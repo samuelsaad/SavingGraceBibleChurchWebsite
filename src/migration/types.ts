@@ -82,7 +82,8 @@ export interface ImportedSermon {
   sourceModifiedGmt: string | null;
   body: string | null;
   summary: string | null;
-  speakers: LegacyTerm[];
+  speaker: LegacyTerm | null;
+  sourceSpeakerCount: number;
   series: LegacyTerm[];
   books: LegacyTerm[];
   passageTerms: LegacyTerm[];

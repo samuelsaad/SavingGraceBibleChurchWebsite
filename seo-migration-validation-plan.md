@@ -160,6 +160,10 @@ Exact numeric rollback thresholds must be based on the approved baseline and lau
 
 Production launch is blocked unless all are true:
 
+- The separate sermon content gate reports exactly 453 included historical records, 453 sole speakers, 453 approved complete transcripts, 453 records with 5–10 approved ordered Q&A pairs and valid required metadata/media, and zero incomplete. The five pending rows remain non-indexable/non-public.
+- Every published transcript and Q&A section is present in initial server HTML at its stable self-canonical detail URL; collapsing uses native disclosure without removing source content. Unapproved enrichment is absent from public detail/search/sitemaps and heavy bodies are absent from list responses.
+- No FAQ structured data is emitted from sermon Q&A unless a later explicit evidence-backed SEO decision approves it.
+
 1. One hundred percent of baseline indexable URLs have a reviewed disposition.
 2. Every preserved URL returns the intended canonical `200`, and every changed URL reaches its equivalent target through exactly one reviewed `301`.
 3. There are zero redirect loops/chains, unintended soft 404s, broken internal links, unexplained orphan pages, staging-origin canonicals/assets, or non-production URLs in production metadata/sitemaps.

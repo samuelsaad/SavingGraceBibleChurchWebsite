@@ -1,7 +1,7 @@
 # Advanced Sermons Migration Contract
 
-**Version:** 1.0  
-**Status:** Approved for local dry-run implementation; not approved for production execution
+**Version:** 1.1
+**Status:** Phase 3B.1 local implementation verified; not approved for production execution
 
 ## 1. Source boundary
 
@@ -42,7 +42,9 @@ Current expected result: 453 included (448 published, 5 pending), 3 Advanced Ser
 
 ## 5. Relationships
 
-- Speakers and series are many-to-many with unique source-backed join rows and deterministic display order.
+- Every sermon has one runtime speaker through nullable `sermons.speaker_id`; null is allowed only while an imported/draft record is incomplete.
+- If source input contains more than one speaker, emit `multiple_source_speakers` at error severity, preserve warning/audit evidence, import no speaker for that record, and never choose one silently.
+- Migration `0004` refuses former local join conversion and reports all affected sermon UUIDs if any sermon has more than one speaker. Series remains many-to-many with deterministic order.
 - Books remain source classifications with an optional canonical Bible-book mapping.
 - Preserve source term/taxonomy IDs, names, slugs, and relationship provenance.
 - Do not merge near-duplicate or misclassified terms without an approved mapping file.
@@ -72,9 +74,18 @@ Each untouched source value becomes a `scripture_reference_sources` row:
 - PDF, bulletin, featured image, body, summary, and resources are nullable; no empty placeholder rows are created.
 - Unsupported or malformed media emits a warning/error and is never rendered directly.
 
-## 8. Search and API contract
+## 8. Transcript, Q&A, and historical enrichment
 
-- PostgreSQL full-text search covers published title, speakers, series, scripture display values, and book classifications. Body/summary are lower-weight nullable inputs for future content.
+- Each included historical record requires a nonblank `approved` full transcript and 5–10 nonblank, consecutively ordered, all-`approved` Q&A pairs before launch, including the five pending/non-public records.
+- New records may be saved incomplete as drafts but cannot schedule or publish until they also have one speaker, required metadata, and valid controlled media.
+- Transcript/Q&A fields accept plain text only. Status, non-secret provenance, created/updated/reviewed/approved timestamps, reviewer/approver, audit history, and optimistic concurrency are preserved.
+- Draft enrichment bundles are strict schema-versioned JSON keyed by source WordPress ID, target UUID, and expected row version. Queue records are deterministically sorted by source ID and need code.
+- Local draft imports are transactionally idempotent by SHA-256 receipt; the same bundle is unchanged on rerun, a changed stale bundle is rejected, and imported content is always `draft` with a `human_approval_required` warning.
+- No provider, media service, AI API, WordPress, or production database may be contacted by this local workflow. Provider interfaces do not constitute an implementation or approval.
+
+## 9. Search and API contract
+
+- PostgreSQL full-text search covers published title (A), sole speaker/series/scripture/book terms (B), summary (C), and body plus approved transcript/Q&A (D). Draft/in-review/missing enrichment never enters the search vector.
 - Legacy keyword behavior is WordPress native title/content/excerpt search plus exact taxonomy-name matching; target weighted ranking is a documented improvement rather than claimed byte-for-byte ranking parity.
 - GIN indexes support the search vector; B-tree indexes support status/date/slug and join filters.
 - Structured filters use exact source-compatible slugs for speaker, series, passage, and book.
@@ -83,7 +94,7 @@ Each untouched source value becomes a `scripture_reference_sources` row:
 - Anonymous results are paginated, deterministically sorted, length-limited, and cannot reveal pending content through results or counts.
 - API v1 preserves legacy-compatible query translation at the web boundary without exposing raw migration metadata.
 
-## 9. Audit and warning output
+## 10. Audit and warning output
 
 Every processed source record returns a structured result containing source type/ID/status, outcome, target ID when included, safe reason code, and warnings. It must not contain credentials, licence values, raw embed HTML, password hashes, auth/session data, or unrelated personal information.
 
@@ -91,13 +102,13 @@ Legacy `post_views_count` is retained only in `sermon_legacy_metrics`/private so
 
 Required outcome categories: `included`, `excluded`, `rejected`. Required warning fields: code, severity, source entity type/ID, field, and safe detail. Output ordering is deterministic by source type then numeric/string source ID.
 
-## 10. Idempotency and dry run
+## 11. Idempotency and dry run
 
 - Dry run performs validation and transformation and produces the complete report without target writes.
 - Reprocessing identical input yields identical target IDs, checksums, transformations, warnings, and ordering.
 - A future load uses upserts keyed by source identity and a migration-run transaction; that path is not authorised against production in this milestone.
 
-## 11. Permanent whole-site SEO migration gate
+## 12. Permanent whole-site SEO migration gate
 
 This sermon migration contract is a subset of the permanent whole-site SEO contract in `seo-migration-validation-plan.md`. It does not by itself establish launch readiness.
 
@@ -109,15 +120,19 @@ This sermon migration contract is a subset of the permanent whole-site SEO contr
 - Reconcile the 448 verified published sermon detail paths, `/sermons/`, and all 50 verified archive pages into the future whole-site one-to-one URL inventory. Do not infer the rest of the site from this sermon subset.
 - A fresh public-site crawl or church-owned Search Console/analytics export remains a later, separately approved read-only discovery task. No production contact is authorised by this contract.
 - Production launch remains blocked until the complete whole-site SEO acceptance artifacts pass; ranking improvement is not guaranteed.
+- Approved transcript and Q&A are rendered in initial server HTML on canonical published detail pages; transcript uses collapsed native `<details>` but is not client-fetched. List responses never duplicate those bodies, and FAQ schema is not added automatically.
 - A previously published sermon slug change transactionally creates or updates a direct `301` from the former path and collapses earlier aliases to the final canonical target.
 - Safeguarded permanent deletion is a target-administration operation, never a source-migration cleanup. It may run only from `archived` and requires confirmation, row version, reason, a minimal non-content tombstone, and either a validated redirect or explicit gone disposition for any formerly public URL. It never changes or deletes the WordPress source row.
 
-## 12. Acceptance invariants
+## 13. Acceptance invariants
 
 - Exactly the approved records are included/excluded.
 - All included source identities and timestamps remain traceable.
 - Four current included non-Sunday dates remain unchanged and warned.
 - Nine current multi-series assignments survive.
+- Every normal source record retains its sole speaker; any multi-speaker anomaly remains incomplete and explicitly warned rather than silently resolved.
+- The historical launch command fails unless included records, sole speakers, approved transcripts, and valid 5–10-Q&A records are all exactly 453 and incomplete is zero.
+- All 453 real historical transcript/Q&A sets remain outstanding until a separately authorised production/review milestone completes them.
 - The 36 conflict and 13 one-source-only published scripture cases remain reviewable.
 - No raw imported embed HTML is emitted by public/admin API contracts.
 - Drafts, blank pending records, legacy tables, and other sermon post types never enter target sermon collections.

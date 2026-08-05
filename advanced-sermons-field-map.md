@@ -52,7 +52,7 @@ Published media matrix: 319 YouTube, 419 audio, 290 both, zero neither. Pending:
 
 | Source taxonomy | Actual live semantics | Proposed target | Migration rule | Evidence |
 | --- | --- | --- | --- | --- |
-| `sermon_speaker` | Public label Preacher; 9 registered, 8 used by any sermon, 7 used by published sermons | `speakers`, `sermon_speakers` | Preserve all terms/assignments; keep many-to-many schema; review unused/misclassified term | `source-and-database-confirmed` |
+| `sermon_speaker` | Public label Preacher; 9 registered, 8 used by any sermon, 7 used by published sermons; included rows have at most one observed assignment | `speakers`, nullable sole `sermons.speaker_id` | Preserve the sole assignment; Yang's final one-speaker decision supersedes the generic taxonomy join. Refuse/warn and leave incomplete on a multi-speaker anomaly rather than selecting silently | `source-and-database-confirmed-and-approved-decision` |
 | `sermon_series` | 29 terms; 441 assignments; 9 sermons have two series | `series`, `sermon_series_map` | Many-to-many required; preserve near-duplicates until approved merge | `source-and-database-confirmed` |
 | `sermon_topics` | Public Passage filter; 379 registered, 376 used by any sermon | `source_taxonomy_terms`; scripture-reference provenance; optional approved topic model | Do not treat blindly as general topics; preserve exact term/slug/assignment | `source-and-database-confirmed` |
 | `sermon_book` | 23 terms including noncanonical `Selected Text`; one non-public sermon has two | `book_classifications`, `sermon_book_classifications`, optional canonical `bible_book_id` | Preserve source classification and map canonically only when reliable | `source-and-database-confirmed` |

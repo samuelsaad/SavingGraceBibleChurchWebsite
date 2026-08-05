@@ -68,14 +68,16 @@ async function upsertSermon(
   sermon: ImportedSermon,
   privateAudit: PrivateMigrationSourceAudit | undefined
 ): Promise<void> {
+  const speakerId = sermon.speaker ? await upsertSpeaker(client, sermon.speaker) : null;
   await client.query(
     `INSERT INTO sermons (
        id, title, slug, summary, body, status, service_date, published_at,
        source_wordpress_id, source_status, source_created_local, source_created_gmt,
-       source_modified_local, source_modified_gmt
+       source_modified_local, source_modified_gmt, speaker_id, historical_backfill_required
      ) VALUES (
        $1, $2, $3, $4, $5, $6, $7::date, $8::timestamptz,
-       $9, $10, $11::timestamp, $12::timestamptz, $13::timestamp, $14::timestamptz
+       $9, $10, $11::timestamp, $12::timestamptz, $13::timestamp, $14::timestamptz,
+       $15, true
      )
      ON CONFLICT (source_wordpress_id) DO UPDATE SET
        title = EXCLUDED.title, slug = EXCLUDED.slug, summary = EXCLUDED.summary,
@@ -85,17 +87,19 @@ async function upsertSermon(
        source_created_gmt = EXCLUDED.source_created_gmt,
        source_modified_local = EXCLUDED.source_modified_local,
        source_modified_gmt = EXCLUDED.source_modified_gmt,
+       speaker_id = EXCLUDED.speaker_id,
+       historical_backfill_required = true,
        updated_at = now(), row_version = sermons.row_version + 1
      WHERE (
        sermons.title, sermons.slug, sermons.summary, sermons.body, sermons.status,
        sermons.service_date, sermons.published_at, sermons.source_status,
        sermons.source_created_local, sermons.source_created_gmt,
-       sermons.source_modified_local, sermons.source_modified_gmt
+       sermons.source_modified_local, sermons.source_modified_gmt, sermons.speaker_id
      ) IS DISTINCT FROM (
        EXCLUDED.title, EXCLUDED.slug, EXCLUDED.summary, EXCLUDED.body, EXCLUDED.status,
        EXCLUDED.service_date, EXCLUDED.published_at, EXCLUDED.source_status,
        EXCLUDED.source_created_local, EXCLUDED.source_created_gmt,
-       EXCLUDED.source_modified_local, EXCLUDED.source_modified_gmt
+       EXCLUDED.source_modified_local, EXCLUDED.source_modified_gmt, EXCLUDED.speaker_id
      )`,
     [
       sermon.id,
@@ -111,7 +115,8 @@ async function upsertSermon(
       sermon.sourceCreatedLocal,
       sermon.sourceCreatedGmt,
       sermon.sourceModifiedLocal,
-      sermon.sourceModifiedGmt
+      sermon.sourceModifiedGmt,
+      speakerId
     ]
   );
 
@@ -119,7 +124,6 @@ async function upsertSermon(
   // Clear only this target sermon's replaceable child sets before rebuilding
   // them, so a changed rerun cannot leave stale taxonomy or media rows behind.
   for (const table of [
-    "sermon_speakers",
     "sermon_series_map",
     "sermon_book_classifications",
     "sermon_source_terms",
@@ -141,14 +145,21 @@ async function upsertSermon(
     await client.query("DELETE FROM sermon_legacy_metrics WHERE sermon_id = $1", [sermon.id]);
   }
 
-  for (const [index, term] of sermon.speakers.entries()) {
-    const speakerId = await upsertSpeaker(client, term);
+  if (sermon.sourceSpeakerCount > 1) {
+    const auditId = deterministicSourceUuid(
+      "migration-speaker-anomaly-audit",
+      sermon.sourceWordPressId
+    );
     await client.query(
-      `INSERT INTO sermon_speakers (sermon_id, speaker_id, display_order, is_primary)
-       VALUES ($1, $2, $3, $4)
-       ON CONFLICT (sermon_id, speaker_id) DO UPDATE
-         SET display_order = EXCLUDED.display_order, is_primary = EXCLUDED.is_primary`,
-      [sermon.id, speakerId, index, index === 0]
+      `INSERT INTO audit_events (
+         id, actor_subject, actor_role, action, entity_type, entity_id,
+         changed_fields, request_correlation_id
+       ) VALUES (
+         $1, 'wordpress-importer', 'system', 'sermon.import_speaker_anomaly',
+         'sermon', $2, '["speaker"]'::jsonb, $3
+       )
+       ON CONFLICT (id) DO NOTHING`,
+      [auditId, sermon.id, `migration-speaker-anomaly-${sermon.sourceWordPressId}`]
     );
   }
 
@@ -275,9 +286,9 @@ async function upsertSermon(
   await client.query(
     `UPDATE sermons s SET search_terms = search.value
      FROM (SELECT concat_ws(' ',
-       (SELECT string_agg(sp.name, ' ' ORDER BY ss.display_order, sp.id)
-        FROM sermon_speakers ss JOIN speakers sp ON sp.id = ss.speaker_id
-        WHERE ss.sermon_id = $1),
+       (SELECT sp.name FROM sermons source_sermon
+        JOIN speakers sp ON sp.id = source_sermon.speaker_id
+        WHERE source_sermon.id = $1),
        (SELECT string_agg(sr.name, ' ' ORDER BY sm.display_order, sr.id)
         FROM sermon_series_map sm JOIN series sr ON sr.id = sm.series_id
         WHERE sm.sermon_id = $1),
@@ -291,6 +302,7 @@ async function upsertSermon(
      WHERE s.id = $1 AND s.search_terms IS DISTINCT FROM search.value`,
     [sermon.id]
   );
+  await client.query("SELECT refresh_sermon_enrichment($1)", [sermon.id]);
 }
 
 export async function loadMigrationResult(
@@ -305,7 +317,7 @@ export async function loadMigrationResult(
     await client.query(
       `INSERT INTO migration_runs (
          id, migration_version, source_snapshot_id, dry_run, status, summary
-       ) VALUES ($1, '0001', $2, false, 'running', $3::jsonb)
+       ) VALUES ($1, '0004', $2, false, 'running', $3::jsonb)
        ON CONFLICT (id) DO UPDATE SET
          status = 'running', completed_at = NULL, summary = EXCLUDED.summary`,
       [runId, sourceSnapshotId, JSON.stringify(result.summary)]

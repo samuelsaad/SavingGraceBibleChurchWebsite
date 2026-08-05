@@ -58,6 +58,13 @@ describe("Phase 3B administration dashboard", () => {
     expect(client).toContain("Permanently delete sermon");
     expect(client).toContain("This action cannot be undone");
     expect(client).toContain("Unsaved changes");
+    expect(client).toContain("Local demonstration data only");
+    expect(client).toContain("anonymised records");
+    expect(client).toContain("1. Sermon basics");
+    expect(client).toContain("6. Review and publish");
+    expect(client).toContain("Completion checklist");
+    expect(client).toContain('name="speakerId"');
+    expect(client).not.toContain('name="speakerIds"');
     expect(client).toContain("x-local-identity\", \"admin");
     expect(`${page}\n${client}`).not.toMatch(/role selector|local-editor|local-contributor/i);
     expect(client).not.toContain("<iframe");

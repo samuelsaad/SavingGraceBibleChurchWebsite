@@ -23,7 +23,7 @@ type PublicSermonRow = QueryResultRow & {
   slug: string;
   service_date: string;
   summary: string | null;
-  speakers: unknown;
+  speaker: unknown;
   series: unknown;
   scripture_references: unknown;
   books: unknown;
@@ -34,6 +34,8 @@ type PublicSermonRow = QueryResultRow & {
 type PublicSermonDetailRow = PublicSermonRow & {
   body: string | null;
   media: unknown;
+  transcript: unknown;
+  question_answers: unknown;
 };
 
 function summaryFromRow(row: PublicSermonRow): SermonSummary {
@@ -43,7 +45,7 @@ function summaryFromRow(row: PublicSermonRow): SermonSummary {
     slug: row.slug,
     serviceDate: row.service_date,
     summary: row.summary,
-    speakers: row.speakers,
+    speaker: row.speaker,
     series: row.series,
     scriptureReferences: row.scripture_references,
     books: row.books,
@@ -55,7 +57,9 @@ function detailFromRow(row: PublicSermonDetailRow): SermonDetail {
   return sermonDetailSchema.parse({
     ...summaryFromRow(row),
     body: row.body,
-    media: row.media
+    media: row.media,
+    transcript: row.transcript,
+    questionAnswers: row.question_answers
   });
 }
 

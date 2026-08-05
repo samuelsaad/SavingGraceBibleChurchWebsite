@@ -1,8 +1,8 @@
 # Target PostgreSQL Schema
 
-> **FINALISED FOR LOCAL MILESTONE 2 — NOT APPROVED FOR PRODUCTION CREATION**
+> **PHASE 3B.1 LOCAL MODEL VERIFIED — NOT APPROVED FOR PRODUCTION CREATION**
 
-This is the reviewed migration-contract schema. It incorporates the completed read-only database inventory, Yang's approved inclusion/date/legacy decisions, and the exact installed Advanced Sermons 3.7 plus Pro 2.2 source review. The matching local SQL migration is `db/migrations/0001_initial.sql`. No production PostgreSQL object has been created.
+This is the reviewed migration-contract schema. It incorporates the completed read-only database inventory, Yang's approved inclusion/date/legacy decisions, the exact installed Advanced Sermons 3.7 plus Pro 2.2 source review, and Yang's final one-speaker/transcript/Q&A completeness decision. The ordered local SQL set is `0001`–`0004`. No production PostgreSQL object has been created.
 
 The migration and rollback were executed successfully against the authorised disposable PostgreSQL 16.14 database `savinggrace_sermons_test` on loopback port 5432. All 23 tables, constraints, foreign keys, indexes, generated search vector, GIN index, `pgcrypto`, fixture loads, rollback, and clean reapplication were verified. This is local evidence only and does not authorise production creation.
 
@@ -12,7 +12,7 @@ The migration and rollback were executed successfully against the authorised dis
 | --- | --- | --- |
 | Preserve source identity independently of target UUIDs | 456 Advanced Sermons rows plus residual sermon systems/custom tables exist | `database-observed` |
 | Series must be many-to-many | Nine sermons have two `sermon_series` assignments | `database-observed` |
-| Speaker remains many-to-many | Yang requires a many-to-many-capable target even though live records currently have at most one | `database observed` |
+| Speaker is exactly one at runtime | Yang approved a sole speaker; null is temporary only for incomplete drafts/backfill, and migration refuses multiple existing assignments | `approved-decision-and-local-test-confirmed` |
 | Scripture needs value plus provenance | Passage meta/taxonomy disagree on 36 published rows and only one side exists on 13 | `database-observed` |
 | Book classification must allow noncanonical values | `Selected Text` and other historic classifications exist | `database-observed` |
 | Campus/service-type entities are unnecessary initially | No registered term or relationship exists for either taxonomy | `database-observed` |
@@ -27,8 +27,9 @@ The migration and rollback were executed successfully against the authorised dis
 
 ```mermaid
 erDiagram
-    SERMONS ||--o{ SERMON_SPEAKERS : has
-    SPEAKERS ||--o{ SERMON_SPEAKERS : appears_in
+    SPEAKERS o|--o{ SERMONS : sole_speaker
+    SERMONS ||--o| SERMON_TRANSCRIPTS : has
+    SERMONS ||--o{ SERMON_QUESTION_ANSWERS : contains
     SERMONS ||--o{ SERMON_SERIES_MAP : belongs_to
     SERIES ||--o{ SERMON_SERIES_MAP : contains
     SERMONS ||--o{ SERMON_BOOK_CLASSIFICATIONS : classified_by
@@ -73,6 +74,10 @@ erDiagram
 | `created_at`, `updated_at` | `timestamptz` | Target audit timestamps |
 | `created_by_subject`, `updated_by_subject` | `text` nullable | Provider-independent identity attribution; imported records remain null-owned |
 | `row_version` | integer | Optimistic concurrency |
+| `speaker_id` | `uuid` nullable foreign key | Sole speaker; nullable only while draft/backfill is incomplete |
+| `historical_backfill_required` | boolean | Derived historical content-completeness marker |
+| `transcript_search_document` | text | Approved transcript search text at weight D |
+| `question_answer_search_document` | text | Approved Q&A search text at weight D |
 
 The migration includes all 448 published records as `published` and all five titled pending records as `pending`; it excludes all three drafts. Zero pending records have blank titles. Target-created drafts/scheduled/archived records remain supported by the administration lifecycle. (`database observed`)
 
@@ -83,11 +88,20 @@ The planned SEO/social columns are not part of migrations `0001`–`0003`; they 
 ### Speakers and series
 
 - `speakers`: UUID, name, slug, biography, image asset, source/audit fields, optimistic row version.
-- `sermon_speakers`: sermon UUID, speaker UUID, display order, optional role and primary flag; unique pair.
+- `sermons.speaker_id`: sole nullable speaker foreign key; schedule/publish and historical launch readiness require it.
 - `series`: UUID, name, slug, description, image asset, source/audit fields, optimistic row version.
 - `sermon_series_map`: sermon UUID, series UUID, display order, optional primary flag; unique pair.
 
-Live data proves multiple series but not multiple speakers. The target should not encode a one-speaker restriction solely from the current 453 assigned records. (`database-observed`)
+Migration `0004_sermon_enrichment_readiness.sql` first aggregates the former local join table and aborts transactionally with every affected sermon UUID when any sermon has more than one speaker. It then maps only valid zero/one relationships, adds the foreign key/index, and removes the join. The importer emits an error warning and leaves the target speaker null for a multi-speaker source anomaly; it never selects one silently. The rollback restores the join representation from the sole foreign key. Series remains many-to-many. (`approved-decision-and-local-test-confirmed`)
+
+### `sermon_transcripts`, `sermon_question_answers`, and readiness
+
+- `sermon_transcripts`: one plain-text row per sermon; status `missing`, `draft`, `in_review`, or `approved`; constrained non-secret provenance; created/updated/reviewed/approved timestamps and reviewer/approver subjects; optimistic row version. HTML-like tags are rejected.
+- `sermon_question_answers`: ordered plain-text rows with required nonblank question/answer, unique order 1–10 per sermon, status `draft`, `in_review`, or `approved`, provenance/review/audit fields, and row version. Readiness requires 5–10 total and every row approved.
+- `sermon_content_readiness`: derived view for one speaker, approved transcript, Q&A totals/approval, controlled media, and overall completeness.
+- `sermon_enrichment_draft_imports`: SHA-256 idempotency receipt for safe local draft import; it stores no transcript body and grants no approval.
+
+Only approved transcript/Q&A text is copied into generated search inputs at weight D. Public detail selects approved rows only; public list projections omit the bodies. The portable server-rendered detail page places the full transcript in initial HTML inside closed native `<details>` and renders approved Q&A without FAQ structured data.
 
 ### Books and source taxonomy preservation
 
@@ -153,10 +167,14 @@ Store run UUID, code/config version, start/end, source snapshot identity without
 
 ## Final schema objects and boundaries
 
-The local migration creates: `sermons`; private `sermon_legacy_metrics`; `speakers`/`sermon_speakers`; `series`/`sermon_series_map`; canonical Bible books and source book classifications; preserved source taxonomy terms/joins; scripture references plus immutable source rows; provider-normalised media plus private source-audit rows; nullable resources/assets; redirect/gone dispositions; migration runs/records/warnings; audit events; minimal sermon deletion tombstones; and schema-validated namespaced sermon extensions.
+The ordered local migrations create `sermons` with its sole speaker foreign key; private `sermon_legacy_metrics`; `speakers`; `series`/`sermon_series_map`; transcripts, ordered Q&A, draft-import receipts, and readiness view; canonical Bible books and source book classifications; preserved source taxonomy terms/joins; scripture references plus immutable source rows; provider-normalised media plus private source-audit rows; nullable resources/assets; redirect/gone dispositions; migration runs/records/warnings; audit events; minimal sermon deletion tombstones; and schema-validated namespaced sermon extensions.
 
 Constraints include stable UUID identities, case-insensitive unique active slugs, explicit status/provider/outcome checks, unique join relationships, source-identity uniqueness, JSON object checks only for versioned controlled extension/embed configuration, timestamps, optimistic row versions, and indexes for visibility/date/filter joins. The full-text vector weights title highest, relationship terms next, summary next, and body lowest.
 
-`0002_admin_foundation.sql` preserves provider-independent creator/updater audit attribution and taxonomy concurrency. `0003_single_admin_deletion_seo.sql` constrains new audit actors to `admin`/`system`, makes the ownership columns non-authoritative for access, and adds reversible tombstones and redirect/gone shapes. It was applied, rolled back independently, and cleanly reapplied on PostgreSQL 16.14 at the exact disposable loopback target. No password, token, Cognito object, arbitrary postmeta, deleted content, or private source value is stored in the new tombstone.
+`0002_admin_foundation.sql` preserves provider-independent creator/updater audit attribution and taxonomy concurrency. `0003_single_admin_deletion_seo.sql` constrains new audit actors to `admin`/`system`, makes ownership columns non-authoritative for access, and adds reversible tombstones and redirect/gone shapes. `0004_sermon_enrichment_readiness.sql` applies the one-speaker and content-readiness correction. The full set and independent `0004` rollback/reapplication were verified on PostgreSQL 16.14 at the exact disposable loopback target. No password, token, Cognito object, arbitrary postmeta, deleted content, or private source value is stored in these objects.
+
+## Historical content launch invariant
+
+Production launch requires exactly 453 included historical rows: 453 with one speaker, 453 with approved complete transcript, 453 with 5–10 all-approved ordered Q&A pairs, 453 with required metadata/valid controlled media, and zero incomplete. The five titled pending records remain pending/non-public but must still pass. Three drafts, all `wp_sb_*`, and 12 older-plugin posts remain excluded. The local anonymised fixture has three included records and intentionally remains incomplete; it is evidence for the gate, not evidence that real enrichment is done.
 
 The exact source confirms archive/detail rewrites, date syntax/inclusivity, native keyword fields, taxonomy-name matching, AJAX triggers, and view-counter behaviour. It also exposes a direct-query `AND` versus AJAX-prepared `OR` inconsistency; the target keeps the approved, publicly observed `AND` contract and regression-tests it. Theme/site customisations outside the supplied plugin directories remain a separate acceptance concern.

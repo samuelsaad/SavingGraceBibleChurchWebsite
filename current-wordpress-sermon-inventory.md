@@ -86,7 +86,7 @@ The complete query returned 440 registered terms: 23 `sermon_book`, 29 `sermon_s
 | `sermon_speaker` | 453 | 8 | 453 | 448 | 0 | 0 | `database-observed` |
 | `sermon_topics` | 432 | 376 | 432 | 428 | 20 | 0 | `database-observed` |
 
-Series is demonstrably many-to-many: nine sermons have two series assignments. One non-public sermon has two book assignments. Speaker and passage happen to be single-valued for assigned records, but that observed content pattern does not prove a parent-plugin constraint. (`database-observed`)
+Series is demonstrably many-to-many: nine sermons have two series assignments. One non-public sermon has two book assignments. Speaker and passage happen to be single-valued for assigned records; that observation alone did not prove a parent-plugin constraint. Yang has since approved exactly one speaker as a replacement-system rule, enforced by migration `0004` with anomaly refusal rather than silent selection. (`database-observed-and-approved-decision`)
 
 Term anomalies requiring review include near-duplicate series “Our Call…”/“Our Calling…”, noncanonical book/passage values such as `Selected Text`, an unused `Hosea` passage term, a book term used only by non-public content, and an unused `Psalm 13` term classified as a speaker. Stored term counts are not always authoritative; for example, `Topical` stores 54 while 59 live relationships were counted. (`database-observed`)
 

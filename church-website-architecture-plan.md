@@ -3,12 +3,14 @@
 ## Technical Architecture, Advanced Sermons Migration, Security, and Delivery Plan
 
 **Document status:** Authoritative working specification  
-**Revision:** 2.5  
+**Revision:** 2.6
 **Updated:** 5 August 2026  
 **Primary audience:** Codex implementation chat, project owner, and church technical administrator  
 **Purpose:** Give the implementation assistant a complete, precise account of what has been agreed, what has been discovered, what remains unknown, and how to proceed safely.
 
 > **Phase 3B decision update (5 August 2026):** Yang has approved one active administration role, `admin`, plus safeguarded permanent deletion from `archived`. The provisional editor/contributor model and archive-only policy are superseded. The local dashboard, API, deletion tombstones, and redirect/gone dispositions use only the disposable loopback PostgreSQL target. Cognito, AWS, production adapters, deployment, real sermon imports, and every production system remain deferred and untouched.
+
+> **Phase 3B.1 final content decision (5 August 2026):** Every sermon has exactly one speaker; a draft/imported record may be temporarily null only while incomplete. All 453 included historical records (448 published and five titled pending) require one speaker, an approved complete transcript, five to ten ordered approved question-and-answer pairs, required metadata, and valid controlled media before launch. The five pending records remain non-public. New records cannot be scheduled or published until complete. This decision supersedes every earlier many-speaker runtime proposal. Real historical enrichment is not complete and Phase 3C remains paused.
 
 > **Permanent SEO decision:** The existing website performs well in organic search. Whole-site SEO non-regression is a launch-blocking acceptance criterion for every future milestone. Preserve existing search signals at minimum, improve technical SEO safely where possible, and do not launch unless one-to-one URL, metadata, canonical, crawlability, redirect, indexability, performance, and structured-data parity is demonstrated through the process in `seo-migration-validation-plan.md`.
 
@@ -91,6 +93,7 @@ The existing WordPress database is a migration source only. It must not become a
 | Whole-site SEO | Preserve existing organic-search signals at minimum; SEO parity is a launch gate and unexplained regression blocks cutover. |
 | Sermon date migration | Map the exact local WordPress `post_date` to preached/service date; preserve non-Sundays and flag them rather than changing them. |
 | Sermon migration scope | Include published and titled pending Advanced Sermons records; exclude drafts, blank-title pending, `wp_sb_*`, and other sermon-plugin post types. |
+| Sermon content completeness | Exactly one speaker plus an approved full transcript and 5–10 approved ordered Q&A pairs are required for scheduling/publishing; all 453 included historical records must pass before launch. |
 | Scripture conflicts | Preserve postmeta and taxonomy values with independent provenance and reconcile reversibly. |
 | Media migration | Normalise YouTube and SermonAudio; never render imported embed HTML directly. |
 
@@ -273,9 +276,9 @@ The actual table prefix is unknown and must be discovered. Advanced Sermons data
 
 Do not assume that Advanced Sermons creates no custom tables. Confirm with `SHOW TABLES` and inspect names related to sermons, analytics, views, or the plugin prefix.
 
-### 8.3 Important correction to the earlier simplified design
+### 8.3 Final church-specific cardinality decision
 
-The target schema must not assume one speaker or one series per sermon. Advanced Sermons can assign multiple taxonomy terms to a sermon. Speakers, series, topics, books, campuses, and service types must therefore be represented using many-to-many join tables unless database discovery proves a stricter church-specific rule that the church explicitly wants to enforce.
+The source taxonomy system is structurally many-to-many, but Yang has approved a stricter replacement rule: every sermon has exactly one speaker. The runtime stores nullable `sermons.speaker_id`; null is permitted only while a draft or historical backfill is incomplete. Scheduling, publishing, and the historical launch gate require it. Migration `0004` refuses conversion and reports sermon IDs if any local join row set has more than one speaker; the importer never chooses a winner for a multi-speaker source anomaly and instead emits warning/audit evidence. Series remains many-to-many. This section supersedes the earlier generic many-speaker proposal.
 
 ---
 
@@ -570,7 +573,7 @@ This mapping is provisional until live database discovery is complete.
 | `asp_sermon_bible_passage` | `scripture_references.display_text` | Preserve exact display text; parse structured reference only when reliable. |
 | `asp_sermon_pdf` | `sermon_resources` | Classify as sermon notes; migrate or retain controlled URL. |
 | `asp_sermon_bulletin` | `sermon_resources` | Classify as bulletin; migrate or retain controlled URL. |
-| `sermon_speaker` taxonomy | `speakers` plus `sermon_speakers` | Preserve terms, slugs, hierarchy/metadata, and all assignments. |
+| `sermon_speaker` taxonomy | `speakers` plus nullable `sermons.speaker_id` | Preserve the sole valid assignment; report and leave null on any source anomaly rather than selecting silently. |
 | `sermon_series` taxonomy | `series` plus `sermon_series_map` | Preserve terms, slugs, descriptions, images, and assignments. |
 | `sermon_topics` taxonomy | `topics` plus `sermon_topics` | Preserve hierarchy and all assignments. |
 | `sermon_book` taxonomy | `bible_books` plus `sermon_books` | Map to canonical Bible books while retaining source term. |
@@ -599,7 +602,10 @@ Use UUID primary keys for new application entities unless the repository already
 | `published_at` | Timestamptz, nullable | Public release time. |
 | `scheduled_for` | Timestamptz, nullable | Optional future publication time. |
 | `featured_asset_id` | UUID, nullable | Relationship to managed image. |
-| `transcript` | Text, nullable | Approved transcript; searchable when present. |
+| `speaker_id` | UUID foreign key, nullable while incomplete | Sole runtime speaker; required by publication and launch readiness. |
+| `historical_backfill_required` | Boolean | Derived marker for included historical records that have not passed the full checklist. |
+| `transcript_search_document` | Text | Approved transcript-only lower-weight search document. |
+| `question_answer_search_document` | Text | Approved Q&A-only lower-weight search document. |
 | `seo_title` | Text, nullable | Explicit SEO title override. |
 | `seo_description` | Text, nullable | Explicit SEO description override. |
 | `social_title`, `social_description` | Text, nullable | Controlled social-sharing overrides; otherwise template-derived. |
@@ -620,7 +626,14 @@ SEO indexability and canonical policy are derived from route, template, environm
 #### Speakers
 
 - `speakers`: `id`, `name`, `slug`, `biography`, `image_asset_id`, source metadata, timestamps.
-- `sermon_speakers`: `sermon_id`, `speaker_id`, optional `role`, `display_order`, and optional `is_primary`.
+- `sermons.speaker_id`: nullable foreign key while incomplete; exactly one valid speaker is mandatory before schedule/publish and for all 453 historical launch records.
+
+#### Full transcripts and questions
+
+- `sermon_transcripts`: one row per sermon; plain text body; `missing`, `draft`, `in_review`, or `approved`; non-secret provenance; created/updated/reviewed/approved timestamps and actors; optimistic row version.
+- `sermon_question_answers`: five to ten ordered plain-text question/answer rows for readiness; `draft`, `in_review`, or `approved`; provenance, timestamps, reviewer/approver, row version, and unique `(sermon_id, display_order)`.
+- `sermon_content_readiness`: derived view covering speaker, approved transcript, 5–10 all-approved Q&As, and controlled media. The service rejects schedule/publish with field-level issues when incomplete.
+- `sermon_enrichment_draft_imports`: local idempotency receipts only; imported transcript/Q&A content is always `draft` and requires human approval.
 
 #### Series
 
@@ -732,8 +745,9 @@ Unique constraint: source system + source type + source ID.
 
 ```mermaid
 erDiagram
-    SERMONS ||--o{ SERMON_SPEAKERS : has
-    SPEAKERS ||--o{ SERMON_SPEAKERS : appears_in
+    SPEAKERS o|--o{ SERMONS : sole_speaker
+    SERMONS ||--o| SERMON_TRANSCRIPTS : has
+    SERMONS ||--o{ SERMON_QUESTION_ANSWERS : has
     SERMONS ||--o{ SERMON_SERIES_MAP : belongs_to
     SERIES ||--o{ SERMON_SERIES_MAP : contains
     SERMONS ||--o{ SERMON_TOPICS : tagged_with
@@ -775,7 +789,7 @@ For each current search feature, document:
 | Requirement | Current behaviour | Required replacement behaviour | Test cases | Status |
 | --- | --- | --- | --- | --- |
 | Keyword fields | To discover | Explicit title/body/etc. scope | Representative queries | Pending |
-| Speaker | To discover | Multi-select or single-select | Exact names and combinations | Pending |
+| Speaker | Single-select source UI and at most one observed assignment | Exact one-speaker filter | Every speaker slug and missing-speaker admin state | Approved |
 | Series | To discover | Defined filter semantics | Multi-series sermons | Pending |
 | Topic | To discover | Hierarchy behaviour | Parent/child topics | Pending |
 | Bible book | To discover | Canonical mapping | Old/new testament books | Pending |
@@ -793,7 +807,7 @@ Preferred initial implementation:
   - Weight A: sermon title
   - Weight B: speaker, series, and scripture display text
   - Weight C: topics, book, and summary
-  - Weight D: body and transcript
+  - Weight D: body plus approved transcript and approved Q&A text
 - Structured SQL filters for taxonomy, date, status, and media availability.
 - `pg_trgm` only if approved partial matching or typo tolerance requires it.
 - Deterministic secondary sorting for equal ranks.
@@ -831,9 +845,7 @@ Example:
       "title": "The Holiness of God",
       "slug": "the-holiness-of-god",
       "serviceDate": "2026-08-02",
-      "speakers": [
-        { "name": "Example Speaker", "slug": "example-speaker" }
-      ],
+      "speaker": { "name": "Example Speaker", "slug": "example-speaker" },
       "series": [],
       "scriptureReferences": [
         { "displayText": "Isaiah 6:1-8" }
@@ -1220,7 +1232,7 @@ Target WCAG 2.2 AA practices:
 ### 23.2 Migration tests
 
 - Idempotent reruns
-- Multiple speakers and series
+- Multi-speaker source anomaly refusal plus normal single-speaker and multiple-series cases
 - Hierarchical topics
 - Missing images/media
 - Invalid media URLs
@@ -1300,6 +1312,18 @@ Target WCAG 2.2 AA practices:
 **Exit gate:** Approved protected staging workflow with tested single-admin authorization, dashboard accessibility, deletion safety, and SEO dispositions.
 
 **Local foundation status:** Provider-independent identity, Yang's final single-admin policy, sermon/taxonomy services, explicit transitions, audit, concurrency, transaction handling, deletion safeguards, URL dispositions, portable handlers, and the loopback dashboard are implemented locally. Cognito configuration, real identities, and protected staging remain future explicitly authorised work.
+
+### Phase 3B.1 — Sermon content model and historical enrichment workflow correction
+
+1. Replace runtime speaker joins with one nullable `speaker_id`; fail conversion on multi-speaker anomalies.
+2. Add reviewed transcript and ordered reviewed Q&A models with audit/provenance and approved-only lower-weight search.
+3. Derive readiness and block schedule/publish until one speaker, approved transcript, 5–10 approved Q&As, and controlled media are present.
+4. Add the exact 453/453 historical launch command, deterministic queue, safe draft contracts, idempotent local import receipts, dashboard progress/filters/checklist, and accessible six-step editor.
+5. Render approved transcript and Q&A in initial server HTML; collapse transcript with native `<details>` without client fetch and never emit FAQ structured data automatically.
+
+**Verified local status:** Migration `0004`, rollback/reapply, importer rerun, repository/search/API/SSR, launch-gate, and dashboard tests pass on PostgreSQL 16.14 at the authorised loopback test target. The local three-record fixture remains intentionally incomplete. No real transcript/Q&A retrieval or production contact occurred.
+
+**Exit gate:** Local model correction is verified and documented. Phase 3C stays paused. The next separately authorised milestone is “Phase 3B.2 — controlled historical transcript and Q&A production/review rehearsal,” which must approve providers, cost ceilings, secure source access, batch sizes, human reviewers, quality rubric, and rollback before producing any of the 453 real enrichment sets.
 
 ### Phase 4 — Events and integrations
 
@@ -1419,7 +1443,8 @@ The first release is complete only when:
 - Indexable pages expose primary content through server-rendered HTML, self-canonicals, valid sitemap/robots treatment, accurate structured data, preserved social metadata, and approved mobile/accessibility/performance budgets.
 - Public sermon pages and search meet the agreed current-site requirements.
 - Search is PostgreSQL-backed, indexed, paginated, permission-safe, and does not preload all sermons.
-- Multiple speakers, series, topics, books, and any used optional taxonomies migrate correctly.
+- Every sermon has exactly one speaker; any multi-speaker source anomaly is reported without silent selection. Series, topics, books, and approved optional taxonomies migrate at their required cardinality.
+- All 453 included historical records pass the exact content gate: 453 speakers, 453 approved complete transcripts, 453 records with 5–10 approved ordered Q&As, valid metadata/media, and zero incomplete; pending records remain non-public.
 - Required historic media and resources remain available.
 - Authorised users can safely manage the sermon lifecycle according to role.
 - Unauthorised users cannot access protected actions or draft data.

@@ -5,6 +5,7 @@ import { createPostgresPool } from "./database";
 import { createApplicationApiRouter } from "./http/application-api-router";
 import { IncomingRequestTooLargeError, toWebRequest } from "./http/node-request-adapter";
 import { serveLocalDashboard } from "./http/local-dashboard-static";
+import { createPublicSermonPageHandler } from "./http/public-sermon-page";
 import { PostgresAdminSermonRepository } from "./repositories/postgres-admin-sermon-repository";
 import { PostgresSermonRepository } from "./repositories/postgres-sermon-repository";
 import { assertLoopbackApiHost } from "./local-api-safety";
@@ -21,16 +22,19 @@ if (!Number.isInteger(port) || port < 1 || port > 65_535) {
 }
 
 const pool = createPostgresPool(connectionString);
+const publicRepository = new PostgresSermonRepository(pool);
 const route = createApplicationApiRouter(
-  new PostgresSermonRepository(pool),
+  publicRepository,
   new PostgresAdminSermonRepository(pool),
   new LocalTestIdentityProvider(process.env.ENABLE_LOCAL_TEST_IDENTITIES === "1")
 );
+const publicSermonPage = createPublicSermonPageHandler(publicRepository);
 const server = createServer(async (incoming, outgoing) => {
   try {
     const originHostname = hostname.includes(":") ? `[${hostname}]` : hostname;
     const request = await toWebRequest(incoming, `http://${originHostname}:${port}`);
     const response =
+      (await publicSermonPage(request)) ??
       (await serveLocalDashboard(
         request,
         process.env.ENABLE_LOCAL_DASHBOARD === "1"

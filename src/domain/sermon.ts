@@ -41,7 +41,7 @@ export const sermonSummarySchema = z.object({
   slug: z.string().min(1),
   serviceDate: isoDateSchema,
   summary: z.string().nullable(),
-  speakers: z.array(z.object({ name: z.string(), slug: z.string() })),
+  speaker: z.object({ name: z.string(), slug: z.string() }).nullable(),
   series: z.array(z.object({ name: z.string(), slug: z.string() })),
   scriptureReferences: z.array(scriptureReferenceDtoSchema),
   books: z.array(z.object({ name: z.string(), slug: z.string() })),
@@ -52,7 +52,13 @@ export type SermonSummary = z.infer<typeof sermonSummarySchema>;
 
 export const sermonDetailSchema = sermonSummarySchema.extend({
   body: z.string().nullable(),
-  media: z.array(publicMediaSchema)
+  media: z.array(publicMediaSchema),
+  transcript: z.object({ bodyText: z.string().min(1) }).nullable(),
+  questionAnswers: z.array(z.object({
+    question: z.string().min(1),
+    answer: z.string().min(1),
+    displayOrder: z.number().int().min(1).max(10)
+  }))
 });
 
 export type SermonDetail = z.infer<typeof sermonDetailSchema>;

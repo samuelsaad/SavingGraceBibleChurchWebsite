@@ -98,6 +98,31 @@ describe("admin sermon API contract", () => {
     expect(() => createSermonInputSchema.parse({ ...valid, status: "published" })).toThrow();
   });
 
+  it("accepts only one nullable speaker and rejects unsafe enrichment content", () => {
+    const base = { title: "Local draft", slug: "local-draft", serviceDate: "2026-08-02" };
+    expect(createSermonInputSchema.parse({ ...base, speakerId: null })).toHaveProperty(
+      "speakerId",
+      null
+    );
+    expect(() =>
+      createSermonInputSchema.parse({
+        ...base,
+        speakerIds: ["75df2144-b557-50f6-98bd-011cd696bfb9"]
+      })
+    ).toThrow();
+    expect(() =>
+      createSermonInputSchema.parse({
+        ...base,
+        transcript: {
+          bodyText: "<script>alert(1)</script>",
+          status: "draft",
+          sourceKind: "manual",
+          sourceReference: null
+        }
+      })
+    ).toThrow("Use plain text");
+  });
+
   it("allows only provider-matched controlled media", () => {
     expect(() =>
       controlledMediaInputSchema.parse({

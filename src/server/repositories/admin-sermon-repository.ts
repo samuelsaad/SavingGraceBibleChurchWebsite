@@ -12,6 +12,7 @@ import type {
   taxonomyWriteInputSchema
 } from "../../api/contracts/admin-sermons";
 import type { SermonStatus } from "../../domain/sermon";
+import type { ContentReadinessResult } from "../../domain/content-readiness";
 import type { z } from "zod";
 
 export type ControlledMediaInput = z.infer<typeof controlledMediaInputSchema>;
@@ -31,14 +32,16 @@ export interface StoredSermonSummary {
   publishedAt: string | null;
   rowVersion: number;
   updatedAt: string;
-  speakers: Array<{ id: string; name: string; slug: string }>;
+  speaker: { id: string; name: string; slug: string } | null;
   series: Array<{ id: string; name: string; slug: string }>;
+  historicalBackfillRequired: boolean;
+  readiness: ContentReadinessResult;
 }
 
 export interface StoredSermonDetail extends StoredSermonSummary {
   summary: string | null;
   body: string | null;
-  speakers: Array<{ id: string; name: string; slug: string }>;
+  speaker: { id: string; name: string; slug: string } | null;
   series: Array<{ id: string; name: string; slug: string }>;
   books: Array<{ id: string; name: string; slug: string }>;
   scriptureReferences: Array<
@@ -48,12 +51,33 @@ export interface StoredSermonDetail extends StoredSermonSummary {
     }
   >;
   media: Array<ControlledMediaInput & { id: string }>;
+  transcript: (CreateSermonInput["transcript"] & {
+    rowVersion: number;
+    reviewedAt: string | null;
+    approvedAt: string | null;
+  }) | null;
+  questionAnswers: Array<CreateSermonInput["questionAnswers"][number] & {
+    id: string;
+    displayOrder: number;
+    rowVersion: number;
+    reviewedAt: string | null;
+    approvedAt: string | null;
+  }>;
 }
 
 export interface StoredSermonPage {
   data: StoredSermonSummary[];
   totalItems: number;
   countsByStatus: Record<SermonStatus, number>;
+  readinessProgress: {
+    total: number;
+    complete: number;
+    remaining: number;
+    withOneSpeaker: number;
+    withApprovedTranscript: number;
+    withRequiredQuestionAnswers: number;
+    withValidControlledMedia: number;
+  };
 }
 
 export interface AuditEventDto {
@@ -131,19 +155,22 @@ export interface AdminSermonTransaction {
   insertDeletionTombstone(input: DeletionTombstoneInput): Promise<void>;
   deleteSermon(id: string): Promise<void>;
   validateRelationshipIds(input: {
-    speakerIds?: string[] | undefined;
+    speakerId?: string | null | undefined;
     seriesIds?: string[] | undefined;
     bookClassificationIds?: string[] | undefined;
   }): Promise<string | null>;
   replaceRelationships(
     id: string,
     input: {
-      speakerIds?: CreateSermonInput["speakerIds"] | undefined;
+      speakerId?: CreateSermonInput["speakerId"] | undefined;
       seriesIds?: CreateSermonInput["seriesIds"] | undefined;
       bookClassificationIds?: CreateSermonInput["bookClassificationIds"] | undefined;
       scriptureReferences?: CreateSermonInput["scriptureReferences"] | undefined;
       media?: CreateSermonInput["media"] | undefined;
-    }
+      transcript?: CreateSermonInput["transcript"] | undefined;
+      questionAnswers?: CreateSermonInput["questionAnswers"] | undefined;
+    },
+    actorSubject: string
   ): Promise<void>;
   refreshSearchTerms(id: string): Promise<void>;
   insertTaxonomy(kind: TaxonomyKind, input: TaxonomyWriteInput): Promise<TaxonomyDto>;

@@ -138,6 +138,20 @@ Permanent deletion is allowed only from `archived` through a separate explicit o
 
 Build the administration dashboard with the existing static Astro/TypeScript stack and portable admin routes. The local Node harness serves the built `/admin` SPA only on loopback with a development-only admin identity, no remote calls, no production adapter, and explicit `noindex`/security headers. Service handlers remain authoritative for authorization, lifecycle validation, concurrency, transactions, media safety, redirects, and deletion.
 
+### D-114 — Final one-speaker sermon model
+
+Yang's final decision is exactly one speaker per sermon. A new draft or included historical row may temporarily have null `speaker_id` only while incomplete; schedule, publish, and historical launch readiness require it. Migration `0004_sermon_enrichment_readiness.sql` transactionally refuses any existing local sermon with more than one former join row and reports affected sermon UUIDs. The importer never chooses a speaker from a multi-speaker source anomaly: it leaves the target null and records a structured error warning plus safe audit evidence. Series remains many-to-many. This decision supersedes every earlier many-speaker runtime proposal. (`approved decision`, locally verified on PostgreSQL 16.14)
+
+### D-115 — Transcript, Q&A, and exact historical launch gate
+
+Every included historical sermon requires a complete approved plain-text transcript and 5–10 consecutively ordered, nonblank, all-approved question-and-answer pairs before launch. This covers all 453 records: 448 published and five titled pending; pending remains non-public. The three drafts, `wp_sb_*`, and 12 older-plugin posts remain excluded. New incomplete sermons may be saved but cannot schedule or publish. Readiness also requires the sole speaker, existing required metadata, and valid controlled media. The launch CLI must fail unless included/speaker/transcript/valid-Q&A counts are exactly 453 and incomplete is zero, reporting only safe source WordPress IDs and missing requirement codes.
+
+Approved transcript/Q&A text participates in public search only at weight D. Public detail renders it server-side in initial HTML; the transcript is closed by default with native `<details>`, while list responses omit heavy bodies. No FAQ structured data is inferred. Deterministic queue and strict draft bundle contracts support idempotent local enrichment, but imported/generated drafts always require recorded human approval. No external provider or real production enrichment is approved by this decision.
+
+### D-116 — Guided six-step administration workflow
+
+The dashboard usability failure is treated as a product defect. The approved workflow is: sermon basics; speaker and scripture; media; full transcript; questions and answers; review and publish. It includes an anonymised-local-data notice, plain state descriptions, aggregate progress, issue filters, per-sermon checklist, field/empty-state guidance, obvious actions, and accessible responsive/concurrency/validation/unsaved-change feedback. Internal migration/database terms remain outside normal editing screens.
+
 ## Decisions still required
 
 - Final AWS runtime/adapter and production networking.
@@ -147,3 +161,4 @@ Build the administration dashboard with the existing static Astro/TypeScript sta
 - Approved runtime secret-provider integration before any future upgrade from `pg` 8 to `pg` 9, whose automatic `pgpass` support is deprecated.
 - Explicit read-only approval and access method for the fresh whole-site crawl and church-owned Search Console/analytics baseline.
 - Production canonical host/slash policy, any intentionally crawlable filter landing pages, and baseline-derived SEO performance/rollback thresholds.
+- Provider(s), cost ceiling, secure source-access method, batch/retry policy, reviewer assignments, quality rubric, and acceptance evidence for the separately authorised Phase 3B.2 historical transcript/Q&A production and human-review rehearsal.

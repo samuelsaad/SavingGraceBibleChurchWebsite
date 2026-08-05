@@ -8,6 +8,17 @@ import {
 import type { SermonStatus } from "../domain/sermon";
 
 type Relationship = { id: string; name: string; slug: string };
+type Readiness = {
+  isComplete: boolean;
+  hasOneSpeaker: boolean;
+  hasApprovedTranscript: boolean;
+  approvedQuestionCount: number;
+  totalQuestionCount: number;
+  hasRequiredQuestionAnswers: boolean;
+  allQuestionsApproved: boolean;
+  hasValidControlledMedia: boolean;
+  issues: Array<{ path: string; code: string; message: string }>;
+};
 type SermonSummary = {
   id: string;
   title: string;
@@ -18,8 +29,10 @@ type SermonSummary = {
   publishedAt: string | null;
   rowVersion: number;
   updatedAt: string;
-  speakers: Relationship[];
+  speaker: Relationship | null;
   series: Relationship[];
+  historicalBackfillRequired: boolean;
+  readiness: Readiness;
 };
 type ScriptureReference = {
   id: string;
@@ -45,6 +58,27 @@ type SermonDetail = SermonSummary & {
   books: Relationship[];
   scriptureReferences: ScriptureReference[];
   media: ControlledMedia[];
+  transcript: {
+    bodyText: string;
+    status: "missing" | "draft" | "in_review" | "approved";
+    sourceKind: string;
+    sourceReference: string | null;
+    rowVersion: number;
+    reviewedAt: string | null;
+    approvedAt: string | null;
+  } | null;
+  questionAnswers: Array<{
+    id: string;
+    question: string;
+    answer: string;
+    displayOrder: number;
+    status: "draft" | "in_review" | "approved";
+    sourceKind: string;
+    sourceReference: string | null;
+    rowVersion: number;
+    reviewedAt: string | null;
+    approvedAt: string | null;
+  }>;
 };
 type Taxonomy = Relationship & {
   kind: "speakers" | "series" | "books";
@@ -56,6 +90,15 @@ type Taxonomy = Relationship & {
 type ListResponse = {
   data: SermonSummary[];
   countsByStatus: Record<SermonStatus, number>;
+  readinessProgress: {
+    total: number;
+    complete: number;
+    remaining: number;
+    withOneSpeaker: number;
+    withApprovedTranscript: number;
+    withRequiredQuestionAnswers: number;
+    withValidControlledMedia: number;
+  };
   pagination: { page: number; pageSize: number; totalItems: number; totalPages: number };
 };
 
@@ -73,6 +116,15 @@ const main = document.querySelector<HTMLElement>("#admin-main")!;
 const announcer = document.querySelector<HTMLElement>("#admin-announcer")!;
 const menuButton = document.querySelector<HTMLButtonElement>(".menu-button")!;
 let dirty = false;
+
+const stateDescriptions: Record<SermonStatus, string> = {
+  draft: "Work in progress; not public.",
+  pending: "Submitted for editorial review; not public.",
+  scheduled: "Complete and set to publish later; not public yet.",
+  published: "Visible on the public website.",
+  unpublished: "Previously published but currently hidden.",
+  archived: "Removed from active editing and public view."
+};
 
 function escapeHtml(value: unknown): string {
   return String(value ?? "")
@@ -179,27 +231,42 @@ function pageHeading(title: string, description: string, action = ""): string {
 }
 
 function sermonRows(sermons: SermonSummary[]): string {
-  if (!sermons.length) return `<tr><td colspan="6" class="empty-state">No sermons match these filters.</td></tr>`;
+  if (!sermons.length) return `<tr><td colspan="7" class="empty-state"><strong>No sermons match these filters.</strong><br />Try clearing a filter or choosing another content task.</td></tr>`;
   return sermons.map((sermon) => `<tr>
     <td><a href="/admin/sermons/${sermon.id}" data-route>${escapeHtml(sermon.title)}</a><div class="subtle">/${escapeHtml(sermon.slug)}/</div></td>
     <td><span class="status-pill ${escapeHtml(sermon.status)}">${escapeHtml(sermon.status)}</span></td>
     <td>${escapeHtml(humanDate(sermon.serviceDate))}</td>
-    <td>${escapeHtml(sermon.speakers.map((item) => item.name).join(", ") || "—")}</td>
+    <td>${escapeHtml(sermon.speaker?.name ?? "—")}</td>
     <td>${escapeHtml(sermon.series.map((item) => item.name).join(", ") || "—")}</td>
     <td>${sermon.scheduledFor ? `<strong>${escapeHtml(humanDate(sermon.scheduledFor))}</strong>` : "—"}</td>
+    <td><span class="status-pill ${sermon.readiness.isComplete ? "published" : "scheduled"}">${sermon.readiness.isComplete ? "Complete" : "Needs work"}</span></td>
   </tr>`).join("");
 }
 
 async function renderDashboard(): Promise<void> {
   const sermons = await api<ListResponse>("/api/v1/admin/sermons?page=1&pageSize=6");
   const statuses: SermonStatus[] = ["draft", "pending", "scheduled", "published", "unpublished", "archived"];
-  main.innerHTML = `${pageHeading("Dashboard", "A local overview of sermon publishing, scheduling, and editorial follow-up.", '<a class="button primary" href="/admin/sermons/new" data-route>Create sermon</a>')}
+  const progress = sermons.readinessProgress;
+  main.innerHTML = `${pageHeading("Dashboard", "Follow the guided checklist until each sermon is ready for review and publication.", '<a class="button primary" href="/admin/sermons/new" data-route>Create sermon</a>')}
+    <div class="callout"><strong>Local demonstration data only.</strong><p>These anonymised records test the workflow. The 453 real historical sermons have not yet received their reviewed transcripts and questions.</p></div>
+    <section class="panel progress-panel" aria-labelledby="enrichment-progress-heading">
+      <h2 id="enrichment-progress-heading">Historical content progress</h2>
+      <p><strong>${progress.complete} of ${progress.total} local records complete</strong> · ${progress.remaining} remaining</p>
+      <progress max="${Math.max(progress.total, 1)}" value="${progress.complete}">${progress.complete} of ${progress.total}</progress>
+      <div class="stats-grid compact">
+        <article class="stat-card"><span>One speaker</span><strong>${progress.withOneSpeaker}/${progress.total}</strong></article>
+        <article class="stat-card"><span>Approved transcript</span><strong>${progress.withApprovedTranscript}/${progress.total}</strong></article>
+        <article class="stat-card"><span>Approved questions</span><strong>${progress.withRequiredQuestionAnswers}/${progress.total}</strong></article>
+        <article class="stat-card"><span>Controlled media</span><strong>${progress.withValidControlledMedia}/${progress.total}</strong></article>
+      </div>
+      <div class="action-row"><a class="button" href="/admin/sermons?contentIssue=missing_speaker" data-route>Find missing speakers</a><a class="button" href="/admin/sermons?contentIssue=missing_transcript" data-route>Find missing transcripts</a><a class="button" href="/admin/sermons?contentIssue=insufficient_questions" data-route>Find missing questions</a></div>
+    </section>
     <section class="stats-grid" aria-label="Sermon counts by state">
       ${statuses.map((status) => `<article class="stat-card"><span>${escapeHtml(status)}</span><strong>${sermons.countsByStatus[status]}</strong></article>`).join("")}
     </section>
     <div class="grid-two">
-      <section class="panel"><h2>Recently updated</h2><div class="table-wrap"><table><thead><tr><th>Sermon</th><th>State</th><th>Service date</th><th>Speaker</th><th>Series</th><th>Scheduled</th></tr></thead><tbody>${sermonRows(sermons.data)}</tbody></table></div></section>
-      <aside class="panel"><h2>Editorial safeguards</h2><div class="callout"><strong>SEO non-regression is a launch gate.</strong><p>Published slugs retain their public paths. Changing a historic slug records a direct redirect. Permanent deletion requires an explicit redirect or gone decision.</p></div><p class="subtle">This dashboard is development-only, bound to loopback, and uses one deterministic local administrator. Public content does not depend on this interface.</p></aside>
+      <section class="panel"><h2>Recently updated</h2><div class="table-wrap"><table><thead><tr><th>Sermon</th><th>State</th><th>Service date</th><th>Speaker</th><th>Series</th><th>Scheduled</th><th>Checklist</th></tr></thead><tbody>${sermonRows(sermons.data)}</tbody></table></div></section>
+      <aside class="panel"><h2>What the states mean</h2><dl>${statuses.map((status) => `<dt><span class="status-pill ${status}">${status}</span></dt><dd>${escapeHtml(stateDescriptions[status])}</dd>`).join("")}</dl><div class="callout"><strong>SEO non-regression is a launch gate.</strong><p>Published slugs retain their paths. Unapproved transcripts and questions are never public.</p></div></aside>
     </div>`;
 }
 
@@ -239,9 +306,21 @@ async function renderSermonList(): Promise<void> {
         <label><span>Series</span><select name="seriesId">${filterOption(taxonomies.series, query.get("seriesId") ?? "", "All series")}</select></label>
         <label><span>Service date from</span><input name="serviceDateFrom" type="date" value="${escapeHtml(query.get("serviceDateFrom") ?? "")}" /></label>
         <label><span>Service date to</span><input name="serviceDateTo" type="date" value="${escapeHtml(query.get("serviceDateTo") ?? "")}" /></label>
+        <label><span>Content task</span><select name="contentIssue">
+          <option value="">All content</option>
+          ${[
+            ["complete", "Complete"],
+            ["missing_speaker", "Missing speaker"],
+            ["missing_transcript", "Missing transcript"],
+            ["transcript_awaiting_review", "Transcript awaiting review"],
+            ["insufficient_questions", "Needs 5–10 questions"],
+            ["questions_awaiting_review", "Questions awaiting review"],
+            ["missing_media", "Missing controlled media"]
+          ].map(([value, label]) => `<option value="${value}"${query.get("contentIssue") === value ? " selected" : ""}>${label}</option>`).join("")}
+        </select></label>
         <button class="button" type="submit">Apply filters</button>
       </form>
-      <div class="table-wrap"><table><caption class="sr-only">Filtered sermons</caption><thead><tr><th>Sermon</th><th>State</th><th>Service date</th><th>Speaker</th><th>Series</th><th>Scheduled</th></tr></thead><tbody>${sermonRows(sermons.data)}</tbody></table></div>
+      <div class="table-wrap"><table><caption class="sr-only">Filtered sermons</caption><thead><tr><th>Sermon</th><th>State</th><th>Service date</th><th>Speaker</th><th>Series</th><th>Scheduled</th><th>Checklist</th></tr></thead><tbody>${sermonRows(sermons.data)}</tbody></table></div>
       <div class="pagination"><span class="subtle">${sermons.pagination.totalItems} result${sermons.pagination.totalItems === 1 ? "" : "s"} · Page ${currentPage} of ${Math.max(sermons.pagination.totalPages, 1)}</span><div class="action-row">${currentPage > 1 ? `<a class="button" href="${pageQuery(currentPage - 1)}" data-route>Previous</a>` : ""}${currentPage < sermons.pagination.totalPages ? `<a class="button" href="${pageQuery(currentPage + 1)}" data-route>Next</a>` : ""}</div></div>
     </section>`;
   document.querySelector<HTMLFormElement>("#sermon-filters")?.addEventListener("submit", (event) => {
@@ -265,6 +344,44 @@ function selectedValues(select: HTMLSelectElement): string[] {
   return [...select.selectedOptions].map((option) => option.value);
 }
 
+type EditableQuestionAnswer = SermonDetail["questionAnswers"][number];
+
+function questionAnswerRow(item: Partial<EditableQuestionAnswer>, index: number): string {
+  const status = item.status ?? "draft";
+  return `<article class="qa-editor" data-qa-row data-source-kind="${escapeHtml(item.sourceKind ?? "manual")}" data-source-reference="${escapeHtml(item.sourceReference ?? "")}">
+    <div class="qa-editor-heading"><h3>Question <span data-qa-number>${index + 1}</span></h3><button class="button quiet" type="button" data-remove-qa>Remove</button></div>
+    <label><span>Thought-provoking question</span><textarea data-qa-question maxlength="1000" required>${escapeHtml(item.question ?? "")}</textarea><small class="field-hint">Ground this in the sermon transcript and scripture context.</small></label>
+    <label><span>Reviewed answer</span><textarea data-qa-answer maxlength="10000" required>${escapeHtml(item.answer ?? "")}</textarea></label>
+    <label><span>Review status</span><select data-qa-status><option value="draft"${status === "draft" ? " selected" : ""}>Draft — not public</option><option value="in_review"${status === "in_review" ? " selected" : ""}>Ready for human review</option><option value="approved"${status === "approved" ? " selected" : ""}>Approved for public page</option></select></label>
+  </article>`;
+}
+
+function readinessChecklist(readiness: Readiness | null): string {
+  const items = [
+    ["One speaker selected", readiness?.hasOneSpeaker ?? false],
+    ["Complete transcript approved", readiness?.hasApprovedTranscript ?? false],
+    ["5–10 questions and answers approved", readiness?.hasRequiredQuestionAnswers ?? false],
+    ["Controlled sermon media valid", readiness?.hasValidControlledMedia ?? false]
+  ] as const;
+  return `<ul class="checklist">${items.map(([label, complete]) => `<li class="${complete ? "complete" : "incomplete"}"><span aria-hidden="true">${complete ? "✓" : "○"}</span><span>${escapeHtml(label)}</span></li>`).join("")}</ul>`;
+}
+
+function collectQuestionAnswers(): Array<{
+  question: string;
+  answer: string;
+  status: "draft" | "in_review" | "approved";
+  sourceKind: "manual" | "imported" | "generated_draft";
+  sourceReference: string | null;
+}> {
+  return [...document.querySelectorAll<HTMLElement>("[data-qa-row]")].map((row) => ({
+    question: row.querySelector<HTMLTextAreaElement>("[data-qa-question]")!.value.trim(),
+    answer: row.querySelector<HTMLTextAreaElement>("[data-qa-answer]")!.value.trim(),
+    status: row.querySelector<HTMLSelectElement>("[data-qa-status]")!.value as "draft" | "in_review" | "approved",
+    sourceKind: (row.dataset.sourceKind ?? "manual") as "manual" | "imported" | "generated_draft",
+    sourceReference: row.dataset.sourceReference || null
+  }));
+}
+
 async function renderSermonForm(id?: string): Promise<void> {
   const [taxonomies, detail] = await Promise.all([
     loadTaxonomies(),
@@ -280,32 +397,49 @@ async function renderSermonForm(id?: string): Promise<void> {
     <div id="form-feedback"></div>
     <form id="sermon-form" class="stack" novalidate>
       <section class="panel form-grid">
+        <div class="wide step-heading"><span>Step 1 of 6</span><h2>1. Sermon basics</h2><p>Start with the title, stable public address, service date and summary.</p></div>
         <label><span>Title</span><input id="sermon-title" name="title" required maxlength="240" value="${escapeHtml(detail?.title ?? "")}" /></label>
         <label><span>Slug</span><input id="sermon-slug" name="slug" required maxlength="200" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" value="${escapeHtml(detail?.slug ?? "")}" /><small class="field-hint">Lowercase letters, numbers, and hyphens. Historic changes create a redirect.</small></label>
         <label><span>Service date</span><input name="serviceDate" type="date" required value="${escapeHtml(detail?.serviceDate ?? new Date().toISOString().slice(0, 10))}" /></label>
         <label><span>Schedule time</span><input id="scheduled-for" type="datetime-local" value="${detail?.scheduledFor ? escapeHtml(detail.scheduledFor.slice(0, 16)) : ""}" /><small class="field-hint">Used only by the Schedule action and must be in the future.</small></label>
         <label class="wide"><span>Summary</span><textarea name="summary" maxlength="2000">${escapeHtml(detail?.summary ?? "")}</textarea></label>
-        <label class="wide"><span>Body</span><textarea name="body" maxlength="200000" rows="12">${escapeHtml(detail?.body ?? "")}</textarea></label>
+        <label class="wide"><span>Short sermon notes</span><textarea name="body" maxlength="200000" rows="7">${escapeHtml(detail?.body ?? "")}</textarea><small class="field-hint">Use the full transcript step below for the complete spoken message.</small></label>
       </section>
       <section class="panel form-grid">
-        <fieldset><legend>Speakers</legend><select name="speakerIds" multiple aria-describedby="speaker-help">${selectOptions(taxonomies.speakers, new Set(detail?.speakers.map((item) => item.id) ?? []))}</select><small id="speaker-help" class="field-hint">Use Ctrl or Command to choose multiple speakers.</small></fieldset>
+        <div class="wide step-heading"><span>Step 2 of 6</span><h2>2. Speaker and scripture</h2><p>Every complete sermon has one speaker. Series may still contain more than one relationship.</p></div>
+        <label><span>Speaker</span><select name="speakerId" aria-describedby="speaker-help"><option value="">Choose one speaker</option>${selectOptions(taxonomies.speakers, new Set(detail?.speaker ? [detail.speaker.id] : []))}</select><small id="speaker-help" class="field-hint">A draft may be saved without a speaker, but it cannot be scheduled or published.</small></label>
         <fieldset><legend>Series</legend><select name="seriesIds" multiple>${selectOptions(taxonomies.series, new Set(detail?.series.map((item) => item.id) ?? []))}</select></fieldset>
         <fieldset><legend>Books</legend><select name="bookClassificationIds" multiple>${selectOptions(taxonomies.books, new Set(detail?.books.map((item) => item.id) ?? []))}</select></fieldset>
         <label><span>Scripture references</span><textarea name="scriptureReferences" placeholder="One display reference per line">${escapeHtml(detail?.scriptureReferences.map((item) => item.displayText).join("\n") ?? "")}</textarea><small class="field-hint">Each edited line is stored as a curated reference. Imported source provenance remains separate and is never exposed here.</small></label>
       </section>
       <section class="panel form-grid">
+        <div class="wide step-heading"><span>Step 3 of 6</span><h2>3. Media</h2><p>Add controlled provider URLs. Raw embed or iframe code is never accepted.</p></div>
         <fieldset><legend>YouTube video</legend><div class="stack"><label><span>Canonical URL</span><input name="youtubeUrl" type="url" value="${escapeHtml(youtube?.canonicalUrl ?? "")}" placeholder="https://www.youtube.com/watch?v=…" /></label><label><span>Accessible title</span><input name="youtubeTitle" value="${escapeHtml(youtube?.title ?? "Sermon video")}" maxlength="500" /></label></div></fieldset>
         <fieldset><legend>SermonAudio audio</legend><div class="stack"><label><span>Canonical URL</span><input name="sermonAudioUrl" type="url" value="${escapeHtml(sermonAudio?.canonicalUrl ?? "")}" placeholder="https://www.sermonaudio.com/…" /></label><label><span>Accessible title</span><input name="sermonAudioTitle" value="${escapeHtml(sermonAudio?.title ?? "Sermon audio")}" maxlength="500" /></label></div></fieldset>
         <div class="wide callout">Raw iframe or embed HTML is never accepted. The application validates controlled provider URLs and generates any future embed markup itself.</div>
       </section>
+      <section class="panel form-grid">
+        <div class="wide step-heading"><span>Step 4 of 6</span><h2>4. Full transcript</h2><p>Add the complete plain-text transcript, then move it through human review. Only approved text can appear publicly.</p></div>
+        <label class="wide"><span>Complete transcript</span><textarea name="transcriptBody" maxlength="500000" rows="20" placeholder="Paste or type the complete spoken sermon in plain text">${escapeHtml(detail?.transcript?.bodyText ?? "")}</textarea><small class="field-hint">HTML tags are rejected. Paragraph breaks are preserved when the approved transcript is rendered.</small></label>
+        <label><span>Transcript status</span><select name="transcriptStatus"><option value="missing"${!detail?.transcript || detail.transcript.status === "missing" ? " selected" : ""}>Missing</option><option value="draft"${detail?.transcript?.status === "draft" ? " selected" : ""}>Draft — not public</option><option value="in_review"${detail?.transcript?.status === "in_review" ? " selected" : ""}>Ready for human review</option><option value="approved"${detail?.transcript?.status === "approved" ? " selected" : ""}>Approved for public page</option></select></label>
+        <div class="callout"><strong>Public behaviour</strong><p>An approved transcript is already present in the initial server-generated sermon page. It is visually collapsed under “Read full transcript”, but never loaded later by JavaScript.</p></div>
+      </section>
       <section class="panel">
-        <h2>Search preview</h2>
+        <div class="step-heading"><span>Step 5 of 6</span><h2>5. Questions and answers</h2><p>Add 5–10 thoughtful, transcript-grounded questions with complete answers. Generated drafts remain private until an administrator approves them.</p></div>
+        <div id="qa-editors" class="stack">${detail?.questionAnswers.length ? detail.questionAnswers.map(questionAnswerRow).join("") : '<div class="empty-state" id="qa-empty"><strong>No questions yet.</strong><p>Add the first question when a transcript draft is available.</p></div>'}</div>
+        <div class="action-row"><button class="button" type="button" id="add-question">Add question and answer</button><span class="subtle" id="qa-count">${detail?.questionAnswers.length ?? 0} of 5–10 required</span></div>
+      </section>
+      <section class="panel">
+        <div class="step-heading"><span>Step 6 of 6</span><h2>6. Review and publish</h2><p>Resolve every checklist item before scheduling or publishing. Saving a draft remains available at any time.</p></div>
+        ${detail?.historicalBackfillRequired ? '<div class="callout"><strong>Historical backfill required.</strong><p>This imported record preserves its original WordPress state, but launch remains blocked until its transcript and questions are approved.</p></div>' : ""}
+        <h3>Completion checklist</h3>${readinessChecklist(detail?.readiness ?? null)}
+        <h3>Search preview</h3>
         <div class="seo-preview"><strong id="seo-title-preview">${escapeHtml(detail?.title ?? "Untitled sermon")}</strong><code id="seo-url-preview">${escapeHtml(expectedPublicSermonUrl(detail?.slug ?? "new-sermon"))}</code><p class="subtle">The current schema has no arbitrary SEO metadata store. Explicit allowlisted SEO fields remain a future ordered migration and contract decision.</p></div>
         <div id="slug-warning"></div>
       </section>
       <div class="form-actions"><button class="button primary" type="submit">${detail ? "Save changes" : "Create draft"}</button><span class="subtle" id="dirty-state">No unsaved changes</span></div>
     </form>
-    ${detail ? `<section class="panel" id="editorial-actions"><h2>Editorial actions</h2><p>Current state: <span class="status-pill ${detail.status}">${detail.status}</span></p><div class="action-row">${allowedDashboardActions(detail.status).map((action) => `<button class="button${action === "archive" ? " danger" : ""}" type="button" data-transition="${action}">${action[0]!.toUpperCase()}${action.slice(1)}</button>`).join("")}</div>${detail.status === "archived" ? '<hr /><button class="button danger" id="open-delete" type="button">Permanently delete…</button>' : ""}</section><section class="panel" id="sermon-audit"><h2>Audit history</h2><div class="subtle">Loading audit events…</div></section>` : ""}
+    ${detail ? `<section class="panel" id="editorial-actions"><h2>Review and publishing actions</h2><p><strong>Current state:</strong> <span class="status-pill ${detail.status}">${detail.status}</span> — ${escapeHtml(stateDescriptions[detail.status])}</p>${detail.readiness.isComplete ? '<p class="feedback">The content checklist is complete. Schedule and publish actions are available when valid for this state.</p>' : `<div class="callout"><strong>Not ready to schedule or publish.</strong><p>${escapeHtml(detail.readiness.issues.map((issue) => issue.message).join(" "))}</p></div>`}<div class="action-row">${allowedDashboardActions(detail.status).map((action) => `<button class="button${action === "archive" ? " danger" : action === "publish" || action === "schedule" ? " primary" : ""}" type="button" data-transition="${action}">${action[0]!.toUpperCase()}${action.slice(1)}</button>`).join("")}</div>${detail.status === "archived" ? '<hr /><button class="button danger" id="open-delete" type="button">Permanently delete…</button>' : ""}</section><section class="panel" id="sermon-audit"><h2>Audit history</h2><div class="subtle">Loading audit events…</div></section>` : ""}
     ${detail?.status === "archived" ? deletionDialog(detail) : ""}`;
 
   const form = document.querySelector<HTMLFormElement>("#sermon-form")!;
@@ -323,6 +457,40 @@ async function renderSermonForm(id?: string): Promise<void> {
   titleInput.addEventListener("input", () => { if (!slugManuallyEdited) slugInput.value = slugify(titleInput.value); updatePreview(); });
   slugInput.addEventListener("input", () => { slugManuallyEdited = true; updatePreview(); });
   updatePreview();
+
+  const qaEditors = document.querySelector<HTMLElement>("#qa-editors")!;
+  const qaCount = document.querySelector<HTMLElement>("#qa-count")!;
+  const refreshQuestionEditors = () => {
+    const rows = [...qaEditors.querySelectorAll<HTMLElement>("[data-qa-row]")];
+    rows.forEach((row, index) => {
+      row.querySelector<HTMLElement>("[data-qa-number]")!.textContent = String(index + 1);
+    });
+    qaCount.textContent = `${rows.length} of 5–10 required`;
+    document.querySelector<HTMLButtonElement>("#add-question")!.disabled = rows.length >= 10;
+    if (!rows.length && !document.querySelector("#qa-empty")) {
+      qaEditors.innerHTML = '<div class="empty-state" id="qa-empty"><strong>No questions yet.</strong><p>Add the first question when a transcript draft is available.</p></div>';
+    }
+  };
+  const wireQuestionRow = (row: HTMLElement) => {
+    row.querySelector<HTMLButtonElement>("[data-remove-qa]")!.addEventListener("click", () => {
+      row.remove();
+      dirty = true;
+      dirtyState.textContent = "Unsaved changes";
+      refreshQuestionEditors();
+    });
+  };
+  qaEditors.querySelectorAll<HTMLElement>("[data-qa-row]").forEach(wireQuestionRow);
+  document.querySelector<HTMLButtonElement>("#add-question")!.addEventListener("click", () => {
+    const current = qaEditors.querySelectorAll("[data-qa-row]").length;
+    if (current >= 10) return;
+    document.querySelector("#qa-empty")?.remove();
+    qaEditors.insertAdjacentHTML("beforeend", questionAnswerRow({}, current));
+    wireQuestionRow(qaEditors.querySelector<HTMLElement>("[data-qa-row]:last-child")!);
+    dirty = true;
+    dirtyState.textContent = "Unsaved changes";
+    refreshQuestionEditors();
+  });
+  refreshQuestionEditors();
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -342,11 +510,18 @@ async function renderSermonForm(id?: string): Promise<void> {
       serviceDate: String(data.get("serviceDate")),
       summary: String(data.get("summary") ?? "").trim() || null,
       body: String(data.get("body") ?? "").trim() || null,
-      speakerIds: selectedValues(form.elements.namedItem("speakerIds") as HTMLSelectElement),
+      speakerId: String(data.get("speakerId") ?? "") || null,
       seriesIds: selectedValues(form.elements.namedItem("seriesIds") as HTMLSelectElement),
       bookClassificationIds: selectedValues(form.elements.namedItem("bookClassificationIds") as HTMLSelectElement),
       scriptureReferences: String(data.get("scriptureReferences") ?? "").split(/\r?\n/).map((line) => line.trim()).filter(Boolean).map((displayText) => ({ displayText })),
-      media
+      media,
+      transcript: {
+        bodyText: String(data.get("transcriptBody") ?? ""),
+        status: String(data.get("transcriptStatus") ?? "missing"),
+        sourceKind: detail?.transcript?.sourceKind ?? "manual",
+        sourceReference: detail?.transcript?.sourceReference ?? null
+      },
+      questionAnswers: collectQuestionAnswers()
     };
     try {
       feedbackTarget.innerHTML = feedback("Saving…");

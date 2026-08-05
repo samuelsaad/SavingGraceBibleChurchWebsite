@@ -34,9 +34,8 @@ function buildPublishedConditions(input: PublicSermonListQuery): PublishedCondit
   if (input.speaker) {
     const speaker = parameter(input.speaker);
     conditions.push(`EXISTS (
-      SELECT 1 FROM sermon_speakers ss_filter
-      JOIN speakers sp_filter ON sp_filter.id = ss_filter.speaker_id
-      WHERE ss_filter.sermon_id = s.id AND lower(sp_filter.slug) = lower(${speaker})
+      SELECT 1 FROM speakers sp_filter
+      WHERE sp_filter.id = s.speaker_id AND lower(sp_filter.slug) = lower(${speaker})
     )`);
   }
   if (input.series) {
@@ -72,15 +71,11 @@ function buildPublishedConditions(input: PublicSermonListQuery): PublishedCondit
 }
 
 const publicRelationshipProjection = `
-  COALESCE((
-    SELECT jsonb_agg(
-      jsonb_build_object('name', sp.name, 'slug', sp.slug)
-      ORDER BY ss.display_order, sp.id
-    )
-    FROM sermon_speakers ss
-    JOIN speakers sp ON sp.id = ss.speaker_id
-    WHERE ss.sermon_id = s.id
-  ), '[]'::jsonb) AS speakers,
+  (
+    SELECT jsonb_build_object('name', sp.name, 'slug', sp.slug)
+    FROM speakers sp
+    WHERE sp.id = s.speaker_id
+  ) AS speaker,
   COALESCE((
     SELECT jsonb_agg(
       jsonb_build_object('name', sr.name, 'slug', sr.slug)
@@ -184,7 +179,21 @@ export function buildPublishedSermonDetailQuery(slug: string): ParameterizedQuer
                  AND media.provider IN ('youtube', 'sermonaudio')
                  AND media.canonical_url IS NOT NULL
                  AND media.title IS NOT NULL
-             ), '[]'::jsonb) AS media
+             ), '[]'::jsonb) AS media,
+             (
+               SELECT jsonb_build_object('bodyText', transcript.body_text)
+               FROM sermon_transcripts transcript
+               WHERE transcript.sermon_id = s.id AND transcript.status = 'approved'
+             ) AS transcript,
+             COALESCE((
+               SELECT jsonb_agg(jsonb_build_object(
+                 'question', qa.question_text,
+                 'answer', qa.answer_text,
+                 'displayOrder', qa.display_order
+               ) ORDER BY qa.display_order, qa.id)
+               FROM sermon_question_answers qa
+               WHERE qa.sermon_id = s.id AND qa.status = 'approved'
+             ), '[]'::jsonb) AS question_answers
       FROM sermons s
       WHERE s.status = 'published'
         AND s.deleted_at IS NULL

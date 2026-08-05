@@ -25,7 +25,7 @@ import {
   assertMayViewAudit,
   type ApplicationIdentity
 } from "./authorization";
-import { conflict, invalid, notFound } from "./errors";
+import { conflict, invalid, invalidMany, notFound } from "./errors";
 import { isFutureSchedule, transitionSermonStatus } from "./sermon-lifecycle";
 import type {
   AdminSermonRepository,
@@ -47,8 +47,10 @@ function sermonSummaryDto(sermon: StoredSermonSummary) {
     publishedAt: sermon.publishedAt,
     rowVersion: sermon.rowVersion,
     updatedAt: sermon.updatedAt,
-    speakers: sermon.speakers,
-    series: sermon.series
+    speaker: sermon.speaker,
+    series: sermon.series,
+    historicalBackfillRequired: sermon.historicalBackfillRequired,
+    readiness: sermon.readiness
   };
 }
 
@@ -57,11 +59,13 @@ function sermonDetailDto(sermon: StoredSermonDetail): AdminSermonDetail {
     ...sermonSummaryDto(sermon),
     summary: sermon.summary,
     body: sermon.body,
-    speakers: sermon.speakers,
+    speaker: sermon.speaker,
     series: sermon.series,
     books: sermon.books,
     scriptureReferences: sermon.scriptureReferences,
-    media: sermon.media
+    media: sermon.media,
+    transcript: sermon.transcript,
+    questionAnswers: sermon.questionAnswers
   });
 }
 
@@ -115,6 +119,7 @@ export class AdminSermonService {
     return adminSermonListResponseSchema.parse({
       data: page.data.map(sermonSummaryDto),
       countsByStatus: page.countsByStatus,
+      readinessProgress: page.readinessProgress,
       pagination: {
         page: query.page,
         pageSize: query.pageSize,
@@ -142,7 +147,7 @@ export class AdminSermonService {
       const invalidRelationship = await transaction.validateRelationshipIds(input);
       if (invalidRelationship) invalid(invalidRelationship, "One or more relationship IDs do not exist");
       const id = await transaction.insertSermon(input, identity.subject);
-      await transaction.replaceRelationships(id, input);
+      await transaction.replaceRelationships(id, input, identity.subject);
       await transaction.refreshSearchTerms(id);
       await transaction.appendAudit(
         successfulAudit(
@@ -156,11 +161,13 @@ export class AdminSermonService {
             "serviceDate",
             "summary",
             "body",
-            "speakerIds",
+            "speakerId",
             "seriesIds",
             "bookClassificationIds",
             "scriptureReferences",
-            "media"
+            "media",
+            "transcript",
+            "questionAnswers"
           ],
           requestCorrelationId
         )
@@ -186,7 +193,7 @@ export class AdminSermonService {
       const invalidRelationship = await transaction.validateRelationshipIds(input);
       if (invalidRelationship) invalid(invalidRelationship, "One or more relationship IDs do not exist");
       await transaction.updateSermon(id, input, identity.subject);
-      await transaction.replaceRelationships(id, input);
+      await transaction.replaceRelationships(id, input, identity.subject);
       await transaction.refreshSearchTerms(id);
       if (input.slug !== undefined && input.slug !== sermon.slug && sermon.publishedAt !== null) {
         await transaction.recordSlugRedirect(id, sermon.slug, input.slug);
@@ -231,6 +238,12 @@ export class AdminSermonService {
       assertMayTransitionSermon(identity, sermon, action);
       const nextStatus = transitionSermonStatus(sermon.status, action);
       if (!nextStatus) invalid("action", `Cannot ${action} a sermon in ${sermon.status} state`);
+      if ((action === "schedule" || action === "publish") && !sermon.readiness.isComplete) {
+        invalidMany(
+          "Complete the sermon checklist before scheduling or publishing",
+          sermon.readiness.issues.map((issue) => ({ path: issue.path, message: issue.message }))
+        );
+      }
 
       const scheduledFor = action === "schedule" ? input.scheduledFor! : null;
       const publishedAt =

@@ -9,12 +9,14 @@ const row = {
   service_date: "2026-08-02",
   summary: null,
   body: null,
-  speakers: [{ name: "Example Speaker", slug: "example-speaker" }],
+  speaker: { name: "Example Speaker", slug: "example-speaker" },
   series: [],
   scripture_references: [{ displayText: "Romans 8:1", parseStatus: "exact" }],
   books: [{ name: "Romans", slug: "romans" }],
   primary_media: null,
   media: [],
+  transcript: { bodyText: "Approved transcript" },
+  question_answers: [{ question: "Why?", answer: "Grace.", displayOrder: 1 }],
   total_items: 1
 };
 
@@ -52,6 +54,7 @@ describe("PostgreSQL sermon repository", () => {
     const result = await repository.findPublishedBySlug("an-anonymised-sermon");
 
     expect(result?.media).toEqual([]);
+    expect(result?.transcript?.bodyText).toBe("Approved transcript");
     expect(calls[0]?.text).toContain("s.status = 'published'");
     expect(calls[0]?.values).toEqual(["an-anonymised-sermon"]);
   });

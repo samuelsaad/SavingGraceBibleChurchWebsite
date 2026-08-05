@@ -7,6 +7,7 @@ import type {
   UpdateSermonInput
 } from "../../api/contracts/admin-sermons";
 import { ApplicationError } from "../../application/errors";
+import type { ContentReadinessIssue, ContentReadinessResult } from "../../domain/content-readiness";
 import type { SermonStatus } from "../../domain/sermon";
 import type {
   AdminSermonRepository,
@@ -35,11 +36,24 @@ type SermonRow = QueryResultRow & {
   updated_at: string;
   summary?: string | null;
   body?: string | null;
-  speakers: StoredSermonDetail["speakers"];
+  speaker: StoredSermonDetail["speaker"];
   series: StoredSermonDetail["series"];
+  historical_backfill_required: boolean;
+  readiness: {
+    isComplete: boolean;
+    hasOneSpeaker: boolean;
+    hasApprovedTranscript: boolean;
+    approvedQuestionCount: number;
+    totalQuestionCount: number;
+    allQuestionsApproved: boolean;
+    hasValidControlledMedia: boolean;
+    transcriptStatus: "missing" | "draft" | "in_review" | "approved" | null;
+  };
   books?: StoredSermonDetail["books"];
   scripture_references?: StoredSermonDetail["scriptureReferences"];
   media?: StoredSermonDetail["media"];
+  transcript?: StoredSermonDetail["transcript"];
+  question_answers?: StoredSermonDetail["questionAnswers"];
 };
 
 const timestamp = (column: string): string =>
@@ -55,20 +69,36 @@ const sermonSummaryProjection = `
   CASE WHEN s.published_at IS NULL THEN NULL ELSE ${timestamp("s.published_at")} END AS published_at,
   s.row_version,
   ${timestamp("s.updated_at")} AS updated_at,
-  COALESCE((
-    SELECT jsonb_agg(jsonb_build_object('id', sp.id, 'name', sp.name, 'slug', sp.slug)
-      ORDER BY ss.display_order, sp.id)
-    FROM sermon_speakers ss
-    JOIN speakers sp ON sp.id = ss.speaker_id
-    WHERE ss.sermon_id = s.id
-  ), '[]'::jsonb) AS speakers,
+  (
+    SELECT jsonb_build_object('id', sp.id, 'name', sp.name, 'slug', sp.slug)
+    FROM speakers sp
+    WHERE sp.id = s.speaker_id
+  ) AS speaker,
   COALESCE((
     SELECT jsonb_agg(jsonb_build_object('id', sr.id, 'name', sr.name, 'slug', sr.slug)
       ORDER BY sm.display_order, sr.id)
     FROM sermon_series_map sm
     JOIN series sr ON sr.id = sm.series_id
     WHERE sm.sermon_id = s.id
-  ), '[]'::jsonb) AS series`;
+  ), '[]'::jsonb) AS series,
+  s.historical_backfill_required,
+  (
+    SELECT jsonb_build_object(
+      'isComplete', readiness.is_complete,
+      'hasOneSpeaker', readiness.has_one_speaker,
+      'hasApprovedTranscript', readiness.has_approved_transcript,
+      'approvedQuestionCount', readiness.approved_question_count,
+      'totalQuestionCount', readiness.total_question_count,
+      'allQuestionsApproved', readiness.all_questions_approved,
+      'hasValidControlledMedia', readiness.has_valid_controlled_media,
+      'transcriptStatus', (
+        SELECT transcript.status FROM sermon_transcripts transcript
+        WHERE transcript.sermon_id = s.id
+      )
+    )
+    FROM sermon_content_readiness readiness
+    WHERE readiness.sermon_id = s.id
+  ) AS readiness`;
 
 const sermonDetailProjection = `${sermonSummaryProjection},
   s.summary,
@@ -108,7 +138,77 @@ const sermonDetailProjection = `${sermonSummaryProjection},
       AND media.provider IN ('youtube', 'sermonaudio')
       AND media.canonical_url IS NOT NULL
       AND media.title IS NOT NULL
-  ), '[]'::jsonb) AS media`;
+  ), '[]'::jsonb) AS media,
+  (
+    SELECT jsonb_build_object(
+      'bodyText', transcript.body_text,
+      'status', transcript.status,
+      'sourceKind', transcript.source_kind,
+      'sourceReference', transcript.source_reference,
+      'rowVersion', transcript.row_version,
+      'reviewedAt', CASE WHEN transcript.reviewed_at IS NULL THEN NULL ELSE ${timestamp("transcript.reviewed_at")} END,
+      'approvedAt', CASE WHEN transcript.approved_at IS NULL THEN NULL ELSE ${timestamp("transcript.approved_at")} END
+    )
+    FROM sermon_transcripts transcript
+    WHERE transcript.sermon_id = s.id
+  ) AS transcript,
+  COALESCE((
+    SELECT jsonb_agg(jsonb_build_object(
+      'id', qa.id,
+      'question', qa.question_text,
+      'answer', qa.answer_text,
+      'displayOrder', qa.display_order,
+      'status', qa.status,
+      'sourceKind', qa.source_kind,
+      'sourceReference', qa.source_reference,
+      'rowVersion', qa.row_version,
+      'reviewedAt', CASE WHEN qa.reviewed_at IS NULL THEN NULL ELSE ${timestamp("qa.reviewed_at")} END,
+      'approvedAt', CASE WHEN qa.approved_at IS NULL THEN NULL ELSE ${timestamp("qa.approved_at")} END
+    ) ORDER BY qa.display_order, qa.id)
+    FROM sermon_question_answers qa
+    WHERE qa.sermon_id = s.id
+  ), '[]'::jsonb) AS question_answers`;
+
+function readinessFromRow(row: SermonRow): ContentReadinessResult {
+  const value = row.readiness;
+  const issues: ContentReadinessIssue[] = [];
+  if (!value.hasOneSpeaker) {
+    issues.push({ path: "speakerId", code: "missing_speaker", message: "Choose one speaker before scheduling or publishing." });
+  }
+  if (!value.hasApprovedTranscript) {
+    const status = row.transcript?.status ?? value.transcriptStatus;
+    issues.push({
+      path: status && status !== "missing" ? "transcript.status" : "transcript.bodyText",
+      code: status && status !== "missing" ? "transcript_awaiting_review" : "missing_transcript",
+      message: status && status !== "missing"
+        ? "The full transcript must be reviewed and approved."
+        : "Add the complete transcript."
+    });
+  }
+  const hasRequiredQuestionAnswers =
+    value.totalQuestionCount >= 5 &&
+    value.totalQuestionCount <= 10 &&
+    value.allQuestionsApproved;
+  if (value.totalQuestionCount < 5 || value.totalQuestionCount > 10) {
+    issues.push({ path: "questionAnswers", code: "insufficient_questions", message: "Add between 5 and 10 complete questions with answers." });
+  } else if (!value.allQuestionsApproved) {
+    issues.push({ path: "questionAnswers", code: "questions_awaiting_review", message: "Every question and answer must be reviewed and approved." });
+  }
+  if (!value.hasValidControlledMedia) {
+    issues.push({ path: "media", code: "missing_media", message: "Add at least one valid controlled YouTube or SermonAudio item." });
+  }
+  return {
+    isComplete: value.isComplete,
+    hasOneSpeaker: value.hasOneSpeaker,
+    hasApprovedTranscript: value.hasApprovedTranscript,
+    approvedQuestionCount: value.approvedQuestionCount,
+    totalQuestionCount: value.totalQuestionCount,
+    hasRequiredQuestionAnswers,
+    allQuestionsApproved: value.allQuestionsApproved,
+    hasValidControlledMedia: value.hasValidControlledMedia,
+    issues
+  };
+}
 
 function summaryFromRow(row: SermonRow): StoredSermonSummary {
   return {
@@ -121,8 +221,10 @@ function summaryFromRow(row: SermonRow): StoredSermonSummary {
     publishedAt: row.published_at,
     rowVersion: row.row_version,
     updatedAt: row.updated_at,
-    speakers: row.speakers ?? [],
-    series: row.series ?? []
+    speaker: row.speaker ?? null,
+    series: row.series ?? [],
+    historicalBackfillRequired: row.historical_backfill_required,
+    readiness: readinessFromRow(row)
   };
 }
 
@@ -133,7 +235,9 @@ function detailFromRow(row: SermonRow): StoredSermonDetail {
     body: row.body ?? null,
     books: row.books ?? [],
     scriptureReferences: row.scripture_references ?? [],
-    media: row.media ?? []
+    media: row.media ?? [],
+    transcript: row.transcript ?? null,
+    questionAnswers: row.question_answers ?? []
   };
 }
 
@@ -199,10 +303,10 @@ class PostgresAdminSermonTransaction implements AdminSermonTransaction {
     const result = await this.client.query<{ id: string }>(
       `INSERT INTO sermons (
          title, slug, summary, body, status, service_date,
-         created_by_subject, updated_by_subject
-       ) VALUES ($1, $2, $3, $4, 'draft', $5::date, $6, $6)
+         speaker_id, created_by_subject, updated_by_subject
+       ) VALUES ($1, $2, $3, $4, 'draft', $5::date, $6, $7, $7)
        RETURNING id`,
-      [input.title, input.slug, input.summary, input.body, input.serviceDate, actorSubject]
+      [input.title, input.slug, input.summary, input.body, input.serviceDate, input.speakerId, actorSubject]
     );
     return result.rows[0]!.id;
   }
@@ -213,7 +317,8 @@ class PostgresAdminSermonTransaction implements AdminSermonTransaction {
       ["slug", "slug"],
       ["serviceDate", "service_date", "::date"],
       ["summary", "summary"],
-      ["body", "body"]
+      ["body", "body"],
+      ["speakerId", "speaker_id"]
     ];
     const values: unknown[] = [];
     const sets: string[] = [];
@@ -382,12 +487,18 @@ class PostgresAdminSermonTransaction implements AdminSermonTransaction {
   }
 
   async validateRelationshipIds(input: {
-    speakerIds?: string[] | undefined;
+    speakerId?: string | null | undefined;
     seriesIds?: string[] | undefined;
     bookClassificationIds?: string[] | undefined;
   }): Promise<string | null> {
+    if (input.speakerId) {
+      const speaker = await this.client.query<{ present: boolean }>(
+        "SELECT EXISTS (SELECT 1 FROM speakers WHERE id = $1) AS present",
+        [input.speakerId]
+      );
+      if (!speaker.rows[0]!.present) return "speakerId";
+    }
     const dimensions = [
-      ["speakerIds", "speakers"],
       ["seriesIds", "series"],
       ["bookClassificationIds", "book_classifications"]
     ] as const;
@@ -406,23 +517,16 @@ class PostgresAdminSermonTransaction implements AdminSermonTransaction {
   async replaceRelationships(
     id: string,
     input: {
-      speakerIds?: CreateSermonInput["speakerIds"] | undefined;
+      speakerId?: CreateSermonInput["speakerId"] | undefined;
       seriesIds?: CreateSermonInput["seriesIds"] | undefined;
       bookClassificationIds?: CreateSermonInput["bookClassificationIds"] | undefined;
       scriptureReferences?: CreateSermonInput["scriptureReferences"] | undefined;
       media?: CreateSermonInput["media"] | undefined;
-    }
+      transcript?: CreateSermonInput["transcript"] | undefined;
+      questionAnswers?: CreateSermonInput["questionAnswers"] | undefined;
+    },
+    actorSubject: string
   ): Promise<void> {
-    if (input.speakerIds !== undefined) {
-      await this.client.query("DELETE FROM sermon_speakers WHERE sermon_id = $1", [id]);
-      for (const [order, speakerId] of input.speakerIds.entries()) {
-        await this.client.query(
-          `INSERT INTO sermon_speakers (sermon_id, speaker_id, display_order, is_primary)
-           VALUES ($1, $2, $3, $4)`,
-          [id, speakerId, order, order === 0]
-        );
-      }
-    }
     if (input.seriesIds !== undefined) {
       await this.client.query("DELETE FROM sermon_series_map WHERE sermon_id = $1", [id]);
       for (const [order, seriesId] of input.seriesIds.entries()) {
@@ -493,14 +597,86 @@ class PostgresAdminSermonTransaction implements AdminSermonTransaction {
         );
       }
     }
+    if (input.transcript !== undefined) {
+      const reviewed = input.transcript.status === "in_review" || input.transcript.status === "approved";
+      const approved = input.transcript.status === "approved";
+      await this.client.query(
+        `INSERT INTO sermon_transcripts (
+           sermon_id, body_text, status, source_kind, source_reference,
+           reviewed_by_subject, approved_by_subject, reviewed_at, approved_at
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+         ON CONFLICT (sermon_id) DO UPDATE SET
+           body_text = EXCLUDED.body_text,
+           status = EXCLUDED.status,
+           source_kind = EXCLUDED.source_kind,
+           source_reference = EXCLUDED.source_reference,
+           reviewed_by_subject = EXCLUDED.reviewed_by_subject,
+           approved_by_subject = EXCLUDED.approved_by_subject,
+           reviewed_at = EXCLUDED.reviewed_at,
+           approved_at = EXCLUDED.approved_at,
+           updated_at = now(),
+           row_version = sermon_transcripts.row_version + 1`,
+        [
+          id,
+          input.transcript.bodyText,
+          input.transcript.status,
+          input.transcript.sourceKind,
+          input.transcript.sourceReference,
+          reviewed ? actorSubject : null,
+          approved ? actorSubject : null,
+          reviewed ? new Date().toISOString() : null,
+          approved ? new Date().toISOString() : null
+        ]
+      );
+    }
+    if (input.questionAnswers !== undefined) {
+      for (const [index, item] of input.questionAnswers.entries()) {
+        const reviewed = item.status === "in_review" || item.status === "approved";
+        const approved = item.status === "approved";
+        await this.client.query(
+          `INSERT INTO sermon_question_answers (
+             sermon_id, question_text, answer_text, display_order, status,
+             source_kind, source_reference, reviewed_by_subject, approved_by_subject,
+             reviewed_at, approved_at
+           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+           ON CONFLICT (sermon_id, display_order) DO UPDATE SET
+             question_text = EXCLUDED.question_text,
+             answer_text = EXCLUDED.answer_text,
+             status = EXCLUDED.status,
+             source_kind = EXCLUDED.source_kind,
+             source_reference = EXCLUDED.source_reference,
+             reviewed_by_subject = EXCLUDED.reviewed_by_subject,
+             approved_by_subject = EXCLUDED.approved_by_subject,
+             reviewed_at = EXCLUDED.reviewed_at,
+             approved_at = EXCLUDED.approved_at,
+             updated_at = now(),
+             row_version = sermon_question_answers.row_version + 1`,
+          [
+            id,
+            item.question,
+            item.answer,
+            index + 1,
+            item.status,
+            item.sourceKind,
+            item.sourceReference,
+            reviewed ? actorSubject : null,
+            approved ? actorSubject : null,
+            reviewed ? new Date().toISOString() : null,
+            approved ? new Date().toISOString() : null
+          ]
+        );
+      }
+      await this.client.query(
+        "DELETE FROM sermon_question_answers WHERE sermon_id = $1 AND display_order > $2",
+        [id, input.questionAnswers.length]
+      );
+    }
   }
 
   async refreshSearchTerms(id: string): Promise<void> {
     await this.client.query(
       `UPDATE sermons s SET search_terms = concat_ws(' ',
-         (SELECT string_agg(sp.name, ' ' ORDER BY ss.display_order, sp.id)
-          FROM sermon_speakers ss JOIN speakers sp ON sp.id = ss.speaker_id
-          WHERE ss.sermon_id = s.id),
+       (SELECT sp.name FROM speakers sp WHERE sp.id = s.speaker_id),
          (SELECT string_agg(sr.name, ' ' ORDER BY sm.display_order, sr.id)
           FROM sermon_series_map sm JOIN series sr ON sr.id = sm.series_id
           WHERE sm.sermon_id = s.id),
@@ -514,6 +690,7 @@ class PostgresAdminSermonTransaction implements AdminSermonTransaction {
        WHERE s.id = $1`,
       [id]
     );
+    await this.client.query("SELECT refresh_sermon_enrichment($1)", [id]);
   }
 
   async insertTaxonomy(kind: TaxonomyKind, input: TaxonomyWriteInput): Promise<TaxonomyDto> {
@@ -637,10 +814,7 @@ export class PostgresAdminSermonRepository implements AdminSermonRepository {
     }
     if (query.speakerId) {
       values.push(query.speakerId);
-      conditions.push(
-        `EXISTS (SELECT 1 FROM sermon_speakers ss
-                 WHERE ss.sermon_id = s.id AND ss.speaker_id = $${values.length})`
-      );
+      conditions.push(`s.speaker_id = $${values.length}`);
     }
     if (query.seriesId) {
       values.push(query.seriesId);
@@ -657,8 +831,32 @@ export class PostgresAdminSermonRepository implements AdminSermonRepository {
       values.push(query.serviceDateTo);
       conditions.push(`s.service_date <= $${values.length}::date`);
     }
+    if (query.contentIssue === "complete") {
+      conditions.push("EXISTS (SELECT 1 FROM sermon_content_readiness r WHERE r.sermon_id = s.id AND r.is_complete)");
+    } else if (query.contentIssue === "missing_speaker") {
+      conditions.push("s.speaker_id IS NULL");
+    } else if (query.contentIssue === "missing_transcript") {
+      conditions.push(`NOT EXISTS (
+        SELECT 1 FROM sermon_transcripts transcript
+        WHERE transcript.sermon_id = s.id AND char_length(trim(transcript.body_text)) > 0
+      )`);
+    } else if (query.contentIssue === "transcript_awaiting_review") {
+      conditions.push(`EXISTS (
+        SELECT 1 FROM sermon_transcripts transcript
+        WHERE transcript.sermon_id = s.id AND transcript.status IN ('draft', 'in_review')
+      )`);
+    } else if (query.contentIssue === "insufficient_questions") {
+      conditions.push("(SELECT count(*) FROM sermon_question_answers qa WHERE qa.sermon_id = s.id) NOT BETWEEN 5 AND 10");
+    } else if (query.contentIssue === "questions_awaiting_review") {
+      conditions.push(`EXISTS (
+        SELECT 1 FROM sermon_question_answers qa
+        WHERE qa.sermon_id = s.id AND qa.status <> 'approved'
+      )`);
+    } else if (query.contentIssue === "missing_media") {
+      conditions.push("EXISTS (SELECT 1 FROM sermon_content_readiness r WHERE r.sermon_id = s.id AND NOT r.has_valid_controlled_media)");
+    }
 
-    const [count, statusCounts] = await Promise.all([
+    const [count, statusCounts, readinessProgressResult] = await Promise.all([
       this.pool.query<{ total: number }>(
         `SELECT count(*)::integer AS total FROM sermons s WHERE ${conditions.join(" AND ")}`,
         values
@@ -668,6 +866,25 @@ export class PostgresAdminSermonRepository implements AdminSermonRepository {
          FROM sermons
          WHERE deleted_at IS NULL
          GROUP BY status`
+      ),
+      this.pool.query<{
+        total: number;
+        complete: number;
+        with_one_speaker: number;
+        with_approved_transcript: number;
+        with_required_question_answers: number;
+        with_valid_controlled_media: number;
+      }>(
+        `SELECT
+           count(*)::integer AS total,
+           count(*) FILTER (WHERE is_complete)::integer AS complete,
+           count(*) FILTER (WHERE has_one_speaker)::integer AS with_one_speaker,
+           count(*) FILTER (WHERE has_approved_transcript)::integer AS with_approved_transcript,
+           count(*) FILTER (
+             WHERE total_question_count BETWEEN 5 AND 10 AND all_questions_approved
+           )::integer AS with_required_question_answers,
+           count(*) FILTER (WHERE has_valid_controlled_media)::integer AS with_valid_controlled_media
+         FROM sermon_content_readiness`
       )
     ]);
     values.push(query.pageSize, (query.page - 1) * query.pageSize);
@@ -688,10 +905,20 @@ export class PostgresAdminSermonRepository implements AdminSermonRepository {
       archived: 0
     };
     for (const row of statusCounts.rows) countsByStatus[row.status] = row.total;
+    const progress = readinessProgressResult.rows[0]!;
     return {
       data: (rows.rows as SermonRow[]).map(summaryFromRow),
       totalItems: count.rows[0]!.total,
-      countsByStatus
+      countsByStatus,
+      readinessProgress: {
+        total: progress.total,
+        complete: progress.complete,
+        remaining: progress.total - progress.complete,
+        withOneSpeaker: progress.with_one_speaker,
+        withApprovedTranscript: progress.with_approved_transcript,
+        withRequiredQuestionAnswers: progress.with_required_question_answers,
+        withValidControlledMedia: progress.with_valid_controlled_media
+      }
     };
   }
 

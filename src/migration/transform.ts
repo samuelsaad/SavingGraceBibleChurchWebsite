@@ -134,6 +134,14 @@ export function transformLegacySermon(input: unknown): TransformedMigrationRecor
   }
 
   const warnings: MigrationWarning[] = [];
+  if (record.speakers.length > 1) {
+    warnings.push({
+      code: "multiple_source_speakers",
+      severity: "error",
+      field: "speaker",
+      safeDetail: "Multiple source speaker relationships require manual resolution; no speaker was selected"
+    });
+  }
   if (!dateResult.isSunday) {
     warnings.push({
       code: "non_sunday_service_date",
@@ -209,7 +217,8 @@ export function transformLegacySermon(input: unknown): TransformedMigrationRecor
     sourceModifiedGmt: parseWordPressGmt(record.postModifiedGmt),
     body: record.body?.length ? record.body : null,
     summary: record.summary?.length ? record.summary : null,
-    speakers: record.speakers,
+    speaker: record.speakers.length === 1 ? record.speakers[0]! : null,
+    sourceSpeakerCount: record.speakers.length,
     series: record.series,
     books: record.books,
     passageTerms: record.passageTerms,

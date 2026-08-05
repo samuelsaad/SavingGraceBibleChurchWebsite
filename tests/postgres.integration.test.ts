@@ -16,6 +16,10 @@ import type { SermonStatus } from "../src/domain/sermon";
 import { runMigrationDryRun } from "../src/migration/importer";
 import { loadMigrationResult } from "../src/migration/postgres-loader";
 import { legacySermonRecordSchema } from "../src/migration/types";
+import {
+  buildEnrichmentQueue,
+  importEnrichmentDraftBundle
+} from "../src/enrichment/postgres-enrichment";
 import { LocalTestIdentityProvider } from "../src/server/auth/local-test-identity-provider";
 import { createApplicationApiRouter } from "../src/server/http/application-api-router";
 import { PostgresAdminSermonRepository } from "../src/server/repositories/postgres-admin-sermon-repository";
@@ -41,6 +45,24 @@ function disposableConnectionString(): string {
   return value;
 }
 
+function approvedEnrichment() {
+  return {
+    transcript: {
+      bodyText: "A complete anonymised transcript reviewed for local integration testing.",
+      status: "approved" as const,
+      sourceKind: "manual" as const,
+      sourceReference: null
+    },
+    questionAnswers: Array.from({ length: 5 }, (_, index) => ({
+      question: `What truth should be considered in question ${index + 1}?`,
+      answer: `This reviewed answer applies the sermon and scripture in example ${index + 1}.`,
+      status: "approved" as const,
+      sourceKind: "manual" as const,
+      sourceReference: null
+    }))
+  };
+}
+
 integration("disposable PostgreSQL Phase 3B application", () => {
   let pool: Pool;
   let up1: string;
@@ -49,6 +71,8 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   let down2: string;
   let up3: string;
   let down3: string;
+  let up4: string;
+  let down4: string;
 
   beforeAll(async () => {
     pool = new Pool({ connectionString: disposableConnectionString(), max: 4 });
@@ -74,20 +98,27 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       postgres_server: true
     });
 
-    [up1, down1, up2, down2, up3, down3] = await Promise.all([
+    [up1, down1, up2, down2, up3, down3, up4, down4] = await Promise.all([
       readFile("db/migrations/0001_initial.sql", "utf8"),
       readFile("db/migrations/0001_initial.down.sql", "utf8"),
       readFile("db/migrations/0002_admin_foundation.sql", "utf8"),
       readFile("db/migrations/0002_admin_foundation.down.sql", "utf8"),
       readFile("db/migrations/0003_single_admin_deletion_seo.sql", "utf8"),
-      readFile("db/migrations/0003_single_admin_deletion_seo.down.sql", "utf8")
+      readFile("db/migrations/0003_single_admin_deletion_seo.down.sql", "utf8"),
+      readFile("db/migrations/0004_sermon_enrichment_readiness.sql", "utf8"),
+      readFile("db/migrations/0004_sermon_enrichment_readiness.down.sql", "utf8")
     ]);
+    const phase3b1Present = await pool.query<{ present: boolean }>(
+      "SELECT to_regclass('public.sermon_transcripts') IS NOT NULL AS present"
+    );
+    if (phase3b1Present.rows[0]?.present) await pool.query(down4);
     await pool.query(down3);
     await pool.query(down2);
     await pool.query(down1);
     await pool.query(up1);
     await pool.query(up2);
     await pool.query(up3);
+    await pool.query(up4);
 
     const fixture = legacySermonRecordSchema.array().parse(
       JSON.parse(await readFile("tests/fixtures/dry-run.json", "utf8"))
@@ -99,6 +130,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
 
   afterAll(async () => {
     if (!pool) return;
+    await pool.query(down4);
     await pool.query(down3);
     const deltaRemoved = await pool.query<{ tombstone_removed: boolean; source_column_removed: boolean }>(
       `SELECT
@@ -110,34 +142,42 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     );
     expect(deltaRemoved.rows[0]).toEqual({ tombstone_removed: true, source_column_removed: true });
     await pool.query(up3);
+    await pool.query(up4);
 
+    await pool.query(down4);
     await pool.query(down3);
     await pool.query(down2);
     await pool.query(down1);
     await pool.query(up1);
     await pool.query(up2);
     await pool.query(up3);
-    const reapplied = await pool.query<{ sermon: string | null; tombstone: string | null }>(
+    await pool.query(up4);
+    const reapplied = await pool.query<{ sermon: string | null; tombstone: string | null; transcript: string | null }>(
       `SELECT to_regclass('public.sermons')::text AS sermon,
-              to_regclass('public.sermon_deletion_tombstones')::text AS tombstone`
+              to_regclass('public.sermon_deletion_tombstones')::text AS tombstone,
+              to_regclass('public.sermon_transcripts')::text AS transcript`
     );
     expect(reapplied.rows[0]).toEqual({
       sermon: "sermons",
-      tombstone: "sermon_deletion_tombstones"
+      tombstone: "sermon_deletion_tombstones",
+      transcript: "sermon_transcripts"
     });
+    await pool.query(down4);
     await pool.query(down3);
     await pool.query(down2);
     await pool.query(down1);
     await pool.end();
   });
 
-  it("applies 0001-0003 and loads anonymised fixtures idempotently", async () => {
+  it("applies 0001-0004 and loads anonymised fixtures idempotently", async () => {
     const counts = await pool.query<{
       sermons: number;
       views: number;
       unowned: number;
       tombstone_table: string | null;
       source_sermon_column: number;
+      transcript_table: string | null;
+      speaker_join_removed: boolean;
     }>(
       `SELECT
          (SELECT count(*)::integer FROM sermons) AS sermons,
@@ -145,15 +185,52 @@ integration("disposable PostgreSQL Phase 3B application", () => {
          (SELECT count(*)::integer FROM sermons WHERE created_by_subject IS NULL) AS unowned,
          to_regclass('public.sermon_deletion_tombstones')::text AS tombstone_table,
          (SELECT count(*)::integer FROM information_schema.columns
-          WHERE table_name = 'redirects' AND column_name = 'source_sermon_id') AS source_sermon_column`
+          WHERE table_name = 'redirects' AND column_name = 'source_sermon_id') AS source_sermon_column,
+         to_regclass('public.sermon_transcripts')::text AS transcript_table,
+         to_regclass('public.sermon_speakers') IS NULL AS speaker_join_removed`
     );
     expect(counts.rows[0]).toEqual({
       sermons: 3,
       views: 3,
       unowned: 3,
       tombstone_table: "sermon_deletion_tombstones",
-      source_sermon_column: 1
+      source_sermon_column: 1,
+      transcript_table: "sermon_transcripts",
+      speaker_join_removed: true
     });
+  });
+
+  it("aborts the one-speaker migration with affected IDs and cleanly reapplies", async () => {
+    await pool.query(down4);
+    const target = await pool.query<{ sermon_id: string; other_speaker_id: string }>(
+      `SELECT s.id AS sermon_id, sp.id AS other_speaker_id
+       FROM sermons s
+       CROSS JOIN LATERAL (
+         SELECT id FROM speakers WHERE id <> (
+           SELECT speaker_id FROM sermon_speakers WHERE sermon_id = s.id LIMIT 1
+         ) ORDER BY id LIMIT 1
+       ) sp
+       WHERE EXISTS (SELECT 1 FROM sermon_speakers ss WHERE ss.sermon_id = s.id)
+       ORDER BY s.id LIMIT 1`
+    );
+    const anomaly = target.rows[0]!;
+    await pool.query(
+      `INSERT INTO sermon_speakers (sermon_id, speaker_id, display_order)
+       VALUES ($1, $2, 1)`,
+      [anomaly.sermon_id, anomaly.other_speaker_id]
+    );
+    await expect(pool.query(up4)).rejects.toThrow(anomaly.sermon_id);
+    expect(
+      (await pool.query("SELECT to_regclass('public.sermon_speakers')::text AS value")).rows[0]
+    ).toEqual({ value: "sermon_speakers" });
+    await pool.query(
+      "DELETE FROM sermon_speakers WHERE sermon_id = $1 AND speaker_id = $2",
+      [anomaly.sermon_id, anomaly.other_speaker_id]
+    );
+    await pool.query(up4);
+    expect(
+      (await pool.query("SELECT to_regclass('public.sermon_speakers') IS NULL AS removed")).rows[0]
+    ).toEqual({ removed: true });
   });
 
   it("preserves published-only public list, search, filters, pagination, and safe detail", async () => {
@@ -186,12 +263,100 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     ).toMatchObject({ data: [], totalItems: 0 });
 
     expect(await repository.findPublishedBySlug("an-anonymised-pending-sermon")).toBeNull();
+    const searchableId = (
+      await pool.query<{ id: string }>(
+        "SELECT id FROM sermons WHERE slug = 'grace-for-an-anonymised-congregation'"
+      )
+    ).rows[0]!.id;
+    await pool.query(
+      `INSERT INTO sermon_transcripts (
+         sermon_id, body_text, status, source_kind, reviewed_by_subject,
+         approved_by_subject, reviewed_at, approved_at
+       ) VALUES ($1, 'An approved transcript with eschatologicalneologism.', 'approved',
+         'manual', 'local-admin-0001', 'local-admin-0001', now(), now())`,
+      [searchableId]
+    );
+    for (let index = 1; index <= 5; index += 1) {
+      await pool.query(
+        `INSERT INTO sermon_question_answers (
+           sermon_id, question_text, answer_text, display_order, status, source_kind,
+           reviewed_by_subject, approved_by_subject, reviewed_at, approved_at
+         ) VALUES ($1, $2, $3, $4, 'approved', 'manual',
+           'local-admin-0001', 'local-admin-0001', now(), now())`,
+        [
+          searchableId,
+          `How does covenantalthoughtword ${index} shape this passage?`,
+          `It grounds reflection ${index} in the sermon and scripture.`,
+          index
+        ]
+      );
+    }
+    expect(
+      (
+        await repository.listPublished(
+          publicSermonListQuerySchema.parse({ query: "eschatologicalneologism" })
+        )
+      ).data.map((item) => item.id)
+    ).toEqual([searchableId]);
+    expect(
+      (
+        await repository.listPublished(
+          publicSermonListQuerySchema.parse({ query: "covenantalthoughtword" })
+        )
+      ).data.map((item) => item.id)
+    ).toEqual([searchableId]);
     const sermon = await repository.findPublishedBySlug(
       "grace-for-an-anonymised-congregation"
     );
     const json = JSON.stringify(sermon);
     expect(sermon?.media.map((media) => media.provider)).toEqual(["youtube", "sermonaudio"]);
+    expect(sermon?.transcript?.bodyText).toContain("eschatologicalneologism");
+    expect(sermon?.questionAnswers).toHaveLength(5);
     expect(json).not.toMatch(/<iframe|legacyViewCount|originalValue|source_wordpress/i);
+  });
+
+  it("exports deterministic work and imports enrichment drafts idempotently without approval", async () => {
+    const firstQueue = await buildEnrichmentQueue(pool, "anonymised-phase3b-fixture");
+    const secondQueue = await buildEnrichmentQueue(pool, "anonymised-phase3b-fixture");
+    expect(firstQueue).toEqual(secondQueue);
+    const target = firstQueue.records.find((record) => record.sourceWordPressId === 9003)!;
+    const bundle = {
+      schemaVersion: 1 as const,
+      sourceWordPressId: target.sourceWordPressId,
+      targetSermonId: target.targetSermonId,
+      expectedRowVersion: target.rowVersion,
+      transcript: {
+        bodyText: "A local anonymised transcript draft.",
+        provenance: { sourceKind: "transcription" as const, sourceReference: "safe-local-job-9003" }
+      },
+      questionAnswers: Array.from({ length: 5 }, (_, index) => ({
+        question: `What should the listener consider in example ${index + 1}?`,
+        answer: `The draft answer remains subject to human review ${index + 1}.`,
+        provenance: { sourceKind: "generated_draft" as const, sourceReference: "safe-local-job-9003" }
+      }))
+    };
+    expect((await importEnrichmentDraftBundle(pool, bundle)).outcome).toBe("imported_as_draft");
+    expect((await importEnrichmentDraftBundle(pool, bundle)).outcome).toBe("unchanged");
+    const stored = await pool.query<{
+      transcript_status: string;
+      questions: number;
+      approved_questions: number;
+      audits: number;
+    }>(
+      `SELECT
+         (SELECT status FROM sermon_transcripts WHERE sermon_id = $1) AS transcript_status,
+         (SELECT count(*)::integer FROM sermon_question_answers WHERE sermon_id = $1) AS questions,
+         (SELECT count(*)::integer FROM sermon_question_answers WHERE sermon_id = $1 AND status = 'approved') AS approved_questions,
+         (SELECT count(*)::integer FROM audit_events WHERE entity_id = $1 AND action = 'sermon.enrichment_draft_imported') AS audits`,
+      [target.targetSermonId]
+    );
+    expect(stored.rows[0]).toEqual({
+      transcript_status: "draft",
+      questions: 5,
+      approved_questions: 0,
+      audits: 1
+    });
+    expect(await new PostgresSermonRepository(pool).findPublishedBySlug("an-anonymised-pending-sermon")).toBeNull();
   });
 
   it("supports admin filters, counts, every state transition, and transactional edits", async () => {
@@ -221,7 +386,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
           title: "Phase 3B Controlled Sermon",
           slug: "phase-3b-controlled-sermon",
           serviceDate: "2026-08-05",
-          speakerIds: [speaker.id],
+          speakerId: speaker.id,
           seriesIds: [series.id],
           scriptureReferences: [{ displayText: "Romans 8:1-4" }],
           media: [{
@@ -237,6 +402,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       );
       sermonIds.push(created.id);
       expect(created).toMatchObject({ status: "draft" });
+      expect(created.readiness.isComplete).toBe(false);
       expect(created).not.toHaveProperty("ownership");
 
       const list = await service.list(
@@ -245,7 +411,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       ) as ListResponseShape;
       expect(list.data).toHaveLength(1);
       expect(list.countsByStatus.draft).toBeGreaterThanOrEqual(1);
-      expect(list.data[0]?.speakers[0]?.name).toBe("Phase 3B Speaker");
+      expect(list.data[0]?.speaker?.name).toBe("Phase 3B Speaker");
 
       await expect(
         service.transition(
@@ -266,7 +432,25 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         )
       ).rejects.toMatchObject({ status: 400, code: "invalid_request" });
 
-      const pending = await service.transition(created.id, "submit", { rowVersion: created.rowVersion }, admin, "phase3b-submit");
+      await expect(
+        service.transition(
+          created.id,
+          "schedule",
+          { rowVersion: created.rowVersion, scheduledFor: "2027-08-05T00:00:00.000Z" },
+          admin,
+          "phase3b-incomplete-schedule"
+        )
+      ).rejects.toMatchObject({ status: 400, code: "content_incomplete" });
+
+      const completed = await service.update(
+        created.id,
+        updateSermonInputSchema.parse({ rowVersion: created.rowVersion, ...approvedEnrichment() }),
+        admin,
+        "phase3b-complete-content"
+      );
+      expect(completed.readiness.isComplete).toBe(true);
+
+      const pending = await service.transition(created.id, "submit", { rowVersion: completed.rowVersion }, admin, "phase3b-submit");
       const withdrawn = await service.transition(created.id, "withdraw", { rowVersion: pending.rowVersion }, admin, "phase3b-withdraw");
       const scheduled = await service.transition(
         created.id,
@@ -331,11 +515,16 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     const service = new AdminSermonService(repository, () => new Date("2026-08-05T00:00:00.000Z"));
     const createdIds: string[] = [];
     try {
+      const existingSpeakerId = (
+        await pool.query<{ id: string }>("SELECT id FROM speakers ORDER BY id LIMIT 1")
+      ).rows[0]!.id;
       const created = await service.create(
         createSermonInputSchema.parse({
           title: "Delete Safeguard Sermon",
           slug: "delete-safeguard-sermon",
           serviceDate: "2026-08-05",
+          speakerId: existingSpeakerId,
+          ...approvedEnrichment(),
           scriptureReferences: [{ displayText: "John 3:16" }],
           media: [{
             provider: "sermonaudio",
@@ -456,7 +645,20 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       expect((await pool.query("SELECT count(*)::integer AS count FROM redirects WHERE source_sermon_id = $1", [neverPublished.id])).rows[0].count).toBe(0);
 
       const redirectSource = await service.create(
-        createSermonInputSchema.parse({ title: "Redirect Retired Sermon", slug: "redirect-retired-sermon", serviceDate: "2026-08-05" }),
+        createSermonInputSchema.parse({
+          title: "Redirect Retired Sermon",
+          slug: "redirect-retired-sermon",
+          serviceDate: "2026-08-05",
+          speakerId: existingSpeakerId,
+          ...approvedEnrichment(),
+          media: [{
+            provider: "sermonaudio",
+            mediaType: "audio",
+            externalId: null,
+            canonicalUrl: "https://www.sermonaudio.com/sermons/redirect-example",
+            title: "Controlled redirect example audio"
+          }]
+        }),
         admin,
         "redirect-delete-create"
       );
@@ -506,7 +708,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
 });
 
 interface ListResponseShape {
-  data: Array<{ speakers: RelationshipShape[] }>;
+  data: Array<{ speaker: RelationshipShape | null }>;
   countsByStatus: Record<SermonStatus, number>;
 }
 

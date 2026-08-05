@@ -7,6 +7,8 @@
 
 The existing website's organic-search performance must be preserved at minimum across the entire site. SEO regression is unacceptable and blocks launch. `seo-migration-validation-plan.md` is the detailed acceptance contract for the complete indexable URL baseline, one-to-one mapping, metadata/canonical parity, redirect quality, sitemaps/robots/structured data, internal links/orphans/errors, crawlability/indexability, server rendering, social metadata, accessibility/performance, pre-launch comparison, post-launch monitoring, and rollback.
 
+The Phase 3B.1 content gate is additive: all 453 included historical sermons must also have exactly one speaker, an approved complete transcript, 5–10 ordered all-approved Q&A pairs, required metadata, and valid controlled media. The five pending rows remain non-public but still count. Failure of either the content gate or whole-site SEO gate blocks launch.
+
 Current discovery contains verified sermon URL/search/canonical/social-image evidence but not a complete whole-site crawl or Search Console/analytics baseline. Those are later explicitly approved read-only tasks; this milestone made no new production contact.
 
 ## Safety gates for a future migration run
@@ -258,4 +260,36 @@ Installed parent 3.7 and Pro 2.2 source resolves the core registration, date-ran
 - Corrected acceptance defects: the sermon list now exposes both inclusive service-date bounds, and narrow-screen table content is contained in its horizontal scroller without widening the page. Source-level regression assertions plus the browser acceptance pass cover both corrections.
 - Local Git was initialised and ignore rules were strengthened. All 89 intended files passed the staged filename/content scan with zero private keys, embedded database credentials, assigned secrets, cloud keys, password hashes/JWTs, PHP/ZIP/plugin-source files, risky filenames, or symlinks. No baseline commit was created because neither local Git author name nor email is configured; no identity was invented and no remote was configured.
 - Permanent whole-site SEO non-regression remains a launch-blocking architecture acceptance criterion. The architecture plan, decision log, README, redirect plan, migration contract, this validation plan, dedicated SEO plan, administration contract, and target schema cross-reference slug-change and permanent-deletion redirect/gone handling. No production crawl, Search Console, analytics, or remote system was contacted.
+
+## Phase 3B.1 content-model correction verification — 5 August 2026
+
+### Safety and target
+
+- Non-secret preflight confirmed configured user/password-file variables, existing ACL-protected libpq file, successful authentication, PostgreSQL 16.14, server address `127.0.0.1`, port `5432`, exact database `savinggrace_sermons_test`, `_test` suffix, PostgreSQL rather than MariaDB, read-only inspection, and explicit `ALLOW_LOCAL_DB_WRITE=1` before mutation.
+- No WordPress, MariaDB, AWS, Cognito, media/transcription/AI provider, remote host, production data, or proprietary plugin source was contacted or changed.
+
+### Ordered migration and rollback evidence
+
+- `0004_sermon_enrichment_readiness.sql` replaced the local speaker join with nullable sole `sermons.speaker_id`, added transcripts, ordered Q&A, draft-import receipts, approved-only search documents, GIN rebuild, refresh functions/triggers, historical-backfill marker, and derived readiness view.
+- Real integration deliberately rolled `0004` back, inserted a second local relationship, and proved forward migration aborted transactionally with the affected sermon UUID while leaving the join table intact. After removing only the test anomaly, clean reapplication succeeded.
+- Independent `0004` rollback restored speaker joins and the prior search vector. The complete `0001`–`0004` set then cleanly reapplied. Final schema reapply and two fixture loads each reported three candidates and left exactly three sermons, not six.
+
+### Behaviour and search evidence
+
+- The service accepts incomplete drafts/imports but rejects future schedule/publish with `content_incomplete` and field issues until speaker, approved transcript, 5–10 approved consecutive Q&As, and controlled media pass.
+- Unit boundaries prove four/eleven Q&A fail; five/ten pass; blanks/order fail; speaker arrays and unsafe HTML-like input are rejected.
+- Real PostgreSQL search matched unique terms present only in an approved transcript and approved Q&A. Public detail returned approved enrichment; pending/unapproved content stayed non-public. List responses omitted heavy bodies.
+- Server-rendered detail tests prove the complete transcript is present in initial escaped HTML inside closed native `<details>` with “Read full transcript”; Q&A is also server-rendered, with no client fetch, script execution, or automatic FAQ JSON-LD.
+- The deterministic queue was byte-equivalent across repeats. A strict anonymised bundle imported as draft, identical rerun returned `unchanged`, one safe audit event remained, and no transcript/Q&A row became approved.
+
+### Test and local completion evidence
+
+- Real PostgreSQL suite: 22 files, 72 tests passed, zero skipped. It covered migration abort/rollback/reapply, importer rerun, repository/filter/search/public visibility, enrichment idempotency, publication rules, deletion/redirect safeguards, authorization, and API boundaries.
+- Final anonymised dry run: five inputs; three included (two published, one pending), two expected exclusions, zero rejected.
+- Final local readiness: included 3/453; sole speaker 2; approved transcript 0; approved 5–10 Q&A 0; valid controlled media 2; incomplete 3; expected exit code 1. Safe missing requirements were reported only by anonymised source IDs.
+- This is correct demonstration state, not historical completion. The real 453 transcripts/Q&A sets have not been retrieved, generated, reviewed, or approved.
+
+### Phase 3B.2 acceptance prerequisite
+
+Before any real historical enrichment, separately approve a controlled provider/source and cost ceiling, secure source access, privacy/retention terms, deterministic batch manifest, retry/resume limits, transcript accuracy rubric, scripture-grounded Q&A rubric, named human reviewers/approvers, correction/audit evidence, and failure rollback. Rehearse on an approved non-production batch first; do not contact providers or claim progress under Phase 3B.1.
 - Non-blocking maintenance note remains: `pg` 8.22 warns that automatic `pgpass` support will be removed in pg 9. An approved asynchronous password provider/secret-store adapter is required before that major upgrade; no credential was read, displayed, or logged in this milestone.

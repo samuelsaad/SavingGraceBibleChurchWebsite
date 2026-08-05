@@ -13,7 +13,7 @@ const summary: SermonSummary = {
   slug: "an-anonymised-sermon",
   serviceDate: "2026-08-02",
   summary: null,
-  speakers: [{ name: "Example Speaker", slug: "example-speaker" }],
+  speaker: { name: "Example Speaker", slug: "example-speaker" },
   series: [{ name: "Example Series", slug: "example-series" }],
   scriptureReferences: [{ displayText: "Romans 8:1", parseStatus: "exact" }],
   books: [{ name: "Romans", slug: "romans" }],
@@ -29,7 +29,11 @@ const summary: SermonSummary = {
 const detail: SermonDetail = {
   ...summary,
   body: null,
-  media: [summary.primaryMedia!]
+  media: [summary.primaryMedia!],
+  transcript: { bodyText: "An approved transcript." },
+  questionAnswers: [
+    { question: "What does grace change?", answer: "It changes how we live.", displayOrder: 1 }
+  ]
 };
 
 class FakeRepository implements PublicSermonRepository {
@@ -82,6 +86,7 @@ describe("public sermon HTTP vertical slice", () => {
     expect(body).not.toContain("<iframe");
     expect(body).not.toContain("post_views_count");
     expect(body).not.toContain("legacyViewCount");
+    expect(body).toContain("An approved transcript");
   });
 
   it("returns controlled validation, visibility-safe 404, and method errors", async () => {
@@ -95,5 +100,13 @@ describe("public sermon HTTP vertical slice", () => {
     expect(
       (await route(new Request("http://localhost/api/v1/sermons", { method: "POST" }))).status
     ).toBe(405);
+  });
+
+  it("keeps large transcript and Q&A bodies out of list responses", async () => {
+    const route = createPublicApiRouter(new FakeRepository());
+    const body = await (await route(new Request("http://localhost/api/v1/sermons"))).text();
+
+    expect(body).not.toContain("An approved transcript");
+    expect(body).not.toContain("What does grace change");
   });
 });

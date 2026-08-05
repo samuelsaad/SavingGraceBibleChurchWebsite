@@ -30,6 +30,25 @@ describe("PostgreSQL schema contract", () => {
     expect(sql).not.toMatch(/CREATE TABLE\s+postmeta/i);
   });
 
+  it("reversibly replaces multi-speaker joins with one speaker and enrichment records", async () => {
+    const [up, down] = await Promise.all([
+      readFile("db/migrations/0004_sermon_enrichment_readiness.sql", "utf8"),
+      readFile("db/migrations/0004_sermon_enrichment_readiness.down.sql", "utf8")
+    ]);
+    expect(up).toContain("HAVING count(*) > 1");
+    expect(up).toContain("Migration 0004 refused multiple speaker relationships for sermon IDs");
+    expect(up).toContain("ADD COLUMN speaker_id uuid");
+    expect(up).toContain("DROP TABLE sermon_speakers");
+    expect(up).toContain("CREATE TABLE sermon_transcripts");
+    expect(up).toContain("CREATE TABLE sermon_question_answers");
+    expect(up).toContain("CREATE VIEW sermon_content_readiness");
+    expect(up).toContain("transcript_search_document");
+    expect(up).toContain("question_answer_search_document");
+    expect(down).toContain("CREATE TABLE sermon_speakers");
+    expect(down).toContain("DROP TABLE IF EXISTS sermon_transcripts");
+    expect(down).toContain("DROP COLUMN speaker_id");
+  });
+
   it("has an explicit reversible local rollback", async () => {
     const down = await readFile("db/migrations/0001_initial.down.sql", "utf8");
     expect(down).toContain("DROP TABLE IF EXISTS sermons");

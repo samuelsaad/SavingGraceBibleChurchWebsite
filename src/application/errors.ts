@@ -24,3 +24,10 @@ export function conflict(message = "The record has changed; reload and try again
 export function invalid(path: string, message: string): never {
   throw new ApplicationError(400, "invalid_request", message, [{ path, message }]);
 }
+
+export function invalidMany(
+  message: string,
+  issues: Array<{ path: string; message: string }>
+): never {
+  throw new ApplicationError(400, "content_incomplete", message, issues);
+}

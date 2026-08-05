@@ -69,4 +69,19 @@ describe("Yang migration inclusion contract", () => {
     expect(report.summary).toMatchObject({ included: 1, rejected: 1 });
     expect(report.records[1]?.reasonCode).toBe("duplicate_canonical_slug");
   });
+
+  it("never selects one speaker when the source unexpectedly contains several", () => {
+    const record = legacySermonFixture();
+    record.speakers = [
+      { termId: 1, termTaxonomyId: 11, name: "First", slug: "first", order: 0 },
+      { termId: 2, termTaxonomyId: 12, name: "Second", slug: "second", order: 1 }
+    ];
+    const result = transformLegacySermon(record);
+
+    expect(result.sermon?.speaker).toBeNull();
+    expect(result.sermon?.sourceSpeakerCount).toBe(2);
+    expect(result.report.warnings).toContainEqual(
+      expect.objectContaining({ code: "multiple_source_speakers", severity: "error" })
+    );
+  });
 });
