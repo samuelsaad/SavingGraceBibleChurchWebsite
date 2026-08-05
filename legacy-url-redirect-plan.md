@@ -58,7 +58,7 @@ The eventual read-only extraction should generate one candidate row per public s
 
 Only the 448 published Advanced Sermons rows are presumed to have public detail paths. The five pending and three draft rows must not receive public redirects unless separate evidence proves an old public URL. (`database-observed`)
 
-Phase 3B.1 enrichment does not create a new transcript or Q&A URL. Approved content belongs in the existing canonical `/sermons/{slug}/` server-rendered detail response, so it preserves and strengthens the same page rather than creating duplicate crawl paths. Pending/unapproved enrichment remains non-public. Any later slug change continues to require the existing direct one-hop redirect safeguard and reviewed one-to-one manifest update.
+Phase 3B.1/3B.1a enrichment does not create description, transcript or Q&A URLs. Approved content belongs in the existing canonical `/sermons/{slug}/` server-rendered detail response, so it preserves and strengthens the same page rather than creating duplicate crawl paths. Pending/unapproved enrichment remains non-public. Any later slug change continues to require the existing direct one-hop redirect safeguard and reviewed one-to-one manifest update.
 
 Yang confirmed that the 12 `ctc_sermon`/`wpfc_sermon`/`wpv_sermon` rows and every `wp_sb_*` row are excluded. No replacement sermon or redirect is generated for them, and WordPress remains untouched. (`database observed`)
 

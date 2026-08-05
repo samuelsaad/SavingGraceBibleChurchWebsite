@@ -50,6 +50,9 @@ describe("Phase 3B administration dashboard", () => {
     expect(page).toContain('meta name="robots" content="noindex');
     expect(page).toContain("Local development only");
     expect(page).toContain("@media (max-width: 800px)");
+    expect(page).toContain("@media (max-width: 480px)");
+    expect(page).toContain(".filters, .form-grid { grid-template-columns: 1fr; }");
+    expect(page).toContain(".form-grid .wide { grid-column: auto; }");
     expect(page).toContain(".grid-two > * { min-width: 0; }");
     expect(page).toContain(".panel { min-width: 0;");
     expect(page).toContain("overflow-x: hidden");
@@ -63,6 +66,11 @@ describe("Phase 3B administration dashboard", () => {
     expect(client).toContain("1. Sermon basics");
     expect(client).toContain("6. Review and publish");
     expect(client).toContain("Completion checklist");
+    expect(client).toContain("Sermon description");
+    expect(client).toContain("sermon-description-count");
+    expect(client).toContain('data-description-status="in_review"');
+    expect(client).toContain("withApprovedDescription");
+    expect(client).toContain("description_awaiting_review");
     expect(client).toContain('name="speakerId"');
     expect(client).not.toContain('name="speakerIds"');
     expect(client).toContain("x-local-identity\", \"admin");

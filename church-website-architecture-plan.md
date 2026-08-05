@@ -12,6 +12,8 @@
 
 > **Phase 3B.1 final content decision (5 August 2026):** Every sermon has exactly one speaker; a draft/imported record may be temporarily null only while incomplete. All 453 included historical records (448 published and five titled pending) require one speaker, an approved complete transcript, five to ten ordered approved question-and-answer pairs, required metadata, and valid controlled media before launch. The five pending records remain non-public. New records cannot be scheduled or published until complete. This decision supersedes every earlier many-speaker runtime proposal. Real historical enrichment is not complete and Phase 3C remains paused.
 
+> **Phase 3B.1a approved-description decision (5 August 2026):** Every public sermon requires one concise, human-reviewed and approved plain-text sermon description. `sermons.summary` remains the canonical field and the administration label is **Sermon description**; `seo_description` is a separate optional controlled override. Only approved summaries are public, searchable at weight C, or readiness-eligible. All 453 included historical records require approved descriptions before launch, and none of those real descriptions is claimed complete. Migration `0005_approved_sermon_descriptions.sql` adds the minimal lifecycle/provenance metadata and approved-only search input without duplicating the summary field.
+
 > **Permanent SEO decision:** The existing website performs well in organic search. Whole-site SEO non-regression is a launch-blocking acceptance criterion for every future milestone. Preserve existing search signals at minimum, improve technical SEO safely where possible, and do not launch unless one-to-one URL, metadata, canonical, crawlability, redirect, indexability, performance, and structured-data parity is demonstrated through the process in `seo-migration-validation-plan.md`.
 
 ---
@@ -93,7 +95,7 @@ The existing WordPress database is a migration source only. It must not become a
 | Whole-site SEO | Preserve existing organic-search signals at minimum; SEO parity is a launch gate and unexplained regression blocks cutover. |
 | Sermon date migration | Map the exact local WordPress `post_date` to preached/service date; preserve non-Sundays and flag them rather than changing them. |
 | Sermon migration scope | Include published and titled pending Advanced Sermons records; exclude drafts, blank-title pending, `wp_sb_*`, and other sermon-plugin post types. |
-| Sermon content completeness | Exactly one speaker plus an approved full transcript and 5–10 approved ordered Q&A pairs are required for scheduling/publishing; all 453 included historical records must pass before launch. |
+| Sermon content completeness | Exactly one speaker, one approved sermon description, an approved full transcript, and 5–10 approved ordered Q&A pairs are required for scheduling/publishing; all 453 included historical records must pass before launch. |
 | Scripture conflicts | Preserve postmeta and taxonomy values with independent provenance and reconcile reversibly. |
 | Media migration | Normalise YouTube and SermonAudio; never render imported embed HTML directly. |
 
@@ -595,7 +597,7 @@ Use UUID primary keys for new application entities unless the repository already
 | `id` | UUID primary key | Stable application identity. |
 | `title` | Text/varchar, required | Public title. |
 | `slug` | Case-insensitive unique value | Canonical path component. |
-| `summary` | Text, nullable | Listing/search summary. |
+| `summary` | Text, nullable only while incomplete | Visible sermon description; draft/in-review values remain private and approval is required for schedule/publish and all included launch records. |
 | `body` | Text, nullable | Sanitized long-form content. |
 | `status` | Controlled value | `draft`, `pending`, `scheduled`, `published`, `unpublished`, or `archived`. Permanent deletion is an operation, not a status. |
 | `service_date` | Date or timestamptz | Date preached; exact type depends on source semantics. |
@@ -607,7 +609,7 @@ Use UUID primary keys for new application entities unless the repository already
 | `transcript_search_document` | Text | Approved transcript-only lower-weight search document. |
 | `question_answer_search_document` | Text | Approved Q&A-only lower-weight search document. |
 | `seo_title` | Text, nullable | Explicit SEO title override. |
-| `seo_description` | Text, nullable | Explicit SEO description override. |
+| `seo_description` | Text, nullable, controlled | Explicit metadata/social override; otherwise the approved visible summary is the deterministic fallback. |
 | `social_title`, `social_description` | Text, nullable | Controlled social-sharing overrides; otherwise template-derived. |
 | `social_image_asset_id` | UUID, nullable | Managed production-safe social image relationship. |
 | `metadata` | JSONB, default `{}` | Rare, non-core attributes that do not drive normal search/filtering. |
@@ -627,13 +629,14 @@ SEO indexability and canonical policy are derived from route, template, environm
 
 - `speakers`: `id`, `name`, `slug`, `biography`, `image_asset_id`, source metadata, timestamps.
 - `sermons.speaker_id`: nullable foreign key while incomplete; exactly one valid speaker is mandatory before schedule/publish and for all 453 historical launch records.
+- `sermons.summary`: reused as the 1-2,000 character draft and 80-2,000 character approved description, with missing/draft/in-review/approved state, source type/reference, lifecycle timestamps, reviewer/approver subjects, and a summary row version. Two to four useful sentences is editorial guidance, not a mechanical rule.
 
 #### Full transcripts and questions
 
 - `sermon_transcripts`: one row per sermon; plain text body; `missing`, `draft`, `in_review`, or `approved`; non-secret provenance; created/updated/reviewed/approved timestamps and actors; optimistic row version.
 - `sermon_question_answers`: five to ten ordered plain-text question/answer rows for readiness; `draft`, `in_review`, or `approved`; provenance, timestamps, reviewer/approver, row version, and unique `(sermon_id, display_order)`.
-- `sermon_content_readiness`: derived view covering speaker, approved transcript, 5–10 all-approved Q&As, and controlled media. The service rejects schedule/publish with field-level issues when incomplete.
-- `sermon_enrichment_draft_imports`: local idempotency receipts only; imported transcript/Q&A content is always `draft` and requires human approval.
+- `sermon_content_readiness`: derived view covering speaker, approved description, approved transcript, 5–10 all-approved Q&As, and controlled media. The service rejects schedule/publish with field-level issues when incomplete.
+- `sermon_enrichment_draft_imports`: local idempotency receipts only; imported description/transcript/Q&A content remains `draft` and requires human approval. A different import is refused when a description is already approved.
 
 #### Series
 
@@ -806,7 +809,7 @@ Preferred initial implementation:
 - Weighted terms, for example:
   - Weight A: sermon title
   - Weight B: speaker, series, and scripture display text
-  - Weight C: topics, book, and summary
+  - Weight C: approved sermon description
   - Weight D: body plus approved transcript and approved Q&A text
 - Structured SQL filters for taxonomy, date, status, and media availability.
 - `pg_trgm` only if approved partial matching or typo tolerance requires it.
@@ -1325,6 +1328,8 @@ Target WCAG 2.2 AA practices:
 
 **Exit gate:** Local model correction is verified and documented. Phase 3C stays paused. The next separately authorised milestone is “Phase 3B.2 — controlled historical transcript and Q&A production/review rehearsal,” which must approve providers, cost ceilings, secure source access, batch sizes, human reviewers, quality rubric, and rollback before producing any of the 453 real enrichment sets.
 
+**Phase 3B.1a supersession:** The Phase 3B.1 exit gate above is complete but its two-output wording is superseded. Migration `0005` adds the approved description lifecycle/search/readiness requirement. Schedule/publish requires one speaker, approved description, approved transcript, 5-10 approved Q&As and controlled media. The next milestone is the three-output Phase 3B.2 rehearsal defined in Section 28A; no real description/transcript/Q&A work has begun.
+
 ### Phase 4 — Events and integrations
 
 1. Confirm the event source of truth.
@@ -1444,7 +1449,7 @@ The first release is complete only when:
 - Public sermon pages and search meet the agreed current-site requirements.
 - Search is PostgreSQL-backed, indexed, paginated, permission-safe, and does not preload all sermons.
 - Every sermon has exactly one speaker; any multi-speaker source anomaly is reported without silent selection. Series, topics, books, and approved optional taxonomies migrate at their required cardinality.
-- All 453 included historical records pass the exact content gate: 453 speakers, 453 approved complete transcripts, 453 records with 5–10 approved ordered Q&As, valid metadata/media, and zero incomplete; pending records remain non-public.
+- All 453 included historical records pass the exact content gate: 453 speakers, 453 approved descriptions, 453 approved complete transcripts, 453 records with 5–10 approved ordered Q&As, valid metadata/media, and zero incomplete; pending records remain non-public.
 - Required historic media and resources remain available.
 - Authorised users can safely manage the sermon lifecycle according to role.
 - Unauthorised users cannot access protected actions or draft data.
@@ -1481,6 +1486,14 @@ Build a staging-only vertical slice after discovery:
 This demonstration proves the architecture from legacy source through migration, PostgreSQL, API, authentication, administration, search, and public rendering before committing to production cutover.
 
 ---
+
+## 28A. Phase 3B.1a completion and next milestone
+
+Phase 3B.1a reuses `sermons.summary`, adds migration `0005`, and makes one approved description a permanent publication and launch criterion. The public SSR places the complete approved description below title/core metadata and before media, transcript and Q&A; it is visible, uncollapsed, escaped, and present without JavaScript. An approved explicit `seo_description` overrides metadata only, otherwise the approved visible description supplies deterministic description/social fallback. Search weights remain A title, B speaker/series/scripture/book, C approved description, and D body plus approved transcript/Q&A.
+
+The exact historical gate is 453 included, 453 sole speakers, 453 approved descriptions, 453 approved transcripts, 453 valid approved Q&A sets, 453 valid controlled-media records, 453 complete and zero incomplete. The current local anonymised fixture is intentionally incomplete and no real description, transcript or Q&A has been produced.
+
+Phase 3C remains paused. The exact next milestone is **Phase 3B.2 - controlled historical description, transcript and Q&A production/review rehearsal**. It requires separate authorization for source/provider access, cost ceiling, privacy/retention terms, deterministic batches and retry/resume rules, reviewers/approvers, distinct quality rubrics for all three outputs, correction/audit evidence and rollback. Start with an approved anonymised/non-production rehearsal; do not contact a provider or produce any of the 453 real output sets under Phase 3B.1a.
 
 ## 29. Reference Documentation
 

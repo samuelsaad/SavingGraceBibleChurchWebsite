@@ -28,6 +28,7 @@ const summary: SermonSummary = {
 
 const detail: SermonDetail = {
   ...summary,
+  seoDescription: null,
   body: null,
   media: [summary.primaryMedia!],
   transcript: { bodyText: "An approved transcript." },

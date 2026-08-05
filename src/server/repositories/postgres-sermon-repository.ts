@@ -32,6 +32,7 @@ type PublicSermonRow = QueryResultRow & {
 };
 
 type PublicSermonDetailRow = PublicSermonRow & {
+  seo_description: string | null;
   body: string | null;
   media: unknown;
   transcript: unknown;
@@ -56,6 +57,7 @@ function summaryFromRow(row: PublicSermonRow): SermonSummary {
 function detailFromRow(row: PublicSermonDetailRow): SermonDetail {
   return sermonDetailSchema.parse({
     ...summaryFromRow(row),
+    seoDescription: row.seo_description ?? null,
     body: row.body,
     media: row.media,
     transcript: row.transcript,

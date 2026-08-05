@@ -21,10 +21,14 @@ describe("historical enrichment contracts", () => {
 
   it("accepts 5–10 plain-text drafts and never grants approval", () => {
     const parsed = enrichmentDraftBundleSchema.parse({
-      schemaVersion: 1,
+      schemaVersion: 2,
       sourceWordPressId: 10,
       targetSermonId: idA,
       expectedRowVersion: 2,
+      description: {
+        bodyText: "A draft description grounded in the sermon transcript and scripture context.",
+        provenance: { sourceKind: "generated_draft", sourceReference: "local-job-10" }
+      },
       transcript: {
         bodyText: "Draft transcript",
         provenance: { sourceKind: "transcription", sourceReference: "local-job-10" }
@@ -41,10 +45,14 @@ describe("historical enrichment contracts", () => {
 
   it("rejects unsafe HTML, blank fields and invalid counts", () => {
     const base = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       sourceWordPressId: 10,
       targetSermonId: idA,
       expectedRowVersion: 2,
+      description: {
+        bodyText: "<iframe src='unsafe'></iframe>",
+        provenance: { sourceKind: "generated_draft", sourceReference: null }
+      },
       transcript: {
         bodyText: "<script>alert(1)</script>",
         provenance: { sourceKind: "manual", sourceReference: null }

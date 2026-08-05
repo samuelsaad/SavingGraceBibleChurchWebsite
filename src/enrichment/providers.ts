@@ -11,6 +11,18 @@ export interface TranscriptDraftProvider {
   prepareDraft(request: TranscriptDraftRequest): Promise<EnrichmentDraftBundle["transcript"]>;
 }
 
+export interface DescriptionDraftRequest {
+  sourceWordPressId: number;
+  sermonTitle: string;
+  transcriptBody: string;
+  scriptureReferences: string[];
+}
+
+export interface DescriptionDraftProvider {
+  readonly providerName: string;
+  prepareDraft(request: DescriptionDraftRequest): Promise<EnrichmentDraftBundle["description"]>;
+}
+
 export interface QuestionAnswerDraftRequest {
   sourceWordPressId: number;
   sermonTitle: string;
@@ -26,4 +38,5 @@ export interface QuestionAnswerDraftProvider {
 }
 
 // Deliberately interfaces only. Provider selection, credentials, network access,
-// cost approval, generation and human review belong to a separately authorised milestone.
+// cost approval, description/transcript/Q&A generation and human review belong to a separately
+// authorised milestone.

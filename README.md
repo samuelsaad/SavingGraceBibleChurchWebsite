@@ -1,6 +1,6 @@
 # Saving Grace Bible Church Website
 
-Local Phase 3B.1 single-administrator sermon content/readiness correction for the Astro/TypeScript/PostgreSQL replacement described in `church-website-architecture-plan.md`.
+Local Phase 3B.1a single-administrator approved sermon-description and content/readiness correction for the Astro/TypeScript/PostgreSQL replacement described in `church-website-architecture-plan.md`.
 
 ## Current scope
 
@@ -13,6 +13,7 @@ Local Phase 3B.1 single-administrator sermon content/readiness correction for th
 - Final default-deny single-`admin` policy with no editor/contributor or ownership-based behaviour
 - Transactional create/update/relationship operations, explicit lifecycle transitions, audit, and row-version concurrency
 - Exactly one nullable-while-incomplete speaker relationship; schedule/publish requires one and migration refuses multi-speaker anomalies
+- Reused `sermons.summary` as the reviewed public **Sermon description**, with explicit lifecycle/provenance, approved-only weight-C search and controlled `seo_description` fallback
 - First-class reviewed plain-text transcripts and 5–10 ordered reviewed Q&A pairs with approved-only lower-weight search
 - Derived readiness, exact 453/453 historical launch gate, deterministic enrichment queue, and idempotent draft-only import contract
 - Legacy query/date compatibility translation
@@ -21,11 +22,11 @@ Local Phase 3B.1 single-administrator sermon content/readiness correction for th
 - Date, status, slug, taxonomy, scripture, and media transformations
 - Structured migration audit/warning output
 - Permanent whole-site SEO non-regression, one-to-one URL mapping, and launch-gate planning
-- Responsive accessible six-step local `/admin` workflow with anonymised-data notice, progress, issue filters, checklist, transcript/Q&A editing, slug redirects, and safeguarded deletion dispositions
-- Server-rendered approved transcript/Q&A detail HTML; collapsed transcript remains in initial markup and list payloads omit heavy bodies
+- Responsive accessible six-step local `/admin` workflow with description editor/status/actions/counts, anonymised-data notice, progress, issue filters, checklist, transcript/Q&A editing, slug redirects, and safeguarded deletion dispositions
+- Server-rendered uncollapsed approved description before media/transcript/Q&A; collapsed transcript remains in initial markup and list payloads omit heavy bodies
 - Automated migration, security, lifecycle, configuration, and schema-contract tests
 
-This milestone does not include deployment, cloud infrastructure, Cognito configuration, production data loading, real historical transcript/Q&A production, external providers, or any WordPress mutation. The AWS runtime and Astro production adapter remain intentionally undecided. Yang's final single-admin, deletion, one-speaker, and content-readiness decisions are recorded in `decision-log.md` and `admin-api-contract.md`.
+This milestone does not include deployment, cloud infrastructure, Cognito configuration, production data loading, real historical description/transcript/Q&A production, external providers, or any WordPress mutation. The AWS runtime and Astro production adapter remain intentionally undecided. Yang's final single-admin, deletion, one-speaker, approved-description, and content-readiness decisions are recorded in `decision-log.md` and `admin-api-contract.md`.
 
 The disposable PostgreSQL 16.14 integration has been verified against only `savinggrace_sermons_test` on `127.0.0.1:5432`: ordered migration apply, importer load/rerun, public/admin repository and API tests, live loopback HTTP requests, rollback, clean reapply, and final anonymised reload passed. The local database is left in the applied fixture-backed development state with the API harness stopped.
 
@@ -52,7 +53,7 @@ npm run launch-readiness:local
 
 The dry-run command accepts an approved local JSON input and prints only the safe migration report. It does not connect to MariaDB or PostgreSQL and never writes records. Original media/embed values remain internal migration provenance and are deliberately omitted from stdout.
 
-The enrichment queue is deterministic by safe source WordPress ID and missing requirement. Draft import requires the same loopback/write gate as fixture loading, validates target/source identity and row version, rejects HTML-like content, records only a checksum receipt, remains idempotent, and never marks content reviewed or approved. The launch command is expected to exit unsuccessfully for the local three-record fixture and for production until all 453 included historical rows are complete.
+The enrichment queue is deterministic by safe source WordPress ID and missing requirement across description, transcript and Q&A. Draft import requires the same loopback/write gate as fixture loading, validates target/source identity and row version, rejects HTML-like content, records only a checksum receipt, remains idempotent, never marks content reviewed/approved, and refuses to replace a different approved description. The launch command is expected to exit unsuccessfully for the local three-record fixture and for production until all 453 included historical rows have approved descriptions and every other requirement.
 
 When a disposable loopback PostgreSQL database is available, apply the schema and load the anonymised fixture only with both `DATABASE_URL` and `ALLOW_LOCAL_DB_WRITE=1`:
 
@@ -85,6 +86,7 @@ The loader and integration suite refuse every target except `savinggrace_sermons
 - `src/migration`: importer, audit output, identity, and CLI
 - `src/enrichment`: strict queue/draft contracts, provider interfaces, and local idempotent PostgreSQL draft workflow
 - `src/readiness`: derived exact-count historical launch gate and safe CLI report
+- `historical-enrichment-plan.md`: three-output Phase 3B.2 contract, review boundary and exact launch gate
 - `db/migrations`: ordered PostgreSQL SQL migrations
 - `tests`: anonymised fixtures and automated contract tests
 
@@ -98,4 +100,4 @@ The proprietary `advanced-sermons*.zip` pattern and extracted plugin directories
 
 ## Next milestone
 
-Phase 3C remains paused. The exact recommended next milestone is **Phase 3B.2 — controlled historical transcript and Q&A production/review rehearsal**. It requires separate approval of source/provider access, cost ceiling, privacy terms, batch size/retries, reviewer assignments, transcript/Q&A quality rubric, correction/audit process, and rollback. Begin with anonymised/non-production rehearsal evidence; do not claim or launch until all 453 real records receive explicit human approval and the separate whole-site SEO gate also passes.
+Phase 3C remains paused. The exact recommended next milestone is **Phase 3B.2 - controlled historical description, transcript and Q&A production/review rehearsal**. It requires separate approval of source/provider access, cost ceiling, privacy/retention terms, deterministic batches/retries, reviewer/approver assignments, distinct quality rubrics for all three outputs, correction/audit process, and rollback. Begin with anonymised/non-production rehearsal evidence; none of the 453 real descriptions/transcripts/Q&A sets is complete, and launch remains blocked until all receive explicit human approval and the separate whole-site SEO gate passes.

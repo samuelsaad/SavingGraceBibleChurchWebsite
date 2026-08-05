@@ -14,6 +14,7 @@ async function main(): Promise<void> {
     const result = await pool.query<{
       source_wordpress_id: string;
       has_one_speaker: boolean;
+      has_approved_description: boolean;
       has_approved_transcript: boolean;
       approved_question_count: number;
       total_question_count: number;
@@ -23,6 +24,7 @@ async function main(): Promise<void> {
       `SELECT
          readiness.source_wordpress_id,
          readiness.has_one_speaker,
+         readiness.has_approved_description,
          readiness.has_approved_transcript,
          readiness.approved_question_count,
          readiness.total_question_count,
@@ -41,6 +43,7 @@ async function main(): Promise<void> {
     const records: HistoricalReadinessRecord[] = result.rows.map((row) => ({
       sourceWordPressId: Number(row.source_wordpress_id),
       hasOneSpeaker: row.has_one_speaker,
+      hasApprovedDescription: row.has_approved_description,
       hasApprovedTranscript: row.has_approved_transcript,
       approvedQuestionCount: row.approved_question_count,
       totalQuestionCount: row.total_question_count,

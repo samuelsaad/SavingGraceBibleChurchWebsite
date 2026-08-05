@@ -11,10 +11,19 @@ async function main(): Promise<void> {
   const rollback = process.argv.includes("--rollback");
   const phase3bOnly = process.argv.includes("--phase3b-only");
   const phase3b1Only = process.argv.includes("--phase3b1-only");
+  const phase3b1aOnly = process.argv.includes("--phase3b1a-only");
   if (apply === rollback) throw new Error("Choose exactly one of --apply or --rollback");
-  if (phase3bOnly && phase3b1Only) throw new Error("Choose at most one phase-only migration");
+  if ([phase3bOnly, phase3b1Only, phase3b1aOnly].filter(Boolean).length > 1) {
+    throw new Error("Choose at most one phase-only migration");
+  }
 
-  const migrationPaths = phase3b1Only
+  const migrationPaths = phase3b1aOnly
+    ? [
+        apply
+          ? "db/migrations/0005_approved_sermon_descriptions.sql"
+          : "db/migrations/0005_approved_sermon_descriptions.down.sql"
+      ]
+    : phase3b1Only
     ? [
         apply
           ? "db/migrations/0004_sermon_enrichment_readiness.sql"
@@ -31,9 +40,11 @@ async function main(): Promise<void> {
           "db/migrations/0001_initial.sql",
           "db/migrations/0002_admin_foundation.sql",
           "db/migrations/0003_single_admin_deletion_seo.sql",
-          "db/migrations/0004_sermon_enrichment_readiness.sql"
+          "db/migrations/0004_sermon_enrichment_readiness.sql",
+          "db/migrations/0005_approved_sermon_descriptions.sql"
         ]
       : [
+          "db/migrations/0005_approved_sermon_descriptions.down.sql",
           "db/migrations/0004_sermon_enrichment_readiness.down.sql",
           "db/migrations/0003_single_admin_deletion_seo.down.sql",
           "db/migrations/0002_admin_foundation.down.sql",
@@ -45,7 +56,7 @@ async function main(): Promise<void> {
       await pool.query(await readFile(migrationPath, "utf8"));
     }
     process.stdout.write(
-      `${apply ? "Applied" : "Rolled back"} local ${phase3b1Only ? "migration 0004" : phase3bOnly ? "migration 0003" : "migrations 0001-0004"}.\n`
+      `${apply ? "Applied" : "Rolled back"} local ${phase3b1aOnly ? "migration 0005" : phase3b1Only ? "migration 0004" : phase3bOnly ? "migration 0003" : "migrations 0001-0005"}.\n`
     );
   } finally {
     await pool.end();

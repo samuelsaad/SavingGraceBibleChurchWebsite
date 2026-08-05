@@ -7,7 +7,7 @@
 
 The existing website's organic-search performance must be preserved at minimum across the entire site. SEO regression is unacceptable and blocks launch. `seo-migration-validation-plan.md` is the detailed acceptance contract for the complete indexable URL baseline, one-to-one mapping, metadata/canonical parity, redirect quality, sitemaps/robots/structured data, internal links/orphans/errors, crawlability/indexability, server rendering, social metadata, accessibility/performance, pre-launch comparison, post-launch monitoring, and rollback.
 
-The Phase 3B.1 content gate is additive: all 453 included historical sermons must also have exactly one speaker, an approved complete transcript, 5–10 ordered all-approved Q&A pairs, required metadata, and valid controlled media. The five pending rows remain non-public but still count. Failure of either the content gate or whole-site SEO gate blocks launch.
+The Phase 3B.1a content gate is additive: all 453 included historical sermons must have exactly one speaker, one approved sermon description, an approved complete transcript, 5–10 ordered all-approved Q&A pairs, required metadata, and valid controlled media. The five pending rows remain non-public but still count. Failure of either the content gate or whole-site SEO gate blocks launch.
 
 Current discovery contains verified sermon URL/search/canonical/social-image evidence but not a complete whole-site crawl or Search Console/analytics baseline. Those are later explicitly approved read-only tasks; this milestone made no new production contact.
 
@@ -104,7 +104,7 @@ Yang confirmed that every residual-system row is excluded from migration and fro
 - Preserve Unicode titles and existing public slugs; no silent slug fallback for drafts.
 - Preserve local/GMT/modified source timestamps and explicitly flag zero draft GMT.
 - Map the exact local `post_date` calendar date to `service_date`; preserve four included non-Sundays unchanged and emit warnings.
-- Keep body/summary null or empty according to approved target semantics; do not generate content.
+- Keep body null/empty according to source. Preserve any nonblank summary as an imported draft; do not generate or auto-approve a sermon description during migration.
 - Assert anonymous queries cannot see pending/draft records.
 
 ### 3. Relationship and term transformation
@@ -271,25 +271,36 @@ Installed parent 3.7 and Pro 2.2 source resolves the core registration, date-ran
 ### Ordered migration and rollback evidence
 
 - `0004_sermon_enrichment_readiness.sql` replaced the local speaker join with nullable sole `sermons.speaker_id`, added transcripts, ordered Q&A, draft-import receipts, approved-only search documents, GIN rebuild, refresh functions/triggers, historical-backfill marker, and derived readiness view.
+- `0005_approved_sermon_descriptions.sql` reused `summary`, added constrained description review/provenance/concurrency fields and controlled `seo_description`, rebuilt the GIN-backed vector with approved-only summary weight C, extended refresh/readiness/backfill, and preserved existing nonblank summaries as drafts.
 - Real integration deliberately rolled `0004` back, inserted a second local relationship, and proved forward migration aborted transactionally with the affected sermon UUID while leaving the join table intact. After removing only the test anomaly, clean reapplication succeeded.
-- Independent `0004` rollback restored speaker joins and the prior search vector. The complete `0001`–`0004` set then cleanly reapplied. Final schema reapply and two fixture loads each reported three candidates and left exactly three sermons, not six.
+- Independent `0004` rollback restored speaker joins and the prior search vector. Independent `0005` rollback removed its lifecycle/SEO columns and constraints and restored the `0004` search/readiness view; clean `0005` reapplication succeeded. The complete `0001`-`0005` set then cleanly reapplied. Final schema reapply and two fixture loads each reported three candidates and left exactly three sermons, not six.
 
 ### Behaviour and search evidence
 
-- The service accepts incomplete drafts/imports but rejects future schedule/publish with `content_incomplete` and field issues until speaker, approved transcript, 5–10 approved consecutive Q&As, and controlled media pass.
+- The service accepts incomplete drafts/imports but rejects future schedule/publish with `content_incomplete` and field issues until speaker, approved description, approved transcript, 5–10 approved consecutive Q&As, and controlled media pass.
 - Unit boundaries prove four/eleven Q&A fail; five/ten pass; blanks/order fail; speaker arrays and unsafe HTML-like input are rejected.
-- Real PostgreSQL search matched unique terms present only in an approved transcript and approved Q&A. Public detail returned approved enrichment; pending/unapproved content stayed non-public. List responses omitted heavy bodies.
+- Real PostgreSQL search matched unique terms present only in an approved description, approved transcript and approved Q&A, while a draft-description-only term did not match. Public detail/list returned only approved descriptions; pending/unapproved content stayed non-public. List responses omitted heavy bodies.
 - Server-rendered detail tests prove the complete transcript is present in initial escaped HTML inside closed native `<details>` with “Read full transcript”; Q&A is also server-rendered, with no client fetch, script execution, or automatic FAQ JSON-LD.
-- The deterministic queue was byte-equivalent across repeats. A strict anonymised bundle imported as draft, identical rerun returned `unchanged`, one safe audit event remained, and no transcript/Q&A row became approved.
+- The deterministic queue was byte-equivalent across repeats. A strict three-output anonymised bundle imported as draft, identical rerun returned `unchanged`, one safe audit event remained, and no description/transcript/Q&A became approved. A later differing draft was refused after the description was explicitly approved.
 
 ### Test and local completion evidence
 
 - Real PostgreSQL suite: 22 files, 72 tests passed, zero skipped. It covered migration abort/rollback/reapply, importer rerun, repository/filter/search/public visibility, enrichment idempotency, publication rules, deletion/redirect safeguards, authorization, and API boundaries.
 - Final anonymised dry run: five inputs; three included (two published, one pending), two expected exclusions, zero rejected.
-- Final local readiness: included 3/453; sole speaker 2; approved transcript 0; approved 5–10 Q&A 0; valid controlled media 2; incomplete 3; expected exit code 1. Safe missing requirements were reported only by anonymised source IDs.
-- This is correct demonstration state, not historical completion. The real 453 transcripts/Q&A sets have not been retrieved, generated, reviewed, or approved.
+- Final local readiness: included 3/453; sole speaker 2; approved description 0; approved transcript 0; approved 5–10 Q&A 0; valid controlled media 2; complete 0; incomplete 3; expected exit code 1. Safe missing requirements are reported only by anonymised source IDs.
+- This is correct demonstration state, not historical completion. The real 453 description/transcript/Q&A sets have not been retrieved, generated, reviewed, or approved.
+
+### Phase 3B.1a verified local evidence - 5 August 2026
+
+- Credential-safe safety checks confirmed PostgreSQL 16.14, loopback `127.0.0.1`, port 5432, exact `_test` database `savinggrace_sermons_test`, and explicit write opt-in. No remote service was contacted.
+- The real suite passed 22/22 files and 80/80 tests with zero PostgreSQL skips. The standard suite passed 73 tests with the seven PostgreSQL cases intentionally omitted there; `test:postgres` is the authoritative zero-skip result.
+- Migration `0005` applied, independently rolled back while retaining three sermon rows, removed its lifecycle/SEO columns and every added constraint, restored the `0004` readiness view, and reapplied. The complete `0001`-`0005` set then rolled back cleanly, removed intended project objects while retaining `pgcrypto`, and reapplied.
+- Two real importer fixture loads each reported three candidates and left exactly three sermons/three included migration records. Final local readiness is approved descriptions 0, approved transcripts 0, valid Q&A sets 0, valid controlled media 2, complete 0 and incomplete 3.
+- Real defects corrected: rollback now explicitly removes the summary plain-text constraint; same-request approval metadata is computed from resulting rather than old row values; public SEO output is gated with description approval; and the detail projection retains `body`. Regression tests cover each correction.
+- Browser acceptance verified the rebuilt desktop editor, character feedback, review/approval actions and live announcements; public initial HTML verified uncollapsed description ordering, no scripts, canonical URL, explicit SEO override precedence and description fallback. The 390px contract retains the single-column form, non-wide fields, off-canvas navigation and flexible action buttons under the 800/480px rules.
+- The importer dry run reported total 5, included 3, excluded 2 and rejected 0. Offline dependency audit reported zero vulnerabilities. Credential/private-key/proprietary-source scans reported no secret pattern, private key, PHP or tracked ZIP.
 
 ### Phase 3B.2 acceptance prerequisite
 
-Before any real historical enrichment, separately approve a controlled provider/source and cost ceiling, secure source access, privacy/retention terms, deterministic batch manifest, retry/resume limits, transcript accuracy rubric, scripture-grounded Q&A rubric, named human reviewers/approvers, correction/audit evidence, and failure rollback. Rehearse on an approved non-production batch first; do not contact providers or claim progress under Phase 3B.1.
+Before any real historical enrichment, separately approve a controlled provider/source and cost ceiling, secure source access, privacy/retention terms, deterministic batch manifest, retry/resume limits, separate description/transcript/Q&A quality rubrics, named human reviewers/approvers, correction/audit evidence, and failure rollback. Description drafting may use the approved transcript and scripture context but can never self-approve. Rehearse all three outputs on an approved non-production batch first; do not contact providers or claim progress under Phase 3B.1a.
 - Non-blocking maintenance note remains: `pg` 8.22 warns that automatic `pgpass` support will be removed in pg 9. An approved asynchronous password provider/secret-store adapter is required before that major upgrade; no credential was read, displayed, or logged in this milestone.

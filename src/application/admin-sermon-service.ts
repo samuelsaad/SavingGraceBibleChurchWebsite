@@ -58,6 +58,15 @@ function sermonDetailDto(sermon: StoredSermonDetail): AdminSermonDetail {
   return adminSermonDetailSchema.parse({
     ...sermonSummaryDto(sermon),
     summary: sermon.summary,
+    summaryStatus: sermon.summaryStatus,
+    summarySourceKind: sermon.summarySourceKind,
+    summarySourceReference: sermon.summarySourceReference,
+    summaryCreatedAt: sermon.summaryCreatedAt,
+    summaryUpdatedAt: sermon.summaryUpdatedAt,
+    summaryReviewedAt: sermon.summaryReviewedAt,
+    summaryApprovedAt: sermon.summaryApprovedAt,
+    summaryRowVersion: sermon.summaryRowVersion,
+    seoDescription: sermon.seoDescription,
     body: sermon.body,
     speaker: sermon.speaker,
     series: sermon.series,
@@ -160,6 +169,10 @@ export class AdminSermonService {
             "slug",
             "serviceDate",
             "summary",
+            "summaryStatus",
+            "summarySourceKind",
+            "summarySourceReference",
+            "seoDescription",
             "body",
             "speakerId",
             "seriesIds",
@@ -190,6 +203,27 @@ export class AdminSermonService {
       if (!sermon) notFound("Sermon was not found");
       if (sermon.rowVersion !== input.rowVersion) conflict();
       assertMayEditSermon(identity, sermon);
+      if (input.summary !== undefined && input.summaryStatus === undefined) {
+        invalid("summaryStatus", "Choose the sermon description review status when editing its text");
+      }
+      const summary = input.summary !== undefined ? input.summary : sermon.summary;
+      const summaryStatus = input.summaryStatus ?? sermon.summaryStatus;
+      const summaryLength = summary?.trim().length ?? 0;
+      if (summaryStatus === "missing" && summaryLength > 0) {
+        invalid("summaryStatus", "A nonblank sermon description cannot have missing status");
+      }
+      if (summaryStatus !== "missing" && summaryLength === 0) {
+        invalid("summary", "Sermon description text is required once work has started");
+      }
+      if (summaryStatus === "approved" && summaryLength < 80) {
+        invalid("summary", "An approved sermon description must contain at least 80 characters");
+      }
+      const seoDescription = input.seoDescription !== undefined
+        ? input.seoDescription
+        : sermon.seoDescription;
+      if (seoDescription && summaryStatus !== "approved") {
+        invalid("seoDescription", "An SEO description override requires an approved sermon description");
+      }
       const invalidRelationship = await transaction.validateRelationshipIds(input);
       if (invalidRelationship) invalid(invalidRelationship, "One or more relationship IDs do not exist");
       await transaction.updateSermon(id, input, identity.subject);

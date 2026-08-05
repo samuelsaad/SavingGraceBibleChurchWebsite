@@ -1,6 +1,7 @@
 export interface HistoricalReadinessRecord {
   sourceWordPressId: number;
   hasOneSpeaker: boolean;
+  hasApprovedDescription: boolean;
   hasApprovedTranscript: boolean;
   approvedQuestionCount: number;
   totalQuestionCount: number;
@@ -12,9 +13,11 @@ export interface LaunchReadinessReport {
   expectedIncludedHistoricalRecords: number;
   includedHistoricalRecords: number;
   recordsWithExactlyOneSpeaker: number;
+  approvedDescriptions: number;
   approvedTranscripts: number;
   recordsWithApprovedQuestionAnswers: number;
   recordsWithValidControlledMedia: number;
+  completeRecords: number;
   incompleteRecords: number;
   passed: boolean;
   missing: Array<{
@@ -33,6 +36,7 @@ export function evaluateHistoricalLaunchReadiness(
   const missing = ordered.flatMap((record) => {
     const requirements: string[] = [];
     if (!record.hasOneSpeaker) requirements.push("speaker");
+    if (!record.hasApprovedDescription) requirements.push("approved_description");
     if (!record.hasApprovedTranscript) requirements.push("approved_transcript");
     if (
       record.totalQuestionCount < 5 ||
@@ -58,11 +62,13 @@ export function evaluateHistoricalLaunchReadiness(
     expectedIncludedHistoricalRecords,
     includedHistoricalRecords: ordered.length,
     recordsWithExactlyOneSpeaker: ordered.filter((record) => record.hasOneSpeaker).length,
+    approvedDescriptions: ordered.filter((record) => record.hasApprovedDescription).length,
     approvedTranscripts: ordered.filter((record) => record.hasApprovedTranscript).length,
     recordsWithApprovedQuestionAnswers,
     recordsWithValidControlledMedia: ordered.filter(
       (record) => record.hasValidControlledMedia
     ).length,
+    completeRecords: ordered.length - missing.length,
     incompleteRecords: missing.length,
     missing
   };
@@ -71,6 +77,7 @@ export function evaluateHistoricalLaunchReadiness(
     passed:
       report.includedHistoricalRecords === expectedIncludedHistoricalRecords &&
       report.recordsWithExactlyOneSpeaker === expectedIncludedHistoricalRecords &&
+      report.approvedDescriptions === expectedIncludedHistoricalRecords &&
       report.approvedTranscripts === expectedIncludedHistoricalRecords &&
       report.recordsWithApprovedQuestionAnswers === expectedIncludedHistoricalRecords &&
       report.recordsWithValidControlledMedia === expectedIncludedHistoricalRecords &&

@@ -49,6 +49,23 @@ describe("PostgreSQL schema contract", () => {
     expect(down).toContain("DROP COLUMN speaker_id");
   });
 
+  it("reuses summary with a reversible approved-description lifecycle and approved-only search", async () => {
+    const [up, down] = await Promise.all([
+      readFile("db/migrations/0005_approved_sermon_descriptions.sql", "utf8"),
+      readFile("db/migrations/0005_approved_sermon_descriptions.down.sql", "utf8")
+    ]);
+    expect(up).toContain("ADD COLUMN summary_status");
+    expect(up).toContain("ADD COLUMN seo_description");
+    expect(up).toContain("summary_search_document");
+    expect(up).toContain("has_approved_description");
+    expect(up).toContain("summary_status = 'approved'");
+    expect(up).toContain("seo_description IS NULL OR summary_status = 'approved'");
+    expect(up).not.toMatch(/ADD COLUMN (description|blurb)\b/);
+    expect(down).toContain("DROP COLUMN IF EXISTS summary_status");
+    expect(down).toContain("DROP CONSTRAINT IF EXISTS sermons_summary_plain_text_check");
+    expect(down).toContain("coalesce(summary, '')");
+  });
+
   it("has an explicit reversible local rollback", async () => {
     const down = await readFile("db/migrations/0001_initial.down.sql", "utf8");
     expect(down).toContain("DROP TABLE IF EXISTS sermons");

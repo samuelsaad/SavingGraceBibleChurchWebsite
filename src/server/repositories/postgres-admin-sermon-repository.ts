@@ -35,6 +35,15 @@ type SermonRow = QueryResultRow & {
   row_version: number;
   updated_at: string;
   summary?: string | null;
+  summary_status?: StoredSermonDetail["summaryStatus"];
+  summary_source_kind?: StoredSermonDetail["summarySourceKind"];
+  summary_source_reference?: string | null;
+  summary_created_at?: string | null;
+  summary_updated_at?: string | null;
+  summary_reviewed_at?: string | null;
+  summary_approved_at?: string | null;
+  summary_row_version?: number;
+  seo_description?: string | null;
   body?: string | null;
   speaker: StoredSermonDetail["speaker"];
   series: StoredSermonDetail["series"];
@@ -42,6 +51,7 @@ type SermonRow = QueryResultRow & {
   readiness: {
     isComplete: boolean;
     hasOneSpeaker: boolean;
+    hasApprovedDescription: boolean;
     hasApprovedTranscript: boolean;
     approvedQuestionCount: number;
     totalQuestionCount: number;
@@ -86,6 +96,7 @@ const sermonSummaryProjection = `
     SELECT jsonb_build_object(
       'isComplete', readiness.is_complete,
       'hasOneSpeaker', readiness.has_one_speaker,
+      'hasApprovedDescription', readiness.has_approved_description,
       'hasApprovedTranscript', readiness.has_approved_transcript,
       'approvedQuestionCount', readiness.approved_question_count,
       'totalQuestionCount', readiness.total_question_count,
@@ -102,6 +113,15 @@ const sermonSummaryProjection = `
 
 const sermonDetailProjection = `${sermonSummaryProjection},
   s.summary,
+  s.summary_status,
+  s.summary_source_kind,
+  s.summary_source_reference,
+  CASE WHEN s.summary_created_at IS NULL THEN NULL ELSE ${timestamp("s.summary_created_at")} END AS summary_created_at,
+  CASE WHEN s.summary_updated_at IS NULL THEN NULL ELSE ${timestamp("s.summary_updated_at")} END AS summary_updated_at,
+  CASE WHEN s.summary_reviewed_at IS NULL THEN NULL ELSE ${timestamp("s.summary_reviewed_at")} END AS summary_reviewed_at,
+  CASE WHEN s.summary_approved_at IS NULL THEN NULL ELSE ${timestamp("s.summary_approved_at")} END AS summary_approved_at,
+  s.summary_row_version,
+  s.seo_description,
   s.body,
   COALESCE((
     SELECT jsonb_agg(jsonb_build_object('id', bc.id, 'name', bc.name, 'slug', bc.slug)
@@ -175,6 +195,16 @@ function readinessFromRow(row: SermonRow): ContentReadinessResult {
   if (!value.hasOneSpeaker) {
     issues.push({ path: "speakerId", code: "missing_speaker", message: "Choose one speaker before scheduling or publishing." });
   }
+  if (!value.hasApprovedDescription) {
+    const hasText = Boolean(row.summary?.trim());
+    issues.push({
+      path: hasText ? "summaryStatus" : "summary",
+      code: hasText ? "description_awaiting_review" : "missing_description",
+      message: hasText
+        ? "The sermon description must be reviewed and approved."
+        : "Add a sermon description before scheduling or publishing."
+    });
+  }
   if (!value.hasApprovedTranscript) {
     const status = row.transcript?.status ?? value.transcriptStatus;
     issues.push({
@@ -200,6 +230,7 @@ function readinessFromRow(row: SermonRow): ContentReadinessResult {
   return {
     isComplete: value.isComplete,
     hasOneSpeaker: value.hasOneSpeaker,
+    hasApprovedDescription: value.hasApprovedDescription,
     hasApprovedTranscript: value.hasApprovedTranscript,
     approvedQuestionCount: value.approvedQuestionCount,
     totalQuestionCount: value.totalQuestionCount,
@@ -232,6 +263,15 @@ function detailFromRow(row: SermonRow): StoredSermonDetail {
   return {
     ...summaryFromRow(row),
     summary: row.summary ?? null,
+    summaryStatus: row.summary_status ?? "missing",
+    summarySourceKind: row.summary_source_kind ?? "manual",
+    summarySourceReference: row.summary_source_reference ?? null,
+    summaryCreatedAt: row.summary_created_at ?? null,
+    summaryUpdatedAt: row.summary_updated_at ?? null,
+    summaryReviewedAt: row.summary_reviewed_at ?? null,
+    summaryApprovedAt: row.summary_approved_at ?? null,
+    summaryRowVersion: row.summary_row_version ?? 1,
+    seoDescription: row.seo_description ?? null,
     body: row.body ?? null,
     books: row.books ?? [],
     scriptureReferences: row.scripture_references ?? [],
@@ -302,11 +342,35 @@ class PostgresAdminSermonTransaction implements AdminSermonTransaction {
   async insertSermon(input: CreateSermonInput, actorSubject: string): Promise<string> {
     const result = await this.client.query<{ id: string }>(
       `INSERT INTO sermons (
-         title, slug, summary, body, status, service_date,
-         speaker_id, created_by_subject, updated_by_subject
-       ) VALUES ($1, $2, $3, $4, 'draft', $5::date, $6, $7, $7)
+         title, slug, summary, summary_status, summary_source_kind,
+         summary_source_reference, summary_created_at, summary_updated_at,
+         summary_reviewed_by_subject, summary_approved_by_subject,
+         summary_reviewed_at, summary_approved_at, seo_description,
+         body, status, service_date, speaker_id, created_by_subject, updated_by_subject
+       ) VALUES (
+         $1, $2, $3, $4, $5, $6,
+         CASE WHEN $3::text IS NULL THEN NULL ELSE now() END,
+         CASE WHEN $3::text IS NULL THEN NULL ELSE now() END,
+         CASE WHEN $4 IN ('in_review', 'approved') THEN $10 ELSE NULL END,
+         CASE WHEN $4 = 'approved' THEN $10 ELSE NULL END,
+         CASE WHEN $4 IN ('in_review', 'approved') THEN now() ELSE NULL END,
+         CASE WHEN $4 = 'approved' THEN now() ELSE NULL END,
+         $7, $8, 'draft', $9::date, $11, $10, $10
+       )
        RETURNING id`,
-      [input.title, input.slug, input.summary, input.body, input.serviceDate, input.speakerId, actorSubject]
+      [
+        input.title,
+        input.slug,
+        input.summary,
+        input.summaryStatus,
+        input.summarySourceKind,
+        input.summarySourceReference,
+        input.seoDescription,
+        input.body,
+        input.serviceDate,
+        actorSubject,
+        input.speakerId
+      ]
     );
     return result.rows[0]!.id;
   }
@@ -317,6 +381,10 @@ class PostgresAdminSermonTransaction implements AdminSermonTransaction {
       ["slug", "slug"],
       ["serviceDate", "service_date", "::date"],
       ["summary", "summary"],
+      ["summaryStatus", "summary_status"],
+      ["summarySourceKind", "summary_source_kind"],
+      ["summarySourceReference", "summary_source_reference"],
+      ["seoDescription", "seo_description"],
       ["body", "body"],
       ["speakerId", "speaker_id"]
     ];
@@ -327,6 +395,35 @@ class PostgresAdminSermonTransaction implements AdminSermonTransaction {
         values.push(input[key]);
         sets.push(`${column} = $${values.length}${cast}`);
       }
+    }
+    const descriptionChanged = [
+      "summary",
+      "summaryStatus",
+      "summarySourceKind",
+      "summarySourceReference"
+    ].some((key) => input[key as keyof UpdateSermonInput] !== undefined);
+    if (descriptionChanged) {
+      let summaryIsNullExpression = "summary IS NULL";
+      if (input.summary !== undefined) {
+        values.push(input.summary);
+        summaryIsNullExpression = `$${values.length}::text IS NULL`;
+      }
+      let resultingStatusExpression = "summary_status";
+      if (input.summaryStatus !== undefined) {
+        values.push(input.summaryStatus);
+        resultingStatusExpression = `$${values.length}::text`;
+      }
+      values.push(actorSubject);
+      const actorParameter = `$${values.length}`;
+      sets.push(
+        `summary_created_at = CASE WHEN ${summaryIsNullExpression} THEN NULL ELSE COALESCE(summary_created_at, now()) END`,
+        `summary_updated_at = CASE WHEN ${summaryIsNullExpression} THEN NULL ELSE now() END`,
+        `summary_reviewed_by_subject = CASE WHEN ${resultingStatusExpression} IN ('in_review', 'approved') THEN ${actorParameter} ELSE NULL END`,
+        `summary_approved_by_subject = CASE WHEN ${resultingStatusExpression} = 'approved' THEN ${actorParameter} ELSE NULL END`,
+        `summary_reviewed_at = CASE WHEN ${resultingStatusExpression} IN ('in_review', 'approved') THEN now() ELSE NULL END`,
+        `summary_approved_at = CASE WHEN ${resultingStatusExpression} = 'approved' THEN now() ELSE NULL END`,
+        "summary_row_version = summary_row_version + 1"
+      );
     }
     values.push(actorSubject, id);
     sets.push(
@@ -835,6 +932,10 @@ export class PostgresAdminSermonRepository implements AdminSermonRepository {
       conditions.push("EXISTS (SELECT 1 FROM sermon_content_readiness r WHERE r.sermon_id = s.id AND r.is_complete)");
     } else if (query.contentIssue === "missing_speaker") {
       conditions.push("s.speaker_id IS NULL");
+    } else if (query.contentIssue === "missing_description") {
+      conditions.push("(s.summary IS NULL OR char_length(trim(s.summary)) = 0)");
+    } else if (query.contentIssue === "description_awaiting_review") {
+      conditions.push("s.summary IS NOT NULL AND s.summary_status IN ('draft', 'in_review')");
     } else if (query.contentIssue === "missing_transcript") {
       conditions.push(`NOT EXISTS (
         SELECT 1 FROM sermon_transcripts transcript
@@ -871,6 +972,7 @@ export class PostgresAdminSermonRepository implements AdminSermonRepository {
         total: number;
         complete: number;
         with_one_speaker: number;
+        with_approved_description: number;
         with_approved_transcript: number;
         with_required_question_answers: number;
         with_valid_controlled_media: number;
@@ -879,6 +981,7 @@ export class PostgresAdminSermonRepository implements AdminSermonRepository {
            count(*)::integer AS total,
            count(*) FILTER (WHERE is_complete)::integer AS complete,
            count(*) FILTER (WHERE has_one_speaker)::integer AS with_one_speaker,
+           count(*) FILTER (WHERE has_approved_description)::integer AS with_approved_description,
            count(*) FILTER (WHERE has_approved_transcript)::integer AS with_approved_transcript,
            count(*) FILTER (
              WHERE total_question_count BETWEEN 5 AND 10 AND all_questions_approved
@@ -915,6 +1018,7 @@ export class PostgresAdminSermonRepository implements AdminSermonRepository {
         complete: progress.complete,
         remaining: progress.total - progress.complete,
         withOneSpeaker: progress.with_one_speaker,
+        withApprovedDescription: progress.with_approved_description,
         withApprovedTranscript: progress.with_approved_transcript,
         withRequiredQuestionAnswers: progress.with_required_question_answers,
         withValidControlledMedia: progress.with_valid_controlled_media

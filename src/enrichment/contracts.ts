@@ -9,6 +9,8 @@ const safePlainText = (maximum: number) =>
 
 export const enrichmentNeedSchema = z.enum([
   "missing_speaker",
+  "missing_description",
+  "description_awaiting_review",
   "missing_transcript",
   "transcript_awaiting_review",
   "insufficient_questions",
@@ -25,7 +27,7 @@ export const enrichmentQueueRecordSchema = z.object({
 }).strict();
 
 export const enrichmentQueueManifestSchema = z.object({
-  schemaVersion: z.literal(1),
+  schemaVersion: z.literal(2),
   sourceSnapshotId: z.string().trim().min(1).max(200),
   records: z.array(enrichmentQueueRecordSchema)
 }).strict();
@@ -42,11 +44,20 @@ const questionAnswerProvenanceSchema = z.object({
   sourceReference: safePlainText(500).trim().min(1).nullable().default(null)
 }).strict();
 
+const descriptionProvenanceSchema = z.object({
+  sourceKind: z.enum(["manual", "imported", "generated_draft"]),
+  sourceReference: safePlainText(500).trim().min(1).nullable().default(null)
+}).strict();
+
 export const enrichmentDraftBundleSchema = z.object({
-  schemaVersion: z.literal(1),
+  schemaVersion: z.literal(2),
   sourceWordPressId: z.number().int().positive(),
   targetSermonId: z.uuid(),
   expectedRowVersion: z.number().int().positive(),
+  description: z.object({
+    bodyText: safePlainText(2_000).trim().min(1),
+    provenance: descriptionProvenanceSchema
+  }).strict(),
   transcript: z.object({
     bodyText: safePlainText(500_000).trim().min(1),
     provenance: transcriptProvenanceSchema
@@ -65,7 +76,7 @@ export function deterministicEnrichmentQueue(
   records: z.infer<typeof enrichmentQueueRecordSchema>[]
 ): EnrichmentQueueManifest {
   return enrichmentQueueManifestSchema.parse({
-    schemaVersion: 1,
+    schemaVersion: 2,
     sourceSnapshotId,
     records: [...records]
       .map((record) => ({ ...record, needs: [...record.needs].sort() }))

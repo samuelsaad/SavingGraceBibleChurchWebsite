@@ -1,7 +1,7 @@
 # Phase 3B Administration and Dashboard Contract
 
 **Status:** Yang's final Phase 3B.1 decisions are approved and implemented locally; Cognito/AWS and production remain excluded.
-**Scope:** Sermons, one-speaker relationship, speaker/series/book definitions, scripture, controlled media, full transcript, ordered Q&A, content readiness, audit history, permanent deletion, enrichment progress, and the local administration dashboard.
+**Scope:** Sermons, approved sermon descriptions, one-speaker relationship, speaker/series/book definitions, scripture, controlled media, full transcript, ordered Q&A, content readiness, audit history, permanent deletion, enrichment progress, and the local administration dashboard.
 **Excluded:** Production identities, role management, WordPress-style metadata, production data, deployment, and every remote service.
 
 ## Identity and authorization boundary
@@ -37,7 +37,7 @@ Any capability not listed is denied. The provisional Phase 3 editor/contributor 
 
 Clients cannot patch `status` directly. Every mutation requires the current positive `rowVersion`. All non-published states remain excluded from every public route and public count.
 
-The complete checklist is derived server-side: one valid `speakerId`, nonblank approved transcript, 5–10 nonblank consecutively ordered all-approved Q&A rows, and valid controlled media plus existing required sermon metadata. Incomplete drafts/imported records are valid, but schedule/publish returns `400 content_incomplete` with every field-level issue. Historical WordPress status is preserved and incomplete included rows carry `historicalBackfillRequired`.
+The complete checklist is derived server-side: one valid `speakerId`, one nonblank approved 80-2,000 character sermon description, nonblank approved transcript, 5–10 nonblank consecutively ordered all-approved Q&A rows, and valid controlled media plus existing required sermon metadata. Incomplete drafts/imported records are valid, but schedule/publish returns `400 content_incomplete` with every field-level issue. Historical WordPress status is preserved and incomplete included rows carry `historicalBackfillRequired`.
 
 ## Permanent deletion contract
 
@@ -78,13 +78,13 @@ POST   /api/v1/admin/taxonomies/:kind
 PATCH  /api/v1/admin/taxonomies/:kind/:id
 ```
 
-The sermon list accepts bounded title/slug search, state, sole speaker ID, series ID, inclusive service-date bounds, content issue, page, and page size. `contentIssue` supports `complete`, `missing_speaker`, `missing_transcript`, `transcript_awaiting_review`, `insufficient_questions`, `questions_awaiting_review`, and `missing_media`. It returns state counts, sole-speaker/series summaries, per-record readiness, and aggregate completed/remaining checklist counts. `:kind` is `speakers`, `series`, or `books`.
+The sermon list accepts bounded title/slug search, state, sole speaker ID, series ID, inclusive service-date bounds, content issue, page, and page size. `contentIssue` supports `complete`, `missing_speaker`, `missing_description`, `description_awaiting_review`, `missing_transcript`, `transcript_awaiting_review`, `insufficient_questions`, `questions_awaiting_review`, and `missing_media`. It returns state counts, sole-speaker/series summaries, per-record readiness, and aggregate approved-description plus completed/remaining checklist counts. `:kind` is `speakers`, `series`, or `books`.
 
 ## Validation and response safety
 
 - Strict request schemas reject unknown fields, direct status edits, arbitrary postmeta, raw iframe/embed HTML, and uncontrolled extensions.
 - `speakerId` is a single nullable UUID; speaker arrays/unknown multi-speaker fields are rejected.
-- Transcript and Q&A are plain text, bounded, status-controlled, provenance-aware, and audited. Approved transitions stamp the verified administrator subject and time; generated/imported drafts never approve themselves.
+- Sermon description, transcript and Q&A are plain text, bounded, status-controlled, provenance-aware, concurrency-protected and audited. Approved transitions stamp the verified administrator subject and time; generated/imported drafts never approve themselves. Description text changes require an explicit description status.
 - Media writes accept only provider-matched YouTube video or SermonAudio audio URLs with controlled labels.
 - Relationship UUIDs must exist; dashboard-edited scripture references are `curated` while immutable imported provenance remains separate and private.
 - Relationship replacement, search refresh, slug dispositions, tombstone/audit writes, and deletion share the relevant transaction.
@@ -92,11 +92,11 @@ The sermon list accepts bounded title/slug search, state, sole speaker ID, serie
 - Normal admin responses exclude migration mappings, private source values, legacy metrics, embed configuration, internal warnings, credentials, and iframe HTML.
 - Audit responses expose safe action metadata and controlled deletion tombstones, never request payloads or deleted content.
 
-Public `/api/v1/sermons` selects only non-deleted `published` records. List responses omit transcript/Q&A bodies. Published detail responses include approved transcript and approved ordered Q&A only; unapproved content and provenance are absent.
+Public `/api/v1/sermons` selects only non-deleted `published` records. List responses may include the approved bounded `summary` but omit transcript/Q&A bodies. Published detail responses include approved summary, approved transcript and approved ordered Q&A only; unapproved content and provenance are absent. Detail includes controlled `seoDescription` only for server metadata selection.
 
 ## Dashboard contract
 
-The static Astro dashboard is served by the local Node harness at `/admin` only when `ENABLE_LOCAL_DASHBOARD=1`. It opens with a visible anonymised-demonstration notice and aggregate completion progress. Editing is a six-step plain-language workflow: (1) basics, (2) speaker and scripture, (3) media, (4) full transcript, (5) questions and answers, and (6) review and publish. It provides issue filters, per-sermon checklist, helpful empty/field/state guidance, obvious save/review/schedule/publish actions, taxonomy/audit/SEO safeguards, concurrency/validation/unsaved-change feedback, and responsive keyboard-accessible controls.
+The static Astro dashboard is served by the local Node harness at `/admin` only when `ENABLE_LOCAL_DASHBOARD=1`. It opens with a visible anonymised-demonstration notice and aggregate completion progress. Editing remains six steps: (1) basics with **Sermon description**, character feedback, lifecycle state and review/approval actions, (2) speaker and scripture, (3) media, (4) full transcript, (5) questions and answers, and (6) review and publish. It provides missing/awaiting-review filters, description progress/checklist, accessible announcements, validation/concurrency feedback, taxonomy/audit/SEO safeguards and keyboard-accessible controls.
 
 The shell is labelled local-development-only, sends no remote requests, receives `X-Robots-Tag: noindex`, and is served with restrictive content/security headers. Navigation, forms, dialogs, tables, live status feedback, visible focus, reduced-motion support, and mobile/tablet/desktop layouts use semantic accessible controls. The interface does not duplicate service authorization or lifecycle decisions.
 
@@ -104,4 +104,4 @@ The shell is labelled local-development-only, sends no remote requests, receives
 
 The dashboard displays the resulting title, slug, and expected canonical public sermon URL. It warns before changing a previously published slug. Slug mapping and deletion dispositions are explicit contract fields rather than WordPress-style postmeta.
 
-The current schema still does not persist general SEO overrides. A future ordered migration and versioned contract may add only approved fields such as `seoTitle`, `seoDescription`, controlled social title/description, a managed social image, and managed image alt text. No role may add arbitrary meta names, raw `<head>` fragments, scripts, external canonicals, arbitrary JSON-LD, or unrestricted metadata. Indexability remains derived from route, environment, template, and publication state.
+Migration `0005` persists only the controlled optional `seoDescription` override. The approved visible description is the deterministic metadata/social fallback when the override is null. Future ordered migrations may add only approved fields such as `seoTitle`, controlled social title/description, a managed social image, and managed image alt text. No role may add arbitrary meta names, raw `<head>` fragments, scripts, external canonicals, arbitrary JSON-LD, or unrestricted metadata. Indexability remains derived from route, environment, template, and publication state.

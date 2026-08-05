@@ -11,6 +11,7 @@ export interface EnrichmentImportResult {
   sourceWordPressId: number;
   targetSermonId: string;
   outcome: "imported_as_draft" | "unchanged";
+  descriptionStatus: "draft" | "approved";
   transcriptStatus: "draft";
   questionAnswerCount: number;
   warnings: Array<{ code: string; safeDetail: string }>;
@@ -22,6 +23,7 @@ interface QueueRow {
   slug: string;
   row_version: number;
   has_one_speaker: boolean;
+  summary_status: "missing" | "draft" | "in_review" | "approved";
   transcript_status: "missing" | "draft" | "in_review" | "approved" | null;
   total_question_count: number;
   approved_question_count: number;
@@ -33,6 +35,11 @@ interface QueueRow {
 function needsFromRow(row: QueueRow): EnrichmentQueueManifest["records"][number]["needs"] {
   const needs: EnrichmentQueueManifest["records"][number]["needs"] = [];
   if (!row.has_one_speaker) needs.push("missing_speaker");
+  if (row.summary_status === "missing") {
+    needs.push("missing_description");
+  } else if (row.summary_status !== "approved") {
+    needs.push("description_awaiting_review");
+  }
   if (!row.transcript_status || row.transcript_status === "missing") {
     needs.push("missing_transcript");
   } else if (row.transcript_status !== "approved") {
@@ -61,6 +68,7 @@ export async function buildEnrichmentQueue(
        s.slug,
        s.row_version,
        readiness.has_one_speaker,
+       s.summary_status,
        transcript.status AS transcript_status,
        readiness.total_question_count,
        readiness.approved_question_count,
@@ -122,8 +130,10 @@ export async function importEnrichmentDraftBundle(
       id: string;
       source_wordpress_id: string | null;
       row_version: number;
+      summary: string | null;
+      summary_status: "missing" | "draft" | "in_review" | "approved";
     }>(
-      `SELECT id, source_wordpress_id, row_version
+      `SELECT id, source_wordpress_id, row_version, summary, summary_status
        FROM sermons
        WHERE id = $1 AND deleted_at IS NULL
        FOR UPDATE`,
@@ -141,6 +151,7 @@ export async function importEnrichmentDraftBundle(
         sourceWordPressId: bundle.sourceWordPressId,
         targetSermonId: bundle.targetSermonId,
         outcome: "unchanged",
+        descriptionStatus: sermon.summary_status === "approved" ? "approved" : "draft",
         transcriptStatus: "draft",
         questionAnswerCount: bundle.questionAnswers.length,
         warnings: []
@@ -149,6 +160,38 @@ export async function importEnrichmentDraftBundle(
     if (sermon.row_version !== bundle.expectedRowVersion) {
       throw new Error(
         `Enrichment import refused stale row version for source WordPress ID ${bundle.sourceWordPressId}`
+      );
+    }
+    if (
+      sermon.summary_status === "approved" &&
+      sermon.summary !== bundle.description.bodyText
+    ) {
+      throw new Error(
+        `approved_description_conflict for source WordPress ID ${bundle.sourceWordPressId}`
+      );
+    }
+
+    if (sermon.summary_status !== "approved") {
+      await client.query(
+        `UPDATE sermons
+         SET summary = $2,
+             summary_status = 'draft',
+             summary_source_kind = $3,
+             summary_source_reference = $4,
+             summary_created_at = COALESCE(summary_created_at, now()),
+             summary_updated_at = now(),
+             summary_reviewed_by_subject = NULL,
+             summary_approved_by_subject = NULL,
+             summary_reviewed_at = NULL,
+             summary_approved_at = NULL,
+             summary_row_version = summary_row_version + 1
+         WHERE id = $1`,
+        [
+          bundle.targetSermonId,
+          bundle.description.bodyText,
+          bundle.description.provenance.sourceKind,
+          bundle.description.provenance.sourceReference
+        ]
       );
     }
 
@@ -216,7 +259,7 @@ export async function importEnrichmentDraftBundle(
          actor_subject, actor_role, action, entity_type, entity_id,
          changed_fields, request_correlation_id, outcome
        ) VALUES ($1, 'system', 'sermon.enrichment_draft_imported', 'sermon', $2,
-         '["transcript","questionAnswers"]'::jsonb, $3, 'succeeded')`,
+         '["summary","transcript","questionAnswers"]'::jsonb, $3, 'succeeded')`,
       [actorSubject, bundle.targetSermonId, `enrichment-${checksum.slice(0, 16)}`]
     );
     await client.query("COMMIT");
@@ -224,6 +267,7 @@ export async function importEnrichmentDraftBundle(
       sourceWordPressId: bundle.sourceWordPressId,
       targetSermonId: bundle.targetSermonId,
       outcome: "imported_as_draft",
+      descriptionStatus: sermon.summary_status === "approved" ? "approved" : "draft",
       transcriptStatus: "draft",
       questionAnswerCount: bundle.questionAnswers.length,
       warnings: [

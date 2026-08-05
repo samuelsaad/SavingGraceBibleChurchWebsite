@@ -19,7 +19,7 @@ SEO parity is a production launch gate. Launch must be blocked when the complete
 | Pagination | `/sermons/page/{n}/`; 50 pages, with 7 results on the last page | `source-and-database-confirmed` |
 | Sermon discoverability | Speaker, series, passage, book, keyword, date, ordering, and pagination behaviours documented | `source-and-database-confirmed` |
 | Detail canonical | Representative public sermon detail self-canonicalised to its public `/sermons/{slug}/` URL | `database-observed` |
-| Per-sermon SEO overrides | AIOSEO rows exist, but effective title/description/social overrides are empty/null | `database-observed` |
+| Per-sermon SEO overrides | AIOSEO rows exist, but effective title/description/social overrides are empty/null. Target `seo_description` is a controlled optional override; otherwise the approved visible sermon description is used. | `database-observed-and-approved-target-decision` |
 | Social-image defect | A representative public detail page used a staging-origin Open Graph image | `database-observed` |
 | Stored host mismatch | WordPress `home`/`siteurl` do not match the observed canonical public origin; values were deliberately not retrieved | `database-observed` |
 | Historic sermon slug redirects | No sermon `_wp_old_slug` rows | `database-observed` |
@@ -160,8 +160,9 @@ Exact numeric rollback thresholds must be based on the approved baseline and lau
 
 Production launch is blocked unless all are true:
 
-- The separate sermon content gate reports exactly 453 included historical records, 453 sole speakers, 453 approved complete transcripts, 453 records with 5–10 approved ordered Q&A pairs and valid required metadata/media, and zero incomplete. The five pending rows remain non-indexable/non-public.
-- Every published transcript and Q&A section is present in initial server HTML at its stable self-canonical detail URL; collapsing uses native disclosure without removing source content. Unapproved enrichment is absent from public detail/search/sitemaps and heavy bodies are absent from list responses.
+- The separate sermon content gate reports exactly 453 included historical records, 453 sole speakers, 453 approved sermon descriptions, 453 approved complete transcripts, 453 records with 5–10 approved ordered Q&A pairs, 453 valid required metadata/media records, 453 complete, and zero incomplete. The five pending rows remain non-indexable/non-public.
+- Every approved sermon description is visible and uncollapsed below title/core metadata and before media/transcript/Q&A in initial server HTML at its stable self-canonical detail URL. Every published transcript and Q&A section is also present initially; collapsing uses native disclosure only for transcript. Unapproved description/enrichment is absent from public detail/search/sitemaps and heavy bodies are absent from list responses.
+- Metadata uses a controlled explicit `seo_description` when set; otherwise the approved visible description provides deterministic plain-text description/social fallback. Validation confirms precedence without claiming a search engine will reproduce the wording as its snippet.
 - No FAQ structured data is emitted from sermon Q&A unless a later explicit evidence-backed SEO decision approves it.
 
 1. One hundred percent of baseline indexable URLs have a reviewed disposition.

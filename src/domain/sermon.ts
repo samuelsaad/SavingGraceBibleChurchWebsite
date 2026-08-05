@@ -40,7 +40,7 @@ export const sermonSummarySchema = z.object({
   title: z.string().min(1),
   slug: z.string().min(1),
   serviceDate: isoDateSchema,
-  summary: z.string().nullable(),
+  summary: z.string().min(80).max(2_000).nullable(),
   speaker: z.object({ name: z.string(), slug: z.string() }).nullable(),
   series: z.array(z.object({ name: z.string(), slug: z.string() })),
   scriptureReferences: z.array(scriptureReferenceDtoSchema),
@@ -51,6 +51,7 @@ export const sermonSummarySchema = z.object({
 export type SermonSummary = z.infer<typeof sermonSummarySchema>;
 
 export const sermonDetailSchema = sermonSummarySchema.extend({
+  seoDescription: z.string().min(1).max(320).nullable(),
   body: z.string().nullable(),
   media: z.array(publicMediaSchema),
   transcript: z.object({ bodyText: z.string().min(1) }).nullable(),

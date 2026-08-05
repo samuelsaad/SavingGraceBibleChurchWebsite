@@ -8,7 +8,10 @@ import {
   permanentlyDeleteSermonInputSchema,
   updateSermonInputSchema
 } from "../src/api/contracts/admin-sermons";
-import { buildPublishedSermonListQuery } from "../src/server/queries/public-sermons";
+import {
+  buildPublishedSermonDetailQuery,
+  buildPublishedSermonListQuery
+} from "../src/server/queries/public-sermons";
 
 describe("public sermon API contract", () => {
   it("applies safe pagination defaults", () => {
@@ -34,6 +37,7 @@ describe("public sermon API contract", () => {
 
     expect(query.text).not.toContain("grace' OR true--");
     expect(query.text).toContain("s.status = 'published'");
+    expect(query.text).toContain("summary_status = 'approved'");
     expect(query.values).toContain("grace' OR true--");
     expect(query.values).toContain("%grace' OR true--%");
     expect(query.values).toContain("example-speaker");
@@ -57,6 +61,12 @@ describe("public sermon API contract", () => {
       "romans-8",
       "romans"
     ]);
+  });
+
+  it("keeps the detail body while gating description and SEO override together", () => {
+    const query = buildPublishedSermonDetailQuery("an-anonymised-sermon");
+    expect(query.text).toContain("s.body");
+    expect(query.text.match(/summary_status = 'approved'/g)).toHaveLength(2);
   });
 });
 
@@ -96,6 +106,32 @@ describe("admin sermon API contract", () => {
     };
     expect(createSermonInputSchema.parse(valid)).not.toHaveProperty("status");
     expect(() => createSermonInputSchema.parse({ ...valid, status: "published" })).toThrow();
+  });
+
+  it("requires bounded plain text and explicit status for sermon description edits", () => {
+    const base = { title: "Local draft", slug: "local-draft", serviceDate: "2026-08-02" };
+    expect(() => createSermonInputSchema.parse({
+      ...base,
+      summary: " ",
+      summaryStatus: "draft"
+    })).toThrow("Sermon description text is required");
+    expect(() => createSermonInputSchema.parse({
+      ...base,
+      summary: "<script>unsafe</script>",
+      summaryStatus: "draft"
+    })).toThrow("Use plain text");
+    expect(() => updateSermonInputSchema.parse({ rowVersion: 1, summary: "Edited text" })).toThrow(
+      "Choose the sermon description review status"
+    );
+    expect(() => createSermonInputSchema.parse({
+      ...base,
+      summary: "Too short",
+      summaryStatus: "approved"
+    })).toThrow("at least 80 characters");
+    expect(() => createSermonInputSchema.parse({
+      ...base,
+      seoDescription: "Metadata cannot bypass description approval"
+    })).toThrow("requires an approved sermon description");
   });
 
   it("accepts only one nullable speaker and rejects unsafe enrichment content", () => {

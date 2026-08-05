@@ -4,6 +4,7 @@ import { evaluateHistoricalLaunchReadiness } from "../src/readiness/launch-readi
 const complete = (sourceWordPressId: number) => ({
   sourceWordPressId,
   hasOneSpeaker: true,
+  hasApprovedDescription: true,
   hasApprovedTranscript: true,
   approvedQuestionCount: 5,
   totalQuestionCount: 5,
@@ -20,6 +21,16 @@ describe("historical launch gate", () => {
     expect(report.incompleteRecords).toBe(1);
     expect(report.missing).toEqual([
       { sourceWordPressId: 200, requirements: ["approved_transcript"] }
+    ]);
+  });
+
+  it("fails if even one description is missing or unapproved", () => {
+    const records = Array.from({ length: 453 }, (_, index) => complete(index + 1));
+    records[452]!.hasApprovedDescription = false;
+    const report = evaluateHistoricalLaunchReadiness(records);
+    expect(report).toMatchObject({ passed: false, approvedDescriptions: 452, completeRecords: 452 });
+    expect(report.missing).toEqual([
+      { sourceWordPressId: 453, requirements: ["approved_description"] }
     ]);
   });
 

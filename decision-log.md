@@ -152,6 +152,12 @@ Approved transcript/Q&A text participates in public search only at weight D. Pub
 
 The dashboard usability failure is treated as a product defect. The approved workflow is: sermon basics; speaker and scripture; media; full transcript; questions and answers; review and publish. It includes an anonymised-local-data notice, plain state descriptions, aggregate progress, issue filters, per-sermon checklist, field/empty-state guidance, obvious actions, and accessible responsive/concurrency/validation/unsaved-change feedback. Internal migration/database terms remain outside normal editing screens.
 
+### D-117 - Approved sermon description required for every sermon
+
+`sermons.summary` is the canonical visible sermon description; no duplicate description, blurb or generic metadata field is introduced. Administration labels it **Sermon description**. It uses missing, draft, in-review and approved states with bounded plain text, provenance, lifecycle timestamps, reviewer/approver subjects, optimistic row-version protection and material-change audit coverage. Existing nonblank summaries migrate as drafts and are never silently approved. Only approved descriptions are public, included in weight-C search or readiness. Approved text is 80-2,000 characters; approximately two to four useful sermon-grounded sentences is guidance, not a mechanical rule.
+
+`seo_description` is a separate optional controlled 1-320 character override for metadata/social tags. When absent, the approved visible description is the deterministic fallback. The public SSR shows the complete description uncollapsed below title/core metadata and before media, transcript and Q&A. The publication gate and exact historical gate require approved descriptions; production needs 453/453 and zero incomplete. None of the 453 real descriptions is complete or approved under this milestone. Migration `0005_approved_sermon_descriptions.sql` and its independent rollback/reapply are locally verified. (`approved decision`, locally verified on PostgreSQL 16.14)
+
 ## Decisions still required
 
 - Final AWS runtime/adapter and production networking.
@@ -161,4 +167,4 @@ The dashboard usability failure is treated as a product defect. The approved wor
 - Approved runtime secret-provider integration before any future upgrade from `pg` 8 to `pg` 9, whose automatic `pgpass` support is deprecated.
 - Explicit read-only approval and access method for the fresh whole-site crawl and church-owned Search Console/analytics baseline.
 - Production canonical host/slash policy, any intentionally crawlable filter landing pages, and baseline-derived SEO performance/rollback thresholds.
-- Provider(s), cost ceiling, secure source-access method, batch/retry policy, reviewer assignments, quality rubric, and acceptance evidence for the separately authorised Phase 3B.2 historical transcript/Q&A production and human-review rehearsal.
+- Provider(s), cost ceiling, secure source-access method, privacy/retention terms, batch/retry policy, reviewer/approver assignments, separate description/transcript/Q&A quality rubrics, correction/audit process, and rollback evidence for the separately authorised Phase 3B.2 three-output production and human-review rehearsal.

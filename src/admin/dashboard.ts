@@ -11,6 +11,7 @@ type Relationship = { id: string; name: string; slug: string };
 type Readiness = {
   isComplete: boolean;
   hasOneSpeaker: boolean;
+  hasApprovedDescription: boolean;
   hasApprovedTranscript: boolean;
   approvedQuestionCount: number;
   totalQuestionCount: number;
@@ -54,6 +55,15 @@ type ControlledMedia = {
 };
 type SermonDetail = SermonSummary & {
   summary: string | null;
+  summaryStatus: "missing" | "draft" | "in_review" | "approved";
+  summarySourceKind: "manual" | "imported" | "generated_draft";
+  summarySourceReference: string | null;
+  summaryCreatedAt: string | null;
+  summaryUpdatedAt: string | null;
+  summaryReviewedAt: string | null;
+  summaryApprovedAt: string | null;
+  summaryRowVersion: number;
+  seoDescription: string | null;
   body: string | null;
   books: Relationship[];
   scriptureReferences: ScriptureReference[];
@@ -95,6 +105,7 @@ type ListResponse = {
     complete: number;
     remaining: number;
     withOneSpeaker: number;
+    withApprovedDescription: number;
     withApprovedTranscript: number;
     withRequiredQuestionAnswers: number;
     withValidControlledMedia: number;
@@ -248,25 +259,26 @@ async function renderDashboard(): Promise<void> {
   const statuses: SermonStatus[] = ["draft", "pending", "scheduled", "published", "unpublished", "archived"];
   const progress = sermons.readinessProgress;
   main.innerHTML = `${pageHeading("Dashboard", "Follow the guided checklist until each sermon is ready for review and publication.", '<a class="button primary" href="/admin/sermons/new" data-route>Create sermon</a>')}
-    <div class="callout"><strong>Local demonstration data only.</strong><p>These anonymised records test the workflow. The 453 real historical sermons have not yet received their reviewed transcripts and questions.</p></div>
+    <div class="callout"><strong>Local demonstration data only.</strong><p>These anonymised records test the workflow. The 453 real historical sermons have not yet received their approved descriptions, transcripts and questions.</p></div>
     <section class="panel progress-panel" aria-labelledby="enrichment-progress-heading">
       <h2 id="enrichment-progress-heading">Historical content progress</h2>
       <p><strong>${progress.complete} of ${progress.total} local records complete</strong> · ${progress.remaining} remaining</p>
       <progress max="${Math.max(progress.total, 1)}" value="${progress.complete}">${progress.complete} of ${progress.total}</progress>
       <div class="stats-grid compact">
         <article class="stat-card"><span>One speaker</span><strong>${progress.withOneSpeaker}/${progress.total}</strong></article>
+        <article class="stat-card"><span>Approved description</span><strong>${progress.withApprovedDescription}/${progress.total}</strong></article>
         <article class="stat-card"><span>Approved transcript</span><strong>${progress.withApprovedTranscript}/${progress.total}</strong></article>
         <article class="stat-card"><span>Approved questions</span><strong>${progress.withRequiredQuestionAnswers}/${progress.total}</strong></article>
         <article class="stat-card"><span>Controlled media</span><strong>${progress.withValidControlledMedia}/${progress.total}</strong></article>
       </div>
-      <div class="action-row"><a class="button" href="/admin/sermons?contentIssue=missing_speaker" data-route>Find missing speakers</a><a class="button" href="/admin/sermons?contentIssue=missing_transcript" data-route>Find missing transcripts</a><a class="button" href="/admin/sermons?contentIssue=insufficient_questions" data-route>Find missing questions</a></div>
+      <div class="action-row"><a class="button" href="/admin/sermons?contentIssue=missing_speaker" data-route>Find missing speakers</a><a class="button" href="/admin/sermons?contentIssue=missing_description" data-route>Find missing descriptions</a><a class="button" href="/admin/sermons?contentIssue=description_awaiting_review" data-route>Review descriptions</a><a class="button" href="/admin/sermons?contentIssue=missing_transcript" data-route>Find missing transcripts</a><a class="button" href="/admin/sermons?contentIssue=insufficient_questions" data-route>Find missing questions</a></div>
     </section>
     <section class="stats-grid" aria-label="Sermon counts by state">
       ${statuses.map((status) => `<article class="stat-card"><span>${escapeHtml(status)}</span><strong>${sermons.countsByStatus[status]}</strong></article>`).join("")}
     </section>
     <div class="grid-two">
       <section class="panel"><h2>Recently updated</h2><div class="table-wrap"><table><thead><tr><th>Sermon</th><th>State</th><th>Service date</th><th>Speaker</th><th>Series</th><th>Scheduled</th><th>Checklist</th></tr></thead><tbody>${sermonRows(sermons.data)}</tbody></table></div></section>
-      <aside class="panel"><h2>What the states mean</h2><dl>${statuses.map((status) => `<dt><span class="status-pill ${status}">${status}</span></dt><dd>${escapeHtml(stateDescriptions[status])}</dd>`).join("")}</dl><div class="callout"><strong>SEO non-regression is a launch gate.</strong><p>Published slugs retain their paths. Unapproved transcripts and questions are never public.</p></div></aside>
+      <aside class="panel"><h2>What the states mean</h2><dl>${statuses.map((status) => `<dt><span class="status-pill ${status}">${status}</span></dt><dd>${escapeHtml(stateDescriptions[status])}</dd>`).join("")}</dl><div class="callout"><strong>SEO non-regression is a launch gate.</strong><p>Published slugs retain their paths. Unapproved descriptions, transcripts and questions are never public.</p></div></aside>
     </div>`;
 }
 
@@ -311,6 +323,8 @@ async function renderSermonList(): Promise<void> {
           ${[
             ["complete", "Complete"],
             ["missing_speaker", "Missing speaker"],
+            ["missing_description", "Missing sermon description"],
+            ["description_awaiting_review", "Description awaiting review"],
             ["missing_transcript", "Missing transcript"],
             ["transcript_awaiting_review", "Transcript awaiting review"],
             ["insufficient_questions", "Needs 5–10 questions"],
@@ -359,6 +373,7 @@ function questionAnswerRow(item: Partial<EditableQuestionAnswer>, index: number)
 function readinessChecklist(readiness: Readiness | null): string {
   const items = [
     ["One speaker selected", readiness?.hasOneSpeaker ?? false],
+    ["Sermon description approved", readiness?.hasApprovedDescription ?? false],
     ["Complete transcript approved", readiness?.hasApprovedTranscript ?? false],
     ["5–10 questions and answers approved", readiness?.hasRequiredQuestionAnswers ?? false],
     ["Controlled sermon media valid", readiness?.hasValidControlledMedia ?? false]
@@ -397,12 +412,15 @@ async function renderSermonForm(id?: string): Promise<void> {
     <div id="form-feedback"></div>
     <form id="sermon-form" class="stack" novalidate>
       <section class="panel form-grid">
-        <div class="wide step-heading"><span>Step 1 of 6</span><h2>1. Sermon basics</h2><p>Start with the title, stable public address, service date and summary.</p></div>
+        <div class="wide step-heading"><span>Step 1 of 6</span><h2>1. Sermon basics</h2><p>Start with the title, stable public address, service date and reviewed sermon description.</p></div>
         <label><span>Title</span><input id="sermon-title" name="title" required maxlength="240" value="${escapeHtml(detail?.title ?? "")}" /></label>
         <label><span>Slug</span><input id="sermon-slug" name="slug" required maxlength="200" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" value="${escapeHtml(detail?.slug ?? "")}" /><small class="field-hint">Lowercase letters, numbers, and hyphens. Historic changes create a redirect.</small></label>
         <label><span>Service date</span><input name="serviceDate" type="date" required value="${escapeHtml(detail?.serviceDate ?? new Date().toISOString().slice(0, 10))}" /></label>
         <label><span>Schedule time</span><input id="scheduled-for" type="datetime-local" value="${detail?.scheduledFor ? escapeHtml(detail.scheduledFor.slice(0, 16)) : ""}" /><small class="field-hint">Used only by the Schedule action and must be in the future.</small></label>
-        <label class="wide"><span>Summary</span><textarea name="summary" maxlength="2000">${escapeHtml(detail?.summary ?? "")}</textarea></label>
+        <label class="wide"><span>Sermon description</span><textarea id="sermon-description" name="summary" maxlength="2000" aria-describedby="sermon-description-guidance sermon-description-count">${escapeHtml(detail?.summary ?? "")}</textarea><small id="sermon-description-guidance" class="field-hint">Normally write 2–4 useful plain-text sentences grounded in the sermon, transcript and scripture. Approval requires 80–2,000 characters; no mechanical sentence count is enforced.</small><small id="sermon-description-count" class="field-hint" aria-live="polite">${detail?.summary?.trim().length ?? 0} of 80–2,000 characters for approval</small></label>
+        <label><span>Description status</span><select id="description-status" name="summaryStatus"><option value="missing"${!detail || detail.summaryStatus === "missing" ? " selected" : ""}>Missing</option><option value="draft"${detail?.summaryStatus === "draft" ? " selected" : ""}>Draft — not public</option><option value="in_review"${detail?.summaryStatus === "in_review" ? " selected" : ""}>Ready for human review</option><option value="approved"${detail?.summaryStatus === "approved" ? " selected" : ""}>Approved for public page</option></select><small class="field-hint">Only approved description text is public, searchable or launch-ready.</small></label>
+        <div><span class="field-label">Description review actions</span><div class="action-row"><button class="button" type="button" data-description-status="in_review">Send to review</button><button class="button" type="button" data-description-status="approved">Approve description</button></div></div>
+        <label class="wide"><span>SEO description override (optional)</span><textarea name="seoDescription" maxlength="320">${escapeHtml(detail?.seoDescription ?? "")}</textarea><small class="field-hint">Controlled plain text for metadata only. When blank, the approved visible sermon description provides the deterministic metadata fallback.</small></label>
         <label class="wide"><span>Short sermon notes</span><textarea name="body" maxlength="200000" rows="7">${escapeHtml(detail?.body ?? "")}</textarea><small class="field-hint">Use the full transcript step below for the complete spoken message.</small></label>
       </section>
       <section class="panel form-grid">
@@ -431,10 +449,10 @@ async function renderSermonForm(id?: string): Promise<void> {
       </section>
       <section class="panel">
         <div class="step-heading"><span>Step 6 of 6</span><h2>6. Review and publish</h2><p>Resolve every checklist item before scheduling or publishing. Saving a draft remains available at any time.</p></div>
-        ${detail?.historicalBackfillRequired ? '<div class="callout"><strong>Historical backfill required.</strong><p>This imported record preserves its original WordPress state, but launch remains blocked until its transcript and questions are approved.</p></div>' : ""}
+        ${detail?.historicalBackfillRequired ? '<div class="callout"><strong>Historical backfill required.</strong><p>This imported record preserves its original WordPress state, but launch remains blocked until its description, transcript and questions are approved.</p></div>' : ""}
         <h3>Completion checklist</h3>${readinessChecklist(detail?.readiness ?? null)}
         <h3>Search preview</h3>
-        <div class="seo-preview"><strong id="seo-title-preview">${escapeHtml(detail?.title ?? "Untitled sermon")}</strong><code id="seo-url-preview">${escapeHtml(expectedPublicSermonUrl(detail?.slug ?? "new-sermon"))}</code><p class="subtle">The current schema has no arbitrary SEO metadata store. Explicit allowlisted SEO fields remain a future ordered migration and contract decision.</p></div>
+        <div class="seo-preview"><strong id="seo-title-preview">${escapeHtml(detail?.title ?? "Untitled sermon")}</strong><code id="seo-url-preview">${escapeHtml(expectedPublicSermonUrl(detail?.slug ?? "new-sermon"))}</code><p class="subtle">The optional allowlisted SEO description overrides metadata only; otherwise the approved visible description is used. No arbitrary metadata store is exposed.</p></div>
         <div id="slug-warning"></div>
       </section>
       <div class="form-actions"><button class="button primary" type="submit">${detail ? "Save changes" : "Create draft"}</button><span class="subtle" id="dirty-state">No unsaved changes</span></div>
@@ -446,6 +464,9 @@ async function renderSermonForm(id?: string): Promise<void> {
   const titleInput = document.querySelector<HTMLInputElement>("#sermon-title")!;
   const slugInput = document.querySelector<HTMLInputElement>("#sermon-slug")!;
   const dirtyState = document.querySelector<HTMLElement>("#dirty-state")!;
+  const descriptionInput = document.querySelector<HTMLTextAreaElement>("#sermon-description")!;
+  const descriptionStatus = document.querySelector<HTMLSelectElement>("#description-status")!;
+  const descriptionCount = document.querySelector<HTMLElement>("#sermon-description-count")!;
   let slugManuallyEdited = Boolean(detail);
   const updatePreview = () => {
     document.querySelector<HTMLElement>("#seo-title-preview")!.textContent = titleInput.value || "Untitled sermon";
@@ -457,6 +478,21 @@ async function renderSermonForm(id?: string): Promise<void> {
   titleInput.addEventListener("input", () => { if (!slugManuallyEdited) slugInput.value = slugify(titleInput.value); updatePreview(); });
   slugInput.addEventListener("input", () => { slugManuallyEdited = true; updatePreview(); });
   updatePreview();
+  const updateDescriptionCount = () => {
+    const length = descriptionInput.value.trim().length;
+    descriptionCount.textContent = `${length} of 80–2,000 characters for approval${length > 0 && length < 80 ? " — add more detail before approval" : ""}`;
+  };
+  descriptionInput.addEventListener("input", updateDescriptionCount);
+  descriptionStatus.addEventListener("change", () => announce(`Sermon description status changed to ${descriptionStatus.selectedOptions[0]?.textContent ?? descriptionStatus.value}`));
+  for (const button of document.querySelectorAll<HTMLButtonElement>("[data-description-status]")) {
+    button.addEventListener("click", () => {
+      descriptionStatus.value = button.dataset.descriptionStatus!;
+      descriptionStatus.dispatchEvent(new Event("change"));
+      dirty = true;
+      dirtyState.textContent = "Unsaved changes";
+    });
+  }
+  updateDescriptionCount();
 
   const qaEditors = document.querySelector<HTMLElement>("#qa-editors")!;
   const qaCount = document.querySelector<HTMLElement>("#qa-count")!;
@@ -509,6 +545,10 @@ async function renderSermonForm(id?: string): Promise<void> {
       slug: String(data.get("slug")),
       serviceDate: String(data.get("serviceDate")),
       summary: String(data.get("summary") ?? "").trim() || null,
+      summaryStatus: String(data.get("summaryStatus") ?? "missing"),
+      summarySourceKind: detail?.summarySourceKind ?? "manual",
+      summarySourceReference: detail?.summarySourceReference ?? null,
+      seoDescription: String(data.get("seoDescription") ?? "").trim() || null,
       body: String(data.get("body") ?? "").trim() || null,
       speakerId: String(data.get("speakerId") ?? "") || null,
       seriesIds: selectedValues(form.elements.namedItem("seriesIds") as HTMLSelectElement),

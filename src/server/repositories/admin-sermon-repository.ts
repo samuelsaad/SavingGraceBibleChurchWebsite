@@ -40,6 +40,15 @@ export interface StoredSermonSummary {
 
 export interface StoredSermonDetail extends StoredSermonSummary {
   summary: string | null;
+  summaryStatus: CreateSermonInput["summaryStatus"];
+  summarySourceKind: CreateSermonInput["summarySourceKind"];
+  summarySourceReference: string | null;
+  summaryCreatedAt: string | null;
+  summaryUpdatedAt: string | null;
+  summaryReviewedAt: string | null;
+  summaryApprovedAt: string | null;
+  summaryRowVersion: number;
+  seoDescription: string | null;
   body: string | null;
   speaker: { id: string; name: string; slug: string } | null;
   series: Array<{ id: string; name: string; slug: string }>;
@@ -74,6 +83,7 @@ export interface StoredSermonPage {
     complete: number;
     remaining: number;
     withOneSpeaker: number;
+    withApprovedDescription: number;
     withApprovedTranscript: number;
     withRequiredQuestionAnswers: number;
     withValidControlledMedia: number;

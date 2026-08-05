@@ -47,6 +47,10 @@ function disposableConnectionString(): string {
 
 function approvedEnrichment() {
   return {
+    summary: "This approved local description explains the sermon message and prepares a visitor to engage with its scripture-grounded application.",
+    summaryStatus: "approved" as const,
+    summarySourceKind: "manual" as const,
+    summarySourceReference: null,
     transcript: {
       bodyText: "A complete anonymised transcript reviewed for local integration testing.",
       status: "approved" as const,
@@ -73,6 +77,8 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   let down3: string;
   let up4: string;
   let down4: string;
+  let up5: string;
+  let down5: string;
 
   beforeAll(async () => {
     pool = new Pool({ connectionString: disposableConnectionString(), max: 4 });
@@ -98,7 +104,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       postgres_server: true
     });
 
-    [up1, down1, up2, down2, up3, down3, up4, down4] = await Promise.all([
+    [up1, down1, up2, down2, up3, down3, up4, down4, up5, down5] = await Promise.all([
       readFile("db/migrations/0001_initial.sql", "utf8"),
       readFile("db/migrations/0001_initial.down.sql", "utf8"),
       readFile("db/migrations/0002_admin_foundation.sql", "utf8"),
@@ -106,19 +112,35 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       readFile("db/migrations/0003_single_admin_deletion_seo.sql", "utf8"),
       readFile("db/migrations/0003_single_admin_deletion_seo.down.sql", "utf8"),
       readFile("db/migrations/0004_sermon_enrichment_readiness.sql", "utf8"),
-      readFile("db/migrations/0004_sermon_enrichment_readiness.down.sql", "utf8")
+      readFile("db/migrations/0004_sermon_enrichment_readiness.down.sql", "utf8"),
+      readFile("db/migrations/0005_approved_sermon_descriptions.sql", "utf8"),
+      readFile("db/migrations/0005_approved_sermon_descriptions.down.sql", "utf8")
     ]);
+    const phase3b1aPresent = await pool.query<{ present: boolean }>(
+      "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'sermons' AND column_name = 'summary_status') AS present"
+    );
+    if (phase3b1aPresent.rows[0]?.present) await pool.query(down5);
     const phase3b1Present = await pool.query<{ present: boolean }>(
       "SELECT to_regclass('public.sermon_transcripts') IS NOT NULL AS present"
     );
     if (phase3b1Present.rows[0]?.present) await pool.query(down4);
-    await pool.query(down3);
-    await pool.query(down2);
-    await pool.query(down1);
+    const phase3bPresent = await pool.query<{ present: boolean }>(
+      "SELECT to_regclass('public.sermon_deletion_tombstones') IS NOT NULL AS present"
+    );
+    if (phase3bPresent.rows[0]?.present) await pool.query(down3);
+    const adminFoundationPresent = await pool.query<{ present: boolean }>(
+      "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'sermons' AND column_name = 'created_by_subject') AS present"
+    );
+    if (adminFoundationPresent.rows[0]?.present) await pool.query(down2);
+    const basePresent = await pool.query<{ present: boolean }>(
+      "SELECT to_regclass('public.sermons') IS NOT NULL AS present"
+    );
+    if (basePresent.rows[0]?.present) await pool.query(down1);
     await pool.query(up1);
     await pool.query(up2);
     await pool.query(up3);
     await pool.query(up4);
+    await pool.query(up5);
 
     const fixture = legacySermonRecordSchema.array().parse(
       JSON.parse(await readFile("tests/fixtures/dry-run.json", "utf8"))
@@ -130,6 +152,14 @@ integration("disposable PostgreSQL Phase 3B application", () => {
 
   afterAll(async () => {
     if (!pool) return;
+    await pool.query(down5);
+    const descriptionDeltaRemoved = await pool.query<{ removed: boolean }>(
+      "SELECT NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'sermons' AND column_name = 'summary_status') AS removed"
+    );
+    expect(descriptionDeltaRemoved.rows[0]).toEqual({ removed: true });
+    await pool.query(up5);
+
+    await pool.query(down5);
     await pool.query(down4);
     await pool.query(down3);
     const deltaRemoved = await pool.query<{ tombstone_removed: boolean; source_column_removed: boolean }>(
@@ -143,7 +173,9 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     expect(deltaRemoved.rows[0]).toEqual({ tombstone_removed: true, source_column_removed: true });
     await pool.query(up3);
     await pool.query(up4);
+    await pool.query(up5);
 
+    await pool.query(down5);
     await pool.query(down4);
     await pool.query(down3);
     await pool.query(down2);
@@ -152,6 +184,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     await pool.query(up2);
     await pool.query(up3);
     await pool.query(up4);
+    await pool.query(up5);
     const reapplied = await pool.query<{ sermon: string | null; tombstone: string | null; transcript: string | null }>(
       `SELECT to_regclass('public.sermons')::text AS sermon,
               to_regclass('public.sermon_deletion_tombstones')::text AS tombstone,
@@ -162,6 +195,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       tombstone: "sermon_deletion_tombstones",
       transcript: "sermon_transcripts"
     });
+    await pool.query(down5);
     await pool.query(down4);
     await pool.query(down3);
     await pool.query(down2);
@@ -169,7 +203,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     await pool.end();
   });
 
-  it("applies 0001-0004 and loads anonymised fixtures idempotently", async () => {
+  it("applies 0001-0005 and loads anonymised fixtures idempotently", async () => {
     const counts = await pool.query<{
       sermons: number;
       views: number;
@@ -201,6 +235,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   });
 
   it("aborts the one-speaker migration with affected IDs and cleanly reapplies", async () => {
+    await pool.query(down5);
     await pool.query(down4);
     const target = await pool.query<{ sermon_id: string; other_speaker_id: string }>(
       `SELECT s.id AS sermon_id, sp.id AS other_speaker_id
@@ -228,6 +263,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       [anomaly.sermon_id, anomaly.other_speaker_id]
     );
     await pool.query(up4);
+    await pool.query(up5);
     expect(
       (await pool.query("SELECT to_regclass('public.sermon_speakers') IS NULL AS removed")).rows[0]
     ).toEqual({ removed: true });
@@ -268,6 +304,31 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         "SELECT id FROM sermons WHERE slug = 'grace-for-an-anonymised-congregation'"
       )
     ).rows[0]!.id;
+    const approvedDescription = "This approved description contains intermediateweighttoken and clearly explains the sermon message before a visitor chooses its media.";
+    await pool.query(
+      `UPDATE sermons
+       SET summary = $2, summary_status = 'approved', summary_source_kind = 'manual',
+           summary_created_at = now(), summary_updated_at = now(),
+           summary_reviewed_by_subject = 'local-admin-0001',
+           summary_approved_by_subject = 'local-admin-0001',
+           summary_reviewed_at = now(), summary_approved_at = now()
+       WHERE id = $1`,
+      [searchableId, approvedDescription]
+    );
+    const draftDescriptionId = (
+      await pool.query<{ id: string }>(
+        "SELECT id FROM sermons WHERE status = 'published' AND id <> $1 ORDER BY id LIMIT 1",
+        [searchableId]
+      )
+    ).rows[0]!.id;
+    await pool.query(
+      `UPDATE sermons
+       SET summary = 'This private draft contains draftonlydescriptiontoken and remains unavailable to public response and search consumers.',
+           summary_status = 'draft', summary_source_kind = 'manual',
+           summary_created_at = now(), summary_updated_at = now()
+       WHERE id = $1`,
+      [draftDescriptionId]
+    );
     await pool.query(
       `INSERT INTO sermon_transcripts (
          sermon_id, body_text, status, source_kind, reviewed_by_subject,
@@ -301,6 +362,18 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     expect(
       (
         await repository.listPublished(
+          publicSermonListQuerySchema.parse({ query: "intermediateweighttoken" })
+        )
+      ).data.map((item) => item.id)
+    ).toEqual([searchableId]);
+    expect(
+      await repository.listPublished(
+        publicSermonListQuerySchema.parse({ query: "draftonlydescriptiontoken" })
+      )
+    ).toMatchObject({ data: [], totalItems: 0 });
+    expect(
+      (
+        await repository.listPublished(
           publicSermonListQuerySchema.parse({ query: "covenantalthoughtword" })
         )
       ).data.map((item) => item.id)
@@ -311,8 +384,15 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     const json = JSON.stringify(sermon);
     expect(sermon?.media.map((media) => media.provider)).toEqual(["youtube", "sermonaudio"]);
     expect(sermon?.transcript?.bodyText).toContain("eschatologicalneologism");
+    expect(sermon?.summary).toBe(approvedDescription);
     expect(sermon?.questionAnswers).toHaveLength(5);
     expect(json).not.toMatch(/<iframe|legacyViewCount|originalValue|source_wordpress/i);
+    const publicList = await repository.listPublished(
+      publicSermonListQuerySchema.parse({ pageSize: 50 })
+    );
+    expect(publicList.data.find((item) => item.id === searchableId)?.summary).toBe(approvedDescription);
+    expect(publicList.data.find((item) => item.id === draftDescriptionId)?.summary).toBeNull();
+    expect(JSON.stringify(publicList)).not.toMatch(/transcript|questionAnswers|draftonlydescriptiontoken/);
   });
 
   it("exports deterministic work and imports enrichment drafts idempotently without approval", async () => {
@@ -321,10 +401,14 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     expect(firstQueue).toEqual(secondQueue);
     const target = firstQueue.records.find((record) => record.sourceWordPressId === 9003)!;
     const bundle = {
-      schemaVersion: 1 as const,
+      schemaVersion: 2 as const,
       sourceWordPressId: target.sourceWordPressId,
       targetSermonId: target.targetSermonId,
       expectedRowVersion: target.rowVersion,
+      description: {
+        bodyText: "This imported local description draft explains the anonymised sermon context for later human review.",
+        provenance: { sourceKind: "generated_draft" as const, sourceReference: "safe-local-job-9003" }
+      },
       transcript: {
         bodyText: "A local anonymised transcript draft.",
         provenance: { sourceKind: "transcription" as const, sourceReference: "safe-local-job-9003" }
@@ -338,12 +422,14 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     expect((await importEnrichmentDraftBundle(pool, bundle)).outcome).toBe("imported_as_draft");
     expect((await importEnrichmentDraftBundle(pool, bundle)).outcome).toBe("unchanged");
     const stored = await pool.query<{
+      description_status: string;
       transcript_status: string;
       questions: number;
       approved_questions: number;
       audits: number;
     }>(
       `SELECT
+         (SELECT summary_status FROM sermons WHERE id = $1) AS description_status,
          (SELECT status FROM sermon_transcripts WHERE sermon_id = $1) AS transcript_status,
          (SELECT count(*)::integer FROM sermon_question_answers WHERE sermon_id = $1) AS questions,
          (SELECT count(*)::integer FROM sermon_question_answers WHERE sermon_id = $1 AND status = 'approved') AS approved_questions,
@@ -351,11 +437,38 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       [target.targetSermonId]
     );
     expect(stored.rows[0]).toEqual({
+      description_status: "draft",
       transcript_status: "draft",
       questions: 5,
       approved_questions: 0,
       audits: 1
     });
+    const approvedText = "This administrator-approved description must remain intact when a later draft import contains different proposed wording.";
+    await pool.query(
+      `UPDATE sermons
+       SET summary = $2, summary_status = 'approved', summary_source_kind = 'manual',
+           summary_updated_at = now(), summary_reviewed_by_subject = 'local-admin-0001',
+           summary_approved_by_subject = 'local-admin-0001', summary_reviewed_at = now(),
+           summary_approved_at = now(), row_version = row_version + 1
+       WHERE id = $1`,
+      [target.targetSermonId, approvedText]
+    );
+    const currentVersion = (
+      await pool.query<{ row_version: number }>("SELECT row_version FROM sermons WHERE id = $1", [target.targetSermonId])
+    ).rows[0]!.row_version;
+    await expect(
+      importEnrichmentDraftBundle(pool, {
+        ...bundle,
+        expectedRowVersion: currentVersion,
+        description: {
+          ...bundle.description,
+          bodyText: "This conflicting draft description must never replace an already approved administrator description."
+        }
+      })
+    ).rejects.toThrow("approved_description_conflict");
+    expect(
+      (await pool.query<{ summary: string }>("SELECT summary FROM sermons WHERE id = $1", [target.targetSermonId])).rows[0]!.summary
+    ).toBe(approvedText);
     expect(await new PostgresSermonRepository(pool).findPublishedBySlug("an-anonymised-pending-sermon")).toBeNull();
   });
 
@@ -403,6 +516,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       sermonIds.push(created.id);
       expect(created).toMatchObject({ status: "draft" });
       expect(created.readiness.isComplete).toBe(false);
+      expect(created.readiness.hasApprovedDescription).toBe(false);
       expect(created).not.toHaveProperty("ownership");
 
       const list = await service.list(
@@ -412,6 +526,11 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       expect(list.data).toHaveLength(1);
       expect(list.countsByStatus.draft).toBeGreaterThanOrEqual(1);
       expect(list.data[0]?.speaker?.name).toBe("Phase 3B Speaker");
+      const missingDescriptions = await service.list(
+        { contentIssue: "missing_description", page: 1, pageSize: 20 },
+        admin
+      ) as ListResponseShape;
+      expect(missingDescriptions.data.some((item) => item.id === created.id)).toBe(true);
 
       await expect(
         service.transition(
@@ -449,6 +568,20 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         "phase3b-complete-content"
       );
       expect(completed.readiness.isComplete).toBe(true);
+      expect(completed).toMatchObject({
+        summaryStatus: "approved",
+        summarySourceKind: "manual",
+        readiness: { hasApprovedDescription: true }
+      });
+      expect(completed.summaryReviewedAt).not.toBeNull();
+      expect(completed.summaryApprovedAt).not.toBeNull();
+      expect(completed.summaryRowVersion).toBeGreaterThan(created.summaryRowVersion);
+      const descriptionAudit = (await service.listAudit(created.id, admin)).find(
+        (event) => event.requestCorrelationId === "phase3b-complete-content"
+      );
+      expect(descriptionAudit?.changedFields).toEqual(
+        expect.arrayContaining(["summary", "summaryStatus", "transcript", "questionAnswers"])
+      );
 
       const pending = await service.transition(created.id, "submit", { rowVersion: completed.rowVersion }, admin, "phase3b-submit");
       const withdrawn = await service.transition(created.id, "withdraw", { rowVersion: pending.rowVersion }, admin, "phase3b-withdraw");
@@ -470,14 +603,14 @@ integration("disposable PostgreSQL Phase 3B application", () => {
 
       const current = await service.update(
         created.id,
-        updateSermonInputSchema.parse({ rowVersion: restored.rowVersion, summary: "Current edit" }),
+        updateSermonInputSchema.parse({ rowVersion: restored.rowVersion, summary: "Current edit", summaryStatus: "draft" }),
         admin,
         "phase3b-current"
       );
       await expect(
         service.update(
           created.id,
-          updateSermonInputSchema.parse({ rowVersion: restored.rowVersion, summary: "Stale edit" }),
+          updateSermonInputSchema.parse({ rowVersion: restored.rowVersion, summary: "Stale edit", summaryStatus: "draft" }),
           admin,
           "phase3b-stale"
         )
@@ -708,7 +841,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
 });
 
 interface ListResponseShape {
-  data: Array<{ speaker: RelationshipShape | null }>;
+  data: Array<{ id: string; speaker: RelationshipShape | null }>;
   countsByStatus: Record<SermonStatus, number>;
 }
 

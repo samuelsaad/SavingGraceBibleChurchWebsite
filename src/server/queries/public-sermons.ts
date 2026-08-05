@@ -135,7 +135,8 @@ export function buildPublishedSermonListQuery(input: PublicSermonListQuery): Par
   return {
     text: `
       SELECT s.id, s.title, s.slug, to_char(s.service_date, 'YYYY-MM-DD') AS service_date,
-             s.summary, count(*) OVER ()::integer AS total_items,
+             CASE WHEN s.summary_status = 'approved' THEN s.summary ELSE NULL END AS summary,
+             count(*) OVER ()::integer AS total_items,
              ${publicRelationshipProjection}
       FROM sermons s
       WHERE ${state.conditions.join("\n        AND ")}
@@ -162,7 +163,9 @@ export function buildPublishedSermonDetailQuery(slug: string): ParameterizedQuer
   return {
     text: `
       SELECT s.id, s.title, s.slug, to_char(s.service_date, 'YYYY-MM-DD') AS service_date,
-             s.summary, s.body,
+             CASE WHEN s.summary_status = 'approved' THEN s.summary ELSE NULL END AS summary,
+             CASE WHEN s.summary_status = 'approved' THEN s.seo_description ELSE NULL END AS seo_description,
+             s.body,
              ${publicRelationshipProjection},
              COALESCE((
                SELECT jsonb_agg(

@@ -1,6 +1,7 @@
 import type { PublicMedia } from "./sermon";
 
 export type TranscriptStatus = "missing" | "draft" | "in_review" | "approved";
+export type DescriptionStatus = "missing" | "draft" | "in_review" | "approved";
 export type QuestionAnswerStatus = "draft" | "in_review" | "approved";
 
 export interface ReadinessTranscript {
@@ -19,6 +20,9 @@ export interface ContentReadinessIssue {
   path: string;
   code:
     | "missing_speaker"
+    | "missing_description"
+    | "description_awaiting_review"
+    | "invalid_description_length"
     | "missing_transcript"
     | "transcript_awaiting_review"
     | "insufficient_questions"
@@ -33,6 +37,7 @@ export interface ContentReadinessIssue {
 export interface ContentReadinessResult {
   isComplete: boolean;
   hasOneSpeaker: boolean;
+  hasApprovedDescription: boolean;
   hasApprovedTranscript: boolean;
   approvedQuestionCount: number;
   totalQuestionCount: number;
@@ -44,6 +49,8 @@ export interface ContentReadinessResult {
 
 export interface ContentReadinessInput {
   speakerId: string | null;
+  summary: string | null;
+  summaryStatus: DescriptionStatus;
   transcript: ReadinessTranscript | null;
   questionAnswers: ReadinessQuestionAnswer[];
   media: PublicMedia[];
@@ -61,6 +68,31 @@ export function evaluateContentReadiness(input: ContentReadinessInput): ContentR
       path: "speakerId",
       code: "missing_speaker",
       message: "Choose one speaker before scheduling or publishing."
+    });
+  }
+
+  const descriptionLength = input.summary?.trim().length ?? 0;
+  const hasDescription = descriptionLength > 0;
+  const hasUsefulDescriptionLength = descriptionLength >= 80 && descriptionLength <= 2_000;
+  const hasApprovedDescription =
+    hasUsefulDescriptionLength && input.summaryStatus === "approved";
+  if (!hasDescription) {
+    issues.push({
+      path: "summary",
+      code: "missing_description",
+      message: "Add a sermon description before scheduling or publishing."
+    });
+  } else if (!hasUsefulDescriptionLength) {
+    issues.push({
+      path: "summary",
+      code: "invalid_description_length",
+      message: "The sermon description must contain between 80 and 2,000 characters."
+    });
+  } else if (!hasApprovedDescription) {
+    issues.push({
+      path: "summaryStatus",
+      code: "description_awaiting_review",
+      message: "The sermon description must be reviewed and approved."
     });
   }
 
@@ -151,11 +183,13 @@ export function evaluateContentReadiness(input: ContentReadinessInput): ContentR
   return {
     isComplete:
       hasOneSpeaker &&
+      hasApprovedDescription &&
       hasApprovedTranscript &&
       hasRequiredQuestionAnswers &&
       hasValidControlledMedia &&
       !issues.some((issue) => issue.code === "blank_question" || issue.code === "blank_answer"),
     hasOneSpeaker,
+    hasApprovedDescription,
     hasApprovedTranscript,
     approvedQuestionCount,
     totalQuestionCount,

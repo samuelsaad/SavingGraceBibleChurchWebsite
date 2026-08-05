@@ -23,6 +23,8 @@ const safePlainText = (maximum: number) =>
     .refine((value) => !containsHtmlTag(value), "Use plain text; HTML tags are not accepted");
 
 export const transcriptStatusSchema = z.enum(["missing", "draft", "in_review", "approved"]);
+export const descriptionStatusSchema = z.enum(["missing", "draft", "in_review", "approved"]);
+export const descriptionSourceKindSchema = z.enum(["manual", "imported", "generated_draft"]);
 export const questionAnswerStatusSchema = z.enum(["draft", "in_review", "approved"]);
 
 export const transcriptInputSchema = z.object({
@@ -107,11 +109,15 @@ export const scriptureReferenceInputSchema = z
     message: "endVerse requires startVerse"
   });
 
-const editableSermonFieldsSchema = z.object({
+const editableSermonFieldsShape = {
   title: z.string().trim().min(1).max(240),
   slug: slugSchema,
   serviceDate: isoDateSchema,
-  summary: z.string().max(2_000).nullable(),
+  summary: safePlainText(2_000).nullable(),
+  summaryStatus: descriptionStatusSchema,
+  summarySourceKind: descriptionSourceKindSchema,
+  summarySourceReference: safePlainText(500).trim().min(1).nullable(),
+  seoDescription: safePlainText(320).trim().min(1).nullable(),
   body: z.string().max(200_000).nullable(),
   speakerId: z.uuid().nullable(),
   seriesIds: uniqueUuidArray,
@@ -120,16 +126,58 @@ const editableSermonFieldsSchema = z.object({
   media: z.array(controlledMediaInputSchema).max(20),
   transcript: transcriptInputSchema,
   questionAnswers: z.array(questionAnswerInputSchema).max(10)
-}).strict();
+};
 
-export const createSermonInputSchema = editableSermonFieldsSchema.extend({
-  summary: editableSermonFieldsSchema.shape.summary.default(null),
-  body: editableSermonFieldsSchema.shape.body.default(null),
+function validateDescription(
+  value: {
+    summary?: string | null | undefined;
+    summaryStatus?: z.infer<typeof descriptionStatusSchema> | undefined;
+    seoDescription?: string | null | undefined;
+  },
+  context: z.RefinementCtx,
+  requireCompletePair: boolean
+): void {
+  if (requireCompletePair && value.summary !== undefined && value.summaryStatus === undefined) {
+    context.addIssue({
+      code: "custom",
+      path: ["summaryStatus"],
+      message: "Choose the sermon description review status when editing its text"
+    });
+    return;
+  }
+  if (value.summaryStatus === undefined) return;
+  const length = value.summary?.trim().length ?? 0;
+  if (value.summaryStatus === "missing" && length > 0) {
+    context.addIssue({ code: "custom", path: ["summaryStatus"], message: "A nonblank description cannot have missing status" });
+  }
+  if (value.summaryStatus !== "missing" && length === 0 && value.summary !== undefined) {
+    context.addIssue({ code: "custom", path: ["summary"], message: "Sermon description text is required once work has started" });
+  }
+  if (value.summaryStatus === "approved" && value.summary !== undefined && length < 80) {
+    context.addIssue({ code: "custom", path: ["summary"], message: "An approved sermon description must contain at least 80 characters" });
+  }
+  if (value.seoDescription && value.summaryStatus !== undefined && value.summaryStatus !== "approved") {
+    context.addIssue({
+      code: "custom",
+      path: ["seoDescription"],
+      message: "An SEO description override requires an approved sermon description"
+    });
+  }
+}
+
+export const createSermonInputSchema = z.object({
+  ...editableSermonFieldsShape,
+  summary: editableSermonFieldsShape.summary.default(null),
+  summaryStatus: descriptionStatusSchema.default("missing"),
+  summarySourceKind: descriptionSourceKindSchema.default("manual"),
+  summarySourceReference: editableSermonFieldsShape.summarySourceReference.default(null),
+  seoDescription: editableSermonFieldsShape.seoDescription.default(null),
+  body: editableSermonFieldsShape.body.default(null),
   speakerId: z.uuid().nullable().default(null),
   seriesIds: uniqueUuidArray.default([]),
   bookClassificationIds: uniqueUuidArray.default([]),
-  scriptureReferences: editableSermonFieldsSchema.shape.scriptureReferences.default([]),
-  media: editableSermonFieldsSchema.shape.media.default([]),
+  scriptureReferences: editableSermonFieldsShape.scriptureReferences.default([]),
+  media: editableSermonFieldsShape.media.default([]),
   transcript: transcriptInputSchema.default({
     bodyText: "",
     status: "missing",
@@ -137,15 +185,32 @@ export const createSermonInputSchema = editableSermonFieldsSchema.extend({
     sourceReference: null
   }),
   questionAnswers: z.array(questionAnswerInputSchema).max(10).default([])
-});
+}).strict().superRefine((value, context) => validateDescription(value, context, false));
 export type CreateSermonInput = z.infer<typeof createSermonInputSchema>;
 
-export const updateSermonInputSchema = editableSermonFieldsSchema
-  .partial()
-  .extend({ rowVersion: z.number().int().positive() })
+export const updateSermonInputSchema = z.object({
+  title: editableSermonFieldsShape.title.optional(),
+  slug: editableSermonFieldsShape.slug.optional(),
+  serviceDate: editableSermonFieldsShape.serviceDate.optional(),
+  summary: editableSermonFieldsShape.summary.optional(),
+  summaryStatus: editableSermonFieldsShape.summaryStatus.optional(),
+  summarySourceKind: editableSermonFieldsShape.summarySourceKind.optional(),
+  summarySourceReference: editableSermonFieldsShape.summarySourceReference.optional(),
+  seoDescription: editableSermonFieldsShape.seoDescription.optional(),
+  body: editableSermonFieldsShape.body.optional(),
+  speakerId: editableSermonFieldsShape.speakerId.optional(),
+  seriesIds: editableSermonFieldsShape.seriesIds.optional(),
+  bookClassificationIds: editableSermonFieldsShape.bookClassificationIds.optional(),
+  scriptureReferences: editableSermonFieldsShape.scriptureReferences.optional(),
+  media: editableSermonFieldsShape.media.optional(),
+  transcript: editableSermonFieldsShape.transcript.optional(),
+  questionAnswers: editableSermonFieldsShape.questionAnswers.optional(),
+  rowVersion: z.number().int().positive()
+}).strict()
   .refine((value) => Object.keys(value).some((key) => key !== "rowVersion"), {
     message: "At least one editable field is required"
-  });
+  })
+  .superRefine((value, context) => validateDescription(value, context, true));
 export type UpdateSermonInput = z.infer<typeof updateSermonInputSchema>;
 
 export const adminSermonIdParamsSchema = z.object({ id: z.uuid() });
@@ -177,6 +242,8 @@ export const adminSermonListQuerySchema = z.object({
   contentIssue: z.enum([
     "complete",
     "missing_speaker",
+    "missing_description",
+    "description_awaiting_review",
     "missing_transcript",
     "transcript_awaiting_review",
     "insufficient_questions",
@@ -199,6 +266,7 @@ const adminRelationshipSchema = z.object({ id: z.uuid(), name: z.string(), slug:
 export const contentReadinessResponseSchema = z.object({
   isComplete: z.boolean(),
   hasOneSpeaker: z.boolean(),
+  hasApprovedDescription: z.boolean(),
   hasApprovedTranscript: z.boolean(),
   approvedQuestionCount: z.number().int().nonnegative(),
   totalQuestionCount: z.number().int().nonnegative(),
@@ -230,6 +298,15 @@ export const adminSermonSummarySchema = z.object({
 
 export const adminSermonDetailSchema = adminSermonSummarySchema.extend({
   summary: z.string().nullable(),
+  summaryStatus: descriptionStatusSchema,
+  summarySourceKind: descriptionSourceKindSchema,
+  summarySourceReference: z.string().nullable(),
+  summaryCreatedAt: z.iso.datetime().nullable(),
+  summaryUpdatedAt: z.iso.datetime().nullable(),
+  summaryReviewedAt: z.iso.datetime().nullable(),
+  summaryApprovedAt: z.iso.datetime().nullable(),
+  summaryRowVersion: z.number().int().positive(),
+  seoDescription: z.string().nullable(),
   body: z.string().nullable(),
   speaker: adminRelationshipSchema.nullable(),
   series: z.array(adminRelationshipSchema),
@@ -271,6 +348,7 @@ export const adminSermonListResponseSchema = z.object({
     complete: z.number().int().nonnegative(),
     remaining: z.number().int().nonnegative(),
     withOneSpeaker: z.number().int().nonnegative(),
+    withApprovedDescription: z.number().int().nonnegative(),
     withApprovedTranscript: z.number().int().nonnegative(),
     withRequiredQuestionAnswers: z.number().int().nonnegative(),
     withValidControlledMedia: z.number().int().nonnegative()

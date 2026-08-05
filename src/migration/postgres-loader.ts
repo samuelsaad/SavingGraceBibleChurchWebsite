@@ -71,16 +71,43 @@ async function upsertSermon(
   const speakerId = sermon.speaker ? await upsertSpeaker(client, sermon.speaker) : null;
   await client.query(
     `INSERT INTO sermons (
-       id, title, slug, summary, body, status, service_date, published_at,
+       id, title, slug, summary, summary_status, summary_source_kind,
+       summary_created_at, summary_updated_at, body, status, service_date, published_at,
        source_wordpress_id, source_status, source_created_local, source_created_gmt,
        source_modified_local, source_modified_gmt, speaker_id, historical_backfill_required
      ) VALUES (
-       $1, $2, $3, $4, $5, $6, $7::date, $8::timestamptz,
+       $1, $2, $3, $4,
+       CASE WHEN $4::text IS NULL THEN 'missing' ELSE 'draft' END,
+       'imported',
+       CASE WHEN $4::text IS NULL THEN NULL ELSE now() END,
+       CASE WHEN $4::text IS NULL THEN NULL ELSE now() END,
+       $5, $6, $7::date, $8::timestamptz,
        $9, $10, $11::timestamp, $12::timestamptz, $13::timestamp, $14::timestamptz,
        $15, true
      )
      ON CONFLICT (source_wordpress_id) DO UPDATE SET
-       title = EXCLUDED.title, slug = EXCLUDED.slug, summary = EXCLUDED.summary,
+       title = EXCLUDED.title, slug = EXCLUDED.slug,
+       summary = CASE
+         WHEN sermons.summary_status = 'approved' THEN sermons.summary
+         WHEN sermons.summary_status = 'missing' AND EXCLUDED.summary IS NOT NULL THEN EXCLUDED.summary
+         ELSE sermons.summary
+       END,
+       summary_status = CASE
+         WHEN sermons.summary_status = 'missing' AND EXCLUDED.summary IS NOT NULL THEN 'draft'
+         ELSE sermons.summary_status
+       END,
+       summary_source_kind = CASE
+         WHEN sermons.summary_status = 'missing' AND EXCLUDED.summary IS NOT NULL THEN 'imported'
+         ELSE sermons.summary_source_kind
+       END,
+       summary_created_at = CASE
+         WHEN sermons.summary_status = 'missing' AND EXCLUDED.summary IS NOT NULL THEN now()
+         ELSE sermons.summary_created_at
+       END,
+       summary_updated_at = CASE
+         WHEN sermons.summary_status = 'missing' AND EXCLUDED.summary IS NOT NULL THEN now()
+         ELSE sermons.summary_updated_at
+       END,
        body = EXCLUDED.body, status = EXCLUDED.status, service_date = EXCLUDED.service_date,
        published_at = EXCLUDED.published_at, source_status = EXCLUDED.source_status,
        source_created_local = EXCLUDED.source_created_local,
@@ -91,15 +118,17 @@ async function upsertSermon(
        historical_backfill_required = true,
        updated_at = now(), row_version = sermons.row_version + 1
      WHERE (
-       sermons.title, sermons.slug, sermons.summary, sermons.body, sermons.status,
+       sermons.title, sermons.slug, sermons.body, sermons.status,
        sermons.service_date, sermons.published_at, sermons.source_status,
        sermons.source_created_local, sermons.source_created_gmt,
        sermons.source_modified_local, sermons.source_modified_gmt, sermons.speaker_id
      ) IS DISTINCT FROM (
-       EXCLUDED.title, EXCLUDED.slug, EXCLUDED.summary, EXCLUDED.body, EXCLUDED.status,
+       EXCLUDED.title, EXCLUDED.slug, EXCLUDED.body, EXCLUDED.status,
        EXCLUDED.service_date, EXCLUDED.published_at, EXCLUDED.source_status,
        EXCLUDED.source_created_local, EXCLUDED.source_created_gmt,
        EXCLUDED.source_modified_local, EXCLUDED.source_modified_gmt, EXCLUDED.speaker_id
+     ) OR (
+       sermons.summary_status = 'missing' AND EXCLUDED.summary IS NOT NULL
      )`,
     [
       sermon.id,

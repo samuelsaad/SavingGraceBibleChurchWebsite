@@ -16,7 +16,7 @@ Evidence values use the original machine labels. The exact installed source snap
 | `post_date`, `post_date_gmt` | Local/GMT values; draft GMT zeros | `sermons.service_date`; immutable source timestamp fields | Map the exact local `post_date` calendar date as preached date; preserve timestamps; flag but do not change non-Sundays | `database observed` |
 | `post_modified`, `post_modified_gmt` | Source update timestamps | `source_updated_at`; migration checksum/audit | Preserve with WordPress timezone context | `database-observed` |
 | `post_content` | Empty on all sermons | `sermons.body` nullable | Do not fabricate body content | `database-observed` |
-| `post_excerpt` | Empty on all sermons | `sermons.summary` nullable | Do not fabricate summaries | `database-observed` |
+| `post_excerpt` | Empty on all sermons | `sermons.summary` nullable only while incomplete; reviewed description required before schedule/publish/launch | Do not fabricate or auto-approve summaries; Phase 3B.2 must draft and humans must approve all 453 | `database-observed-and-approved-target-decision` |
 | `post_password` | Empty on all sermons | None | Do not introduce a password-protected state | `database-observed` |
 | `guid` | Not treated as canonical URL | Optional source audit only | Canonical mapping comes from public permalink/slug evidence | `database-observed` |
 | `post_author` | WordPress identity reference | Optional migration audit | Do not migrate users, password hashes, auth data, or credentials through this content map | `database-observed` |
