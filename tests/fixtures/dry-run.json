@@ -1,0 +1,125 @@
+[
+  {
+    "sourceTable": "wp_posts",
+    "sourceId": 9001,
+    "postType": "sermons",
+    "postStatus": "publish",
+    "title": "Grace for an Anonymised Congregation",
+    "slug": "grace-for-an-anonymised-congregation",
+    "postDateLocal": "2026-08-02 10:00:00",
+    "postDateGmt": "2026-08-02 00:00:00",
+    "postModifiedLocal": "2026-08-02 12:00:00",
+    "postModifiedGmt": "2026-08-02 02:00:00",
+    "body": "",
+    "summary": "",
+    "legacyViewCount": 11,
+    "speakers": [
+      { "termId": 101, "termTaxonomyId": 201, "name": "Example Speaker", "slug": "example-speaker", "order": 0 }
+    ],
+    "series": [
+      { "termId": 102, "termTaxonomyId": 202, "name": "Example Series", "slug": "example-series", "order": 0 },
+      { "termId": 103, "termTaxonomyId": 203, "name": "Second Example Series", "slug": "second-example-series", "order": 0 }
+    ],
+    "books": [
+      { "termId": 104, "termTaxonomyId": 204, "name": "Romans", "slug": "romans", "order": 0 }
+    ],
+    "passageTerms": [
+      { "termId": 105, "termTaxonomyId": 205, "name": "Romans 8:1-4", "slug": "romans-8-1-4", "order": 0 }
+    ],
+    "meta": {
+      "biblePassage": "Romans 8:1-4",
+      "youtube": "https://youtu.be/abcdefghijk",
+      "audioEmbed": "<iframe src=\"https://embed.sermonaudio.com/player/example-9001\" title=\"Example\"></iframe>"
+    }
+  },
+  {
+    "sourceTable": "wp_posts",
+    "sourceId": 9002,
+    "postType": "sermons",
+    "postStatus": "publish",
+    "title": "Hope in an Anonymised Trial",
+    "slug": "hope-in-an-anonymised-trial",
+    "postDateLocal": "2026-07-26 10:00:00",
+    "postDateGmt": "2026-07-26 00:00:00",
+    "postModifiedLocal": "2026-07-26 12:00:00",
+    "postModifiedGmt": "2026-07-26 02:00:00",
+    "body": "",
+    "summary": "",
+    "legacyViewCount": 7,
+    "speakers": [
+      { "termId": 106, "termTaxonomyId": 206, "name": "Second Speaker", "slug": "second-speaker", "order": 0 }
+    ],
+    "series": [],
+    "books": [
+      { "termId": 107, "termTaxonomyId": 207, "name": "Psalms", "slug": "psalms", "order": 0 }
+    ],
+    "passageTerms": [
+      { "termId": 108, "termTaxonomyId": 208, "name": "Psalm 13", "slug": "psalm-13", "order": 0 }
+    ],
+    "meta": {
+      "biblePassage": "Psalm 13",
+      "youtube": "https://youtu.be/lmnopqrstuv",
+      "audioEmbed": null
+    }
+  },
+  {
+    "sourceTable": "wp_posts",
+    "sourceId": 9003,
+    "postType": "sermons",
+    "postStatus": "pending",
+    "title": "An Anonymised Pending Sermon",
+    "slug": "an-anonymised-pending-sermon",
+    "postDateLocal": "2026-08-09 10:00:00",
+    "postDateGmt": "2026-08-09 00:00:00",
+    "postModifiedLocal": "2026-08-09 10:00:00",
+    "postModifiedGmt": "2026-08-09 00:00:00",
+    "body": "",
+    "summary": "",
+    "legacyViewCount": 1,
+    "speakers": [],
+    "series": [],
+    "books": [],
+    "passageTerms": [],
+    "meta": { "biblePassage": null, "youtube": null, "audioEmbed": null }
+  },
+  {
+    "sourceTable": "wp_posts",
+    "sourceId": 9004,
+    "postType": "sermons",
+    "postStatus": "draft",
+    "title": "Excluded Anonymised Draft",
+    "slug": null,
+    "postDateLocal": "2026-08-03 10:00:00",
+    "postDateGmt": null,
+    "postModifiedLocal": "2026-08-03 10:00:00",
+    "postModifiedGmt": null,
+    "body": "",
+    "summary": "",
+    "legacyViewCount": null,
+    "speakers": [],
+    "series": [],
+    "books": [],
+    "passageTerms": [],
+    "meta": { "biblePassage": null, "youtube": null, "audioEmbed": null }
+  },
+  {
+    "sourceTable": "wp_posts",
+    "sourceId": 9005,
+    "postType": "wpfc_sermon",
+    "postStatus": "publish",
+    "title": "Excluded Legacy Sermon",
+    "slug": "excluded-legacy-sermon",
+    "postDateLocal": "2026-08-02 10:00:00",
+    "postDateGmt": "2026-08-02 00:00:00",
+    "postModifiedLocal": "2026-08-02 10:00:00",
+    "postModifiedGmt": "2026-08-02 00:00:00",
+    "body": "",
+    "summary": "",
+    "legacyViewCount": null,
+    "speakers": [],
+    "series": [],
+    "books": [],
+    "passageTerms": [],
+    "meta": { "biblePassage": null, "youtube": null, "audioEmbed": null }
+  }
+]

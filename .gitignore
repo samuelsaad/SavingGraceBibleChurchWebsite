@@ -1,0 +1,48 @@
+node_modules/
+dist/
+.astro/
+.env
+.env.*
+!.env.example
+coverage/
+*.log
+*.tmp
+*.temp
+test-results/
+playwright-report/
+
+# Credentials, private keys, and local authentication files
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.kdbx
+.pgpass
+pgpass.conf
+id_rsa*
+id_ed25519*
+
+# Proprietary reference archives and extracted plugin sources
+advanced-sermons*.zip
+advanced-sermons/
+advanced-sermons-pro/
+
+# Local database/runtime state
+.local/
+tmp/
+.tmp/
+*.sqlite
+*.sqlite3
+*.dump
+*.backup
+*.bak
+*.sql.gz
+
+# Private production migration inputs and exports
+private/
+migration-inputs/
+migration-exports/
+*.private.json
+*.production.json
+*.snapshot.json

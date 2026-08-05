@@ -1,0 +1,141 @@
+import { describe, expect, it } from "vitest";
+import { publicSermonListQuerySchema } from "../src/api/contracts/public-sermons";
+import {
+  adminSermonListQuerySchema,
+  applicationRoleSchema,
+  controlledMediaInputSchema,
+  createSermonInputSchema,
+  permanentlyDeleteSermonInputSchema,
+  updateSermonInputSchema
+} from "../src/api/contracts/admin-sermons";
+import { buildPublishedSermonListQuery } from "../src/server/queries/public-sermons";
+
+describe("public sermon API contract", () => {
+  it("applies safe pagination defaults", () => {
+    const parsed = publicSermonListQuerySchema.parse({});
+    expect(parsed).toMatchObject({ page: 1, pageSize: 9, order: "DESC" });
+  });
+
+  it("rejects reversed date ranges", () => {
+    expect(() =>
+      publicSermonListQuerySchema.parse({ dateFrom: "2026-08-03", dateTo: "2026-08-02" })
+    ).toThrow();
+    expect(() => publicSermonListQuerySchema.parse({ dateFrom: "2026-02-30" })).toThrow();
+  });
+
+  it("builds parameterized search/filter SQL without interpolating user values", () => {
+    const query = buildPublishedSermonListQuery(
+      publicSermonListQuerySchema.parse({
+        query: "grace' OR true--",
+        speaker: "example-speaker",
+        page: 2
+      })
+    );
+
+    expect(query.text).not.toContain("grace' OR true--");
+    expect(query.text).toContain("s.status = 'published'");
+    expect(query.values).toContain("grace' OR true--");
+    expect(query.values).toContain("%grace' OR true--%");
+    expect(query.values).toContain("example-speaker");
+  });
+
+  it("keeps every taxonomy dimension as an independent AND predicate", () => {
+    const query = buildPublishedSermonListQuery(
+      publicSermonListQuerySchema.parse({
+        speaker: "example-speaker",
+        series: "example-series",
+        passage: "romans-8",
+        book: "romans"
+      })
+    );
+
+    expect(query.text.match(/EXISTS \(/g)).toHaveLength(4);
+    expect(query.text).not.toMatch(/relation\s*=>?\s*['"]OR/i);
+    expect(query.values.slice(0, 4)).toEqual([
+      "example-speaker",
+      "example-series",
+      "romans-8",
+      "romans"
+    ]);
+  });
+});
+
+describe("admin sermon API contract", () => {
+  it("has one active application role and validates admin list filters", () => {
+    expect(applicationRoleSchema.parse("admin")).toBe("admin");
+    expect(() => applicationRoleSchema.parse("editor")).toThrow();
+    expect(() => applicationRoleSchema.parse("contributor")).toThrow();
+    expect(
+      adminSermonListQuerySchema.parse({
+        query: "grace",
+        serviceDateFrom: "2026-08-01",
+        serviceDateTo: "2026-08-31"
+      })
+    ).toMatchObject({ page: 1, pageSize: 20 });
+    expect(() =>
+      adminSermonListQuerySchema.parse({
+        serviceDateFrom: "2026-09-01",
+        serviceDateTo: "2026-08-31"
+      })
+    ).toThrow();
+  });
+
+  it("requires optimistic concurrency and an actual edit", () => {
+    expect(() => updateSermonInputSchema.parse({ rowVersion: 1 })).toThrow();
+    expect(updateSermonInputSchema.parse({ rowVersion: 1, title: "Updated" })).toMatchObject({
+      rowVersion: 1,
+      title: "Updated"
+    });
+  });
+
+  it("always creates a draft and rejects arbitrary status input", () => {
+    const valid = {
+      title: "Local draft",
+      slug: "local-draft",
+      serviceDate: "2026-08-02"
+    };
+    expect(createSermonInputSchema.parse(valid)).not.toHaveProperty("status");
+    expect(() => createSermonInputSchema.parse({ ...valid, status: "published" })).toThrow();
+  });
+
+  it("allows only provider-matched controlled media", () => {
+    expect(() =>
+      controlledMediaInputSchema.parse({
+        provider: "youtube",
+        mediaType: "video",
+        externalId: "abcdefghijk",
+        canonicalUrl: "https://evil.example/embed/abcdefghijk",
+        title: "Unsafe"
+      })
+    ).toThrow("Expected a YouTube URL");
+    expect(() =>
+      controlledMediaInputSchema.parse({
+        provider: "youtube",
+        mediaType: "video",
+        externalId: "abcdefghijk",
+        canonicalUrl: "https://www.youtube.com/watch?v=abcdefghijk",
+        title: "Controlled video",
+        embedHtml: "<iframe>unsafe</iframe>"
+      })
+    ).toThrow();
+  });
+
+  it("requires explicit, bounded permanent-deletion confirmation data", () => {
+    expect(
+      permanentlyDeleteSermonInputSchema.parse({
+        rowVersion: 3,
+        confirmation: "historic-sermon",
+        reason: "Duplicate content",
+        seoDisposition: { kind: "gone" }
+      })
+    ).toMatchObject({ seoDisposition: { kind: "gone" } });
+    expect(() =>
+      permanentlyDeleteSermonInputSchema.parse({
+        rowVersion: 3,
+        confirmation: "historic-sermon",
+        reason: "x",
+        seoDisposition: { kind: "redirect", targetPath: "https://evil.example/" }
+      })
+    ).toThrow();
+  });
+});

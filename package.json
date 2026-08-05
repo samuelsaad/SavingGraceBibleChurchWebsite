@@ -1,0 +1,39 @@
+{
+  "name": "saving-grace-bible-church-website",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "dev": "cross-env ASTRO_TELEMETRY_DISABLED=1 astro dev",
+    "build": "cross-env ASTRO_TELEMETRY_DISABLED=1 astro build",
+    "preview": "cross-env ASTRO_TELEMETRY_DISABLED=1 astro preview",
+    "check": "cross-env ASTRO_TELEMETRY_DISABLED=1 astro check",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "migration:dry-run": "tsx src/migration/cli.ts --dry-run",
+    "migration:load-local": "tsx src/migration/load-cli.ts",
+    "db:apply-local": "tsx src/migration/schema-cli.ts --apply",
+    "db:rollback-local": "tsx src/migration/schema-cli.ts --rollback",
+    "db:apply-phase3b-local": "tsx src/migration/schema-cli.ts --apply --phase3b-only",
+    "db:rollback-phase3b-local": "tsx src/migration/schema-cli.ts --rollback --phase3b-only",
+    "api:local": "tsx src/server/local-api.ts",
+    "dashboard:local": "cross-env API_HOST=127.0.0.1 ENABLE_LOCAL_TEST_IDENTITIES=1 ENABLE_LOCAL_DASHBOARD=1 tsx src/server/local-api.ts"
+  },
+  "dependencies": {
+    "astro": "7.1.6",
+    "pg": "8.22.0",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "@types/node": "26.1.2",
+    "@types/pg": "8.20.4",
+    "cross-env": "10.1.0",
+    "tsx": "4.23.5",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10"
+  }
+}
