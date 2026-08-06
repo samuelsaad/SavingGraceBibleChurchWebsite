@@ -3,8 +3,8 @@
 ## Technical Architecture, Advanced Sermons Migration, Security, and Delivery Plan
 
 **Document status:** Authoritative working specification  
-**Revision:** 2.6
-**Updated:** 5 August 2026  
+**Revision:** 2.7
+**Updated:** 6 August 2026
 **Primary audience:** Codex implementation chat, project owner, and church technical administrator  
 **Purpose:** Give the implementation assistant a complete, precise account of what has been agreed, what has been discovered, what remains unknown, and how to proceed safely.
 
@@ -1499,7 +1499,9 @@ Phase 3C remains paused. The exact next milestone is **Phase 3B.2 - controlled h
 
 The separately authorised pilot uses exactly three user-mapped local YouTube Studio text exports and no network/provider path. Migration `0006` stores private structured provenance and warning metadata without duplicating transcript content. One export had sufficient existing sentence boundaries for word-sequence-preserving cleanup and private description/transcript/seven-Q&A draft import. Two exports stopped safely with `manual_punctuation_required` and produced no derived outputs. All material remains draft, non-public and excluded from search/readiness; Codex performed no administrator approval.
 
-This pilot does not authorise the remaining 450 sermons. Before another batch, require explicit acceptance of the pilot results, an exact allowlist/batch, approved reviewers, a non-billable punctuation method for boundary-free exports, confirmed source identities/dates, and renewed privacy, retention, retry, correction, audit and rollback approval. Phase 3C remains paused.
+Phase 3B.2b provisionally hardens the offline completion path for exactly the two records that the committed Phase 3B.2 outcome identified as `manual_punctuation_required`. Trusted source state—not caller-declared identifiers—defines that scope. Source and cleaned text are normalised to Unicode NFC and measured independently as whitespace-delimited lexical-token sequences; Unicode punctuation is removed from each token and the remainder is case-folded for comparison. Token count, boundaries, order and content must remain exact, so deletions, additions, substitutions, duplication, reordering, splitting and merging fail closed. Deterministic chunks, cryptographic hashes, exact reassembly, no-clobber filesystem persistence, structured failures, provenance retention and database/public/readiness verification are covered by anonymised tests.
+
+No real private Phase 3B.2b captions or artifacts were inspected or processed during hardening. Private processing results, counts, import/idempotency evidence, timings and workload projections are unverified and must not be inferred from fixture tests. This hardening does not authorise the remaining 450 sermons. Before another batch, require a separately authorised private pilot rerun, administrator review of its drafts and uncertainties, explicit acceptance of its bounded verified report, an exact allowlist/batch, approved reviewers/approvers, confirmed source identities/dates, and renewed workload, privacy, retention, retry, correction, audit and rollback approval. Phase 3C remains paused.
 
 ## 29. Reference Documentation
 

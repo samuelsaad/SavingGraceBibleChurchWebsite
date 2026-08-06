@@ -2,7 +2,7 @@
 
 ## Current boundary
 
-Phase 3B.2 has completed a private, local three-caption rehearsal using the exact user-supplied filename/video mapping. No external source/provider was contacted. One caption had sufficient existing sentence boundaries for word-preserving preparation and produced private draft description/transcript/seven-Q&A output. Two captions had essentially no sentence boundaries and stopped with `manual_punctuation_required`; they produced no derived content. Nothing is approved, public, searchable, committed, or evidence of launch readiness. The remaining 450 sermons are out of scope.
+Phase 3B.2b is a provisional offline hardening of the private three-caption rehearsal. Its completion scope is derived from the committed Phase 3B.2 outcome and is limited to exactly the two records that returned `manual_punctuation_required`; the already-successful record and all other records are rejected. The hardened implementation has been exercised only with anonymised fixtures. No real private captions or workspace artifacts were inspected or processed during hardening, so private output, import, idempotency, timing, review and quality results remain pending a separately authorised rerun. The remaining 450 sermons and Phase 3C are out of scope.
 
 ## Required outputs per included sermon
 
@@ -25,7 +25,7 @@ Manifest schema version 2 orders records by anonymised source WordPress ID and s
 
 ## Phase 3B.2 authorization prerequisite
 
-The three-record Phase 3B.2 pilot does not authorise a larger batch. Before processing any of the remaining 450, explicitly accept the pilot report, approve the next exact allowlist/batch, nominate reviewers/approvers, supply or approve a non-billable method for punctuation-free captions, confirm source identities and dates, and reconfirm privacy/retention, retry/resume, correction/audit and rollback. Phase 3C remains paused.
+The provisional Phase 3B.2b hardening does not authorise a private rerun or larger batch. Before processing any of the remaining 450, separately authorise the real private pilot rerun, complete administrator review of its drafts and retained uncertainties, explicitly accept its bounded verified report and workload evidence, approve the next exact allowlist/batch, nominate reviewers/approvers, confirm source identities and dates, and reconfirm privacy/retention, retry/resume, correction/audit and rollback. Phase 3C remains paused.
 
 ## Pilot preparation boundary
 
@@ -33,10 +33,16 @@ The three-record Phase 3B.2 pilot does not authorise a larger batch. Before proc
 - URL identity is the allowlisted 11-character video ID; playlist/tracking parameters are discarded.
 - The processor removes only timestamp-only lines and exact adjacent duplicate paragraphs, normalises whitespace, and capitalises existing sentence boundaries.
 - A case-insensitive word-sequence equality check blocks any preparation that changes retained words.
-- Sources without reliable sentence boundaries fail for manual attention; punctuation is never guessed.
+- Sources without reliable sentence boundaries fail for manual attention unless separately allowlisted for the Phase 3B.2b Codex punctuation-only path.
+- Phase 3B.2b uses deterministic, non-overlapping chunks of at most 450 lexical tokens with stable character/token ranges, source and cleaned SHA-256 hashes, exact ordering and complete source coverage.
+- Source and cleaned text are normalised to Unicode NFC and tokenised independently on whitespace. Unicode punctuation is removed from each token and the remainder is case-folded. The token counts, boundaries, order and content must match for every chunk and the complete reassembly; deletion, addition, substitution, duplication, reordering, splitting or merging rolls back the complete sermon before persistence.
 - The private bundle uses schema version 3 and records filename, SHA-256, language, track type (including unresolved `unknown`), counts, processing version/timestamps, warnings, unresolved markers, and mandatory accuracy review.
 - Pilot migration records use the isolated `phase3b2_pilot` source-system discriminator and therefore cannot inflate the 453-record WordPress launch gate.
 - No audio/video downloader, speech-to-text path, billable provider, or approval action exists in the pilot implementation.
+
+## Remaining workload
+
+No Phase 3B.2b private processing time, warning/review count or workload extrapolation is verified by the hardening task. Recalculate workload only after a separately authorised private rerun and administrator review, using clearly identified measured and estimated components. A larger authorised sample remains necessary before treating any extrapolation as a commitment.
 
 ## Launch gate
 

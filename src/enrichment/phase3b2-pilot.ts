@@ -1,6 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { basename, relative, resolve } from "node:path";
+import { resolve } from "node:path";
 import type { Pool, PoolClient } from "pg";
 import { enrichmentDraftBundleSchema, type EnrichmentDraftBundle } from "./contracts";
 import {
@@ -14,10 +13,18 @@ import {
   prepareExistingCaptionText
 } from "./pilot-caption";
 import { importEnrichmentDraftBundle } from "./postgres-enrichment";
+import {
+  PunctuationWorkflowError,
+  assertSafeDirectory,
+  ensureSafeDirectory,
+  persistNoClobber,
+  readSafeFile,
+  resolveSafeDirectChild
+} from "./pilot-punctuation";
 
 const pilotActorSubject = "local-phase3b2-pilot-importer";
 
-function deterministicPilotUuid(videoId: string): string {
+export function deterministicPilotUuid(videoId: string): string {
   const bytes = createHash("sha256").update(`saving-grace-phase3b2:${videoId}`, "utf8").digest().subarray(0, 16);
   bytes[6] = (bytes[6]! & 0x0f) | 0x50;
   bytes[8] = (bytes[8]! & 0x3f) | 0x80;
@@ -26,15 +33,10 @@ function deterministicPilotUuid(videoId: string): string {
 }
 
 function pathInside(root: string, filename: string): string {
-  const target = resolve(root, filename);
-  const relationship = relative(root, target);
-  if (!relationship || relationship.startsWith("..") || relationship.includes(":") || basename(target) !== filename) {
-    throw new Error("Pilot caption files must be direct children of the private pilot directory");
-  }
-  return target;
+  return resolveSafeDirectChild(root, filename, "file", ".txt");
 }
 
-async function verifyPilotDatabase(client: PoolClient): Promise<void> {
+export async function verifyPilotDatabase(client: PoolClient): Promise<void> {
   const result = await client.query<{
     server_16: boolean;
     loopback: boolean;
@@ -52,7 +54,10 @@ async function verifyPilotDatabase(client: PoolClient): Promise<void> {
        to_regclass('public.sermon_enrichment_sources') IS NOT NULL AS provenance_table`
   );
   if (!Object.values(result.rows[0] ?? {}).every(Boolean)) {
-    throw new Error("Phase 3B.2 database identity or migration safety verification failed");
+    throw new PunctuationWorkflowError(
+      "database_verification_failure",
+      "Phase 3B.2 database identity or migration safety verification failed."
+    );
   }
 }
 
@@ -92,13 +97,30 @@ async function ensurePilotMigrationRecord(
      ) VALUES ($1, 'phase3b2_pilot', 'private_caption', $2, 'draft', $3, $4,
        'sermon', $5, 'included', 'authorised_private_pilot')
      ON CONFLICT (migration_run_id, source_system, source_entity_type, source_id)
-     DO UPDATE SET source_checksum_sha256 = EXCLUDED.source_checksum_sha256,
-       source_url = EXCLUDED.source_url, target_id = EXCLUDED.target_id`,
+     DO NOTHING`,
     [migrationRunId, String(record.sourceWordPressId), canonicalUrl, sourceSha256, sermonId]
   );
+  const exactRecord = await client.query<{ matches: boolean }>(
+    `SELECT EXISTS (
+       SELECT 1 FROM migration_records
+       WHERE migration_run_id = $1 AND source_system = 'phase3b2_pilot'
+         AND source_entity_type = 'private_caption' AND source_id = $2
+         AND source_status = 'draft' AND source_url = $3
+         AND source_checksum_sha256 = $4 AND target_entity_type = 'sermon'
+         AND target_id = $5 AND outcome = 'included'
+         AND reason_code = 'authorised_private_pilot'
+     ) AS matches`,
+    [migrationRunId, String(record.sourceWordPressId), canonicalUrl, sourceSha256, sermonId]
+  );
+  if (!exactRecord.rows[0]?.matches) {
+    throw new PunctuationWorkflowError(
+      "persistence_conflict",
+      "An existing private pilot migration receipt differs from the trusted source identity."
+    );
+  }
 }
 
-async function ensurePrivatePilotSermon(
+export async function ensurePrivatePilotSermon(
   pool: Pool,
   manifest: Phase3b2PilotManifest,
   record: Phase3b2PilotManifest["records"][number],
@@ -166,16 +188,26 @@ async function ensurePrivatePilotSermon(
   }
 }
 
-function sourceReference(videoId: string, sha256: string): string {
-  return `youtube-studio:${videoId}:${sha256}:phase3b2-caption-v1`;
+export function sourceReference(videoId: string, sha256: string, processingVersion = phase3b2ProcessingVersion): string {
+  return `youtube-studio:${videoId}:${sha256}:${processingVersion}`;
 }
 
-async function existingOrWriteBundle(
+export async function existingOrWriteBundle(
   bundlePath: string,
   candidate: EnrichmentDraftBundle
 ): Promise<EnrichmentDraftBundle> {
   try {
-    const existing = enrichmentDraftBundleSchema.parse(JSON.parse(await readFile(bundlePath, "utf8")));
+    const existingBytes = await readSafeFile(bundlePath);
+    let existing: EnrichmentDraftBundle;
+    try {
+      existing = enrichmentDraftBundleSchema.parse(JSON.parse(existingBytes.toString("utf8")));
+    } catch (error) {
+      throw new PunctuationWorkflowError(
+        "persistence_conflict",
+        "An existing private pilot bundle is corrupt or does not match the required schema.",
+        { cause: error }
+      );
+    }
     if (
       existing.schemaVersion !== 3 ||
       candidate.schemaVersion !== 3 ||
@@ -184,14 +216,38 @@ async function existingOrWriteBundle(
       existing.targetSermonId !== candidate.targetSermonId ||
       existing.sourceWordPressId !== candidate.sourceWordPressId ||
       existing.description.bodyText !== candidate.description.bodyText ||
-      JSON.stringify(existing.questionAnswers) !== JSON.stringify(candidate.questionAnswers)
+      existing.transcript.bodyText !== candidate.transcript.bodyText ||
+      JSON.stringify(existing.questionAnswers) !== JSON.stringify(candidate.questionAnswers) ||
+      JSON.stringify(existing.sourceProvenance.warnings) !== JSON.stringify(candidate.sourceProvenance.warnings) ||
+      JSON.stringify(existing.sourceProvenance.unresolvedPassages) !==
+        JSON.stringify(candidate.sourceProvenance.unresolvedPassages)
     ) {
-      throw new Error("Existing private pilot bundle does not match the current mapped source and drafts");
+      throw new PunctuationWorkflowError(
+        "persistence_conflict",
+        "An existing private pilot bundle differs from the expected mapped source and drafts."
+      );
+    }
+    const byteComparableCandidate = enrichmentDraftBundleSchema.parse({
+      ...candidate,
+      expectedRowVersion: existing.expectedRowVersion,
+      sourceProvenance: {
+        ...candidate.sourceProvenance,
+        importedAt: existing.sourceProvenance.importedAt,
+        processedAt: existing.sourceProvenance.processedAt,
+        processingDurationMs: existing.sourceProvenance.processingDurationMs
+      }
+    });
+    const expectedBytes = Buffer.from(`${JSON.stringify(byteComparableCandidate, null, 2)}\n`, "utf8");
+    if (!existingBytes.equals(expectedBytes)) {
+      throw new PunctuationWorkflowError(
+        "persistence_conflict",
+        "An existing private pilot bundle is not byte-for-byte identical to the expected artifact."
+      );
     }
     return existing;
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-    await writeFile(bundlePath, `${JSON.stringify(candidate, null, 2)}\n`, { encoding: "utf8", flag: "wx" });
+    if (!(error instanceof PunctuationWorkflowError && error.code === "missing_input")) throw error;
+    await persistNoClobber(bundlePath, `${JSON.stringify(candidate, null, 2)}\n`);
     return candidate;
   }
 }
@@ -203,11 +259,9 @@ export async function runPhase3b2Pilot(
 ): Promise<Phase3b2SafeOutcome[]> {
   const manifest = phase3b2PilotManifestSchema.parse(manifestInput);
   const pilotRoot = resolve(pilotRootInput);
-  const preparedRoot = resolve(pilotRoot, "prepared-private");
-  if (!relative(pilotRoot, preparedRoot) || relative(pilotRoot, preparedRoot).startsWith("..")) {
-    throw new Error("Private pilot output must remain inside the pilot directory");
-  }
-  await mkdir(preparedRoot, { recursive: true });
+  await assertSafeDirectory(pilotRoot);
+  const preparedRoot = resolveSafeDirectChild(pilotRoot, "prepared-private", "directory");
+  await ensureSafeDirectory(preparedRoot);
   const outcomes: Phase3b2SafeOutcome[] = [];
 
   for (const record of manifest.records) {
@@ -219,9 +273,9 @@ export async function runPhase3b2Pilot(
     const captionPath = pathInside(pilotRoot, record.captionFilename);
     let captionBytes: Buffer;
     try {
-      captionBytes = await readFile(captionPath);
+      captionBytes = await readSafeFile(captionPath);
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+      if (!(error instanceof PunctuationWorkflowError && error.code === "missing_input")) throw error;
       outcomes.push({
         videoId: record.videoId,
         captionSupplied: false,
@@ -339,7 +393,12 @@ export async function runPhase3b2Pilot(
         accuracyReviewStatus: "required"
       }
     });
-    const bundlePath = resolve(preparedRoot, `${record.videoId}.private.json`);
+    const bundlePath = resolveSafeDirectChild(
+      preparedRoot,
+      `${record.videoId}.private.json`,
+      "file",
+      ".private.json"
+    );
     const bundle = await existingOrWriteBundle(bundlePath, candidate);
     const imported = await importEnrichmentDraftBundle(pool, bundle, pilotActorSubject);
     outcomes.push({
@@ -365,10 +424,9 @@ export async function runPhase3b2Pilot(
       failure: null
     });
   }
-  await writeFile(
-    resolve(preparedRoot, "safe-outcomes.private.json"),
-    `${JSON.stringify({ schemaVersion: 1, outcomes }, null, 2)}\n`,
-    "utf8"
+  await persistNoClobber(
+    resolveSafeDirectChild(preparedRoot, "safe-outcomes.private.json", "file", ".private.json"),
+    `${JSON.stringify({ schemaVersion: 1, outcomes }, null, 2)}\n`
   );
   return outcomes;
 }

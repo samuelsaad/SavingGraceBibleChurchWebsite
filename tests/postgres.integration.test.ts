@@ -1,4 +1,7 @@
-import { readFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
@@ -20,6 +23,15 @@ import {
   buildEnrichmentQueue,
   importEnrichmentDraftBundle
 } from "../src/enrichment/postgres-enrichment";
+import {
+  runPhase3b2PunctuationCompletion,
+  verifyPhase3b2PunctuationCompletion
+} from "../src/enrichment/phase3b2b-pilot";
+import {
+  buildPunctuationPack,
+  createPunctuationWorkspaceTemplate,
+  phase3b2PunctuationProcessingVersion
+} from "../src/enrichment/pilot-punctuation";
 import { LocalTestIdentityProvider } from "../src/server/auth/local-test-identity-provider";
 import { createApplicationApiRouter } from "../src/server/http/application-api-router";
 import { PostgresAdminSermonRepository } from "../src/server/repositories/postgres-admin-sermon-repository";
@@ -555,6 +567,317 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       })
     ).rejects.toThrow("approved_question_answers_conflict");
     expect(await new PostgresSermonRepository(pool).findPublishedBySlug("an-anonymised-pending-sermon")).toBeNull();
+  });
+
+  it("runs the real Phase 3B.2b filesystem, orchestration, importer and fail-closed verifier paths", async () => {
+    const roots: string[] = [];
+    const makeCaption = (punctuated: boolean) => Array.from(
+      { length: 110 },
+      () => punctuated
+        ? "The anonymised speaker explains a local example and invites careful review."
+        : "the anonymised speaker explains a local example and invites careful review [unclear]"
+    ).join(" ");
+    const completionRecord = (videoId: string, punctuationPackFilename: string) => ({
+      videoId,
+      punctuationPackFilename,
+      descriptionDraft: "This anonymised local description is grounded in the test transcript and remains a private draft for explicit administrator review.",
+      descriptionSupportingParagraphs: [1],
+      questionAnswers: Array.from({ length: 7 }, (_, index) => ({
+        question: `What should be considered in anonymised question ${index + 1}?`,
+        answer: "This transcript-grounded anonymised answer remains a private draft for administrator review.",
+        supportingParagraphs: [1]
+      })),
+      possibleCaptionErrors: [{
+        detail: "An anonymised source uncertainty remains for review.",
+        supportingParagraphs: [1]
+      }],
+      apparentNamesAndScriptureReferences: []
+    });
+    const createFixture = async (
+      videoIds: readonly [string, string, string],
+      sourceIdBase: number
+    ) => {
+      const root = await mkdtemp(join(tmpdir(), "phase3b2b-postgres-"));
+      roots.push(root);
+      const records = videoIds.map((videoId, index) => ({
+        videoId,
+        videoUrl: `https://www.youtube.com/watch?v=${videoId}&list=ignored&index=${index + 1}`,
+        captionFilename: `anonymised-${index + 1}.txt`,
+        captionLanguage: "en-AU",
+        captionTrackType: "unknown" as const,
+        sourceWordPressId: sourceIdBase + index,
+        title: `Anonymised punctuation pilot ${sourceIdBase + index}`,
+        slug: `anonymised-punctuation-pilot-${sourceIdBase + index}`,
+        serviceDate: "1970-01-01",
+        descriptionDraft: null,
+        questionAnswers: []
+      }));
+      const manifest = {
+        schemaVersion: 1 as const,
+        sourceSnapshotId: `anonymised-phase3b2b-${sourceIdBase}`,
+        allowlistedVideoIds: [...videoIds],
+        records
+      };
+      await Promise.all(records.map((record, index) =>
+        writeFile(join(root, record.captionFilename), makeCaption(index === 0), "utf8")
+      ));
+      const completionRecords = [];
+      for (const [index, record] of records.slice(1).entries()) {
+        const sourceText = await readFile(join(root, record.captionFilename), "utf8");
+        const template = createPunctuationWorkspaceTemplate(record.videoId, sourceText);
+        const pack = buildPunctuationPack(
+          record.videoId,
+          sourceText,
+          template,
+          template.chunks.map((chunk) => sourceText.slice(chunk.sourceStart, chunk.sourceEnd))
+        );
+        const packFilename = `anonymised-${index + 1}.pack.private.json`;
+        await writeFile(join(root, packFilename), `${JSON.stringify(pack, null, 2)}\n`, "utf8");
+        completionRecords.push(completionRecord(record.videoId, packFilename));
+      }
+      const completion = {
+        schemaVersion: 2 as const,
+        sourceSnapshotId: manifest.sourceSnapshotId,
+        records: completionRecords
+      };
+      return { root, manifest, completion, records };
+    };
+
+    const successfulIds = ["ddddddddddd", "eeeeeeeeeee", "fffffffffff"] as const;
+    const successful = await createFixture(successfulIds, 991_000);
+    const successfulSourceIds = successful.records.slice(1).map((record) => record.sourceWordPressId);
+    try {
+      const first = await runPhase3b2PunctuationCompletion(
+        pool,
+        successful.root,
+        successful.manifest,
+        successful.completion
+      );
+      expect(first).toHaveLength(2);
+      expect(first.every((outcome) => outcome.importedOutcome === "imported_as_draft" && outcome.failure === null))
+        .toBe(true);
+      expect(first.every((outcome) => outcome.uncertaintyMarkerCount > 0)).toBe(true);
+
+      const second = await runPhase3b2PunctuationCompletion(
+        pool,
+        successful.root,
+        successful.manifest,
+        successful.completion
+      );
+      expect(second.every((outcome) => outcome.importedOutcome === "unchanged" && outcome.failure === null))
+        .toBe(true);
+
+      const retained = await pool.query<{
+        records: number;
+        draft_sermons: number;
+        draft_descriptions: number;
+        draft_transcripts: number;
+        draft_questions: number;
+        uncertainty_records: number;
+        unresolved_records: number;
+        warning_records: number;
+        language_records: number;
+        track_type_records: number;
+      }>(
+        `SELECT
+           (SELECT count(*)::integer FROM sermons WHERE source_wordpress_id = ANY($1::bigint[])) AS records,
+           (SELECT count(*)::integer FROM sermons WHERE source_wordpress_id = ANY($1::bigint[]) AND status = 'draft') AS draft_sermons,
+           (SELECT count(*)::integer FROM sermons WHERE source_wordpress_id = ANY($1::bigint[]) AND summary_status = 'draft') AS draft_descriptions,
+           (SELECT count(*)::integer FROM sermon_transcripts t JOIN sermons s ON s.id = t.sermon_id
+             WHERE s.source_wordpress_id = ANY($1::bigint[]) AND t.status = 'draft') AS draft_transcripts,
+           (SELECT count(*)::integer FROM sermon_question_answers q JOIN sermons s ON s.id = q.sermon_id
+             WHERE s.source_wordpress_id = ANY($1::bigint[]) AND q.status = 'draft') AS draft_questions,
+           (SELECT count(*)::integer FROM sermon_enrichment_sources source JOIN sermons s ON s.id = source.sermon_id
+             WHERE s.source_wordpress_id = ANY($1::bigint[]) AND source.uncertainty_marker_count > 0) AS uncertainty_records,
+           (SELECT count(*)::integer FROM sermon_enrichment_sources source JOIN sermons s ON s.id = source.sermon_id
+             WHERE s.source_wordpress_id = ANY($1::bigint[]) AND jsonb_array_length(source.unresolved_passages) > 0) AS unresolved_records,
+           (SELECT count(*)::integer FROM sermon_enrichment_sources source JOIN sermons s ON s.id = source.sermon_id
+             WHERE s.source_wordpress_id = ANY($1::bigint[]) AND source.warnings @> '[{"code":"source_uncertainties_retained"}]'::jsonb) AS warning_records,
+           (SELECT count(*)::integer FROM sermon_enrichment_sources source JOIN sermons s ON s.id = source.sermon_id
+             WHERE s.source_wordpress_id = ANY($1::bigint[]) AND source.caption_language = 'en-AU') AS language_records,
+           (SELECT count(*)::integer FROM sermon_enrichment_sources source JOIN sermons s ON s.id = source.sermon_id
+             WHERE s.source_wordpress_id = ANY($1::bigint[]) AND source.caption_track_type = 'unknown') AS track_type_records`,
+        [successfulSourceIds]
+      );
+      expect(retained.rows[0]).toEqual({
+        records: 2,
+        draft_sermons: 2,
+        draft_descriptions: 2,
+        draft_transcripts: 2,
+        draft_questions: 14,
+        uncertainty_records: 2,
+        unresolved_records: 2,
+        warning_records: 2,
+        language_records: 2,
+        track_type_records: 2
+      });
+
+      await expect(verifyPhase3b2PunctuationCompletion(
+        pool,
+        successful.root,
+        successful.manifest,
+        successful.completion
+      )).resolves.toMatchObject({
+        authorisedRecordCount: 2,
+        idempotentRerunCount: 2,
+        everySermonDraft: true,
+        publicRoutesIsolated: true,
+        historicalReadinessIsolated: true
+      });
+
+      const invalidStates = [
+        {
+          apply: "UPDATE sermons SET status = 'published', published_at = now() WHERE source_wordpress_id = $1",
+          restore: "UPDATE sermons SET status = 'draft', published_at = NULL WHERE source_wordpress_id = $1"
+        },
+        {
+          apply: `UPDATE sermons SET summary_status = 'approved', summary_reviewed_by_subject = 'local-admin-0001',
+                    summary_approved_by_subject = 'local-admin-0001', summary_reviewed_at = now(), summary_approved_at = now()
+                  WHERE source_wordpress_id = $1`,
+          restore: `UPDATE sermons SET summary_status = 'draft', summary_reviewed_by_subject = NULL,
+                    summary_approved_by_subject = NULL, summary_reviewed_at = NULL, summary_approved_at = NULL
+                  WHERE source_wordpress_id = $1`
+        },
+        {
+          apply: `UPDATE sermon_question_answers SET status = 'approved', reviewed_by_subject = 'local-admin-0001',
+                    approved_by_subject = 'local-admin-0001', reviewed_at = now(), approved_at = now()
+                  WHERE sermon_id = (SELECT id FROM sermons WHERE source_wordpress_id = $1)`,
+          restore: `UPDATE sermon_question_answers SET status = 'draft', reviewed_by_subject = NULL,
+                    approved_by_subject = NULL, reviewed_at = NULL, approved_at = NULL
+                  WHERE sermon_id = (SELECT id FROM sermons WHERE source_wordpress_id = $1)`
+        },
+        {
+          apply: "UPDATE sermons SET source_status = 'unexpected_source' WHERE source_wordpress_id = $1",
+          restore: "UPDATE sermons SET source_status = 'phase3b2_pilot' WHERE source_wordpress_id = $1"
+        }
+      ];
+      for (const state of invalidStates) {
+        await pool.query(state.apply, [successfulSourceIds[0]]);
+        try {
+          await expect(verifyPhase3b2PunctuationCompletion(
+            pool,
+            successful.root,
+            successful.manifest,
+            successful.completion
+          )).rejects.toMatchObject({ code: "database_verification_failure" });
+        } finally {
+          await pool.query(state.restore, [successfulSourceIds[0]]);
+        }
+      }
+
+      const originalStoredValues = await pool.query<{
+        summary: string;
+        caption_language: string;
+      }>(
+        `SELECT s.summary, source.caption_language
+         FROM sermons s JOIN sermon_enrichment_sources source ON source.sermon_id = s.id
+         WHERE s.source_wordpress_id = $1`,
+        [successfulSourceIds[0]]
+      );
+      const originalStored = originalStoredValues.rows[0]!;
+      await pool.query(
+        "UPDATE sermons SET summary = summary || ' An anonymised verifier mutation.' WHERE source_wordpress_id = $1",
+        [successfulSourceIds[0]]
+      );
+      try {
+        await expect(verifyPhase3b2PunctuationCompletion(
+          pool,
+          successful.root,
+          successful.manifest,
+          successful.completion
+        )).rejects.toMatchObject({ code: "database_verification_failure" });
+      } finally {
+        await pool.query(
+          "UPDATE sermons SET summary = $2 WHERE source_wordpress_id = $1",
+          [successfulSourceIds[0], originalStored.summary]
+        );
+      }
+      await pool.query(
+        `UPDATE sermon_enrichment_sources SET caption_language = 'en'
+         WHERE sermon_id = (SELECT id FROM sermons WHERE source_wordpress_id = $1)`,
+        [successfulSourceIds[0]]
+      );
+      try {
+        await expect(verifyPhase3b2PunctuationCompletion(
+          pool,
+          successful.root,
+          successful.manifest,
+          successful.completion
+        )).rejects.toMatchObject({ code: "database_verification_failure" });
+      } finally {
+        await pool.query(
+          `UPDATE sermon_enrichment_sources SET caption_language = $2
+           WHERE sermon_id = (SELECT id FROM sermons WHERE source_wordpress_id = $1)`,
+          [successfulSourceIds[0], originalStored.caption_language]
+        );
+      }
+
+      const fixtureProvenance = await pool.query<{ processing_version: string }>(
+        `SELECT source.processing_version FROM sermon_enrichment_sources source
+         JOIN sermons s ON s.id = source.sermon_id WHERE s.source_wordpress_id = 9003`
+      );
+      if (fixtureProvenance.rows[0]) {
+        await pool.query(
+          `UPDATE sermon_enrichment_sources SET processing_version = $1
+           WHERE sermon_id = (SELECT id FROM sermons WHERE source_wordpress_id = 9003)`,
+          [phase3b2PunctuationProcessingVersion]
+        );
+        try {
+          await expect(verifyPhase3b2PunctuationCompletion(
+            pool,
+            successful.root,
+            successful.manifest,
+            successful.completion
+          )).rejects.toMatchObject({ code: "database_verification_failure" });
+        } finally {
+          await pool.query(
+            `UPDATE sermon_enrichment_sources SET processing_version = $1
+             WHERE sermon_id = (SELECT id FROM sermons WHERE source_wordpress_id = 9003)`,
+            [fixtureProvenance.rows[0].processing_version]
+          );
+        }
+      }
+
+      const failedIds = ["ggggggggggg", "hhhhhhhhhhh", "iiiiiiiiiii"] as const;
+      const failed = await createFixture(failedIds, 992_000);
+      const firstPackPath = join(failed.root, failed.completion.records[0]!.punctuationPackFilename);
+      const firstPack = JSON.parse(await readFile(firstPackPath, "utf8")) as {
+        chunks: Array<{ cleanedText: string; cleanedOutputSha256: string }>;
+      };
+      firstPack.chunks[0]!.cleanedText = firstPack.chunks[0]!.cleanedText.replace(
+        /anonymised/i,
+        "substituted"
+      );
+      firstPack.chunks[0]!.cleanedOutputSha256 = createHash("sha256")
+        .update(firstPack.chunks[0]!.cleanedText, "utf8")
+        .digest("hex");
+      await writeFile(firstPackPath, `${JSON.stringify(firstPack, null, 2)}\n`, "utf8");
+      const failedOutcomes = await runPhase3b2PunctuationCompletion(
+        pool,
+        failed.root,
+        failed.manifest,
+        failed.completion
+      );
+      expect(failedOutcomes.map((outcome) => outcome.failure?.code)).toEqual([
+        "lexical_preservation_failure",
+        "not_attempted_prior_failure"
+      ]);
+      expect((await pool.query<{ count: number }>(
+        "SELECT count(*)::integer AS count FROM sermons WHERE source_wordpress_id = ANY($1::bigint[])",
+        [failed.records.slice(1).map((record) => record.sourceWordPressId)]
+      )).rows[0]?.count).toBe(0);
+    } finally {
+      await pool.query(
+        "DELETE FROM migration_records WHERE source_system = 'phase3b2_pilot' AND source_id = ANY($1::text[])",
+        [successfulSourceIds.map(String)]
+      );
+      await pool.query("DELETE FROM sermons WHERE source_wordpress_id = ANY($1::bigint[])", [successfulSourceIds]);
+      await pool.query(
+        `DELETE FROM migration_runs run WHERE migration_version = 'phase3b2-pilot-v1'
+         AND NOT EXISTS (SELECT 1 FROM migration_records record WHERE record.migration_run_id = run.id)`
+      );
+      await Promise.all(roots.map((root) => rm(root, { recursive: true, force: true })));
+    }
   });
 
   it("supports admin filters, counts, every state transition, and transactional edits", async () => {

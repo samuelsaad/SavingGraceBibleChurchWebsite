@@ -1,7 +1,7 @@
 # Advanced Sermons Migration Contract
 
-**Version:** 1.2
-**Status:** Phase 3B.2 three-caption private rehearsal implemented; not approved for production execution or the remaining 450 sermons
+**Version:** 1.3
+**Status:** Phase 3B.2b offline workflow provisionally hardened with anonymised fixtures; real private rerun, production execution and the remaining 450 sermons are not approved
 
 ## 1. Source boundary
 
@@ -82,10 +82,10 @@ Each untouched source value becomes a `scripture_reference_sources` row:
 - Transcript/Q&A fields accept plain text only. Status, non-secret provenance, created/updated/reviewed/approved timestamps, reviewer/approver, audit history, and optimistic concurrency are preserved.
 - Draft enrichment bundles are strict schema-versioned JSON keyed by source WordPress ID, target UUID, and expected row version. Queue records are deterministically sorted by source ID and need code.
 - Local draft imports are transactionally idempotent by SHA-256 receipt; the same bundle is unchanged on rerun, a changed stale bundle is rejected, and imported content is always `draft` with a `human_approval_required` warning.
-- No provider, media service, AI API, WordPress, or production database may be contacted by this local workflow. Provider interfaces do not constitute an implementation or approval.
+- No provider, media service, AI API, WordPress, production database or network service may be contacted by this local workflow. Provider interfaces do not constitute an implementation or approval. Any future authority to process real private transcript text must be explicit and reported accurately.
 - Phase 3B.2 bundle schema version 3 adds private, structured YouTube Studio export provenance and safe warning codes. Operational timestamps and expected row versions are excluded from the content checksum so an identical regenerated bundle remains idempotent.
 - A differing draft import must refuse to overwrite any approved description, approved transcript, or approved Q&A content. Identical approved content is preserved rather than downgraded.
-- Caption preparation is local-file-only and verifies that the retained case-insensitive word sequence is unchanged. Insufficient sentence boundaries produce `manual_punctuation_required` and no derived outputs.
+- Initial caption preparation is local-file-only and verifies that the retained case-insensitive word sequence is unchanged. The provisional Phase 3B.2b path derives exactly two eligible records from the committed Phase 3B.2 result and rejects the successful or unknown records. It uses stable, non-overlapping chunks of at most 450 lexical tokens with source/output hashes and exact ordering. Source and cleaned text are normalised to Unicode NFC, independently tokenised on whitespace, stripped of Unicode punctuation within each token and case-folded. Any token count, boundary, order or content mismatch—including splitting or merging—or any missing, duplicated or reordered chunk discards the whole sermon before persistence.
 - Local pilot rows use `source_system = 'phase3b2_pilot'`; historical readiness continues to count only approved `wordpress` migration records.
 
 ## 9. Search and API contract
