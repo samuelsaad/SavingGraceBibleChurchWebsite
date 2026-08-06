@@ -158,6 +158,12 @@ The dashboard usability failure is treated as a product defect. The approved wor
 
 `seo_description` is a separate optional controlled 1-320 character override for metadata/social tags. When absent, the approved visible description is the deterministic fallback. The public SSR shows the complete description uncollapsed below title/core metadata and before media, transcript and Q&A. The publication gate and exact historical gate require approved descriptions; production needs 453/453 and zero incomplete. None of the 453 real descriptions is complete or approved under this milestone. Migration `0005_approved_sermon_descriptions.sql` and its independent rollback/reapply are locally verified. (`approved decision`, locally verified on PostgreSQL 16.14)
 
+### D-118 - Phase 3B.2 private caption pilot boundary
+
+The approved rehearsal is exactly three explicitly mapped local YouTube Studio text exports. Video identity is the allowlisted 11-character ID; playlist/tracking parameters have no identity effect. No video/audio download, speech-to-text, caption mutation, external provider, paid API, WordPress, AWS or production contact is permitted. Preparation may remove timestamp-only lines and exact adjacent overlap, normalise whitespace and capitalise existing boundaries, but must preserve the retained word sequence. Boundary-free or unreliable exports fail for manual attention rather than receiving guessed punctuation or invented content.
+
+All successful outputs import as private drafts with structured source hash/filename/language/track-type/attribution, processing evidence, warnings and mandatory human accuracy review. Differing imports cannot replace approved descriptions, transcripts or Q&A. The pilot result does not authorise the remaining 450 sermons or Phase 3C. (`approved decision`, locally exercised against PostgreSQL 16.14)
+
 ## Decisions still required
 
 - Final AWS runtime/adapter and production networking.
@@ -167,4 +173,4 @@ The dashboard usability failure is treated as a product defect. The approved wor
 - Approved runtime secret-provider integration before any future upgrade from `pg` 8 to `pg` 9, whose automatic `pgpass` support is deprecated.
 - Explicit read-only approval and access method for the fresh whole-site crawl and church-owned Search Console/analytics baseline.
 - Production canonical host/slash policy, any intentionally crawlable filter landing pages, and baseline-derived SEO performance/rollback thresholds.
-- Provider(s), cost ceiling, secure source-access method, privacy/retention terms, batch/retry policy, reviewer/approver assignments, separate description/transcript/Q&A quality rubrics, correction/audit process, and rollback evidence for the separately authorised Phase 3B.2 three-output production and human-review rehearsal.
+- Explicit acceptance of the Phase 3B.2 pilot, the next exact allowlist/batch, reviewer/approver assignments, confirmed source identities/dates, and a non-billable punctuation method for caption exports without reliable sentence boundaries before any of the remaining 450 sermons is processed.

@@ -105,3 +105,9 @@ The shell is labelled local-development-only, sends no remote requests, receives
 The dashboard displays the resulting title, slug, and expected canonical public sermon URL. It warns before changing a previously published slug. Slug mapping and deletion dispositions are explicit contract fields rather than WordPress-style postmeta.
 
 Migration `0005` persists only the controlled optional `seoDescription` override. The approved visible description is the deterministic metadata/social fallback when the override is null. Future ordered migrations may add only approved fields such as `seoTitle`, controlled social title/description, a managed social image, and managed image alt text. No role may add arbitrary meta names, raw `<head>` fragments, scripts, external canonicals, arbitrary JSON-LD, or unrestricted metadata. Indexability remains derived from route, environment, template, and publication state.
+
+## Phase 3B.2 private provenance review
+
+Admin sermon detail may include a private `enrichmentSource` object when a draft came from the controlled caption pilot. It exposes only canonical video identity, caption language/track type, original filename, SHA-256, authorised-export attribution, aggregate source/cleaned counts, processing version/timestamps/duration, safe warning codes, unresolved marker identifiers, review estimate, and the fixed `required` human-accuracy state. It never appears in public API responses or search documents and never includes source caption text, credentials, cookies or tokens.
+
+The six-step editor displays this evidence and warnings before the transcript field. Reviewing the provenance, transcript, description and each Q&A is possible without changing status. Moving any area to in-review or approved remains a separate explicit administrator action that records the administrator subject and timestamp. The local pilot importer has no approval capability and never impersonates the administrator.

@@ -66,6 +66,20 @@ describe("PostgreSQL schema contract", () => {
     expect(down).toContain("coalesce(summary, '')");
   });
 
+  it("stores reversible private Phase 3B.2 source provenance without sermon bodies", async () => {
+    const [up, down] = await Promise.all([
+      readFile("db/migrations/0006_phase3b2_pilot_provenance.sql", "utf8"),
+      readFile("db/migrations/0006_phase3b2_pilot_provenance.down.sql", "utf8")
+    ]);
+    expect(up).toContain("CREATE TABLE sermon_enrichment_sources");
+    expect(up).toContain("authorised_youtube_studio_export");
+    expect(up).toContain("source_content_sha256");
+    expect(up).toContain("warnings jsonb");
+    expect(up).toContain("accuracy_review_status");
+    expect(up).not.toMatch(/source_(?:body|transcript)_text/);
+    expect(down).toContain("DROP TABLE IF EXISTS sermon_enrichment_sources");
+  });
+
   it("has an explicit reversible local rollback", async () => {
     const down = await readFile("db/migrations/0001_initial.down.sql", "utf8");
     expect(down).toContain("DROP TABLE IF EXISTS sermons");

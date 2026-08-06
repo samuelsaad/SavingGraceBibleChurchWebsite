@@ -74,7 +74,8 @@ function sermonDetailDto(sermon: StoredSermonDetail): AdminSermonDetail {
     scriptureReferences: sermon.scriptureReferences,
     media: sermon.media,
     transcript: sermon.transcript,
-    questionAnswers: sermon.questionAnswers
+    questionAnswers: sermon.questionAnswers,
+    enrichmentSource: sermon.enrichmentSource
   });
 }
 

@@ -1,6 +1,6 @@
 # Saving Grace Bible Church Website
 
-Local Phase 3B.1a single-administrator approved sermon-description and content/readiness correction for the Astro/TypeScript/PostgreSQL replacement described in `church-website-architecture-plan.md`.
+Local Phase 3B.2 private three-sermon caption/enrichment rehearsal for the Astro/TypeScript/PostgreSQL replacement described in `church-website-architecture-plan.md`.
 
 ## Current scope
 
@@ -16,6 +16,7 @@ Local Phase 3B.1a single-administrator approved sermon-description and content/r
 - Reused `sermons.summary` as the reviewed public **Sermon description**, with explicit lifecycle/provenance, approved-only weight-C search and controlled `seo_description` fallback
 - First-class reviewed plain-text transcripts and 5–10 ordered reviewed Q&A pairs with approved-only lower-weight search
 - Derived readiness, exact 453/453 historical launch gate, deterministic enrichment queue, and idempotent draft-only import contract
+- Private YouTube Studio caption-file processor with exact three-video allowlisting, word-sequence preservation, safe manual-review failures, structured source provenance/warnings, and no media/network implementation
 - Legacy query/date compatibility translation
 - Deterministic Advanced Sermons dry-run importer
 - Loopback-only anonymised fixture loader with an explicit write opt-in
@@ -26,7 +27,7 @@ Local Phase 3B.1a single-administrator approved sermon-description and content/r
 - Server-rendered uncollapsed approved description before media/transcript/Q&A; collapsed transcript remains in initial markup and list payloads omit heavy bodies
 - Automated migration, security, lifecycle, configuration, and schema-contract tests
 
-This milestone does not include deployment, cloud infrastructure, Cognito configuration, production data loading, real historical description/transcript/Q&A production, external providers, or any WordPress mutation. The AWS runtime and Astro production adapter remain intentionally undecided. Yang's final single-admin, deletion, one-speaker, approved-description, and content-readiness decisions are recorded in `decision-log.md` and `admin-api-contract.md`.
+This milestone does not include deployment, cloud infrastructure, Cognito configuration, production loading, the remaining 450 sermons, external providers, audio/video processing, new transcription, or any WordPress/YouTube mutation. One mapped caption was prepared and imported privately as draft content; two mapped captions stopped at a structured manual-punctuation gate. The AWS runtime and Astro production adapter remain intentionally undecided.
 
 The disposable PostgreSQL 16.14 integration has been verified against only `savinggrace_sermons_test` on `127.0.0.1:5432`: ordered migration apply, importer load/rerun, public/admin repository and API tests, live loopback HTTP requests, rollback, clean reapply, and final anonymised reload passed. The local database is left in the applied fixture-backed development state with the API harness stopped.
 
@@ -48,12 +49,13 @@ npm run build
 npm run migration:dry-run -- --input tests/fixtures/dry-run.json
 npm run enrichment:export-queue-local -- anonymised-local-fixture
 npm run enrichment:import-draft-local -- path/to/strict-local-draft-bundle.json
+npm run enrichment:pilot-local -- path/to/ignored-private-pilot-manifest.json
 npm run launch-readiness:local
 ```
 
 The dry-run command accepts an approved local JSON input and prints only the safe migration report. It does not connect to MariaDB or PostgreSQL and never writes records. Original media/embed values remain internal migration provenance and are deliberately omitted from stdout.
 
-The enrichment queue is deterministic by safe source WordPress ID and missing requirement across description, transcript and Q&A. Draft import requires the same loopback/write gate as fixture loading, validates target/source identity and row version, rejects HTML-like content, records only a checksum receipt, remains idempotent, never marks content reviewed/approved, and refuses to replace a different approved description. The launch command is expected to exit unsuccessfully for the local three-record fixture and for production until all 453 included historical rows have approved descriptions and every other requirement.
+The enrichment queue is deterministic by safe source WordPress ID and missing requirement across description, transcript and Q&A. Draft import requires the same loopback/write gate as fixture loading, validates target/source identity and row version, rejects HTML-like content, stores private structured provenance, remains idempotent, never marks content reviewed/approved, and refuses to replace different approved descriptions, transcripts, or Q&A. The private pilot command reads local caption text only and contains no downloader, audio processing, speech-to-text, or provider call.
 
 When a disposable loopback PostgreSQL database is available, apply the schema and load the anonymised fixture only with both `DATABASE_URL` and `ALLOW_LOCAL_DB_WRITE=1`:
 
@@ -98,6 +100,6 @@ Copy `.env.example` to a local ignored `.env` only when a local PostgreSQL servi
 
 The proprietary `advanced-sermons*.zip` pattern and extracted plugin directories are excluded by `.gitignore`. Plugin implementation code must never be copied into this application. The exact installed source was inspected read-only outside the workspace and is identified only by aggregate fingerprints in the discovery artifacts.
 
-## Next milestone
+## Next approval gate
 
-Phase 3C remains paused. The exact recommended next milestone is **Phase 3B.2 - controlled historical description, transcript and Q&A production/review rehearsal**. It requires separate approval of source/provider access, cost ceiling, privacy/retention terms, deterministic batches/retries, reviewer/approver assignments, distinct quality rubrics for all three outputs, correction/audit process, and rollback. Begin with anonymised/non-production rehearsal evidence; none of the 453 real descriptions/transcripts/Q&A sets is complete, and launch remains blocked until all receive explicit human approval and the separate whole-site SEO gate passes.
+Phase 3C remains paused and the remaining 450 sermons are not authorised. Before any larger Phase 3B.2 batch, the church must explicitly accept the three-record pilot quality/failure report, nominate the administrator reviewers, provide or approve a non-billable punctuation path for exports without sentence boundaries, confirm real source identities/service dates, approve the next exact allowlist and batch size, and reconfirm privacy/retention, retry, correction, audit, rollback and human-approval rules. Launch remains blocked until all 453 records are complete and separately approved and the whole-site SEO gate passes.

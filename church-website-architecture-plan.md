@@ -1495,6 +1495,12 @@ The exact historical gate is 453 included, 453 sole speakers, 453 approved descr
 
 Phase 3C remains paused. The exact next milestone is **Phase 3B.2 - controlled historical description, transcript and Q&A production/review rehearsal**. It requires separate authorization for source/provider access, cost ceiling, privacy/retention terms, deterministic batches and retry/resume rules, reviewers/approvers, distinct quality rubrics for all three outputs, correction/audit evidence and rollback. Start with an approved anonymised/non-production rehearsal; do not contact a provider or produce any of the 453 real output sets under Phase 3B.1a.
 
+### Phase 3B.2 private three-caption rehearsal outcome
+
+The separately authorised pilot uses exactly three user-mapped local YouTube Studio text exports and no network/provider path. Migration `0006` stores private structured provenance and warning metadata without duplicating transcript content. One export had sufficient existing sentence boundaries for word-sequence-preserving cleanup and private description/transcript/seven-Q&A draft import. Two exports stopped safely with `manual_punctuation_required` and produced no derived outputs. All material remains draft, non-public and excluded from search/readiness; Codex performed no administrator approval.
+
+This pilot does not authorise the remaining 450 sermons. Before another batch, require explicit acceptance of the pilot results, an exact allowlist/batch, approved reviewers, a non-billable punctuation method for boundary-free exports, confirmed source identities/dates, and renewed privacy, retention, retry, correction, audit and rollback approval. Phase 3C remains paused.
+
 ## 29. Reference Documentation
 
 - Advanced Sermons: <https://advancedsermons.com/>

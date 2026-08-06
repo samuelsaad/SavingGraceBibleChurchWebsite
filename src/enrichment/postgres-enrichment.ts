@@ -12,7 +12,7 @@ export interface EnrichmentImportResult {
   targetSermonId: string;
   outcome: "imported_as_draft" | "unchanged";
   descriptionStatus: "draft" | "approved";
-  transcriptStatus: "draft";
+  transcriptStatus: "draft" | "approved";
   questionAnswerCount: number;
   warnings: Array<{ code: string; safeDetail: string }>;
 }
@@ -102,7 +102,19 @@ export async function buildEnrichmentQueue(
 }
 
 function bundleChecksum(bundle: EnrichmentDraftBundle): string {
-  return createHash("sha256").update(JSON.stringify(bundle), "utf8").digest("hex");
+  const { expectedRowVersion: _expectedRowVersion, ...content } = bundle;
+  const checksumContent = bundle.schemaVersion === 3
+    ? {
+        ...content,
+        sourceProvenance: {
+          ...bundle.sourceProvenance,
+          importedAt: undefined,
+          processedAt: undefined,
+          processingDurationMs: undefined
+        }
+      }
+    : content;
+  return createHash("sha256").update(JSON.stringify(checksumContent), "utf8").digest("hex");
 }
 
 async function currentImportReceipt(
@@ -144,6 +156,28 @@ export async function importEnrichmentDraftBundle(
       throw new Error("Enrichment target does not match the supplied source WordPress ID");
     }
 
+    const transcriptResult = await client.query<{
+      body_text: string;
+      status: "missing" | "draft" | "in_review" | "approved";
+    }>(
+      "SELECT body_text, status FROM sermon_transcripts WHERE sermon_id = $1",
+      [bundle.targetSermonId]
+    );
+    const existingTranscript = transcriptResult.rows[0];
+    const questionResult = await client.query<{
+      question_text: string;
+      answer_text: string;
+      display_order: number;
+      status: "draft" | "in_review" | "approved";
+    }>(
+      `SELECT question_text, answer_text, display_order, status
+       FROM sermon_question_answers
+       WHERE sermon_id = $1
+       ORDER BY display_order`,
+      [bundle.targetSermonId]
+    );
+    const existingQuestions = questionResult.rows;
+
     const receipt = await currentImportReceipt(client, bundle.targetSermonId);
     if (receipt?.content_checksum === checksum) {
       await client.query("COMMIT");
@@ -152,7 +186,7 @@ export async function importEnrichmentDraftBundle(
         targetSermonId: bundle.targetSermonId,
         outcome: "unchanged",
         descriptionStatus: sermon.summary_status === "approved" ? "approved" : "draft",
-        transcriptStatus: "draft",
+        transcriptStatus: existingTranscript?.status === "approved" ? "approved" : "draft",
         questionAnswerCount: bundle.questionAnswers.length,
         warnings: []
       };
@@ -168,6 +202,31 @@ export async function importEnrichmentDraftBundle(
     ) {
       throw new Error(
         `approved_description_conflict for source WordPress ID ${bundle.sourceWordPressId}`
+      );
+    }
+    if (
+      existingTranscript?.status === "approved" &&
+      existingTranscript.body_text !== bundle.transcript.bodyText
+    ) {
+      throw new Error(
+        `approved_transcript_conflict for source WordPress ID ${bundle.sourceWordPressId}`
+      );
+    }
+    const questionsMatch =
+      existingQuestions.length === bundle.questionAnswers.length &&
+      existingQuestions.every((existing, index) => {
+        const proposed = bundle.questionAnswers[index];
+        return Boolean(
+          proposed &&
+          existing.display_order === index + 1 &&
+          existing.question_text === proposed.question &&
+          existing.answer_text === proposed.answer
+        );
+      });
+    const hasApprovedQuestions = existingQuestions.some((item) => item.status === "approved");
+    if (hasApprovedQuestions && !questionsMatch) {
+      throw new Error(
+        `approved_question_answers_conflict for source WordPress ID ${bundle.sourceWordPressId}`
       );
     }
 
@@ -195,46 +254,50 @@ export async function importEnrichmentDraftBundle(
       );
     }
 
-    await client.query(
-      `INSERT INTO sermon_transcripts (
-         sermon_id, body_text, status, source_kind, source_reference
-       ) VALUES ($1, $2, 'draft', $3, $4)
-       ON CONFLICT (sermon_id) DO UPDATE SET
-         body_text = EXCLUDED.body_text,
-         status = 'draft',
-         source_kind = EXCLUDED.source_kind,
-         source_reference = EXCLUDED.source_reference,
-         reviewed_by_subject = NULL,
-         approved_by_subject = NULL,
-         reviewed_at = NULL,
-         approved_at = NULL,
-         updated_at = now(),
-         row_version = sermon_transcripts.row_version + 1`,
-      [
-        bundle.targetSermonId,
-        bundle.transcript.bodyText,
-        bundle.transcript.provenance.sourceKind,
-        bundle.transcript.provenance.sourceReference
-      ]
-    );
-    await client.query("DELETE FROM sermon_question_answers WHERE sermon_id = $1", [
-      bundle.targetSermonId
-    ]);
-    for (const [index, item] of bundle.questionAnswers.entries()) {
+    if (existingTranscript?.status !== "approved") {
       await client.query(
-        `INSERT INTO sermon_question_answers (
-           sermon_id, question_text, answer_text, display_order, status,
-           source_kind, source_reference
-         ) VALUES ($1, $2, $3, $4, 'draft', $5, $6)`,
+        `INSERT INTO sermon_transcripts (
+           sermon_id, body_text, status, source_kind, source_reference
+         ) VALUES ($1, $2, 'draft', $3, $4)
+         ON CONFLICT (sermon_id) DO UPDATE SET
+           body_text = EXCLUDED.body_text,
+           status = 'draft',
+           source_kind = EXCLUDED.source_kind,
+           source_reference = EXCLUDED.source_reference,
+           reviewed_by_subject = NULL,
+           approved_by_subject = NULL,
+           reviewed_at = NULL,
+           approved_at = NULL,
+           updated_at = now(),
+           row_version = sermon_transcripts.row_version + 1`,
         [
           bundle.targetSermonId,
-          item.question,
-          item.answer,
-          index + 1,
-          item.provenance.sourceKind,
-          item.provenance.sourceReference
+          bundle.transcript.bodyText,
+          bundle.transcript.provenance.sourceKind,
+          bundle.transcript.provenance.sourceReference
         ]
       );
+    }
+    if (!hasApprovedQuestions) {
+      await client.query("DELETE FROM sermon_question_answers WHERE sermon_id = $1", [
+        bundle.targetSermonId
+      ]);
+      for (const [index, item] of bundle.questionAnswers.entries()) {
+        await client.query(
+          `INSERT INTO sermon_question_answers (
+             sermon_id, question_text, answer_text, display_order, status,
+             source_kind, source_reference
+           ) VALUES ($1, $2, $3, $4, 'draft', $5, $6)`,
+          [
+            bundle.targetSermonId,
+            item.question,
+            item.answer,
+            index + 1,
+            item.provenance.sourceKind,
+            item.provenance.sourceReference
+          ]
+        );
+      }
     }
     await client.query(
       `UPDATE sermons
@@ -254,6 +317,70 @@ export async function importEnrichmentDraftBundle(
          imported_at = now()`,
       [bundle.targetSermonId, bundle.sourceWordPressId, checksum, actorSubject]
     );
+    if (bundle.schemaVersion === 3) {
+      const source = bundle.sourceProvenance;
+      await client.query(
+        `INSERT INTO sermon_enrichment_sources (
+           sermon_id, provider, video_id, canonical_url, caption_language,
+           caption_track_type, original_filename, source_content_sha256,
+           retrieval_attribution, source_character_count, cleaned_character_count,
+           apparent_completeness, uncertainty_marker_count, warnings,
+           unresolved_passages, processing_version, imported_at, processed_at,
+           processing_duration_ms, estimated_review_minutes,
+           manual_attention_required, accuracy_review_status
+         ) VALUES (
+           $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
+           $14::jsonb, $15::jsonb, $16, $17, $18, $19, $20, $21, $22
+         )
+         ON CONFLICT (sermon_id) DO UPDATE SET
+           provider = EXCLUDED.provider,
+           video_id = EXCLUDED.video_id,
+           canonical_url = EXCLUDED.canonical_url,
+           caption_language = EXCLUDED.caption_language,
+           caption_track_type = EXCLUDED.caption_track_type,
+           original_filename = EXCLUDED.original_filename,
+           source_content_sha256 = EXCLUDED.source_content_sha256,
+           retrieval_attribution = EXCLUDED.retrieval_attribution,
+           source_character_count = EXCLUDED.source_character_count,
+           cleaned_character_count = EXCLUDED.cleaned_character_count,
+           apparent_completeness = EXCLUDED.apparent_completeness,
+           uncertainty_marker_count = EXCLUDED.uncertainty_marker_count,
+           warnings = EXCLUDED.warnings,
+           unresolved_passages = EXCLUDED.unresolved_passages,
+           processing_version = EXCLUDED.processing_version,
+           imported_at = EXCLUDED.imported_at,
+           processed_at = EXCLUDED.processed_at,
+           processing_duration_ms = EXCLUDED.processing_duration_ms,
+           estimated_review_minutes = EXCLUDED.estimated_review_minutes,
+           manual_attention_required = EXCLUDED.manual_attention_required,
+           accuracy_review_status = EXCLUDED.accuracy_review_status,
+           updated_at = now()`,
+        [
+          bundle.targetSermonId,
+          source.provider,
+          source.videoId,
+          source.canonicalUrl,
+          source.captionLanguage,
+          source.captionTrackType,
+          source.originalFilename,
+          source.sourceContentSha256,
+          source.retrievalAttribution,
+          source.sourceCharacterCount,
+          source.cleanedCharacterCount,
+          source.apparentCompleteness,
+          source.uncertaintyMarkerCount,
+          JSON.stringify(source.warnings),
+          JSON.stringify(source.unresolvedPassages),
+          source.processingVersion,
+          source.importedAt,
+          source.processedAt,
+          source.processingDurationMs,
+          source.estimatedReviewMinutes,
+          source.manualAttentionRequired,
+          source.accuracyReviewStatus
+        ]
+      );
+    }
     await client.query(
       `INSERT INTO audit_events (
          actor_subject, actor_role, action, entity_type, entity_id,
@@ -268,9 +395,10 @@ export async function importEnrichmentDraftBundle(
       targetSermonId: bundle.targetSermonId,
       outcome: "imported_as_draft",
       descriptionStatus: sermon.summary_status === "approved" ? "approved" : "draft",
-      transcriptStatus: "draft",
+      transcriptStatus: existingTranscript?.status === "approved" ? "approved" : "draft",
       questionAnswerCount: bundle.questionAnswers.length,
       warnings: [
+        ...(bundle.schemaVersion === 3 ? bundle.sourceProvenance.warnings : []),
         {
           code: "human_approval_required",
           safeDetail: "Imported content remains a draft until an administrator reviews and approves it."

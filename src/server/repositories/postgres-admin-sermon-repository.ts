@@ -64,6 +64,7 @@ type SermonRow = QueryResultRow & {
   media?: StoredSermonDetail["media"];
   transcript?: StoredSermonDetail["transcript"];
   question_answers?: StoredSermonDetail["questionAnswers"];
+  enrichment_source?: StoredSermonDetail["enrichmentSource"];
 };
 
 const timestamp = (column: string): string =>
@@ -187,7 +188,34 @@ const sermonDetailProjection = `${sermonSummaryProjection},
     ) ORDER BY qa.display_order, qa.id)
     FROM sermon_question_answers qa
     WHERE qa.sermon_id = s.id
-  ), '[]'::jsonb) AS question_answers`;
+  ), '[]'::jsonb) AS question_answers,
+  (
+    SELECT jsonb_build_object(
+      'provider', source.provider,
+      'videoId', source.video_id,
+      'canonicalUrl', source.canonical_url,
+      'captionLanguage', source.caption_language,
+      'captionTrackType', source.caption_track_type,
+      'originalFilename', source.original_filename,
+      'sourceContentSha256', source.source_content_sha256,
+      'retrievalAttribution', source.retrieval_attribution,
+      'sourceCharacterCount', source.source_character_count,
+      'cleanedCharacterCount', source.cleaned_character_count,
+      'apparentCompleteness', source.apparent_completeness,
+      'uncertaintyMarkerCount', source.uncertainty_marker_count,
+      'warnings', source.warnings,
+      'unresolvedPassages', source.unresolved_passages,
+      'processingVersion', source.processing_version,
+      'importedAt', ${timestamp("source.imported_at")},
+      'processedAt', ${timestamp("source.processed_at")},
+      'processingDurationMs', source.processing_duration_ms,
+      'estimatedReviewMinutes', source.estimated_review_minutes,
+      'manualAttentionRequired', source.manual_attention_required,
+      'accuracyReviewStatus', source.accuracy_review_status
+    )
+    FROM sermon_enrichment_sources source
+    WHERE source.sermon_id = s.id
+  ) AS enrichment_source`;
 
 function readinessFromRow(row: SermonRow): ContentReadinessResult {
   const value = row.readiness;
@@ -277,7 +305,8 @@ function detailFromRow(row: SermonRow): StoredSermonDetail {
     scriptureReferences: row.scripture_references ?? [],
     media: row.media ?? [],
     transcript: row.transcript ?? null,
-    questionAnswers: row.question_answers ?? []
+    questionAnswers: row.question_answers ?? [],
+    enrichmentSource: row.enrichment_source ?? null
   };
 }
 

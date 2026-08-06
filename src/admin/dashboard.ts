@@ -89,6 +89,29 @@ type SermonDetail = SermonSummary & {
     reviewedAt: string | null;
     approvedAt: string | null;
   }>;
+  enrichmentSource: {
+    provider: "youtube";
+    videoId: string;
+    canonicalUrl: string;
+    captionLanguage: string;
+    captionTrackType: "manual" | "automatic" | "unknown";
+    originalFilename: string;
+    sourceContentSha256: string;
+    retrievalAttribution: "authorised_youtube_studio_export";
+    sourceCharacterCount: number;
+    cleanedCharacterCount: number;
+    apparentCompleteness: "apparently_complete" | "requires_manual_review";
+    uncertaintyMarkerCount: number;
+    warnings: Array<{ code: string; safeDetail: string }>;
+    unresolvedPassages: Array<{ marker: string; safeReason: string }>;
+    processingVersion: string;
+    importedAt: string;
+    processedAt: string;
+    processingDurationMs: number;
+    estimatedReviewMinutes: number;
+    manualAttentionRequired: boolean;
+    accuracyReviewStatus: "required";
+  } | null;
 };
 type Taxonomy = Relationship & {
   kind: "speakers" | "series" | "books";
@@ -381,6 +404,31 @@ function readinessChecklist(readiness: Readiness | null): string {
   return `<ul class="checklist">${items.map(([label, complete]) => `<li class="${complete ? "complete" : "incomplete"}"><span aria-hidden="true">${complete ? "✓" : "○"}</span><span>${escapeHtml(label)}</span></li>`).join("")}</ul>`;
 }
 
+function enrichmentSourcePanel(source: SermonDetail["enrichmentSource"]): string {
+  if (!source) return "";
+  const warnings = source.warnings.length
+    ? `<ul>${source.warnings.map((warning) => `<li><code>${escapeHtml(warning.code)}</code> — ${escapeHtml(warning.safeDetail)}</li>`).join("")}</ul>`
+    : "<p>No automated warning codes were recorded. Human accuracy review is still required.</p>";
+  return `<section class="wide callout" aria-labelledby="enrichment-source-heading">
+    <h3 id="enrichment-source-heading">Private caption source and warnings</h3>
+    <p><strong>Administrator review is required.</strong> This source and all generated material remain private until each content area is explicitly approved.</p>
+    <dl class="provenance-grid">
+      <dt>YouTube video ID</dt><dd><code>${escapeHtml(source.videoId)}</code></dd>
+      <dt>Canonical source</dt><dd><code>${escapeHtml(source.canonicalUrl)}</code></dd>
+      <dt>Caption language</dt><dd>${escapeHtml(source.captionLanguage)}</dd>
+      <dt>Caption track type</dt><dd>${escapeHtml(source.captionTrackType)}</dd>
+      <dt>Original filename</dt><dd>${escapeHtml(source.originalFilename)}</dd>
+      <dt>SHA-256</dt><dd><code>${escapeHtml(source.sourceContentSha256)}</code></dd>
+      <dt>Retrieval attribution</dt><dd>Authorised YouTube Studio export</dd>
+      <dt>Characters</dt><dd>${source.sourceCharacterCount.toLocaleString()} source / ${source.cleanedCharacterCount.toLocaleString()} cleaned</dd>
+      <dt>Processing</dt><dd>${escapeHtml(source.processingVersion)} at ${escapeHtml(source.processedAt)}</dd>
+      <dt>Estimated review</dt><dd>${source.estimatedReviewMinutes} minutes</dd>
+      <dt>Accuracy state</dt><dd>Human review required</dd>
+    </dl>
+    <h4>Warnings</h4>${warnings}
+  </section>`;
+}
+
 function collectQuestionAnswers(): Array<{
   question: string;
   answer: string;
@@ -438,6 +486,7 @@ async function renderSermonForm(id?: string): Promise<void> {
       </section>
       <section class="panel form-grid">
         <div class="wide step-heading"><span>Step 4 of 6</span><h2>4. Full transcript</h2><p>Add the complete plain-text transcript, then move it through human review. Only approved text can appear publicly.</p></div>
+        ${enrichmentSourcePanel(detail?.enrichmentSource ?? null)}
         <label class="wide"><span>Complete transcript</span><textarea name="transcriptBody" maxlength="500000" rows="20" placeholder="Paste or type the complete spoken sermon in plain text">${escapeHtml(detail?.transcript?.bodyText ?? "")}</textarea><small class="field-hint">HTML tags are rejected. Paragraph breaks are preserved when the approved transcript is rendered.</small></label>
         <label><span>Transcript status</span><select name="transcriptStatus"><option value="missing"${!detail?.transcript || detail.transcript.status === "missing" ? " selected" : ""}>Missing</option><option value="draft"${detail?.transcript?.status === "draft" ? " selected" : ""}>Draft — not public</option><option value="in_review"${detail?.transcript?.status === "in_review" ? " selected" : ""}>Ready for human review</option><option value="approved"${detail?.transcript?.status === "approved" ? " selected" : ""}>Approved for public page</option></select></label>
         <div class="callout"><strong>Public behaviour</strong><p>An approved transcript is already present in the initial server-generated sermon page. It is visually collapsed under “Read full transcript”, but never loaded later by JavaScript.</p></div>

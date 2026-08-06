@@ -71,6 +71,10 @@ describe("Phase 3B administration dashboard", () => {
     expect(client).toContain('data-description-status="in_review"');
     expect(client).toContain("withApprovedDescription");
     expect(client).toContain("description_awaiting_review");
+    expect(client).toContain("Private caption source and warnings");
+    expect(client).toContain("Authorised YouTube Studio export");
+    expect(client).toContain("accuracyReviewStatus");
+    expect(page).toContain("Phase 3B.2 private review rehearsal");
     expect(client).toContain('name="speakerId"');
     expect(client).not.toContain('name="speakerIds"');
     expect(client).toContain("x-local-identity\", \"admin");

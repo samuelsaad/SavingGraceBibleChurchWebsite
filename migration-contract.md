@@ -1,7 +1,7 @@
 # Advanced Sermons Migration Contract
 
-**Version:** 1.1
-**Status:** Phase 3B.1 local implementation verified; not approved for production execution
+**Version:** 1.2
+**Status:** Phase 3B.2 three-caption private rehearsal implemented; not approved for production execution or the remaining 450 sermons
 
 ## 1. Source boundary
 
@@ -83,6 +83,10 @@ Each untouched source value becomes a `scripture_reference_sources` row:
 - Draft enrichment bundles are strict schema-versioned JSON keyed by source WordPress ID, target UUID, and expected row version. Queue records are deterministically sorted by source ID and need code.
 - Local draft imports are transactionally idempotent by SHA-256 receipt; the same bundle is unchanged on rerun, a changed stale bundle is rejected, and imported content is always `draft` with a `human_approval_required` warning.
 - No provider, media service, AI API, WordPress, or production database may be contacted by this local workflow. Provider interfaces do not constitute an implementation or approval.
+- Phase 3B.2 bundle schema version 3 adds private, structured YouTube Studio export provenance and safe warning codes. Operational timestamps and expected row versions are excluded from the content checksum so an identical regenerated bundle remains idempotent.
+- A differing draft import must refuse to overwrite any approved description, approved transcript, or approved Q&A content. Identical approved content is preserved rather than downgraded.
+- Caption preparation is local-file-only and verifies that the retained case-insensitive word sequence is unchanged. Insufficient sentence boundaries produce `manual_punctuation_required` and no derived outputs.
+- Local pilot rows use `source_system = 'phase3b2_pilot'`; historical readiness continues to count only approved `wordpress` migration records.
 
 ## 9. Search and API contract
 

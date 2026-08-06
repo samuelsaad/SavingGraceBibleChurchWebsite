@@ -296,6 +296,30 @@ export const adminSermonSummarySchema = z.object({
   readiness: contentReadinessResponseSchema
 });
 
+const enrichmentSourceResponseSchema = z.object({
+  provider: z.literal("youtube"),
+  videoId: z.string().regex(/^[A-Za-z0-9_-]{11}$/),
+  canonicalUrl: z.url(),
+  captionLanguage: z.string(),
+  captionTrackType: z.enum(["manual", "automatic", "unknown"]),
+  originalFilename: z.string(),
+  sourceContentSha256: z.string().regex(/^[0-9a-f]{64}$/),
+  retrievalAttribution: z.literal("authorised_youtube_studio_export"),
+  sourceCharacterCount: z.number().int().positive(),
+  cleanedCharacterCount: z.number().int().positive(),
+  apparentCompleteness: z.enum(["apparently_complete", "requires_manual_review"]),
+  uncertaintyMarkerCount: z.number().int().nonnegative(),
+  warnings: z.array(z.object({ code: z.string(), safeDetail: z.string() })),
+  unresolvedPassages: z.array(z.object({ marker: z.string(), safeReason: z.string() })),
+  processingVersion: z.string(),
+  importedAt: z.iso.datetime(),
+  processedAt: z.iso.datetime(),
+  processingDurationMs: z.number().int().nonnegative(),
+  estimatedReviewMinutes: z.number().int().positive(),
+  manualAttentionRequired: z.boolean(),
+  accuracyReviewStatus: z.literal("required")
+});
+
 export const adminSermonDetailSchema = adminSermonSummarySchema.extend({
   summary: z.string().nullable(),
   summaryStatus: descriptionStatusSchema,
@@ -329,7 +353,8 @@ export const adminSermonDetailSchema = adminSermonSummarySchema.extend({
     rowVersion: z.number().int().positive(),
     reviewedAt: z.iso.datetime().nullable(),
     approvedAt: z.iso.datetime().nullable()
-  }))
+  })),
+  enrichmentSource: enrichmentSourceResponseSchema.nullable()
 });
 export type AdminSermonDetail = z.infer<typeof adminSermonDetailSchema>;
 

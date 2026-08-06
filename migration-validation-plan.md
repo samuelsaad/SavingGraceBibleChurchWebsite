@@ -304,3 +304,25 @@ Installed parent 3.7 and Pro 2.2 source resolves the core registration, date-ran
 
 Before any real historical enrichment, separately approve a controlled provider/source and cost ceiling, secure source access, privacy/retention terms, deterministic batch manifest, retry/resume limits, separate description/transcript/Q&A quality rubrics, named human reviewers/approvers, correction/audit evidence, and failure rollback. Description drafting may use the approved transcript and scripture context but can never self-approve. Rehearse all three outputs on an approved non-production batch first; do not contact providers or claim progress under Phase 3B.1a.
 - Non-blocking maintenance note remains: `pg` 8.22 warns that automatic `pgpass` support will be removed in pg 9. An approved asynchronous password provider/secret-store adapter is required before that major upgrade; no credential was read, displayed, or logged in this milestone.
+
+## Phase 3B.2 private pilot validation - 6 August 2026
+
+- Verify the exact three-record mapping manifest and reject every non-allowlisted ID or ambiguous filename. Canonicalisation discards playlist/tracking parameters only.
+- Hash and inspect local UTF-8 text without emitting source/cleaned bodies. Record language as text-observed and track type as `unknown` when the export carries no track metadata.
+- Prove preparation changes no retained word token, does not download/process media, and returns structured failures for missing, unsafe, short or sentence-boundary-free inputs.
+- Apply `0006`, verify private provenance constraints, independently roll it back, and cleanly reapply the full `0001`-`0006` sequence.
+- Import each usable three-output bundle twice, expecting `imported_as_draft` then `unchanged`; prove differing bundles cannot overwrite any approved description, transcript or Q&A.
+- Query only aggregate/status evidence for pilot records: draft states, null review/approval subjects/timestamps, safe provenance counts and public/search absence.
+- Exercise the local admin detail workflow without approval and verify provenance/warnings are visible only to the authorised administrator.
+- Run the complete unit suite, zero-skip real PostgreSQL suite, Astro/type check, production build, importer dry run, offline audit and staged credential/private-key/AWS/proprietary/real-content scans.
+- Leave successful private pilot content in draft or in-review state for the real administrator; leave failed records as safe private outcome reports. Do not process the remaining 450 or begin Phase 3C.
+
+### Verified pilot evidence
+
+- All three explicitly mapped UTF-8 caption files were supplied. They contain no timestamp-like lines or replacement characters; the plain-text exports do not identify manual versus automatic track type, so each remains `unknown`.
+- One 38,993-character source had sufficient sentence boundaries. Local preparation retained all 7,265 words, produced an equal 38,993-character cleaned draft, one 205-word private description and seven private Q&As. Import/rerun outcomes were `imported_as_draft` then `unchanged`; estimated administrator review is 69 minutes.
+- The 27,380- and 29,512-character sources had effectively no sentence punctuation. Both returned `manual_punctuation_required`, produced no description/transcript/Q&A bundle, and require estimated 61- and 64-minute manual review respectively. Automated analysis does not establish source accuracy or completeness.
+- Final database evidence: four local sermons total; three `wordpress` historical fixtures remain the entire launch-readiness scope; one separately discriminated `phase3b2_pilot` row is draft. Its description/transcript/seven Q&As are all draft, review/approval timestamps are null, public search-document lengths are zero, and public detail returns 404.
+- Migration `0006` applied, independently rolled back while preserving three fixture sermons, and reapplied. The complete `0001`-`0006` sequence rolled back, removed intended project objects, cleanly reapplied, and loaded the anonymised fixture twice without duplication.
+- Real PostgreSQL suite: 23 files and 88 tests passed with zero skipped. Standard suite: 81 passed with seven PostgreSQL cases intentionally skipped and covered by the zero-skip run. Astro/type check reported zero errors/warnings/hints across 82 files; production build, importer dry run and offline zero-vulnerability audit passed.
+- Browser acceptance verified private provenance/warnings, populated draft editors and explicit review controls without approving anything or capturing sermon-content screenshots. The temporary loopback listener was stopped.

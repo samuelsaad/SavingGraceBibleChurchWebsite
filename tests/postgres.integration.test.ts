@@ -79,6 +79,8 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   let down4: string;
   let up5: string;
   let down5: string;
+  let up6: string;
+  let down6: string;
 
   beforeAll(async () => {
     pool = new Pool({ connectionString: disposableConnectionString(), max: 4 });
@@ -104,7 +106,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       postgres_server: true
     });
 
-    [up1, down1, up2, down2, up3, down3, up4, down4, up5, down5] = await Promise.all([
+    [up1, down1, up2, down2, up3, down3, up4, down4, up5, down5, up6, down6] = await Promise.all([
       readFile("db/migrations/0001_initial.sql", "utf8"),
       readFile("db/migrations/0001_initial.down.sql", "utf8"),
       readFile("db/migrations/0002_admin_foundation.sql", "utf8"),
@@ -114,8 +116,14 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       readFile("db/migrations/0004_sermon_enrichment_readiness.sql", "utf8"),
       readFile("db/migrations/0004_sermon_enrichment_readiness.down.sql", "utf8"),
       readFile("db/migrations/0005_approved_sermon_descriptions.sql", "utf8"),
-      readFile("db/migrations/0005_approved_sermon_descriptions.down.sql", "utf8")
+      readFile("db/migrations/0005_approved_sermon_descriptions.down.sql", "utf8"),
+      readFile("db/migrations/0006_phase3b2_pilot_provenance.sql", "utf8"),
+      readFile("db/migrations/0006_phase3b2_pilot_provenance.down.sql", "utf8")
     ]);
+    const phase3b2Present = await pool.query<{ present: boolean }>(
+      "SELECT to_regclass('public.sermon_enrichment_sources') IS NOT NULL AS present"
+    );
+    if (phase3b2Present.rows[0]?.present) await pool.query(down6);
     const phase3b1aPresent = await pool.query<{ present: boolean }>(
       "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'sermons' AND column_name = 'summary_status') AS present"
     );
@@ -141,6 +149,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     await pool.query(up3);
     await pool.query(up4);
     await pool.query(up5);
+    await pool.query(up6);
 
     const fixture = legacySermonRecordSchema.array().parse(
       JSON.parse(await readFile("tests/fixtures/dry-run.json", "utf8"))
@@ -159,6 +168,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     expect(descriptionDeltaRemoved.rows[0]).toEqual({ removed: true });
     await pool.query(up5);
 
+    await pool.query(down6);
     await pool.query(down5);
     await pool.query(down4);
     await pool.query(down3);
@@ -174,7 +184,9 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     await pool.query(up3);
     await pool.query(up4);
     await pool.query(up5);
+    await pool.query(up6);
 
+    await pool.query(down6);
     await pool.query(down5);
     await pool.query(down4);
     await pool.query(down3);
@@ -185,16 +197,20 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     await pool.query(up3);
     await pool.query(up4);
     await pool.query(up5);
-    const reapplied = await pool.query<{ sermon: string | null; tombstone: string | null; transcript: string | null }>(
+    await pool.query(up6);
+    const reapplied = await pool.query<{ sermon: string | null; tombstone: string | null; transcript: string | null; source: string | null }>(
       `SELECT to_regclass('public.sermons')::text AS sermon,
               to_regclass('public.sermon_deletion_tombstones')::text AS tombstone,
-              to_regclass('public.sermon_transcripts')::text AS transcript`
+              to_regclass('public.sermon_transcripts')::text AS transcript,
+              to_regclass('public.sermon_enrichment_sources')::text AS source`
     );
     expect(reapplied.rows[0]).toEqual({
       sermon: "sermons",
       tombstone: "sermon_deletion_tombstones",
-      transcript: "sermon_transcripts"
+      transcript: "sermon_transcripts",
+      source: "sermon_enrichment_sources"
     });
+    await pool.query(down6);
     await pool.query(down5);
     await pool.query(down4);
     await pool.query(down3);
@@ -203,7 +219,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     await pool.end();
   });
 
-  it("applies 0001-0005 and loads anonymised fixtures idempotently", async () => {
+  it("applies 0001-0006 and loads anonymised fixtures idempotently", async () => {
     const counts = await pool.query<{
       sermons: number;
       views: number;
@@ -211,6 +227,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       tombstone_table: string | null;
       source_sermon_column: number;
       transcript_table: string | null;
+      source_table: string | null;
       speaker_join_removed: boolean;
     }>(
       `SELECT
@@ -221,6 +238,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
          (SELECT count(*)::integer FROM information_schema.columns
           WHERE table_name = 'redirects' AND column_name = 'source_sermon_id') AS source_sermon_column,
          to_regclass('public.sermon_transcripts')::text AS transcript_table,
+         to_regclass('public.sermon_enrichment_sources')::text AS source_table,
          to_regclass('public.sermon_speakers') IS NULL AS speaker_join_removed`
     );
     expect(counts.rows[0]).toEqual({
@@ -230,11 +248,13 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       tombstone_table: "sermon_deletion_tombstones",
       source_sermon_column: 1,
       transcript_table: "sermon_transcripts",
+      source_table: "sermon_enrichment_sources",
       speaker_join_removed: true
     });
   });
 
   it("aborts the one-speaker migration with affected IDs and cleanly reapplies", async () => {
+    await pool.query(down6);
     await pool.query(down5);
     await pool.query(down4);
     const target = await pool.query<{ sermon_id: string; other_speaker_id: string }>(
@@ -264,6 +284,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     );
     await pool.query(up4);
     await pool.query(up5);
+    await pool.query(up6);
     expect(
       (await pool.query("SELECT to_regclass('public.sermon_speakers') IS NULL AS removed")).rows[0]
     ).toEqual({ removed: true });
@@ -401,7 +422,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     expect(firstQueue).toEqual(secondQueue);
     const target = firstQueue.records.find((record) => record.sourceWordPressId === 9003)!;
     const bundle = {
-      schemaVersion: 2 as const,
+      schemaVersion: 3 as const,
       sourceWordPressId: target.sourceWordPressId,
       targetSermonId: target.targetSermonId,
       expectedRowVersion: target.rowVersion,
@@ -411,13 +432,36 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       },
       transcript: {
         bodyText: "A local anonymised transcript draft.",
-        provenance: { sourceKind: "transcription" as const, sourceReference: "safe-local-job-9003" }
+        provenance: { sourceKind: "caption" as const, sourceReference: "safe-local-job-9003" }
       },
       questionAnswers: Array.from({ length: 5 }, (_, index) => ({
         question: `What should the listener consider in example ${index + 1}?`,
         answer: `The draft answer remains subject to human review ${index + 1}.`,
         provenance: { sourceKind: "generated_draft" as const, sourceReference: "safe-local-job-9003" }
-      }))
+      })),
+      sourceProvenance: {
+        provider: "youtube" as const,
+        videoId: "aaaaaaaaaaa",
+        canonicalUrl: "https://www.youtube.com/watch?v=aaaaaaaaaaa",
+        captionLanguage: "en-AU",
+        captionTrackType: "unknown" as const,
+        originalFilename: "anonymised-caption.txt",
+        sourceContentSha256: "a".repeat(64),
+        retrievalAttribution: "authorised_youtube_studio_export" as const,
+        sourceCharacterCount: 10_000,
+        cleanedCharacterCount: 10_020,
+        apparentCompleteness: "apparently_complete" as const,
+        uncertaintyMarkerCount: 0,
+        warnings: [{ code: "administrator_accuracy_review_required", safeDetail: "Human review remains required." }],
+        unresolvedPassages: [],
+        processingVersion: "phase3b2-test-v1",
+        importedAt: "2026-08-06T00:00:00.000Z",
+        processedAt: "2026-08-06T00:00:01.000Z",
+        processingDurationMs: 1_000,
+        estimatedReviewMinutes: 60,
+        manualAttentionRequired: true as const,
+        accuracyReviewStatus: "required" as const
+      }
     };
     expect((await importEnrichmentDraftBundle(pool, bundle)).outcome).toBe("imported_as_draft");
     expect((await importEnrichmentDraftBundle(pool, bundle)).outcome).toBe("unchanged");
@@ -427,13 +471,15 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       questions: number;
       approved_questions: number;
       audits: number;
+      provenance: number;
     }>(
       `SELECT
          (SELECT summary_status FROM sermons WHERE id = $1) AS description_status,
          (SELECT status FROM sermon_transcripts WHERE sermon_id = $1) AS transcript_status,
          (SELECT count(*)::integer FROM sermon_question_answers WHERE sermon_id = $1) AS questions,
          (SELECT count(*)::integer FROM sermon_question_answers WHERE sermon_id = $1 AND status = 'approved') AS approved_questions,
-         (SELECT count(*)::integer FROM audit_events WHERE entity_id = $1 AND action = 'sermon.enrichment_draft_imported') AS audits`,
+         (SELECT count(*)::integer FROM audit_events WHERE entity_id = $1 AND action = 'sermon.enrichment_draft_imported') AS audits,
+         (SELECT count(*)::integer FROM sermon_enrichment_sources WHERE sermon_id = $1) AS provenance`,
       [target.targetSermonId]
     );
     expect(stored.rows[0]).toEqual({
@@ -441,8 +487,15 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       transcript_status: "draft",
       questions: 5,
       approved_questions: 0,
-      audits: 1
+      audits: 1,
+      provenance: 1
     });
+    expect((await new PostgresAdminSermonRepository(pool).findSermon(target.targetSermonId))?.enrichmentSource)
+      .toMatchObject({
+        videoId: "aaaaaaaaaaa",
+        captionTrackType: "unknown",
+        accuracyReviewStatus: "required"
+      });
     const approvedText = "This administrator-approved description must remain intact when a later draft import contains different proposed wording.";
     await pool.query(
       `UPDATE sermons
@@ -469,6 +522,38 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     expect(
       (await pool.query<{ summary: string }>("SELECT summary FROM sermons WHERE id = $1", [target.targetSermonId])).rows[0]!.summary
     ).toBe(approvedText);
+    await pool.query(
+      `UPDATE sermon_transcripts
+       SET status = 'approved', reviewed_by_subject = 'local-admin-0001',
+           approved_by_subject = 'local-admin-0001', reviewed_at = now(), approved_at = now()
+       WHERE sermon_id = $1`,
+      [target.targetSermonId]
+    );
+    await pool.query(
+      `UPDATE sermon_question_answers
+       SET status = 'approved', reviewed_by_subject = 'local-admin-0001',
+           approved_by_subject = 'local-admin-0001', reviewed_at = now(), approved_at = now()
+       WHERE sermon_id = $1`,
+      [target.targetSermonId]
+    );
+    await expect(
+      importEnrichmentDraftBundle(pool, {
+        ...bundle,
+        expectedRowVersion: currentVersion,
+        description: { ...bundle.description, bodyText: approvedText },
+        transcript: { ...bundle.transcript, bodyText: "A different draft must not replace an approved transcript." }
+      })
+    ).rejects.toThrow("approved_transcript_conflict");
+    await expect(
+      importEnrichmentDraftBundle(pool, {
+        ...bundle,
+        expectedRowVersion: currentVersion,
+        description: { ...bundle.description, bodyText: approvedText },
+        questionAnswers: bundle.questionAnswers.map((item, index) =>
+          index === 0 ? { ...item, answer: "A conflicting answer must not replace approved Q&A." } : item
+        )
+      })
+    ).rejects.toThrow("approved_question_answers_conflict");
     expect(await new PostgresSermonRepository(pool).findPublishedBySlug("an-anonymised-pending-sermon")).toBeNull();
   });
 

@@ -72,6 +72,29 @@ export interface StoredSermonDetail extends StoredSermonSummary {
     reviewedAt: string | null;
     approvedAt: string | null;
   }>;
+  enrichmentSource: {
+    provider: "youtube";
+    videoId: string;
+    canonicalUrl: string;
+    captionLanguage: string;
+    captionTrackType: "manual" | "automatic" | "unknown";
+    originalFilename: string;
+    sourceContentSha256: string;
+    retrievalAttribution: "authorised_youtube_studio_export";
+    sourceCharacterCount: number;
+    cleanedCharacterCount: number;
+    apparentCompleteness: "apparently_complete" | "requires_manual_review";
+    uncertaintyMarkerCount: number;
+    warnings: Array<{ code: string; safeDetail: string }>;
+    unresolvedPassages: Array<{ marker: string; safeReason: string }>;
+    processingVersion: string;
+    importedAt: string;
+    processedAt: string;
+    processingDurationMs: number;
+    estimatedReviewMinutes: number;
+    manualAttentionRequired: boolean;
+    accuracyReviewStatus: "required";
+  } | null;
 }
 
 export interface StoredSermonPage {
