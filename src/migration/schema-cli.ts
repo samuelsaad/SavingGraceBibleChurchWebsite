@@ -1,6 +1,9 @@
-import { readFile } from "node:fs/promises";
 import { createPostgresPool } from "../server/database";
 import { assertDisposableLocalDatabase } from "./local-database-safety";
+import {
+  runSchemaMigrations,
+  type SchemaMigrationScope
+} from "./schema-migrations";
 
 async function main(): Promise<void> {
   const connectionString = process.env.DATABASE_URL;
@@ -18,55 +21,24 @@ async function main(): Promise<void> {
     throw new Error("Choose at most one phase-only migration");
   }
 
-  const migrationPaths = phase3b2Only
-    ? [
-        apply
-          ? "db/migrations/0006_phase3b2_pilot_provenance.sql"
-          : "db/migrations/0006_phase3b2_pilot_provenance.down.sql"
-      ]
+  const scope: SchemaMigrationScope = phase3b2Only
+    ? "0006_phase3b2_pilot_provenance"
     : phase3b1aOnly
-    ? [
-        apply
-          ? "db/migrations/0005_approved_sermon_descriptions.sql"
-          : "db/migrations/0005_approved_sermon_descriptions.down.sql"
-      ]
-    : phase3b1Only
-    ? [
-        apply
-          ? "db/migrations/0004_sermon_enrichment_readiness.sql"
-          : "db/migrations/0004_sermon_enrichment_readiness.down.sql"
-      ]
-    : phase3bOnly
-    ? [
-        apply
-          ? "db/migrations/0003_single_admin_deletion_seo.sql"
-          : "db/migrations/0003_single_admin_deletion_seo.down.sql"
-      ]
-    : apply
-      ? [
-          "db/migrations/0001_initial.sql",
-          "db/migrations/0002_admin_foundation.sql",
-          "db/migrations/0003_single_admin_deletion_seo.sql",
-          "db/migrations/0004_sermon_enrichment_readiness.sql",
-          "db/migrations/0005_approved_sermon_descriptions.sql",
-          "db/migrations/0006_phase3b2_pilot_provenance.sql"
-        ]
-      : [
-          "db/migrations/0006_phase3b2_pilot_provenance.down.sql",
-          "db/migrations/0005_approved_sermon_descriptions.down.sql",
-          "db/migrations/0004_sermon_enrichment_readiness.down.sql",
-          "db/migrations/0003_single_admin_deletion_seo.down.sql",
-          "db/migrations/0002_admin_foundation.down.sql",
-          "db/migrations/0001_initial.down.sql"
-        ];
+      ? "0005_approved_sermon_descriptions"
+      : phase3b1Only
+        ? "0004_sermon_enrichment_readiness"
+        : phase3bOnly
+          ? "0003_single_admin_deletion_seo"
+          : "all";
   const pool = createPostgresPool(connectionString);
   try {
-    for (const migrationPath of migrationPaths) {
-      await pool.query(await readFile(migrationPath, "utf8"));
-    }
-    process.stdout.write(
-      `${apply ? "Applied" : "Rolled back"} local ${phase3b2Only ? "migration 0006" : phase3b1aOnly ? "migration 0005" : phase3b1Only ? "migration 0004" : phase3bOnly ? "migration 0003" : "migrations 0001-0006"}.\n`
-    );
+    const result = await runSchemaMigrations(pool, {
+      direction: apply ? "apply" : "rollback",
+      scope,
+      connectionString,
+      writeOptIn: process.env.ALLOW_LOCAL_DB_WRITE
+    });
+    process.stdout.write(`${JSON.stringify(result)}\n`);
   } finally {
     await pool.end();
   }

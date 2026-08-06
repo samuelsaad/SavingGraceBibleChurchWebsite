@@ -1,10 +1,10 @@
 # Target PostgreSQL Schema
 
-> **PHASE 3B.1 LOCAL MODEL VERIFIED — NOT APPROVED FOR PRODUCTION CREATION**
+> **LOCAL MODEL VERIFIED — NOT APPROVED FOR PRODUCTION CREATION**
 
-This is the reviewed migration-contract schema. It incorporates the completed read-only database inventory, Yang's approved inclusion/date/legacy decisions, the exact installed Advanced Sermons 3.7 plus Pro 2.2 source review, and Yang's final one-speaker/description/transcript/Q&A completeness decision. The ordered local SQL set is `0001`-`0005`. No production PostgreSQL object has been created.
+This is the reviewed migration-contract schema. It incorporates the completed read-only database inventory, Yang's approved inclusion/date/legacy decisions, the exact installed Advanced Sermons 3.7 plus Pro 2.2 source review, and Yang's final one-speaker/description/transcript/Q&A completeness decision. The ordered local SQL set is `0001`-`0006`. No production PostgreSQL object has been created.
 
-The migration and rollback were executed successfully against the authorised disposable PostgreSQL 16.14 database `savinggrace_sermons_test` on loopback port 5432. All 23 tables, constraints, foreign keys, indexes, generated search vector, GIN index, `pgcrypto`, fixture loads, rollback, and clean reapplication were verified. This is local evidence only and does not authorise production creation.
+Migration and rollback verification is restricted to the authorised disposable PostgreSQL 16 database `savinggrace_sermons_test` on loopback port 5432. Intended application relations, constraints, foreign keys, indexes, generated search vector, GIN index, `pgcrypto`, fixture loads, rollback and clean reapplication are covered by local verification. This is local evidence only and does not authorise production creation.
 
 ## Evidence-driven design conclusions
 
@@ -138,6 +138,10 @@ Current sermon PDFs, bulletins, and featured images are absent, so migration sho
 
 ## Migration, redirect, and warning tables
 
+### `schema_migrations`
+
+Runner-owned schema history, separate from source/content migration and draft-import receipts. Required fields are positive canonical order, unique canonical migration identity, lowercase SHA-256 checksum of the paired normalised up/down definitions, and database application timestamp. The runner accepts only an exact trusted prefix, uses an advisory lock, writes DDL and its receipt transactionally, removes the receipt transactionally with rollback, and never auto-baselines existing application objects.
+
 ### `migration_records`
 
 Required fields: source system, source entity type, source ID, source URL, target type/UUID, source checksum or modified timestamp, migration run ID, state (`imported`, `skipped`, `rejected`, `pending_review`), evidence classification, and redacted warning/error detail. Unique key: source system + source entity type + source ID.
@@ -169,7 +173,7 @@ Store run UUID, code/config version, start/end, source snapshot identity without
 
 ## Final schema objects and boundaries
 
-The ordered local migrations create `sermons` with its sole speaker foreign key; private `sermon_legacy_metrics`; `speakers`; `series`/`sermon_series_map`; transcripts, ordered Q&A, draft-import receipts, and readiness view; canonical Bible books and source book classifications; preserved source taxonomy terms/joins; scripture references plus immutable source rows; provider-normalised media plus private source-audit rows; nullable resources/assets; redirect/gone dispositions; migration runs/records/warnings; audit events; minimal sermon deletion tombstones; and schema-validated namespaced sermon extensions.
+The ordered local migrations create `sermons` with its sole speaker foreign key; private `sermon_legacy_metrics`; `speakers`; `series`/`sermon_series_map`; transcripts, ordered Q&A, draft-import receipts, and readiness view; canonical Bible books and source book classifications; preserved source taxonomy terms/joins; scripture references plus immutable source rows; provider-normalised media plus private source-audit rows; nullable resources/assets; redirect/gone dispositions; migration runs/records/warnings; audit events; minimal sermon deletion tombstones; private enrichment provenance; and schema-validated namespaced sermon extensions. The runner creates and owns the separate `schema_migrations` journal.
 
 Constraints include stable UUID identities, case-insensitive unique active slugs, explicit status/provider/outcome checks, unique join relationships, source-identity uniqueness, JSON object checks only for versioned controlled extension/embed configuration, timestamps, optimistic row versions, and indexes for visibility/date/filter joins. The full-text vector weights title highest, relationship terms next, summary next, and body lowest.
 

@@ -174,6 +174,18 @@ Yang confirmed that every residual-system row is excluded from migration and fro
 - Verify target role/permission checks and draft separation independently of UI controls.
 - Retain only the minimum controlled raw source needed for reconciliation and delete it on the approved schedule.
 
+### 9. Schema migration history and execution
+
+- Preflight every write-capable run for PostgreSQL 16, loopback address, port 5432, exact `savinggrace_sermons_test` database and explicit `ALLOW_LOCAL_DB_WRITE=1`.
+- Verify the separate `schema_migrations` journal has the exact trusted columns, constraints, canonical order/identity, paired-definition checksum and application timestamp.
+- Prove BOM and CRLF/CR/LF differences do not change a migration checksum, while any substantive up or down definition change does.
+- Prove fresh apply creates exactly six ordered unique receipts, a matching rerun is a no-op, a valid partial prefix applies only the pending suffix, and concurrent applies serialise without duplicate DDL or receipts.
+- Prove unknown, changed, missing, duplicate and reordered history fails before apply or rollback, preserving both schema state and existing receipts.
+- Prove application objects without a trusted journal fail closed and are never inferred or auto-baselined.
+- Prove each up migration and receipt commit in one transaction by forcing DDL failure and observing neither schema change nor receipt. Prove rollback removes the matching latest receipt in the same transaction as its down SQL.
+- Run independent rollback, clean reapply, idempotent rerun and exact relation/constraint/index checks while keeping standalone down SQL usable outside the runner.
+- Keep schema receipts distinct from `migration_runs`, `migration_records`, and `sermon_enrichment_draft_imports`; no content/import receipt may satisfy schema history.
+
 ## Required edge-case fixture set
 
 Include representative fixtures for: oldest/newest records; titled pending, blank-title pending, and slugless draft; Sunday and non-Sunday dates; missing series/passage/book; two-series sermon; exact and mismatched passage sources; `Selected Text`; near-duplicate/misclassified term; YouTube-only, audio-only, both; duplicate audio value; Unicode title; broken term image; empty body/summary; and residual legacy-system row.
@@ -337,3 +349,15 @@ Before any real historical enrichment, separately approve a controlled provider/
 - The first targeted `npm run test:postgres -- -t "runs the real Phase 3B.2b filesystem"` reached the real anonymised orchestration and importer but failed because a deliberately published fixture omitted the schema-required publication timestamp. The fixture was corrected without weakening the assertion. After a fresh successful preflight, the same targeted command passed its one selected test; other tests were intentionally excluded by the target filter and do not count as zero-skip evidence.
 - Final `npm test`: 22 files and 90 tests passed; the one PostgreSQL file and its eight tests were intentionally skipped and covered by the separate zero-skip run. Final `npm run test:postgres`: all 23 files and 98 tests passed with zero skipped. `npm run build` completed two static pages. The documented anonymised importer dry run reported five input records, three included, two excluded and zero rejected. `npm audit --offline --audit-level=low` reported zero vulnerabilities.
 - Candidate scans covered 14 authorised files and found zero credential/private-key/token-shaped values, zero cloud/AWS or network/provider implementation in production code, zero proprietary implementation/archive candidates, zero private artifact filenames and zero tracked or candidate symlinks. `git diff --check` passed. `AGENTS.md` remained unchanged, the index and remote list remained empty before staging, and the ignored private pilot directory was confirmed present/ignored without listing or reading it. No private pilot outcome is inferred from anonymised fixture results.
+
+## Schema migration journal verification - 6 August 2026
+
+- Every write-capable run received a fresh successful preflight for explicit write opt-in, PostgreSQL 16, loopback `127.0.0.1`, port 5432, exact `savinggrace_sermons_test`, `_test` suffix and PostgreSQL server identity. No credential or secret-bearing connection detail was displayed.
+- Focused journal/schema-contract verification passed 2 files and 11 tests. Focused real PostgreSQL journal verification passed its 4 selected tests after each selected run received its own preflight; the remaining tests were deliberately filtered and were not counted as zero-skip evidence.
+- Final `npm test` passed 23 files and 94 tests; the one PostgreSQL file and its 12 tests were intentionally skipped there. Final `npm run test:postgres` passed all 24 files and all 106 tests with zero skips.
+- Manual forward apply recorded exactly ordered migrations `0001`-`0006`; immediate reapply returned `no_op` with six receipts. Independent full rollback removed `0006` through `0001` and left zero receipts. Clean reapply restored the exact six-receipt prefix.
+- Final aggregate schema verification found 28 tables, one view, six distinct ordered receipts/checksums with timestamps, 198 validated constraints with zero unvalidated, 69 ready/valid indexes with zero invalid, two journal indexes, three application functions and three application triggers. The journal primary/identity indexes, search GIN index and private-provenance review index were present.
+- Transaction tests prove a failed `0004` apply leaves neither its DDL nor receipt, a deliberately blocked `0006` down migration leaves both its table and receipt, a checksum mismatch changes nothing, a valid partial prefix applies only its suffix, unjournalled objects are refused, and concurrent fresh runners produce one apply plus one no-op with six unique receipts.
+- Final static check reported 88 files with zero errors, warnings or hints. The production build completed two static pages; the anonymised dry run reported five total, three included, two excluded and zero rejected; offline audit reported zero vulnerabilities; and `git diff --check` passed.
+- The ten candidate files had zero secret assignments, private keys, cloud access keys, credentialed database URLs, JWT-shaped values, external/cloud/provider implementation in production code, proprietary PHP/licensed source, private-artifact candidate names or symlinks. The private pilot workspace was not entered or read, and the real two-record import remains unrun.
+- Intermediate implementation checks exposed and then corrected exact-optional typing, advisory-lock key range/parameter typing, SQL journal-shape query construction, focused-test ordering and an anonymised rollback-probe key. No production/external system was contacted, and no private-content result is inferred from these tests.

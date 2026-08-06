@@ -509,7 +509,10 @@ The transform must:
 
 ### 10.4 Load into staging
 
-- Run schema migrations before content migration.
+- Run schema migrations before content migration through the fail-closed journalled runner.
+- Keep schema receipts in `schema_migrations`, separate from content/import receipts. Each canonical migration has a stable order/identity and SHA-256 checksum over its normalised paired up/down definitions.
+- Hold a PostgreSQL advisory lock while validating and changing schema history. Require the journal to be an exact canonical prefix with matching checksums, apply only its pending suffix, and treat a fully matching schema as a no-op.
+- Record each migration's DDL and journal receipt in one transaction; remove the matching receipt in the same transaction as rollback. Never auto-baseline unjournalled application objects or accept unknown, changed, missing, duplicate or reordered history.
 - Wrap entity groups in safe transactions.
 - Upsert by stable migration identity, not by title.
 - Never infer record equivalence from similar sermon titles alone.
@@ -1502,6 +1505,10 @@ The separately authorised pilot uses exactly three user-mapped local YouTube Stu
 Phase 3B.2b provisionally hardens the offline completion path for exactly the two records that the committed Phase 3B.2 outcome identified as `manual_punctuation_required`. Trusted source state—not caller-declared identifiers—defines that scope. Source and cleaned text are normalised to Unicode NFC and measured independently as whitespace-delimited lexical-token sequences; Unicode punctuation is removed from each token and the remainder is case-folded for comparison. Token count, boundaries, order and content must remain exact, so deletions, additions, substitutions, duplication, reordering, splitting and merging fail closed. Deterministic chunks, cryptographic hashes, exact reassembly, no-clobber filesystem persistence, structured failures, provenance retention and database/public/readiness verification are covered by anonymised tests.
 
 No real private Phase 3B.2b captions or artifacts were inspected or processed during hardening. Private processing results, counts, import/idempotency evidence, timings and workload projections are unverified and must not be inferred from fixture tests. This hardening does not authorise the remaining 450 sermons. Before another batch, require a separately authorised private pilot rerun, administrator review of its drafts and uncertainties, explicit acceptance of its bounded verified report, an exact allowlist/batch, approved reviewers/approvers, confirmed source identities/dates, and renewed workload, privacy, retention, retry, correction, audit and rollback approval. Phase 3C remains paused.
+
+### Journalled local schema execution
+
+Local schema execution for the canonical `0001`-`0006` SQL pairs is fail closed and independent of content migration. `schema_migrations` stores stable order, identity, paired-definition checksum and application time. The runner normalises supported line endings for deterministic checksums, serialises planning and execution with a PostgreSQL advisory lock, accepts only an exact trusted journal prefix, applies only the pending suffix and performs DDL plus receipt insertion/deletion transactionally. Matching reruns are no-ops. Unknown, changed, missing, duplicate, reordered or unjournalled history blocks apply and rollback; existing objects are never silently baselined. The standalone down SQL remains available for independently controlled rollback verification.
 
 ## 29. Reference Documentation
 

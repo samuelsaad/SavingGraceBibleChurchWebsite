@@ -18,6 +18,11 @@ import { ApplicationError } from "../src/application/errors";
 import type { SermonStatus } from "../src/domain/sermon";
 import { runMigrationDryRun } from "../src/migration/importer";
 import { loadMigrationResult } from "../src/migration/postgres-loader";
+import {
+  loadSchemaMigrations,
+  runSchemaMigrations,
+  type SchemaMigrationScope
+} from "../src/migration/schema-migrations";
 import { legacySermonRecordSchema } from "../src/migration/types";
 import {
   buildEnrichmentQueue,
@@ -81,18 +86,15 @@ function approvedEnrichment() {
 
 integration("disposable PostgreSQL Phase 3B application", () => {
   let pool: Pool;
-  let up1: string;
-  let down1: string;
-  let up2: string;
-  let down2: string;
-  let up3: string;
-  let down3: string;
-  let up4: string;
-  let down4: string;
-  let up5: string;
-  let down5: string;
-  let up6: string;
-  let down6: string;
+
+  function runSchema(direction: "apply" | "rollback", scope: SchemaMigrationScope = "all") {
+    return runSchemaMigrations(pool, {
+      direction,
+      scope,
+      connectionString: disposableConnectionString(),
+      writeOptIn: process.env.ALLOW_LOCAL_DB_WRITE
+    });
+  }
 
   beforeAll(async () => {
     pool = new Pool({ connectionString: disposableConnectionString(), max: 4 });
@@ -118,50 +120,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       postgres_server: true
     });
 
-    [up1, down1, up2, down2, up3, down3, up4, down4, up5, down5, up6, down6] = await Promise.all([
-      readFile("db/migrations/0001_initial.sql", "utf8"),
-      readFile("db/migrations/0001_initial.down.sql", "utf8"),
-      readFile("db/migrations/0002_admin_foundation.sql", "utf8"),
-      readFile("db/migrations/0002_admin_foundation.down.sql", "utf8"),
-      readFile("db/migrations/0003_single_admin_deletion_seo.sql", "utf8"),
-      readFile("db/migrations/0003_single_admin_deletion_seo.down.sql", "utf8"),
-      readFile("db/migrations/0004_sermon_enrichment_readiness.sql", "utf8"),
-      readFile("db/migrations/0004_sermon_enrichment_readiness.down.sql", "utf8"),
-      readFile("db/migrations/0005_approved_sermon_descriptions.sql", "utf8"),
-      readFile("db/migrations/0005_approved_sermon_descriptions.down.sql", "utf8"),
-      readFile("db/migrations/0006_phase3b2_pilot_provenance.sql", "utf8"),
-      readFile("db/migrations/0006_phase3b2_pilot_provenance.down.sql", "utf8")
-    ]);
-    const phase3b2Present = await pool.query<{ present: boolean }>(
-      "SELECT to_regclass('public.sermon_enrichment_sources') IS NOT NULL AS present"
-    );
-    if (phase3b2Present.rows[0]?.present) await pool.query(down6);
-    const phase3b1aPresent = await pool.query<{ present: boolean }>(
-      "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'sermons' AND column_name = 'summary_status') AS present"
-    );
-    if (phase3b1aPresent.rows[0]?.present) await pool.query(down5);
-    const phase3b1Present = await pool.query<{ present: boolean }>(
-      "SELECT to_regclass('public.sermon_transcripts') IS NOT NULL AS present"
-    );
-    if (phase3b1Present.rows[0]?.present) await pool.query(down4);
-    const phase3bPresent = await pool.query<{ present: boolean }>(
-      "SELECT to_regclass('public.sermon_deletion_tombstones') IS NOT NULL AS present"
-    );
-    if (phase3bPresent.rows[0]?.present) await pool.query(down3);
-    const adminFoundationPresent = await pool.query<{ present: boolean }>(
-      "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'sermons' AND column_name = 'created_by_subject') AS present"
-    );
-    if (adminFoundationPresent.rows[0]?.present) await pool.query(down2);
-    const basePresent = await pool.query<{ present: boolean }>(
-      "SELECT to_regclass('public.sermons') IS NOT NULL AS present"
-    );
-    if (basePresent.rows[0]?.present) await pool.query(down1);
-    await pool.query(up1);
-    await pool.query(up2);
-    await pool.query(up3);
-    await pool.query(up4);
-    await pool.query(up5);
-    await pool.query(up6);
+    await runSchema("apply");
 
     const fixture = legacySermonRecordSchema.array().parse(
       JSON.parse(await readFile("tests/fixtures/dry-run.json", "utf8"))
@@ -173,61 +132,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
 
   afterAll(async () => {
     if (!pool) return;
-    await pool.query(down5);
-    const descriptionDeltaRemoved = await pool.query<{ removed: boolean }>(
-      "SELECT NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'sermons' AND column_name = 'summary_status') AS removed"
-    );
-    expect(descriptionDeltaRemoved.rows[0]).toEqual({ removed: true });
-    await pool.query(up5);
-
-    await pool.query(down6);
-    await pool.query(down5);
-    await pool.query(down4);
-    await pool.query(down3);
-    const deltaRemoved = await pool.query<{ tombstone_removed: boolean; source_column_removed: boolean }>(
-      `SELECT
-         to_regclass('public.sermon_deletion_tombstones') IS NULL AS tombstone_removed,
-         NOT EXISTS (
-           SELECT 1 FROM information_schema.columns
-           WHERE table_name = 'redirects' AND column_name = 'source_sermon_id'
-         ) AS source_column_removed`
-    );
-    expect(deltaRemoved.rows[0]).toEqual({ tombstone_removed: true, source_column_removed: true });
-    await pool.query(up3);
-    await pool.query(up4);
-    await pool.query(up5);
-    await pool.query(up6);
-
-    await pool.query(down6);
-    await pool.query(down5);
-    await pool.query(down4);
-    await pool.query(down3);
-    await pool.query(down2);
-    await pool.query(down1);
-    await pool.query(up1);
-    await pool.query(up2);
-    await pool.query(up3);
-    await pool.query(up4);
-    await pool.query(up5);
-    await pool.query(up6);
-    const reapplied = await pool.query<{ sermon: string | null; tombstone: string | null; transcript: string | null; source: string | null }>(
-      `SELECT to_regclass('public.sermons')::text AS sermon,
-              to_regclass('public.sermon_deletion_tombstones')::text AS tombstone,
-              to_regclass('public.sermon_transcripts')::text AS transcript,
-              to_regclass('public.sermon_enrichment_sources')::text AS source`
-    );
-    expect(reapplied.rows[0]).toEqual({
-      sermon: "sermons",
-      tombstone: "sermon_deletion_tombstones",
-      transcript: "sermon_transcripts",
-      source: "sermon_enrichment_sources"
-    });
-    await pool.query(down6);
-    await pool.query(down5);
-    await pool.query(down4);
-    await pool.query(down3);
-    await pool.query(down2);
-    await pool.query(down1);
+    await runSchema("rollback");
     await pool.end();
   });
 
@@ -266,9 +171,9 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   });
 
   it("aborts the one-speaker migration with affected IDs and cleanly reapplies", async () => {
-    await pool.query(down6);
-    await pool.query(down5);
-    await pool.query(down4);
+    await runSchema("rollback", "0006_phase3b2_pilot_provenance");
+    await runSchema("rollback", "0005_approved_sermon_descriptions");
+    await runSchema("rollback", "0004_sermon_enrichment_readiness");
     const target = await pool.query<{ sermon_id: string; other_speaker_id: string }>(
       `SELECT s.id AS sermon_id, sp.id AS other_speaker_id
        FROM sermons s
@@ -286,7 +191,11 @@ integration("disposable PostgreSQL Phase 3B application", () => {
        VALUES ($1, $2, 1)`,
       [anomaly.sermon_id, anomaly.other_speaker_id]
     );
-    await expect(pool.query(up4)).rejects.toThrow(anomaly.sermon_id);
+    await expect(runSchema("apply", "0004_sermon_enrichment_readiness"))
+      .rejects.toMatchObject({ code: "migration_transaction_failure" });
+    expect((await pool.query<{ count: number }>(
+      "SELECT count(*)::integer AS count FROM schema_migrations WHERE migration_order = 4"
+    )).rows[0]).toEqual({ count: 0 });
     expect(
       (await pool.query("SELECT to_regclass('public.sermon_speakers')::text AS value")).rows[0]
     ).toEqual({ value: "sermon_speakers" });
@@ -294,9 +203,9 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       "DELETE FROM sermon_speakers WHERE sermon_id = $1 AND speaker_id = $2",
       [anomaly.sermon_id, anomaly.other_speaker_id]
     );
-    await pool.query(up4);
-    await pool.query(up5);
-    await pool.query(up6);
+    await runSchema("apply", "0004_sermon_enrichment_readiness");
+    await runSchema("apply", "0005_approved_sermon_descriptions");
+    await runSchema("apply", "0006_phase3b2_pilot_provenance");
     expect(
       (await pool.query("SELECT to_regclass('public.sermon_speakers') IS NULL AS removed")).rows[0]
     ).toEqual({ removed: true });
@@ -1245,6 +1154,164 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       expect((await route(new Request("http://127.0.0.1/api/v1/admin/sermons", { headers: { "x-local-identity": selector, "x-actor-role": "admin" } }))).status).toBe(401);
     }
     expect((await route(new Request("http://127.0.0.1/api/v1/admin/audit", { headers: { "x-local-identity": "admin" } }))).status).toBe(200);
+  });
+
+  it("keeps six schema receipts separate from content-import receipts and verifies a no-op", async () => {
+    const migrations = await loadSchemaMigrations();
+    const journal = await pool.query<{
+      migration_order: number;
+      migration_id: string;
+      checksum_sha256: string;
+      applied_at: Date;
+    }>(
+      `SELECT migration_order, migration_id, checksum_sha256, applied_at
+       FROM schema_migrations ORDER BY migration_order`
+    );
+    expect(journal.rows).toEqual(migrations.map((migration) => ({
+      migration_order: migration.order,
+      migration_id: migration.id,
+      checksum_sha256: migration.checksumSha256,
+      applied_at: expect.any(Date)
+    })));
+    const before = await pool.query<{
+      schema_receipts: number;
+      content_records: number;
+      draft_import_receipts: number;
+    }>(
+      `SELECT
+         (SELECT count(*)::integer FROM schema_migrations) AS schema_receipts,
+         (SELECT count(*)::integer FROM migration_records) AS content_records,
+         (SELECT count(*)::integer FROM sermon_enrichment_draft_imports) AS draft_import_receipts`
+    );
+    expect(before.rows[0]?.schema_receipts).toBe(6);
+    expect(before.rows[0]?.content_records).toBe(5);
+    expect(before.rows[0]?.draft_import_receipts).toBeGreaterThanOrEqual(0);
+    await expect(runSchema("apply")).resolves.toEqual({
+      direction: "apply",
+      outcome: "no_op",
+      appliedMigrationIds: [],
+      rolledBackMigrationIds: [],
+      journalReceiptCount: 6
+    });
+    expect((await pool.query<{
+      schema_receipts: number;
+      content_records: number;
+      draft_import_receipts: number;
+    }>(
+      `SELECT
+         (SELECT count(*)::integer FROM schema_migrations) AS schema_receipts,
+         (SELECT count(*)::integer FROM migration_records) AS content_records,
+         (SELECT count(*)::integer FROM sermon_enrichment_draft_imports) AS draft_import_receipts`
+    )).rows[0]).toEqual(before.rows[0]);
+  });
+
+  it("applies only the pending canonical suffix from a valid partial journal", async () => {
+    await runSchema("rollback", "0006_phase3b2_pilot_provenance");
+    await runSchema("rollback", "0005_approved_sermon_descriptions");
+    await runSchema("rollback", "0004_sermon_enrichment_readiness");
+    expect((await pool.query<{ count: number }>(
+      "SELECT count(*)::integer AS count FROM schema_migrations"
+    )).rows[0]).toEqual({ count: 3 });
+    await expect(runSchema("apply")).resolves.toEqual({
+      direction: "apply",
+      outcome: "applied",
+      appliedMigrationIds: [
+        "0004_sermon_enrichment_readiness",
+        "0005_approved_sermon_descriptions",
+        "0006_phase3b2_pilot_provenance"
+      ],
+      rolledBackMigrationIds: [],
+      journalReceiptCount: 6
+    });
+  });
+
+  it("fails before apply or rollback on changed and unknown receipts", async () => {
+    const migrations = await loadSchemaMigrations();
+    const sixth = migrations[5]!;
+    await pool.query(
+      "UPDATE schema_migrations SET checksum_sha256 = $1 WHERE migration_order = 6",
+      ["f".repeat(64)]
+    );
+    await expect(runSchema("rollback", "0006_phase3b2_pilot_provenance"))
+      .rejects.toMatchObject({ code: "migration_checksum_mismatch" });
+    expect((await pool.query<{ receipt: number; source_present: boolean }>(
+      `SELECT
+         (SELECT count(*)::integer FROM schema_migrations WHERE migration_order = 6) AS receipt,
+         to_regclass('public.sermon_enrichment_sources') IS NOT NULL AS source_present`
+    )).rows[0]).toEqual({ receipt: 1, source_present: true });
+    await pool.query(
+      "UPDATE schema_migrations SET checksum_sha256 = $1 WHERE migration_order = 6",
+      [sixth.checksumSha256]
+    );
+
+    await pool.query(
+      `ALTER TABLE sermons
+       ADD COLUMN migration_journal_rollback_probe uuid
+       REFERENCES sermon_enrichment_sources(sermon_id)`
+    );
+    await expect(runSchema("rollback", "0006_phase3b2_pilot_provenance"))
+      .rejects.toMatchObject({ code: "migration_transaction_failure" });
+    expect((await pool.query<{ receipt: number; source_present: boolean }>(
+      `SELECT
+         (SELECT count(*)::integer FROM schema_migrations WHERE migration_order = 6) AS receipt,
+         to_regclass('public.sermon_enrichment_sources') IS NOT NULL AS source_present`
+    )).rows[0]).toEqual({ receipt: 1, source_present: true });
+    await pool.query("ALTER TABLE sermons DROP COLUMN migration_journal_rollback_probe");
+
+    await expect(runSchema("rollback", "0006_phase3b2_pilot_provenance"))
+      .resolves.toMatchObject({ outcome: "rolled_back", journalReceiptCount: 5 });
+    expect((await pool.query<{ receipt: number; source_present: boolean }>(
+      `SELECT
+         (SELECT count(*)::integer FROM schema_migrations WHERE migration_order = 6) AS receipt,
+         to_regclass('public.sermon_enrichment_sources') IS NOT NULL AS source_present`
+    )).rows[0]).toEqual({ receipt: 0, source_present: false });
+
+    await pool.query(
+      `INSERT INTO schema_migrations (migration_order, migration_id, checksum_sha256)
+       VALUES (6, '0007_unknown', $1)`,
+      [sixth.checksumSha256]
+    );
+    await expect(runSchema("apply")).rejects.toMatchObject({ code: "journal_state_failure" });
+    expect((await pool.query<{ present: boolean }>(
+      "SELECT to_regclass('public.sermon_enrichment_sources') IS NOT NULL AS present"
+    )).rows[0]).toEqual({ present: false });
+    await pool.query("DELETE FROM schema_migrations WHERE migration_order = 6");
+    await expect(runSchema("apply", "0006_phase3b2_pilot_provenance"))
+      .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 6 });
+  });
+
+  it("refuses unjournalled objects and serialises concurrent fresh application", async () => {
+    await expect(runSchema("rollback")).resolves.toMatchObject({
+      outcome: "rolled_back",
+      journalReceiptCount: 0
+    });
+    await pool.query("DROP TABLE schema_migrations");
+    await pool.query("CREATE TABLE sermons (id integer PRIMARY KEY)");
+    await expect(runSchema("apply")).rejects.toMatchObject({ code: "schema_drift_failure" });
+    expect((await pool.query<{ journal_present: boolean; sermon_present: boolean }>(
+      `SELECT
+         to_regclass('public.schema_migrations') IS NOT NULL AS journal_present,
+         to_regclass('public.sermons') IS NOT NULL AS sermon_present`
+    )).rows[0]).toEqual({ journal_present: false, sermon_present: true });
+    await pool.query("DROP TABLE sermons");
+
+    const results = await Promise.all([runSchema("apply"), runSchema("apply")]);
+    expect(results.map((result) => result.outcome).sort()).toEqual(["applied", "no_op"]);
+    expect(results.reduce((count, result) => count + result.appliedMigrationIds.length, 0)).toBe(6);
+    expect((await pool.query<{ receipts: number; distinct_receipts: number }>(
+      `SELECT count(*)::integer AS receipts,
+              count(DISTINCT migration_id)::integer AS distinct_receipts
+       FROM schema_migrations`
+    )).rows[0]).toEqual({ receipts: 6, distinct_receipts: 6 });
+
+    await expect(runSchema("rollback")).resolves.toMatchObject({
+      outcome: "rolled_back",
+      journalReceiptCount: 0
+    });
+    await expect(runSchema("apply")).resolves.toMatchObject({
+      outcome: "applied",
+      journalReceiptCount: 6
+    });
   });
 });
 

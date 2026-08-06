@@ -170,6 +170,12 @@ The provisional offline completion path is limited to exactly the two records th
 
 Source and cleaned text are normalised to Unicode NFC and tokenised independently on whitespace. Unicode punctuation is removed from within each token and the remaining text is case-folded; the resulting token count, boundaries, order and content must match exactly. Only punctuation, capitalisation and paragraph/line-break formatting may change. Stable non-overlapping chunks carry exact source ranges and source/output hashes, and deterministic whole-sermon reassembly is revalidated before any persistence. No-clobber paths, retained uncertainty/provenance, structured failures, exact-two scope and comprehensive fail-closed verification are mandatory. These rules have anonymised fixture coverage only; real private processing, import/idempotency, counts, timing and quality outcomes remain pending a separately authorised rerun. (`provisional implementation contract`)
 
+### D-120 - Fail-closed schema migration journal
+
+Canonical local schema migration uses a runner-owned `schema_migrations` journal that is distinct from source/content migration records and draft-import receipts. Each ordered migration identity is bound to a deterministic SHA-256 checksum of its Unicode/line-ending-normalised paired up/down SQL definitions. The runner holds a PostgreSQL advisory lock around planning and execution, requires the stored receipts to be an exact canonical prefix, applies only the pending suffix, and records DDL plus its receipt in the same transaction. A matching rerun is a no-op. Rollback removes only matching latest receipts transactionally with their down SQL while preserving the standalone rollback files.
+
+Unknown, changed, missing, duplicate or reordered receipts fail before apply or rollback. Existing application objects without the trusted journal also fail; the runner never infers or auto-baselines prior history. The existing exact disposable-database and explicit write-opt-in gates remain mandatory. (`local implementation decision`)
+
 ## Decisions still required
 
 - Final AWS runtime/adapter and production networking.

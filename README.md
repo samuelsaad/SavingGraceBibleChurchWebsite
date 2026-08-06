@@ -4,7 +4,7 @@ Local Phase 3B.2 caption/enrichment rehearsal plus provisional Phase 3B.2b punct
 
 ## Current scope
 
-- Final local PostgreSQL schema migration plus explicit rollback SQL
+- Fail-closed journalled local PostgreSQL schema runner plus explicit standalone rollback SQL
 - Typed public/admin sermon API contracts
 - Runtime input validation
 - Parameterized PostgreSQL public sermon repository
@@ -29,7 +29,7 @@ Local Phase 3B.2 caption/enrichment rehearsal plus provisional Phase 3B.2b punct
 
 This milestone does not include deployment, cloud infrastructure, Cognito configuration, production loading, the remaining 450 sermons, external providers, audio/video processing, new transcription, or any WordPress/YouTube mutation. Phase 3B.2b hardens the offline workflow for exactly the two records identified by the committed Phase 3B.2 outcome as requiring manual punctuation; it does not reprocess the already-successful record. The hardened implementation has been exercised only with anonymised fixtures. Real private preparation, finalisation, import, idempotency and verification results remain pending a separate explicitly authorised rerun. The AWS runtime and Astro production adapter remain intentionally undecided.
 
-The disposable PostgreSQL 16.14 integration has been verified against only `savinggrace_sermons_test` on `127.0.0.1:5432`: ordered migration apply, importer load/rerun, public/admin repository and API tests, live loopback HTTP requests, rollback, clean reapply, and final anonymised reload passed. The local database is left in the applied fixture-backed development state with the API harness stopped.
+The disposable PostgreSQL integration is verified only against `savinggrace_sermons_test` on `127.0.0.1:5432`. The schema runner uses a separate `schema_migrations` journal, stable checksums of each paired up/down definition, an advisory lock, exact-prefix validation and transactional DDL/receipt writes. A matching fully applied schema is a no-op; unknown, changed, missing, duplicate, reordered or unjournalled history fails closed instead of being baselined. Disposable database contents are test state, not milestone authority.
 
 The implemented admin routes, authorization, transition, deletion, and dashboard contracts are documented in `admin-api-contract.md`. There is one non-secret local admin identity, disabled by default, limited to loopback/development, and never a substitute for the future verified identity adapter.
 
@@ -67,6 +67,8 @@ npm run api:local
 npm run db:rollback-local
 ```
 
+The schema commands keep schema history separate from `migration_records` and `sermon_enrichment_draft_imports`. Apply runs only the pending canonical suffix. Rollback removes only the latest requested receipt, or the full applied suffix for an unscoped rollback, in the same transaction as its down SQL. The SQL files remain independently executable rollback artifacts; the runner normalises CRLF/CR/LF differences before hashing their paired definitions.
+
 After `npm run build`, the reviewed Phase 3B dashboard can be started with the existing password-free libpq credential mechanism:
 
 ```powershell
@@ -86,7 +88,7 @@ The loader and integration suite refuse every target except `savinggrace_sermons
 - `src/application`: lifecycle and permission rules
 - `src/server/auth`: provider-independent identity boundary and local-only allowlisted adapter
 - `src/server`: server-only PostgreSQL repository, query, and portable HTTP boundaries
-- `src/migration`: importer, audit output, identity, and CLI
+- `src/migration`: journalled schema runner, importer, audit output, identity, and CLI
 - `src/enrichment`: strict queue/draft contracts, provider interfaces, and local idempotent PostgreSQL draft workflow
 - `src/readiness`: derived exact-count historical launch gate and safe CLI report
 - `historical-enrichment-plan.md`: three-output Phase 3B.2 contract, review boundary and exact launch gate

@@ -1,6 +1,6 @@
 # Advanced Sermons Migration Contract
 
-**Version:** 1.3
+**Version:** 1.4
 **Status:** Phase 3B.2b offline workflow provisionally hardened with anonymised fixtures; real private rerun, production execution and the remaining 450 sermons are not approved
 
 ## 1. Source boundary
@@ -112,6 +112,9 @@ Required outcome categories: `included`, `excluded`, `rejected`. Required warnin
 - Dry run performs validation and transformation and produces the complete report without target writes.
 - Reprocessing identical input yields identical target IDs, checksums, transformations, warnings, and ordering.
 - A future load uses upserts keyed by source identity and a migration-run transaction; that path is not authorised against production in this milestone.
+- Schema idempotency uses runner-owned `schema_migrations`, never `migration_records`, `migration_runs`, or `sermon_enrichment_draft_imports`. Each canonical ordered identity has a SHA-256 checksum over its paired up/down definitions after BOM and CRLF/CR/LF normalisation.
+- Under a PostgreSQL advisory lock, the runner requires journal receipts to be an exact canonical prefix with matching checksums, applies only the pending suffix, and returns a no-op for a fully matching schema. Unknown, changed, missing, duplicate, reordered or unjournalled history fails before mutation; existing application objects are never auto-baselined.
+- Each up definition and its receipt are committed in one transaction. Rollback is latest-first and removes its exact receipt in the same transaction as the paired down definition. Standalone down SQL remains independently executable for controlled verification.
 
 ## 12. Permanent whole-site SEO migration gate
 
