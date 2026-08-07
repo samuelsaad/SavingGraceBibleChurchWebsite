@@ -46,9 +46,12 @@ Current expected result: 453 included (448 published, 5 pending), 3 Advanced Ser
 - If source input contains more than one speaker, emit `multiple_source_speakers` at error severity, preserve warning/audit evidence, import no speaker for that record, and never choose one silently.
 - Migration `0004` refuses former local join conversion and reports all affected sermon UUIDs if any sermon has more than one speaker. Series remains many-to-many with deterministic order.
 - Books remain source classifications with an optional canonical Bible-book mapping.
+- Local reference seeding contains exactly the seven confirmed speakers and the 66-book Protestant canon in stable order. It is idempotent, creates no sermon relationship, and refuses conflicting identities or partial state.
+- Trusted canonical names, slugs, abbreviations and aliases may map an imported book term to the seeded canonical classification only when the mapping is unique; source term/taxonomy provenance remains attached and conflicts fail closed.
 - Preserve source term/taxonomy IDs, names, slugs, and relationship provenance.
 - Do not merge near-duplicate or misclassified terms without an approved mapping file.
 - Do not create campus/service-type entities from the current source because no live term/relationship exists.
+- Do not import or hardcode historical preacher/book totals as runtime counts. Administrator counts are distinct non-deleted sermon relationships; public counts include only complete published sermons.
 
 ## 6. Scripture
 

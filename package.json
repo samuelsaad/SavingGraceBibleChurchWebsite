@@ -28,6 +28,8 @@
     "db:rollback-phase3b2-local": "tsx src/migration/schema-cli.ts --rollback --phase3b2-only",
     "db:apply-atomic-review-local": "tsx src/migration/schema-cli.ts --apply --atomic-review-only",
     "db:rollback-atomic-review-local": "tsx src/migration/schema-cli.ts --rollback --atomic-review-only",
+    "reference:apply-local": "tsx src/migration/reference-catalogue-cli.ts --apply",
+    "reference:rollback-local": "tsx src/migration/reference-catalogue-cli.ts --rollback",
     "enrichment:export-queue-local": "tsx src/enrichment/cli.ts --export-queue",
     "enrichment:import-draft-local": "tsx src/enrichment/cli.ts --import-bundle",
     "enrichment:pilot-local": "tsx src/enrichment/pilot-cli.ts",

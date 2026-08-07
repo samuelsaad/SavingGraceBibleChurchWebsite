@@ -512,6 +512,8 @@ export const taxonomyResponseSchema = z.object({
   slug: z.string(),
   description: z.string().nullable(),
   canonicalBookId: z.number().int().min(1).max(66).nullable(),
+  administratorSermonCount: z.number().int().nonnegative(),
+  publicSermonCount: z.number().int().nonnegative(),
   rowVersion: z.number().int().positive(),
   updatedAt: z.iso.datetime()
 });

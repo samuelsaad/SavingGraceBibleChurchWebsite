@@ -13,6 +13,7 @@ Local Phase 3B.2 caption/enrichment rehearsal, Phase 3B.2b punctuation hardening
 - Final default-deny single-`admin` policy with no editor/contributor or ownership-based behaviour
 - Transactional create/update/relationship operations, explicit lifecycle transitions, audit, and row-version concurrency
 - Exactly one nullable-while-incomplete speaker relationship; schedule/publish requires one and migration refuses multi-speaker anomalies
+- Idempotent local reference seeding for the seven confirmed speakers and the exact 66-book Protestant canon, with deterministic identities, canonical order, supported Bible-book aliases, no automatic sermon assignment, and relationship-derived administrator/public counts
 - Reused `sermons.summary` as the reviewed public **Sermon description**, with explicit lifecycle/provenance, approved-only weight-C search and controlled `seo_description` fallback
 - First-class reviewed plain-text transcripts and 5–10 ordered reviewed Q&A pairs with approved-only lower-weight search
 - Derived readiness, exact 453/453 historical launch gate, deterministic enrichment queue, and idempotent draft-only import contract
@@ -53,6 +54,8 @@ npm run enrichment:pilot-local -- path/to/ignored-private-pilot-manifest.json
 npm run enrichment:punctuation-local -- prepare path/to/ignored-private-pilot-manifest.json video-id private-workspace
 npm run db:apply-atomic-review-local
 npm run db:rollback-atomic-review-local
+npm run reference:apply-local
+npm run reference:rollback-local
 npm run launch-readiness:local
 ```
 
@@ -70,6 +73,8 @@ npm run db:rollback-local
 ```
 
 The schema commands keep schema history separate from `migration_records` and `sermon_enrichment_draft_imports`. Apply runs only the pending canonical suffix. Rollback removes only the latest requested receipt, or the full applied suffix for an unscoped rollback, in the same transaction as its down SQL. The SQL files remain independently executable rollback artifacts; the runner normalises CRLF/CR/LF differences before hashing their paired definitions.
+
+Reference seeding is a separate local data operation because migrations `0001` through `0008` already provide the required structure. It requires the same exact loopback PostgreSQL 16 test target and write opt-in, inserts only the confirmed seven speakers plus 66 canonical books/classifications, and is idempotent. Its guarded rollback refuses partial, changed, or in-use catalogue state. It never selects a speaker or Bible book for a sermon. Bible-book abbreviations and aliases are normalised only to resolve trusted import terms; ambiguous aliases fail closed. Administrator relationship counts include private drafts, while public counts include only complete published sermons, and neither count is stored as historical source truth.
 
 After `npm run build`, the reviewed Phase 3B dashboard can be started with the existing password-free libpq credential mechanism:
 

@@ -96,6 +96,8 @@ The planned SEO/social columns are not part of migrations `0001`–`0003`; they 
 
 Migration `0004_sermon_enrichment_readiness.sql` first aggregates the former local join table and aborts transactionally with every affected sermon UUID when any sermon has more than one speaker. It then maps only valid zero/one relationships, adds the foreign key/index, and removes the join. The importer emits an error warning and leaves the target speaker null for a multi-speaker source anomaly; it never selects one silently. The rollback restores the join representation from the sole foreign key. Series remains many-to-many. (`approved-decision-and-local-test-confirmed`)
 
+The local reference catalogue seeds exactly seven confirmed speaker rows using deterministic UUIDs. It stores no imported historical preacher totals and assigns no sermon automatically. Administration derives distinct non-deleted relationship counts at query time; the separately labelled public count includes only complete published sermons.
+
 ### `sermon_transcripts`, `sermon_question_answers`, and readiness
 
 - `sermon_transcripts`: one plain-text row per sermon; status `missing`, `draft`, `in_review`, or `approved`; constrained non-secret provenance; created/updated/reviewed/approved timestamps and reviewer/approver subjects; optimistic row version. HTML-like tags are rejected.
@@ -114,6 +116,8 @@ Only approved summary text is copied into weight-C search input; approved transc
 - `sermon_source_terms`: sermon UUID, source-term UUID, source relationship/order; unique pair.
 
 The source layer prevents loss of `Selected Text`, unused/misclassified terms, near-duplicate series, and stored-versus-actual count discrepancies. (`database-observed`)
+
+The canonical reference catalogue seeds all 66 `bible_books` rows in contiguous Protestant order (39 Old Testament, 27 New Testament) and one deterministic approved canonical `book_classifications` row per book. Collision-checked name/slug/abbreviation/alias resolution lets a trusted matching source term reuse that canonical classification while retaining source-term provenance. Unknown terms remain separate reviewable classifications; any ambiguous configured alias fails closed. Seeding is idempotent, grants no sermon relationship, and uses no stored legacy count as current truth.
 
 ### `scripture_references`
 

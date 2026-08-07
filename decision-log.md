@@ -188,6 +188,12 @@ The six aggregate prompts created by migration `0007` do not preserve the 86 det
 
 Aggregate warning codes remain informational provenance only. Each atomic item requires its own explicit accepted or corrected outcome; resolving one never resolves a sibling. Missing, extra, duplicate, reordered, pending, stale or identity-mismatched rows block the stage and final completion. Direct correction is available only when an exact transcript phrase is truthfully attached. Assembly, restoration and import are no-clobber, deterministic, fail-closed and idempotent, and no review decision or approval is created by them. (`approved local implementation decision; private findings remain pending`)
 
+### D-123 - Confirmed speaker and Protestant Bible reference catalogues
+
+The local application reference catalogue contains exactly the seven confirmed speakers Binoy Joseph, Matthew Johnston, Nathan Vella, Ralph Gambardella, Rodney Hole, Wesam Saad and Yang Yu, plus the exact 66-book Protestant Bible canon in canonical order with 39 Old Testament and 27 New Testament books. Speaker and canonical classification UUIDs are deterministic; canonical book IDs and order are 1 through 66. Supported names, slugs, abbreviations and aliases resolve through one collision-checked normaliser.
+
+This is idempotent reference data, not a new schema version: migrations `0001` through `0008` remain unchanged. Seeding never assigns a speaker or book to a sermon, never imports legacy term counts, and never treats stored counts as current truth. Administrator counts are derived as distinct non-deleted sermon relationships; public counts are separately derived from complete published sermons only. Guarded rollback refuses partial, changed or referenced catalogue state. (`approved local implementation decision`)
+
 ## Decisions still required
 
 - Final AWS runtime/adapter and production networking.

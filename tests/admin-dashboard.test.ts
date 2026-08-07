@@ -90,6 +90,8 @@ describe("Phase 3B administration dashboard", () => {
     expect(client).toContain("supportingContext");
     expect(client).toContain("Final review summary");
     expect(client).toContain("Technical provenance");
+    expect(client).toContain("Administrator relationships");
+    expect(client).toContain("Publicly eligible");
     expect(client).toContain("data-review-item-decision=\"left_unresolved\"");
     expect(client).toContain("Finish review");
     expect(client).toContain("Save and pause");

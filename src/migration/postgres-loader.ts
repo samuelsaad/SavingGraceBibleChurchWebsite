@@ -1,5 +1,6 @@
 import type { Pool, PoolClient } from "pg";
 import { deterministicSourceUuid } from "./identity";
+import { resolveCanonicalBibleBook } from "./reference-catalogue";
 import type {
   ImportedSermon,
   LegacyTerm,
@@ -32,6 +33,47 @@ async function upsertSeries(client: PoolClient, term: LegacyTerm): Promise<strin
 }
 
 async function upsertBook(client: PoolClient, term: LegacyTerm): Promise<string> {
+  const canonical = resolveCanonicalBibleBook(term.name) ?? resolveCanonicalBibleBook(term.slug);
+  if (canonical) {
+    const seeded = await client.query<{ present: boolean }>(
+      `SELECT EXISTS (
+         SELECT 1
+         FROM bible_books book
+         JOIN book_classifications classification
+           ON classification.canonical_book_id = book.id
+         WHERE book.id = $1
+           AND book.canonical_name = $2
+           AND book.slug = $3
+           AND classification.id = $4
+           AND classification.name = $2
+           AND classification.slug = $3
+           AND classification.classification_type = 'canonical'
+           AND classification.review_status = 'approved'
+       ) AS present`,
+      [canonical.id, canonical.canonicalName, canonical.slug, canonical.classificationId]
+    );
+    if (seeded.rows[0]?.present) {
+      const mapped = await client.query(
+        `UPDATE book_classifications
+         SET source_term_id = $2,
+             source_term_taxonomy_id = $3,
+             updated_at = CASE
+               WHEN source_term_id IS DISTINCT FROM $2
+                 OR source_term_taxonomy_id IS DISTINCT FROM $3
+               THEN now()
+               ELSE updated_at
+             END
+         WHERE id = $1
+           AND (source_term_id IS NULL OR source_term_id = $2)
+           AND (source_term_taxonomy_id IS NULL OR source_term_taxonomy_id = $3)`,
+        [canonical.classificationId, term.termId, term.termTaxonomyId]
+      );
+      if (mapped.rowCount !== 1) {
+        throw new Error("A canonical Bible-book source mapping conflicts with existing provenance.");
+      }
+      return canonical.classificationId;
+    }
+  }
   const id = deterministicSourceUuid("wordpress-book", term.termTaxonomyId);
   const classificationType = term.name.trim().toLowerCase() === "selected text"
     ? "selected_text"

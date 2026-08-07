@@ -375,13 +375,14 @@ const taxonomyConfiguration = {
   books: { table: "book_classifications", description: null, entityType: "book_classification" }
 } as const;
 
-function taxonomyProjection(kind: TaxonomyKind): string {
+function taxonomyProjection(kind: TaxonomyKind, alias = ""): string {
   const config = taxonomyConfiguration[kind];
-  const description = config.description ? config.description : "NULL::text";
-  const canonical = kind === "books" ? "canonical_book_id" : "NULL::smallint";
-  return `id, name, slug, ${description} AS description,
-    ${canonical} AS canonical_book_id, row_version,
-    ${timestamp("updated_at")} AS updated_at`;
+  const prefix = alias ? `${alias}.` : "";
+  const description = config.description ? `${prefix}${config.description}` : "NULL::text";
+  const canonical = kind === "books" ? `${prefix}canonical_book_id` : "NULL::smallint";
+  return `${prefix}id, ${prefix}name, ${prefix}slug, ${description} AS description,
+    ${canonical} AS canonical_book_id, ${prefix}row_version,
+    ${timestamp(`${prefix}updated_at`)} AS updated_at`;
 }
 
 function taxonomyFromRow(kind: TaxonomyKind, row: QueryResultRow): TaxonomyDto {
@@ -392,6 +393,8 @@ function taxonomyFromRow(kind: TaxonomyKind, row: QueryResultRow): TaxonomyDto {
     slug: row.slug as string,
     description: (row.description as string | null) ?? null,
     canonicalBookId: (row.canonical_book_id as number | null) ?? null,
+    administratorSermonCount: Number(row.administrator_sermon_count ?? 0),
+    publicSermonCount: Number(row.public_sermon_count ?? 0),
     rowVersion: row.row_version as number,
     updatedAt: row.updated_at as string
   };
@@ -1400,8 +1403,42 @@ export class PostgresAdminSermonRepository implements AdminSermonRepository {
 
   async listTaxonomies(kind: TaxonomyKind): Promise<TaxonomyDto[]> {
     const config = taxonomyConfiguration[kind];
+    const alias = "reference";
+    const relationship = kind === "speakers"
+      ? "sermon.speaker_id = reference.id"
+      : kind === "series"
+        ? `EXISTS (
+             SELECT 1 FROM sermon_series_map relationship
+             WHERE relationship.sermon_id = sermon.id
+               AND relationship.series_id = reference.id
+           )`
+        : `EXISTS (
+             SELECT 1 FROM sermon_book_classifications relationship
+             WHERE relationship.sermon_id = sermon.id
+               AND relationship.book_classification_id = reference.id
+           )`;
+    const canonicalJoin = kind === "books"
+      ? "LEFT JOIN bible_books canonical ON canonical.id = reference.canonical_book_id"
+      : "";
+    const order = kind === "books"
+      ? "canonical.canonical_order NULLS LAST, lower(reference.name), reference.id"
+      : "lower(reference.name), reference.id";
     const result = await this.pool.query(
-      `SELECT ${taxonomyProjection(kind)} FROM ${config.table} ORDER BY lower(name), id`
+      `SELECT ${taxonomyProjection(kind, alias)},
+              (SELECT count(DISTINCT sermon.id)::integer
+               FROM sermons sermon
+               WHERE sermon.deleted_at IS NULL AND ${relationship})
+                AS administrator_sermon_count,
+              (SELECT count(DISTINCT sermon.id)::integer
+               FROM sermons sermon
+               JOIN sermon_content_readiness readiness ON readiness.sermon_id = sermon.id
+               WHERE sermon.status = 'published'
+                 AND sermon.deleted_at IS NULL
+                 AND readiness.is_complete
+                 AND ${relationship}) AS public_sermon_count
+       FROM ${config.table} ${alias}
+       ${canonicalJoin}
+       ORDER BY ${order}`
     );
     return result.rows.map((row) => taxonomyFromRow(kind, row));
   }

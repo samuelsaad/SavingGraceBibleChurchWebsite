@@ -22,6 +22,12 @@ import type { SermonStatus } from "../src/domain/sermon";
 import { runMigrationDryRun } from "../src/migration/importer";
 import { loadMigrationResult } from "../src/migration/postgres-loader";
 import {
+  applyReferenceCatalogue,
+  protestantBibleBooks,
+  rollbackReferenceCatalogue,
+  savingGraceSpeakers
+} from "../src/migration/reference-catalogue";
+import {
   loadSchemaMigrations,
   runSchemaMigrations,
   type SchemaMigrationScope
@@ -135,6 +141,10 @@ integration("disposable PostgreSQL Phase 3B application", () => {
 
     await runSchema("rollback");
     await runSchema("apply");
+    await applyReferenceCatalogue(pool, {
+      connectionString: disposableConnectionString(),
+      writeOptIn: process.env.ALLOW_LOCAL_DB_WRITE
+    });
 
     const fixture = legacySermonRecordSchema.array().parse(
       JSON.parse(await readFile("tests/fixtures/dry-run.json", "utf8"))
@@ -188,6 +198,92 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       review_item_table: "sermon_enrichment_review_items",
       speaker_join_removed: true
     });
+  });
+
+  it("seeds reference catalogues idempotently, orders selectors, and derives scoped counts", async () => {
+    await expect(applyReferenceCatalogue(pool, {
+      connectionString: disposableConnectionString(),
+      writeOptIn: process.env.ALLOW_LOCAL_DB_WRITE
+    })).resolves.toMatchObject({ outcome: "unchanged" });
+
+    const catalogue = await pool.query<{
+      seeded_speakers: number;
+      bible_books: number;
+      old_testament: number;
+      new_testament: number;
+      canonical_classifications: number;
+      min_order: number;
+      max_order: number;
+      distinct_orders: number;
+    }>(`SELECT
+      (SELECT count(*)::integer FROM speakers WHERE id = ANY($1::uuid[])) AS seeded_speakers,
+      (SELECT count(*)::integer FROM bible_books) AS bible_books,
+      (SELECT count(*)::integer FROM bible_books WHERE testament = 'old') AS old_testament,
+      (SELECT count(*)::integer FROM bible_books WHERE testament = 'new') AS new_testament,
+      (SELECT count(*)::integer FROM book_classifications
+       WHERE id = ANY($2::uuid[]) AND classification_type = 'canonical') AS canonical_classifications,
+      (SELECT min(canonical_order)::integer FROM bible_books) AS min_order,
+      (SELECT max(canonical_order)::integer FROM bible_books) AS max_order,
+      (SELECT count(DISTINCT canonical_order)::integer FROM bible_books) AS distinct_orders`, [
+      savingGraceSpeakers.map((speaker) => speaker.id),
+      protestantBibleBooks.map((book) => book.classificationId)
+    ]);
+    expect(catalogue.rows[0]).toEqual({
+      seeded_speakers: 7,
+      bible_books: 66,
+      old_testament: 39,
+      new_testament: 27,
+      canonical_classifications: 66,
+      min_order: 1,
+      max_order: 66,
+      distinct_orders: 66
+    });
+
+    const repository = new PostgresAdminSermonRepository(pool);
+    const speakers = await repository.listTaxonomies("speakers");
+    const books = await repository.listTaxonomies("books");
+    expect(speakers.filter((speaker) => savingGraceSpeakers.some((seed) => seed.id === speaker.id))
+      .map((speaker) => speaker.name)).toEqual(savingGraceSpeakers.map((speaker) => speaker.name));
+    expect(books.filter((book) => protestantBibleBooks.some((seed) => seed.classificationId === book.id))
+      .map((book) => book.name)).toEqual(protestantBibleBooks.map((book) => book.canonicalName));
+
+    const target = (await pool.query<{ id: string; original_speaker_id: string | null }>(
+      "SELECT id, speaker_id AS original_speaker_id FROM sermons ORDER BY id LIMIT 1"
+    )).rows[0]!;
+    await pool.query("UPDATE sermons SET speaker_id = $2 WHERE id = $1", [target.id, savingGraceSpeakers[0]!.id]);
+    try {
+      await expect(rollbackReferenceCatalogue(pool, {
+        connectionString: disposableConnectionString(),
+        writeOptIn: process.env.ALLOW_LOCAL_DB_WRITE
+      })).rejects.toThrow("reference catalogue is in use");
+    } finally {
+      await pool.query("UPDATE sermons SET speaker_id = $2 WHERE id = $1", [target.id, target.original_speaker_id]);
+    }
+
+    const draftTarget = (await pool.query<{ id: string; original_speaker_id: string | null }>(
+      "SELECT id, speaker_id AS original_speaker_id FROM sermons WHERE status <> 'published' ORDER BY id LIMIT 1"
+    )).rows[0]!;
+    await pool.query("UPDATE sermons SET speaker_id = $2 WHERE id = $1", [draftTarget.id, savingGraceSpeakers[0]!.id]);
+    await pool.query(
+      `INSERT INTO sermon_book_classifications (sermon_id, book_classification_id)
+       VALUES ($1, $2)`,
+      [draftTarget.id, protestantBibleBooks[0]!.classificationId]
+    );
+    const dynamicSpeakers = await repository.listTaxonomies("speakers");
+    const dynamicBooks = await repository.listTaxonomies("books");
+    expect(dynamicSpeakers.find((speaker) => speaker.id === savingGraceSpeakers[0]!.id))
+      .toMatchObject({ administratorSermonCount: 1, publicSermonCount: 0 });
+    expect(dynamicBooks.find((book) => book.id === protestantBibleBooks[0]!.classificationId))
+      .toMatchObject({ administratorSermonCount: 1, publicSermonCount: 0 });
+    await pool.query("DELETE FROM sermon_book_classifications WHERE sermon_id = $1 AND book_classification_id = $2", [
+      draftTarget.id,
+      protestantBibleBooks[0]!.classificationId
+    ]);
+    await pool.query("UPDATE sermons SET speaker_id = $2 WHERE id = $1", [draftTarget.id, draftTarget.original_speaker_id]);
+    expect((await repository.listTaxonomies("speakers")).find((speaker) => speaker.id === savingGraceSpeakers[0]!.id))
+      .toMatchObject({ administratorSermonCount: 0, publicSermonCount: 0 });
+    expect((await repository.listTaxonomies("books")).find((book) => book.id === protestantBibleBooks[0]!.classificationId))
+      .toMatchObject({ administratorSermonCount: 0, publicSermonCount: 0 });
   });
 
   it("aborts the one-speaker migration with affected IDs and cleanly reapplies", async () => {
@@ -1588,7 +1684,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
           updateSermonInputSchema.parse({
             rowVersion: current.rowVersion,
             title: "Must roll back",
-            scriptureReferences: [{ displayText: "Invalid FK", canonicalBookId: 66 }]
+            seriesIds: ["00000000-0000-4000-8000-000000000099"]
           }),
           admin,
           "phase3b-rollback"
