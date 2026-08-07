@@ -62,7 +62,7 @@ const pageTitle = "Local administration — Saving Grace Bible Church";
   </body>
 </html>
 
-<style>
+<style is:global>
   :root {
     --ink: #18251f;
     --muted: #607068;
@@ -145,7 +145,7 @@ const pageTitle = "Local administration — Saving Grace Bible Church";
   .filters { display: grid; grid-template-columns: minmax(12rem, 1.5fr) repeat(6, minmax(8rem, 1fr)) auto; gap: .75rem; align-items: end; margin-bottom: 1rem; }
   label, legend { color: #35483e; font-size: .78rem; font-weight: 750; }
   label span { display: block; margin-bottom: .35rem; }
-  input, select, textarea { width: 100%; min-height: 2.65rem; padding: .65rem .72rem; border: 1px solid #bdcac2; border-radius: .55rem; background: white; color: var(--ink); }
+  input, select, textarea { width: 100%; min-height: 2.65rem; padding: .65rem .72rem; border: 1px solid #bdcac2; border-radius: .55rem; background: white; color: var(--ink); font-weight: 400; }
   textarea { min-height: 7rem; resize: vertical; line-height: 1.5; }
   select[multiple] { min-height: 9rem; }
   .field-hint { display: block; margin-top: .35rem; color: var(--muted); font-size: .73rem; font-weight: 400; line-height: 1.45; }
@@ -192,11 +192,84 @@ const pageTitle = "Local administration — Saving Grace Bible Church";
   .qa-editor-heading { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
   .qa-editor-heading h3 { margin: 0; font-family: Georgia, serif; }
   .qa-editor > label { display: block; margin-top: .8rem; }
+  .review-record-header { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1rem 2rem; align-items: end; margin-bottom: 1.5rem; }
+  .review-record-header h1 { max-width: 60rem; margin: .45rem 0 .25rem; font-family: Georgia, serif; font-size: clamp(1.8rem, 4vw, 2.65rem); font-weight: 500; letter-spacing: -.025em; }
+  .review-record-header p { margin: .2rem 0 0; color: var(--muted); }
+  .review-record-header .eyebrow { margin-top: .8rem; color: var(--forest); }
+  .review-record-header progress { grid-column: 1 / -1; }
+  .review-record-status { display: grid; gap: .5rem; justify-items: end; text-align: right; }
+  .review-workflow-layout { display: grid; grid-template-columns: minmax(14rem, 19rem) minmax(0, 1fr); gap: 1.25rem; align-items: start; }
+  .review-stage-nav { position: sticky; top: 1rem; padding: .75rem; border: 1px solid var(--line); border-radius: 1rem; background: white; box-shadow: 0 .6rem 2rem rgba(31,80,59,.055); }
+  .review-stage-nav ol { display: grid; gap: .35rem; margin: 0; padding: 0; list-style: none; }
+  .review-stage-button { display: grid; grid-template-columns: 2rem minmax(0,1fr) auto; gap: .65rem; align-items: center; width: 100%; padding: .7rem; border: 1px solid transparent; border-radius: .7rem; color: var(--ink); background: transparent; text-align: left; cursor: pointer; }
+  .review-stage-button:hover { background: var(--paper); }
+  .review-stage-button.current { border-color: #a9c8b7; background: #edf5f0; }
+  .review-stage-button strong, .review-stage-button small { display: block; }
+  .review-stage-button strong { line-height: 1.25; }
+  .review-stage-button small { margin-top: .2rem; color: var(--muted); font-size: .7rem; }
+  .review-stage-number { display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 50%; background: var(--sage); color: var(--forest-dark); font-weight: 850; }
+  .review-stage-mark { color: var(--forest); font-weight: 900; }
+  .review-stage-workspace { min-width: 0; }
+  .review-stage-panel { min-width: 0; padding: clamp(1.2rem, 2.5vw, 2rem); border: 1px solid var(--line); border-radius: 1rem; background: white; box-shadow: 0 .6rem 2rem rgba(31,80,59,.055); }
+  .review-stage-heading { max-width: 58rem; margin-bottom: 1.4rem; }
+  .review-stage-heading > p:first-child { margin: 0 0 .35rem; color: var(--forest); font-size: .72rem; font-weight: 850; letter-spacing: .1em; text-transform: uppercase; }
+  .review-stage-heading h2 { margin: 0; font-family: Georgia, serif; font-size: clamp(1.55rem, 3vw, 2.1rem); font-weight: 500; }
+  .review-stage-heading h2 + p { margin: .5rem 0 0; color: var(--muted); line-height: 1.55; }
+  .review-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 1rem; }
+  .review-readonly-field { padding: .8rem; border: 1px solid var(--line); border-radius: .65rem; background: var(--paper); }
+  .review-readonly-field span, .review-readonly-field strong, .review-readonly-field small { display: block; }
+  .review-readonly-field span { color: #35483e; font-size: .78rem; font-weight: 750; }
+  .review-readonly-field strong { margin-top: .4rem; }
+  .review-readonly-field small { margin-top: .3rem; color: var(--muted); }
+  .source-summary { display: grid; gap: 1rem; margin-top: 1.25rem; padding: 1.2rem; border: 1px solid #c9d9d0; border-radius: .8rem; background: #f8fbf9; }
+  .source-summary h3 { margin: .2rem 0 0; font-family: Georgia, serif; font-weight: 500; }
+  .source-facts { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: .75rem; }
+  .source-facts div { min-width: 0; padding: .75rem; border-radius: .6rem; background: white; }
+  .source-facts dt { color: var(--muted); font-size: .72rem; font-weight: 800; text-transform: uppercase; }
+  .source-facts dd { margin-top: .3rem; overflow-wrap: anywhere; }
+  .technical-provenance { border-top: 1px solid var(--line); padding-top: .8rem; }
+  .technical-provenance summary { color: var(--forest); font-weight: 750; cursor: pointer; }
+  .technical-provenance .provenance-grid { margin-top: 1rem; }
+  .review-content-status { display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding: .8rem 1rem; border: 1px solid var(--line); border-radius: .65rem; background: var(--paper); }
+  .review-content-status span { color: var(--muted); }
+  .review-editor-label { display: block; }
+  #review-transcript-body { width: 100%; min-height: 65vh; padding: 1rem; font-family: Georgia, serif; font-size: 1.05rem; line-height: 1.75; }
+  #review-description-body { min-height: 16rem; padding: 1rem; font-size: 1rem; line-height: 1.65; }
+  .review-counts { margin: -.45rem 0 0; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .review-stage-actions, .review-decision-bar, .review-item-pager, .qa-order-actions { display: flex; flex-wrap: wrap; gap: .65rem; align-items: center; }
+  .review-stage-actions { justify-content: space-between; margin-top: 1.5rem; padding-top: 1.2rem; border-top: 1px solid var(--line); }
+  .review-decision-bar { position: sticky; bottom: 1rem; z-index: 4; padding: .8rem; border: 1px solid var(--line); border-radius: .75rem; background: rgba(255,255,255,.97); box-shadow: 0 .5rem 2rem rgba(0,0,0,.08); }
+  .review-item-toolbar { display: grid; grid-template-columns: repeat(2, minmax(9rem, 1fr)) auto; gap: .8rem; align-items: end; margin-bottom: 1rem; }
+  .review-item-toolbar p { margin: 0 0 .7rem; white-space: nowrap; }
+  .review-item-card { min-width: 0; padding: clamp(1rem, 2vw, 1.5rem); border: 1px solid #bfd1c7; border-radius: .85rem; background: #fbfdfc; }
+  .review-item-card > header { display: flex; justify-content: space-between; gap: 1rem; align-items: start; }
+  .review-item-card header p { margin: 0 0 .25rem; color: var(--forest); font-size: .72rem; font-weight: 800; text-transform: uppercase; }
+  .review-item-card h3 { margin: 0; font-family: Georgia, serif; font-size: 1.45rem; font-weight: 500; }
+  .review-item-guidance { color: var(--muted); line-height: 1.55; }
+  .review-context { margin: 1.2rem 0; padding: 1rem; border-left: .3rem solid var(--gold); border-radius: .5rem; background: #fffaf0; font-family: Georgia, serif; font-size: 1.05rem; line-height: 1.75; overflow-wrap: anywhere; }
+  .review-context mark { margin: 0 .18rem; padding: .08rem .2rem; border-radius: .2rem; background: #ffe29b; color: #432e07; font-weight: 700; }
+  .review-correction { display: block; margin: 1rem 0; }
+  .review-correction textarea { min-height: 9rem; }
+  .review-item-pager { justify-content: space-between; margin-top: 1rem; }
+  .review-qa-list { display: grid; gap: 1rem; margin-top: 1rem; }
+  .review-qa-card { display: grid; gap: 1rem; padding: clamp(1rem, 2vw, 1.4rem); border: 1px solid var(--line); border-radius: .85rem; background: #fbfcfb; }
+  .review-qa-card > header { display: flex; justify-content: space-between; gap: 1rem; align-items: start; }
+  .review-qa-card header p { margin: 0; color: var(--muted); font-size: .75rem; }
+  .review-qa-card h3 { margin: .2rem 0 0; font-family: Georgia, serif; font-size: 1.35rem; font-weight: 500; }
+  .review-qa-card textarea[name="question"] { min-height: 9rem; }
+  .review-qa-card textarea[name="answer"] { min-height: 16rem; }
+  .review-final-checklist li { align-items: flex-start; padding: .85rem 1rem; }
+  .review-final-checklist li > span { font-size: 1.1rem; font-weight: 900; }
+  .review-final-checklist strong, .review-final-checklist small { display: block; }
+  .review-final-checklist small { margin-top: .25rem; color: inherit; opacity: .82; line-height: 1.4; }
   .noscript { margin: 1rem; padding: 1rem; background: var(--danger-soft); }
   @media (max-width: 1120px) {
     .filters { grid-template-columns: repeat(3, minmax(0,1fr)); }
     .grid-two { grid-template-columns: 1fr; }
     .stats-grid.compact { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .review-workflow-layout { grid-template-columns: 1fr; }
+    .review-stage-nav { position: static; }
+    .review-stage-nav ol { grid-template-columns: repeat(3, minmax(0,1fr)); }
   }
   @media (max-width: 800px) {
     .admin-shell { grid-template-columns: 1fr; }
@@ -206,6 +279,11 @@ const pageTitle = "Local administration — Saving Grace Bible Church";
     .stats-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
     .filters, .form-grid { grid-template-columns: 1fr; }
     .form-grid .wide { grid-column: auto; }
+    .review-record-header { grid-template-columns: 1fr; align-items: start; }
+    .review-record-status { justify-items: start; text-align: left; }
+    .review-stage-nav ol, .review-form-grid, .source-facts, .review-item-toolbar { grid-template-columns: 1fr; }
+    .review-item-toolbar p { margin: 0; }
+    .review-decision-bar { position: static; }
   }
   @media (max-width: 480px) {
     main { padding: 1rem; }
@@ -215,6 +293,7 @@ const pageTitle = "Local administration — Saving Grace Bible Church";
     .stat-card strong { font-size: 1.55rem; }
     .button { width: 100%; }
     .form-actions .button, .action-row .button { width: auto; flex: 1 1 8rem; }
+    .review-stage-actions .button, .review-decision-bar .button, .review-item-pager .button, .qa-order-actions .button { width: 100%; }
     th, td { padding: .68rem .6rem; }
   }
   @media (prefers-reduced-motion: reduce) {

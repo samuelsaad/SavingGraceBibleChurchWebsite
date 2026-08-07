@@ -2,7 +2,9 @@
 
 ## Current boundary
 
-Phase 3B.2b is a provisional offline hardening of the private three-caption rehearsal. Its completion scope is derived from the committed Phase 3B.2 outcome and is limited to exactly the two records that returned `manual_punctuation_required`; the already-successful record and all other records are rejected. The hardened implementation has been exercised only with anonymised fixtures. No real private captions or workspace artifacts were inspected or processed during hardening, so private output, import, idempotency, timing, review and quality results remain pending a separately authorised rerun. The remaining 450 sermons and Phase 3C are out of scope.
+Phase 3B.2b remains limited to exactly the two records that the committed Phase 3B.2 outcome identified as `manual_punctuation_required`; the already-successful record and all other records remain excluded. The authorised exact-two private workflow produced and idempotently imported two draft enrichment sets. They remain private and unapproved. No conclusion about caption, Scripture or theological accuracy follows from import or automated verification. The remaining 450 sermons and Phase 3C are out of scope.
+
+Administrator review now uses the dedicated `/admin/sermons/:id/review` route. It presents identity/provenance, typed flagged items, transcript, description, ordered Q&A and final summary one stage at a time. A missing decision is pending, not accepted; unresolved/rejected items block transcript approval; transcript edits invalidate earlier transcript-bound decisions. Saving, viewing and finishing review never publish. The human administrator must explicitly confirm identities/dates, decide every item, approve each content area and separately decide whether to accept the bounded pilot result.
 
 ## Required outputs per included sermon
 
@@ -25,7 +27,7 @@ Manifest schema version 2 orders records by anonymised source WordPress ID and s
 
 ## Phase 3B.2 authorization prerequisite
 
-The provisional Phase 3B.2b hardening does not authorise a private rerun or larger batch. Before processing any of the remaining 450, separately authorise the real private pilot rerun, complete administrator review of its drafts and retained uncertainties, explicitly accept its bounded verified report and workload evidence, approve the next exact allowlist/batch, nominate reviewers/approvers, confirm source identities and dates, and reconfirm privacy/retention, retry/resume, correction/audit and rollback. Phase 3C remains paused.
+Phase 3B.2b does not authorise a larger batch. Before processing any of the remaining 450, Samuel must explicitly complete administrator review of both imported drafts and retained uncertainties, then explicitly accept the bounded verified report and workload evidence. A later authority must approve the next exact allowlist/batch, nominate reviewers/approvers, confirm source identities and dates, and reconfirm privacy/retention, retry/resume, correction/audit and rollback. Phase 3C remains paused.
 
 ## Pilot preparation boundary
 

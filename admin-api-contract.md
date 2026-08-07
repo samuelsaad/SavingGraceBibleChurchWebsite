@@ -62,6 +62,10 @@ GET    /api/v1/admin/sermons
 POST   /api/v1/admin/sermons
 GET    /api/v1/admin/sermons/:id
 PATCH  /api/v1/admin/sermons/:id
+GET    /api/v1/admin/sermons/:id/review
+PATCH  /api/v1/admin/sermons/:id/review/progress
+POST   /api/v1/admin/sermons/:id/review/items/:itemId/decision
+POST   /api/v1/admin/sermons/:id/review/finish
 POST   /api/v1/admin/sermons/:id/submit
 POST   /api/v1/admin/sermons/:id/withdraw
 POST   /api/v1/admin/sermons/:id/schedule
@@ -96,7 +100,9 @@ Public `/api/v1/sermons` selects only non-deleted `published` records. List resp
 
 ## Dashboard contract
 
-The static Astro dashboard is served by the local Node harness at `/admin` only when `ENABLE_LOCAL_DASHBOARD=1`. It opens with a visible anonymised-demonstration notice and aggregate completion progress. Editing remains six steps: (1) basics with **Sermon description**, character feedback, lifecycle state and review/approval actions, (2) speaker and scripture, (3) media, (4) full transcript, (5) questions and answers, and (6) review and publish. It provides missing/awaiting-review filters, description progress/checklist, accessible announcements, validation/concurrency feedback, taxonomy/audit/SEO safeguards and keyboard-accessible controls.
+The static Astro dashboard is served by the local Node harness at `/admin` only when `ENABLE_LOCAL_DASHBOARD=1`. It opens with a visible anonymised-demonstration notice and aggregate completion progress. The general sermon editor retains the existing lifecycle and relationship controls for sermons without imported enrichment.
+
+Imported enrichment drafts use `/admin/sermons/:id/review`, not the all-in-one lifecycle form. That route renders one of six stages at a time: identity/provenance, flagged items, transcript, description, ordered Q&A and final summary. It stores progress for pause/resume, renders epoch dates blank/unresolved, collapses technical provenance by default, provides large responsive transcript/Q&A controls, and requires explicit save/accept/correct/unresolved/reject/approve/finish actions. An unsaved-change warning precedes navigation. The route contains no submit, schedule, publish, archive or deletion action.
 
 The shell is labelled local-development-only, sends no remote requests, receives `X-Robots-Tag: noindex`, and is served with restrictive content/security headers. Navigation, forms, dialogs, tables, live status feedback, visible focus, reduced-motion support, and mobile/tablet/desktop layouts use semantic accessible controls. The interface does not duplicate service authorization or lifecycle decisions.
 
@@ -110,4 +116,6 @@ Migration `0005` persists only the controlled optional `seoDescription` override
 
 Admin sermon detail may include a private `enrichmentSource` object when a draft came from the controlled caption pilot. It exposes only canonical video identity, caption language/track type, original filename, SHA-256, authorised-export attribution, aggregate source/cleaned counts, processing version/timestamps/duration, safe warning codes, unresolved marker identifiers, review estimate, and the fixed `required` human-accuracy state. It never appears in public API responses or search documents and never includes source caption text, credentials, cookies or tokens.
 
-The six-step editor displays this evidence and warnings before the transcript field. Reviewing the provenance, transcript, description and each Q&A is possible without changing status. Moving any area to in-review or approved remains a separate explicit administrator action that records the administrator subject and timestamp. The local pilot importer has no approval capability and never impersonates the administrator.
+Migration `0007` converts private warning/unresolved markers into typed caption/name/Scripture review items with pending-by-default decisions, transcript-row association, row versions, decision actor/timestamp and persistent review progress. The dedicated review route shows enough private context for administrator decisions but never logs that context. Accepted or corrected are the only decisions that resolve a blocking item; left-unresolved and rejected remain explicit blockers. Transcript text changes reset prior transcript-bound decisions to pending. Review completion requires confirmed identity/date/provenance, resolved items, approved transcript/description/5–10 ordered Q&A, controlled media and a sermon that remains draft.
+
+Viewing, navigation and saving never change approval. Each approval and review-item decision is a separate server-authorised action with optimistic concurrency and audit. The local pilot importer has no approval capability and never impersonates the administrator. Review source/items never appear in public APIs, public search or readiness content.

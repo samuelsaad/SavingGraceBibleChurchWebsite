@@ -26,6 +26,15 @@ export const transcriptStatusSchema = z.enum(["missing", "draft", "in_review", "
 export const descriptionStatusSchema = z.enum(["missing", "draft", "in_review", "approved"]);
 export const descriptionSourceKindSchema = z.enum(["manual", "imported", "generated_draft"]);
 export const questionAnswerStatusSchema = z.enum(["draft", "in_review", "approved"]);
+export const enrichmentReviewIdentityStatusSchema = z.enum(["pending", "confirmed"]);
+export const enrichmentReviewItemCategorySchema = z.enum(["caption_error", "name", "scripture"]);
+export const enrichmentReviewItemDecisionSchema = z.enum([
+  "pending",
+  "accepted",
+  "corrected",
+  "left_unresolved",
+  "rejected"
+]);
 
 export const transcriptInputSchema = z.object({
   bodyText: safePlainText(500_000),
@@ -358,6 +367,86 @@ export const adminSermonDetailSchema = adminSermonSummarySchema.extend({
 });
 export type AdminSermonDetail = z.infer<typeof adminSermonDetailSchema>;
 
+export const enrichmentReviewProgressInputSchema = z.object({
+  sermonRowVersion: z.number().int().positive(),
+  reviewRowVersion: z.number().int().positive(),
+  currentStage: z.number().int().min(1).max(6),
+  identityStatus: enrichmentReviewIdentityStatusSchema.optional()
+}).strict();
+export type EnrichmentReviewProgressInput = z.infer<typeof enrichmentReviewProgressInputSchema>;
+
+export const enrichmentReviewItemDecisionInputSchema = z.object({
+  sermonRowVersion: z.number().int().positive(),
+  reviewRowVersion: z.number().int().positive(),
+  itemRowVersion: z.number().int().positive(),
+  transcriptRowVersion: z.number().int().positive(),
+  decision: enrichmentReviewItemDecisionSchema.exclude(["pending"]),
+  correctionText: safePlainText(1_000).trim().min(1).optional()
+}).strict().superRefine((value, context) => {
+  if (value.decision === "corrected" && !value.correctionText) {
+    context.addIssue({
+      code: "custom",
+      path: ["correctionText"],
+      message: "Enter the reviewed correction"
+    });
+  }
+  if (value.decision !== "corrected" && value.correctionText !== undefined) {
+    context.addIssue({
+      code: "custom",
+      path: ["correctionText"],
+      message: "Correction text is accepted only for a correction decision"
+    });
+  }
+});
+export type EnrichmentReviewItemDecisionInput = z.infer<typeof enrichmentReviewItemDecisionInputSchema>;
+
+export const finishEnrichmentReviewInputSchema = z.object({
+  sermonRowVersion: z.number().int().positive(),
+  reviewRowVersion: z.number().int().positive()
+}).strict();
+export type FinishEnrichmentReviewInput = z.infer<typeof finishEnrichmentReviewInputSchema>;
+
+export const enrichmentReviewItemResponseSchema = z.object({
+  id: z.uuid(),
+  category: enrichmentReviewItemCategorySchema,
+  displayOrder: z.number().int().positive(),
+  label: z.string(),
+  guidance: z.string(),
+  sourceMarker: z.string().nullable(),
+  decisionStatus: enrichmentReviewItemDecisionSchema,
+  correctionText: z.string().nullable(),
+  transcriptRowVersion: z.number().int().positive(),
+  decidedAt: z.iso.datetime().nullable(),
+  rowVersion: z.number().int().positive(),
+  context: z.object({
+    before: z.string(),
+    flagged: z.string(),
+    after: z.string()
+  }).nullable()
+});
+
+export const enrichmentReviewResponseSchema = z.object({
+  sermon: adminSermonDetailSchema,
+  recordPosition: z.number().int().positive(),
+  recordCount: z.number().int().positive(),
+  review: z.object({
+    identityStatus: enrichmentReviewIdentityStatusSchema,
+    currentStage: z.number().int().min(1).max(6),
+    completedAt: z.iso.datetime().nullable(),
+    rowVersion: z.number().int().positive()
+  }),
+  items: z.array(enrichmentReviewItemResponseSchema),
+  progress: z.object({
+    resolvedItemCount: z.number().int().nonnegative(),
+    unresolvedItemCount: z.number().int().nonnegative(),
+    totalItemCount: z.number().int().nonnegative(),
+    completedStageCount: z.number().int().min(0).max(6),
+    percentReviewed: z.number().int().min(0).max(100),
+    canFinish: z.boolean()
+  })
+});
+export type EnrichmentReviewResponse = z.infer<typeof enrichmentReviewResponseSchema>;
+
 export const adminSermonListResponseSchema = z.object({
   data: z.array(adminSermonSummarySchema),
   countsByStatus: z.object({
@@ -484,6 +573,12 @@ export const adminSermonApiContracts = {
   permanentDelete: {
     method: "POST",
     path: "/api/v1/admin/sermons/:id/permanent-delete"
+  },
+  enrichmentReview: {
+    detail: { method: "GET", path: "/api/v1/admin/sermons/:id/review" },
+    progress: { method: "PATCH", path: "/api/v1/admin/sermons/:id/review/progress" },
+    itemDecision: { method: "POST", path: "/api/v1/admin/sermons/:id/review/items/:itemId/decision" },
+    finish: { method: "POST", path: "/api/v1/admin/sermons/:id/review/finish" }
   },
   audit: { method: "GET", path: "/api/v1/admin/sermons/:id/audit", roles: ["admin"] },
   auditHistory: { method: "GET", path: "/api/v1/admin/audit", roles: ["admin"] },

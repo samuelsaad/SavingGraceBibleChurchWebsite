@@ -80,6 +80,27 @@ describe("PostgreSQL schema contract", () => {
     expect(down).toContain("DROP TABLE IF EXISTS sermon_enrichment_sources");
   });
 
+  it("stores reversible typed guided-review state with fail-closed pending decisions", async () => {
+    const [up, down] = await Promise.all([
+      readFile("db/migrations/0007_guided_sermon_review.sql", "utf8"),
+      readFile("db/migrations/0007_guided_sermon_review.down.sql", "utf8")
+    ]);
+    expect(up).toContain("CREATE TABLE sermon_enrichment_reviews");
+    expect(up).toContain("CREATE TABLE sermon_enrichment_review_items");
+    expect(up).toContain("identity_status text NOT NULL DEFAULT 'pending'");
+    expect(up).toContain("decision_status text NOT NULL DEFAULT 'pending'");
+    expect(up).toContain("transcript_row_version integer NOT NULL");
+    expect(up).toContain("decided_by_subject text");
+    expect(up).toContain("sermon_enrichment_sources_seed_review");
+    expect(up).toContain("sermon_transcripts_seed_enrichment_review");
+    expect(up).toContain("IF NOT EXISTS (\n    SELECT 1 FROM sermon_enrichment_sources");
+    expect(up).toContain("caption_item_count + 1");
+    expect(up).toContain("caption_item_count + 2");
+    expect(up).not.toMatch(/DEFAULT\s+'accepted'/i);
+    expect(down).toContain("DROP TABLE IF EXISTS sermon_enrichment_review_items");
+    expect(down).toContain("DROP TABLE IF EXISTS sermon_enrichment_reviews");
+  });
+
   it("has an explicit reversible local rollback", async () => {
     const down = await readFile("db/migrations/0001_initial.down.sql", "utf8");
     expect(down).toContain("DROP TABLE IF EXISTS sermons");

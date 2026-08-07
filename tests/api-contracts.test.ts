@@ -5,6 +5,9 @@ import {
   applicationRoleSchema,
   controlledMediaInputSchema,
   createSermonInputSchema,
+  enrichmentReviewItemDecisionInputSchema,
+  enrichmentReviewProgressInputSchema,
+  finishEnrichmentReviewInputSchema,
   permanentlyDeleteSermonInputSchema,
   updateSermonInputSchema
 } from "../src/api/contracts/admin-sermons";
@@ -96,6 +99,45 @@ describe("admin sermon API contract", () => {
       rowVersion: 1,
       title: "Updated"
     });
+  });
+
+  it("requires explicit, versioned guided-review progress and item decisions", () => {
+    expect(enrichmentReviewProgressInputSchema.parse({
+      sermonRowVersion: 3,
+      reviewRowVersion: 2,
+      currentStage: 4,
+      identityStatus: "confirmed"
+    })).toMatchObject({ currentStage: 4, identityStatus: "confirmed" });
+    expect(() => enrichmentReviewProgressInputSchema.parse({
+      sermonRowVersion: 3,
+      reviewRowVersion: 2,
+      currentStage: 7
+    })).toThrow();
+    expect(() => enrichmentReviewItemDecisionInputSchema.parse({
+      sermonRowVersion: 3,
+      reviewRowVersion: 2,
+      itemRowVersion: 1,
+      transcriptRowVersion: 5,
+      decision: "pending"
+    })).toThrow();
+    expect(() => enrichmentReviewItemDecisionInputSchema.parse({
+      sermonRowVersion: 3,
+      reviewRowVersion: 2,
+      itemRowVersion: 1,
+      transcriptRowVersion: 5,
+      decision: "corrected"
+    })).toThrow("Enter the reviewed correction");
+    expect(enrichmentReviewItemDecisionInputSchema.parse({
+      sermonRowVersion: 3,
+      reviewRowVersion: 2,
+      itemRowVersion: 1,
+      transcriptRowVersion: 5,
+      decision: "left_unresolved"
+    })).toMatchObject({ decision: "left_unresolved" });
+    expect(finishEnrichmentReviewInputSchema.parse({
+      sermonRowVersion: 3,
+      reviewRowVersion: 2
+    })).toEqual({ sermonRowVersion: 3, reviewRowVersion: 2 });
   });
 
   it("always creates a draft and rejects arbitrary status input", () => {

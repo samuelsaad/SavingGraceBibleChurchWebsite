@@ -1,7 +1,7 @@
 # Advanced Sermons Migration Contract
 
-**Version:** 1.4
-**Status:** Phase 3B.2b offline workflow provisionally hardened with anonymised fixtures; real private rerun, production execution and the remaining 450 sermons are not approved
+**Version:** 1.5
+**Status:** Exact-two private Phase 3B.2b drafts imported; guided administrator review implemented; production execution and the remaining 450 sermons are not approved
 
 ## 1. Source boundary
 
@@ -87,6 +87,8 @@ Each untouched source value becomes a `scripture_reference_sources` row:
 - A differing draft import must refuse to overwrite any approved description, approved transcript, or approved Q&A content. Identical approved content is preserved rather than downgraded.
 - Initial caption preparation is local-file-only and verifies that the retained case-insensitive word sequence is unchanged. The provisional Phase 3B.2b path derives exactly two eligible records from the committed Phase 3B.2 result and rejects the successful or unknown records. It uses stable, non-overlapping chunks of at most 450 lexical tokens with source/output hashes and exact ordering. Source and cleaned text are normalised to Unicode NFC, independently tokenised on whitespace, stripped of Unicode punctuation within each token and case-folded. Any token count, boundary, order or content mismatch—including splitting or merging—or any missing, duplicated or reordered chunk discards the whole sermon before persistence.
 - Local pilot rows use `source_system = 'phase3b2_pilot'`; historical readiness continues to count only approved `wordpress` migration records.
+- Imported enrichment reviews use private typed state/items from migration `0007`. Review-item decisions begin `pending`, retain transcript row version and administrator attribution, and require optimistic row versions. Only accepted/corrected resolve a blocker; left-unresolved/rejected remain blockers. Transcript text changes invalidate prior transcript-bound decisions.
+- The dedicated review completion action requires confirmed identity/date/provenance, resolved items, approved transcript/description/5–10 Q&A, valid media and a sermon still in `draft`. Completion is neither publication approval nor a lifecycle transition. No review view, navigation or draft save implies approval.
 
 ## 9. Search and API contract
 

@@ -10,6 +10,9 @@ describe("local dashboard static routing", () => {
     expect(resolveLocalDashboardAsset("/admin/sermons/example", root)).toBe(
       resolve(root, "admin/index.html")
     );
+    expect(resolveLocalDashboardAsset("/admin/sermons/example/review", root)).toBe(
+      resolve(root, "admin/index.html")
+    );
     expect(resolveLocalDashboardAsset("/_astro/dashboard.js", root)).toBe(
       resolve(root, "_astro/dashboard.js")
     );

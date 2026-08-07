@@ -12,7 +12,8 @@ export type SchemaMigrationScope =
   | "0003_single_admin_deletion_seo"
   | "0004_sermon_enrichment_readiness"
   | "0005_approved_sermon_descriptions"
-  | "0006_phase3b2_pilot_provenance";
+  | "0006_phase3b2_pilot_provenance"
+  | "0007_guided_sermon_review";
 
 interface SchemaMigrationDefinition {
   id: string;
@@ -147,6 +148,24 @@ export const schemaMigrationDefinitions: readonly SchemaMigrationDefinition[] = 
     upPath: "db/migrations/0006_phase3b2_pilot_provenance.sql",
     downPath: "db/migrations/0006_phase3b2_pilot_provenance.down.sql",
     addedRelations: ["sermon_enrichment_sources"]
+  },
+  {
+    id: "0007_guided_sermon_review",
+    order: 7,
+    upPath: "db/migrations/0007_guided_sermon_review.sql",
+    downPath: "db/migrations/0007_guided_sermon_review.down.sql",
+    addedRelations: [
+      "sermon_enrichment_reviews",
+      "sermon_enrichment_review_items"
+    ],
+    addedFunctions: [
+      "seed_sermon_enrichment_review(uuid)",
+      "seed_sermon_enrichment_review_from_source()"
+    ],
+    addedTriggers: [
+      "sermon_enrichment_sources_seed_review",
+      "sermon_transcripts_seed_enrichment_review"
+    ]
   }
 ] as const;
 

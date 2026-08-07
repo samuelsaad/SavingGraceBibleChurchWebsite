@@ -16,6 +16,9 @@ import type {
   AuditEventInput,
   DeletionTombstoneDto,
   DeletionTombstoneInput,
+  EnrichmentReviewItemDto,
+  EnrichmentReviewStateDto,
+  EnrichmentReviewWorkflowDto,
   StoredSermonDetail,
   StoredSermonPage,
   StoredSermonSummary,
@@ -69,6 +72,27 @@ type SermonRow = QueryResultRow & {
 
 const timestamp = (column: string): string =>
   `to_char(${column} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')`;
+
+const enrichmentReviewStateProjection = `
+  review.sermon_id AS "sermonId",
+  review.identity_status AS "identityStatus",
+  review.current_stage AS "currentStage",
+  CASE WHEN review.completed_at IS NULL THEN NULL ELSE ${timestamp("review.completed_at")} END AS "completedAt",
+  review.row_version AS "rowVersion"`;
+
+const enrichmentReviewItemProjection = `
+  item.id,
+  item.sermon_id AS "sermonId",
+  item.category,
+  item.display_order AS "displayOrder",
+  item.label,
+  item.guidance,
+  item.source_marker AS "sourceMarker",
+  item.decision_status AS "decisionStatus",
+  item.correction_text AS "correctionText",
+  item.transcript_row_version AS "transcriptRowVersion",
+  CASE WHEN item.decided_at IS NULL THEN NULL ELSE ${timestamp("item.decided_at")} END AS "decidedAt",
+  item.row_version AS "rowVersion"`;
 
 const sermonSummaryProjection = `
   s.id,
@@ -819,6 +843,212 @@ class PostgresAdminSermonTransaction implements AdminSermonTransaction {
     await this.client.query("SELECT refresh_sermon_enrichment($1)", [id]);
   }
 
+  async findEnrichmentReviewForUpdate(
+    sermonId: string
+  ): Promise<EnrichmentReviewStateDto | null> {
+    const result = await this.client.query(
+      `SELECT ${enrichmentReviewStateProjection}
+       FROM sermon_enrichment_reviews review
+       WHERE review.sermon_id = $1
+       FOR UPDATE OF review`,
+      [sermonId]
+    );
+    return (result.rows[0] as EnrichmentReviewStateDto | undefined) ?? null;
+  }
+
+  async findEnrichmentReviewItemForUpdate(
+    sermonId: string,
+    itemId: string
+  ): Promise<EnrichmentReviewItemDto | null> {
+    const result = await this.client.query(
+      `SELECT ${enrichmentReviewItemProjection}
+       FROM sermon_enrichment_review_items item
+       WHERE item.sermon_id = $1 AND item.id = $2
+       FOR UPDATE OF item`,
+      [sermonId, itemId]
+    );
+    return (result.rows[0] as EnrichmentReviewItemDto | undefined) ?? null;
+  }
+
+  async updateEnrichmentReviewProgress(
+    sermonId: string,
+    input: import("../../api/contracts/admin-sermons").EnrichmentReviewProgressInput,
+    actorSubject: string
+  ): Promise<void> {
+    await this.client.query(
+      `UPDATE sermon_enrichment_reviews
+       SET current_stage = $2,
+           identity_status = COALESCE($3, identity_status),
+           completed_by_subject = CASE WHEN $3 = 'pending' THEN NULL ELSE completed_by_subject END,
+           completed_at = CASE WHEN $3 = 'pending' THEN NULL ELSE completed_at END,
+           updated_at = now(),
+           updated_by_subject = $4,
+           row_version = row_version + 1
+       WHERE sermon_id = $1`,
+      [sermonId, input.currentStage, input.identityStatus ?? null, actorSubject]
+    );
+  }
+
+  async updateEnrichmentReviewItemDecision(
+    itemId: string,
+    input: import("../../api/contracts/admin-sermons").EnrichmentReviewItemDecisionInput,
+    transcriptRowVersion: number,
+    actorSubject: string
+  ): Promise<void> {
+    await this.client.query(
+      `UPDATE sermon_enrichment_review_items
+       SET decision_status = $2,
+           correction_text = $3,
+           transcript_row_version = $4,
+           decided_by_subject = $5,
+           decided_at = now(),
+           updated_at = now(),
+           row_version = row_version + 1
+       WHERE id = $1`,
+      [
+        itemId,
+        input.decision,
+        input.decision === "corrected" ? input.correctionText : null,
+        transcriptRowVersion,
+        actorSubject
+      ]
+    );
+    await this.client.query(
+      `UPDATE sermon_enrichment_reviews
+       SET completed_by_subject = NULL,
+           completed_at = NULL,
+           updated_at = now(),
+           updated_by_subject = $2,
+           row_version = row_version + 1
+       WHERE sermon_id = (SELECT sermon_id FROM sermon_enrichment_review_items WHERE id = $1)`,
+      [itemId, actorSubject]
+    );
+  }
+
+  async resetEnrichmentReviewItemsForTranscriptChange(
+    sermonId: string,
+    transcriptRowVersion: number,
+    exceptItemId: string | null,
+    actorSubject: string
+  ): Promise<void> {
+    await this.client.query(
+      `UPDATE sermon_enrichment_review_items
+       SET decision_status = 'pending',
+           correction_text = NULL,
+           transcript_row_version = $2,
+           decided_by_subject = NULL,
+           decided_at = NULL,
+           updated_at = now(),
+           row_version = row_version + 1
+       WHERE sermon_id = $1
+         AND ($3::uuid IS NULL OR id <> $3::uuid)`,
+      [sermonId, transcriptRowVersion, exceptItemId]
+    );
+    await this.client.query(
+      `UPDATE sermon_enrichment_reviews
+       SET current_stage = 2,
+           completed_by_subject = NULL,
+           completed_at = NULL,
+           updated_at = now(),
+           updated_by_subject = $2,
+           row_version = row_version + 1
+       WHERE sermon_id = $1`,
+      [sermonId, actorSubject]
+    );
+  }
+
+  async alignEnrichmentReviewItemsWithTranscriptVersion(
+    sermonId: string,
+    transcriptRowVersion: number,
+    actorSubject: string
+  ): Promise<void> {
+    const items = await this.client.query(
+      `UPDATE sermon_enrichment_review_items
+       SET transcript_row_version = $2,
+           updated_at = now(),
+           row_version = row_version + 1
+       WHERE sermon_id = $1
+         AND transcript_row_version <> $2
+       RETURNING id`,
+      [sermonId, transcriptRowVersion]
+    );
+    if (items.rowCount) {
+      await this.client.query(
+        `UPDATE sermon_enrichment_reviews
+         SET updated_at = now(),
+             updated_by_subject = $2,
+             row_version = row_version + 1
+         WHERE sermon_id = $1`,
+        [sermonId, actorSubject]
+      );
+    }
+  }
+
+  async reopenEnrichmentReview(
+    sermonId: string,
+    identityChanged: boolean,
+    actorSubject: string
+  ): Promise<void> {
+    await this.client.query(
+      `UPDATE sermon_enrichment_reviews
+       SET identity_status = CASE WHEN $2 THEN 'pending' ELSE identity_status END,
+           current_stage = CASE WHEN $2 THEN 1 ELSE current_stage END,
+           completed_by_subject = NULL,
+           completed_at = NULL,
+           updated_at = now(),
+           updated_by_subject = $3,
+           row_version = row_version + 1
+       WHERE sermon_id = $1
+         AND (completed_at IS NOT NULL OR ($2 AND identity_status = 'confirmed'))`,
+      [sermonId, identityChanged, actorSubject]
+    );
+  }
+
+  async completeEnrichmentReview(sermonId: string, actorSubject: string): Promise<void> {
+    await this.client.query(
+      `UPDATE sermon_enrichment_reviews
+       SET current_stage = 6,
+           completed_by_subject = $2,
+           completed_at = now(),
+           updated_at = now(),
+           updated_by_subject = $2,
+           row_version = row_version + 1
+       WHERE sermon_id = $1`,
+      [sermonId, actorSubject]
+    );
+  }
+
+  async hasBlockingEnrichmentReviewItems(
+    sermonId: string,
+    transcriptRowVersion: number | null
+  ): Promise<boolean> {
+    const result = await this.client.query<{ blocking: boolean }>(
+      `SELECT EXISTS (
+         SELECT 1
+         FROM sermon_enrichment_review_items item
+         WHERE item.sermon_id = $1
+           AND (
+             item.decision_status NOT IN ('accepted', 'corrected')
+             OR $2::integer IS NULL
+             OR item.transcript_row_version <> $2
+           )
+       ) AS blocking`,
+      [sermonId, transcriptRowVersion]
+    );
+    return result.rows[0]?.blocking ?? false;
+  }
+
+  async touchSermon(id: string, actorSubject: string): Promise<void> {
+    await this.client.query(
+      `UPDATE sermons
+       SET updated_by_subject = $2,
+           updated_at = now(),
+           row_version = row_version + 1
+       WHERE id = $1`,
+      [id, actorSubject]
+    );
+  }
+
   async insertTaxonomy(kind: TaxonomyKind, input: TaxonomyWriteInput): Promise<TaxonomyDto> {
     const config = taxonomyConfiguration[kind];
     let result;
@@ -1064,6 +1294,45 @@ export class PostgresAdminSermonRepository implements AdminSermonRepository {
     );
     const row = result.rows[0] as SermonRow | undefined;
     return row ? detailFromRow(row) : null;
+  }
+
+  async findEnrichmentReview(sermonId: string): Promise<EnrichmentReviewWorkflowDto | null> {
+    const state = await this.pool.query(
+      `SELECT ${enrichmentReviewStateProjection}
+       FROM sermon_enrichment_reviews review
+       WHERE review.sermon_id = $1`,
+      [sermonId]
+    );
+    if (!state.rows[0]) return null;
+    const [items, position] = await Promise.all([
+      this.pool.query(
+        `SELECT ${enrichmentReviewItemProjection}
+         FROM sermon_enrichment_review_items item
+         WHERE item.sermon_id = $1
+         ORDER BY item.display_order, item.id`,
+        [sermonId]
+      ),
+      this.pool.query<{ record_position: number; record_count: number }>(
+        `SELECT ranked.record_position, ranked.record_count
+         FROM (
+           SELECT review.sermon_id,
+                  row_number() OVER (ORDER BY sermon.source_wordpress_id, review.sermon_id)::integer AS record_position,
+                  count(*) OVER ()::integer AS record_count
+           FROM sermon_enrichment_reviews review
+           JOIN sermons sermon ON sermon.id = review.sermon_id
+         ) ranked
+         WHERE ranked.sermon_id = $1`,
+        [sermonId]
+      )
+    ]);
+    const ranked = position.rows[0];
+    if (!ranked) return null;
+    return {
+      state: state.rows[0] as EnrichmentReviewStateDto,
+      items: items.rows as EnrichmentReviewItemDto[],
+      recordPosition: ranked.record_position,
+      recordCount: ranked.record_count
+    };
   }
 
   async hasSermonOrTombstone(id: string): Promise<boolean> {

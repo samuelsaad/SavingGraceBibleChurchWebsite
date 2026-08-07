@@ -4,11 +4,16 @@ import {
   adminAuditHistoryResponseSchema,
   auditEventResponseSchema,
   deletionTombstoneResponseSchema,
+  enrichmentReviewResponseSchema,
   permanentDeletionResultSchema,
   taxonomyResponseSchema,
   type AdminSermonDetail,
   type AdminSermonListQuery,
   type CreateSermonInput,
+  type EnrichmentReviewItemDecisionInput,
+  type EnrichmentReviewProgressInput,
+  type EnrichmentReviewResponse,
+  type FinishEnrichmentReviewInput,
   type PermanentlyDeleteSermonInput,
   type SermonStateAction,
   type SermonTransitionInput,
@@ -30,6 +35,7 @@ import { isFutureSchedule, transitionSermonStatus } from "./sermon-lifecycle";
 import type {
   AdminSermonRepository,
   AuditEventInput,
+  EnrichmentReviewWorkflowDto,
   StoredSermonDetail,
   StoredSermonSummary,
   TaxonomyUpdateInput,
@@ -99,6 +105,73 @@ function successfulAudit(
   };
 }
 
+function reviewItemContext(
+  transcript: string,
+  marker: string | null
+): { before: string; flagged: string; after: string } | null {
+  if (!marker) return null;
+  const index = transcript.indexOf(marker);
+  if (index < 0) return null;
+  const contextLength = 220;
+  return {
+    before: transcript.slice(Math.max(0, index - contextLength), index).trimStart(),
+    flagged: marker,
+    after: transcript.slice(index + marker.length, index + marker.length + contextLength).trimEnd()
+  };
+}
+
+function enrichmentReviewDto(
+  sermon: StoredSermonDetail,
+  workflow: EnrichmentReviewWorkflowDto
+): EnrichmentReviewResponse {
+  const transcript = sermon.transcript?.bodyText ?? "";
+  const resolvedItemCount = workflow.items.filter((item) =>
+    item.decisionStatus === "accepted" || item.decisionStatus === "corrected"
+  ).length;
+  const unresolvedItemCount = workflow.items.length - resolvedItemCount;
+  const stageComplete = [
+    workflow.state.identityStatus === "confirmed",
+    unresolvedItemCount === 0,
+    sermon.transcript?.status === "approved",
+    sermon.summaryStatus === "approved",
+    sermon.questionAnswers.length >= 5 &&
+      sermon.questionAnswers.length <= 10 &&
+      sermon.questionAnswers.every((item) => item.status === "approved"),
+    workflow.state.completedAt !== null
+  ];
+  const completedStageCount = stageComplete.filter(Boolean).length;
+  const canFinish =
+    stageComplete.slice(0, 5).every(Boolean) &&
+    sermon.readiness.hasValidControlledMedia &&
+    sermon.status === "draft";
+  return enrichmentReviewResponseSchema.parse({
+    sermon: sermonDetailDto(sermon),
+    recordPosition: workflow.recordPosition,
+    recordCount: workflow.recordCount,
+    review: {
+      identityStatus: workflow.state.identityStatus,
+      currentStage: workflow.state.currentStage,
+      completedAt: workflow.state.completedAt,
+      rowVersion: workflow.state.rowVersion
+    },
+    items: workflow.items.map((item) => ({
+      ...item,
+      context: reviewItemContext(
+        transcript,
+        item.decisionStatus === "corrected" ? item.correctionText : item.sourceMarker
+      )
+    })),
+    progress: {
+      resolvedItemCount,
+      unresolvedItemCount,
+      totalItemCount: workflow.items.length,
+      completedStageCount,
+      percentReviewed: Math.round((completedStageCount / 6) * 100),
+      canFinish
+    }
+  });
+}
+
 function assertTaxonomyShape(
   kind: TaxonomyKind,
   input: {
@@ -145,6 +218,227 @@ export class AdminSermonService {
     if (!sermon) notFound("Sermon was not found");
     assertMayReadSermon(identity, sermon);
     return sermonDetailDto(sermon);
+  }
+
+  async enrichmentReviewDetail(
+    id: string,
+    identity: ApplicationIdentity
+  ): Promise<EnrichmentReviewResponse> {
+    assertAdminAccess(identity);
+    const [sermon, workflow] = await Promise.all([
+      this.repository.findSermon(id),
+      this.repository.findEnrichmentReview(id)
+    ]);
+    if (!sermon) notFound("Sermon was not found");
+    assertMayReadSermon(identity, sermon);
+    if (!workflow || !sermon.enrichmentSource) {
+      notFound("A guided enrichment review is not available for this sermon");
+    }
+    return enrichmentReviewDto(sermon, workflow);
+  }
+
+  async updateEnrichmentReviewProgress(
+    id: string,
+    input: EnrichmentReviewProgressInput,
+    identity: ApplicationIdentity,
+    requestCorrelationId: string
+  ): Promise<EnrichmentReviewResponse> {
+    assertAdminAccess(identity);
+    await this.repository.transaction(async (transaction) => {
+      const sermon = await transaction.findSermonForUpdate(id);
+      if (!sermon) notFound("Sermon was not found");
+      if (sermon.rowVersion !== input.sermonRowVersion) conflict();
+      assertMayEditSermon(identity, sermon);
+      const review = await transaction.findEnrichmentReviewForUpdate(id);
+      if (!review) notFound("A guided enrichment review is not available for this sermon");
+      if (review.rowVersion !== input.reviewRowVersion) conflict();
+      if (input.identityStatus === "confirmed") {
+        if (!sermon.speaker) {
+          invalid("speakerId", "Choose and verify the sermon speaker before confirming identity");
+        }
+        if (sermon.serviceDate === "1970-01-01") {
+          invalid("serviceDate", "Enter the verified service date before confirming identity");
+        }
+      }
+      await transaction.updateEnrichmentReviewProgress(id, input, identity.subject);
+      if (input.identityStatus && input.identityStatus !== review.identityStatus) {
+        await transaction.appendAudit(
+          successfulAudit(
+            identity,
+            input.identityStatus === "confirmed"
+              ? "sermon.enrichment_identity_confirmed"
+              : "sermon.enrichment_identity_reopened",
+            "sermon",
+            id,
+            ["enrichmentReview.identityStatus"],
+            requestCorrelationId
+          )
+        );
+      }
+    });
+    return this.enrichmentReviewDetail(id, identity);
+  }
+
+  async decideEnrichmentReviewItem(
+    id: string,
+    itemId: string,
+    input: EnrichmentReviewItemDecisionInput,
+    identity: ApplicationIdentity,
+    requestCorrelationId: string
+  ): Promise<EnrichmentReviewResponse> {
+    assertAdminAccess(identity);
+    await this.repository.transaction(async (transaction) => {
+      const sermon = await transaction.findSermonForUpdate(id);
+      if (!sermon) notFound("Sermon was not found");
+      if (sermon.rowVersion !== input.sermonRowVersion) conflict();
+      assertMayEditSermon(identity, sermon);
+      const review = await transaction.findEnrichmentReviewForUpdate(id);
+      if (!review) notFound("A guided enrichment review is not available for this sermon");
+      if (review.rowVersion !== input.reviewRowVersion) conflict();
+      const item = await transaction.findEnrichmentReviewItemForUpdate(id, itemId);
+      if (!item) notFound("Review item was not found");
+      if (item.rowVersion !== input.itemRowVersion) conflict();
+      const transcript = sermon.transcript;
+      if (!transcript || transcript.rowVersion !== input.transcriptRowVersion) conflict();
+      if (item.transcriptRowVersion !== transcript.rowVersion) conflict();
+
+      let resultingTranscriptRowVersion = transcript.rowVersion;
+      let transcriptChanged = false;
+      if (input.decision === "corrected") {
+        const marker = item.sourceMarker;
+        const correction = input.correctionText!;
+        if (!marker) {
+          invalid(
+            "correctionText",
+            "This general review item has no exact passage; make the edit in the transcript stage"
+          );
+        }
+        if (marker.trim() === correction.trim()) {
+          invalid("correctionText", "The correction must change the flagged wording");
+        }
+        const occurrenceCount = transcript.bodyText.split(marker).length - 1;
+        if (occurrenceCount !== 1) {
+          invalid(
+            "correctionText",
+            "The flagged wording is not unique in this transcript; edit it in the transcript stage"
+          );
+        }
+        await transaction.replaceRelationships(
+          id,
+          {
+            transcript: {
+              bodyText: transcript.bodyText.replace(marker, correction),
+              status: "draft",
+              sourceKind: transcript.sourceKind,
+              sourceReference: transcript.sourceReference
+            }
+          },
+          identity.subject
+        );
+        await transaction.touchSermon(id, identity.subject);
+        resultingTranscriptRowVersion += 1;
+        transcriptChanged = true;
+        await transaction.resetEnrichmentReviewItemsForTranscriptChange(
+          id,
+          resultingTranscriptRowVersion,
+          itemId,
+          identity.subject
+        );
+      } else if (input.decision === "rejected" && transcript.status !== "draft") {
+        await transaction.replaceRelationships(
+          id,
+          {
+            transcript: {
+              bodyText: transcript.bodyText,
+              status: "draft",
+              sourceKind: transcript.sourceKind,
+              sourceReference: transcript.sourceReference
+            }
+          },
+          identity.subject
+        );
+        await transaction.touchSermon(id, identity.subject);
+        resultingTranscriptRowVersion += 1;
+        transcriptChanged = true;
+      }
+
+      await transaction.updateEnrichmentReviewItemDecision(
+        itemId,
+        input,
+        resultingTranscriptRowVersion,
+        identity.subject
+      );
+      await transaction.appendAudit(
+        successfulAudit(
+          identity,
+          `sermon.enrichment_review_item_${input.decision}`,
+          "sermon",
+          id,
+          transcriptChanged
+            ? ["enrichmentReview.items", "transcript"]
+            : ["enrichmentReview.items"],
+          requestCorrelationId
+        )
+      );
+    });
+    return this.enrichmentReviewDetail(id, identity);
+  }
+
+  async finishEnrichmentReview(
+    id: string,
+    input: FinishEnrichmentReviewInput,
+    identity: ApplicationIdentity,
+    requestCorrelationId: string
+  ): Promise<EnrichmentReviewResponse> {
+    assertAdminAccess(identity);
+    await this.repository.transaction(async (transaction) => {
+      const sermon = await transaction.findSermonForUpdate(id);
+      if (!sermon) notFound("Sermon was not found");
+      if (sermon.rowVersion !== input.sermonRowVersion) conflict();
+      assertMayEditSermon(identity, sermon);
+      const review = await transaction.findEnrichmentReviewForUpdate(id);
+      if (!review) notFound("A guided enrichment review is not available for this sermon");
+      if (review.rowVersion !== input.reviewRowVersion) conflict();
+      const blockingItems = await transaction.hasBlockingEnrichmentReviewItems(
+        id,
+        sermon.transcript?.rowVersion ?? null
+      );
+      const issues: Array<{ path: string; message: string }> = [];
+      if (review.identityStatus !== "confirmed") {
+        issues.push({ path: "identity", message: "Confirm identity, speaker, date and provenance." });
+      }
+      if (blockingItems) {
+        issues.push({ path: "reviewItems", message: "Resolve every required flagged review item." });
+      }
+      if (!sermon.readiness.hasApprovedTranscript) {
+        issues.push({ path: "transcript", message: "Approve the complete transcript." });
+      }
+      if (!sermon.readiness.hasApprovedDescription) {
+        issues.push({ path: "summary", message: "Approve the sermon description." });
+      }
+      if (!sermon.readiness.hasRequiredQuestionAnswers) {
+        issues.push({ path: "questionAnswers", message: "Approve five to ten ordered Q&A pairs." });
+      }
+      if (!sermon.readiness.hasValidControlledMedia) {
+        issues.push({ path: "media", message: "Confirm valid controlled media." });
+      }
+      if (sermon.status !== "draft") {
+        issues.push({ path: "status", message: "The pilot review can finish only while the sermon remains draft and private." });
+      }
+      if (issues.length) invalidMany("Complete the guided review checklist", issues);
+      await transaction.completeEnrichmentReview(id, identity.subject);
+      await transaction.appendAudit(
+        successfulAudit(
+          identity,
+          "sermon.enrichment_review_finished",
+          "sermon",
+          id,
+          ["enrichmentReview.completedAt"],
+          requestCorrelationId
+        )
+      );
+    });
+    return this.enrichmentReviewDetail(id, identity);
   }
 
   async create(
@@ -227,9 +521,63 @@ export class AdminSermonService {
       }
       const invalidRelationship = await transaction.validateRelationshipIds(input);
       if (invalidRelationship) invalid(invalidRelationship, "One or more relationship IDs do not exist");
+      const transcriptBodyChanged = input.transcript !== undefined &&
+        input.transcript.bodyText !== (sermon.transcript?.bodyText ?? "");
+      const enrichmentReview = input.transcript !== undefined
+        ? await transaction.findEnrichmentReviewForUpdate(id)
+        : null;
+      if (
+        enrichmentReview &&
+        transcriptBodyChanged &&
+        input.transcript?.status === "approved"
+      ) {
+        invalid(
+          "transcript.status",
+          "Save changed transcript wording as draft, then repeat flagged-item review before approval"
+        );
+      }
+      if (
+        input.transcript?.status === "approved" &&
+        await transaction.hasBlockingEnrichmentReviewItems(
+          id,
+          sermon.transcript?.rowVersion ?? null
+        )
+      ) {
+        invalid(
+          "transcript.status",
+          "Resolve every required flagged review item before approving the transcript"
+        );
+      }
       await transaction.updateSermon(id, input, identity.subject);
       await transaction.replaceRelationships(id, input, identity.subject);
       await transaction.refreshSearchTerms(id);
+      const identityChanged =
+        (input.title !== undefined && input.title !== sermon.title) ||
+        (input.serviceDate !== undefined && input.serviceDate !== sermon.serviceDate) ||
+        (input.speakerId !== undefined && input.speakerId !== (sermon.speaker?.id ?? null));
+      const reviewContentChanged =
+        input.summary !== undefined ||
+        input.summaryStatus !== undefined ||
+        input.media !== undefined ||
+        input.transcript !== undefined ||
+        input.questionAnswers !== undefined;
+      if (transcriptBodyChanged) {
+        await transaction.resetEnrichmentReviewItemsForTranscriptChange(
+          id,
+          (sermon.transcript?.rowVersion ?? 0) + 1,
+          null,
+          identity.subject
+        );
+      } else if (input.transcript !== undefined) {
+        await transaction.alignEnrichmentReviewItemsWithTranscriptVersion(
+          id,
+          (sermon.transcript?.rowVersion ?? 0) + 1,
+          identity.subject
+        );
+      }
+      if (identityChanged || (!transcriptBodyChanged && reviewContentChanged)) {
+        await transaction.reopenEnrichmentReview(id, identityChanged, identity.subject);
+      }
       if (input.slug !== undefined && input.slug !== sermon.slug && sermon.publishedAt !== null) {
         await transaction.recordSlugRedirect(id, sermon.slug, input.slug);
       }

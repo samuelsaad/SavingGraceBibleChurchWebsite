@@ -4,6 +4,9 @@ import {
   adminSermonIdParamsSchema,
   adminSermonListQuerySchema,
   createSermonInputSchema,
+  enrichmentReviewItemDecisionInputSchema,
+  enrichmentReviewProgressInputSchema,
+  finishEnrichmentReviewInputSchema,
   permanentlyDeleteSermonInputSchema,
   sermonStateActionSchema,
   sermonTransitionInputSchema,
@@ -146,6 +149,80 @@ export function createAdminApiRouter(
           200,
           await service.permanentlyDelete(id, input, identity, requestCorrelationId)
         );
+      }
+
+      const reviewItemDecision =
+        /^\/api\/v1\/admin\/sermons\/([^/]+)\/review\/items\/([^/]+)\/decision\/?$/.exec(path);
+      if (reviewItemDecision) {
+        if (request.method !== "POST") {
+          return json(405, { error: { code: "method_not_allowed" } }, { Allow: "POST" });
+        }
+        const { id } = adminSermonIdParamsSchema.parse({
+          id: decodeURIComponent(reviewItemDecision[1]!)
+        });
+        const { id: itemId } = adminSermonIdParamsSchema.parse({
+          id: decodeURIComponent(reviewItemDecision[2]!)
+        });
+        const input = enrichmentReviewItemDecisionInputSchema.parse(await readJson(request));
+        return json(
+          200,
+          await service.decideEnrichmentReviewItem(
+            id,
+            itemId,
+            input,
+            identity,
+            requestCorrelationId
+          )
+        );
+      }
+
+      const reviewProgress =
+        /^\/api\/v1\/admin\/sermons\/([^/]+)\/review\/progress\/?$/.exec(path);
+      if (reviewProgress) {
+        if (request.method !== "PATCH") {
+          return json(405, { error: { code: "method_not_allowed" } }, { Allow: "PATCH" });
+        }
+        const { id } = adminSermonIdParamsSchema.parse({
+          id: decodeURIComponent(reviewProgress[1]!)
+        });
+        const input = enrichmentReviewProgressInputSchema.parse(await readJson(request));
+        return json(
+          200,
+          await service.updateEnrichmentReviewProgress(
+            id,
+            input,
+            identity,
+            requestCorrelationId
+          )
+        );
+      }
+
+      const finishReview =
+        /^\/api\/v1\/admin\/sermons\/([^/]+)\/review\/finish\/?$/.exec(path);
+      if (finishReview) {
+        if (request.method !== "POST") {
+          return json(405, { error: { code: "method_not_allowed" } }, { Allow: "POST" });
+        }
+        const { id } = adminSermonIdParamsSchema.parse({
+          id: decodeURIComponent(finishReview[1]!)
+        });
+        const input = finishEnrichmentReviewInputSchema.parse(await readJson(request));
+        return json(
+          200,
+          await service.finishEnrichmentReview(id, input, identity, requestCorrelationId)
+        );
+      }
+
+      const enrichmentReview =
+        /^\/api\/v1\/admin\/sermons\/([^/]+)\/review\/?$/.exec(path);
+      if (enrichmentReview) {
+        if (request.method !== "GET") {
+          return json(405, { error: { code: "method_not_allowed" } }, { Allow: "GET" });
+        }
+        const { id } = adminSermonIdParamsSchema.parse({
+          id: decodeURIComponent(enrichmentReview[1]!)
+        });
+        return json(200, await service.enrichmentReviewDetail(id, identity));
       }
 
       const sermon = /^\/api\/v1\/admin\/sermons\/([^/]+)\/?$/.exec(path);

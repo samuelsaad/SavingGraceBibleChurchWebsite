@@ -135,6 +135,40 @@ type ListResponse = {
   };
   pagination: { page: number; pageSize: number; totalItems: number; totalPages: number };
 };
+type EnrichmentReviewItem = {
+  id: string;
+  category: "caption_error" | "name" | "scripture";
+  displayOrder: number;
+  label: string;
+  guidance: string;
+  sourceMarker: string | null;
+  decisionStatus: "pending" | "accepted" | "corrected" | "left_unresolved" | "rejected";
+  correctionText: string | null;
+  transcriptRowVersion: number;
+  decidedAt: string | null;
+  rowVersion: number;
+  context: { before: string; flagged: string; after: string } | null;
+};
+type EnrichmentReviewResponse = {
+  sermon: SermonDetail;
+  recordPosition: number;
+  recordCount: number;
+  review: {
+    identityStatus: "pending" | "confirmed";
+    currentStage: number;
+    completedAt: string | null;
+    rowVersion: number;
+  };
+  items: EnrichmentReviewItem[];
+  progress: {
+    resolvedItemCount: number;
+    unresolvedItemCount: number;
+    totalItemCount: number;
+    completedStageCount: number;
+    percentReviewed: number;
+    canFinish: boolean;
+  };
+};
 
 class DashboardRequestError extends Error {
   constructor(
@@ -318,6 +352,674 @@ function filterOption(items: Taxonomy[], selected: string, placeholder: string):
   return `<option value="">${escapeHtml(placeholder)}</option>${items.map((item) => `<option value="${item.id}"${item.id === selected ? " selected" : ""}>${escapeHtml(item.name)}</option>`).join("")}`;
 }
 
+const enrichmentReviewStages = [
+  "Identity and provenance",
+  "Flagged review items",
+  "Complete transcript",
+  "Sermon description",
+  "Ordered questions and answers",
+  "Final review summary"
+] as const;
+
+function plainReviewStatus(status: string): string {
+  const labels: Record<string, string> = {
+    pending: "Not reviewed",
+    accepted: "Wording accepted",
+    corrected: "Correction recorded",
+    left_unresolved: "Left unresolved",
+    rejected: "Transcript rejected",
+    missing: "Not started",
+    draft: "Draft — private",
+    in_review: "Awaiting a decision",
+    approved: "Approved — still private while sermon is draft"
+  };
+  return labels[status] ?? status;
+}
+
+function transcriptTokenCount(value: string): number {
+  const trimmed = value.trim();
+  return trimmed ? trimmed.split(/\s+/u).length : 0;
+}
+
+function reviewStageComplete(review: EnrichmentReviewResponse, stage: number): boolean {
+  if (stage === 1) return review.review.identityStatus === "confirmed";
+  if (stage === 2) return review.progress.unresolvedItemCount === 0;
+  if (stage === 3) return review.sermon.transcript?.status === "approved";
+  if (stage === 4) return review.sermon.summaryStatus === "approved";
+  if (stage === 5) {
+    return review.sermon.questionAnswers.length >= 5 &&
+      review.sermon.questionAnswers.length <= 10 &&
+      review.sermon.questionAnswers.every((item) => item.status === "approved");
+  }
+  return review.review.completedAt !== null;
+}
+
+function reviewStageNavigation(review: EnrichmentReviewResponse): string {
+  return `<nav class="review-stage-nav" aria-label="Sermon review stages">
+    <ol>${enrichmentReviewStages.map((label, index) => {
+      const stage = index + 1;
+      const complete = reviewStageComplete(review, stage);
+      const current = review.review.currentStage === stage;
+      return `<li><button type="button" class="review-stage-button${current ? " current" : ""}" data-review-stage="${stage}"${current ? ' aria-current="step"' : ""}>
+        <span class="review-stage-number">${stage}</span>
+        <span><strong>${escapeHtml(label)}</strong><small>${complete ? "Complete" : current ? "Current stage" : "Not complete"}</small></span>
+        <span class="review-stage-mark" aria-label="${complete ? "Complete" : "Not complete"}">${complete ? "✓" : "○"}</span>
+      </button></li>`;
+    }).join("")}</ol>
+  </nav>`;
+}
+
+function technicalProvenance(source: NonNullable<SermonDetail["enrichmentSource"]>): string {
+  return `<details class="technical-provenance">
+    <summary>Technical provenance</summary>
+    <dl class="provenance-grid">
+      <dt>Original file</dt><dd>${escapeHtml(source.originalFilename)}</dd>
+      <dt>Source SHA-256</dt><dd><code>${escapeHtml(source.sourceContentSha256)}</code></dd>
+      <dt>Processing version</dt><dd>${escapeHtml(source.processingVersion)}</dd>
+      <dt>Processed</dt><dd>${escapeHtml(humanDate(source.processedAt))}</dd>
+      <dt>Characters</dt><dd>${source.sourceCharacterCount.toLocaleString()} source / ${source.cleanedCharacterCount.toLocaleString()} cleaned</dd>
+      <dt>Estimated reading time</dt><dd>${source.estimatedReviewMinutes} minutes</dd>
+    </dl>
+  </details>`;
+}
+
+function reviewStageActions(stage: number): string {
+  return `<div class="review-stage-actions">
+    ${stage > 1 ? `<button class="button" type="button" data-review-stage="${stage - 1}">Back: ${escapeHtml(enrichmentReviewStages[stage - 2])}</button>` : ""}
+    <button class="button quiet" type="button" data-review-pause>Save and pause</button>
+    ${stage < 6 ? `<button class="button primary" type="button" data-review-stage="${stage + 1}">Next: ${escapeHtml(enrichmentReviewStages[stage])}</button>` : ""}
+  </div>`;
+}
+
+function renderIdentityReviewStage(
+  review: EnrichmentReviewResponse,
+  speakers: Taxonomy[]
+): string {
+  const sermon = review.sermon;
+  const source = sermon.enrichmentSource!;
+  const unresolvedDate = sermon.serviceDate === "1970-01-01";
+  return `<form id="review-identity-form" class="review-stage-panel stack" novalidate>
+    <header class="review-stage-heading"><p>Stage 1 of 6</p><h2>Identity and provenance</h2><p>Confirm that this draft belongs to the correct sermon before reviewing its words. Nothing here publishes content.</p></header>
+    <div id="review-stage-feedback"></div>
+    <div class="review-form-grid">
+      <label><span>Sermon title</span><input name="title" required maxlength="240" value="${escapeHtml(sermon.title)}" /></label>
+      <label><span>Speaker</span><select name="speakerId" required>${filterOption(speakers, sermon.speaker?.id ?? "", "Select the verified speaker")}</select><small class="field-hint">No speaker is selected automatically.</small></label>
+      <label><span>Service date</span><input name="serviceDate" type="date" value="${unresolvedDate ? "" : escapeHtml(sermon.serviceDate)}" /><small class="field-hint">${unresolvedDate ? "Date unresolved — verify and enter the preached date." : "Confirm this is the date preached."}</small></label>
+      <div class="review-readonly-field"><span>Draft status</span><strong>Draft • Private</strong><small>Review and approval do not publish this sermon.</small></div>
+    </div>
+    <section class="source-summary" aria-labelledby="source-summary-heading">
+      <div><p class="eyebrow">Private source</p><h3 id="source-summary-heading">Authorised YouTube Studio export</h3></div>
+      <dl class="source-facts">
+        <div><dt>Video identity</dt><dd><code>${escapeHtml(source.videoId)}</code></dd></div>
+        <div><dt>Caption language</dt><dd>${escapeHtml(source.captionLanguage)}</dd></div>
+        <div><dt>Caption track</dt><dd>${source.captionTrackType === "unknown" ? "Not identified by the export" : escapeHtml(source.captionTrackType)}</dd></div>
+        <div><dt>Accuracy</dt><dd>Administrator verification required</dd></div>
+      </dl>
+      ${technicalProvenance(source)}
+    </section>
+    <div class="review-decision-bar">
+      <button class="button" type="submit" data-identity-action="save">Save identity draft</button>
+      <button class="button primary" type="submit" data-identity-action="confirm">Save and confirm identity</button>
+    </div>
+  </form>`;
+}
+
+function renderFlaggedReviewStage(review: EnrichmentReviewResponse): string {
+  return `<section class="review-stage-panel" aria-labelledby="flagged-review-heading">
+    <header class="review-stage-heading"><p>Stage 2 of 6</p><h2 id="flagged-review-heading">Flagged review items</h2><p>Make an explicit decision for each item. An unanswered item is never treated as accepted.</p></header>
+    <div id="review-stage-feedback"></div>
+    <div class="review-item-toolbar">
+      <label><span>Category</span><select id="review-item-category"><option value="all">All categories</option><option value="caption_error">Caption wording</option><option value="name">Names</option><option value="scripture">Scripture references</option></select></label>
+      <label><span>Decision</span><select id="review-item-status"><option value="all">All decisions</option><option value="unresolved">Unresolved</option><option value="resolved">Resolved</option></select></label>
+      <p><strong>${review.progress.resolvedItemCount} of ${review.progress.totalItemCount}</strong> resolved</p>
+    </div>
+    <div id="review-item-card"></div>
+    ${reviewStageActions(2)}
+  </section>`;
+}
+
+function renderTranscriptReviewStage(review: EnrichmentReviewResponse): string {
+  const transcript = review.sermon.transcript;
+  const body = transcript?.bodyText ?? "";
+  const approvalBlocked = review.progress.unresolvedItemCount > 0;
+  return `<form id="review-transcript-form" class="review-stage-panel stack" novalidate>
+    <header class="review-stage-heading"><p>Stage 3 of 6</p><h2>Complete transcript</h2><p>Read the complete draft in a comfortable workspace. Saving edits does not approve them.</p></header>
+    <div id="review-stage-feedback"></div>
+    <div class="review-content-status"><span>Current status</span><strong>${escapeHtml(plainReviewStatus(transcript?.status ?? "missing"))}</strong></div>
+    ${approvalBlocked ? `<div class="callout"><strong>Approval is blocked.</strong><p>Resolve ${review.progress.unresolvedItemCount} flagged review item${review.progress.unresolvedItemCount === 1 ? "" : "s"} first.</p></div>` : ""}
+    <label class="review-editor-label"><span>Complete transcript</span><textarea id="review-transcript-body" name="transcriptBody" maxlength="500000" required>${escapeHtml(body)}</textarea></label>
+    <p class="review-counts" id="review-transcript-counts">${body.length.toLocaleString()} characters • ${transcriptTokenCount(body).toLocaleString()} tokens</p>
+    <div class="review-decision-bar">
+      <button class="button" type="submit" data-transcript-action="save">Save transcript draft</button>
+      <button class="button danger" type="submit" data-transcript-action="reject">Reject and keep as draft</button>
+      <button class="button primary" type="submit" data-transcript-action="approve"${approvalBlocked ? " disabled" : ""}>Approve transcript</button>
+    </div>
+    ${reviewStageActions(3)}
+  </form>`;
+}
+
+function renderDescriptionReviewStage(review: EnrichmentReviewResponse): string {
+  const summary = review.sermon.summary ?? "";
+  return `<form id="review-description-form" class="review-stage-panel stack" novalidate>
+    <header class="review-stage-heading"><p>Stage 4 of 6</p><h2>Sermon description</h2><p>Review the visible description separately from the transcript. Approval still does not publish the sermon.</p></header>
+    <div id="review-stage-feedback"></div>
+    <div class="review-content-status"><span>Current status</span><strong>${escapeHtml(plainReviewStatus(review.sermon.summaryStatus))}</strong></div>
+    <label class="review-editor-label"><span>Sermon description</span><textarea id="review-description-body" name="summary" maxlength="2000" required>${escapeHtml(summary)}</textarea><small class="field-hint">Approval requires 80–2,000 characters of useful plain text.</small></label>
+    <p class="review-counts" id="review-description-counts">${summary.trim().length.toLocaleString()} of 80–2,000 characters</p>
+    <div class="review-decision-bar">
+      <button class="button" type="submit" data-description-review-action="save">Save description draft</button>
+      <button class="button danger" type="submit" data-description-review-action="reject">Reject and return to draft</button>
+      <button class="button primary" type="submit" data-description-review-action="approve"${summary.trim().length < 80 ? " disabled" : ""}>Approve description</button>
+    </div>
+    ${reviewStageActions(4)}
+  </form>`;
+}
+
+function reviewQuestionCard(item: SermonDetail["questionAnswers"][number], index: number, total: number): string {
+  return `<form class="review-qa-card" data-review-qa="${escapeHtml(item.id)}">
+    <header><div><p>Question ${index + 1} of ${total}</p><h3>Question ${index + 1}</h3></div><span class="status-pill">${escapeHtml(plainReviewStatus(item.status))}</span></header>
+    <label><span>Question</span><textarea name="question" maxlength="1000" required>${escapeHtml(item.question)}</textarea></label>
+    <label><span>Answer</span><textarea name="answer" maxlength="10000" required>${escapeHtml(item.answer)}</textarea></label>
+    <div class="qa-order-actions" aria-label="Reorder question ${index + 1}">
+      <button class="button quiet" type="button" data-qa-move="up"${index === 0 ? " disabled" : ""}>Move up</button>
+      <button class="button quiet" type="button" data-qa-move="down"${index === total - 1 ? " disabled" : ""}>Move down</button>
+    </div>
+    <div class="review-decision-bar">
+      <button class="button" type="submit" data-qa-action="save">Save pair</button>
+      <button class="button danger" type="submit" data-qa-action="reject">Reject pair</button>
+      <button class="button primary" type="submit" data-qa-action="approve">Approve pair</button>
+    </div>
+  </form>`;
+}
+
+function renderQuestionReviewStage(review: EnrichmentReviewResponse): string {
+  const questions = [...review.sermon.questionAnswers].sort((a, b) => a.displayOrder - b.displayOrder);
+  const approved = questions.filter((item) => item.status === "approved").length;
+  return `<section class="review-stage-panel" aria-labelledby="qa-review-heading">
+    <header class="review-stage-heading"><p>Stage 5 of 6</p><h2 id="qa-review-heading">Ordered questions and answers</h2><p>Review each pair independently. Five to ten retained pairs must all be approved before the collection is complete.</p></header>
+    <div id="review-stage-feedback"></div>
+    <div class="review-content-status"><span>Collection progress</span><strong>${approved} of ${questions.length} pairs approved</strong></div>
+    <div class="review-qa-list">${questions.map((item, index) => reviewQuestionCard(item, index, questions.length)).join("")}</div>
+    ${reviewStageActions(5)}
+  </section>`;
+}
+
+function finalChecklistItem(label: string, complete: boolean, detail: string): string {
+  return `<li class="${complete ? "complete" : "incomplete"}"><span aria-hidden="true">${complete ? "✓" : "○"}</span><div><strong>${escapeHtml(label)}</strong><small>${escapeHtml(detail)}</small></div></li>`;
+}
+
+function renderFinalReviewStage(review: EnrichmentReviewResponse): string {
+  const sermon = review.sermon;
+  const dateConfirmed = review.review.identityStatus === "confirmed" && sermon.serviceDate !== "1970-01-01";
+  const qaApproved = sermon.questionAnswers.length >= 5 && sermon.questionAnswers.length <= 10 && sermon.questionAnswers.every((item) => item.status === "approved");
+  return `<section class="review-stage-panel" aria-labelledby="final-review-heading">
+    <header class="review-stage-heading"><p>Stage 6 of 6</p><h2 id="final-review-heading">Final review summary</h2><p>Finishing records that the editorial review is complete. It does not submit, schedule or publish this draft.</p></header>
+    <div id="review-stage-feedback"></div>
+    <ul class="checklist review-final-checklist">
+      ${finalChecklistItem("One speaker confirmed", review.review.identityStatus === "confirmed" && Boolean(sermon.speaker), sermon.speaker ? "A verified speaker is selected." : "Return to Identity and choose the speaker.")}
+      ${finalChecklistItem("Service date confirmed", dateConfirmed, dateConfirmed ? "The preached date was verified." : "The service date is unresolved.")}
+      ${finalChecklistItem("Provenance reviewed", review.review.identityStatus === "confirmed", "Source identity, language, track and attribution were presented in Stage 1.")}
+      ${finalChecklistItem("Flagged items resolved", review.progress.unresolvedItemCount === 0, `${review.progress.resolvedItemCount} of ${review.progress.totalItemCount} items resolved.`)}
+      ${finalChecklistItem("Transcript approved", sermon.transcript?.status === "approved", plainReviewStatus(sermon.transcript?.status ?? "missing"))}
+      ${finalChecklistItem("Description approved", sermon.summaryStatus === "approved", plainReviewStatus(sermon.summaryStatus))}
+      ${finalChecklistItem("Five to ten Q&A pairs approved", qaApproved, `${sermon.questionAnswers.filter((item) => item.status === "approved").length} of ${sermon.questionAnswers.length} approved.`)}
+      ${finalChecklistItem("Controlled media valid", sermon.readiness.hasValidControlledMedia, sermon.readiness.hasValidControlledMedia ? "Controlled media passed validation." : "Controlled media still requires attention.")}
+      ${finalChecklistItem("Sermon remains draft and unpublished", sermon.status === "draft", `Current sermon state: ${sermon.status}.`)}
+    </ul>
+    <div class="review-decision-bar">
+      <button class="button" type="button" data-review-pause>Save and pause</button>
+      <button class="button primary" type="button" id="finish-enrichment-review"${review.progress.canFinish ? "" : " disabled"}>Finish review</button>
+    </div>
+    ${review.review.completedAt ? `<p class="feedback">Review finished ${escapeHtml(humanDate(review.review.completedAt))}. The sermon remains draft and private.</p>` : ""}
+  </section>`;
+}
+
+function reviewStageMarkup(review: EnrichmentReviewResponse, speakers: Taxonomy[]): string {
+  const stage = review.review.currentStage;
+  if (stage === 1) return renderIdentityReviewStage(review, speakers);
+  if (stage === 2) return renderFlaggedReviewStage(review);
+  if (stage === 3) return renderTranscriptReviewStage(review);
+  if (stage === 4) return renderDescriptionReviewStage(review);
+  if (stage === 5) return renderQuestionReviewStage(review);
+  return renderFinalReviewStage(review);
+}
+
+type ReviewFeedbackTarget = () => HTMLElement | null;
+
+function reviewItemCategoryLabel(category: EnrichmentReviewItem["category"]): string {
+  if (category === "caption_error") return "Caption wording";
+  if (category === "name") return "Name or person";
+  return "Scripture reference";
+}
+
+function reviewItemCardMarkup(item: EnrichmentReviewItem, position: number, total: number): string {
+  const context = item.context;
+  return `<article class="review-item-card" data-review-item-card="${escapeHtml(item.id)}">
+    <header>
+      <div><p>${escapeHtml(reviewItemCategoryLabel(item.category))} • Item ${position} of ${total}</p><h3>${escapeHtml(item.label)}</h3></div>
+      <span class="status-pill">${escapeHtml(plainReviewStatus(item.decisionStatus))}</span>
+    </header>
+    <p class="review-item-guidance">${escapeHtml(item.guidance)}</p>
+    ${context ? `<blockquote class="review-context"><span>${escapeHtml(context.before)}</span><mark>${escapeHtml(context.flagged)}</mark><span>${escapeHtml(context.after)}</span></blockquote>` : '<div class="callout"><strong>General review check</strong><p>No single passage is attached to this item. Use the full transcript stage to inspect and edit the wording.</p></div>'}
+    <label class="review-correction"><span>Reviewed correction</span><textarea id="review-item-correction" maxlength="1000" placeholder="Enter replacement wording only when choosing Correct">${escapeHtml(item.correctionText ?? "")}</textarea><small class="field-hint">A correction changes the one displayed passage and returns the transcript to draft.</small></label>
+    <div class="review-decision-bar" aria-label="Decision for ${escapeHtml(item.label)}">
+      <button class="button" type="button" data-review-item-decision="accepted">Accept wording</button>
+      <button class="button primary" type="button" data-review-item-decision="corrected"${item.sourceMarker ? "" : " disabled"}>Correct wording</button>
+      <button class="button" type="button" data-review-item-decision="left_unresolved">Leave unresolved</button>
+      <button class="button danger" type="button" data-review-item-decision="rejected">Reject transcript</button>
+    </div>
+    <p class="field-hint">Leaving an item unresolved or rejecting the transcript records your decision but continues to block transcript approval.</p>
+    <div class="review-item-pager">
+      <button class="button quiet" type="button" data-review-item-offset="-1"${position <= 1 ? " disabled" : ""}>Previous item</button>
+      <button class="button quiet" type="button" data-review-item-offset="1"${position >= total ? " disabled" : ""}>Next item</button>
+    </div>
+  </article>`;
+}
+
+function wireFlaggedReviewItems(
+  review: EnrichmentReviewResponse,
+  id: string,
+  feedbackTarget: ReviewFeedbackTarget
+): void {
+  const cardTarget = document.querySelector<HTMLElement>("#review-item-card");
+  const categoryFilter = document.querySelector<HTMLSelectElement>("#review-item-category");
+  const statusFilter = document.querySelector<HTMLSelectElement>("#review-item-status");
+  if (!cardTarget || !categoryFilter || !statusFilter) return;
+  let currentIndex = 0;
+
+  const filteredItems = () => review.items.filter((item) => {
+    const categoryMatches = categoryFilter.value === "all" || item.category === categoryFilter.value;
+    const resolved = item.decisionStatus === "accepted" || item.decisionStatus === "corrected";
+    const statusMatches = statusFilter.value === "all" ||
+      (statusFilter.value === "resolved" ? resolved : !resolved);
+    return categoryMatches && statusMatches;
+  });
+
+  const renderCard = () => {
+    const items = filteredItems();
+    currentIndex = Math.max(0, Math.min(currentIndex, items.length - 1));
+    if (!items.length) {
+      cardTarget.innerHTML = '<div class="empty-state"><strong>No items match these filters.</strong><p>Choose another category or decision filter.</p></div>';
+      return;
+    }
+    const item = items[currentIndex]!;
+    cardTarget.innerHTML = reviewItemCardMarkup(item, currentIndex + 1, items.length);
+    const correction = cardTarget.querySelector<HTMLTextAreaElement>("#review-item-correction");
+    correction?.addEventListener("input", () => { dirty = true; });
+    for (const button of cardTarget.querySelectorAll<HTMLButtonElement>("[data-review-item-offset]")) {
+      button.addEventListener("click", () => {
+        if (!confirmDiscard()) return;
+        dirty = false;
+        currentIndex += Number(button.dataset.reviewItemOffset);
+        renderCard();
+        cardTarget.focus({ preventScroll: true });
+      });
+    }
+    for (const button of cardTarget.querySelectorAll<HTMLButtonElement>("[data-review-item-decision]")) {
+      button.addEventListener("click", async () => {
+        const decision = button.dataset.reviewItemDecision as Exclude<EnrichmentReviewItem["decisionStatus"], "pending">;
+        const correctionText = correction?.value.trim() ?? "";
+        if (decision === "corrected" && !correctionText) {
+          feedbackTarget()!.innerHTML = feedback("Enter the reviewed replacement wording before choosing Correct wording.", true);
+          correction?.focus();
+          return;
+        }
+        try {
+          button.disabled = true;
+          await api(`/api/v1/admin/sermons/${id}/review/items/${item.id}/decision`, {
+            method: "POST",
+            body: JSON.stringify({
+              sermonRowVersion: review.sermon.rowVersion,
+              reviewRowVersion: review.review.rowVersion,
+              itemRowVersion: item.rowVersion,
+              transcriptRowVersion: review.sermon.transcript!.rowVersion,
+              decision,
+              ...(decision === "corrected" ? { correctionText } : {})
+            })
+          });
+          dirty = false;
+          announce(`Review item decision recorded: ${plainReviewStatus(decision)}`);
+          await renderGuidedSermonReview(id);
+        } catch (error) {
+          button.disabled = false;
+          feedbackTarget()!.innerHTML = feedback(errorMessage(error), true);
+        }
+      });
+    }
+  };
+
+  categoryFilter.addEventListener("change", () => { currentIndex = 0; renderCard(); });
+  statusFilter.addEventListener("change", () => { currentIndex = 0; renderCard(); });
+  renderCard();
+}
+
+function wireTranscriptReview(
+  review: EnrichmentReviewResponse,
+  id: string,
+  feedbackTarget: ReviewFeedbackTarget
+): void {
+  const form = document.querySelector<HTMLFormElement>("#review-transcript-form");
+  const body = document.querySelector<HTMLTextAreaElement>("#review-transcript-body");
+  const counts = document.querySelector<HTMLElement>("#review-transcript-counts");
+  if (!form || !body || !counts || !review.sermon.transcript) return;
+  body.addEventListener("input", () => {
+    counts.textContent = `${body.value.length.toLocaleString()} characters • ${transcriptTokenCount(body.value).toLocaleString()} tokens`;
+  });
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const submitter = (event as SubmitEvent).submitter as HTMLButtonElement | null;
+    const action = submitter?.dataset.transcriptAction ?? "save";
+    if (!form.reportValidity()) return;
+    if (action === "approve" && review.progress.unresolvedItemCount > 0) {
+      feedbackTarget()!.innerHTML = feedback("Resolve every flagged review item before approving the transcript.", true);
+      return;
+    }
+    try {
+      await api(`/api/v1/admin/sermons/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          rowVersion: review.sermon.rowVersion,
+          transcript: {
+            bodyText: body.value,
+            status: action === "approve" ? "approved" : "draft",
+            sourceKind: review.sermon.transcript!.sourceKind,
+            sourceReference: review.sermon.transcript!.sourceReference
+          }
+        })
+      });
+      dirty = false;
+      announce(action === "approve" ? "Transcript approved; sermon remains private" : action === "reject" ? "Transcript rejected and retained as a private draft" : "Transcript draft saved");
+      await renderGuidedSermonReview(id);
+    } catch (error) {
+      feedbackTarget()!.innerHTML = feedback(errorMessage(error), true);
+    }
+  });
+}
+
+function wireDescriptionReview(
+  review: EnrichmentReviewResponse,
+  id: string,
+  feedbackTarget: ReviewFeedbackTarget
+): void {
+  const form = document.querySelector<HTMLFormElement>("#review-description-form");
+  const body = document.querySelector<HTMLTextAreaElement>("#review-description-body");
+  const counts = document.querySelector<HTMLElement>("#review-description-counts");
+  if (!form || !body || !counts) return;
+  body.addEventListener("input", () => {
+    const length = body.value.trim().length;
+    counts.textContent = `${length.toLocaleString()} of 80–2,000 characters`;
+    const approve = form.querySelector<HTMLButtonElement>('[data-description-review-action="approve"]');
+    if (approve) approve.disabled = length < 80;
+  });
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const submitter = (event as SubmitEvent).submitter as HTMLButtonElement | null;
+    const action = submitter?.dataset.descriptionReviewAction ?? "save";
+    if (!form.reportValidity()) return;
+    const summary = body.value.trim();
+    if (action === "approve" && summary.length < 80) {
+      feedbackTarget()!.innerHTML = feedback("An approved description must contain at least 80 characters.", true);
+      return;
+    }
+    try {
+      await api(`/api/v1/admin/sermons/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          rowVersion: review.sermon.rowVersion,
+          summary,
+          summaryStatus: action === "approve" ? "approved" : "draft",
+          summarySourceKind: review.sermon.summarySourceKind,
+          summarySourceReference: review.sermon.summarySourceReference
+        })
+      });
+      dirty = false;
+      announce(action === "approve" ? "Description approved; sermon remains private" : action === "reject" ? "Description rejected and retained as a private draft" : "Description draft saved");
+      await renderGuidedSermonReview(id);
+    } catch (error) {
+      feedbackTarget()!.innerHTML = feedback(errorMessage(error), true);
+    }
+  });
+}
+
+type ReviewQuestionAnswerPayload = {
+  question: string;
+  answer: string;
+  status: "draft" | "in_review" | "approved";
+  sourceKind: string;
+  sourceReference: string | null;
+};
+
+function questionAnswerPayload(
+  review: EnrichmentReviewResponse,
+  changedId: string,
+  question: string,
+  answer: string,
+  status: "draft" | "approved",
+  order?: string[]
+): ReviewQuestionAnswerPayload[] {
+  const ordered = order
+    ? order.map((itemId) => review.sermon.questionAnswers.find((item) => item.id === itemId)!)
+    : [...review.sermon.questionAnswers].sort((a, b) => a.displayOrder - b.displayOrder);
+  return ordered.map((item) => ({
+    question: item.id === changedId ? question : item.question,
+    answer: item.id === changedId ? answer : item.answer,
+    status: item.id === changedId ? status : item.status,
+    sourceKind: item.sourceKind,
+    sourceReference: item.sourceReference
+  }));
+}
+
+function wireQuestionReview(
+  review: EnrichmentReviewResponse,
+  id: string,
+  feedbackTarget: ReviewFeedbackTarget
+): void {
+  const forms = [...document.querySelectorAll<HTMLFormElement>(".review-qa-card")];
+  if (!forms.length) return;
+  const ensureOnlyThisCardIsDirty = (form: HTMLFormElement): boolean => {
+    const another = forms.find((candidate) => candidate !== form && candidate.dataset.dirty === "true");
+    if (!another) return true;
+    feedbackTarget()!.innerHTML = feedback("Save or discard the other edited Q&A pair before continuing.", true);
+    another.scrollIntoView({ behavior: "smooth", block: "center" });
+    return false;
+  };
+  for (const form of forms) {
+    const itemId = form.dataset.reviewQa!;
+    const question = form.elements.namedItem("question") as HTMLTextAreaElement;
+    const answer = form.elements.namedItem("answer") as HTMLTextAreaElement;
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!form.reportValidity() || !ensureOnlyThisCardIsDirty(form)) return;
+      const submitter = (event as SubmitEvent).submitter as HTMLButtonElement | null;
+      const action = submitter?.dataset.qaAction ?? "save";
+      try {
+        await api(`/api/v1/admin/sermons/${id}`, {
+          method: "PATCH",
+          body: JSON.stringify({
+            rowVersion: review.sermon.rowVersion,
+            questionAnswers: questionAnswerPayload(
+              review,
+              itemId,
+              question.value,
+              answer.value,
+              action === "approve" ? "approved" : "draft"
+            )
+          })
+        });
+        dirty = false;
+        announce(action === "approve" ? "Q&A pair approved; sermon remains private" : action === "reject" ? "Q&A pair rejected and retained as a draft" : "Q&A pair saved");
+        await renderGuidedSermonReview(id);
+      } catch (error) {
+        feedbackTarget()!.innerHTML = feedback(errorMessage(error), true);
+      }
+    });
+    for (const button of form.querySelectorAll<HTMLButtonElement>("[data-qa-move]")) {
+      button.addEventListener("click", async () => {
+        if (!ensureOnlyThisCardIsDirty(form)) return;
+        if (form.dataset.dirty === "true") {
+          feedbackTarget()!.innerHTML = feedback("Save this pair before changing its order.", true);
+          return;
+        }
+        const ids = [...review.sermon.questionAnswers]
+          .sort((a, b) => a.displayOrder - b.displayOrder)
+          .map((item) => item.id);
+        const index = ids.indexOf(itemId);
+        const swapWith = button.dataset.qaMove === "up" ? index - 1 : index + 1;
+        if (index < 0 || swapWith < 0 || swapWith >= ids.length) return;
+        [ids[index], ids[swapWith]] = [ids[swapWith]!, ids[index]!];
+        try {
+          await api(`/api/v1/admin/sermons/${id}`, {
+            method: "PATCH",
+            body: JSON.stringify({
+              rowVersion: review.sermon.rowVersion,
+              questionAnswers: questionAnswerPayload(
+                review,
+                itemId,
+                question.value,
+                answer.value,
+                review.sermon.questionAnswers.find((item) => item.id === itemId)!.status === "approved" ? "approved" : "draft",
+                ids
+              )
+            })
+          });
+          dirty = false;
+          announce("Q&A order saved");
+          await renderGuidedSermonReview(id);
+        } catch (error) {
+          feedbackTarget()!.innerHTML = feedback(errorMessage(error), true);
+        }
+      });
+    }
+  }
+}
+
+async function renderGuidedSermonReview(id: string): Promise<void> {
+  const [review, speakers] = await Promise.all([
+    api<EnrichmentReviewResponse>(`/api/v1/admin/sermons/${id}/review`),
+    api<{ data: Taxonomy[] }>("/api/v1/admin/taxonomies/speakers")
+  ]);
+  dirty = false;
+  main.innerHTML = `<header class="review-record-header">
+    <div><a href="/admin/sermons" data-route>Back to sermons</a><p class="eyebrow">Guided private review</p><h1>${escapeHtml(review.sermon.title)}</h1><p>Record ${review.recordPosition} of ${review.recordCount}</p></div>
+    <div class="review-record-status"><span class="status-pill">Draft • Private</span><strong>${review.progress.percentReviewed}% reviewed</strong></div>
+    <progress max="100" value="${review.progress.percentReviewed}">${review.progress.percentReviewed}%</progress>
+  </header>
+  <div class="review-workflow-layout">
+    ${reviewStageNavigation(review)}
+    <div class="review-stage-workspace">${reviewStageMarkup(review, speakers.data)}</div>
+  </div>`;
+
+  const stageFeedback = () => document.querySelector<HTMLElement>("#review-stage-feedback");
+  const markDirty = (target?: HTMLElement | null) => {
+    dirty = true;
+    target?.setAttribute("data-dirty", "true");
+  };
+  for (const form of document.querySelectorAll<HTMLFormElement>(".review-stage-panel form, form.review-stage-panel, .review-qa-card")) {
+    form.addEventListener("input", () => markDirty(form));
+  }
+
+  const persistStage = async (stage: number, identityStatus?: "pending" | "confirmed") => {
+    if (dirty && !confirmDiscard()) return;
+    try {
+      await api(`/api/v1/admin/sermons/${id}/review/progress`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          sermonRowVersion: review.sermon.rowVersion,
+          reviewRowVersion: review.review.rowVersion,
+          currentStage: stage,
+          ...(identityStatus ? { identityStatus } : {})
+        })
+      });
+      dirty = false;
+      await renderGuidedSermonReview(id);
+    } catch (error) {
+      if (stageFeedback()) stageFeedback()!.innerHTML = feedback(errorMessage(error), true);
+    }
+  };
+
+  for (const button of document.querySelectorAll<HTMLButtonElement>("[data-review-stage]")) {
+    button.addEventListener("click", () => void persistStage(Number(button.dataset.reviewStage)));
+  }
+  for (const button of document.querySelectorAll<HTMLButtonElement>("[data-review-pause]")) {
+    button.addEventListener("click", () => {
+      if (!dirty) {
+        void persistStage(review.review.currentStage);
+        return;
+      }
+      const saveButton = document.querySelector<HTMLButtonElement>(
+        '[data-identity-action="save"], [data-transcript-action="save"], [data-description-review-action="save"], .review-qa-card[data-dirty="true"] [data-qa-action="save"]'
+      );
+      if (saveButton) {
+        saveButton.click();
+        return;
+      }
+      stageFeedback()!.innerHTML = feedback("Choose an explicit decision for the edited flagged item before pausing.", true);
+    });
+  }
+
+  const identityForm = document.querySelector<HTMLFormElement>("#review-identity-form");
+  identityForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const submitter = (event as SubmitEvent).submitter as HTMLButtonElement | null;
+    const action = submitter?.dataset.identityAction ?? "save";
+    if (!identityForm.reportValidity()) return;
+    const data = new FormData(identityForm);
+    const serviceDate = String(data.get("serviceDate") ?? "");
+    if (action === "confirm" && !serviceDate) {
+      stageFeedback()!.innerHTML = feedback("Enter and verify the preached service date before confirming identity.", true);
+      (identityForm.elements.namedItem("serviceDate") as HTMLInputElement).focus();
+      return;
+    }
+    try {
+      const saved = await api<SermonDetail>(`/api/v1/admin/sermons/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          rowVersion: review.sermon.rowVersion,
+          title: String(data.get("title") ?? ""),
+          speakerId: String(data.get("speakerId") ?? "") || null,
+          ...(serviceDate ? { serviceDate } : {})
+        })
+      });
+      const refreshed = await api<EnrichmentReviewResponse>(`/api/v1/admin/sermons/${id}/review`);
+      await api(`/api/v1/admin/sermons/${id}/review/progress`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          sermonRowVersion: saved.rowVersion,
+          reviewRowVersion: refreshed.review.rowVersion,
+          currentStage: action === "confirm" ? 2 : 1,
+          identityStatus: action === "confirm" ? "confirmed" : "pending"
+        })
+      });
+      dirty = false;
+      announce(action === "confirm" ? "Identity and provenance confirmed" : "Identity draft saved");
+      await renderGuidedSermonReview(id);
+    } catch (error) {
+      stageFeedback()!.innerHTML = feedback(errorMessage(error), true);
+    }
+  });
+
+  wireFlaggedReviewItems(review, id, stageFeedback);
+  wireTranscriptReview(review, id, stageFeedback);
+  wireDescriptionReview(review, id, stageFeedback);
+  wireQuestionReview(review, id, stageFeedback);
+
+  document.querySelector<HTMLButtonElement>("#finish-enrichment-review")?.addEventListener("click", async () => {
+    try {
+      await api(`/api/v1/admin/sermons/${id}/review/finish`, {
+        method: "POST",
+        body: JSON.stringify({
+          sermonRowVersion: review.sermon.rowVersion,
+          reviewRowVersion: review.review.rowVersion
+        })
+      });
+      announce("Guided review finished; sermon remains draft and private");
+      await renderGuidedSermonReview(id);
+    } catch (error) {
+      stageFeedback()!.innerHTML = feedback(errorMessage(error), true);
+    }
+  });
+}
+
 async function renderSermonList(): Promise<void> {
   const url = new URL(location.href);
   const query = new URLSearchParams(url.search);
@@ -450,6 +1152,11 @@ async function renderSermonForm(id?: string): Promise<void> {
     loadTaxonomies(),
     id ? api<SermonDetail>(`/api/v1/admin/sermons/${id}`) : Promise.resolve(null)
   ]);
+  if (detail?.enrichmentSource) {
+    history.replaceState({}, "", `/admin/sermons/${detail.id}/review`);
+    await renderGuidedSermonReview(detail.id);
+    return;
+  }
   const youtube = detail?.media.find((media) => media.provider === "youtube");
   const sermonAudio = detail?.media.find((media) => media.provider === "sermonaudio");
   const title = detail ? `Edit ${detail.title}` : "New sermon";
@@ -758,6 +1465,7 @@ async function renderRoute(): Promise<void> {
     if (path === "/admin") await renderDashboard();
     else if (path === "/admin/sermons") await renderSermonList();
     else if (path === "/admin/sermons/new") await renderSermonForm();
+    else if (/^\/admin\/sermons\/[0-9a-f-]+\/review$/i.test(path)) await renderGuidedSermonReview(path.split("/").at(-2)!);
     else if (/^\/admin\/sermons\/[0-9a-f-]+$/i.test(path)) await renderSermonForm(path.split("/").at(-1));
     else if (path === "/admin/taxonomies/speakers") await renderTaxonomy("speakers");
     else if (path === "/admin/taxonomies/series") await renderTaxonomy("series");

@@ -2,6 +2,8 @@ import type {
   AdminSermonListQuery,
   CreateSermonInput,
   DeletionSeoDisposition,
+  EnrichmentReviewItemDecisionInput,
+  EnrichmentReviewProgressInput,
   TaxonomyKind,
   UpdateSermonInput,
   applicationRoleSchema,
@@ -113,6 +115,36 @@ export interface StoredSermonPage {
   };
 }
 
+export interface EnrichmentReviewStateDto {
+  sermonId: string;
+  identityStatus: "pending" | "confirmed";
+  currentStage: number;
+  completedAt: string | null;
+  rowVersion: number;
+}
+
+export interface EnrichmentReviewItemDto {
+  id: string;
+  sermonId: string;
+  category: "caption_error" | "name" | "scripture";
+  displayOrder: number;
+  label: string;
+  guidance: string;
+  sourceMarker: string | null;
+  decisionStatus: "pending" | "accepted" | "corrected" | "left_unresolved" | "rejected";
+  correctionText: string | null;
+  transcriptRowVersion: number;
+  decidedAt: string | null;
+  rowVersion: number;
+}
+
+export interface EnrichmentReviewWorkflowDto {
+  state: EnrichmentReviewStateDto;
+  items: EnrichmentReviewItemDto[];
+  recordPosition: number;
+  recordCount: number;
+}
+
 export interface AuditEventDto {
   id: string;
   actorSubject: string;
@@ -206,6 +238,44 @@ export interface AdminSermonTransaction {
     actorSubject: string
   ): Promise<void>;
   refreshSearchTerms(id: string): Promise<void>;
+  findEnrichmentReviewForUpdate(sermonId: string): Promise<EnrichmentReviewStateDto | null>;
+  findEnrichmentReviewItemForUpdate(
+    sermonId: string,
+    itemId: string
+  ): Promise<EnrichmentReviewItemDto | null>;
+  updateEnrichmentReviewProgress(
+    sermonId: string,
+    input: EnrichmentReviewProgressInput,
+    actorSubject: string
+  ): Promise<void>;
+  updateEnrichmentReviewItemDecision(
+    itemId: string,
+    input: EnrichmentReviewItemDecisionInput,
+    transcriptRowVersion: number,
+    actorSubject: string
+  ): Promise<void>;
+  resetEnrichmentReviewItemsForTranscriptChange(
+    sermonId: string,
+    transcriptRowVersion: number,
+    exceptItemId: string | null,
+    actorSubject: string
+  ): Promise<void>;
+  alignEnrichmentReviewItemsWithTranscriptVersion(
+    sermonId: string,
+    transcriptRowVersion: number,
+    actorSubject: string
+  ): Promise<void>;
+  reopenEnrichmentReview(
+    sermonId: string,
+    identityChanged: boolean,
+    actorSubject: string
+  ): Promise<void>;
+  completeEnrichmentReview(sermonId: string, actorSubject: string): Promise<void>;
+  hasBlockingEnrichmentReviewItems(
+    sermonId: string,
+    transcriptRowVersion: number | null
+  ): Promise<boolean>;
+  touchSermon(id: string, actorSubject: string): Promise<void>;
   insertTaxonomy(kind: TaxonomyKind, input: TaxonomyWriteInput): Promise<TaxonomyDto>;
   findTaxonomyForUpdate(kind: TaxonomyKind, id: string): Promise<TaxonomyDto | null>;
   updateTaxonomy(
@@ -220,6 +290,7 @@ export interface AdminSermonRepository {
   transaction<T>(work: (transaction: AdminSermonTransaction) => Promise<T>): Promise<T>;
   listSermons(query: AdminSermonListQuery): Promise<StoredSermonPage>;
   findSermon(id: string): Promise<StoredSermonDetail | null>;
+  findEnrichmentReview(sermonId: string): Promise<EnrichmentReviewWorkflowDto | null>;
   hasSermonOrTombstone(id: string): Promise<boolean>;
   listTaxonomies(kind: TaxonomyKind): Promise<TaxonomyDto[]>;
   listAuditEvents(sermonId: string): Promise<AuditEventDto[]>;

@@ -41,16 +41,21 @@ describe("Phase 3B administration dashboard", () => {
   });
 
   it("contains the protected accessible shell and required workflows without a role selector", async () => {
-    const [page, client] = await Promise.all([
+    const [page, client, service] = await Promise.all([
       readFile("src/pages/admin/index.astro", "utf8"),
-      readFile("src/admin/dashboard.ts", "utf8")
+      readFile("src/admin/dashboard.ts", "utf8"),
+      readFile("src/application/admin-sermon-service.ts", "utf8")
     ]);
     expect(page).toContain('href="#admin-main"');
     expect(page).toContain('aria-live="polite"');
     expect(page).toContain('meta name="robots" content="noindex');
+    expect(page).toContain("<style is:global>");
     expect(page).toContain("Local development only");
     expect(page).toContain("@media (max-width: 800px)");
     expect(page).toContain("@media (max-width: 480px)");
+    expect(page).toContain("#review-transcript-body { width: 100%; min-height: 65vh");
+    expect(page).toContain(".review-qa-card textarea[name=\"answer\"] { min-height: 16rem");
+    expect(page).toContain(".review-workflow-layout");
     expect(page).toContain(".filters, .form-grid { grid-template-columns: 1fr; }");
     expect(page).toContain(".form-grid .wide { grid-column: auto; }");
     expect(page).toContain(".grid-two > * { min-width: 0; }");
@@ -74,6 +79,28 @@ describe("Phase 3B administration dashboard", () => {
     expect(client).toContain("Private caption source and warnings");
     expect(client).toContain("Authorised YouTube Studio export");
     expect(client).toContain("accuracyReviewStatus");
+    expect(client).toContain("Guided private review");
+    expect(client).toContain("Identity and provenance");
+    expect(client).toContain("Flagged review items");
+    expect(client).toContain("Final review summary");
+    expect(client).toContain("Technical provenance");
+    expect(client).toContain("data-review-item-decision=\"left_unresolved\"");
+    expect(client).toContain("Finish review");
+    expect(client).toContain("Save and pause");
+    expect(client).toContain("/review/finish");
+    expect(client).toContain("/review/items/");
+    expect(service).toContain("Save changed transcript wording as draft");
+    expect(client).toContain("/^\\/admin\\/sermons\\/[0-9a-f-]+\\/review$/i");
+    const guidedRouteSource = client.slice(
+      client.indexOf("const enrichmentReviewStages"),
+      client.indexOf("async function renderSermonList")
+    );
+    expect(guidedRouteSource).toContain('serviceDate === "1970-01-01"');
+    expect(guidedRouteSource).toContain("<details class=\"technical-provenance\">");
+    expect(guidedRouteSource).toContain("if (stage === 1)");
+    expect(guidedRouteSource).not.toContain("data-transition");
+    expect(guidedRouteSource).not.toContain("open-delete");
+    expect(guidedRouteSource).not.toContain("permanent-delete");
     expect(page).toContain("Phase 3B.2 private review rehearsal");
     expect(client).toContain('name="speakerId"');
     expect(client).not.toContain('name="speakerIds"');

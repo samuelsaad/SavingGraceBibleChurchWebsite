@@ -6,6 +6,9 @@ import { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   createSermonInputSchema,
+  enrichmentReviewItemDecisionInputSchema,
+  enrichmentReviewProgressInputSchema,
+  finishEnrichmentReviewInputSchema,
   permanentlyDeleteSermonInputSchema,
   sermonTransitionInputSchema,
   taxonomyWriteInputSchema,
@@ -120,6 +123,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       postgres_server: true
     });
 
+    await runSchema("rollback");
     await runSchema("apply");
 
     const fixture = legacySermonRecordSchema.array().parse(
@@ -136,7 +140,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     await pool.end();
   });
 
-  it("applies 0001-0006 and loads anonymised fixtures idempotently", async () => {
+  it("applies 0001-0007 and loads anonymised fixtures idempotently", async () => {
     const counts = await pool.query<{
       sermons: number;
       views: number;
@@ -145,6 +149,8 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       source_sermon_column: number;
       transcript_table: string | null;
       source_table: string | null;
+      review_table: string | null;
+      review_item_table: string | null;
       speaker_join_removed: boolean;
     }>(
       `SELECT
@@ -156,6 +162,8 @@ integration("disposable PostgreSQL Phase 3B application", () => {
           WHERE table_name = 'redirects' AND column_name = 'source_sermon_id') AS source_sermon_column,
          to_regclass('public.sermon_transcripts')::text AS transcript_table,
          to_regclass('public.sermon_enrichment_sources')::text AS source_table,
+         to_regclass('public.sermon_enrichment_reviews')::text AS review_table,
+         to_regclass('public.sermon_enrichment_review_items')::text AS review_item_table,
          to_regclass('public.sermon_speakers') IS NULL AS speaker_join_removed`
     );
     expect(counts.rows[0]).toEqual({
@@ -166,11 +174,14 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       source_sermon_column: 1,
       transcript_table: "sermon_transcripts",
       source_table: "sermon_enrichment_sources",
+      review_table: "sermon_enrichment_reviews",
+      review_item_table: "sermon_enrichment_review_items",
       speaker_join_removed: true
     });
   });
 
   it("aborts the one-speaker migration with affected IDs and cleanly reapplies", async () => {
+    await runSchema("rollback", "0007_guided_sermon_review");
     await runSchema("rollback", "0006_phase3b2_pilot_provenance");
     await runSchema("rollback", "0005_approved_sermon_descriptions");
     await runSchema("rollback", "0004_sermon_enrichment_readiness");
@@ -206,6 +217,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     await runSchema("apply", "0004_sermon_enrichment_readiness");
     await runSchema("apply", "0005_approved_sermon_descriptions");
     await runSchema("apply", "0006_phase3b2_pilot_provenance");
+    await runSchema("apply", "0007_guided_sermon_review");
     expect(
       (await pool.query("SELECT to_regclass('public.sermon_speakers') IS NULL AS removed")).rows[0]
     ).toEqual({ removed: true });
@@ -789,6 +801,347 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     }
   });
 
+  it("guides an explicit private enrichment review with concurrency, audit, and reopen safeguards", async () => {
+    const admin = { subject: "local-admin-0001", role: "admin" } satisfies ApplicationIdentity;
+    const repository = new PostgresAdminSermonRepository(pool);
+    const publicRepository = new PostgresSermonRepository(pool);
+    const service = new AdminSermonService(repository, () => new Date("2026-08-05T00:00:00.000Z"));
+    let sermonId: string | null = null;
+    try {
+      const speakerId = (
+        await pool.query<{ id: string }>("SELECT id FROM speakers ORDER BY id LIMIT 1")
+      ).rows[0]!.id;
+      const created = await service.create(
+        createSermonInputSchema.parse({
+          title: "Anonymised guided review",
+          slug: "anonymised-guided-review",
+          serviceDate: "1970-01-01",
+          summary: "This private draft description explains an anonymised sermon and remains unavailable to public visitors until reviewed.",
+          summaryStatus: "draft",
+          summarySourceKind: "generated_draft",
+          transcript: {
+            bodyText: "Opening context includes mistaken caption wording for review. The remainder is anonymised local fixture text.",
+            status: "draft",
+            sourceKind: "caption",
+            sourceReference: null
+          },
+          questionAnswers: Array.from({ length: 5 }, (_, index) => ({
+            question: `What anonymised point is reviewed in question ${index + 1}?`,
+            answer: `This private fixture answer explains anonymised point ${index + 1} without real sermon content.`,
+            status: "draft",
+            sourceKind: "generated_draft",
+            sourceReference: null
+          })),
+          media: [{
+            provider: "youtube",
+            mediaType: "video",
+            externalId: "review00001",
+            canonicalUrl: "https://www.youtube.com/watch?v=review00001",
+            title: "Anonymised controlled video"
+          }]
+        }),
+        admin,
+        "guided-review-create"
+      );
+      sermonId = created.id;
+      await pool.query(
+        `INSERT INTO sermon_enrichment_sources (
+           sermon_id, provider, video_id, canonical_url, caption_language,
+           caption_track_type, original_filename, source_content_sha256,
+           retrieval_attribution, source_character_count, cleaned_character_count,
+           apparent_completeness, uncertainty_marker_count, warnings,
+           unresolved_passages, processing_version, imported_at, processed_at,
+           processing_duration_ms, estimated_review_minutes,
+           manual_attention_required, accuracy_review_status
+         ) VALUES (
+           $1, 'youtube', 'review00001',
+           'https://www.youtube.com/watch?v=review00001', 'en-AU', 'unknown',
+           'anonymised-review.txt', $2, 'authorised_youtube_studio_export',
+           101, 101, 'requires_manual_review', 1, $3::jsonb, $4::jsonb,
+           'anonymised-guided-review-v1', '2026-08-05T00:00:00.000Z',
+           '2026-08-05T00:00:00.000Z', 10, 1, true, 'required'
+         )`,
+        [
+          sermonId,
+          "a".repeat(64),
+          JSON.stringify([{
+            code: "names_and_scripture_references_require_verification",
+            safeDetail: "Verify anonymised names and scripture references."
+          }]),
+          JSON.stringify([{
+            marker: "mistaken caption wording",
+            safeReason: "Check the anonymised caption phrase."
+          }])
+        ]
+      );
+
+      const auditBeforeRead = (await service.listAudit(sermonId, admin)).length;
+      const initial = await service.enrichmentReviewDetail(sermonId, admin);
+      const repeatedRead = await service.enrichmentReviewDetail(sermonId, admin);
+      expect(repeatedRead.review).toEqual(initial.review);
+      expect((await service.listAudit(sermonId, admin)).length).toBe(auditBeforeRead);
+      expect(initial).toMatchObject({
+        sermon: { status: "draft", serviceDate: "1970-01-01" },
+        review: { identityStatus: "pending", currentStage: 1, completedAt: null },
+        progress: { resolvedItemCount: 0, unresolvedItemCount: 3, canFinish: false }
+      });
+      expect(initial.items.map((item) => item.category)).toEqual([
+        "caption_error",
+        "name",
+        "scripture"
+      ]);
+      expect(initial.items[0]?.context?.flagged).toBe("mistaken caption wording");
+      expect(initial.items.every((item) => item.decisionStatus === "pending")).toBe(true);
+
+      await expect(service.updateEnrichmentReviewProgress(
+        sermonId,
+        enrichmentReviewProgressInputSchema.parse({
+          sermonRowVersion: initial.sermon.rowVersion,
+          reviewRowVersion: initial.review.rowVersion,
+          currentStage: 2,
+          identityStatus: "confirmed"
+        }),
+        admin,
+        "guided-review-invalid-identity"
+      )).rejects.toMatchObject({ status: 400, code: "invalid_request" });
+
+      const identifiedSermon = await service.update(
+        sermonId,
+        updateSermonInputSchema.parse({
+          rowVersion: initial.sermon.rowVersion,
+          title: "Anonymised guided review",
+          speakerId,
+          serviceDate: "2026-08-05"
+        }),
+        admin,
+        "guided-review-identity-save"
+      );
+      let review = await service.enrichmentReviewDetail(sermonId, admin);
+      review = await service.updateEnrichmentReviewProgress(
+        sermonId,
+        enrichmentReviewProgressInputSchema.parse({
+          sermonRowVersion: identifiedSermon.rowVersion,
+          reviewRowVersion: review.review.rowVersion,
+          currentStage: 2,
+          identityStatus: "confirmed"
+        }),
+        admin,
+        "guided-review-identity-confirm"
+      );
+      expect(review.review.identityStatus).toBe("confirmed");
+
+      const caption = review.items.find((item) => item.category === "caption_error")!;
+      const name = review.items.find((item) => item.category === "name")!;
+      const scripture = review.items.find((item) => item.category === "scripture")!;
+      review = await service.decideEnrichmentReviewItem(
+        sermonId,
+        name.id,
+        enrichmentReviewItemDecisionInputSchema.parse({
+          sermonRowVersion: review.sermon.rowVersion,
+          reviewRowVersion: review.review.rowVersion,
+          itemRowVersion: name.rowVersion,
+          transcriptRowVersion: review.sermon.transcript!.rowVersion,
+          decision: "left_unresolved"
+        }),
+        admin,
+        "guided-review-left-unresolved"
+      );
+      expect(review.progress.unresolvedItemCount).toBe(3);
+      await expect(service.decideEnrichmentReviewItem(
+        sermonId,
+        name.id,
+        enrichmentReviewItemDecisionInputSchema.parse({
+          sermonRowVersion: review.sermon.rowVersion,
+          reviewRowVersion: initial.review.rowVersion,
+          itemRowVersion: name.rowVersion,
+          transcriptRowVersion: review.sermon.transcript!.rowVersion,
+          decision: "accepted"
+        }),
+        admin,
+        "guided-review-stale-item"
+      )).rejects.toMatchObject({ status: 409, code: "stale_write" });
+
+      for (const itemId of [name.id, scripture.id]) {
+        const item = review.items.find((candidate) => candidate.id === itemId)!;
+        review = await service.decideEnrichmentReviewItem(
+          sermonId,
+          item.id,
+          enrichmentReviewItemDecisionInputSchema.parse({
+            sermonRowVersion: review.sermon.rowVersion,
+            reviewRowVersion: review.review.rowVersion,
+            itemRowVersion: item.rowVersion,
+            transcriptRowVersion: review.sermon.transcript!.rowVersion,
+            decision: "accepted"
+          }),
+          admin,
+          `guided-review-accept-${item.category}`
+        );
+      }
+      const currentCaption = review.items.find((item) => item.id === caption.id)!;
+      review = await service.decideEnrichmentReviewItem(
+        sermonId,
+        currentCaption.id,
+        enrichmentReviewItemDecisionInputSchema.parse({
+          sermonRowVersion: review.sermon.rowVersion,
+          reviewRowVersion: review.review.rowVersion,
+          itemRowVersion: currentCaption.rowVersion,
+          transcriptRowVersion: review.sermon.transcript!.rowVersion,
+          decision: "corrected",
+          correctionText: "reviewed caption wording"
+        }),
+        admin,
+        "guided-review-correction"
+      );
+      expect(review.sermon.transcript?.bodyText).toContain("reviewed caption wording");
+      expect(review.progress).toMatchObject({ resolvedItemCount: 1, unresolvedItemCount: 2 });
+      expect(review.items.filter((item) => item.id !== caption.id).every(
+        (item) => item.decisionStatus === "pending"
+      )).toBe(true);
+
+      for (const item of review.items.filter((candidate) => candidate.id !== caption.id)) {
+        const current = review.items.find((candidate) => candidate.id === item.id)!;
+        review = await service.decideEnrichmentReviewItem(
+          sermonId,
+          current.id,
+          enrichmentReviewItemDecisionInputSchema.parse({
+            sermonRowVersion: review.sermon.rowVersion,
+            reviewRowVersion: review.review.rowVersion,
+            itemRowVersion: current.rowVersion,
+            transcriptRowVersion: review.sermon.transcript!.rowVersion,
+            decision: "accepted"
+          }),
+          admin,
+          `guided-review-reaccept-${current.category}`
+        );
+      }
+      expect(review.progress.unresolvedItemCount).toBe(0);
+
+      let sermon = await service.update(
+        sermonId,
+        updateSermonInputSchema.parse({
+          rowVersion: review.sermon.rowVersion,
+          transcript: {
+            bodyText: review.sermon.transcript!.bodyText,
+            status: "approved",
+            sourceKind: "caption",
+            sourceReference: null
+          }
+        }),
+        admin,
+        "guided-review-transcript-approve"
+      );
+      sermon = await service.update(
+        sermonId,
+        updateSermonInputSchema.parse({
+          rowVersion: sermon.rowVersion,
+          summary: sermon.summary,
+          summaryStatus: "approved",
+          summarySourceKind: sermon.summarySourceKind,
+          summarySourceReference: sermon.summarySourceReference
+        }),
+        admin,
+        "guided-review-description-approve"
+      );
+      sermon = await service.update(
+        sermonId,
+        updateSermonInputSchema.parse({
+          rowVersion: sermon.rowVersion,
+          questionAnswers: sermon.questionAnswers.map((item) => ({
+            question: item.question,
+            answer: item.answer,
+            status: "approved",
+            sourceKind: item.sourceKind,
+            sourceReference: item.sourceReference
+          }))
+        }),
+        admin,
+        "guided-review-qa-approve"
+      );
+      review = await service.enrichmentReviewDetail(sermonId, admin);
+      expect(review.items.every(
+        (item) => item.transcriptRowVersion === review.sermon.transcript!.rowVersion
+      )).toBe(true);
+      review = await service.updateEnrichmentReviewProgress(
+        sermonId,
+        enrichmentReviewProgressInputSchema.parse({
+          sermonRowVersion: sermon.rowVersion,
+          reviewRowVersion: review.review.rowVersion,
+          currentStage: 6
+        }),
+        admin,
+        "guided-review-resume-stage"
+      );
+      expect((await service.enrichmentReviewDetail(sermonId, admin)).review.currentStage).toBe(6);
+      review = await service.finishEnrichmentReview(
+        sermonId,
+        finishEnrichmentReviewInputSchema.parse({
+          sermonRowVersion: review.sermon.rowVersion,
+          reviewRowVersion: review.review.rowVersion
+        }),
+        admin,
+        "guided-review-finish"
+      );
+      expect(review).toMatchObject({
+        sermon: { status: "draft" },
+        review: { currentStage: 6 },
+        progress: { canFinish: true, percentReviewed: 100 }
+      });
+      expect(review.review.completedAt).not.toBeNull();
+      expect(await publicRepository.findPublishedBySlug("anonymised-guided-review")).toBeNull();
+      expect((await publicRepository.listPublished(
+        publicSermonListQuerySchema.parse({ query: "anonymised-guided-review" })
+      )).data).toHaveLength(0);
+
+      await expect(service.update(
+        sermonId,
+        updateSermonInputSchema.parse({
+          rowVersion: review.sermon.rowVersion,
+          transcript: {
+            bodyText: `${review.sermon.transcript!.bodyText} Changed after completion.`,
+            status: "approved",
+            sourceKind: "caption",
+            sourceReference: null
+          }
+        }),
+        admin,
+        "guided-review-unsafe-direct-approval"
+      )).rejects.toMatchObject({ status: 400, code: "invalid_request" });
+      const reopenedSermon = await service.update(
+        sermonId,
+        updateSermonInputSchema.parse({
+          rowVersion: review.sermon.rowVersion,
+          transcript: {
+            bodyText: `${review.sermon.transcript!.bodyText} Changed after completion.`,
+            status: "draft",
+            sourceKind: "caption",
+            sourceReference: null
+          }
+        }),
+        admin,
+        "guided-review-reopen"
+      );
+      const reopened = await service.enrichmentReviewDetail(sermonId, admin);
+      expect(reopened).toMatchObject({
+        sermon: { rowVersion: reopenedSermon.rowVersion, status: "draft" },
+        review: { currentStage: 2, completedAt: null },
+        progress: { resolvedItemCount: 0, unresolvedItemCount: 3, canFinish: false }
+      });
+      expect(reopened.items.every((item) => item.decisionStatus === "pending")).toBe(true);
+      expect((await service.listAudit(sermonId, admin)).map((event) => event.action)).toEqual(
+        expect.arrayContaining([
+          "sermon.enrichment_identity_confirmed",
+          "sermon.enrichment_review_item_corrected",
+          "sermon.enrichment_review_finished"
+        ])
+      );
+    } finally {
+      if (sermonId) {
+        await pool.query("DELETE FROM audit_events WHERE entity_id = $1", [sermonId]);
+        await pool.query("DELETE FROM sermons WHERE id = $1", [sermonId]);
+      }
+    }
+  });
+
   it("supports admin filters, counts, every state transition, and transactional edits", async () => {
     const admin = { subject: "local-admin-0001", role: "admin" } satisfies ApplicationIdentity;
     const repository = new PostgresAdminSermonRepository(pool);
@@ -1149,6 +1502,9 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       new LocalTestIdentityProvider(true, "development")
     );
     expect((await route(new Request("http://127.0.0.1/api/v1/admin/sermons"))).status).toBe(401);
+    expect((await route(new Request(
+      "http://127.0.0.1/api/v1/admin/sermons/75df2144-b557-50f6-98bd-011cd696bfb9/review"
+    ))).status).toBe(401);
     expect((await route(new Request("http://127.0.0.1/api/v1/admin/sermons", { headers: { "x-local-identity": "admin" } }))).status).toBe(200);
     for (const selector of ["editor", "contributor", "unknown"]) {
       expect((await route(new Request("http://127.0.0.1/api/v1/admin/sermons", { headers: { "x-local-identity": selector, "x-actor-role": "admin" } }))).status).toBe(401);
@@ -1156,7 +1512,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     expect((await route(new Request("http://127.0.0.1/api/v1/admin/audit", { headers: { "x-local-identity": "admin" } }))).status).toBe(200);
   });
 
-  it("keeps six schema receipts separate from content-import receipts and verifies a no-op", async () => {
+  it("keeps seven schema receipts separate from content-import receipts and verifies a no-op", async () => {
     const migrations = await loadSchemaMigrations();
     const journal = await pool.query<{
       migration_order: number;
@@ -1183,7 +1539,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
          (SELECT count(*)::integer FROM migration_records) AS content_records,
          (SELECT count(*)::integer FROM sermon_enrichment_draft_imports) AS draft_import_receipts`
     );
-    expect(before.rows[0]?.schema_receipts).toBe(6);
+    expect(before.rows[0]?.schema_receipts).toBe(7);
     expect(before.rows[0]?.content_records).toBe(5);
     expect(before.rows[0]?.draft_import_receipts).toBeGreaterThanOrEqual(0);
     await expect(runSchema("apply")).resolves.toEqual({
@@ -1191,7 +1547,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       outcome: "no_op",
       appliedMigrationIds: [],
       rolledBackMigrationIds: [],
-      journalReceiptCount: 6
+      journalReceiptCount: 7
     });
     expect((await pool.query<{
       schema_receipts: number;
@@ -1206,6 +1562,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   });
 
   it("applies only the pending canonical suffix from a valid partial journal", async () => {
+    await runSchema("rollback", "0007_guided_sermon_review");
     await runSchema("rollback", "0006_phase3b2_pilot_provenance");
     await runSchema("rollback", "0005_approved_sermon_descriptions");
     await runSchema("rollback", "0004_sermon_enrichment_readiness");
@@ -1218,66 +1575,67 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       appliedMigrationIds: [
         "0004_sermon_enrichment_readiness",
         "0005_approved_sermon_descriptions",
-        "0006_phase3b2_pilot_provenance"
+        "0006_phase3b2_pilot_provenance",
+        "0007_guided_sermon_review"
       ],
       rolledBackMigrationIds: [],
-      journalReceiptCount: 6
+      journalReceiptCount: 7
     });
   });
 
   it("fails before apply or rollback on changed and unknown receipts", async () => {
     const migrations = await loadSchemaMigrations();
-    const sixth = migrations[5]!;
+    const seventh = migrations[6]!;
     await pool.query(
-      "UPDATE schema_migrations SET checksum_sha256 = $1 WHERE migration_order = 6",
+      "UPDATE schema_migrations SET checksum_sha256 = $1 WHERE migration_order = 7",
       ["f".repeat(64)]
     );
-    await expect(runSchema("rollback", "0006_phase3b2_pilot_provenance"))
+    await expect(runSchema("rollback", "0007_guided_sermon_review"))
       .rejects.toMatchObject({ code: "migration_checksum_mismatch" });
-    expect((await pool.query<{ receipt: number; source_present: boolean }>(
+    expect((await pool.query<{ receipt: number; review_present: boolean }>(
       `SELECT
-         (SELECT count(*)::integer FROM schema_migrations WHERE migration_order = 6) AS receipt,
-         to_regclass('public.sermon_enrichment_sources') IS NOT NULL AS source_present`
-    )).rows[0]).toEqual({ receipt: 1, source_present: true });
+         (SELECT count(*)::integer FROM schema_migrations WHERE migration_order = 7) AS receipt,
+         to_regclass('public.sermon_enrichment_reviews') IS NOT NULL AS review_present`
+    )).rows[0]).toEqual({ receipt: 1, review_present: true });
     await pool.query(
-      "UPDATE schema_migrations SET checksum_sha256 = $1 WHERE migration_order = 6",
-      [sixth.checksumSha256]
+      "UPDATE schema_migrations SET checksum_sha256 = $1 WHERE migration_order = 7",
+      [seventh.checksumSha256]
     );
 
     await pool.query(
       `ALTER TABLE sermons
        ADD COLUMN migration_journal_rollback_probe uuid
-       REFERENCES sermon_enrichment_sources(sermon_id)`
+       REFERENCES sermon_enrichment_reviews(sermon_id)`
     );
-    await expect(runSchema("rollback", "0006_phase3b2_pilot_provenance"))
+    await expect(runSchema("rollback", "0007_guided_sermon_review"))
       .rejects.toMatchObject({ code: "migration_transaction_failure" });
-    expect((await pool.query<{ receipt: number; source_present: boolean }>(
+    expect((await pool.query<{ receipt: number; review_present: boolean }>(
       `SELECT
-         (SELECT count(*)::integer FROM schema_migrations WHERE migration_order = 6) AS receipt,
-         to_regclass('public.sermon_enrichment_sources') IS NOT NULL AS source_present`
-    )).rows[0]).toEqual({ receipt: 1, source_present: true });
+         (SELECT count(*)::integer FROM schema_migrations WHERE migration_order = 7) AS receipt,
+         to_regclass('public.sermon_enrichment_reviews') IS NOT NULL AS review_present`
+    )).rows[0]).toEqual({ receipt: 1, review_present: true });
     await pool.query("ALTER TABLE sermons DROP COLUMN migration_journal_rollback_probe");
 
-    await expect(runSchema("rollback", "0006_phase3b2_pilot_provenance"))
-      .resolves.toMatchObject({ outcome: "rolled_back", journalReceiptCount: 5 });
-    expect((await pool.query<{ receipt: number; source_present: boolean }>(
+    await expect(runSchema("rollback", "0007_guided_sermon_review"))
+      .resolves.toMatchObject({ outcome: "rolled_back", journalReceiptCount: 6 });
+    expect((await pool.query<{ receipt: number; review_present: boolean }>(
       `SELECT
-         (SELECT count(*)::integer FROM schema_migrations WHERE migration_order = 6) AS receipt,
-         to_regclass('public.sermon_enrichment_sources') IS NOT NULL AS source_present`
-    )).rows[0]).toEqual({ receipt: 0, source_present: false });
+         (SELECT count(*)::integer FROM schema_migrations WHERE migration_order = 7) AS receipt,
+         to_regclass('public.sermon_enrichment_reviews') IS NOT NULL AS review_present`
+    )).rows[0]).toEqual({ receipt: 0, review_present: false });
 
     await pool.query(
       `INSERT INTO schema_migrations (migration_order, migration_id, checksum_sha256)
-       VALUES (6, '0007_unknown', $1)`,
-      [sixth.checksumSha256]
+       VALUES (7, '0008_unknown', $1)`,
+      [seventh.checksumSha256]
     );
     await expect(runSchema("apply")).rejects.toMatchObject({ code: "journal_state_failure" });
     expect((await pool.query<{ present: boolean }>(
-      "SELECT to_regclass('public.sermon_enrichment_sources') IS NOT NULL AS present"
+      "SELECT to_regclass('public.sermon_enrichment_reviews') IS NOT NULL AS present"
     )).rows[0]).toEqual({ present: false });
-    await pool.query("DELETE FROM schema_migrations WHERE migration_order = 6");
-    await expect(runSchema("apply", "0006_phase3b2_pilot_provenance"))
-      .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 6 });
+    await pool.query("DELETE FROM schema_migrations WHERE migration_order = 7");
+    await expect(runSchema("apply", "0007_guided_sermon_review"))
+      .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 7 });
   });
 
   it("refuses unjournalled objects and serialises concurrent fresh application", async () => {
@@ -1297,12 +1655,12 @@ integration("disposable PostgreSQL Phase 3B application", () => {
 
     const results = await Promise.all([runSchema("apply"), runSchema("apply")]);
     expect(results.map((result) => result.outcome).sort()).toEqual(["applied", "no_op"]);
-    expect(results.reduce((count, result) => count + result.appliedMigrationIds.length, 0)).toBe(6);
+    expect(results.reduce((count, result) => count + result.appliedMigrationIds.length, 0)).toBe(7);
     expect((await pool.query<{ receipts: number; distinct_receipts: number }>(
       `SELECT count(*)::integer AS receipts,
               count(DISTINCT migration_id)::integer AS distinct_receipts
        FROM schema_migrations`
-    )).rows[0]).toEqual({ receipts: 6, distinct_receipts: 6 });
+    )).rows[0]).toEqual({ receipts: 7, distinct_receipts: 7 });
 
     await expect(runSchema("rollback")).resolves.toMatchObject({
       outcome: "rolled_back",
@@ -1310,7 +1668,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     });
     await expect(runSchema("apply")).resolves.toMatchObject({
       outcome: "applied",
-      journalReceiptCount: 6
+      journalReceiptCount: 7
     });
   });
 });

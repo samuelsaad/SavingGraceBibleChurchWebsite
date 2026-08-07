@@ -1,6 +1,6 @@
 # Saving Grace Bible Church Website
 
-Local Phase 3B.2 caption/enrichment rehearsal plus provisional Phase 3B.2b punctuation-workflow hardening for the Astro/TypeScript/PostgreSQL replacement described in `church-website-architecture-plan.md`.
+Local Phase 3B.2 caption/enrichment rehearsal, Phase 3B.2b punctuation hardening, and a guided private administrator-review workflow for the Astro/TypeScript/PostgreSQL replacement described in `church-website-architecture-plan.md`.
 
 ## Current scope
 
@@ -23,11 +23,11 @@ Local Phase 3B.2 caption/enrichment rehearsal plus provisional Phase 3B.2b punct
 - Date, status, slug, taxonomy, scripture, and media transformations
 - Structured migration audit/warning output
 - Permanent whole-site SEO non-regression, one-to-one URL mapping, and launch-gate planning
-- Responsive accessible six-step local `/admin` workflow with description editor/status/actions/counts, anonymised-data notice, progress, issue filters, checklist, transcript/Q&A editing, slug redirects, and safeguarded deletion dispositions
+- Responsive accessible local `/admin` foundation plus a dedicated one-stage-at-a-time `/admin/sermons/:id/review` workflow for imported drafts, with typed flagged-item decisions, large transcript/Q&A editors, persistent progress, explicit approval, optimistic concurrency and audit
 - Server-rendered uncollapsed approved description before media/transcript/Q&A; collapsed transcript remains in initial markup and list payloads omit heavy bodies
 - Automated migration, security, lifecycle, configuration, and schema-contract tests
 
-This milestone does not include deployment, cloud infrastructure, Cognito configuration, production loading, the remaining 450 sermons, external providers, audio/video processing, new transcription, or any WordPress/YouTube mutation. Phase 3B.2b hardens the offline workflow for exactly the two records identified by the committed Phase 3B.2 outcome as requiring manual punctuation; it does not reprocess the already-successful record. The hardened implementation has been exercised only with anonymised fixtures. Real private preparation, finalisation, import, idempotency and verification results remain pending a separate explicitly authorised rerun. The AWS runtime and Astro production adapter remain intentionally undecided.
+This milestone does not include deployment, cloud infrastructure, Cognito configuration, production loading, the remaining 450 sermons, external providers, audio/video processing, new transcription, or any WordPress/YouTube mutation. Phase 3B.2b is limited to the two records identified by the committed Phase 3B.2 outcome as requiring manual punctuation; it does not reprocess the already-successful record. Those two authorised records now exist only as private drafts awaiting genuine administrator review. The guided review implementation uses anonymised fixtures for automated and visual evidence; it records no decision merely by viewing or saving. The AWS runtime and Astro production adapter remain intentionally undecided.
 
 The disposable PostgreSQL integration is verified only against `savinggrace_sermons_test` on `127.0.0.1:5432`. The schema runner uses a separate `schema_migrations` journal, stable checksums of each paired up/down definition, an advisory lock, exact-prefix validation and transactional DDL/receipt writes. A matching fully applied schema is a no-op; unknown, changed, missing, duplicate, reordered or unjournalled history fails closed instead of being baselined. Disposable database contents are test state, not milestone authority.
 
@@ -79,6 +79,8 @@ npm run dashboard:local
 
 Open `http://127.0.0.1:4322/admin`. The harness refuses non-loopback database and listener targets. Stop it with `Ctrl+C` after local review.
 
+Imported Phase 3B.2 drafts open in the dedicated `/admin/sermons/:id/review` route. The route shows identity, typed flagged items, transcript, description, ordered Q&A and final summary one stage at a time. It has no publish, schedule, archive or deletion action.
+
 The loader and integration suite refuse every target except `savinggrace_sermons_test` on loopback port 5432. Real PostgreSQL integration tests additionally require `TEST_DATABASE_URL` and `RUN_POSTGRES_INTEGRATION=1`.
 
 ## Project boundaries
@@ -105,4 +107,4 @@ The proprietary `advanced-sermons*.zip` pattern and extracted plugin directories
 
 ## Next approval gate
 
-Phase 3C remains paused and the remaining 450 sermons are not authorised. First, separately authorise and run the real private Phase 3B.2b workflow, review its bounded report, and obtain administrator review of every draft and retained uncertainty. Before any larger Phase 3B.2 batch, the church must explicitly accept the verified three-record pilot report, nominate administrator reviewers/approvers, confirm real source identities/service dates, approve the next exact allowlist and batch size, and reconfirm workload, privacy/retention, retry, correction, audit, rollback and human-approval rules. Launch remains blocked until all 453 records are complete and separately approved and the whole-site SEO gate passes.
+Phase 3C remains paused and the remaining 450 sermons are not authorised. Samuel must resume and complete explicit administrator review of each private pilot draft and retained uncertainty before any pilot acceptance decision. Before any larger Phase 3B.2 batch, the church must explicitly accept the verified pilot report, nominate administrator reviewers/approvers, confirm real source identities/service dates, approve the next exact allowlist and batch size, and reconfirm workload, privacy/retention, retry, correction, audit, rollback and human-approval rules. Launch remains blocked until all 453 records are complete and separately approved and the whole-site SEO gate passes.

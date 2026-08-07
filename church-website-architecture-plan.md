@@ -14,6 +14,8 @@
 
 > **Phase 3B.1a approved-description decision (5 August 2026):** Every public sermon requires one concise, human-reviewed and approved plain-text sermon description. `sermons.summary` remains the canonical field and the administration label is **Sermon description**; `seo_description` is a separate optional controlled override. Only approved summaries are public, searchable at weight C, or readiness-eligible. All 453 included historical records require approved descriptions before launch, and none of those real descriptions is claimed complete. Migration `0005_approved_sermon_descriptions.sql` adds the minimal lifecycle/provenance metadata and approved-only search input without duplicating the summary field.
 
+> **Phase 3B.2b administrator-review correction (6 August 2026):** Imported enrichment drafts use a dedicated one-stage-at-a-time private review route rather than the general all-in-one lifecycle form. Migration `0007_guided_sermon_review.sql` adds typed pending-by-default caption/name/Scripture decisions, transcript-version association, optimistic concurrency, audit attribution and pause/resume progress. Transcript edits invalidate earlier transcript-bound decisions. Finishing review does not submit, schedule, publish, archive or delete; the sermon remains draft/private and the human administrator retains every approval decision.
+
 > **Permanent SEO decision:** The existing website performs well in organic search. Whole-site SEO non-regression is a launch-blocking acceptance criterion for every future milestone. Preserve existing search signals at minimum, improve technical SEO safely where possible, and do not launch unless one-to-one URL, metadata, canonical, crawlability, redirect, indexability, performance, and structured-data parity is demonstrated through the process in `seo-migration-validation-plan.md`.
 
 ---
@@ -907,6 +909,10 @@ GET /api/v1/sermons?query=holiness&speaker=example-speaker&book=isaiah&page=1&pa
 ```text
 POST   /api/v1/admin/sermons
 PATCH  /api/v1/admin/sermons/:id
+GET    /api/v1/admin/sermons/:id/review
+PATCH  /api/v1/admin/sermons/:id/review/progress
+POST   /api/v1/admin/sermons/:id/review/items/:itemId/decision
+POST   /api/v1/admin/sermons/:id/review/finish
 POST   /api/v1/admin/sermons/:id/submit
 POST   /api/v1/admin/sermons/:id/withdraw
 POST   /api/v1/admin/sermons/:id/schedule
