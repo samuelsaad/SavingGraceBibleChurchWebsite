@@ -27,7 +27,10 @@ export const descriptionStatusSchema = z.enum(["missing", "draft", "in_review", 
 export const descriptionSourceKindSchema = z.enum(["manual", "imported", "generated_draft"]);
 export const questionAnswerStatusSchema = z.enum(["draft", "in_review", "approved"]);
 export const enrichmentReviewIdentityStatusSchema = z.enum(["pending", "confirmed"]);
-export const enrichmentReviewItemCategorySchema = z.enum(["caption_error", "name", "scripture"]);
+export const enrichmentReviewItemCategorySchema = z.enum([
+  "caption_error",
+  "name_or_scripture_reference"
+]);
 export const enrichmentReviewItemDecisionSchema = z.enum([
   "pending",
   "accepted",
@@ -408,10 +411,14 @@ export type FinishEnrichmentReviewInput = z.infer<typeof finishEnrichmentReviewI
 
 export const enrichmentReviewItemResponseSchema = z.object({
   id: z.uuid(),
+  identitySha256: z.string().regex(/^[0-9a-f]{64}$/),
+  sourceRecordKey: z.string().regex(/^authorised-record-[1-9][0-9]*$/),
   category: enrichmentReviewItemCategorySchema,
   displayOrder: z.number().int().positive(),
+  categoryOrdinal: z.number().int().positive(),
   label: z.string(),
-  guidance: z.string(),
+  detail: z.string(),
+  supportingParagraphs: z.array(z.number().int().positive()).min(1).max(100),
   sourceMarker: z.string().nullable(),
   decisionStatus: enrichmentReviewItemDecisionSchema,
   correctionText: z.string().nullable(),
@@ -422,7 +429,11 @@ export const enrichmentReviewItemResponseSchema = z.object({
     before: z.string(),
     flagged: z.string(),
     after: z.string()
-  }).nullable()
+  }).nullable(),
+  supportingContext: z.array(z.object({
+    paragraphNumber: z.number().int().positive(),
+    text: z.string()
+  }))
 });
 
 export const enrichmentReviewResponseSchema = z.object({
@@ -440,6 +451,9 @@ export const enrichmentReviewResponseSchema = z.object({
     resolvedItemCount: z.number().int().nonnegative(),
     unresolvedItemCount: z.number().int().nonnegative(),
     totalItemCount: z.number().int().nonnegative(),
+    presentItemCount: z.number().int().nonnegative(),
+    itemSetMatches: z.boolean(),
+    transcriptMatchesExpected: z.boolean(),
     completedStageCount: z.number().int().min(0).max(6),
     percentReviewed: z.number().int().min(0).max(100),
     canFinish: z.boolean()

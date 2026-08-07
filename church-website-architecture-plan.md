@@ -3,8 +3,8 @@
 ## Technical Architecture, Advanced Sermons Migration, Security, and Delivery Plan
 
 **Document status:** Authoritative working specification  
-**Revision:** 2.7
-**Updated:** 6 August 2026
+**Revision:** 2.8
+**Updated:** 7 August 2026
 **Primary audience:** Codex implementation chat, project owner, and church technical administrator  
 **Purpose:** Give the implementation assistant a complete, precise account of what has been agreed, what has been discovered, what remains unknown, and how to proceed safely.
 
@@ -15,6 +15,8 @@
 > **Phase 3B.1a approved-description decision (5 August 2026):** Every public sermon requires one concise, human-reviewed and approved plain-text sermon description. `sermons.summary` remains the canonical field and the administration label is **Sermon description**; `seo_description` is a separate optional controlled override. Only approved summaries are public, searchable at weight C, or readiness-eligible. All 453 included historical records require approved descriptions before launch, and none of those real descriptions is claimed complete. Migration `0005_approved_sermon_descriptions.sql` adds the minimal lifecycle/provenance metadata and approved-only search input without duplicating the summary field.
 
 > **Phase 3B.2b administrator-review correction (6 August 2026):** Imported enrichment drafts use a dedicated one-stage-at-a-time private review route rather than the general all-in-one lifecycle form. Migration `0007_guided_sermon_review.sql` adds typed pending-by-default caption/name/Scripture decisions, transcript-version association, optimistic concurrency, audit attribution and pause/resume progress. Transcript edits invalidate earlier transcript-bound decisions. Finishing review does not submit, schedule, publish, archive or delete; the sermon remains draft/private and the human administrator retains every approval decision.
+
+> **Phase 3B.2b atomic-preservation correction (7 August 2026):** The six aggregate prompts from migration `0007` cannot represent the 86 authoritative private findings. Migration `0008_atomic_sermon_review_items.sql` preserves exactly 42 and 44 deterministic atomic items with truthful category, stable ordinal, private detail, supporting paragraphs and transcript hash/version. Completion reconciles the exact ordered identity set; aggregate warnings never count as decisions. Every item remains pending until Samuel makes an explicit individual decision.
 
 > **Permanent SEO decision:** The existing website performs well in organic search. Whole-site SEO non-regression is a launch-blocking acceptance criterion for every future milestone. Preserve existing search signals at minimum, improve technical SEO safely where possible, and do not launch unless one-to-one URL, metadata, canonical, crawlability, redirect, indexability, performance, and structured-data parity is demonstrated through the process in `seo-migration-validation-plan.md`.
 
@@ -1512,9 +1514,11 @@ Phase 3B.2b provisionally hardens the offline completion path for exactly the tw
 
 No real private Phase 3B.2b captions or artifacts were inspected or processed during hardening. Private processing results, counts, import/idempotency evidence, timings and workload projections are unverified and must not be inferred from fixture tests. This hardening does not authorise the remaining 450 sermons. Before another batch, require a separately authorised private pilot rerun, administrator review of its drafts and uncertainties, explicit acceptance of its bounded verified report, an exact allowlist/batch, approved reviewers/approvers, confirmed source identities/dates, and renewed workload, privacy, retention, retry, correction, audit and rollback approval. Phase 3C remains paused.
 
+That paragraph records the earlier implementation-only hardening milestone. Subsequent explicit private exact-two authority produced and restored both draft sets without external services, then migration `0008` preserved their 42 and 44 detailed findings as 86 individually pending decisions. Content accuracy, administrator approval, pilot acceptance, any larger batch and Phase 3C remain outstanding.
+
 ### Journalled local schema execution
 
-Local schema execution for the canonical `0001`-`0006` SQL pairs is fail closed and independent of content migration. `schema_migrations` stores stable order, identity, paired-definition checksum and application time. The runner normalises supported line endings for deterministic checksums, serialises planning and execution with a PostgreSQL advisory lock, accepts only an exact trusted journal prefix, applies only the pending suffix and performs DDL plus receipt insertion/deletion transactionally. Matching reruns are no-ops. Unknown, changed, missing, duplicate, reordered or unjournalled history blocks apply and rollback; existing objects are never silently baselined. The standalone down SQL remains available for independently controlled rollback verification.
+Local schema execution for the canonical `0001`-`0008` SQL pairs is fail closed and independent of content migration. `schema_migrations` stores stable order, identity, paired-definition checksum and application time. The runner normalises supported line endings for deterministic checksums, serialises planning and execution with a PostgreSQL advisory lock, accepts only an exact trusted journal prefix, applies only the pending suffix and performs DDL plus receipt insertion/deletion transactionally. Matching reruns are no-ops. Unknown, changed, missing, duplicate, reordered or unjournalled history blocks apply and rollback; existing objects are never silently baselined. The standalone down SQL remains available for independently controlled rollback verification.
 
 ## 29. Reference Documentation
 

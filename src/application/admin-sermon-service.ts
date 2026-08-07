@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import {
   adminSermonDetailSchema,
   adminSermonListResponseSchema,
@@ -120,18 +121,58 @@ function reviewItemContext(
   };
 }
 
+function supportingParagraphContext(
+  transcript: string,
+  paragraphNumbers: readonly number[]
+): Array<{ paragraphNumber: number; text: string }> {
+  const paragraphs = transcript.split(/\n\s*\n/u);
+  return paragraphNumbers.flatMap((paragraphNumber) => {
+    const text = paragraphs[paragraphNumber - 1]?.trim();
+    return text ? [{ paragraphNumber, text }] : [];
+  });
+}
+
+function sha256(value: string): string {
+  return createHash("sha256").update(value, "utf8").digest("hex");
+}
+
 function enrichmentReviewDto(
   sermon: StoredSermonDetail,
   workflow: EnrichmentReviewWorkflowDto
 ): EnrichmentReviewResponse {
   const transcript = sermon.transcript?.bodyText ?? "";
+  const expectedItemCount = workflow.state.expectedItemCount ?? workflow.items.length;
+  const actualItemSetSha256 = sha256(
+    workflow.items.map((item) => item.identitySha256).join("\n")
+  );
+  const itemSetMatches =
+    workflow.state.sourceRecordKey !== null &&
+    workflow.state.expectedItemCount !== null &&
+    workflow.state.expectedItemSetSha256 !== null &&
+    workflow.state.storedItemCount === workflow.state.expectedItemCount &&
+    workflow.state.atomicItemCount === workflow.state.expectedItemCount &&
+    workflow.state.actualItemSetSha256 === workflow.state.expectedItemSetSha256 &&
+    workflow.items.length === workflow.state.expectedItemCount &&
+    actualItemSetSha256 === workflow.state.expectedItemSetSha256 &&
+    workflow.items.every((item, index) =>
+      item.displayOrder === index + 1 && item.sourceRecordKey === workflow.state.sourceRecordKey
+    );
+  const transcriptMatchesExpected =
+    sermon.transcript !== null &&
+    workflow.state.expectedTranscriptSha256 !== null &&
+    workflow.state.expectedTranscriptRowVersion !== null &&
+    sha256(transcript) === workflow.state.expectedTranscriptSha256 &&
+    sermon.transcript.rowVersion === workflow.state.expectedTranscriptRowVersion &&
+    workflow.items.every((item) => item.transcriptRowVersion === sermon.transcript!.rowVersion);
   const resolvedItemCount = workflow.items.filter((item) =>
     item.decisionStatus === "accepted" || item.decisionStatus === "corrected"
   ).length;
-  const unresolvedItemCount = workflow.items.length - resolvedItemCount;
+  const unresolvedItemCount = itemSetMatches && transcriptMatchesExpected
+    ? expectedItemCount - resolvedItemCount
+    : Math.max(expectedItemCount - resolvedItemCount, 1);
   const stageComplete = [
     workflow.state.identityStatus === "confirmed",
-    unresolvedItemCount === 0,
+    itemSetMatches && transcriptMatchesExpected && unresolvedItemCount === 0,
     sermon.transcript?.status === "approved",
     sermon.summaryStatus === "approved",
     sermon.questionAnswers.length >= 5 &&
@@ -159,12 +200,16 @@ function enrichmentReviewDto(
       context: reviewItemContext(
         transcript,
         item.decisionStatus === "corrected" ? item.correctionText : item.sourceMarker
-      )
+      ),
+      supportingContext: supportingParagraphContext(transcript, item.supportingParagraphs)
     })),
     progress: {
       resolvedItemCount,
       unresolvedItemCount,
-      totalItemCount: workflow.items.length,
+      totalItemCount: expectedItemCount,
+      presentItemCount: workflow.state.storedItemCount,
+      itemSetMatches,
+      transcriptMatchesExpected,
       completedStageCount,
       percentReviewed: Math.round((completedStageCount / 6) * 100),
       canFinish

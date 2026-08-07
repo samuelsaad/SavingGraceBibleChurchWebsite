@@ -1,6 +1,6 @@
 # Project Decision Log
 
-**Status:** Approved decisions and provisional Phase 3B.2b hardening through 6 August 2026
+**Status:** Approved decisions and verified Phase 3B.2b atomic-review preservation through 7 August 2026
 **Authority:** `church-website-architecture-plan.md` plus Yang’s confirmed migration decisions
 
 ## Evidence classifications
@@ -181,6 +181,12 @@ Unknown, changed, missing, duplicate or reordered receipts fail before apply or 
 Imported enrichment drafts use a dedicated six-stage administrator route: identity/provenance, typed flagged items, complete transcript, sermon description, ordered Q&A and final review summary. Only one stage is shown at a time. Technical provenance is collapsed; unresolved epoch service dates render blank; transcript and Q&A editors remain readable at supported desktop widths and 200% zoom. Every editorial decision has an explicit action, optimistic row version and safe audit event. Viewing, navigation and draft saving never imply approval.
 
 Migration `0007_guided_sermon_review.sql` adds only private structured progress and typed caption/name/Scripture review items. Missing, rejected or deliberately unresolved item decisions block transcript approval; a transcript text change invalidates earlier transcript-bound decisions. Completing the workflow records completion only while the sermon remains draft/private and all content gates pass. The route intentionally has no submit, schedule, publish, archive or deletion controls. D-121 supersedes D-116's all-in-one editor only for imported enrichment review; the general sermon lifecycle editor remains available for other authorised administration. (`approved local implementation decision`)
+
+### D-122 - Every private source finding is an atomic administrator decision
+
+The six aggregate prompts created by migration `0007` do not preserve the 86 detailed private findings and cannot count toward review completion. Migration `0008_atomic_sermon_review_items.sql` adds deterministic collision-checked identities, trusted record/category ordinals, private finding detail and paragraph references, transcript content hash/version expectations, and an exact ordered identity-set commitment. The two authorised records require exactly 42 and 44 pending atomic rows. Their combined category remains `name_or_scripture_reference`; automation must not infer a more specific name-versus-Scripture classification.
+
+Aggregate warning codes remain informational provenance only. Each atomic item requires its own explicit accepted or corrected outcome; resolving one never resolves a sibling. Missing, extra, duplicate, reordered, pending, stale or identity-mismatched rows block the stage and final completion. Direct correction is available only when an exact transcript phrase is truthfully attached. Assembly, restoration and import are no-clobber, deterministic, fail-closed and idempotent, and no review decision or approval is created by them. (`approved local implementation decision; private findings remain pending`)
 
 ## Decisions still required
 

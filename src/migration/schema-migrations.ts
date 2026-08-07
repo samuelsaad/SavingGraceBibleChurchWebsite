@@ -13,7 +13,8 @@ export type SchemaMigrationScope =
   | "0004_sermon_enrichment_readiness"
   | "0005_approved_sermon_descriptions"
   | "0006_phase3b2_pilot_provenance"
-  | "0007_guided_sermon_review";
+  | "0007_guided_sermon_review"
+  | "0008_atomic_sermon_review_items";
 
 interface SchemaMigrationDefinition {
   id: string;
@@ -166,6 +167,13 @@ export const schemaMigrationDefinitions: readonly SchemaMigrationDefinition[] = 
       "sermon_enrichment_sources_seed_review",
       "sermon_transcripts_seed_enrichment_review"
     ]
+  },
+  {
+    id: "0008_atomic_sermon_review_items",
+    order: 8,
+    upPath: "db/migrations/0008_atomic_sermon_review_items.sql",
+    downPath: "db/migrations/0008_atomic_sermon_review_items.down.sql",
+    addedRelations: []
   }
 ] as const;
 

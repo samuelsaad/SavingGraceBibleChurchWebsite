@@ -78,16 +78,36 @@ const enrichmentReviewStateProjection = `
   review.identity_status AS "identityStatus",
   review.current_stage AS "currentStage",
   CASE WHEN review.completed_at IS NULL THEN NULL ELSE ${timestamp("review.completed_at")} END AS "completedAt",
+  review.source_record_key AS "sourceRecordKey",
+  review.expected_item_count AS "expectedItemCount",
+  review.expected_item_set_sha256 AS "expectedItemSetSha256",
+  review.expected_transcript_sha256 AS "expectedTranscriptSha256",
+  review.expected_transcript_row_version AS "expectedTranscriptRowVersion",
+  (SELECT count(*)::integer FROM sermon_enrichment_review_items stored
+   WHERE stored.sermon_id = review.sermon_id) AS "storedItemCount",
+  (SELECT count(*)::integer FROM sermon_enrichment_review_items atomic
+   WHERE atomic.sermon_id = review.sermon_id
+     AND atomic.item_identity_sha256 IS NOT NULL) AS "atomicItemCount",
+  (SELECT encode(digest(string_agg(atomic.item_identity_sha256, E'\n'
+                                    ORDER BY atomic.display_order), 'sha256'), 'hex')
+   FROM sermon_enrichment_review_items atomic
+   WHERE atomic.sermon_id = review.sermon_id
+     AND atomic.item_identity_sha256 IS NOT NULL) AS "actualItemSetSha256",
   review.row_version AS "rowVersion"`;
 
 const enrichmentReviewItemProjection = `
   item.id,
   item.sermon_id AS "sermonId",
+  item.item_identity_sha256 AS "identitySha256",
+  item.source_record_key AS "sourceRecordKey",
   item.category,
   item.display_order AS "displayOrder",
+  item.category_ordinal AS "categoryOrdinal",
   item.label,
-  item.guidance,
+  item.finding_detail AS detail,
+  item.supporting_paragraphs AS "supportingParagraphs",
   item.source_marker AS "sourceMarker",
+  item.source_transcript_sha256 AS "sourceTranscriptSha256",
   item.decision_status AS "decisionStatus",
   item.correction_text AS "correctionText",
   item.transcript_row_version AS "transcriptRowVersion",
@@ -864,6 +884,7 @@ class PostgresAdminSermonTransaction implements AdminSermonTransaction {
       `SELECT ${enrichmentReviewItemProjection}
        FROM sermon_enrichment_review_items item
        WHERE item.sermon_id = $1 AND item.id = $2
+         AND item.item_identity_sha256 IS NOT NULL
        FOR UPDATE OF item`,
       [sermonId, itemId]
     );
@@ -949,11 +970,16 @@ class PostgresAdminSermonTransaction implements AdminSermonTransaction {
        SET current_stage = 2,
            completed_by_subject = NULL,
            completed_at = NULL,
+           expected_transcript_sha256 = (
+             SELECT encode(digest(transcript.body_text, 'sha256'), 'hex')
+             FROM sermon_transcripts transcript WHERE transcript.sermon_id = $1
+           ),
+           expected_transcript_row_version = $2,
            updated_at = now(),
-           updated_by_subject = $2,
+           updated_by_subject = $3,
            row_version = row_version + 1
        WHERE sermon_id = $1`,
-      [sermonId, actorSubject]
+      [sermonId, transcriptRowVersion, actorSubject]
     );
   }
 
@@ -975,11 +1001,12 @@ class PostgresAdminSermonTransaction implements AdminSermonTransaction {
     if (items.rowCount) {
       await this.client.query(
         `UPDATE sermon_enrichment_reviews
-         SET updated_at = now(),
-             updated_by_subject = $2,
+         SET expected_transcript_row_version = $2,
+             updated_at = now(),
+             updated_by_subject = $3,
              row_version = row_version + 1
          WHERE sermon_id = $1`,
-        [sermonId, actorSubject]
+        [sermonId, transcriptRowVersion, actorSubject]
       );
     }
   }
@@ -1025,12 +1052,37 @@ class PostgresAdminSermonTransaction implements AdminSermonTransaction {
     const result = await this.client.query<{ blocking: boolean }>(
       `SELECT EXISTS (
          SELECT 1
-         FROM sermon_enrichment_review_items item
-         WHERE item.sermon_id = $1
-           AND (
-             item.decision_status NOT IN ('accepted', 'corrected')
-             OR $2::integer IS NULL
-             OR item.transcript_row_version <> $2
+         FROM sermon_enrichment_reviews review
+         LEFT JOIN sermon_transcripts transcript ON transcript.sermon_id = review.sermon_id
+         WHERE review.sermon_id = $1
+           AND NOT (
+             review.source_record_key IS NOT NULL
+             AND review.expected_item_count IS NOT NULL
+             AND review.expected_item_set_sha256 IS NOT NULL
+             AND review.expected_transcript_sha256 IS NOT NULL
+             AND review.expected_transcript_row_version IS NOT NULL
+             AND $2::integer IS NOT NULL
+             AND transcript.row_version = $2
+             AND review.expected_transcript_row_version = transcript.row_version
+             AND review.expected_transcript_sha256 = encode(digest(transcript.body_text, 'sha256'), 'hex')
+             AND (SELECT count(*) FROM sermon_enrichment_review_items item
+                  WHERE item.sermon_id = review.sermon_id) = review.expected_item_count
+             AND (SELECT count(*) FROM sermon_enrichment_review_items item
+                  WHERE item.sermon_id = review.sermon_id
+                    AND item.item_identity_sha256 IS NOT NULL) = review.expected_item_count
+             AND (SELECT encode(digest(string_agg(item.item_identity_sha256, E'\n'
+                                                   ORDER BY item.display_order), 'sha256'), 'hex')
+                  FROM sermon_enrichment_review_items item
+                  WHERE item.sermon_id = review.sermon_id
+                    AND item.item_identity_sha256 IS NOT NULL) = review.expected_item_set_sha256
+             AND NOT EXISTS (
+               SELECT 1 FROM sermon_enrichment_review_items item
+               WHERE item.sermon_id = review.sermon_id
+                 AND (
+                   item.decision_status NOT IN ('accepted', 'corrected')
+                   OR item.transcript_row_version <> transcript.row_version
+                 )
+             )
            )
        ) AS blocking`,
       [sermonId, transcriptRowVersion]
@@ -1306,9 +1358,10 @@ export class PostgresAdminSermonRepository implements AdminSermonRepository {
     if (!state.rows[0]) return null;
     const [items, position] = await Promise.all([
       this.pool.query(
-        `SELECT ${enrichmentReviewItemProjection}
+         `SELECT ${enrichmentReviewItemProjection}
          FROM sermon_enrichment_review_items item
          WHERE item.sermon_id = $1
+           AND item.item_identity_sha256 IS NOT NULL
          ORDER BY item.display_order, item.id`,
         [sermonId]
       ),

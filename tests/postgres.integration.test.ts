@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Pool } from "pg";
@@ -32,6 +32,15 @@ import {
   importEnrichmentDraftBundle
 } from "../src/enrichment/postgres-enrichment";
 import {
+  atomicReviewItemSetSha256,
+  buildAtomicReviewItems
+} from "../src/enrichment/atomic-review-contracts";
+import {
+  assemblePhase3b2AtomicReviewManifest,
+  importPhase3b2AtomicReviewManifest,
+  verifyPhase3b2AtomicReviewManifest
+} from "../src/enrichment/atomic-review";
+import {
   runPhase3b2PunctuationCompletion,
   verifyPhase3b2PunctuationCompletion
 } from "../src/enrichment/phase3b2b-pilot";
@@ -44,6 +53,7 @@ import { LocalTestIdentityProvider } from "../src/server/auth/local-test-identit
 import { createApplicationApiRouter } from "../src/server/http/application-api-router";
 import { PostgresAdminSermonRepository } from "../src/server/repositories/postgres-admin-sermon-repository";
 import { PostgresSermonRepository } from "../src/server/repositories/postgres-sermon-repository";
+import { anonymisedAtomicManifest } from "./fixtures/atomic-review";
 
 const enabled = process.env.RUN_POSTGRES_INTEGRATION === "1";
 const integration = enabled ? describe : describe.skip;
@@ -140,7 +150,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     await pool.end();
   });
 
-  it("applies 0001-0007 and loads anonymised fixtures idempotently", async () => {
+  it("applies 0001-0008 and loads anonymised fixtures idempotently", async () => {
     const counts = await pool.query<{
       sermons: number;
       views: number;
@@ -181,6 +191,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   });
 
   it("aborts the one-speaker migration with affected IDs and cleanly reapplies", async () => {
+    await runSchema("rollback", "0008_atomic_sermon_review_items");
     await runSchema("rollback", "0007_guided_sermon_review");
     await runSchema("rollback", "0006_phase3b2_pilot_provenance");
     await runSchema("rollback", "0005_approved_sermon_descriptions");
@@ -218,6 +229,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     await runSchema("apply", "0005_approved_sermon_descriptions");
     await runSchema("apply", "0006_phase3b2_pilot_provenance");
     await runSchema("apply", "0007_guided_sermon_review");
+    await runSchema("apply", "0008_atomic_sermon_review_items");
     expect(
       (await pool.query("SELECT to_regclass('public.sermon_speakers') IS NULL AS removed")).rows[0]
     ).toEqual({ removed: true });
@@ -801,6 +813,220 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     }
   });
 
+  it("restores exact 42/44 atomic findings and fails closed on missing, extra, stale, or sibling state", async () => {
+    const manifest = anonymisedAtomicManifest();
+    const targetIds = manifest.records.map((record) => record.draftBundle.targetSermonId);
+    const sourceIds = manifest.records.map((record) => String(record.draftBundle.sourceWordPressId));
+    const root = await mkdtemp(join(tmpdir(), "sgbc-atomic-review-"));
+    const preparedRoot = join(root, "prepared-private");
+    const repository = new PostgresAdminSermonRepository(pool);
+    const service = new AdminSermonService(repository, () => new Date("2026-08-07T00:00:00.000Z"));
+    const admin = { subject: "local-admin-0001", role: "admin" } satisfies ApplicationIdentity;
+    try {
+      const imported = await importPhase3b2AtomicReviewManifest(pool, manifest);
+      expect(imported).toEqual({
+        contentOutcomes: ["imported_as_draft", "imported_as_draft"],
+        atomicOutcomes: ["imported_atomic_items", "imported_atomic_items"],
+        totalItemCount: 86
+      });
+      await expect(verifyPhase3b2AtomicReviewManifest(pool, manifest)).resolves.toEqual({
+        recordCounts: [42, 44],
+        totalItemCount: 86,
+        pendingItemCount: 86,
+        decisionCount: 0,
+        approvalCount: 0,
+        publicSearchCharacters: 0,
+        exactIdentitySets: true
+      });
+
+      const rerun = await importPhase3b2AtomicReviewManifest(pool, manifest);
+      expect(rerun).toEqual({
+        contentOutcomes: ["unchanged", "unchanged"],
+        atomicOutcomes: ["unchanged", "unchanged"],
+        totalItemCount: 86
+      });
+
+      await mkdir(preparedRoot);
+      const completionRecords = manifest.records.map((record, index) => ({
+        videoId: record.draftBundle.sourceProvenance.videoId,
+        punctuationPackFilename: `anonymised-pack-${index + 1}.private.json`,
+        descriptionDraft: record.draftBundle.description.bodyText,
+        descriptionSupportingParagraphs: [1],
+        questionAnswers: record.draftBundle.questionAnswers.map((item) => ({
+          question: item.question,
+          answer: item.answer,
+          supportingParagraphs: [1]
+        })),
+        possibleCaptionErrors: record.reviewItems
+          .filter((item) => item.category === "caption_error")
+          .map((item) => ({ detail: item.detail, supportingParagraphs: item.supportingParagraphs })),
+        apparentNamesAndScriptureReferences: record.reviewItems
+          .filter((item) => item.category === "name_or_scripture_reference")
+          .map((item) => ({ detail: item.detail, supportingParagraphs: item.supportingParagraphs }))
+      }));
+      for (const record of manifest.records) {
+        const videoId = record.draftBundle.sourceProvenance.videoId;
+        await writeFile(
+          join(preparedRoot, `${videoId}.phase3b2b-v2.private.json`),
+          `${JSON.stringify(record.draftBundle, null, 2)}\n`,
+          "utf8"
+        );
+        await writeFile(
+          join(preparedRoot, `${videoId}.phase3b2b-v2.review.private.json`),
+          `${JSON.stringify({
+            schemaVersion: 2,
+            recordKey: record.recordKey,
+            tokenSequenceComparison: {
+              sourceSha256: record.transcriptEvidence.sourceTokenSequenceSha256,
+              cleanedSha256: record.transcriptEvidence.cleanedTokenSequenceSha256,
+              match: true
+            },
+            preservation: {
+              zeroAddedRemovedSubstitutedDuplicatedOrReorderedTokens: true,
+              whitespaceBoundariesPreserved: true,
+              sourceSegmentsCompleteAndUnique: true,
+              chunkReassemblyComplete: true,
+              sourceTokenCount: record.transcriptEvidence.sourceTokenCount,
+              cleanedTokenCount: record.transcriptEvidence.cleanedTokenCount
+            },
+            possibleCaptionErrors: completionRecords.find((item) => item.videoId === videoId)!
+              .possibleCaptionErrors,
+            apparentNamesAndScriptureReferences: completionRecords.find((item) => item.videoId === videoId)!
+              .apparentNamesAndScriptureReferences
+          }, null, 2)}\n`,
+          "utf8"
+        );
+      }
+      const completionPath = join(root, "completion.private.json");
+      await writeFile(completionPath, `${JSON.stringify({
+        schemaVersion: 2,
+        sourceSnapshotId: manifest.sourceSnapshotId,
+        records: completionRecords
+      }, null, 2)}\n`, "utf8");
+      await expect(assemblePhase3b2AtomicReviewManifest(
+        pool,
+        completionPath,
+        "atomic-completion.private.json"
+      )).resolves.toEqual({ persistence: "created", recordCounts: [42, 44], totalItemCount: 86 });
+      await expect(assemblePhase3b2AtomicReviewManifest(
+        pool,
+        completionPath,
+        "atomic-completion.private.json"
+      )).resolves.toEqual({ persistence: "unchanged", recordCounts: [42, 44], totalItemCount: 86 });
+
+      const firstRecord = manifest.records[0]!;
+      const removed = firstRecord.reviewItems.at(-1)!;
+      await pool.query("DELETE FROM sermon_enrichment_review_items WHERE id = $1", [removed.id]);
+      const missing = await service.enrichmentReviewDetail(firstRecord.draftBundle.targetSermonId, admin);
+      expect(missing.progress).toMatchObject({
+        totalItemCount: 42,
+        presentItemCount: 41,
+        itemSetMatches: false,
+        canFinish: false
+      });
+      await pool.query(
+        `INSERT INTO sermon_enrichment_review_items (
+           id, sermon_id, item_key, category, display_order, label, guidance,
+           source_marker, transcript_row_version, item_identity_sha256,
+           source_record_key, category_ordinal, finding_detail,
+           supporting_paragraphs, source_transcript_sha256, atomic_schema_version
+         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14::integer[],$15,1)`,
+        [
+          removed.id,
+          firstRecord.draftBundle.targetSermonId,
+          removed.itemKey,
+          removed.category,
+          removed.displayOrder,
+          `Anonymised item ${removed.displayOrder}`,
+          removed.detail,
+          removed.sourceMarker,
+          removed.expectedTranscriptRowVersion,
+          removed.identitySha256,
+          removed.sourceRecordKey,
+          removed.categoryOrdinal,
+          removed.detail,
+          removed.supportingParagraphs,
+          removed.sourceTranscriptSha256
+        ]
+      );
+
+      await pool.query(
+        `INSERT INTO sermon_enrichment_review_items (
+           sermon_id, item_key, category, display_order, label, guidance,
+           transcript_row_version
+         ) VALUES ($1, 'unexpected-aggregate', 'caption_error', 99,
+           'Unexpected aggregate', 'Anonymised unexpected aggregate.', $2)`,
+        [firstRecord.draftBundle.targetSermonId, firstRecord.transcriptEvidence.expectedRowVersion]
+      );
+      const extra = await service.enrichmentReviewDetail(firstRecord.draftBundle.targetSermonId, admin);
+      expect(extra.progress).toMatchObject({ presentItemCount: 43, itemSetMatches: false, canFinish: false });
+      expect(await repository.transaction((transaction) =>
+        transaction.hasBlockingEnrichmentReviewItems(
+          firstRecord.draftBundle.targetSermonId,
+          firstRecord.transcriptEvidence.expectedRowVersion
+        )
+      )).toBe(true);
+      await pool.query(
+        "DELETE FROM sermon_enrichment_review_items WHERE sermon_id = $1 AND item_key = 'unexpected-aggregate'",
+        [firstRecord.draftBundle.targetSermonId]
+      );
+
+      const staleItem = firstRecord.reviewItems[1]!;
+      await pool.query(
+        "UPDATE sermon_enrichment_review_items SET transcript_row_version = transcript_row_version + 1 WHERE id = $1",
+        [staleItem.id]
+      );
+      expect(await repository.transaction((transaction) =>
+        transaction.hasBlockingEnrichmentReviewItems(
+          firstRecord.draftBundle.targetSermonId,
+          firstRecord.transcriptEvidence.expectedRowVersion
+        )
+      )).toBe(true);
+      await pool.query(
+        "UPDATE sermon_enrichment_review_items SET transcript_row_version = $2 WHERE id = $1",
+        [staleItem.id, staleItem.expectedTranscriptRowVersion]
+      );
+
+      const beforeDecision = await service.enrichmentReviewDetail(
+        firstRecord.draftBundle.targetSermonId,
+        admin
+      );
+      const decided = await service.decideEnrichmentReviewItem(
+        firstRecord.draftBundle.targetSermonId,
+        beforeDecision.items[0]!.id,
+        enrichmentReviewItemDecisionInputSchema.parse({
+          decision: "accepted",
+          sermonRowVersion: beforeDecision.sermon.rowVersion,
+          reviewRowVersion: beforeDecision.review.rowVersion,
+          itemRowVersion: beforeDecision.items[0]!.rowVersion,
+          transcriptRowVersion: beforeDecision.sermon.transcript!.rowVersion
+        }),
+        admin,
+        "anonymised-atomic-single-decision"
+      );
+      expect(decided.progress).toMatchObject({
+        resolvedItemCount: 1,
+        unresolvedItemCount: 41,
+        totalItemCount: 42,
+        itemSetMatches: true,
+        canFinish: false
+      });
+      expect(decided.items.filter((item) => item.decisionStatus === "pending")).toHaveLength(41);
+    } finally {
+      await pool.query("DELETE FROM audit_events WHERE entity_id = ANY($1::uuid[])", [targetIds]);
+      await pool.query(
+        "DELETE FROM migration_records WHERE source_system = 'phase3b2_pilot' AND source_id = ANY($1::text[])",
+        [sourceIds]
+      );
+      await pool.query("DELETE FROM sermons WHERE id = ANY($1::uuid[])", [targetIds]);
+      await pool.query(
+        `DELETE FROM migration_runs run WHERE migration_version = 'phase3b2-pilot-v1'
+         AND NOT EXISTS (SELECT 1 FROM migration_records record WHERE record.migration_run_id = run.id)`
+      );
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
   it("guides an explicit private enrichment review with concurrency, audit, and reopen safeguards", async () => {
     const admin = { subject: "local-admin-0001", role: "admin" } satisfies ApplicationIdentity;
     const repository = new PostgresAdminSermonRepository(pool);
@@ -875,6 +1101,73 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         ]
       );
 
+      const transcriptState = await pool.query<{ body_text: string; row_version: number }>(
+        "SELECT body_text, row_version FROM sermon_transcripts WHERE sermon_id = $1",
+        [sermonId]
+      );
+      const transcriptBody = transcriptState.rows[0]!.body_text;
+      const transcriptRowVersion = transcriptState.rows[0]!.row_version;
+      const transcriptSha256 = createHash("sha256").update(transcriptBody, "utf8").digest("hex");
+      const atomicItems = buildAtomicReviewItems({
+        sourceRecordKey: "authorised-record-2",
+        transcriptSermonId: sermonId,
+        sourceTranscriptSha256: transcriptSha256,
+        expectedTranscriptRowVersion: transcriptRowVersion,
+        captionErrors: [{
+          detail: "Check the anonymised caption phrase.",
+          supportingParagraphs: [1],
+          sourceMarker: "mistaken caption wording"
+        }],
+        namesOrScriptureReferences: [
+          { detail: "Verify an anonymised name.", supportingParagraphs: [1] },
+          { detail: "Verify an anonymised Scripture reference.", supportingParagraphs: [1] }
+        ]
+      });
+      for (const item of atomicItems) {
+        await pool.query(
+          `INSERT INTO sermon_enrichment_review_items (
+             id, sermon_id, item_key, category, display_order, label, guidance,
+             source_marker, transcript_row_version, item_identity_sha256,
+             source_record_key, category_ordinal, finding_detail,
+             supporting_paragraphs, source_transcript_sha256, atomic_schema_version
+           ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14::integer[],$15,1)`,
+          [
+            item.id,
+            sermonId,
+            item.itemKey,
+            item.category,
+            item.displayOrder,
+            `Anonymised item ${item.displayOrder}`,
+            item.detail,
+            item.sourceMarker,
+            item.expectedTranscriptRowVersion,
+            item.identitySha256,
+            item.sourceRecordKey,
+            item.categoryOrdinal,
+            item.detail,
+            item.supportingParagraphs,
+            item.sourceTranscriptSha256
+          ]
+        );
+      }
+      await pool.query(
+        `UPDATE sermon_enrichment_reviews
+         SET source_record_key = 'authorised-record-2',
+             expected_item_count = $2,
+             expected_item_set_sha256 = $3,
+             expected_transcript_sha256 = $4,
+             expected_transcript_row_version = $5,
+             atomic_schema_version = 1
+         WHERE sermon_id = $1`,
+        [
+          sermonId,
+          atomicItems.length,
+          atomicReviewItemSetSha256(atomicItems),
+          transcriptSha256,
+          transcriptRowVersion
+        ]
+      );
+
       const auditBeforeRead = (await service.listAudit(sermonId, admin)).length;
       const initial = await service.enrichmentReviewDetail(sermonId, admin);
       const repeatedRead = await service.enrichmentReviewDetail(sermonId, admin);
@@ -887,8 +1180,8 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       });
       expect(initial.items.map((item) => item.category)).toEqual([
         "caption_error",
-        "name",
-        "scripture"
+        "name_or_scripture_reference",
+        "name_or_scripture_reference"
       ]);
       expect(initial.items[0]?.context?.flagged).toBe("mistaken caption wording");
       expect(initial.items.every((item) => item.decisionStatus === "pending")).toBe(true);
@@ -931,8 +1224,11 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       expect(review.review.identityStatus).toBe("confirmed");
 
       const caption = review.items.find((item) => item.category === "caption_error")!;
-      const name = review.items.find((item) => item.category === "name")!;
-      const scripture = review.items.find((item) => item.category === "scripture")!;
+      const combinedItems = review.items.filter(
+        (item) => item.category === "name_or_scripture_reference"
+      );
+      const name = combinedItems[0]!;
+      const scripture = combinedItems[1]!;
       review = await service.decideEnrichmentReviewItem(
         sermonId,
         name.id,
@@ -1512,7 +1808,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     expect((await route(new Request("http://127.0.0.1/api/v1/admin/audit", { headers: { "x-local-identity": "admin" } }))).status).toBe(200);
   });
 
-  it("keeps seven schema receipts separate from content-import receipts and verifies a no-op", async () => {
+  it("keeps eight schema receipts separate from content-import receipts and verifies a no-op", async () => {
     const migrations = await loadSchemaMigrations();
     const journal = await pool.query<{
       migration_order: number;
@@ -1539,7 +1835,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
          (SELECT count(*)::integer FROM migration_records) AS content_records,
          (SELECT count(*)::integer FROM sermon_enrichment_draft_imports) AS draft_import_receipts`
     );
-    expect(before.rows[0]?.schema_receipts).toBe(7);
+    expect(before.rows[0]?.schema_receipts).toBe(8);
     expect(before.rows[0]?.content_records).toBe(5);
     expect(before.rows[0]?.draft_import_receipts).toBeGreaterThanOrEqual(0);
     await expect(runSchema("apply")).resolves.toEqual({
@@ -1547,7 +1843,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       outcome: "no_op",
       appliedMigrationIds: [],
       rolledBackMigrationIds: [],
-      journalReceiptCount: 7
+      journalReceiptCount: 8
     });
     expect((await pool.query<{
       schema_receipts: number;
@@ -1562,6 +1858,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   });
 
   it("applies only the pending canonical suffix from a valid partial journal", async () => {
+    await runSchema("rollback", "0008_atomic_sermon_review_items");
     await runSchema("rollback", "0007_guided_sermon_review");
     await runSchema("rollback", "0006_phase3b2_pilot_provenance");
     await runSchema("rollback", "0005_approved_sermon_descriptions");
@@ -1576,66 +1873,77 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         "0004_sermon_enrichment_readiness",
         "0005_approved_sermon_descriptions",
         "0006_phase3b2_pilot_provenance",
-        "0007_guided_sermon_review"
+        "0007_guided_sermon_review",
+        "0008_atomic_sermon_review_items"
       ],
       rolledBackMigrationIds: [],
-      journalReceiptCount: 7
+      journalReceiptCount: 8
     });
   });
 
   it("fails before apply or rollback on changed and unknown receipts", async () => {
     const migrations = await loadSchemaMigrations();
-    const seventh = migrations[6]!;
+    const eighth = migrations[7]!;
     await pool.query(
-      "UPDATE schema_migrations SET checksum_sha256 = $1 WHERE migration_order = 7",
+      "UPDATE schema_migrations SET checksum_sha256 = $1 WHERE migration_order = 8",
       ["f".repeat(64)]
     );
-    await expect(runSchema("rollback", "0007_guided_sermon_review"))
+    await expect(runSchema("rollback", "0008_atomic_sermon_review_items"))
       .rejects.toMatchObject({ code: "migration_checksum_mismatch" });
-    expect((await pool.query<{ receipt: number; review_present: boolean }>(
+    expect((await pool.query<{ receipt: number; atomic_present: boolean }>(
       `SELECT
-         (SELECT count(*)::integer FROM schema_migrations WHERE migration_order = 7) AS receipt,
-         to_regclass('public.sermon_enrichment_reviews') IS NOT NULL AS review_present`
-    )).rows[0]).toEqual({ receipt: 1, review_present: true });
+         (SELECT count(*)::integer FROM schema_migrations WHERE migration_order = 8) AS receipt,
+         EXISTS (SELECT 1 FROM information_schema.columns
+                 WHERE table_name = 'sermon_enrichment_review_items'
+                   AND column_name = 'item_identity_sha256') AS atomic_present`
+    )).rows[0]).toEqual({ receipt: 1, atomic_present: true });
     await pool.query(
-      "UPDATE schema_migrations SET checksum_sha256 = $1 WHERE migration_order = 7",
-      [seventh.checksumSha256]
+      "UPDATE schema_migrations SET checksum_sha256 = $1 WHERE migration_order = 8",
+      [eighth.checksumSha256]
     );
 
     await pool.query(
-      `ALTER TABLE sermons
-       ADD COLUMN migration_journal_rollback_probe uuid
-       REFERENCES sermon_enrichment_reviews(sermon_id)`
+      `ALTER TABLE sermon_enrichment_review_items
+       ADD COLUMN atomic_review_rollback_probe text
+       GENERATED ALWAYS AS (item_identity_sha256) STORED`
     );
-    await expect(runSchema("rollback", "0007_guided_sermon_review"))
+    await expect(runSchema("rollback", "0008_atomic_sermon_review_items"))
       .rejects.toMatchObject({ code: "migration_transaction_failure" });
-    expect((await pool.query<{ receipt: number; review_present: boolean }>(
+    expect((await pool.query<{ receipt: number; atomic_present: boolean }>(
       `SELECT
-         (SELECT count(*)::integer FROM schema_migrations WHERE migration_order = 7) AS receipt,
-         to_regclass('public.sermon_enrichment_reviews') IS NOT NULL AS review_present`
-    )).rows[0]).toEqual({ receipt: 1, review_present: true });
-    await pool.query("ALTER TABLE sermons DROP COLUMN migration_journal_rollback_probe");
+         (SELECT count(*)::integer FROM schema_migrations WHERE migration_order = 8) AS receipt,
+         EXISTS (SELECT 1 FROM information_schema.columns
+                 WHERE table_name = 'sermon_enrichment_review_items'
+                   AND column_name = 'item_identity_sha256') AS atomic_present`
+    )).rows[0]).toEqual({ receipt: 1, atomic_present: true });
+    await pool.query(
+      "ALTER TABLE sermon_enrichment_review_items DROP COLUMN atomic_review_rollback_probe"
+    );
 
-    await expect(runSchema("rollback", "0007_guided_sermon_review"))
-      .resolves.toMatchObject({ outcome: "rolled_back", journalReceiptCount: 6 });
-    expect((await pool.query<{ receipt: number; review_present: boolean }>(
+    await expect(runSchema("rollback", "0008_atomic_sermon_review_items"))
+      .resolves.toMatchObject({ outcome: "rolled_back", journalReceiptCount: 7 });
+    expect((await pool.query<{ receipt: number; atomic_present: boolean }>(
       `SELECT
-         (SELECT count(*)::integer FROM schema_migrations WHERE migration_order = 7) AS receipt,
-         to_regclass('public.sermon_enrichment_reviews') IS NOT NULL AS review_present`
-    )).rows[0]).toEqual({ receipt: 0, review_present: false });
+         (SELECT count(*)::integer FROM schema_migrations WHERE migration_order = 8) AS receipt,
+         EXISTS (SELECT 1 FROM information_schema.columns
+                 WHERE table_name = 'sermon_enrichment_review_items'
+                   AND column_name = 'item_identity_sha256') AS atomic_present`
+    )).rows[0]).toEqual({ receipt: 0, atomic_present: false });
 
     await pool.query(
       `INSERT INTO schema_migrations (migration_order, migration_id, checksum_sha256)
-       VALUES (7, '0008_unknown', $1)`,
-      [seventh.checksumSha256]
+       VALUES (8, '0009_unknown', $1)`,
+      [eighth.checksumSha256]
     );
     await expect(runSchema("apply")).rejects.toMatchObject({ code: "journal_state_failure" });
     expect((await pool.query<{ present: boolean }>(
-      "SELECT to_regclass('public.sermon_enrichment_reviews') IS NOT NULL AS present"
+      `SELECT EXISTS (SELECT 1 FROM information_schema.columns
+                      WHERE table_name = 'sermon_enrichment_review_items'
+                        AND column_name = 'item_identity_sha256') AS present`
     )).rows[0]).toEqual({ present: false });
-    await pool.query("DELETE FROM schema_migrations WHERE migration_order = 7");
-    await expect(runSchema("apply", "0007_guided_sermon_review"))
-      .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 7 });
+    await pool.query("DELETE FROM schema_migrations WHERE migration_order = 8");
+    await expect(runSchema("apply", "0008_atomic_sermon_review_items"))
+      .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 8 });
   });
 
   it("refuses unjournalled objects and serialises concurrent fresh application", async () => {
@@ -1655,12 +1963,12 @@ integration("disposable PostgreSQL Phase 3B application", () => {
 
     const results = await Promise.all([runSchema("apply"), runSchema("apply")]);
     expect(results.map((result) => result.outcome).sort()).toEqual(["applied", "no_op"]);
-    expect(results.reduce((count, result) => count + result.appliedMigrationIds.length, 0)).toBe(7);
+    expect(results.reduce((count, result) => count + result.appliedMigrationIds.length, 0)).toBe(8);
     expect((await pool.query<{ receipts: number; distinct_receipts: number }>(
       `SELECT count(*)::integer AS receipts,
               count(DISTINCT migration_id)::integer AS distinct_receipts
        FROM schema_migrations`
-    )).rows[0]).toEqual({ receipts: 7, distinct_receipts: 7 });
+    )).rows[0]).toEqual({ receipts: 8, distinct_receipts: 8 });
 
     await expect(runSchema("rollback")).resolves.toMatchObject({
       outcome: "rolled_back",
@@ -1668,7 +1976,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     });
     await expect(runSchema("apply")).resolves.toMatchObject({
       outcome: "applied",
-      journalReceiptCount: 7
+      journalReceiptCount: 8
     });
   });
 });

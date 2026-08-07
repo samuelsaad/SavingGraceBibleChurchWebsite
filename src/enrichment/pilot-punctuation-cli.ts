@@ -4,6 +4,12 @@ import type { Pool } from "pg";
 import { ZodError, type ZodType } from "zod";
 import { assertDisposableLocalDatabase } from "../migration/local-database-safety";
 import { createPostgresPool } from "../server/database";
+import {
+  assemblePhase3b2AtomicReviewManifest,
+  importPhase3b2AtomicReviewManifest,
+  readPhase3b2AtomicReviewManifest,
+  verifyPhase3b2AtomicReviewManifest
+} from "./atomic-review";
 import { phase3b2PilotManifestSchema, type Phase3b2PilotManifest } from "./pilot-contracts";
 import {
   phase3b2PunctuationCompletionManifestSchema,
@@ -300,14 +306,57 @@ export async function verifyCompletion(
 function usageFailure(): PunctuationWorkflowError {
   return new PunctuationWorkflowError(
     "missing_input",
-    "Use prepare, finalize, assemble, import or verify with all required private-file arguments."
+    "Use prepare, finalize, assemble, import, verify, atomic-assemble, atomic-import or atomic-verify with all required private-file arguments."
   );
+}
+
+async function atomicDatabasePool(): Promise<Pool> {
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new PunctuationWorkflowError("missing_input", "DATABASE_URL is required for atomic review work.");
+  }
+  assertDisposableLocalDatabase(connectionString, process.env.ALLOW_LOCAL_DB_WRITE);
+  return createPostgresPool(connectionString);
 }
 
 export async function main(args = process.argv.slice(2)): Promise<void> {
   const [action, manifestPath, videoIdOrCompletionPath, workspaceName, packFilename] = args;
   let report: Record<string, unknown>;
-  if (action === "prepare" && manifestPath && videoIdOrCompletionPath && workspaceName) {
+  if (action === "atomic-assemble" && manifestPath && videoIdOrCompletionPath) {
+    const pool = await atomicDatabasePool();
+    try {
+      const result = await assemblePhase3b2AtomicReviewManifest(
+        pool,
+        manifestPath,
+        videoIdOrCompletionPath
+      );
+      report = { outcome: "atomic_review_manifest_assembled", ...result };
+    } finally {
+      await pool.end();
+    }
+  } else if (action === "atomic-import" && manifestPath) {
+    const pool = await atomicDatabasePool();
+    try {
+      const manifest = await readPhase3b2AtomicReviewManifest(manifestPath);
+      report = {
+        outcome: "atomic_review_items_imported",
+        ...(await importPhase3b2AtomicReviewManifest(pool, manifest))
+      };
+    } finally {
+      await pool.end();
+    }
+  } else if (action === "atomic-verify" && manifestPath) {
+    const pool = await atomicDatabasePool();
+    try {
+      const manifest = await readPhase3b2AtomicReviewManifest(manifestPath);
+      report = {
+        outcome: "atomic_review_items_verified",
+        ...(await verifyPhase3b2AtomicReviewManifest(pool, manifest))
+      };
+    } finally {
+      await pool.end();
+    }
+  } else if (action === "prepare" && manifestPath && videoIdOrCompletionPath && workspaceName) {
     report = await prepareWorkspace(manifestPath, videoIdOrCompletionPath, workspaceName);
   } else if (
     (action === "finalize" || action === "finalise") &&

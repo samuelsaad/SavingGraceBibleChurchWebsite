@@ -101,6 +101,21 @@ describe("PostgreSQL schema contract", () => {
     expect(down).toContain("DROP TABLE IF EXISTS sermon_enrichment_reviews");
   });
 
+  it("adds reversible atomic review identities without changing migration 0007", async () => {
+    const [up, down] = await Promise.all([
+      readFile("db/migrations/0008_atomic_sermon_review_items.sql", "utf8"),
+      readFile("db/migrations/0008_atomic_sermon_review_items.down.sql", "utf8")
+    ]);
+    expect(up).toContain("item_identity_sha256");
+    expect(up).toContain("expected_item_set_sha256");
+    expect(up).toContain("name_or_scripture_reference");
+    expect(up).toContain("atomic_review_migration_refused_existing_decision");
+    expect(up).not.toContain("possible_caption_errors_require_review");
+    expect(down).toContain("atomic_review_rollback_refused_existing_decision");
+    expect(down).toContain("caption-general");
+    expect(down).toContain("DROP COLUMN item_identity_sha256");
+  });
+
   it("has an explicit reversible local rollback", async () => {
     const down = await readFile("db/migrations/0001_initial.down.sql", "utf8");
     expect(down).toContain("DROP TABLE IF EXISTS sermons");

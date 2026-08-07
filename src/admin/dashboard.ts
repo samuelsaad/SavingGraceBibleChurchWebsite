@@ -137,10 +137,14 @@ type ListResponse = {
 };
 type EnrichmentReviewItem = {
   id: string;
-  category: "caption_error" | "name" | "scripture";
+  identitySha256: string;
+  sourceRecordKey: string;
+  category: "caption_error" | "name_or_scripture_reference";
   displayOrder: number;
+  categoryOrdinal: number;
   label: string;
-  guidance: string;
+  detail: string;
+  supportingParagraphs: number[];
   sourceMarker: string | null;
   decisionStatus: "pending" | "accepted" | "corrected" | "left_unresolved" | "rejected";
   correctionText: string | null;
@@ -148,6 +152,7 @@ type EnrichmentReviewItem = {
   decidedAt: string | null;
   rowVersion: number;
   context: { before: string; flagged: string; after: string } | null;
+  supportingContext: Array<{ paragraphNumber: number; text: string }>;
 };
 type EnrichmentReviewResponse = {
   sermon: SermonDetail;
@@ -164,6 +169,9 @@ type EnrichmentReviewResponse = {
     resolvedItemCount: number;
     unresolvedItemCount: number;
     totalItemCount: number;
+    presentItemCount: number;
+    itemSetMatches: boolean;
+    transcriptMatchesExpected: boolean;
     completedStageCount: number;
     percentReviewed: number;
     canFinish: boolean;
@@ -468,10 +476,13 @@ function renderFlaggedReviewStage(review: EnrichmentReviewResponse): string {
   return `<section class="review-stage-panel" aria-labelledby="flagged-review-heading">
     <header class="review-stage-heading"><p>Stage 2 of 6</p><h2 id="flagged-review-heading">Flagged review items</h2><p>Make an explicit decision for each item. An unanswered item is never treated as accepted.</p></header>
     <div id="review-stage-feedback"></div>
+    ${review.progress.itemSetMatches && review.progress.transcriptMatchesExpected
+      ? ""
+      : `<div class="callout"><strong>Review set verification failed.</strong><p>The expected identities, item total or transcript version does not match. Decisions and completion remain blocked until the private review set is safely restored.</p></div>`}
     <div class="review-item-toolbar">
-      <label><span>Category</span><select id="review-item-category"><option value="all">All categories</option><option value="caption_error">Caption wording</option><option value="name">Names</option><option value="scripture">Scripture references</option></select></label>
+      <label><span>Category</span><select id="review-item-category"><option value="all">All categories</option><option value="caption_error">Caption wording</option><option value="name_or_scripture_reference">Names or Scripture references</option></select></label>
       <label><span>Decision</span><select id="review-item-status"><option value="all">All decisions</option><option value="unresolved">Unresolved</option><option value="resolved">Resolved</option></select></label>
-      <p><strong>${review.progress.resolvedItemCount} of ${review.progress.totalItemCount}</strong> resolved</p>
+      <p><strong>${review.progress.resolvedItemCount} of ${review.progress.totalItemCount}</strong> resolved${review.progress.presentItemCount === review.progress.totalItemCount ? "" : ` &bull; ${review.progress.presentItemCount} currently present`}</p>
     </div>
     <div id="review-item-card"></div>
     ${reviewStageActions(2)}
@@ -588,30 +599,43 @@ type ReviewFeedbackTarget = () => HTMLElement | null;
 
 function reviewItemCategoryLabel(category: EnrichmentReviewItem["category"]): string {
   if (category === "caption_error") return "Caption wording";
-  if (category === "name") return "Name or person";
-  return "Scripture reference";
+  return "Name or Scripture reference";
 }
 
-function reviewItemCardMarkup(item: EnrichmentReviewItem, position: number, total: number): string {
+function reviewItemCardMarkup(
+  item: EnrichmentReviewItem,
+  position: number,
+  total: number,
+  decisionsEnabled: boolean
+): string {
   const context = item.context;
   return `<article class="review-item-card" data-review-item-card="${escapeHtml(item.id)}">
     <header>
       <div><p>${escapeHtml(reviewItemCategoryLabel(item.category))} • Item ${position} of ${total}</p><h3>${escapeHtml(item.label)}</h3></div>
       <span class="status-pill">${escapeHtml(plainReviewStatus(item.decisionStatus))}</span>
     </header>
-    <p class="review-item-guidance">${escapeHtml(item.guidance)}</p>
+    <p class="review-item-guidance">${escapeHtml(item.detail)}</p>
+    ${item.supportingContext.length
+      ? `<section class="review-supporting-context" aria-label="Supporting transcript context">
+          <h4>Supporting transcript context</h4>
+          ${item.supportingContext.map((context) => `<article><strong>Paragraph ${context.paragraphNumber}</strong><p>${escapeHtml(context.text)}</p></article>`).join("")}
+        </section>`
+      : '<div class="callout"><strong>Supporting context unavailable</strong><p>The expected supporting paragraph is not present in this transcript version. This item remains blocking.</p></div>'}
     ${context ? `<blockquote class="review-context"><span>${escapeHtml(context.before)}</span><mark>${escapeHtml(context.flagged)}</mark><span>${escapeHtml(context.after)}</span></blockquote>` : '<div class="callout"><strong>General review check</strong><p>No single passage is attached to this item. Use the full transcript stage to inspect and edit the wording.</p></div>'}
-    <label class="review-correction"><span>Reviewed correction</span><textarea id="review-item-correction" maxlength="1000" placeholder="Enter replacement wording only when choosing Correct">${escapeHtml(item.correctionText ?? "")}</textarea><small class="field-hint">A correction changes the one displayed passage and returns the transcript to draft.</small></label>
+    ${item.sourceMarker
+      ? `<label class="review-correction"><span>Reviewed correction</span><textarea id="review-item-correction" maxlength="1000" placeholder="Enter replacement wording only when choosing Correct">${escapeHtml(item.correctionText ?? "")}</textarea><small class="field-hint">A correction changes the one displayed passage and returns the transcript to draft.</small></label>`
+      : '<div class="callout"><strong>Direct correction unavailable</strong><p>This finding is associated with supporting paragraphs rather than one exact transcript phrase. Make any wording change in the full transcript stage.</p></div>'}
     <div class="review-decision-bar" aria-label="Decision for ${escapeHtml(item.label)}">
-      <button class="button" type="button" data-review-item-decision="accepted">Accept wording</button>
-      <button class="button primary" type="button" data-review-item-decision="corrected"${item.sourceMarker ? "" : " disabled"}>Correct wording</button>
-      <button class="button" type="button" data-review-item-decision="left_unresolved">Leave unresolved</button>
-      <button class="button danger" type="button" data-review-item-decision="rejected">Reject transcript</button>
+      <button class="button" type="button" data-review-item-decision="accepted"${decisionsEnabled ? "" : " disabled"}>Accept wording</button>
+      <button class="button primary" type="button" data-review-item-decision="corrected"${decisionsEnabled && item.sourceMarker ? "" : " disabled"}>Correct wording</button>
+      <button class="button" type="button" data-review-item-decision="left_unresolved"${decisionsEnabled ? "" : " disabled"}>Leave unresolved</button>
+      <button class="button danger" type="button" data-review-item-decision="rejected"${decisionsEnabled ? "" : " disabled"}>Reject transcript</button>
     </div>
     <p class="field-hint">Leaving an item unresolved or rejecting the transcript records your decision but continues to block transcript approval.</p>
     <div class="review-item-pager">
       <button class="button quiet" type="button" data-review-item-offset="-1"${position <= 1 ? " disabled" : ""}>Previous item</button>
       <button class="button quiet" type="button" data-review-item-offset="1"${position >= total ? " disabled" : ""}>Next item</button>
+      <button class="button quiet" type="button" data-review-next-unresolved>Next unresolved</button>
     </div>
   </article>`;
 }
@@ -626,6 +650,8 @@ function wireFlaggedReviewItems(
   const statusFilter = document.querySelector<HTMLSelectElement>("#review-item-status");
   if (!cardTarget || !categoryFilter || !statusFilter) return;
   let currentIndex = 0;
+  let selectedCategory = categoryFilter.value;
+  let selectedStatus = statusFilter.value;
 
   const filteredItems = () => review.items.filter((item) => {
     const categoryMatches = categoryFilter.value === "all" || item.category === categoryFilter.value;
@@ -643,7 +669,12 @@ function wireFlaggedReviewItems(
       return;
     }
     const item = items[currentIndex]!;
-    cardTarget.innerHTML = reviewItemCardMarkup(item, currentIndex + 1, items.length);
+    cardTarget.innerHTML = reviewItemCardMarkup(
+      item,
+      currentIndex + 1,
+      items.length,
+      review.progress.itemSetMatches && review.progress.transcriptMatchesExpected
+    );
     const correction = cardTarget.querySelector<HTMLTextAreaElement>("#review-item-correction");
     correction?.addEventListener("input", () => { dirty = true; });
     for (const button of cardTarget.querySelectorAll<HTMLButtonElement>("[data-review-item-offset]")) {
@@ -655,6 +686,24 @@ function wireFlaggedReviewItems(
         cardTarget.focus({ preventScroll: true });
       });
     }
+    cardTarget.querySelector<HTMLButtonElement>("[data-review-next-unresolved]")?.addEventListener("click", () => {
+      if (!confirmDiscard()) return;
+      const items = filteredItems();
+      const nextIndex = items.findIndex((candidate, index) =>
+        index > currentIndex && candidate.decisionStatus !== "accepted" && candidate.decisionStatus !== "corrected"
+      );
+      const wrappedIndex = items.findIndex((candidate) =>
+        candidate.decisionStatus !== "accepted" && candidate.decisionStatus !== "corrected"
+      );
+      if (nextIndex < 0 && wrappedIndex < 0) {
+        feedbackTarget()!.innerHTML = feedback("Every item matching these filters is resolved.");
+        return;
+      }
+      dirty = false;
+      currentIndex = nextIndex >= 0 ? nextIndex : wrappedIndex;
+      renderCard();
+      cardTarget.focus({ preventScroll: true });
+    });
     for (const button of cardTarget.querySelectorAll<HTMLButtonElement>("[data-review-item-decision]")) {
       button.addEventListener("click", async () => {
         const decision = button.dataset.reviewItemDecision as Exclude<EnrichmentReviewItem["decisionStatus"], "pending">;
@@ -688,8 +737,26 @@ function wireFlaggedReviewItems(
     }
   };
 
-  categoryFilter.addEventListener("change", () => { currentIndex = 0; renderCard(); });
-  statusFilter.addEventListener("change", () => { currentIndex = 0; renderCard(); });
+  categoryFilter.addEventListener("change", () => {
+    if (!confirmDiscard()) {
+      categoryFilter.value = selectedCategory;
+      return;
+    }
+    dirty = false;
+    selectedCategory = categoryFilter.value;
+    currentIndex = 0;
+    renderCard();
+  });
+  statusFilter.addEventListener("change", () => {
+    if (!confirmDiscard()) {
+      statusFilter.value = selectedStatus;
+      return;
+    }
+    dirty = false;
+    selectedStatus = statusFilter.value;
+    currentIndex = 0;
+    renderCard();
+  });
   renderCard();
 }
 

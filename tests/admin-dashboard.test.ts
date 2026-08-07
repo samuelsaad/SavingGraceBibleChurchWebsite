@@ -82,6 +82,12 @@ describe("Phase 3B administration dashboard", () => {
     expect(client).toContain("Guided private review");
     expect(client).toContain("Identity and provenance");
     expect(client).toContain("Flagged review items");
+    expect(client).toContain("Next unresolved");
+    expect(client).toContain('id="review-item-category"');
+    expect(client).toContain('id="review-item-status"');
+    expect(client).toContain("presentItemCount");
+    expect(client).toContain("itemSetMatches");
+    expect(client).toContain("supportingContext");
     expect(client).toContain("Final review summary");
     expect(client).toContain("Technical provenance");
     expect(client).toContain("data-review-item-decision=\"left_unresolved\"");

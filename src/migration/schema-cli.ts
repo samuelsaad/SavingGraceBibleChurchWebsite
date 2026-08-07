@@ -16,20 +16,23 @@ async function main(): Promise<void> {
   const phase3b1Only = process.argv.includes("--phase3b1-only");
   const phase3b1aOnly = process.argv.includes("--phase3b1a-only");
   const phase3b2Only = process.argv.includes("--phase3b2-only");
+  const atomicReviewOnly = process.argv.includes("--atomic-review-only");
   if (apply === rollback) throw new Error("Choose exactly one of --apply or --rollback");
-  if ([phase3bOnly, phase3b1Only, phase3b1aOnly, phase3b2Only].filter(Boolean).length > 1) {
+  if ([phase3bOnly, phase3b1Only, phase3b1aOnly, phase3b2Only, atomicReviewOnly].filter(Boolean).length > 1) {
     throw new Error("Choose at most one phase-only migration");
   }
 
-  const scope: SchemaMigrationScope = phase3b2Only
-    ? "0006_phase3b2_pilot_provenance"
-    : phase3b1aOnly
-      ? "0005_approved_sermon_descriptions"
-      : phase3b1Only
-        ? "0004_sermon_enrichment_readiness"
-        : phase3bOnly
-          ? "0003_single_admin_deletion_seo"
-          : "all";
+  const scope: SchemaMigrationScope = atomicReviewOnly
+    ? "0008_atomic_sermon_review_items"
+    : phase3b2Only
+      ? "0006_phase3b2_pilot_provenance"
+      : phase3b1aOnly
+        ? "0005_approved_sermon_descriptions"
+        : phase3b1Only
+          ? "0004_sermon_enrichment_readiness"
+          : phase3bOnly
+            ? "0003_single_admin_deletion_seo"
+            : "all";
   const pool = createPostgresPool(connectionString);
   try {
     const result = await runSchemaMigrations(pool, {

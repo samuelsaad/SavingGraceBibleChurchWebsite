@@ -120,17 +120,30 @@ export interface EnrichmentReviewStateDto {
   identityStatus: "pending" | "confirmed";
   currentStage: number;
   completedAt: string | null;
+  sourceRecordKey: string | null;
+  expectedItemCount: number | null;
+  expectedItemSetSha256: string | null;
+  expectedTranscriptSha256: string | null;
+  expectedTranscriptRowVersion: number | null;
+  storedItemCount: number;
+  atomicItemCount: number;
+  actualItemSetSha256: string | null;
   rowVersion: number;
 }
 
 export interface EnrichmentReviewItemDto {
   id: string;
   sermonId: string;
-  category: "caption_error" | "name" | "scripture";
+  identitySha256: string;
+  sourceRecordKey: string;
+  category: "caption_error" | "name_or_scripture_reference";
   displayOrder: number;
+  categoryOrdinal: number;
   label: string;
-  guidance: string;
+  detail: string;
+  supportingParagraphs: number[];
   sourceMarker: string | null;
+  sourceTranscriptSha256: string;
   decisionStatus: "pending" | "accepted" | "corrected" | "left_unresolved" | "rejected";
   correctionText: string | null;
   transcriptRowVersion: number;
