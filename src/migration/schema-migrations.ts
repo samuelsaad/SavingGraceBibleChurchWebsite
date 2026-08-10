@@ -18,7 +18,8 @@ export type SchemaMigrationScope =
   | "0006_phase3b2_pilot_provenance"
   | "0007_guided_sermon_review"
   | "0008_atomic_sermon_review_items"
-  | "0009_pilot_completion_safeguards";
+  | "0009_pilot_completion_safeguards"
+  | "0010_zero_finding_guided_review";
 
 interface SchemaMigrationDefinition {
   id: string;
@@ -187,6 +188,13 @@ export const schemaMigrationDefinitions: readonly SchemaMigrationDefinition[] = 
     addedRelations: [],
     addedFunctions: ["protect_audit_events_append_only()"],
     addedTriggers: ["audit_events_append_only_for_application"]
+  },
+  {
+    id: "0010_zero_finding_guided_review",
+    order: 10,
+    upPath: "db/migrations/0010_zero_finding_guided_review.sql",
+    downPath: "db/migrations/0010_zero_finding_guided_review.down.sql",
+    addedRelations: []
   }
 ] as const;
 

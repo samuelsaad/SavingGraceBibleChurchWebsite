@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
+  acknowledgeEmptyEnrichmentReviewInputSchema,
   createSermonInputSchema,
   enrichmentReviewItemDecisionInputSchema,
   enrichmentReviewProgressInputSchema,
@@ -184,7 +185,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     await pool.end();
   });
 
-  it("applies 0001-0009 and loads anonymised fixtures idempotently", async () => {
+  it("applies 0001-0010 and loads anonymised fixtures idempotently", async () => {
     const counts = await pool.query<{
       sermons: number;
       views: number;
@@ -313,6 +314,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   });
 
   it("aborts the one-speaker migration with affected IDs and cleanly reapplies", async () => {
+    await runSchema("rollback", "0010_zero_finding_guided_review");
     await runSchema("rollback", "0009_pilot_completion_safeguards");
     await runSchema("rollback", "0008_atomic_sermon_review_items");
     await runSchema("rollback", "0007_guided_sermon_review");
@@ -354,6 +356,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     await runSchema("apply", "0007_guided_sermon_review");
     await runSchema("apply", "0008_atomic_sermon_review_items");
     await runSchema("apply", "0009_pilot_completion_safeguards");
+    await runSchema("apply", "0010_zero_finding_guided_review");
     expect(
       (await pool.query("SELECT to_regclass('public.sermon_speakers') IS NULL AS removed")).rows[0]
     ).toEqual({ removed: true });
@@ -1153,6 +1156,8 @@ integration("disposable PostgreSQL Phase 3B application", () => {
 
   it("restores only the exact remaining pilot identity idempotently with a truthful zero-finding review", async () => {
     const root = await mkdtemp(join(tmpdir(), "remaining-pilot-restoration-"));
+    const service = new AdminSermonService(new PostgresAdminSermonRepository(pool));
+    const admin = { subject: "local-admin-0001", role: "admin" } satisfies ApplicationIdentity;
     const sourceWordPressId = 994_001;
     const sermonId = deterministicPilotUuid(remainingAuthorisedPilotVideoId);
     const otherVideoIds = ["restoretwo1", "restorethr1"];
@@ -1251,6 +1256,165 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         identity_status: "pending",
         completed_at: null
       });
+      let zeroReview = await service.enrichmentReviewDetail(sermonId, admin);
+      expect(zeroReview).toMatchObject({
+        items: [],
+        review: {
+          identityStatus: "pending",
+          emptyItemSetAcknowledgedAt: null,
+          emptyItemSetAcknowledgedBySubject: null
+        },
+        progress: {
+          totalItemCount: 0,
+          presentItemCount: 0,
+          resolvedItemCount: 0,
+          unresolvedItemCount: 0,
+          itemSetMatches: true,
+          transcriptMatchesExpected: true,
+          reviewSetVerified: true,
+          requiresEmptyItemSetAcknowledgement: true,
+          stageCompletion: { identity: false, findings: false },
+          canFinish: false
+        }
+      });
+
+      const identified = await service.update(
+        sermonId,
+        updateSermonInputSchema.parse({
+          rowVersion: zeroReview.sermon.rowVersion,
+          speakerId: savingGraceSpeakers[0]!.id,
+          serviceDate: "2026-08-05"
+        }),
+        admin,
+        "zero-review-identity-save"
+      );
+      zeroReview = await service.enrichmentReviewDetail(sermonId, admin);
+      zeroReview = await service.updateEnrichmentReviewProgress(
+        sermonId,
+        enrichmentReviewProgressInputSchema.parse({
+          sermonRowVersion: identified.rowVersion,
+          reviewRowVersion: zeroReview.review.rowVersion,
+          currentStage: 2,
+          identityStatus: "confirmed"
+        }),
+        admin,
+        "zero-review-identity-confirm"
+      );
+      expect(zeroReview.progress.stageCompletion).toMatchObject({ identity: true, findings: false });
+      await expect(service.updateEnrichmentReviewProgress(
+        sermonId,
+        enrichmentReviewProgressInputSchema.parse({
+          sermonRowVersion: zeroReview.sermon.rowVersion,
+          reviewRowVersion: zeroReview.review.rowVersion,
+          currentStage: 3
+        }),
+        admin,
+        "zero-review-skip-attempt"
+      )).rejects.toMatchObject({ status: 400, code: "invalid_request" });
+
+      await pool.query(
+        `UPDATE sermon_enrichment_reviews
+         SET expected_transcript_row_version = expected_transcript_row_version + 1,
+             row_version = row_version + 1
+         WHERE sermon_id = $1`,
+        [sermonId]
+      );
+      zeroReview = await service.enrichmentReviewDetail(sermonId, admin);
+      expect(zeroReview.progress).toMatchObject({
+        unresolvedItemCount: 0,
+        transcriptMatchesExpected: false,
+        reviewSetVerified: false,
+        requiresEmptyItemSetAcknowledgement: false,
+        stageCompletion: { findings: false }
+      });
+      await expect(service.acknowledgeEmptyEnrichmentReviewItems(
+        sermonId,
+        acknowledgeEmptyEnrichmentReviewInputSchema.parse({
+          sermonRowVersion: zeroReview.sermon.rowVersion,
+          reviewRowVersion: zeroReview.review.rowVersion,
+          transcriptRowVersion: zeroReview.sermon.transcript!.rowVersion
+        }),
+        admin,
+        "zero-review-mismatch-acknowledgement"
+      )).rejects.toMatchObject({ status: 409, code: "stale_write" });
+      await pool.query(
+        `UPDATE sermon_enrichment_reviews
+         SET expected_transcript_row_version = $2,
+             row_version = row_version + 1
+         WHERE sermon_id = $1`,
+        [sermonId, zeroReview.sermon.transcript!.rowVersion]
+      );
+      zeroReview = await service.enrichmentReviewDetail(sermonId, admin);
+
+      const statusOnlyTranscript = await service.update(
+        sermonId,
+        updateSermonInputSchema.parse({
+          rowVersion: zeroReview.sermon.rowVersion,
+          transcript: {
+            bodyText: zeroReview.sermon.transcript!.bodyText,
+            status: "in_review",
+            sourceKind: zeroReview.sermon.transcript!.sourceKind,
+            sourceReference: zeroReview.sermon.transcript!.sourceReference
+          }
+        }),
+        admin,
+        "zero-review-status-only-transcript"
+      );
+      zeroReview = await service.enrichmentReviewDetail(sermonId, admin);
+      expect(zeroReview.sermon.rowVersion).toBe(statusOnlyTranscript.rowVersion);
+      expect(zeroReview.progress).toMatchObject({
+        unresolvedItemCount: 0,
+        transcriptMatchesExpected: true,
+        reviewSetVerified: true,
+        requiresEmptyItemSetAcknowledgement: true
+      });
+
+      zeroReview = await service.acknowledgeEmptyEnrichmentReviewItems(
+        sermonId,
+        acknowledgeEmptyEnrichmentReviewInputSchema.parse({
+          sermonRowVersion: zeroReview.sermon.rowVersion,
+          reviewRowVersion: zeroReview.review.rowVersion,
+          transcriptRowVersion: zeroReview.sermon.transcript!.rowVersion
+        }),
+        admin,
+        "zero-review-explicit-acknowledgement"
+      );
+      expect(zeroReview).toMatchObject({
+        items: [],
+        review: {
+          currentStage: 3,
+          emptyItemSetAcknowledgedBySubject: admin.subject,
+          emptyItemSetAcknowledgedAt: expect.any(String)
+        },
+        progress: {
+          unresolvedItemCount: 0,
+          requiresEmptyItemSetAcknowledgement: false,
+          stageCompletion: {
+            identity: true,
+            findings: true,
+            transcript: false,
+            description: false,
+            questionAnswers: false,
+            final: false
+          },
+          completedStageCount: 2,
+          percentReviewed: 33,
+          canFinish: false
+        }
+      });
+      expect((await service.listAudit(sermonId, admin)).filter(
+        (event) => event.action === "sermon.enrichment_zero_findings_acknowledged"
+      )).toHaveLength(1);
+      await expect(service.acknowledgeEmptyEnrichmentReviewItems(
+        sermonId,
+        acknowledgeEmptyEnrichmentReviewInputSchema.parse({
+          sermonRowVersion: zeroReview.sermon.rowVersion,
+          reviewRowVersion: zeroReview.review.rowVersion,
+          transcriptRowVersion: zeroReview.sermon.transcript!.rowVersion
+        }),
+        admin,
+        "zero-review-duplicate-acknowledgement"
+      )).rejects.toMatchObject({ status: 409, code: "stale_write" });
       expect(await new PostgresSermonRepository(pool).findPublishedBySlug(record.slug)).toBeNull();
     } finally {
       await pool.query("DELETE FROM audit_events WHERE entity_id = $1", [sermonId]);
@@ -2211,7 +2375,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
          (SELECT count(*)::integer FROM migration_records) AS content_records,
          (SELECT count(*)::integer FROM sermon_enrichment_draft_imports) AS draft_import_receipts`
     );
-    expect(before.rows[0]?.schema_receipts).toBe(9);
+    expect(before.rows[0]?.schema_receipts).toBe(10);
     expect(before.rows[0]?.content_records).toBe(5);
     expect(before.rows[0]?.draft_import_receipts).toBeGreaterThanOrEqual(0);
     await expect(runSchema("apply")).resolves.toEqual({
@@ -2219,7 +2383,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       outcome: "no_op",
       appliedMigrationIds: [],
       rolledBackMigrationIds: [],
-      journalReceiptCount: 9
+      journalReceiptCount: 10
     });
     expect((await pool.query<{
       schema_receipts: number;
@@ -2234,6 +2398,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   });
 
   it("applies only the pending canonical suffix from a valid partial journal", async () => {
+    await runSchema("rollback", "0010_zero_finding_guided_review");
     await runSchema("rollback", "0009_pilot_completion_safeguards");
     await runSchema("rollback", "0008_atomic_sermon_review_items");
     await runSchema("rollback", "0007_guided_sermon_review");
@@ -2252,10 +2417,11 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         "0006_phase3b2_pilot_provenance",
         "0007_guided_sermon_review",
         "0008_atomic_sermon_review_items",
-        "0009_pilot_completion_safeguards"
+        "0009_pilot_completion_safeguards",
+        "0010_zero_finding_guided_review"
       ],
       rolledBackMigrationIds: [],
-      journalReceiptCount: 9
+      journalReceiptCount: 10
     });
   });
 
@@ -2279,6 +2445,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       "UPDATE schema_migrations SET checksum_sha256 = $1 WHERE migration_order = 8",
       [eighth.checksumSha256]
     );
+    await runSchema("rollback", "0010_zero_finding_guided_review");
     await runSchema("rollback", "0009_pilot_completion_safeguards");
 
     await pool.query(
@@ -2325,6 +2492,8 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 8 });
     await expect(runSchema("apply", "0009_pilot_completion_safeguards"))
       .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 9 });
+    await expect(runSchema("apply", "0010_zero_finding_guided_review"))
+      .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 10 });
   });
 
   it("refuses unjournalled objects and serialises concurrent fresh application", async () => {
@@ -2344,12 +2513,12 @@ integration("disposable PostgreSQL Phase 3B application", () => {
 
     const results = await Promise.all([runSchema("apply"), runSchema("apply")]);
     expect(results.map((result) => result.outcome).sort()).toEqual(["applied", "no_op"]);
-    expect(results.reduce((count, result) => count + result.appliedMigrationIds.length, 0)).toBe(9);
+    expect(results.reduce((count, result) => count + result.appliedMigrationIds.length, 0)).toBe(10);
     expect((await pool.query<{ receipts: number; distinct_receipts: number }>(
       `SELECT count(*)::integer AS receipts,
               count(DISTINCT migration_id)::integer AS distinct_receipts
        FROM schema_migrations`
-    )).rows[0]).toEqual({ receipts: 9, distinct_receipts: 9 });
+    )).rows[0]).toEqual({ receipts: 10, distinct_receipts: 10 });
 
     await expect(runSchema("rollback")).resolves.toMatchObject({
       outcome: "rolled_back",
@@ -2357,7 +2526,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     });
     await expect(runSchema("apply")).resolves.toMatchObject({
       outcome: "applied",
-      journalReceiptCount: 9
+      journalReceiptCount: 10
     });
   });
 });

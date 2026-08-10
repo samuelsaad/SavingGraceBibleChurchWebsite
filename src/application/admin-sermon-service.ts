@@ -8,6 +8,7 @@ import {
   enrichmentReviewResponseSchema,
   permanentDeletionResultSchema,
   taxonomyResponseSchema,
+  type AcknowledgeEmptyEnrichmentReviewInput,
   type AdminSermonDetail,
   type AdminSermonListQuery,
   type CreateSermonInput,
@@ -195,18 +196,40 @@ function enrichmentReviewDto(
   const resolvedItemCount = workflow.items.filter((item) =>
     item.decisionStatus === "accepted" || item.decisionStatus === "corrected"
   ).length;
-  const unresolvedItemCount = itemSetMatches && transcriptMatchesExpected
-    ? expectedItemCount - resolvedItemCount
-    : Math.max(expectedItemCount - resolvedItemCount, 1);
-  const stageComplete = [
-    workflow.state.identityStatus === "confirmed",
-    itemSetMatches && transcriptMatchesExpected && unresolvedItemCount === 0,
-    sermon.transcript?.status === "approved",
-    sermon.summaryStatus === "approved",
-    sermon.questionAnswers.length >= 5 &&
+  const unresolvedItemCount = Math.max(expectedItemCount - resolvedItemCount, 0);
+  const reviewSetVerified = itemSetMatches && transcriptMatchesExpected;
+  const emptyItemSetAcknowledged =
+    workflow.state.emptyItemSetAcknowledgedBySubject !== null &&
+    workflow.state.emptyItemSetAcknowledgedAt !== null;
+  const stageCompletion = {
+    identity: workflow.state.completedAt !== null || (
+      workflow.state.identityStatus === "confirmed" &&
+      sermon.speaker !== null &&
+      sermon.serviceDate !== "1970-01-01"
+    ),
+    findings: reviewSetVerified && unresolvedItemCount === 0 && (
+      expectedItemCount > 0 || emptyItemSetAcknowledged
+    ),
+    transcript: workflow.state.completedAt !== null || (
+      sermon.transcript?.status === "approved" && sermon.transcript.approvedAt !== null
+    ),
+    description: workflow.state.completedAt !== null || (
+      sermon.summaryStatus === "approved" && sermon.summaryApprovedAt !== null
+    ),
+    questionAnswers: workflow.state.completedAt !== null || (
+      sermon.questionAnswers.length >= 5 &&
       sermon.questionAnswers.length <= 10 &&
-      sermon.questionAnswers.every((item) => item.status === "approved"),
-    workflow.state.completedAt !== null
+      sermon.questionAnswers.every((item) => item.status === "approved" && item.approvedAt !== null)
+    ),
+    final: workflow.state.completedAt !== null
+  };
+  const stageComplete = [
+    stageCompletion.identity,
+    stageCompletion.findings,
+    stageCompletion.transcript,
+    stageCompletion.description,
+    stageCompletion.questionAnswers,
+    stageCompletion.final
   ];
   const completedStageCount = stageComplete.filter(Boolean).length;
   const canFinish =
@@ -220,6 +243,8 @@ function enrichmentReviewDto(
     review: {
       identityStatus: workflow.state.identityStatus,
       currentStage: workflow.state.currentStage,
+      emptyItemSetAcknowledgedBySubject: workflow.state.emptyItemSetAcknowledgedBySubject,
+      emptyItemSetAcknowledgedAt: workflow.state.emptyItemSetAcknowledgedAt,
       completedAt: workflow.state.completedAt,
       rowVersion: workflow.state.rowVersion
     },
@@ -239,6 +264,10 @@ function enrichmentReviewDto(
       presentItemCount: workflow.state.storedItemCount,
       itemSetMatches,
       transcriptMatchesExpected,
+      reviewSetVerified,
+      requiresEmptyItemSetAcknowledgement:
+        expectedItemCount === 0 && reviewSetVerified && !emptyItemSetAcknowledged,
+      stageCompletion,
       completedStageCount,
       percentReviewed: Math.round((completedStageCount / 6) * 100),
       canFinish
@@ -337,6 +366,36 @@ export class AdminSermonService {
           invalid("serviceDate", "Enter the verified service date before confirming identity");
         }
       }
+      const identityComplete =
+        (input.identityStatus ?? review.identityStatus) === "confirmed" &&
+        sermon.speaker !== null &&
+        sermon.serviceDate !== "1970-01-01";
+      const findingsComplete = identityComplete && !await transaction.hasBlockingEnrichmentReviewItems(
+        id,
+        sermon.transcript?.rowVersion ?? null
+      );
+      const transcriptComplete =
+        sermon.transcript?.status === "approved" && sermon.transcript.approvedAt !== null;
+      const descriptionComplete =
+        sermon.summaryStatus === "approved" && sermon.summaryApprovedAt !== null;
+      const questionAnswersComplete =
+        sermon.questionAnswers.length >= 5 &&
+        sermon.questionAnswers.length <= 10 &&
+        sermon.questionAnswers.every((item) => item.status === "approved" && item.approvedAt !== null);
+      const firstIncompleteStage = !identityComplete
+        ? 1
+        : !findingsComplete
+          ? 2
+          : !transcriptComplete
+            ? 3
+            : !descriptionComplete
+              ? 4
+              : !questionAnswersComplete
+                ? 5
+                : 6;
+      if (input.currentStage > firstIncompleteStage) {
+        invalid("currentStage", "Complete the earliest incomplete review stage before moving forward");
+      }
       await transaction.updateEnrichmentReviewProgress(id, input, identity.subject);
       if (input.identityStatus && input.identityStatus !== review.identityStatus) {
         await transaction.appendAudit(
@@ -352,6 +411,72 @@ export class AdminSermonService {
           )
         );
       }
+    });
+    return this.enrichmentReviewDetail(id, identity);
+  }
+
+  async acknowledgeEmptyEnrichmentReviewItems(
+    id: string,
+    input: AcknowledgeEmptyEnrichmentReviewInput,
+    identity: ApplicationIdentity,
+    requestCorrelationId: string
+  ): Promise<EnrichmentReviewResponse> {
+    assertAdminAccess(identity);
+    await this.repository.transaction(async (transaction) => {
+      const sermon = await transaction.findSermonForUpdate(id);
+      if (!sermon) notFound("Sermon was not found");
+      if (sermon.rowVersion !== input.sermonRowVersion) conflict();
+      assertMayEditSermon(identity, sermon);
+      const review = await transaction.findEnrichmentReviewForUpdate(id);
+      if (!review) notFound("A guided enrichment review is not available for this sermon");
+      if (review.rowVersion !== input.reviewRowVersion) conflict();
+      const transcript = sermon.transcript;
+      if (!transcript || transcript.rowVersion !== input.transcriptRowVersion) conflict();
+      if (
+        review.identityStatus !== "confirmed" ||
+        sermon.speaker === null ||
+        sermon.serviceDate === "1970-01-01"
+      ) {
+        invalid("identity", "Confirm identity and required metadata before reviewing findings");
+      }
+      if (review.expectedItemCount !== 0) {
+        invalid("reviewItems", "Empty-set acknowledgement is available only for a zero-item review set");
+      }
+      if (
+        review.sourceRecordKey === null ||
+        review.storedItemCount !== 0 ||
+        review.atomicItemCount !== 0 ||
+        review.expectedItemSetSha256 !== sha256("") ||
+        review.actualItemSetSha256 !== review.expectedItemSetSha256 ||
+        review.expectedTranscriptSha256 !== sha256(transcript.bodyText) ||
+        review.expectedTranscriptRowVersion !== transcript.rowVersion
+      ) {
+        conflict("The empty review set or transcript expectation is not verified; reload after restoration.");
+      }
+      if (
+        review.emptyItemSetAcknowledgedBySubject !== null ||
+        review.emptyItemSetAcknowledgedAt !== null
+      ) {
+        conflict("The empty review set has already been acknowledged.");
+      }
+      const acknowledged = await transaction.acknowledgeEmptyEnrichmentReviewItems(
+        id,
+        input,
+        identity.subject
+      );
+      if (!acknowledged) {
+        conflict("The empty review set changed before it could be acknowledged; reload and inspect it again.");
+      }
+      await transaction.appendAudit(
+        successfulAudit(
+          identity,
+          "sermon.enrichment_zero_findings_acknowledged",
+          "sermon",
+          id,
+          ["enrichmentReview.emptyItemSetAcknowledgedAt"],
+          requestCorrelationId
+        )
+      );
     });
     return this.enrichmentReviewDetail(id, identity);
   }

@@ -1,4 +1,5 @@
 import type {
+  AcknowledgeEmptyEnrichmentReviewInput,
   AdminSermonListQuery,
   CreateSermonInput,
   DeletionSeoDisposition,
@@ -134,6 +135,8 @@ export interface EnrichmentReviewStateDto {
   expectedItemSetSha256: string | null;
   expectedTranscriptSha256: string | null;
   expectedTranscriptRowVersion: number | null;
+  emptyItemSetAcknowledgedBySubject: string | null;
+  emptyItemSetAcknowledgedAt: string | null;
   storedItemCount: number;
   atomicItemCount: number;
   actualItemSetSha256: string | null;
@@ -273,6 +276,11 @@ export interface AdminSermonTransaction {
     input: EnrichmentReviewProgressInput,
     actorSubject: string
   ): Promise<void>;
+  acknowledgeEmptyEnrichmentReviewItems(
+    sermonId: string,
+    input: AcknowledgeEmptyEnrichmentReviewInput,
+    actorSubject: string
+  ): Promise<boolean>;
   updateEnrichmentReviewItemDecision(
     itemId: string,
     input: EnrichmentReviewItemDecisionInput,

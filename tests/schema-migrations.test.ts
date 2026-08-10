@@ -33,7 +33,7 @@ describe("journalled PostgreSQL schema migrations", () => {
     expect(schemaMigrationChecksum(upLf, downLf)).toMatch(/^[0-9a-f]{64}$/);
   });
 
-  it("loads the nine canonical paired migrations in stable order", async () => {
+  it("loads the ten canonical paired migrations in stable order", async () => {
     const migrations = await loadSchemaMigrations();
     expect(migrations.map((migration) => migration.id)).toEqual([
       "0001_initial",
@@ -44,9 +44,10 @@ describe("journalled PostgreSQL schema migrations", () => {
       "0006_phase3b2_pilot_provenance",
       "0007_guided_sermon_review",
       "0008_atomic_sermon_review_items",
-      "0009_pilot_completion_safeguards"
+      "0009_pilot_completion_safeguards",
+      "0010_zero_finding_guided_review"
     ]);
-    expect(migrations.map((migration) => migration.order)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    expect(migrations.map((migration) => migration.order)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
     expect(migrations.every((migration) => !/^\s*BEGIN;/i.test(migration.upBody))).toBe(true);
     expect(migrations.every((migration) => !/COMMIT;\s*$/i.test(migration.downBody))).toBe(true);
   });
@@ -55,7 +56,7 @@ describe("journalled PostgreSQL schema migrations", () => {
     const migrations = await loadSchemaMigrations();
     expect(validateSchemaMigrationJournal(migrations, [])).toBe(0);
     expect(validateSchemaMigrationJournal(migrations, receipts(migrations, 3))).toBe(3);
-    expect(validateSchemaMigrationJournal(migrations, receipts(migrations))).toBe(9);
+    expect(validateSchemaMigrationJournal(migrations, receipts(migrations))).toBe(10);
   });
 
   it("fails closed on duplicate, unknown, missing, reordered and changed receipts", async () => {

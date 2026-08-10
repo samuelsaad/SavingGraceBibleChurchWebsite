@@ -387,6 +387,15 @@ export const enrichmentReviewProgressInputSchema = z.object({
 }).strict();
 export type EnrichmentReviewProgressInput = z.infer<typeof enrichmentReviewProgressInputSchema>;
 
+export const acknowledgeEmptyEnrichmentReviewInputSchema = z.object({
+  sermonRowVersion: z.number().int().positive(),
+  reviewRowVersion: z.number().int().positive(),
+  transcriptRowVersion: z.number().int().positive()
+}).strict();
+export type AcknowledgeEmptyEnrichmentReviewInput = z.infer<
+  typeof acknowledgeEmptyEnrichmentReviewInputSchema
+>;
+
 export const enrichmentReviewItemDecisionInputSchema = z.object({
   sermonRowVersion: z.number().int().positive(),
   reviewRowVersion: z.number().int().positive(),
@@ -466,6 +475,8 @@ export const enrichmentReviewResponseSchema = z.object({
   review: z.object({
     identityStatus: enrichmentReviewIdentityStatusSchema,
     currentStage: z.number().int().min(1).max(6),
+    emptyItemSetAcknowledgedBySubject: z.string().nullable(),
+    emptyItemSetAcknowledgedAt: z.iso.datetime().nullable(),
     completedAt: z.iso.datetime().nullable(),
     rowVersion: z.number().int().positive()
   }),
@@ -477,6 +488,16 @@ export const enrichmentReviewResponseSchema = z.object({
     presentItemCount: z.number().int().nonnegative(),
     itemSetMatches: z.boolean(),
     transcriptMatchesExpected: z.boolean(),
+    reviewSetVerified: z.boolean(),
+    requiresEmptyItemSetAcknowledgement: z.boolean(),
+    stageCompletion: z.object({
+      identity: z.boolean(),
+      findings: z.boolean(),
+      transcript: z.boolean(),
+      description: z.boolean(),
+      questionAnswers: z.boolean(),
+      final: z.boolean()
+    }),
     completedStageCount: z.number().int().min(0).max(6),
     percentReviewed: z.number().int().min(0).max(100),
     canFinish: z.boolean()
@@ -619,6 +640,10 @@ export const adminSermonApiContracts = {
   enrichmentReview: {
     detail: { method: "GET", path: "/api/v1/admin/sermons/:id/review" },
     progress: { method: "PATCH", path: "/api/v1/admin/sermons/:id/review/progress" },
+    acknowledgeEmptyItemSet: {
+      method: "POST",
+      path: "/api/v1/admin/sermons/:id/review/empty-item-set/acknowledge"
+    },
     itemDecision: { method: "POST", path: "/api/v1/admin/sermons/:id/review/items/:itemId/decision" },
     finish: { method: "POST", path: "/api/v1/admin/sermons/:id/review/finish" }
   },

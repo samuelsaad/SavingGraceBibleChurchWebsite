@@ -3,6 +3,7 @@ import { ZodError } from "zod";
 import {
   adminSermonIdParamsSchema,
   adminSermonListQuerySchema,
+  acknowledgeEmptyEnrichmentReviewInputSchema,
   createSermonInputSchema,
   enrichmentReviewItemDecisionInputSchema,
   enrichmentReviewProgressInputSchema,
@@ -169,6 +170,27 @@ export function createAdminApiRouter(
           await service.decideEnrichmentReviewItem(
             id,
             itemId,
+            input,
+            identity,
+            requestCorrelationId
+          )
+        );
+      }
+
+      const acknowledgeEmptyReview =
+        /^\/api\/v1\/admin\/sermons\/([^/]+)\/review\/empty-item-set\/acknowledge\/?$/.exec(path);
+      if (acknowledgeEmptyReview) {
+        if (request.method !== "POST") {
+          return json(405, { error: { code: "method_not_allowed" } }, { Allow: "POST" });
+        }
+        const { id } = adminSermonIdParamsSchema.parse({
+          id: decodeURIComponent(acknowledgeEmptyReview[1]!)
+        });
+        const input = acknowledgeEmptyEnrichmentReviewInputSchema.parse(await readJson(request));
+        return json(
+          200,
+          await service.acknowledgeEmptyEnrichmentReviewItems(
+            id,
             input,
             identity,
             requestCorrelationId

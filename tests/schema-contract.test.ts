@@ -115,6 +115,19 @@ describe("PostgreSQL schema contract", () => {
     expect(down).toContain("pilot_safeguards_rollback_refused_preserved_evidence");
   });
 
+  it("stores a reversible, explicit acknowledgement for verified empty finding sets", async () => {
+    const [up, down] = await Promise.all([
+      readFile("db/migrations/0010_zero_finding_guided_review.sql", "utf8"),
+      readFile("db/migrations/0010_zero_finding_guided_review.down.sql", "utf8")
+    ]);
+    expect(up).toContain("empty_item_set_acknowledged_by_subject");
+    expect(up).toContain("empty_item_set_acknowledged_at");
+    expect(up).toContain("expected_item_count = 0");
+    expect(up).toContain("NOT EXISTS");
+    expect(up).toContain("current_stage = CASE");
+    expect(down).toContain("zero_finding_review_rollback_refused_acknowledgement_evidence");
+  });
+
   it("adds reversible atomic review identities without changing migration 0007", async () => {
     const [up, down] = await Promise.all([
       readFile("db/migrations/0008_atomic_sermon_review_items.sql", "utf8"),

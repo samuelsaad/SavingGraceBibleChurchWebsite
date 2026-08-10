@@ -86,6 +86,10 @@ const enrichmentReviewStateProjection = `
   review.expected_item_set_sha256 AS "expectedItemSetSha256",
   review.expected_transcript_sha256 AS "expectedTranscriptSha256",
   review.expected_transcript_row_version AS "expectedTranscriptRowVersion",
+  review.empty_item_set_acknowledged_by_subject AS "emptyItemSetAcknowledgedBySubject",
+  CASE WHEN review.empty_item_set_acknowledged_at IS NULL THEN NULL
+    ELSE ${timestamp("review.empty_item_set_acknowledged_at")}
+  END AS "emptyItemSetAcknowledgedAt",
   (SELECT count(*)::integer FROM sermon_enrichment_review_items stored
    WHERE stored.sermon_id = review.sermon_id) AS "storedItemCount",
   (SELECT count(*)::integer FROM sermon_enrichment_review_items atomic
@@ -942,6 +946,46 @@ class PostgresAdminSermonTransaction implements AdminSermonTransaction {
     );
   }
 
+  async acknowledgeEmptyEnrichmentReviewItems(
+    sermonId: string,
+    input: import("../../api/contracts/admin-sermons").AcknowledgeEmptyEnrichmentReviewInput,
+    actorSubject: string
+  ): Promise<boolean> {
+    const result = await this.client.query(
+      `UPDATE sermon_enrichment_reviews review
+       SET empty_item_set_acknowledged_by_subject = $4,
+           empty_item_set_acknowledged_at = now(),
+           current_stage = 3,
+           completed_by_subject = NULL,
+           completed_at = NULL,
+           updated_at = now(),
+           updated_by_subject = $4,
+           row_version = review.row_version + 1
+       FROM sermon_transcripts transcript
+       WHERE review.sermon_id = $1
+         AND transcript.sermon_id = review.sermon_id
+         AND review.row_version = $2
+         AND transcript.row_version = $3
+         AND review.identity_status = 'confirmed'
+         AND review.current_stage = 2
+         AND review.expected_item_count = 0
+         AND review.expected_item_set_sha256 =
+           encode(digest(convert_to('', 'UTF8'), 'sha256'), 'hex')
+         AND review.expected_transcript_sha256 =
+           encode(digest(convert_to(transcript.body_text, 'UTF8'), 'sha256'), 'hex')
+         AND review.expected_transcript_row_version = transcript.row_version
+         AND review.empty_item_set_acknowledged_by_subject IS NULL
+         AND review.empty_item_set_acknowledged_at IS NULL
+         AND NOT EXISTS (
+           SELECT 1 FROM sermon_enrichment_review_items item
+           WHERE item.sermon_id = review.sermon_id
+         )
+       RETURNING review.sermon_id`,
+      [sermonId, input.reviewRowVersion, input.transcriptRowVersion, actorSubject]
+    );
+    return result.rowCount === 1;
+  }
+
   async updateEnrichmentReviewItemDecision(
     itemId: string,
     input: import("../../api/contracts/admin-sermons").EnrichmentReviewItemDecisionInput,
@@ -1000,6 +1044,8 @@ class PostgresAdminSermonTransaction implements AdminSermonTransaction {
        SET current_stage = 2,
            completed_by_subject = NULL,
            completed_at = NULL,
+           empty_item_set_acknowledged_by_subject = NULL,
+           empty_item_set_acknowledged_at = NULL,
            expected_transcript_sha256 = (
              SELECT encode(digest(transcript.body_text, 'sha256'), 'hex')
              FROM sermon_transcripts transcript WHERE transcript.sermon_id = $1
@@ -1037,6 +1083,8 @@ class PostgresAdminSermonTransaction implements AdminSermonTransaction {
        SET current_stage = 2,
            completed_by_subject = NULL,
            completed_at = NULL,
+           empty_item_set_acknowledged_by_subject = NULL,
+           empty_item_set_acknowledged_at = NULL,
            expected_transcript_sha256 = (
              SELECT encode(digest(transcript.body_text, 'sha256'), 'hex')
              FROM sermon_transcripts transcript WHERE transcript.sermon_id = $1
@@ -1055,7 +1103,7 @@ class PostgresAdminSermonTransaction implements AdminSermonTransaction {
     transcriptRowVersion: number,
     actorSubject: string
   ): Promise<void> {
-    const items = await this.client.query(
+    await this.client.query(
       `UPDATE sermon_enrichment_review_items
        SET transcript_row_version = $2,
            updated_at = now(),
@@ -1065,17 +1113,17 @@ class PostgresAdminSermonTransaction implements AdminSermonTransaction {
        RETURNING id`,
       [sermonId, transcriptRowVersion]
     );
-    if (items.rowCount) {
-      await this.client.query(
-        `UPDATE sermon_enrichment_reviews
-         SET expected_transcript_row_version = $2,
-             updated_at = now(),
-             updated_by_subject = $3,
-             row_version = row_version + 1
-         WHERE sermon_id = $1`,
-        [sermonId, transcriptRowVersion, actorSubject]
-      );
-    }
+    await this.client.query(
+      `UPDATE sermon_enrichment_reviews
+       SET expected_transcript_row_version = $2,
+           updated_at = now(),
+           updated_by_subject = $3,
+           row_version = row_version + 1
+       WHERE sermon_id = $1
+         AND expected_transcript_row_version IS NOT NULL
+         AND expected_transcript_row_version <> $2`,
+      [sermonId, transcriptRowVersion, actorSubject]
+    );
   }
 
   async reopenEnrichmentReview(
@@ -1132,6 +1180,13 @@ class PostgresAdminSermonTransaction implements AdminSermonTransaction {
              AND transcript.row_version = $2
              AND review.expected_transcript_row_version = transcript.row_version
              AND review.expected_transcript_sha256 = encode(digest(transcript.body_text, 'sha256'), 'hex')
+             AND (
+               review.expected_item_count > 0
+               OR (
+                 review.empty_item_set_acknowledged_by_subject IS NOT NULL
+                 AND review.empty_item_set_acknowledged_at IS NOT NULL
+               )
+             )
              AND (SELECT count(*) FROM sermon_enrichment_review_items item
                   WHERE item.sermon_id = review.sermon_id) = review.expected_item_count
              AND (SELECT count(*) FROM sermon_enrichment_review_items item

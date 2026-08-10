@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { publicSermonListQuerySchema } from "../src/api/contracts/public-sermons";
 import {
+  acknowledgeEmptyEnrichmentReviewInputSchema,
   adminSermonListQuerySchema,
   applicationRoleSchema,
   controlledMediaInputSchema,
@@ -114,6 +115,16 @@ describe("admin sermon API contract", () => {
   });
 
   it("requires explicit, versioned guided-review progress and item decisions", () => {
+    expect(acknowledgeEmptyEnrichmentReviewInputSchema.parse({
+      sermonRowVersion: 3,
+      reviewRowVersion: 2,
+      transcriptRowVersion: 5
+    })).toEqual({ sermonRowVersion: 3, reviewRowVersion: 2, transcriptRowVersion: 5 });
+    expect(() => acknowledgeEmptyEnrichmentReviewInputSchema.parse({
+      sermonRowVersion: 3,
+      reviewRowVersion: 2,
+      transcriptRowVersion: 0
+    })).toThrow();
     expect(enrichmentReviewProgressInputSchema.parse({
       sermonRowVersion: 3,
       reviewRowVersion: 2,

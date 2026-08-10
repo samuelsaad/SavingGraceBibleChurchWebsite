@@ -121,6 +121,12 @@ describe("Phase 3B administration dashboard", () => {
     expect(client).toContain("Save and pause");
     expect(client).toContain("/review/finish");
     expect(client).toContain("/review/items/");
+    expect(client).toContain("/review/empty-item-set/acknowledge");
+    expect(client).toContain("No atomic flagged review items were generated for this source.");
+    expect(client).toContain("Confirm inspection of no flagged items");
+    expect(client).toContain("requiresEmptyItemSetAcknowledgement");
+    expect(client).toContain("stageCompletion.findings");
+    expect(client).toContain("Complete earlier stage first");
     expect(service).toContain("Save changed transcript wording as draft");
     expect(client).toContain("/^\\/admin\\/sermons\\/[0-9a-f-]+\\/review$/i");
     const guidedRouteSource = client.slice(

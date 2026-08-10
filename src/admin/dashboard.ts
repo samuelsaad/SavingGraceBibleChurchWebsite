@@ -179,6 +179,8 @@ type EnrichmentReviewResponse = {
   review: {
     identityStatus: "pending" | "confirmed";
     currentStage: number;
+    emptyItemSetAcknowledgedBySubject: string | null;
+    emptyItemSetAcknowledgedAt: string | null;
     completedAt: string | null;
     rowVersion: number;
   };
@@ -190,6 +192,16 @@ type EnrichmentReviewResponse = {
     presentItemCount: number;
     itemSetMatches: boolean;
     transcriptMatchesExpected: boolean;
+    reviewSetVerified: boolean;
+    requiresEmptyItemSetAcknowledgement: boolean;
+    stageCompletion: {
+      identity: boolean;
+      findings: boolean;
+      transcript: boolean;
+      description: boolean;
+      questionAnswers: boolean;
+      final: boolean;
+    };
     completedStageCount: number;
     percentReviewed: number;
     canFinish: boolean;
@@ -423,16 +435,19 @@ function transcriptTokenCount(value: string): number {
 }
 
 function reviewStageComplete(review: EnrichmentReviewResponse, stage: number): boolean {
-  if (stage === 1) return review.review.identityStatus === "confirmed";
-  if (stage === 2) return review.progress.unresolvedItemCount === 0;
-  if (stage === 3) return review.sermon.transcript?.status === "approved";
-  if (stage === 4) return review.sermon.summaryStatus === "approved";
-  if (stage === 5) {
-    return review.sermon.questionAnswers.length >= 5 &&
-      review.sermon.questionAnswers.length <= 10 &&
-      review.sermon.questionAnswers.every((item) => item.status === "approved");
-  }
-  return review.review.completedAt !== null;
+  const completion = review.progress.stageCompletion;
+  return [
+    completion.identity,
+    completion.findings,
+    completion.transcript,
+    completion.description,
+    completion.questionAnswers,
+    completion.final
+  ][stage - 1] ?? false;
+}
+
+function firstIncompleteReviewStage(review: EnrichmentReviewResponse): number {
+  return enrichmentReviewStages.findIndex((_, index) => !reviewStageComplete(review, index + 1)) + 1 || 6;
 }
 
 function reviewStageNavigation(review: EnrichmentReviewResponse): string {
@@ -441,9 +456,10 @@ function reviewStageNavigation(review: EnrichmentReviewResponse): string {
       const stage = index + 1;
       const complete = reviewStageComplete(review, stage);
       const current = review.review.currentStage === stage;
-      return `<li><button type="button" class="review-stage-button${current ? " current" : ""}" data-review-stage="${stage}"${current ? ' aria-current="step"' : ""}>
+      const blocked = review.review.completedAt === null && stage > firstIncompleteReviewStage(review);
+      return `<li><button type="button" class="review-stage-button${current ? " current" : ""}" data-review-stage="${stage}"${current ? ' aria-current="step"' : ""}${blocked ? ' disabled aria-disabled="true"' : ""}>
         <span class="review-stage-number">${stage}</span>
-        <span><strong>${escapeHtml(label)}</strong><small>${complete ? "Complete" : current ? "Current stage" : "Not complete"}</small></span>
+        <span><strong>${escapeHtml(label)}</strong><small>${complete ? "Complete" : current ? "Current stage" : blocked ? "Complete earlier stage first" : "Not complete"}</small></span>
         <span class="review-stage-mark" aria-label="${complete ? "Complete" : "Not complete"}">${complete ? "✓" : "○"}</span>
       </button></li>`;
     }).join("")}</ol>
@@ -464,11 +480,12 @@ function technicalProvenance(source: NonNullable<SermonDetail["enrichmentSource"
   </details>`;
 }
 
-function reviewStageActions(stage: number): string {
+function reviewStageActions(review: EnrichmentReviewResponse, stage: number): string {
+  const currentComplete = reviewStageComplete(review, stage);
   return `<div class="review-stage-actions">
     ${stage > 1 ? `<button class="button" type="button" data-review-stage="${stage - 1}">Back: ${escapeHtml(enrichmentReviewStages[stage - 2])}</button>` : ""}
     <button class="button quiet" type="button" data-review-pause>Save and pause</button>
-    ${stage < 6 ? `<button class="button primary" type="button" data-review-stage="${stage + 1}">Next: ${escapeHtml(enrichmentReviewStages[stage])}</button>` : ""}
+    ${stage < 6 ? `<button class="button primary" type="button" data-review-stage="${stage + 1}"${currentComplete ? "" : ' disabled aria-disabled="true"'}>Next: ${escapeHtml(enrichmentReviewStages[stage])}</button>` : ""}
   </div>`;
 }
 
@@ -512,20 +529,35 @@ function renderIdentityReviewStage(
 
 function renderFlaggedReviewStage(review: EnrichmentReviewResponse): string {
   const resolvedItems = review.items.filter((item) => isResolvedReviewDecision(item.decisionStatus));
+  const emptyItemSet = review.progress.totalItemCount === 0;
+  const emptyItemSetAcknowledged = review.review.emptyItemSetAcknowledgedAt !== null;
   return `<section class="review-stage-panel" aria-labelledby="flagged-review-heading">
     <header class="review-stage-heading"><p>Stage 2 of 6</p><h2 id="flagged-review-heading">Flagged review items</h2><p>Review the exact associated transcript wording. Accepting leaves it unchanged; correcting saves the edited wording and decision together.</p></header>
     <div id="review-stage-feedback"></div>
-    ${review.progress.itemSetMatches && review.progress.transcriptMatchesExpected
+    ${review.progress.reviewSetVerified
       ? ""
       : `<div class="callout"><strong>Review set verification failed.</strong><p>The expected identities, item total or transcript version does not match. Decisions and completion remain blocked until the private review set is safely restored.</p></div>`}
-    <div class="review-item-toolbar">
-      <label><span>Category</span><select id="review-item-category"><option value="all">All categories</option><option value="caption_error">Caption wording</option><option value="name_or_scripture_reference">Names or Scripture references</option></select></label>
-      <p aria-live="polite"><strong>${review.progress.unresolvedItemCount}</strong> remaining &bull; ${review.progress.resolvedItemCount} resolved of ${review.progress.totalItemCount}${review.progress.presentItemCount === review.progress.totalItemCount ? "" : ` &bull; ${review.progress.presentItemCount} currently present`}</p>
-    </div>
-    <div id="review-item-card">${review.progress.unresolvedItemCount === 0
-      ? '<div class="empty-state review-stage-complete"><strong>Every flagged item has an explicit resolving decision.</strong><p>No content was approved. Continue to the transcript stage when you are ready to review the complete draft.</p></div>'
-      : ""}</div>
-    <details class="review-resolved-history">
+    ${emptyItemSet
+      ? `<div class="review-item-toolbar"><p aria-live="polite"><strong>0</strong> remaining &bull; 0 resolved of 0</p></div>
+        <div class="empty-state${emptyItemSetAcknowledged ? " review-stage-complete" : ""}">
+          <strong>${emptyItemSetAcknowledged ? "The empty finding set was explicitly acknowledged." : "No atomic flagged review items were generated for this source."}</strong>
+          <p>${emptyItemSetAcknowledged
+            ? `Recorded by ${escapeHtml(review.review.emptyItemSetAcknowledgedBySubject ?? "an authorised administrator")}${review.review.emptyItemSetAcknowledgedAt ? ` on ${escapeHtml(humanDate(review.review.emptyItemSetAcknowledgedAt))}` : ""}. This did not approve any content.`
+            : review.progress.reviewSetVerified
+              ? "Inspect this verified empty state, then explicitly acknowledge it. This action does not approve the transcript, description or questions and answers."
+              : "The zero count cannot be acknowledged until the item-set and transcript expectations are verified."}</p>
+          ${review.progress.requiresEmptyItemSetAcknowledgement
+            ? '<button class="button primary" type="button" id="acknowledge-empty-review-set">Confirm inspection of no flagged items</button>'
+            : ""}
+        </div>`
+      : `<div class="review-item-toolbar">
+          <label><span>Category</span><select id="review-item-category"><option value="all">All categories</option><option value="caption_error">Caption wording</option><option value="name_or_scripture_reference">Names or Scripture references</option></select></label>
+          <p aria-live="polite"><strong>${review.progress.unresolvedItemCount}</strong> remaining &bull; ${review.progress.resolvedItemCount} resolved of ${review.progress.totalItemCount}${review.progress.presentItemCount === review.progress.totalItemCount ? "" : ` &bull; ${review.progress.presentItemCount} currently present`}</p>
+        </div>
+        <div id="review-item-card">${review.progress.unresolvedItemCount === 0
+          ? '<div class="empty-state review-stage-complete"><strong>Every flagged item has an explicit resolving decision.</strong><p>No content was approved. Continue to the transcript stage when you are ready to review the complete draft.</p></div>'
+          : ""}</div>`}
+    ${emptyItemSet ? "" : `<details class="review-resolved-history">
       <summary>Resolved history (${resolvedItems.length})</summary>
       ${resolvedItems.length
         ? `<ol>${resolvedItems.map((item) => `<li>
@@ -536,20 +568,20 @@ function renderFlaggedReviewStage(review: EnrichmentReviewResponse): string {
               : ""}
           </li>`).join("")}</ol>`
         : "<p>No findings have been resolved.</p>"}
-    </details>
-    ${reviewStageActions(2)}
+    </details>`}
+    ${reviewStageActions(review, 2)}
   </section>`;
 }
 
 function renderTranscriptReviewStage(review: EnrichmentReviewResponse): string {
   const transcript = review.sermon.transcript;
   const body = transcript?.bodyText ?? "";
-  const approvalBlocked = review.progress.unresolvedItemCount > 0;
+  const approvalBlocked = !review.progress.stageCompletion.findings;
   return `<form id="review-transcript-form" class="review-stage-panel stack" novalidate>
     <header class="review-stage-heading"><p>Stage 3 of 6</p><h2>Complete transcript</h2><p>Read the complete draft in a comfortable workspace. Saving edits does not approve them.</p></header>
     <div id="review-stage-feedback"></div>
     <div class="review-content-status"><span>Current status</span><strong>${escapeHtml(plainReviewStatus(transcript?.status ?? "missing"))}</strong></div>
-    ${approvalBlocked ? `<div class="callout"><strong>Approval is blocked.</strong><p>Resolve ${review.progress.unresolvedItemCount} flagged review item${review.progress.unresolvedItemCount === 1 ? "" : "s"} first.</p></div>` : ""}
+    ${approvalBlocked ? `<div class="callout"><strong>Approval is blocked.</strong><p>${review.progress.totalItemCount === 0 ? "Verify and explicitly acknowledge the empty finding set first." : `Resolve ${review.progress.unresolvedItemCount} flagged review item${review.progress.unresolvedItemCount === 1 ? "" : "s"} first.`}</p></div>` : ""}
     <label class="review-editor-label"><span>Complete transcript</span><textarea id="review-transcript-body" name="transcriptBody" maxlength="500000" required>${escapeHtml(body)}</textarea></label>
     <p class="review-counts" id="review-transcript-counts">${body.length.toLocaleString()} characters • ${transcriptTokenCount(body).toLocaleString()} tokens</p>
     <div class="review-decision-bar">
@@ -557,7 +589,7 @@ function renderTranscriptReviewStage(review: EnrichmentReviewResponse): string {
       <button class="button danger" type="submit" data-transcript-action="reject">Reject and keep as draft</button>
       <button class="button primary" type="submit" data-transcript-action="approve"${approvalBlocked ? " disabled" : ""}>Approve transcript</button>
     </div>
-    ${reviewStageActions(3)}
+    ${reviewStageActions(review, 3)}
   </form>`;
 }
 
@@ -574,7 +606,7 @@ function renderDescriptionReviewStage(review: EnrichmentReviewResponse): string 
       <button class="button danger" type="submit" data-description-review-action="reject">Reject and return to draft</button>
       <button class="button primary" type="submit" data-description-review-action="approve"${summary.trim().length < 80 ? " disabled" : ""}>Approve description</button>
     </div>
-    ${reviewStageActions(4)}
+    ${reviewStageActions(review, 4)}
   </form>`;
 }
 
@@ -603,7 +635,7 @@ function renderQuestionReviewStage(review: EnrichmentReviewResponse): string {
     <div id="review-stage-feedback"></div>
     <div class="review-content-status"><span>Collection progress</span><strong>${approved} of ${questions.length} pairs approved</strong></div>
     <div class="review-qa-list">${questions.map((item, index) => reviewQuestionCard(item, index, questions.length)).join("")}</div>
-    ${reviewStageActions(5)}
+    ${reviewStageActions(review, 5)}
   </section>`;
 }
 
@@ -613,8 +645,7 @@ function finalChecklistItem(label: string, complete: boolean, detail: string): s
 
 function renderFinalReviewStage(review: EnrichmentReviewResponse): string {
   const sermon = review.sermon;
-  const dateConfirmed = review.review.identityStatus === "confirmed" && sermon.serviceDate !== "1970-01-01";
-  const qaApproved = sermon.questionAnswers.length >= 5 && sermon.questionAnswers.length <= 10 && sermon.questionAnswers.every((item) => item.status === "approved");
+  const dateConfirmed = review.progress.stageCompletion.identity && sermon.serviceDate !== "1970-01-01";
   return `<section class="review-stage-panel" aria-labelledby="final-review-heading">
     <header class="review-stage-heading"><p>Stage 6 of 6</p><h2 id="final-review-heading">Final review summary</h2><p>Finishing records that the editorial review is complete. It does not submit, schedule or publish this draft.</p></header>
     <div id="review-stage-feedback"></div>
@@ -623,10 +654,10 @@ function renderFinalReviewStage(review: EnrichmentReviewResponse): string {
       ${finalChecklistItem("Canonical Bible book assigned", sermon.readiness.hasRequiredBibleBook, sermon.readiness.hasRequiredBibleBook ? "Replacement-launch metadata is complete." : "Content review may finish, but replacement launch remains blocked until Samuel assigns the Bible book.")}
       ${finalChecklistItem("Service date confirmed", dateConfirmed, dateConfirmed ? "The preached date was verified." : "The service date is unresolved.")}
       ${finalChecklistItem("Provenance reviewed", review.review.identityStatus === "confirmed", "Source identity, language, track and attribution were presented in Stage 1.")}
-      ${finalChecklistItem("Flagged items resolved", review.progress.unresolvedItemCount === 0, `${review.progress.resolvedItemCount} of ${review.progress.totalItemCount} items resolved.`)}
-      ${finalChecklistItem("Transcript approved", sermon.transcript?.status === "approved", plainReviewStatus(sermon.transcript?.status ?? "missing"))}
-      ${finalChecklistItem("Description approved", sermon.summaryStatus === "approved", plainReviewStatus(sermon.summaryStatus))}
-      ${finalChecklistItem("Five to ten Q&A pairs approved", qaApproved, `${sermon.questionAnswers.filter((item) => item.status === "approved").length} of ${sermon.questionAnswers.length} approved.`)}
+      ${finalChecklistItem("Flagged items resolved", review.progress.stageCompletion.findings, review.progress.totalItemCount === 0 ? review.progress.stageCompletion.findings ? "The verified empty set was explicitly acknowledged." : "The verified empty set requires an explicit acknowledgement." : `${review.progress.resolvedItemCount} of ${review.progress.totalItemCount} items resolved.`)}
+      ${finalChecklistItem("Transcript approved", review.progress.stageCompletion.transcript, plainReviewStatus(sermon.transcript?.status ?? "missing"))}
+      ${finalChecklistItem("Description approved", review.progress.stageCompletion.description, plainReviewStatus(sermon.summaryStatus))}
+      ${finalChecklistItem("Five to ten Q&A pairs approved", review.progress.stageCompletion.questionAnswers, `${sermon.questionAnswers.filter((item) => item.status === "approved").length} of ${sermon.questionAnswers.length} approved.`)}
       ${finalChecklistItem("Controlled media valid", sermon.readiness.hasValidControlledMedia, sermon.readiness.hasValidControlledMedia ? "Controlled media passed validation." : "Controlled media still requires attention.")}
       ${finalChecklistItem("Sermon remains draft and unpublished", sermon.status === "draft", `Current sermon state: ${sermon.status}.`)}
     </ul>
@@ -696,6 +727,31 @@ function wireFlaggedReviewItems(
   id: string,
   feedbackTarget: ReviewFeedbackTarget
 ): void {
+  document.querySelector<HTMLButtonElement>("#acknowledge-empty-review-set")?.addEventListener(
+    "click",
+    async (event) => {
+      const button = event.currentTarget as HTMLButtonElement;
+      try {
+        button.disabled = true;
+        await api<EnrichmentReviewResponse>(
+          `/api/v1/admin/sermons/${id}/review/empty-item-set/acknowledge`,
+          {
+            method: "POST",
+            body: JSON.stringify({
+              sermonRowVersion: review.sermon.rowVersion,
+              reviewRowVersion: review.review.rowVersion,
+              transcriptRowVersion: review.sermon.transcript!.rowVersion
+            })
+          }
+        );
+        announce("The verified empty finding set was explicitly acknowledged; no content was approved");
+        await renderGuidedSermonReview(id);
+      } catch (error) {
+        button.disabled = false;
+        feedbackTarget()!.innerHTML = feedback(errorMessage(error), true);
+      }
+    }
+  );
   const cardTarget = document.querySelector<HTMLElement>("#review-item-card");
   const categoryFilter = document.querySelector<HTMLSelectElement>("#review-item-category");
   if (!cardTarget || !categoryFilter) return;
@@ -804,8 +860,8 @@ function wireTranscriptReview(
     const submitter = (event as SubmitEvent).submitter as HTMLButtonElement | null;
     const action = submitter?.dataset.transcriptAction ?? "save";
     if (!form.reportValidity()) return;
-    if (action === "approve" && review.progress.unresolvedItemCount > 0) {
-      feedbackTarget()!.innerHTML = feedback("Resolve every flagged review item before approving the transcript.", true);
+    if (action === "approve" && !review.progress.stageCompletion.findings) {
+      feedbackTarget()!.innerHTML = feedback("Complete the verified finding-review stage before approving the transcript.", true);
       return;
     }
     try {
@@ -1080,13 +1136,13 @@ async function renderGuidedSermonReview(id: string, readOnlyStage?: number): Pro
     if (!identityForm.reportValidity()) return;
     const data = new FormData(identityForm);
     const serviceDate = String(data.get("serviceDate") ?? "");
+    const bookClassificationId = String(data.get("bookClassificationId") ?? "");
     if (action === "confirm" && !serviceDate) {
       stageFeedback()!.innerHTML = feedback("Enter and verify the preached service date before confirming identity.", true);
       (identityForm.elements.namedItem("serviceDate") as HTMLInputElement).focus();
       return;
     }
     try {
-      const bookClassificationId = String(data.get("bookClassificationId") ?? "");
       const saved = await api<SermonDetail>(`/api/v1/admin/sermons/${id}`, {
         method: "PATCH",
         body: JSON.stringify({
