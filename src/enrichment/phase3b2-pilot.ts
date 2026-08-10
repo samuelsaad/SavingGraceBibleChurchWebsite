@@ -24,6 +24,7 @@ import {
 } from "./pilot-punctuation";
 
 const pilotActorSubject = "local-phase3b2-pilot-importer";
+export const remainingAuthorisedPilotVideoId = "RAMFOAOWwMA" as const;
 
 export function deterministicPilotUuid(videoId: string): string {
   const bytes = createHash("sha256").update(`saving-grace-phase3b2:${videoId}`, "utf8").digest().subarray(0, 16);
@@ -195,6 +196,86 @@ export function sourceReference(videoId: string, sha256: string, processingVersi
   return `youtube-studio:${videoId}:${sha256}:${processingVersion}`;
 }
 
+async function initialiseZeroFindingReview(
+  pool: Pool,
+  sermonId: string,
+  sourceRecordKey: string
+): Promise<void> {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await verifyPilotDatabase(client);
+    const state = await client.query<{
+      transcript_sha256: string;
+      transcript_row_version: number;
+      item_count: number;
+      unresolved_count: number;
+      non_draft_content_count: number;
+      existing_source_record_key: string | null;
+    }>(
+      `SELECT
+         encode(digest(convert_to(transcript.body_text, 'UTF8'), 'sha256'), 'hex') AS transcript_sha256,
+         transcript.row_version AS transcript_row_version,
+         (SELECT count(*)::integer FROM sermon_enrichment_review_items item
+          WHERE item.sermon_id = sermon.id) AS item_count,
+         jsonb_array_length(source.unresolved_passages) AS unresolved_count,
+         (CASE WHEN sermon.summary_status = 'draft' THEN 0 ELSE 1 END
+          + CASE WHEN transcript.status = 'draft' THEN 0 ELSE 1 END
+          + (SELECT count(*)::integer FROM sermon_question_answers qa
+             WHERE qa.sermon_id = sermon.id AND qa.status <> 'draft')) AS non_draft_content_count,
+         review.source_record_key AS existing_source_record_key
+       FROM sermons sermon
+       JOIN sermon_transcripts transcript ON transcript.sermon_id = sermon.id
+       JOIN sermon_enrichment_sources source ON source.sermon_id = sermon.id
+       JOIN sermon_enrichment_reviews review ON review.sermon_id = sermon.id
+       WHERE sermon.id = $1 AND sermon.status = 'draft'
+       FOR UPDATE OF sermon, transcript, review`,
+      [sermonId]
+    );
+    const row = state.rows[0];
+    if (
+      !row ||
+      row.item_count !== 0 ||
+      row.unresolved_count !== 0 ||
+      row.non_draft_content_count !== 0 ||
+      (row.existing_source_record_key !== null && row.existing_source_record_key !== sourceRecordKey)
+    ) {
+      throw new PunctuationWorkflowError(
+        "persistence_conflict",
+        "The remaining pilot cannot be represented as a zero-finding private draft without changing existing review state."
+      );
+    }
+    await client.query(
+      `UPDATE sermon_enrichment_reviews
+       SET source_record_key = $2,
+           expected_item_count = 0,
+           expected_item_set_sha256 = encode(digest(convert_to('', 'UTF8'), 'sha256'), 'hex'),
+           expected_transcript_sha256 = $3,
+           expected_transcript_row_version = $4,
+           atomic_schema_version = 1,
+           updated_at = now(),
+           updated_by_subject = $5,
+           row_version = row_version + 1
+       WHERE sermon_id = $1
+         AND (
+           source_record_key IS DISTINCT FROM $2
+           OR expected_item_count IS DISTINCT FROM 0
+           OR expected_item_set_sha256 IS DISTINCT FROM encode(digest(convert_to('', 'UTF8'), 'sha256'), 'hex')
+           OR expected_transcript_sha256 IS DISTINCT FROM $3
+           OR expected_transcript_row_version IS DISTINCT FROM $4
+           OR atomic_schema_version IS DISTINCT FROM 1
+         )`,
+      [sermonId, sourceRecordKey, row.transcript_sha256, row.transcript_row_version, pilotActorSubject]
+    );
+    await client.query("COMMIT");
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 export async function existingOrWriteBundle(
   bundlePath: string,
   candidate: EnrichmentDraftBundle
@@ -255,10 +336,11 @@ export async function existingOrWriteBundle(
   }
 }
 
-export async function runPhase3b2Pilot(
+async function runPhase3b2PilotRecords(
   pool: Pool,
   pilotRootInput: string,
-  manifestInput: unknown
+  manifestInput: unknown,
+  exactVideoId: string | null
 ): Promise<Phase3b2SafeOutcome[]> {
   const manifest = phase3b2PilotManifestSchema.parse(manifestInput);
   const pilotRoot = resolve(pilotRootInput);
@@ -267,7 +349,17 @@ export async function runPhase3b2Pilot(
   await ensureSafeDirectory(preparedRoot);
   const outcomes: Phase3b2SafeOutcome[] = [];
 
-  for (const record of manifest.records) {
+  const selectedRecords = manifest.records
+    .map((record, recordIndex) => ({ record, recordIndex }))
+    .filter(({ record }) => exactVideoId === null || record.videoId === exactVideoId);
+  if (exactVideoId !== null && selectedRecords.length !== 1) {
+    throw new PunctuationWorkflowError(
+      "persistence_conflict",
+      "The trusted private manifest does not contain exactly the authorised restoration identity."
+    );
+  }
+
+  for (const { record, recordIndex } of selectedRecords) {
     const started = performance.now();
     const identity = canonicalYouTubeIdentity(record.videoUrl, manifest.allowlistedVideoIds);
     if (identity.videoId !== record.videoId) {
@@ -404,6 +496,9 @@ export async function runPhase3b2Pilot(
     );
     const bundle = await existingOrWriteBundle(bundlePath, candidate);
     const imported = await importEnrichmentDraftBundle(pool, bundle, pilotActorSubject);
+    if (exactVideoId !== null) {
+      await initialiseZeroFindingReview(pool, target.id, `authorised-record-${recordIndex + 1}`);
+    }
     outcomes.push({
       videoId: record.videoId,
       captionSupplied: true,
@@ -427,9 +522,34 @@ export async function runPhase3b2Pilot(
       failure: null
     });
   }
-  await persistNoClobber(
-    resolveSafeDirectChild(preparedRoot, "safe-outcomes.private.json", "file", ".private.json"),
-    `${JSON.stringify({ schemaVersion: 1, outcomes }, null, 2)}\n`
-  );
+  if (exactVideoId === null) {
+    await persistNoClobber(
+      resolveSafeDirectChild(preparedRoot, "safe-outcomes.private.json", "file", ".private.json"),
+      `${JSON.stringify({ schemaVersion: 1, outcomes }, null, 2)}\n`
+    );
+  }
   return outcomes;
+}
+
+export function runPhase3b2Pilot(
+  pool: Pool,
+  pilotRootInput: string,
+  manifestInput: unknown
+): Promise<Phase3b2SafeOutcome[]> {
+  return runPhase3b2PilotRecords(pool, pilotRootInput, manifestInput, null);
+}
+
+export function restoreRemainingPhase3b2Pilot(
+  pool: Pool,
+  pilotRootInput: string,
+  manifestInput: unknown,
+  exactVideoId: string
+): Promise<Phase3b2SafeOutcome[]> {
+  if (exactVideoId !== remainingAuthorisedPilotVideoId) {
+    throw new PunctuationWorkflowError(
+      "persistence_conflict",
+      "The requested pilot identity is outside the exact remaining-restoration allowlist."
+    );
+  }
+  return runPhase3b2PilotRecords(pool, pilotRootInput, manifestInput, exactVideoId);
 }

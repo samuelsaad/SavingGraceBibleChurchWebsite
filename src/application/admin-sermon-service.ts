@@ -62,6 +62,7 @@ function sermonSummaryDto(sermon: StoredSermonSummary) {
     speaker: sermon.speaker,
     series: sermon.series,
     historicalBackfillRequired: sermon.historicalBackfillRequired,
+    enrichmentReview: sermon.enrichmentReview,
     readiness: sermon.readiness
   };
 }
@@ -97,7 +98,8 @@ function successfulAudit(
   entityType: string,
   entityId: string,
   changedFields: string[],
-  requestCorrelationId: string
+  requestCorrelationId: string,
+  reviewItemIdentitySha256: string | null = null
 ): AuditEventInput {
   return {
     actorSubject: identity.subject,
@@ -107,7 +109,8 @@ function successfulAudit(
     entityId,
     outcome: "succeeded",
     changedFields,
-    requestCorrelationId
+    requestCorrelationId,
+    reviewItemIdentitySha256
   };
 }
 
@@ -323,6 +326,9 @@ export class AdminSermonService {
       const review = await transaction.findEnrichmentReviewForUpdate(id);
       if (!review) notFound("A guided enrichment review is not available for this sermon");
       if (review.rowVersion !== input.reviewRowVersion) conflict();
+      if (review.completedAt !== null && input.identityStatus !== "pending") {
+        return;
+      }
       if (input.identityStatus === "confirmed") {
         if (!sermon.speaker) {
           invalid("speakerId", "Choose and verify the sermon speaker before confirming identity");
@@ -458,7 +464,8 @@ export class AdminSermonService {
           transcriptChanged
             ? ["enrichmentReview.items", "transcript"]
             : ["enrichmentReview.items"],
-          requestCorrelationId
+          requestCorrelationId,
+          item.identitySha256
         )
       );
     });
@@ -673,6 +680,18 @@ export class AdminSermonService {
           requestCorrelationId
         )
       );
+      if (input.bookClassificationIds !== undefined) {
+        await transaction.appendAudit(
+          successfulAudit(
+            identity,
+            "sermon.bible_book_assignment_updated",
+            "sermon",
+            id,
+            ["bookClassificationIds"],
+            requestCorrelationId
+          )
+        );
+      }
       const updated = await transaction.findSermonForUpdate(id);
       if (!updated) notFound("Updated sermon could not be read");
       return sermonDetailDto(updated);

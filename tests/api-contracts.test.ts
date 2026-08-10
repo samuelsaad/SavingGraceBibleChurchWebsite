@@ -101,6 +101,18 @@ describe("admin sermon API contract", () => {
     });
   });
 
+  it("accepts an explicit Bible-book assignment and rejects duplicate relationships", () => {
+    const bookId = "4b4ae324-6cf8-5510-9f77-c5c88a308fc4";
+    expect(updateSermonInputSchema.parse({
+      rowVersion: 1,
+      bookClassificationIds: [bookId]
+    })).toMatchObject({ bookClassificationIds: [bookId] });
+    expect(() => updateSermonInputSchema.parse({
+      rowVersion: 1,
+      bookClassificationIds: [bookId, bookId]
+    })).toThrow();
+  });
+
   it("requires explicit, versioned guided-review progress and item decisions", () => {
     expect(enrichmentReviewProgressInputSchema.parse({
       sermonRowVersion: 3,

@@ -20,6 +20,7 @@ export interface ContentReadinessIssue {
   path: string;
   code:
     | "missing_speaker"
+    | "missing_bible_book"
     | "missing_description"
     | "description_awaiting_review"
     | "invalid_description_length"
@@ -36,7 +37,9 @@ export interface ContentReadinessIssue {
 
 export interface ContentReadinessResult {
   isComplete: boolean;
+  isContentComplete: boolean;
   hasOneSpeaker: boolean;
+  hasRequiredBibleBook: boolean;
   hasApprovedDescription: boolean;
   hasApprovedTranscript: boolean;
   approvedQuestionCount: number;
@@ -49,6 +52,7 @@ export interface ContentReadinessResult {
 
 export interface ContentReadinessInput {
   speakerId: string | null;
+  bookClassificationIds: string[];
   summary: string | null;
   summaryStatus: DescriptionStatus;
   transcript: ReadinessTranscript | null;
@@ -68,6 +72,15 @@ export function evaluateContentReadiness(input: ContentReadinessInput): ContentR
       path: "speakerId",
       code: "missing_speaker",
       message: "Choose one speaker before scheduling or publishing."
+    });
+  }
+
+  const hasRequiredBibleBook = input.bookClassificationIds.length > 0;
+  if (!hasRequiredBibleBook) {
+    issues.push({
+      path: "bookClassificationIds",
+      code: "missing_bible_book",
+      message: "Assign a verified canonical Bible book before replacement launch."
     });
   }
 
@@ -180,15 +193,18 @@ export function evaluateContentReadiness(input: ContentReadinessInput): ContentR
     });
   }
 
-  return {
-    isComplete:
+  const isContentComplete =
       hasOneSpeaker &&
       hasApprovedDescription &&
       hasApprovedTranscript &&
       hasRequiredQuestionAnswers &&
       hasValidControlledMedia &&
-      !issues.some((issue) => issue.code === "blank_question" || issue.code === "blank_answer"),
+      !issues.some((issue) => issue.code === "blank_question" || issue.code === "blank_answer");
+  return {
+    isComplete: isContentComplete && hasRequiredBibleBook,
+    isContentComplete,
     hasOneSpeaker,
+    hasRequiredBibleBook,
     hasApprovedDescription,
     hasApprovedTranscript,
     approvedQuestionCount,

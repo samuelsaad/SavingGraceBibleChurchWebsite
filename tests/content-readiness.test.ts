@@ -20,6 +20,7 @@ function questionAnswers(count: number) {
 
 const completeBase = {
   speakerId: "75df2144-b557-50f6-98bd-011cd696bfb9",
+  bookClassificationIds: ["4b4ae324-6cf8-5510-9f77-c5c88a308fc4"],
   summary: "This approved description clearly explains the central sermon message and its application to the listener.",
   summaryStatus: "approved" as const,
   transcript: { bodyText: "A complete reviewed transcript.", status: "approved" as const },
@@ -47,6 +48,7 @@ describe("sermon content readiness", () => {
   it("allows an incomplete draft shape but reports every blocking field", () => {
     const result = evaluateContentReadiness({
       speakerId: null,
+      bookClassificationIds: [],
       summary: "A private description draft that has enough meaningful context for later human review and approval.",
       summaryStatus: "draft",
       transcript: { bodyText: "draft text", status: "draft" },
@@ -56,11 +58,26 @@ describe("sermon content readiness", () => {
     expect(result.isComplete).toBe(false);
     expect(result.issues.map((issue) => issue.code)).toEqual([
       "missing_speaker",
+      "missing_bible_book",
       "description_awaiting_review",
       "transcript_awaiting_review",
       "insufficient_questions",
       "missing_media"
     ]);
+  });
+
+  it("keeps approved content complete while Bible-book metadata is incomplete", () => {
+    const result = evaluateContentReadiness({
+      ...completeBase,
+      bookClassificationIds: [],
+      questionAnswers: questionAnswers(5)
+    });
+    expect(result).toMatchObject({
+      isComplete: false,
+      isContentComplete: true,
+      hasRequiredBibleBook: false
+    });
+    expect(result.issues).toContainEqual(expect.objectContaining({ code: "missing_bible_book" }));
   });
 
   it.each(["draft", "in_review"] as const)(

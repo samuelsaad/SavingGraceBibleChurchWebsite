@@ -101,6 +101,20 @@ describe("PostgreSQL schema contract", () => {
     expect(down).toContain("DROP TABLE IF EXISTS sermon_enrichment_reviews");
   });
 
+  it("separates content completion from Bible-book metadata and protects linked audit evidence", async () => {
+    const [up, down] = await Promise.all([
+      readFile("db/migrations/0009_pilot_completion_safeguards.sql", "utf8"),
+      readFile("db/migrations/0009_pilot_completion_safeguards.down.sql", "utf8")
+    ]);
+    expect(up).toContain("has_required_bible_book");
+    expect(up).toContain("is_content_complete");
+    expect(up).toContain("review_item_identity_sha256");
+    expect(up).toContain("audit_events_append_only_for_application");
+    expect(up).toContain("expected_item_count BETWEEN 0 AND 200");
+    expect(up).toContain("completed_at IS NULL OR current_stage = 6");
+    expect(down).toContain("pilot_safeguards_rollback_refused_preserved_evidence");
+  });
+
   it("adds reversible atomic review identities without changing migration 0007", async () => {
     const [up, down] = await Promise.all([
       readFile("db/migrations/0008_atomic_sermon_review_items.sql", "utf8"),

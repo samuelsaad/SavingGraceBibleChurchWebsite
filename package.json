@@ -33,6 +33,7 @@
     "enrichment:export-queue-local": "tsx src/enrichment/cli.ts --export-queue",
     "enrichment:import-draft-local": "tsx src/enrichment/cli.ts --import-bundle",
     "enrichment:pilot-local": "tsx src/enrichment/pilot-cli.ts",
+    "enrichment:restore-remaining-pilot-local": "tsx src/enrichment/pilot-restore-cli.ts",
     "enrichment:punctuation-local": "tsx src/enrichment/pilot-punctuation-cli.ts",
     "launch-readiness:local": "tsx src/readiness/cli.ts",
     "api:local": "tsx src/server/local-api.ts",

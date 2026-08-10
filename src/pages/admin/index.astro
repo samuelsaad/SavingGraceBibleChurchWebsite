@@ -136,6 +136,10 @@ const pageTitle = "Local administration — Saving Grace Bible Church";
   .grid-two > * { min-width: 0; }
   .panel h2 { margin: 0 0 1rem; font-family: Georgia, serif; font-weight: 500; }
   .progress-panel { margin: 1.25rem 0; }
+  .review-queue { display: grid; gap: .75rem; margin: 0; padding: 0; list-style: none; }
+  .review-queue li { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .9rem; border: 1px solid var(--line); border-radius: .75rem; background: #fbfcfb; }
+  .review-queue strong, .review-queue span { display: block; }
+  .review-queue span { margin-top: .25rem; color: var(--muted); font-size: .82rem; }
   progress { width: 100%; height: 1rem; accent-color: var(--forest); }
   dl { display: grid; grid-template-columns: auto 1fr; gap: .7rem 1rem; align-items: start; }
   dt, dd { margin: 0; }
@@ -308,6 +312,7 @@ const pageTitle = "Local administration — Saving Grace Bible Church";
     .stat-card { padding: .85rem; }
     .stat-card strong { font-size: 1.55rem; }
     .button { width: 100%; }
+    .review-queue li { align-items: stretch; flex-direction: column; }
     .form-actions .button, .action-row .button { width: auto; flex: 1 1 8rem; }
     .review-stage-actions .button, .review-decision-bar .button, .review-item-pager .button, .qa-order-actions .button { width: 100%; }
     th, td { padding: .68rem .6rem; }

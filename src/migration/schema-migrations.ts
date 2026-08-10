@@ -17,7 +17,8 @@ export type SchemaMigrationScope =
   | "0005_approved_sermon_descriptions"
   | "0006_phase3b2_pilot_provenance"
   | "0007_guided_sermon_review"
-  | "0008_atomic_sermon_review_items";
+  | "0008_atomic_sermon_review_items"
+  | "0009_pilot_completion_safeguards";
 
 interface SchemaMigrationDefinition {
   id: string;
@@ -177,6 +178,15 @@ export const schemaMigrationDefinitions: readonly SchemaMigrationDefinition[] = 
     upPath: "db/migrations/0008_atomic_sermon_review_items.sql",
     downPath: "db/migrations/0008_atomic_sermon_review_items.down.sql",
     addedRelations: []
+  },
+  {
+    id: "0009_pilot_completion_safeguards",
+    order: 9,
+    upPath: "db/migrations/0009_pilot_completion_safeguards.sql",
+    downPath: "db/migrations/0009_pilot_completion_safeguards.down.sql",
+    addedRelations: [],
+    addedFunctions: ["protect_audit_events_append_only()"],
+    addedTriggers: ["audit_events_append_only_for_application"]
   }
 ] as const;
 

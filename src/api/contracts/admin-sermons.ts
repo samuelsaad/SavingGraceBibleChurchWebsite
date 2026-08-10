@@ -277,7 +277,9 @@ const adminRelationshipSchema = z.object({ id: z.uuid(), name: z.string(), slug:
 
 export const contentReadinessResponseSchema = z.object({
   isComplete: z.boolean(),
+  isContentComplete: z.boolean(),
   hasOneSpeaker: z.boolean(),
+  hasRequiredBibleBook: z.boolean(),
   hasApprovedDescription: z.boolean(),
   hasApprovedTranscript: z.boolean(),
   approvedQuestionCount: z.number().int().nonnegative(),
@@ -305,6 +307,12 @@ export const adminSermonSummarySchema = z.object({
   speaker: adminRelationshipSchema.nullable(),
   series: z.array(adminRelationshipSchema),
   historicalBackfillRequired: z.boolean(),
+  enrichmentReview: z.object({
+    currentStage: z.number().int().min(1).max(6),
+    completedAt: z.iso.datetime().nullable(),
+    pendingItemCount: z.number().int().nonnegative(),
+    totalItemCount: z.number().int().nonnegative()
+  }).nullable(),
   readiness: contentReadinessResponseSchema
 });
 
@@ -322,6 +330,7 @@ const enrichmentSourceResponseSchema = z.object({
   apparentCompleteness: z.enum(["apparently_complete", "requires_manual_review"]),
   uncertaintyMarkerCount: z.number().int().nonnegative(),
   warnings: z.array(z.object({ code: z.string(), safeDetail: z.string() })),
+  warningResolutionStatus: z.enum(["unresolved", "resolved_by_completed_review"]),
   unresolvedPassages: z.array(z.object({ marker: z.string(), safeReason: z.string() })),
   processingVersion: z.string(),
   importedAt: z.iso.datetime(),
@@ -490,6 +499,8 @@ export const adminSermonListResponseSchema = z.object({
     complete: z.number().int().nonnegative(),
     remaining: z.number().int().nonnegative(),
     withOneSpeaker: z.number().int().nonnegative(),
+    withRequiredBibleBook: z.number().int().nonnegative(),
+    contentComplete: z.number().int().nonnegative(),
     withApprovedDescription: z.number().int().nonnegative(),
     withApprovedTranscript: z.number().int().nonnegative(),
     withRequiredQuestionAnswers: z.number().int().nonnegative(),
@@ -542,6 +553,7 @@ export const auditEventResponseSchema = z.object({
   outcome: z.enum(["succeeded", "denied", "failed"]),
   changedFields: z.array(z.string()),
   requestCorrelationId: z.string(),
+  reviewItemIdentitySha256: z.string().regex(/^[0-9a-f]{64}$/).nullable(),
   createdAt: z.iso.datetime()
 });
 

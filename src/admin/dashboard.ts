@@ -12,7 +12,9 @@ import type { SermonStatus } from "../domain/sermon";
 type Relationship = { id: string; name: string; slug: string };
 type Readiness = {
   isComplete: boolean;
+  isContentComplete: boolean;
   hasOneSpeaker: boolean;
+  hasRequiredBibleBook: boolean;
   hasApprovedDescription: boolean;
   hasApprovedTranscript: boolean;
   approvedQuestionCount: number;
@@ -35,6 +37,12 @@ type SermonSummary = {
   speaker: Relationship | null;
   series: Relationship[];
   historicalBackfillRequired: boolean;
+  enrichmentReview: {
+    currentStage: number;
+    completedAt: string | null;
+    pendingItemCount: number;
+    totalItemCount: number;
+  } | null;
   readiness: Readiness;
 };
 type ScriptureReference = {
@@ -105,6 +113,7 @@ type SermonDetail = SermonSummary & {
     apparentCompleteness: "apparently_complete" | "requires_manual_review";
     uncertaintyMarkerCount: number;
     warnings: Array<{ code: string; safeDetail: string }>;
+    warningResolutionStatus: "unresolved" | "resolved_by_completed_review";
     unresolvedPassages: Array<{ marker: string; safeReason: string }>;
     processingVersion: string;
     importedAt: string;
@@ -132,6 +141,8 @@ type ListResponse = {
     complete: number;
     remaining: number;
     withOneSpeaker: number;
+    withRequiredBibleBook: number;
+    contentComplete: number;
     withApprovedDescription: number;
     withApprovedTranscript: number;
     withRequiredQuestionAnswers: number;
@@ -330,20 +341,35 @@ async function renderDashboard(): Promise<void> {
   const sermons = await api<ListResponse>("/api/v1/admin/sermons?page=1&pageSize=6");
   const statuses: SermonStatus[] = ["draft", "pending", "scheduled", "published", "unpublished", "archived"];
   const progress = sermons.readinessProgress;
+  const pilotQueue = sermons.data.filter((sermon) => sermon.enrichmentReview !== null);
   main.innerHTML = `${pageHeading("Dashboard", "Follow the guided checklist until each sermon is ready for review and publication.", '<a class="button primary" href="/admin/sermons/new" data-route>Create sermon</a>')}
-    <div class="callout"><strong>Local demonstration data only.</strong><p>These anonymised records test the workflow. The 453 real historical sermons have not yet received their approved descriptions, transcripts and questions.</p></div>
+    <div class="callout"><strong>Private local pilot only.</strong><p>These records remain draft, loopback-only and excluded from public and search surfaces. No larger historical batch has begun.</p></div>
     <section class="panel progress-panel" aria-labelledby="enrichment-progress-heading">
       <h2 id="enrichment-progress-heading">Historical content progress</h2>
       <p><strong>${progress.complete} of ${progress.total} local records complete</strong> · ${progress.remaining} remaining</p>
       <progress max="${Math.max(progress.total, 1)}" value="${progress.complete}">${progress.complete} of ${progress.total}</progress>
       <div class="stats-grid compact">
         <article class="stat-card"><span>One speaker</span><strong>${progress.withOneSpeaker}/${progress.total}</strong></article>
+        <article class="stat-card"><span>Canonical Bible book</span><strong>${progress.withRequiredBibleBook}/${progress.total}</strong></article>
         <article class="stat-card"><span>Approved description</span><strong>${progress.withApprovedDescription}/${progress.total}</strong></article>
         <article class="stat-card"><span>Approved transcript</span><strong>${progress.withApprovedTranscript}/${progress.total}</strong></article>
         <article class="stat-card"><span>Approved questions</span><strong>${progress.withRequiredQuestionAnswers}/${progress.total}</strong></article>
         <article class="stat-card"><span>Controlled media</span><strong>${progress.withValidControlledMedia}/${progress.total}</strong></article>
       </div>
       <div class="action-row"><a class="button" href="/admin/sermons?contentIssue=missing_speaker" data-route>Find missing speakers</a><a class="button" href="/admin/sermons?contentIssue=missing_description" data-route>Find missing descriptions</a><a class="button" href="/admin/sermons?contentIssue=description_awaiting_review" data-route>Review descriptions</a><a class="button" href="/admin/sermons?contentIssue=missing_transcript" data-route>Find missing transcripts</a><a class="button" href="/admin/sermons?contentIssue=insufficient_questions" data-route>Find missing questions</a></div>
+    </section>
+    <section class="panel" aria-labelledby="pilot-work-queue-heading">
+      <h2 id="pilot-work-queue-heading">Phase 3B.2 pilot work queue</h2>
+      <p class="subtle">Content review completion and replacement-launch metadata are shown separately.</p>
+      <ol class="review-queue">${pilotQueue.map((sermon) => {
+        const completed = sermon.enrichmentReview?.completedAt !== null;
+        const status = completed && !sermon.readiness.hasRequiredBibleBook
+          ? "Content reviewed · Bible-book assignment required"
+          : completed
+            ? "Content reviewed"
+            : "Administrator review required";
+        return `<li><div><strong>${escapeHtml(sermon.title)}</strong><span>${escapeHtml(status)}</span></div><a class="button" href="/admin/sermons/${sermon.id}/review" data-route>Open guided review</a></li>`;
+      }).join("")}</ol>
     </section>
     <section class="stats-grid" aria-label="Sermon counts by state">
       ${statuses.map((status) => `<article class="stat-card"><span>${escapeHtml(status)}</span><strong>${sermons.countsByStatus[status]}</strong></article>`).join("")}
@@ -448,19 +474,24 @@ function reviewStageActions(stage: number): string {
 
 function renderIdentityReviewStage(
   review: EnrichmentReviewResponse,
-  speakers: Taxonomy[]
+  speakers: Taxonomy[],
+  books: Taxonomy[]
 ): string {
   const sermon = review.sermon;
   const source = sermon.enrichmentSource!;
   const unresolvedDate = sermon.serviceDate === "1970-01-01";
+  const completed = review.review.completedAt !== null;
+  const canonicalBooks = books.filter((book) => book.canonicalBookId !== null);
+  const selectedBookId = sermon.books[0]?.id ?? "";
   return `<form id="review-identity-form" class="review-stage-panel stack" novalidate>
     <header class="review-stage-heading"><p>Stage 1 of 6</p><h2>Identity and provenance</h2><p>Confirm that this draft belongs to the correct sermon before reviewing its words. Nothing here publishes content.</p></header>
     <div id="review-stage-feedback"></div>
     <div class="review-form-grid">
-      <label><span>Sermon title</span><input name="title" required maxlength="240" value="${escapeHtml(sermon.title)}" /></label>
-      <label><span>Speaker</span><select name="speakerId" required>${filterOption(speakers, sermon.speaker?.id ?? "", "Select the verified speaker")}</select><small class="field-hint">No speaker is selected automatically.</small></label>
-      <label><span>Service date</span><input name="serviceDate" type="date" value="${unresolvedDate ? "" : escapeHtml(sermon.serviceDate)}" /><small class="field-hint">${unresolvedDate ? "Date unresolved — verify and enter the preached date." : "Confirm this is the date preached."}</small></label>
+      <label><span>Sermon title</span><input name="title" required maxlength="240" value="${escapeHtml(sermon.title)}"${completed ? " readonly" : ""} /></label>
+      <label><span>Speaker</span><select name="speakerId" required${completed ? " disabled" : ""}>${filterOption(speakers, sermon.speaker?.id ?? "", "Select the verified speaker")}</select><small class="field-hint">No speaker is selected automatically.</small></label>
+      <label><span>Service date</span><input name="serviceDate" type="date" value="${unresolvedDate ? "" : escapeHtml(sermon.serviceDate)}"${completed ? " readonly" : ""} /><small class="field-hint">${unresolvedDate ? "Date unresolved — verify and enter the preached date." : "Confirm this is the date preached."}</small></label>
       <div class="review-readonly-field"><span>Draft status</span><strong>Draft • Private</strong><small>Review and approval do not publish this sermon.</small></div>
+      <label><span>Primary Bible book</span><select name="bookClassificationId">${filterOption(canonicalBooks, selectedBookId, "No Bible book assigned")}</select><small class="field-hint">Choose the canonical book only after personal verification. There is no automatic or default assignment.</small></label>
     </div>
     <section class="source-summary" aria-labelledby="source-summary-heading">
       <div><p class="eyebrow">Private source</p><h3 id="source-summary-heading">Authorised YouTube Studio export</h3></div>
@@ -473,8 +504,8 @@ function renderIdentityReviewStage(
       ${technicalProvenance(source)}
     </section>
     <div class="review-decision-bar">
-      <button class="button" type="submit" data-identity-action="save">Save identity draft</button>
-      <button class="button primary" type="submit" data-identity-action="confirm">Save and confirm identity</button>
+      <button class="button${completed ? " primary" : ""}" type="submit" data-identity-action="save">${completed ? "Save Bible-book assignment" : "Save identity draft"}</button>
+      ${completed ? "" : '<button class="button primary" type="submit" data-identity-action="confirm">Save and confirm identity</button>'}
     </div>
   </form>`;
 }
@@ -589,6 +620,7 @@ function renderFinalReviewStage(review: EnrichmentReviewResponse): string {
     <div id="review-stage-feedback"></div>
     <ul class="checklist review-final-checklist">
       ${finalChecklistItem("One speaker confirmed", review.review.identityStatus === "confirmed" && Boolean(sermon.speaker), sermon.speaker ? "A verified speaker is selected." : "Return to Identity and choose the speaker.")}
+      ${finalChecklistItem("Canonical Bible book assigned", sermon.readiness.hasRequiredBibleBook, sermon.readiness.hasRequiredBibleBook ? "Replacement-launch metadata is complete." : "Content review may finish, but replacement launch remains blocked until Samuel assigns the Bible book.")}
       ${finalChecklistItem("Service date confirmed", dateConfirmed, dateConfirmed ? "The preached date was verified." : "The service date is unresolved.")}
       ${finalChecklistItem("Provenance reviewed", review.review.identityStatus === "confirmed", "Source identity, language, track and attribution were presented in Stage 1.")}
       ${finalChecklistItem("Flagged items resolved", review.progress.unresolvedItemCount === 0, `${review.progress.resolvedItemCount} of ${review.progress.totalItemCount} items resolved.`)}
@@ -606,9 +638,9 @@ function renderFinalReviewStage(review: EnrichmentReviewResponse): string {
   </section>`;
 }
 
-function reviewStageMarkup(review: EnrichmentReviewResponse, speakers: Taxonomy[]): string {
+function reviewStageMarkup(review: EnrichmentReviewResponse, speakers: Taxonomy[], books: Taxonomy[]): string {
   const stage = review.review.currentStage;
-  if (stage === 1) return renderIdentityReviewStage(review, speakers);
+  if (stage === 1) return renderIdentityReviewStage(review, speakers, books);
   if (stage === 2) return renderFlaggedReviewStage(review);
   if (stage === 3) return renderTranscriptReviewStage(review);
   if (stage === 4) return renderDescriptionReviewStage(review);
@@ -955,21 +987,37 @@ function wireQuestionReview(
   }
 }
 
-async function renderGuidedSermonReview(id: string): Promise<void> {
-  const [review, speakers] = await Promise.all([
+async function renderGuidedSermonReview(id: string, readOnlyStage?: number): Promise<void> {
+  const [review, taxonomies] = await Promise.all([
     api<EnrichmentReviewResponse>(`/api/v1/admin/sermons/${id}/review`),
-    api<{ data: Taxonomy[] }>("/api/v1/admin/taxonomies/speakers")
+    loadTaxonomies()
   ]);
+  if (review.review.completedAt !== null && readOnlyStage !== undefined) {
+    review.review.currentStage = Math.max(1, Math.min(6, readOnlyStage));
+  }
   dirty = false;
   main.innerHTML = `<header class="review-record-header">
     <div><a href="/admin/sermons" data-route>Back to sermons</a><p class="eyebrow">Guided private review</p><h1>${escapeHtml(review.sermon.title)}</h1><p>Record ${review.recordPosition} of ${review.recordCount}</p></div>
-    <div class="review-record-status"><span class="status-pill">Draft • Private</span><strong>${review.progress.percentReviewed}% reviewed</strong></div>
+    <div class="review-record-status"><span class="status-pill">Draft • Private</span><strong>${review.review.completedAt ? "Content review complete" : `${review.progress.percentReviewed}% reviewed`}</strong>${review.review.completedAt ? "<small>Completed editorial stages are read-only. Bible-book metadata remains available in Stage 1.</small>" : ""}</div>
     <progress max="100" value="${review.progress.percentReviewed}">${review.progress.percentReviewed}%</progress>
   </header>
   <div class="review-workflow-layout">
     ${reviewStageNavigation(review)}
-    <div class="review-stage-workspace">${reviewStageMarkup(review, speakers.data)}</div>
+    <div class="review-stage-workspace">${reviewStageMarkup(review, taxonomies.speakers, taxonomies.books)}</div>
   </div>`;
+
+  if (review.review.completedAt !== null) {
+    for (const control of document.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | HTMLButtonElement>(
+      ".review-stage-workspace input, .review-stage-workspace select, .review-stage-workspace textarea, .review-stage-workspace button"
+    )) {
+      const isBibleBookControl = control.matches('[name="bookClassificationId"], [data-identity-action="save"]');
+      const isReadOnlyNavigation = control.matches("[data-review-stage]");
+      if (!isBibleBookControl && !isReadOnlyNavigation) {
+        control.disabled = true;
+        control.setAttribute("aria-disabled", "true");
+      }
+    }
+  }
 
   const stageFeedback = () => document.querySelector<HTMLElement>("#review-stage-feedback");
   const markDirty = (target?: HTMLElement | null) => {
@@ -982,6 +1030,11 @@ async function renderGuidedSermonReview(id: string): Promise<void> {
 
   const persistStage = async (stage: number, identityStatus?: "pending" | "confirmed") => {
     if (dirty && !confirmDiscard()) return;
+    if (review.review.completedAt !== null && identityStatus === undefined) {
+      dirty = false;
+      await renderGuidedSermonReview(id, stage);
+      return;
+    }
     try {
       await api(`/api/v1/admin/sermons/${id}/review/progress`, {
         method: "PATCH",
@@ -1033,12 +1086,16 @@ async function renderGuidedSermonReview(id: string): Promise<void> {
       return;
     }
     try {
+      const bookClassificationId = String(data.get("bookClassificationId") ?? "");
       const saved = await api<SermonDetail>(`/api/v1/admin/sermons/${id}`, {
         method: "PATCH",
         body: JSON.stringify({
           rowVersion: review.sermon.rowVersion,
-          title: String(data.get("title") ?? ""),
-          speakerId: String(data.get("speakerId") ?? "") || null,
+          title: review.review.completedAt !== null ? review.sermon.title : String(data.get("title") ?? ""),
+          speakerId: review.review.completedAt !== null
+            ? review.sermon.speaker?.id ?? null
+            : String(data.get("speakerId") ?? "") || null,
+          bookClassificationIds: bookClassificationId ? [bookClassificationId] : [],
           ...(serviceDate ? { serviceDate } : {})
         })
       });
@@ -1048,8 +1105,8 @@ async function renderGuidedSermonReview(id: string): Promise<void> {
         body: JSON.stringify({
           sermonRowVersion: saved.rowVersion,
           reviewRowVersion: refreshed.review.rowVersion,
-          currentStage: action === "confirm" ? 2 : 1,
-          identityStatus: action === "confirm" ? "confirmed" : "pending"
+          currentStage: review.review.completedAt !== null ? 6 : action === "confirm" ? 2 : 1,
+          identityStatus: review.review.completedAt !== null ? "confirmed" : action === "confirm" ? "confirmed" : "pending"
         })
       });
       dirty = false;
@@ -1160,6 +1217,7 @@ function questionAnswerRow(item: Partial<EditableQuestionAnswer>, index: number)
 function readinessChecklist(readiness: Readiness | null): string {
   const items = [
     ["One speaker selected", readiness?.hasOneSpeaker ?? false],
+    ["Canonical Bible book assigned", readiness?.hasRequiredBibleBook ?? false],
     ["Sermon description approved", readiness?.hasApprovedDescription ?? false],
     ["Complete transcript approved", readiness?.hasApprovedTranscript ?? false],
     ["5–10 questions and answers approved", readiness?.hasRequiredQuestionAnswers ?? false],
@@ -1173,6 +1231,9 @@ function enrichmentSourcePanel(source: SermonDetail["enrichmentSource"]): string
   const warnings = source.warnings.length
     ? `<ul>${source.warnings.map((warning) => `<li><code>${escapeHtml(warning.code)}</code> — ${escapeHtml(warning.safeDetail)}</li>`).join("")}</ul>`
     : "<p>No automated warning codes were recorded. Human accuracy review is still required.</p>";
+  const warningState = source.warningResolutionStatus === "resolved_by_completed_review"
+    ? "Historical source warnings retained; the completed administrator review resolved their current-work status."
+    : "Historical source warnings remain current administrator work.";
   return `<section class="wide callout" aria-labelledby="enrichment-source-heading">
     <h3 id="enrichment-source-heading">Private caption source and warnings</h3>
     <p><strong>Administrator review is required.</strong> This source and all generated material remain private until each content area is explicitly approved.</p>
@@ -1189,7 +1250,7 @@ function enrichmentSourcePanel(source: SermonDetail["enrichmentSource"]): string
       <dt>Estimated review</dt><dd>${source.estimatedReviewMinutes} minutes</dd>
       <dt>Accuracy state</dt><dd>Human review required</dd>
     </dl>
-    <h4>Warnings</h4>${warnings}
+    <h4>Warnings</h4><p><strong>${escapeHtml(warningState)}</strong></p>${warnings}
   </section>`;
 }
 

@@ -51,9 +51,12 @@ type SermonRow = QueryResultRow & {
   speaker: StoredSermonDetail["speaker"];
   series: StoredSermonDetail["series"];
   historical_backfill_required: boolean;
+  enrichment_review: StoredSermonSummary["enrichmentReview"];
   readiness: {
     isComplete: boolean;
+    isContentComplete: boolean;
     hasOneSpeaker: boolean;
+    hasRequiredBibleBook: boolean;
     hasApprovedDescription: boolean;
     hasApprovedTranscript: boolean;
     approvedQuestionCount: number;
@@ -88,8 +91,8 @@ const enrichmentReviewStateProjection = `
   (SELECT count(*)::integer FROM sermon_enrichment_review_items atomic
    WHERE atomic.sermon_id = review.sermon_id
      AND atomic.item_identity_sha256 IS NOT NULL) AS "atomicItemCount",
-  (SELECT encode(digest(string_agg(atomic.item_identity_sha256, E'\n'
-                                    ORDER BY atomic.display_order), 'sha256'), 'hex')
+  (SELECT encode(digest(convert_to(COALESCE(string_agg(atomic.item_identity_sha256, E'\n'
+                                    ORDER BY atomic.display_order), ''), 'UTF8'), 'sha256'), 'hex')
    FROM sermon_enrichment_review_items atomic
    WHERE atomic.sermon_id = review.sermon_id
      AND atomic.item_identity_sha256 IS NOT NULL) AS "actualItemSetSha256",
@@ -140,8 +143,20 @@ const sermonSummaryProjection = `
   s.historical_backfill_required,
   (
     SELECT jsonb_build_object(
+      'currentStage', CASE WHEN review.completed_at IS NULL THEN review.current_stage ELSE 6 END,
+      'completedAt', CASE WHEN review.completed_at IS NULL THEN NULL ELSE ${timestamp("review.completed_at")} END,
+      'pendingItemCount', (SELECT count(*)::integer FROM sermon_enrichment_review_items item WHERE item.sermon_id = s.id AND item.item_identity_sha256 IS NOT NULL AND item.decision_status = 'pending'),
+      'totalItemCount', (SELECT count(*)::integer FROM sermon_enrichment_review_items item WHERE item.sermon_id = s.id AND item.item_identity_sha256 IS NOT NULL)
+    )
+    FROM sermon_enrichment_reviews review
+    WHERE review.sermon_id = s.id
+  ) AS enrichment_review,
+  (
+    SELECT jsonb_build_object(
       'isComplete', readiness.is_complete,
+      'isContentComplete', readiness.is_content_complete,
       'hasOneSpeaker', readiness.has_one_speaker,
+      'hasRequiredBibleBook', readiness.has_required_bible_book,
       'hasApprovedDescription', readiness.has_approved_description,
       'hasApprovedTranscript', readiness.has_approved_transcript,
       'approvedQuestionCount', readiness.approved_question_count,
@@ -249,6 +264,13 @@ const sermonDetailProjection = `${sermonSummaryProjection},
       'apparentCompleteness', source.apparent_completeness,
       'uncertaintyMarkerCount', source.uncertainty_marker_count,
       'warnings', source.warnings,
+      'warningResolutionStatus', CASE
+        WHEN EXISTS (
+          SELECT 1 FROM sermon_enrichment_reviews review
+          WHERE review.sermon_id = s.id AND review.completed_at IS NOT NULL
+        ) THEN 'resolved_by_completed_review'
+        ELSE 'unresolved'
+      END,
       'unresolvedPassages', source.unresolved_passages,
       'processingVersion', source.processing_version,
       'importedAt', ${timestamp("source.imported_at")},
@@ -267,6 +289,9 @@ function readinessFromRow(row: SermonRow): ContentReadinessResult {
   const issues: ContentReadinessIssue[] = [];
   if (!value.hasOneSpeaker) {
     issues.push({ path: "speakerId", code: "missing_speaker", message: "Choose one speaker before scheduling or publishing." });
+  }
+  if (!value.hasRequiredBibleBook) {
+    issues.push({ path: "bookClassificationIds", code: "missing_bible_book", message: "Assign a verified canonical Bible book before replacement launch." });
   }
   if (!value.hasApprovedDescription) {
     const hasText = Boolean(row.summary?.trim());
@@ -302,7 +327,9 @@ function readinessFromRow(row: SermonRow): ContentReadinessResult {
   }
   return {
     isComplete: value.isComplete,
+    isContentComplete: value.isContentComplete,
     hasOneSpeaker: value.hasOneSpeaker,
+    hasRequiredBibleBook: value.hasRequiredBibleBook,
     hasApprovedDescription: value.hasApprovedDescription,
     hasApprovedTranscript: value.hasApprovedTranscript,
     approvedQuestionCount: value.approvedQuestionCount,
@@ -328,6 +355,7 @@ function summaryFromRow(row: SermonRow): StoredSermonSummary {
     speaker: row.speaker ?? null,
     series: row.series ?? [],
     historicalBackfillRequired: row.historical_backfill_required,
+    enrichmentReview: row.enrichment_review ?? null,
     readiness: readinessFromRow(row)
   };
 }
@@ -1109,8 +1137,8 @@ class PostgresAdminSermonTransaction implements AdminSermonTransaction {
              AND (SELECT count(*) FROM sermon_enrichment_review_items item
                   WHERE item.sermon_id = review.sermon_id
                     AND item.item_identity_sha256 IS NOT NULL) = review.expected_item_count
-             AND (SELECT encode(digest(string_agg(item.item_identity_sha256, E'\n'
-                                                   ORDER BY item.display_order), 'sha256'), 'hex')
+             AND (SELECT encode(digest(convert_to(COALESCE(string_agg(item.item_identity_sha256, E'\n'
+                                                   ORDER BY item.display_order), ''), 'UTF8'), 'sha256'), 'hex')
                   FROM sermon_enrichment_review_items item
                   WHERE item.sermon_id = review.sermon_id
                     AND item.item_identity_sha256 IS NOT NULL) = review.expected_item_set_sha256
@@ -1213,8 +1241,8 @@ class PostgresAdminSermonTransaction implements AdminSermonTransaction {
     await this.client.query(
       `INSERT INTO audit_events (
          actor_subject, actor_role, action, entity_type, entity_id,
-         changed_fields, request_correlation_id, outcome
-       ) VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8)`,
+         changed_fields, request_correlation_id, outcome, review_item_identity_sha256
+       ) VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9)`,
       [
         event.actorSubject,
         event.actorRole,
@@ -1223,7 +1251,8 @@ class PostgresAdminSermonTransaction implements AdminSermonTransaction {
         event.entityId,
         JSON.stringify(event.changedFields),
         event.requestCorrelationId,
-        event.outcome
+        event.outcome,
+        event.reviewItemIdentitySha256 ?? null
       ]
     );
   }
@@ -1236,6 +1265,7 @@ export class PostgresAdminSermonRepository implements AdminSermonRepository {
     const client = await this.pool.connect();
     try {
       await client.query("BEGIN");
+      await client.query("SET LOCAL savinggrace.application_request = 'on'");
       const result = await work(new PostgresAdminSermonTransaction(client));
       await client.query("COMMIT");
       return result;
@@ -1322,6 +1352,8 @@ export class PostgresAdminSermonRepository implements AdminSermonRepository {
         total: number;
         complete: number;
         with_one_speaker: number;
+        with_required_bible_book: number;
+        content_complete: number;
         with_approved_description: number;
         with_approved_transcript: number;
         with_required_question_answers: number;
@@ -1331,6 +1363,8 @@ export class PostgresAdminSermonRepository implements AdminSermonRepository {
            count(*)::integer AS total,
            count(*) FILTER (WHERE is_complete)::integer AS complete,
            count(*) FILTER (WHERE has_one_speaker)::integer AS with_one_speaker,
+           count(*) FILTER (WHERE has_required_bible_book)::integer AS with_required_bible_book,
+           count(*) FILTER (WHERE is_content_complete)::integer AS content_complete,
            count(*) FILTER (WHERE has_approved_description)::integer AS with_approved_description,
            count(*) FILTER (WHERE has_approved_transcript)::integer AS with_approved_transcript,
            count(*) FILTER (
@@ -1368,6 +1402,8 @@ export class PostgresAdminSermonRepository implements AdminSermonRepository {
         complete: progress.complete,
         remaining: progress.total - progress.complete,
         withOneSpeaker: progress.with_one_speaker,
+        withRequiredBibleBook: progress.with_required_bible_book,
+        contentComplete: progress.content_complete,
         withApprovedDescription: progress.with_approved_description,
         withApprovedTranscript: progress.with_approved_transcript,
         withRequiredQuestionAnswers: progress.with_required_question_answers,
@@ -1490,6 +1526,7 @@ export class PostgresAdminSermonRepository implements AdminSermonRepository {
               outcome,
               changed_fields AS "changedFields",
               request_correlation_id AS "requestCorrelationId",
+              review_item_identity_sha256 AS "reviewItemIdentitySha256",
               ${timestamp("created_at")} AS "createdAt"
        FROM audit_events
        WHERE entity_type = 'sermon' AND entity_id = $1
@@ -1510,6 +1547,7 @@ export class PostgresAdminSermonRepository implements AdminSermonRepository {
               outcome,
               changed_fields AS "changedFields",
               request_correlation_id AS "requestCorrelationId",
+              review_item_identity_sha256 AS "reviewItemIdentitySha256",
               ${timestamp("created_at")} AS "createdAt"
        FROM audit_events
        ORDER BY created_at DESC, id

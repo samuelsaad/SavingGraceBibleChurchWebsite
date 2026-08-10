@@ -82,8 +82,13 @@ describe("Phase 3B administration dashboard", () => {
     expect(client).toContain("Permanently delete sermon");
     expect(client).toContain("This action cannot be undone");
     expect(client).toContain("Unsaved changes");
-    expect(client).toContain("Local demonstration data only");
-    expect(client).toContain("anonymised records");
+    expect(client).toContain("Private local pilot only");
+    expect(client).toContain("Phase 3B.2 pilot work queue");
+    expect(client).toContain("Bible-book assignment required");
+    expect(client).toContain("Primary Bible book");
+    expect(client).toContain("No Bible book assigned");
+    expect(client).toContain("Completed editorial stages are read-only");
+    expect(client).toContain("isBibleBookControl");
     expect(client).toContain("1. Sermon basics");
     expect(client).toContain("6. Review and publish");
     expect(client).toContain("Completion checklist");

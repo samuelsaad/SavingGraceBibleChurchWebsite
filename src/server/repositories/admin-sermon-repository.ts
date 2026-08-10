@@ -37,6 +37,12 @@ export interface StoredSermonSummary {
   speaker: { id: string; name: string; slug: string } | null;
   series: Array<{ id: string; name: string; slug: string }>;
   historicalBackfillRequired: boolean;
+  enrichmentReview: {
+    currentStage: number;
+    completedAt: string | null;
+    pendingItemCount: number;
+    totalItemCount: number;
+  } | null;
   readiness: ContentReadinessResult;
 }
 
@@ -88,6 +94,7 @@ export interface StoredSermonDetail extends StoredSermonSummary {
     apparentCompleteness: "apparently_complete" | "requires_manual_review";
     uncertaintyMarkerCount: number;
     warnings: Array<{ code: string; safeDetail: string }>;
+    warningResolutionStatus: "unresolved" | "resolved_by_completed_review";
     unresolvedPassages: Array<{ marker: string; safeReason: string }>;
     processingVersion: string;
     importedAt: string;
@@ -108,6 +115,8 @@ export interface StoredSermonPage {
     complete: number;
     remaining: number;
     withOneSpeaker: number;
+    withRequiredBibleBook: number;
+    contentComplete: number;
     withApprovedDescription: number;
     withApprovedTranscript: number;
     withRequiredQuestionAnswers: number;
@@ -169,6 +178,7 @@ export interface AuditEventDto {
   outcome: "succeeded" | "denied" | "failed";
   changedFields: string[];
   requestCorrelationId: string;
+  reviewItemIdentitySha256: string | null;
   createdAt: string;
 }
 
@@ -181,6 +191,7 @@ export interface AuditEventInput {
   outcome: "succeeded" | "denied" | "failed";
   changedFields: string[];
   requestCorrelationId: string;
+  reviewItemIdentitySha256?: string | null;
 }
 
 export interface DeletionTombstoneDto {

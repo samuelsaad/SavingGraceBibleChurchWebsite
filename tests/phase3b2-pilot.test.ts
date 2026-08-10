@@ -34,6 +34,10 @@ import {
   loadTrustedPunctuationSources,
   validateSupportingParagraphs
 } from "../src/enrichment/phase3b2b-pilot";
+import {
+  remainingAuthorisedPilotVideoId,
+  restoreRemainingPhase3b2Pilot
+} from "../src/enrichment/phase3b2-pilot";
 
 const ids = ["aaaaaaaaaaa", "bbbbbbbbbbb", "ccccccccccc"] as const;
 const temporaryRoots: string[] = [];
@@ -144,6 +148,16 @@ describe("Phase 3B.2 private caption pilot", () => {
     const invalid = manifest();
     invalid.records[2]!.videoId = ids[0];
     expect(() => phase3b2PilotManifestSchema.parse(invalid)).toThrow();
+  });
+
+  it("uses one exact remaining-pilot restoration allowlist identity", () => {
+    expect(remainingAuthorisedPilotVideoId).toBe("RAMFOAOWwMA");
+    expect(() => restoreRemainingPhase3b2Pilot(
+      {} as Pool,
+      "unused-anonymised-root",
+      manifest(),
+      ids[0]
+    )).toThrow("outside the exact remaining-restoration allowlist");
   });
 
   it("prepares only captions with safe sentence boundaries and preserves the word sequence", () => {
