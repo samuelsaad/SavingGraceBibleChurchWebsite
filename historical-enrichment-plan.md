@@ -39,7 +39,7 @@ Phase 3B.2b does not authorise a larger batch. Before processing any of the rema
 - Phase 3B.2b uses deterministic, non-overlapping chunks of at most 450 lexical tokens with stable character/token ranges, source and cleaned SHA-256 hashes, exact ordering and complete source coverage.
 - Source and cleaned text are normalised to Unicode NFC and tokenised independently on whitespace. Unicode punctuation is removed from each token and the remainder is case-folded. The token counts, boundaries, order and content must match for every chunk and the complete reassembly; deletion, addition, substitution, duplication, reordering, splitting or merging rolls back the complete sermon before persistence.
 - The private bundle uses schema version 3 and records filename, SHA-256, language, track type (including unresolved `unknown`), counts, processing version/timestamps, warnings, unresolved markers, and mandatory accuracy review.
-- Pilot migration records use the isolated `phase3b2_pilot` source-system discriminator and therefore cannot inflate the 453-record WordPress launch gate.
+- Pilot migration records use the isolated `phase3b2_pilot` source-system discriminator and therefore cannot inflate WordPress inventory or launch-readiness counts.
 - No audio/video downloader, speech-to-text path, billable provider, or approval action exists in the pilot implementation.
 
 ## Remaining workload
@@ -48,4 +48,4 @@ No Phase 3B.2b private processing time, warning/review count or workload extrapo
 
 ## Launch gate
 
-Production launch requires exactly 453 included records, 453 sole speakers, 453 approved descriptions, 453 approved transcripts, 453 valid approved Q&A sets, 453 valid controlled-media records, 453 complete records and zero incomplete. Missing details are reported only with approved anonymised source WordPress IDs and safe requirement codes.
+Public replacement launch requires all 448 currently published sermon candidates to have one reconciled speaker, an approved description, approved transcript, valid 5–10 approved ordered Q&A pairs, required metadata and controlled media. The five pending rows remain private/unpublished, require separate approval before any future publication, and do not block public launch. The three WordPress drafts remain excluded. This supersedes the earlier 453/453 launch wording without changing the 453-row migration inventory. Missing details are reported only with approved anonymised source WordPress IDs and safe requirement codes.

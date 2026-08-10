@@ -33,6 +33,11 @@ import {
 } from "./authorization";
 import { conflict, invalid, invalidMany, notFound } from "./errors";
 import { isFutureSchedule, transitionSermonStatus } from "./sermon-lifecycle";
+import {
+  applyAssociatedTranscriptCorrection,
+  associatedTranscriptWording,
+  TranscriptAssociationError
+} from "../enrichment/review-wording";
 import type {
   AdminSermonRepository,
   AuditEventInput,
@@ -132,6 +137,26 @@ function supportingParagraphContext(
   });
 }
 
+function reviewItemAssociation(
+  transcript: string,
+  paragraphNumbers: readonly number[]
+): { associatedWording: string | null; associationStatus: "exact" | "missing" | "ambiguous" } {
+  try {
+    return {
+      associatedWording: associatedTranscriptWording(transcript, paragraphNumbers),
+      associationStatus: "exact"
+    };
+  } catch (error) {
+    if (error instanceof TranscriptAssociationError) {
+      return {
+        associatedWording: null,
+        associationStatus: error.reason === "ambiguous" ? "ambiguous" : "missing"
+      };
+    }
+    throw error;
+  }
+}
+
 function sha256(value: string): string {
   return createHash("sha256").update(value, "utf8").digest("hex");
 }
@@ -197,6 +222,7 @@ function enrichmentReviewDto(
     },
     items: workflow.items.map((item) => ({
       ...item,
+      ...reviewItemAssociation(transcript, item.supportingParagraphs),
       context: reviewItemContext(
         transcript,
         item.decisionStatus === "corrected" ? item.correctionText : item.sourceMarker
@@ -346,33 +372,38 @@ export class AdminSermonService {
       const transcript = sermon.transcript;
       if (!transcript || transcript.rowVersion !== input.transcriptRowVersion) conflict();
       if (item.transcriptRowVersion !== transcript.rowVersion) conflict();
+      if (
+        review.expectedTranscriptRowVersion !== transcript.rowVersion ||
+        review.expectedTranscriptSha256 !== sha256(transcript.bodyText)
+      ) {
+        conflict("The transcript no longer matches this review set; reload before deciding.");
+      }
 
       let resultingTranscriptRowVersion = transcript.rowVersion;
       let transcriptChanged = false;
+      let originalWording: string | null = null;
       if (input.decision === "corrected") {
-        const marker = item.sourceMarker;
-        const correction = input.correctionText!;
-        if (!marker) {
-          invalid(
-            "correctionText",
-            "This general review item has no exact passage; make the edit in the transcript stage"
-          );
+        let correction: ReturnType<typeof applyAssociatedTranscriptCorrection>;
+        try {
+          correction = applyAssociatedTranscriptCorrection({
+            transcript: transcript.bodyText,
+            paragraphNumbers: item.supportingParagraphs,
+            expectedOriginalWording: input.originalWording!,
+            correctedWording: input.correctionText!
+          });
+        } catch (error) {
+          if (error instanceof TranscriptAssociationError) {
+            if (error.reason === "stale") conflict(error.message);
+            invalid("correctionText", error.message);
+          }
+          throw error;
         }
-        if (marker.trim() === correction.trim()) {
-          invalid("correctionText", "The correction must change the flagged wording");
-        }
-        const occurrenceCount = transcript.bodyText.split(marker).length - 1;
-        if (occurrenceCount !== 1) {
-          invalid(
-            "correctionText",
-            "The flagged wording is not unique in this transcript; edit it in the transcript stage"
-          );
-        }
+        originalWording = correction.originalWording;
         await transaction.replaceRelationships(
           id,
           {
             transcript: {
-              bodyText: transcript.bodyText.replace(marker, correction),
+              bodyText: correction.bodyText,
               status: "draft",
               sourceKind: transcript.sourceKind,
               sourceReference: transcript.sourceReference
@@ -383,10 +414,9 @@ export class AdminSermonService {
         await transaction.touchSermon(id, identity.subject);
         resultingTranscriptRowVersion += 1;
         transcriptChanged = true;
-        await transaction.resetEnrichmentReviewItemsForTranscriptChange(
+        await transaction.preserveEnrichmentReviewItemsForFindingCorrection(
           id,
           resultingTranscriptRowVersion,
-          itemId,
           identity.subject
         );
       } else if (input.decision === "rejected" && transcript.status !== "draft") {
@@ -405,12 +435,18 @@ export class AdminSermonService {
         await transaction.touchSermon(id, identity.subject);
         resultingTranscriptRowVersion += 1;
         transcriptChanged = true;
+        await transaction.alignEnrichmentReviewItemsWithTranscriptVersion(
+          id,
+          resultingTranscriptRowVersion,
+          identity.subject
+        );
       }
 
       await transaction.updateEnrichmentReviewItemDecision(
         itemId,
         input,
         resultingTranscriptRowVersion,
+        originalWording,
         identity.subject
       );
       await transaction.appendAudit(

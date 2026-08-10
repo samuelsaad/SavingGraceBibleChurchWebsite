@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { resolve } from "node:path";
 import type { Pool, PoolClient } from "pg";
+import { authorisedLocalDatabaseName } from "../migration/local-database-safety";
 import { enrichmentDraftBundleSchema, type EnrichmentDraftBundle } from "./contracts";
 import {
   phase3b2PilotManifestSchema,
@@ -37,6 +38,7 @@ function pathInside(root: string, filename: string): string {
 }
 
 export async function verifyPilotDatabase(client: PoolClient): Promise<void> {
+  const databaseName = authorisedLocalDatabaseName();
   const result = await client.query<{
     server_16: boolean;
     loopback: boolean;
@@ -49,9 +51,10 @@ export async function verifyPilotDatabase(client: PoolClient): Promise<void> {
        current_setting('server_version_num')::integer BETWEEN 160000 AND 169999 AS server_16,
        inet_server_addr() = '127.0.0.1'::inet AS loopback,
        inet_server_port() = 5432 AS port_5432,
-       current_database() = 'savinggrace_sermons_test' AS target_database,
+       current_database() = $1 AS target_database,
        version() LIKE 'PostgreSQL%' AS postgres_server,
-       to_regclass('public.sermon_enrichment_sources') IS NOT NULL AS provenance_table`
+       to_regclass('public.sermon_enrichment_sources') IS NOT NULL AS provenance_table`,
+    [databaseName]
   );
   if (!Object.values(result.rows[0] ?? {}).every(Boolean)) {
     throw new PunctuationWorkflowError(

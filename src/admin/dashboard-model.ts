@@ -3,11 +3,11 @@ import type { DeletionSeoDisposition } from "../api/contracts/admin-sermons";
 import type { ControlledMediaInput } from "../server/repositories/admin-sermon-repository";
 
 const actionMap: Record<SermonStatus, string[]> = {
-  draft: ["submit", "schedule", "publish", "archive"],
-  pending: ["withdraw", "schedule", "publish", "archive"],
+  draft: ["submit", "publish", "archive"],
+  pending: ["withdraw", "publish", "archive"],
   scheduled: ["publish", "unpublish", "archive"],
   published: ["unpublish", "archive"],
-  unpublished: ["schedule", "publish", "archive"],
+  unpublished: ["publish", "archive"],
   archived: ["restore"]
 };
 
@@ -65,4 +65,26 @@ export function buildDeletionSeoDisposition(
   if (kind === "redirect") return { kind, targetPath: targetPath.trim() };
   if (kind === "gone") return { kind };
   return null;
+}
+
+export type ReviewItemDecisionStatus =
+  | "pending"
+  | "accepted"
+  | "corrected"
+  | "left_unresolved"
+  | "rejected";
+
+export function isResolvedReviewDecision(status: ReviewItemDecisionStatus): boolean {
+  return status === "accepted" || status === "corrected";
+}
+
+export function unresolvedReviewQueue<T extends {
+  category: string;
+  decisionStatus: ReviewItemDecisionStatus;
+}>(items: readonly T[], category = "all"): T[] {
+  return items.filter(
+    (item) =>
+      !isResolvedReviewDecision(item.decisionStatus) &&
+      (category === "all" || item.category === category)
+  );
 }

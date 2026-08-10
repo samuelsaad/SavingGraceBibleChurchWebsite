@@ -33,6 +33,11 @@ import {
   type SchemaMigrationScope
 } from "../src/migration/schema-migrations";
 import { legacySermonRecordSchema } from "../src/migration/types";
+import { assertDisposableIntegrationTestDatabase } from "../src/migration/local-database-safety";
+import {
+  protectedLocalPostgresPassword,
+  protectedLocalPostgresUser
+} from "../src/migration/protected-local-postgres";
 import {
   buildEnrichmentQueue,
   importEnrichmentDraftBundle
@@ -70,15 +75,18 @@ function disposableConnectionString(): string {
   }
   const value = process.env.TEST_DATABASE_URL;
   if (!value) throw new Error("TEST_DATABASE_URL is required for PostgreSQL integration tests");
-  const url = new URL(value);
-  if (
-    !new Set(["127.0.0.1", "localhost", "[::1]", "::1"]).has(url.hostname) ||
-    url.port !== "5432" ||
-    url.pathname.slice(1) !== "savinggrace_sermons_test"
-  ) {
-    throw new Error("Integration tests require savinggrace_sermons_test on loopback port 5432");
-  }
+  assertDisposableIntegrationTestDatabase(
+    value,
+    process.env.DISPOSABLE_TEST_DATABASE_TOKEN,
+    process.env.ALLOW_LOCAL_DB_WRITE
+  );
   return value;
+}
+
+function testRunToken(): string {
+  const token = process.env.DISPOSABLE_TEST_DATABASE_TOKEN;
+  if (!token) throw new Error("DISPOSABLE_TEST_DATABASE_TOKEN is required");
+  return token;
 }
 
 function approvedEnrichment() {
@@ -111,12 +119,21 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       direction,
       scope,
       connectionString: disposableConnectionString(),
-      writeOptIn: process.env.ALLOW_LOCAL_DB_WRITE
+      writeOptIn: process.env.ALLOW_LOCAL_DB_WRITE,
+      testRunToken: testRunToken()
     });
   }
 
   beforeAll(async () => {
-    pool = new Pool({ connectionString: disposableConnectionString(), max: 4 });
+    const testUrl = new URL(disposableConnectionString());
+    pool = new Pool({
+      host: testUrl.hostname,
+      port: Number(testUrl.port),
+      database: decodeURIComponent(testUrl.pathname.slice(1)),
+      user: protectedLocalPostgresUser,
+      password: protectedLocalPostgresPassword,
+      max: 4
+    });
     const identity = await pool.query<{
       server_16: boolean;
       loopback: boolean;
@@ -128,8 +145,9 @@ integration("disposable PostgreSQL Phase 3B application", () => {
          current_setting('server_version_num')::integer BETWEEN 160000 AND 169999 AS server_16,
          inet_server_addr() = '127.0.0.1'::inet AS loopback,
          inet_server_port() = 5432 AS port_5432,
-         current_database() = 'savinggrace_sermons_test' AS target_database,
-         version() LIKE 'PostgreSQL%' AS postgres_server`
+         current_database() = $1 AS target_database,
+         version() LIKE 'PostgreSQL%' AS postgres_server`,
+      [`savinggrace_test_run_${testRunToken()}`]
     );
     expect(identity.rows[0]).toEqual({
       server_16: true,
@@ -143,7 +161,8 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     await runSchema("apply");
     await applyReferenceCatalogue(pool, {
       connectionString: disposableConnectionString(),
-      writeOptIn: process.env.ALLOW_LOCAL_DB_WRITE
+      writeOptIn: process.env.ALLOW_LOCAL_DB_WRITE,
+      testRunToken: testRunToken()
     });
 
     const fixture = legacySermonRecordSchema.array().parse(
@@ -203,7 +222,8 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   it("seeds reference catalogues idempotently, orders selectors, and derives scoped counts", async () => {
     await expect(applyReferenceCatalogue(pool, {
       connectionString: disposableConnectionString(),
-      writeOptIn: process.env.ALLOW_LOCAL_DB_WRITE
+      writeOptIn: process.env.ALLOW_LOCAL_DB_WRITE,
+      testRunToken: testRunToken()
     })).resolves.toMatchObject({ outcome: "unchanged" });
 
     const catalogue = await pool.query<{
@@ -254,7 +274,8 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     try {
       await expect(rollbackReferenceCatalogue(pool, {
         connectionString: disposableConnectionString(),
-        writeOptIn: process.env.ALLOW_LOCAL_DB_WRITE
+        writeOptIn: process.env.ALLOW_LOCAL_DB_WRITE,
+        testRunToken: testRunToken()
       })).rejects.toThrow("reference catalogue is in use");
     } finally {
       await pool.query("UPDATE sermons SET speaker_id = $2 WHERE id = $1", [target.id, target.original_speaker_id]);
@@ -1355,6 +1376,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
 
       for (const itemId of [name.id, scripture.id]) {
         const item = review.items.find((candidate) => candidate.id === itemId)!;
+        const transcriptBeforeAcceptance = review.sermon.transcript!.bodyText;
         review = await service.decideEnrichmentReviewItem(
           sermonId,
           item.id,
@@ -1368,8 +1390,14 @@ integration("disposable PostgreSQL Phase 3B application", () => {
           admin,
           `guided-review-accept-${item.category}`
         );
+        expect(review.sermon.transcript!.bodyText).toBe(transcriptBeforeAcceptance);
       }
       const currentCaption = review.items.find((item) => item.id === caption.id)!;
+      const originalAssociatedWording = currentCaption.associatedWording!;
+      const correctedAssociatedWording = originalAssociatedWording.replace(
+        "mistaken caption wording",
+        "reviewed caption wording"
+      );
       review = await service.decideEnrichmentReviewItem(
         sermonId,
         currentCaption.id,
@@ -1379,34 +1407,38 @@ integration("disposable PostgreSQL Phase 3B application", () => {
           itemRowVersion: currentCaption.rowVersion,
           transcriptRowVersion: review.sermon.transcript!.rowVersion,
           decision: "corrected",
-          correctionText: "reviewed caption wording"
+          originalWording: originalAssociatedWording,
+          correctionText: correctedAssociatedWording
         }),
         admin,
         "guided-review-correction"
       );
       expect(review.sermon.transcript?.bodyText).toContain("reviewed caption wording");
-      expect(review.progress).toMatchObject({ resolvedItemCount: 1, unresolvedItemCount: 2 });
+      expect(review.progress).toMatchObject({ resolvedItemCount: 3, unresolvedItemCount: 0 });
       expect(review.items.filter((item) => item.id !== caption.id).every(
-        (item) => item.decisionStatus === "pending"
+        (item) => item.decisionStatus === "accepted"
       )).toBe(true);
-
-      for (const item of review.items.filter((candidate) => candidate.id !== caption.id)) {
-        const current = review.items.find((candidate) => candidate.id === item.id)!;
-        review = await service.decideEnrichmentReviewItem(
-          sermonId,
-          current.id,
-          enrichmentReviewItemDecisionInputSchema.parse({
-            sermonRowVersion: review.sermon.rowVersion,
-            reviewRowVersion: review.review.rowVersion,
-            itemRowVersion: current.rowVersion,
-            transcriptRowVersion: review.sermon.transcript!.rowVersion,
-            decision: "accepted"
-          }),
-          admin,
-          `guided-review-reaccept-${current.category}`
-        );
-      }
       expect(review.progress.unresolvedItemCount).toBe(0);
+      expect(review.sermon).toMatchObject({
+        status: "draft",
+        summaryStatus: "draft",
+        transcript: { status: "draft" }
+      });
+      expect(review.sermon.questionAnswers.every((item) => item.status === "draft")).toBe(true);
+      const storedCorrection = await pool.query<{
+        source_marker: string;
+        correction_text: string;
+        decided_by_subject: string;
+      }>(
+        `SELECT source_marker, correction_text, decided_by_subject
+         FROM sermon_enrichment_review_items WHERE id = $1`,
+        [caption.id]
+      );
+      expect(storedCorrection.rows[0]).toEqual({
+        source_marker: originalAssociatedWording,
+        correction_text: correctedAssociatedWording,
+        decided_by_subject: admin.subject
+      });
 
       let sermon = await service.update(
         sermonId,

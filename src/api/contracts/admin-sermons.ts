@@ -384,20 +384,31 @@ export const enrichmentReviewItemDecisionInputSchema = z.object({
   itemRowVersion: z.number().int().positive(),
   transcriptRowVersion: z.number().int().positive(),
   decision: enrichmentReviewItemDecisionSchema.exclude(["pending"]),
-  correctionText: safePlainText(1_000).trim().min(1).optional()
+  originalWording: safePlainText(500_000).min(1).optional(),
+  correctionText: safePlainText(500_000).min(1).optional()
 }).strict().superRefine((value, context) => {
-  if (value.decision === "corrected" && !value.correctionText) {
+  if (value.decision === "corrected" && !value.correctionText?.trim()) {
     context.addIssue({
       code: "custom",
       path: ["correctionText"],
       message: "Enter the reviewed correction"
     });
   }
-  if (value.decision !== "corrected" && value.correctionText !== undefined) {
+  if (value.decision === "corrected" && !value.originalWording) {
+    context.addIssue({
+      code: "custom",
+      path: ["originalWording"],
+      message: "The exact original transcript wording is required"
+    });
+  }
+  if (
+    value.decision !== "corrected" &&
+    (value.originalWording !== undefined || value.correctionText !== undefined)
+  ) {
     context.addIssue({
       code: "custom",
       path: ["correctionText"],
-      message: "Correction text is accepted only for a correction decision"
+      message: "Transcript wording is accepted only for a correction decision"
     });
   }
 });
@@ -423,8 +434,11 @@ export const enrichmentReviewItemResponseSchema = z.object({
   decisionStatus: enrichmentReviewItemDecisionSchema,
   correctionText: z.string().nullable(),
   transcriptRowVersion: z.number().int().positive(),
+  decidedBySubject: z.string().nullable(),
   decidedAt: z.iso.datetime().nullable(),
   rowVersion: z.number().int().positive(),
+  associatedWording: z.string().nullable(),
+  associationStatus: z.enum(["exact", "missing", "ambiguous"]),
   context: z.object({
     before: z.string(),
     flagged: z.string(),

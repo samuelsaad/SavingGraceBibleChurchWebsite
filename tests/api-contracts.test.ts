@@ -125,8 +125,17 @@ describe("admin sermon API contract", () => {
       reviewRowVersion: 2,
       itemRowVersion: 1,
       transcriptRowVersion: 5,
-      decision: "corrected"
+      decision: "corrected",
+      originalWording: "Original wording"
     })).toThrow("Enter the reviewed correction");
+    expect(() => enrichmentReviewItemDecisionInputSchema.parse({
+      sermonRowVersion: 3,
+      reviewRowVersion: 2,
+      itemRowVersion: 1,
+      transcriptRowVersion: 5,
+      decision: "corrected",
+      correctionText: "Corrected wording"
+    })).toThrow("exact original transcript wording");
     expect(enrichmentReviewItemDecisionInputSchema.parse({
       sermonRowVersion: 3,
       reviewRowVersion: 2,

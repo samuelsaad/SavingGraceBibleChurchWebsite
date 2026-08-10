@@ -239,7 +239,7 @@ const pageTitle = "Local administration — Saving Grace Bible Church";
   .review-stage-actions, .review-decision-bar, .review-item-pager, .qa-order-actions { display: flex; flex-wrap: wrap; gap: .65rem; align-items: center; }
   .review-stage-actions { justify-content: space-between; margin-top: 1.5rem; padding-top: 1.2rem; border-top: 1px solid var(--line); }
   .review-decision-bar { position: sticky; bottom: 1rem; z-index: 4; padding: .8rem; border: 1px solid var(--line); border-radius: .75rem; background: rgba(255,255,255,.97); box-shadow: 0 .5rem 2rem rgba(0,0,0,.08); }
-  .review-item-toolbar { display: grid; grid-template-columns: repeat(2, minmax(9rem, 1fr)) auto; gap: .8rem; align-items: end; margin-bottom: 1rem; }
+  .review-item-toolbar { display: grid; grid-template-columns: minmax(12rem, 20rem) 1fr; gap: .8rem; align-items: end; margin-bottom: 1rem; }
   .review-item-toolbar p { margin: 0 0 .7rem; white-space: nowrap; }
   .review-item-card { min-width: 0; padding: clamp(1rem, 2vw, 1.5rem); border: 1px solid #bfd1c7; border-radius: .85rem; background: #fbfdfc; }
   .review-item-card > header { display: flex; justify-content: space-between; gap: 1rem; align-items: start; }
@@ -254,6 +254,18 @@ const pageTitle = "Local administration — Saving Grace Bible Church";
   .review-supporting-context article p { margin: .45rem 0 0; max-height: 18rem; overflow: auto; white-space: pre-wrap; line-height: 1.65; overflow-wrap: anywhere; }
   .review-correction { display: block; margin: 1rem 0; }
   .review-correction textarea { min-height: 9rem; }
+  .review-associated-wording textarea { width: 100%; min-height: 24rem; padding: 1rem; font-family: Georgia, serif; font-size: 1.05rem; line-height: 1.75; }
+  .review-finding-evidence { margin: 1rem 0; padding: .85rem 1rem; border: 1px solid var(--line); border-radius: .65rem; background: white; }
+  .review-finding-evidence summary, .review-resolved-history > summary { color: var(--forest); font-weight: 800; cursor: pointer; }
+  .review-resolved-history { margin-top: 1.25rem; padding: 1rem; border: 1px solid var(--line); border-radius: .75rem; background: var(--paper); }
+  .review-resolved-history > ol { display: grid; gap: .75rem; margin: 1rem 0 0; padding: 0; list-style: none; }
+  .review-resolved-history > ol > li { padding: 1rem; border: 1px solid var(--line); border-radius: .65rem; background: white; }
+  .review-resolved-history li div > span { display: block; margin-top: .25rem; color: var(--muted); }
+  .review-resolved-history li p { color: var(--muted); }
+  .review-resolved-history dl div { margin-top: .75rem; }
+  .review-resolved-history dt { font-weight: 800; }
+  .review-resolved-history dd { margin: .25rem 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .review-stage-complete { border-color: #a9c8b7; background: #edf5f0; }
   .review-item-pager { justify-content: space-between; margin-top: 1rem; }
   .review-qa-list { display: grid; gap: 1rem; margin-top: 1rem; }
   .review-qa-card { display: grid; gap: 1rem; padding: clamp(1rem, 2vw, 1.4rem); border: 1px solid var(--line); border-radius: .85rem; background: #fbfcfb; }

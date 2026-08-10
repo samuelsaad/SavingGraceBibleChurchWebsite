@@ -147,6 +147,7 @@ export interface EnrichmentReviewItemDto {
   decisionStatus: "pending" | "accepted" | "corrected" | "left_unresolved" | "rejected";
   correctionText: string | null;
   transcriptRowVersion: number;
+  decidedBySubject: string | null;
   decidedAt: string | null;
   rowVersion: number;
 }
@@ -264,6 +265,12 @@ export interface AdminSermonTransaction {
   updateEnrichmentReviewItemDecision(
     itemId: string,
     input: EnrichmentReviewItemDecisionInput,
+    transcriptRowVersion: number,
+    originalWording: string | null,
+    actorSubject: string
+  ): Promise<void>;
+  preserveEnrichmentReviewItemsForFindingCorrection(
+    sermonId: string,
     transcriptRowVersion: number,
     actorSubject: string
   ): Promise<void>;

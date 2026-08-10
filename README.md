@@ -16,7 +16,7 @@ Local Phase 3B.2 caption/enrichment rehearsal, Phase 3B.2b punctuation hardening
 - Idempotent local reference seeding for the seven confirmed speakers and the exact 66-book Protestant canon, with deterministic identities, canonical order, supported Bible-book aliases, no automatic sermon assignment, and relationship-derived administrator/public counts
 - Reused `sermons.summary` as the reviewed public **Sermon description**, with explicit lifecycle/provenance, approved-only weight-C search and controlled `seo_description` fallback
 - First-class reviewed plain-text transcripts and 5–10 ordered reviewed Q&A pairs with approved-only lower-weight search
-- Derived readiness, exact 453/453 historical launch gate, deterministic enrichment queue, and idempotent draft-only import contract
+- Derived readiness, a 448-currently-published-candidate public-launch gate, deterministic enrichment queue, and idempotent draft-only import contract
 - Private YouTube Studio caption-file processor with trusted exact-scope derivation, deterministic punctuation-only chunks and hashes, whole-sermon lexical-token preservation/rollback, structured source provenance/warnings, and no media/network implementation
 - Legacy query/date compatibility translation
 - Deterministic Advanced Sermons dry-run importer
@@ -27,10 +27,13 @@ Local Phase 3B.2 caption/enrichment rehearsal, Phase 3B.2b punctuation hardening
 - Responsive accessible local `/admin` foundation plus a dedicated one-stage-at-a-time `/admin/sermons/:id/review` workflow for imported drafts, with one decision per deterministic atomic finding, exact identity-set completion gates, large transcript/Q&A editors, persistent progress, explicit approval, optimistic concurrency and audit
 - Server-rendered uncollapsed approved description before media/transcript/Q&A; collapsed transcript remains in initial markup and list payloads omit heavy bodies
 - Automated migration, security, lifecycle, configuration, and schema-contract tests
+- Static `/health.json` build metadata explicitly marked `runtimeHealth: false`; a genuine runtime health check remains future work
 
 This milestone does not include deployment, cloud infrastructure, Cognito configuration, production loading, the remaining 450 sermons, external providers, audio/video processing, new transcription, or any WordPress/YouTube mutation. Phase 3B.2b is limited to the two records identified by the committed Phase 3B.2 outcome as requiring manual punctuation; it does not reprocess the already-successful record. Those two authorised records now exist only as private drafts with 42 and 44 individually pending review findings. The former six aggregate prompts are provenance warnings only and no longer act as decisions. The guided review implementation uses anonymised fixtures for automated and visual evidence; it records no approval merely by viewing or saving. The AWS runtime and Astro production adapter remain intentionally undecided.
 
-The disposable PostgreSQL integration is verified only against `savinggrace_sermons_test` on `127.0.0.1:5432`. The schema runner uses a separate `schema_migrations` journal, stable checksums of each paired up/down definition, an advisory lock, exact-prefix validation and transactional DDL/receipt writes. A matching fully applied schema is a no-op; unknown, changed, missing, duplicate, reordered or unjournalled history fails closed instead of being baselined. Disposable database contents are test state, not milestone authority.
+The approved direction is a complete WordPress replacement, with WordPress remaining live until authorised cutover. Continue Astro/API/PostgreSQL, preferably a statically generated public site separated from protected administration/API/PostgreSQL. Production administration will use individually attributable MFA identities for Samuel and Yang or another authorised church administrator. Exact AWS services/pricing are undecided; target ongoing hosting below A$70/month where practical and avoid unnecessary NAT, Fargate, RDS Proxy or Multi-AZ infrastructure. There is no fixed launch month. The five pending sermons remain unpublished and do not block the 448-candidate public launch gate; the three WordPress drafts remain excluded.
+
+Operational local work is restricted to `savinggrace_sermons_test` on `127.0.0.1:5432`. `npm run test:postgres` refuses that persistent pilot database and instead creates a strongly named unique loopback database, runs the complete PostgreSQL suite, and drops only that exact disposable target. The schema runner uses a separate `schema_migrations` journal, stable checksums of each paired up/down definition, an advisory lock, exact-prefix validation and transactional DDL/receipt writes. A matching fully applied schema is a no-op; unknown, changed, missing, duplicate, reordered or unjournalled history fails closed instead of being baselined.
 
 The implemented admin routes, authorization, transition, deletion, and dashboard contracts are documented in `admin-api-contract.md`. There is one non-secret local admin identity, disabled by default, limited to loopback/development, and never a substitute for the future verified identity adapter.
 
@@ -46,6 +49,7 @@ Ranking improvements are not guaranteed. Primary indexable content must be serve
 npm install
 npm run check
 npm test
+npm run test:postgres
 npm run build
 npm run migration:dry-run -- --input tests/fixtures/dry-run.json
 npm run enrichment:export-queue-local -- anonymised-local-fixture
@@ -86,9 +90,9 @@ npm run dashboard:local
 
 Open `http://127.0.0.1:4322/admin`. The harness refuses non-loopback database and listener targets. Stop it with `Ctrl+C` after local review.
 
-Imported Phase 3B.2 drafts open in the dedicated `/admin/sermons/:id/review` route. The route shows identity, typed flagged items, transcript, description, ordered Q&A and final summary one stage at a time. It has no publish, schedule, archive or deletion action.
+Imported Phase 3B.2 drafts open in the dedicated `/admin/sermons/:id/review` route. Stage 2 shows only unresolved findings and the exact associated transcript paragraphs in a large editable field; accepting leaves wording unchanged, while correcting atomically stores original/corrected wording and updates only that association without resetting siblings. Resolved items remain in read-only history. The route has no publish, schedule, archive or deletion action, and the general dashboard also hides scheduling until a real publication worker exists.
 
-The loader and integration suite refuse every target except `savinggrace_sermons_test` on loopback port 5432. Real PostgreSQL integration tests additionally require `TEST_DATABASE_URL` and `RUN_POSTGRES_INTEGRATION=1`.
+Operational loaders refuse every target except `savinggrace_sermons_test` on loopback port 5432. The integration runner requires its generated token and exact `savinggrace_test_run_<token>` database, and explicitly rejects the persistent pilot target.
 
 ## Project boundaries
 
@@ -99,7 +103,7 @@ The loader and integration suite refuse every target except `savinggrace_sermons
 - `src/server`: server-only PostgreSQL repository, query, and portable HTTP boundaries
 - `src/migration`: journalled schema runner, importer, audit output, identity, and CLI
 - `src/enrichment`: strict queue/draft contracts, provider interfaces, and local idempotent PostgreSQL draft workflow
-- `src/readiness`: derived exact-count historical launch gate and safe CLI report
+- `src/readiness`: derived inventory/readiness reporting; the approved public-launch gate applies to the 448 published candidates
 - `historical-enrichment-plan.md`: three-output Phase 3B.2 contract, review boundary and exact launch gate
 - `db/migrations`: ordered PostgreSQL SQL migrations
 - `tests`: anonymised fixtures and automated contract tests
@@ -114,4 +118,4 @@ The proprietary `advanced-sermons*.zip` pattern and extracted plugin directories
 
 ## Next approval gate
 
-Phase 3C remains paused and the remaining 450 sermons are not authorised. Samuel must resume and complete explicit administrator review of each private pilot draft and retained uncertainty before any pilot acceptance decision. Before any larger Phase 3B.2 batch, the church must explicitly accept the verified pilot report, nominate administrator reviewers/approvers, confirm real source identities/service dates, approve the next exact allowlist and batch size, and reconfirm workload, privacy/retention, retry, correction, audit, rollback and human-approval rules. Launch remains blocked until all 453 records are complete and separately approved and the whole-site SEO gate passes.
+Phase 3C remains paused and the remaining 450 sermons are not authorised. Samuel must resume and complete explicit administrator review of each private pilot draft and retained uncertainty before any pilot acceptance decision. Before any larger Phase 3B.2 batch, the church must explicitly accept the verified pilot report, nominate administrator reviewers/approvers, confirm real source identities/service dates, approve the next exact allowlist and batch size, and reconfirm workload, privacy/retention, retry, correction, audit, rollback and human-approval rules. Public launch remains blocked until all 448 currently published sermon candidates pass the content gate and the whole-site SEO gate passes; the five pending rows remain unpublished and non-blocking unless separately approved.

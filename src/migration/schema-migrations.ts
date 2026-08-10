@@ -1,7 +1,10 @@
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import type { Pool, PoolClient } from "pg";
-import { assertDisposableLocalDatabase } from "./local-database-safety";
+import {
+  assertDisposableIntegrationTestDatabase,
+  assertDisposableLocalDatabase
+} from "./local-database-safety";
 
 const schemaMigrationLockKeys: [number, number] = [1_397_176_899, 1_397_111_885];
 const journalTableName = "schema_migrations";
@@ -346,7 +349,7 @@ async function verifyExpectedSchemaState(
   }
 }
 
-async function verifyDatabaseIdentity(client: PoolClient): Promise<void> {
+async function verifyDatabaseIdentity(client: PoolClient, expectedDatabaseName: string): Promise<void> {
   const result = await client.query<{
     server_16: boolean;
     loopback: boolean;
@@ -358,8 +361,9 @@ async function verifyDatabaseIdentity(client: PoolClient): Promise<void> {
        current_setting('server_version_num')::integer BETWEEN 160000 AND 169999 AS server_16,
        inet_server_addr() = '127.0.0.1'::inet AS loopback,
        inet_server_port() = 5432 AS port_5432,
-       current_database() = 'savinggrace_sermons_test' AS target_database,
-       version() LIKE 'PostgreSQL%' AS postgres_server`
+       current_database() = $1 AS target_database,
+       version() LIKE 'PostgreSQL%' AS postgres_server`,
+    [expectedDatabaseName]
   );
   if (!Object.values(result.rows[0] ?? {}).every(Boolean)) {
     throw new SchemaMigrationError(
@@ -547,14 +551,22 @@ export async function runSchemaMigrations(
     scope?: SchemaMigrationScope;
     connectionString: string;
     writeOptIn?: string | undefined;
+    testRunToken?: string | undefined;
   }
 ): Promise<SchemaMigrationRunResult> {
-  assertDisposableLocalDatabase(options.connectionString, options.writeOptIn);
+  const expectedDatabaseName = options.testRunToken
+    ? assertDisposableIntegrationTestDatabase(
+        options.connectionString,
+        options.testRunToken,
+        options.writeOptIn
+      )
+    : (assertDisposableLocalDatabase(options.connectionString, options.writeOptIn),
+      "savinggrace_sermons_test");
   const migrations = await loadSchemaMigrations();
   const client = await pool.connect();
   let locked = false;
   try {
-    await verifyDatabaseIdentity(client);
+    await verifyDatabaseIdentity(client, expectedDatabaseName);
     await client.query("SELECT pg_advisory_lock($1::integer, $2::integer)", schemaMigrationLockKeys);
     locked = true;
     await bootstrapJournal(client);

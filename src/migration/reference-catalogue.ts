@@ -1,6 +1,9 @@
 import { createHash } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
-import { assertDisposableLocalDatabase } from "./local-database-safety";
+import {
+  assertDisposableIntegrationTestDatabase,
+  assertDisposableLocalDatabase
+} from "./local-database-safety";
 import { deterministicSourceUuid } from "./identity";
 
 export const referenceCatalogueVersion = "saving-grace-reference-catalogue-v1";
@@ -204,9 +207,22 @@ export const referenceCatalogueSha256 = createHash("sha256")
 interface ApplyOptions {
   connectionString: string;
   writeOptIn?: string | undefined;
+  testRunToken?: string | undefined;
 }
 
-async function verifyTarget(client: PoolClient): Promise<void> {
+function expectedDatabaseName(options: ApplyOptions): string {
+  if (options.testRunToken) {
+    return assertDisposableIntegrationTestDatabase(
+      options.connectionString,
+      options.testRunToken,
+      options.writeOptIn
+    );
+  }
+  assertDisposableLocalDatabase(options.connectionString, options.writeOptIn);
+  return "savinggrace_sermons_test";
+}
+
+async function verifyTarget(client: PoolClient, databaseName: string): Promise<void> {
   const result = await client.query<{
     server_16: boolean;
     loopback: boolean;
@@ -216,7 +232,7 @@ async function verifyTarget(client: PoolClient): Promise<void> {
       current_setting('server_version_num')::integer BETWEEN 160000 AND 169999 AS server_16,
       inet_server_addr() = '127.0.0.1'::inet AS loopback,
       inet_server_port() = 5432 AS port_5432,
-      current_database() = 'savinggrace_sermons_test' AS target_database`);
+      current_database() = $1 AS target_database`, [databaseName]);
   if (!Object.values(result.rows[0] ?? {}).every(Boolean)) {
     throw new Error("The reference catalogue database identity failed closed.");
   }
@@ -246,11 +262,11 @@ function assertNoConflict(
 }
 
 export async function applyReferenceCatalogue(pool: Pool, options: ApplyOptions) {
-  assertDisposableLocalDatabase(options.connectionString, options.writeOptIn);
+  const databaseName = expectedDatabaseName(options);
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    await verifyTarget(client);
+    await verifyTarget(client, databaseName);
     await client.query("SELECT pg_advisory_xact_lock(72419066)");
     const existingSpeakers = await client.query<{ id: string; name: string; slug: string }>(
       "SELECT id, name, slug FROM speakers"
@@ -374,11 +390,11 @@ export async function applyReferenceCatalogue(pool: Pool, options: ApplyOptions)
 }
 
 export async function rollbackReferenceCatalogue(pool: Pool, options: ApplyOptions) {
-  assertDisposableLocalDatabase(options.connectionString, options.writeOptIn);
+  const databaseName = expectedDatabaseName(options);
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    await verifyTarget(client);
+    await verifyTarget(client, databaseName);
     await client.query("SELECT pg_advisory_xact_lock(72419066)");
     const speakerIds = savingGraceSpeakers.map((speaker) => speaker.id);
     const classificationIds = protestantBibleBooks.map((book) => book.classificationId);

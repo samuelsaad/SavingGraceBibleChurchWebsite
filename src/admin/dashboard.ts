@@ -3,7 +3,9 @@ import {
   buildControlledMediaInputs,
   buildDeletionSeoDisposition,
   expectedPublicSermonUrl,
-  shouldWarnAboutSlugChange
+  isResolvedReviewDecision,
+  shouldWarnAboutSlugChange,
+  unresolvedReviewQueue
 } from "./dashboard-model";
 import type { SermonStatus } from "../domain/sermon";
 
@@ -151,8 +153,11 @@ type EnrichmentReviewItem = {
   decisionStatus: "pending" | "accepted" | "corrected" | "left_unresolved" | "rejected";
   correctionText: string | null;
   transcriptRowVersion: number;
+  decidedBySubject: string | null;
   decidedAt: string | null;
   rowVersion: number;
+  associatedWording: string | null;
+  associationStatus: "exact" | "missing" | "ambiguous";
   context: { before: string; flagged: string; after: string } | null;
   supportingContext: Array<{ paragraphNumber: number; text: string }>;
 };
@@ -475,18 +480,32 @@ function renderIdentityReviewStage(
 }
 
 function renderFlaggedReviewStage(review: EnrichmentReviewResponse): string {
+  const resolvedItems = review.items.filter((item) => isResolvedReviewDecision(item.decisionStatus));
   return `<section class="review-stage-panel" aria-labelledby="flagged-review-heading">
-    <header class="review-stage-heading"><p>Stage 2 of 6</p><h2 id="flagged-review-heading">Flagged review items</h2><p>Make an explicit decision for each item. An unanswered item is never treated as accepted.</p></header>
+    <header class="review-stage-heading"><p>Stage 2 of 6</p><h2 id="flagged-review-heading">Flagged review items</h2><p>Review the exact associated transcript wording. Accepting leaves it unchanged; correcting saves the edited wording and decision together.</p></header>
     <div id="review-stage-feedback"></div>
     ${review.progress.itemSetMatches && review.progress.transcriptMatchesExpected
       ? ""
       : `<div class="callout"><strong>Review set verification failed.</strong><p>The expected identities, item total or transcript version does not match. Decisions and completion remain blocked until the private review set is safely restored.</p></div>`}
     <div class="review-item-toolbar">
       <label><span>Category</span><select id="review-item-category"><option value="all">All categories</option><option value="caption_error">Caption wording</option><option value="name_or_scripture_reference">Names or Scripture references</option></select></label>
-      <label><span>Decision</span><select id="review-item-status"><option value="all">All decisions</option><option value="unresolved">Unresolved</option><option value="resolved">Resolved</option></select></label>
-      <p><strong>${review.progress.resolvedItemCount} of ${review.progress.totalItemCount}</strong> resolved${review.progress.presentItemCount === review.progress.totalItemCount ? "" : ` &bull; ${review.progress.presentItemCount} currently present`}</p>
+      <p aria-live="polite"><strong>${review.progress.unresolvedItemCount}</strong> remaining &bull; ${review.progress.resolvedItemCount} resolved of ${review.progress.totalItemCount}${review.progress.presentItemCount === review.progress.totalItemCount ? "" : ` &bull; ${review.progress.presentItemCount} currently present`}</p>
     </div>
-    <div id="review-item-card"></div>
+    <div id="review-item-card">${review.progress.unresolvedItemCount === 0
+      ? '<div class="empty-state review-stage-complete"><strong>Every flagged item has an explicit resolving decision.</strong><p>No content was approved. Continue to the transcript stage when you are ready to review the complete draft.</p></div>'
+      : ""}</div>
+    <details class="review-resolved-history">
+      <summary>Resolved history (${resolvedItems.length})</summary>
+      ${resolvedItems.length
+        ? `<ol>${resolvedItems.map((item) => `<li>
+            <div><strong>${escapeHtml(item.label)}</strong><span>${escapeHtml(reviewItemCategoryLabel(item.category))} &bull; ${escapeHtml(plainReviewStatus(item.decisionStatus))}</span></div>
+            <p>Recorded by ${escapeHtml(item.decidedBySubject ?? "an authorised administrator")}${item.decidedAt ? ` on ${escapeHtml(humanDate(item.decidedAt))}` : ""}.</p>
+            ${item.decisionStatus === "corrected" && item.sourceMarker && item.correctionText
+              ? `<details><summary>Read-only wording change</summary><dl><div><dt>Original wording</dt><dd>${escapeHtml(item.sourceMarker)}</dd></div><div><dt>Corrected wording</dt><dd>${escapeHtml(item.correctionText)}</dd></div></dl></details>`
+              : ""}
+          </li>`).join("")}</ol>`
+        : "<p>No findings have been resolved.</p>"}
+    </details>
     ${reviewStageActions(2)}
   </section>`;
 }
@@ -610,34 +629,32 @@ function reviewItemCardMarkup(
   total: number,
   decisionsEnabled: boolean
 ): string {
-  const context = item.context;
+  const associationExact = item.associationStatus === "exact" && item.associatedWording !== null;
   return `<article class="review-item-card" data-review-item-card="${escapeHtml(item.id)}">
     <header>
       <div><p>${escapeHtml(reviewItemCategoryLabel(item.category))} • Item ${position} of ${total}</p><h3>${escapeHtml(item.label)}</h3></div>
       <span class="status-pill">${escapeHtml(plainReviewStatus(item.decisionStatus))}</span>
     </header>
     <p class="review-item-guidance">${escapeHtml(item.detail)}</p>
-    ${item.supportingContext.length
-      ? `<section class="review-supporting-context" aria-label="Supporting transcript context">
-          <h4>Supporting transcript context</h4>
-          ${item.supportingContext.map((context) => `<article><strong>Paragraph ${context.paragraphNumber}</strong><p>${escapeHtml(context.text)}</p></article>`).join("")}
-        </section>`
-      : '<div class="callout"><strong>Supporting context unavailable</strong><p>The expected supporting paragraph is not present in this transcript version. This item remains blocking.</p></div>'}
-    ${context ? `<blockquote class="review-context"><span>${escapeHtml(context.before)}</span><mark>${escapeHtml(context.flagged)}</mark><span>${escapeHtml(context.after)}</span></blockquote>` : '<div class="callout"><strong>General review check</strong><p>No single passage is attached to this item. Use the full transcript stage to inspect and edit the wording.</p></div>'}
-    ${item.sourceMarker
-      ? `<label class="review-correction"><span>Reviewed correction</span><textarea id="review-item-correction" maxlength="1000" placeholder="Enter replacement wording only when choosing Correct">${escapeHtml(item.correctionText ?? "")}</textarea><small class="field-hint">A correction changes the one displayed passage and returns the transcript to draft.</small></label>`
-      : '<div class="callout"><strong>Direct correction unavailable</strong><p>This finding is associated with supporting paragraphs rather than one exact transcript phrase. Make any wording change in the full transcript stage.</p></div>'}
+    ${associationExact
+      ? `<label class="review-correction review-associated-wording"><span>Associated transcript wording</span><textarea id="review-item-correction" maxlength="500000" spellcheck="true">${escapeHtml(item.associatedWording!)}</textarea><small class="field-hint">Edit the transcript wording itself. Keep the same blank-line-separated paragraph boundaries so other finding associations stay stable.</small></label>`
+      : `<div class="callout"><strong>Exact wording association unavailable</strong><p>${item.associationStatus === "ambiguous" ? "The stored paragraph association is duplicated or ambiguous." : "The expected associated paragraph is missing from this transcript version."} This item remains unresolved and no decision can be saved.</p></div>`}
+    <details class="review-finding-evidence">
+      <summary>Review finding evidence and paragraph references</summary>
+      ${item.supportingContext.length
+        ? `<section class="review-supporting-context" aria-label="Supporting transcript context">${item.supportingContext.map((context) => `<article><strong>Paragraph ${context.paragraphNumber}</strong><p>${escapeHtml(context.text)}</p></article>`).join("")}</section>`
+        : "<p>Supporting context is unavailable.</p>"}
+    </details>
     <div class="review-decision-bar" aria-label="Decision for ${escapeHtml(item.label)}">
-      <button class="button" type="button" data-review-item-decision="accepted"${decisionsEnabled ? "" : " disabled"}>Accept wording</button>
-      <button class="button primary" type="button" data-review-item-decision="corrected"${decisionsEnabled && item.sourceMarker ? "" : " disabled"}>Correct wording</button>
-      <button class="button" type="button" data-review-item-decision="left_unresolved"${decisionsEnabled ? "" : " disabled"}>Leave unresolved</button>
-      <button class="button danger" type="button" data-review-item-decision="rejected"${decisionsEnabled ? "" : " disabled"}>Reject transcript</button>
+      <button class="button" type="button" data-review-item-decision="accepted"${decisionsEnabled && associationExact ? "" : " disabled"}>Accept wording</button>
+      <button class="button primary" type="button" data-review-item-decision="corrected"${decisionsEnabled && associationExact ? "" : " disabled"}>Correct wording</button>
+      <button class="button" type="button" data-review-item-decision="left_unresolved"${decisionsEnabled && associationExact ? "" : " disabled"}>Leave unresolved</button>
+      <button class="button danger" type="button" data-review-item-decision="rejected"${decisionsEnabled && associationExact ? "" : " disabled"}>Reject transcript</button>
     </div>
     <p class="field-hint">Leaving an item unresolved or rejecting the transcript records your decision but continues to block transcript approval.</p>
     <div class="review-item-pager">
       <button class="button quiet" type="button" data-review-item-offset="-1"${position <= 1 ? " disabled" : ""}>Previous item</button>
       <button class="button quiet" type="button" data-review-item-offset="1"${position >= total ? " disabled" : ""}>Next item</button>
-      <button class="button quiet" type="button" data-review-next-unresolved>Next unresolved</button>
     </div>
   </article>`;
 }
@@ -649,25 +666,20 @@ function wireFlaggedReviewItems(
 ): void {
   const cardTarget = document.querySelector<HTMLElement>("#review-item-card");
   const categoryFilter = document.querySelector<HTMLSelectElement>("#review-item-category");
-  const statusFilter = document.querySelector<HTMLSelectElement>("#review-item-status");
-  if (!cardTarget || !categoryFilter || !statusFilter) return;
+  if (!cardTarget || !categoryFilter) return;
   let currentIndex = 0;
   let selectedCategory = categoryFilter.value;
-  let selectedStatus = statusFilter.value;
+  let saving = false;
 
-  const filteredItems = () => review.items.filter((item) => {
-    const categoryMatches = categoryFilter.value === "all" || item.category === categoryFilter.value;
-    const resolved = item.decisionStatus === "accepted" || item.decisionStatus === "corrected";
-    const statusMatches = statusFilter.value === "all" ||
-      (statusFilter.value === "resolved" ? resolved : !resolved);
-    return categoryMatches && statusMatches;
-  });
+  const filteredItems = () => unresolvedReviewQueue(review.items, categoryFilter.value);
 
   const renderCard = () => {
     const items = filteredItems();
     currentIndex = Math.max(0, Math.min(currentIndex, items.length - 1));
     if (!items.length) {
-      cardTarget.innerHTML = '<div class="empty-state"><strong>No items match these filters.</strong><p>Choose another category or decision filter.</p></div>';
+      cardTarget.innerHTML = review.progress.unresolvedItemCount === 0
+        ? '<div class="empty-state review-stage-complete"><strong>Every flagged item has an explicit resolving decision.</strong><p>No content was approved. Continue to the transcript stage when you are ready.</p></div>'
+        : '<div class="empty-state"><strong>No unresolved items match this category.</strong><p>Choose another category to continue.</p></div>';
       return;
     }
     const item = items[currentIndex]!;
@@ -688,36 +700,23 @@ function wireFlaggedReviewItems(
         cardTarget.focus({ preventScroll: true });
       });
     }
-    cardTarget.querySelector<HTMLButtonElement>("[data-review-next-unresolved]")?.addEventListener("click", () => {
-      if (!confirmDiscard()) return;
-      const items = filteredItems();
-      const nextIndex = items.findIndex((candidate, index) =>
-        index > currentIndex && candidate.decisionStatus !== "accepted" && candidate.decisionStatus !== "corrected"
-      );
-      const wrappedIndex = items.findIndex((candidate) =>
-        candidate.decisionStatus !== "accepted" && candidate.decisionStatus !== "corrected"
-      );
-      if (nextIndex < 0 && wrappedIndex < 0) {
-        feedbackTarget()!.innerHTML = feedback("Every item matching these filters is resolved.");
-        return;
-      }
-      dirty = false;
-      currentIndex = nextIndex >= 0 ? nextIndex : wrappedIndex;
-      renderCard();
-      cardTarget.focus({ preventScroll: true });
-    });
     for (const button of cardTarget.querySelectorAll<HTMLButtonElement>("[data-review-item-decision]")) {
       button.addEventListener("click", async () => {
+        if (saving) return;
         const decision = button.dataset.reviewItemDecision as Exclude<EnrichmentReviewItem["decisionStatus"], "pending">;
-        const correctionText = correction?.value.trim() ?? "";
-        if (decision === "corrected" && !correctionText) {
+        const correctionText = correction?.value ?? "";
+        if (decision === "corrected" && !correctionText.trim()) {
           feedbackTarget()!.innerHTML = feedback("Enter the reviewed replacement wording before choosing Correct wording.", true);
           correction?.focus();
           return;
         }
+        const controls = [...cardTarget.querySelectorAll<HTMLButtonElement>("button")];
+        const disabledBefore = controls.map((control) => control.disabled);
         try {
-          button.disabled = true;
-          await api(`/api/v1/admin/sermons/${id}/review/items/${item.id}/decision`, {
+          saving = true;
+          controls.forEach((control) => { control.disabled = true; });
+          if (correction) correction.readOnly = true;
+          await api<EnrichmentReviewResponse>(`/api/v1/admin/sermons/${id}/review/items/${item.id}/decision`, {
             method: "POST",
             body: JSON.stringify({
               sermonRowVersion: review.sermon.rowVersion,
@@ -725,14 +724,18 @@ function wireFlaggedReviewItems(
               itemRowVersion: item.rowVersion,
               transcriptRowVersion: review.sermon.transcript!.rowVersion,
               decision,
-              ...(decision === "corrected" ? { correctionText } : {})
+              ...(decision === "corrected"
+                ? { originalWording: item.associatedWording, correctionText }
+                : {})
             })
           });
           dirty = false;
           announce(`Review item decision recorded: ${plainReviewStatus(decision)}`);
           await renderGuidedSermonReview(id);
         } catch (error) {
-          button.disabled = false;
+          saving = false;
+          controls.forEach((control, index) => { control.disabled = disabledBefore[index]!; });
+          if (correction) correction.readOnly = false;
           feedbackTarget()!.innerHTML = feedback(errorMessage(error), true);
         }
       });
@@ -746,16 +749,6 @@ function wireFlaggedReviewItems(
     }
     dirty = false;
     selectedCategory = categoryFilter.value;
-    currentIndex = 0;
-    renderCard();
-  });
-  statusFilter.addEventListener("change", () => {
-    if (!confirmDiscard()) {
-      statusFilter.value = selectedStatus;
-      return;
-    }
-    dirty = false;
-    selectedStatus = statusFilter.value;
     currentIndex = 0;
     renderCard();
   });
@@ -1240,7 +1233,6 @@ async function renderSermonForm(id?: string): Promise<void> {
         <label><span>Title</span><input id="sermon-title" name="title" required maxlength="240" value="${escapeHtml(detail?.title ?? "")}" /></label>
         <label><span>Slug</span><input id="sermon-slug" name="slug" required maxlength="200" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" value="${escapeHtml(detail?.slug ?? "")}" /><small class="field-hint">Lowercase letters, numbers, and hyphens. Historic changes create a redirect.</small></label>
         <label><span>Service date</span><input name="serviceDate" type="date" required value="${escapeHtml(detail?.serviceDate ?? new Date().toISOString().slice(0, 10))}" /></label>
-        <label><span>Schedule time</span><input id="scheduled-for" type="datetime-local" value="${detail?.scheduledFor ? escapeHtml(detail.scheduledFor.slice(0, 16)) : ""}" /><small class="field-hint">Used only by the Schedule action and must be in the future.</small></label>
         <label class="wide"><span>Sermon description</span><textarea id="sermon-description" name="summary" maxlength="2000" aria-describedby="sermon-description-guidance sermon-description-count">${escapeHtml(detail?.summary ?? "")}</textarea><small id="sermon-description-guidance" class="field-hint">Normally write 2–4 useful plain-text sentences grounded in the sermon, transcript and scripture. Approval requires 80–2,000 characters; no mechanical sentence count is enforced.</small><small id="sermon-description-count" class="field-hint" aria-live="polite">${detail?.summary?.trim().length ?? 0} of 80–2,000 characters for approval</small></label>
         <label><span>Description status</span><select id="description-status" name="summaryStatus"><option value="missing"${!detail || detail.summaryStatus === "missing" ? " selected" : ""}>Missing</option><option value="draft"${detail?.summaryStatus === "draft" ? " selected" : ""}>Draft — not public</option><option value="in_review"${detail?.summaryStatus === "in_review" ? " selected" : ""}>Ready for human review</option><option value="approved"${detail?.summaryStatus === "approved" ? " selected" : ""}>Approved for public page</option></select><small class="field-hint">Only approved description text is public, searchable or launch-ready.</small></label>
         <div><span class="field-label">Description review actions</span><div class="action-row"><button class="button" type="button" data-description-status="in_review">Send to review</button><button class="button" type="button" data-description-status="approved">Approve description</button></div></div>
@@ -1273,7 +1265,7 @@ async function renderSermonForm(id?: string): Promise<void> {
         <div class="action-row"><button class="button" type="button" id="add-question">Add question and answer</button><span class="subtle" id="qa-count">${detail?.questionAnswers.length ?? 0} of 5–10 required</span></div>
       </section>
       <section class="panel">
-        <div class="step-heading"><span>Step 6 of 6</span><h2>6. Review and publish</h2><p>Resolve every checklist item before scheduling or publishing. Saving a draft remains available at any time.</p></div>
+        <div class="step-heading"><span>Step 6 of 6</span><h2>6. Review and publish</h2><p>Resolve every checklist item before publishing. Scheduling remains hidden until a real publication worker exists.</p></div>
         ${detail?.historicalBackfillRequired ? '<div class="callout"><strong>Historical backfill required.</strong><p>This imported record preserves its original WordPress state, but launch remains blocked until its description, transcript and questions are approved.</p></div>' : ""}
         <h3>Completion checklist</h3>${readinessChecklist(detail?.readiness ?? null)}
         <h3>Search preview</h3>
@@ -1282,7 +1274,7 @@ async function renderSermonForm(id?: string): Promise<void> {
       </section>
       <div class="form-actions"><button class="button primary" type="submit">${detail ? "Save changes" : "Create draft"}</button><span class="subtle" id="dirty-state">No unsaved changes</span></div>
     </form>
-    ${detail ? `<section class="panel" id="editorial-actions"><h2>Review and publishing actions</h2><p><strong>Current state:</strong> <span class="status-pill ${detail.status}">${detail.status}</span> — ${escapeHtml(stateDescriptions[detail.status])}</p>${detail.readiness.isComplete ? '<p class="feedback">The content checklist is complete. Schedule and publish actions are available when valid for this state.</p>' : `<div class="callout"><strong>Not ready to schedule or publish.</strong><p>${escapeHtml(detail.readiness.issues.map((issue) => issue.message).join(" "))}</p></div>`}<div class="action-row">${allowedDashboardActions(detail.status).map((action) => `<button class="button${action === "archive" ? " danger" : action === "publish" || action === "schedule" ? " primary" : ""}" type="button" data-transition="${action}">${action[0]!.toUpperCase()}${action.slice(1)}</button>`).join("")}</div>${detail.status === "archived" ? '<hr /><button class="button danger" id="open-delete" type="button">Permanently delete…</button>' : ""}</section><section class="panel" id="sermon-audit"><h2>Audit history</h2><div class="subtle">Loading audit events…</div></section>` : ""}
+    ${detail ? `<section class="panel" id="editorial-actions"><h2>Review and publishing actions</h2><p><strong>Current state:</strong> <span class="status-pill ${detail.status}">${detail.status}</span> — ${escapeHtml(stateDescriptions[detail.status])}</p>${detail.readiness.isComplete ? '<p class="feedback">The content checklist is complete. Publishing is available when valid for this state. Scheduling remains hidden until a real worker exists.</p>' : `<div class="callout"><strong>Not ready to publish.</strong><p>${escapeHtml(detail.readiness.issues.map((issue) => issue.message).join(" "))}</p></div>`}<div class="action-row">${allowedDashboardActions(detail.status).map((action) => `<button class="button${action === "archive" ? " danger" : action === "publish" ? " primary" : ""}" type="button" data-transition="${action}">${action[0]!.toUpperCase()}${action.slice(1)}</button>`).join("")}</div>${detail.status === "archived" ? '<hr /><button class="button danger" id="open-delete" type="button">Permanently delete…</button>' : ""}</section><section class="panel" id="sermon-audit"><h2>Audit history</h2><div class="subtle">Loading audit events…</div></section>` : ""}
     ${detail?.status === "archived" ? deletionDialog(detail) : ""}`;
 
   const form = document.querySelector<HTMLFormElement>("#sermon-form")!;
@@ -1405,12 +1397,7 @@ async function renderSermonForm(id?: string): Promise<void> {
       button.addEventListener("click", async () => {
         if (!confirmDiscard()) return;
         const action = button.dataset.transition!;
-        const scheduledInput = document.querySelector<HTMLInputElement>("#scheduled-for")!;
-        const payload: { rowVersion: number; scheduledFor?: string } = { rowVersion: detail.rowVersion };
-        if (action === "schedule") {
-          if (!scheduledInput.value) { document.querySelector<HTMLElement>("#form-feedback")!.innerHTML = feedback("Choose a future schedule time first.", true); scheduledInput.focus(); return; }
-          payload.scheduledFor = new Date(scheduledInput.value).toISOString();
-        }
+        const payload = { rowVersion: detail.rowVersion };
         try {
           button.disabled = true;
           await api(`/api/v1/admin/sermons/${detail.id}/${action}`, { method: "POST", body: JSON.stringify(payload) });

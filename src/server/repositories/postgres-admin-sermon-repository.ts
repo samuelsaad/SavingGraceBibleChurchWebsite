@@ -111,6 +111,7 @@ const enrichmentReviewItemProjection = `
   item.decision_status AS "decisionStatus",
   item.correction_text AS "correctionText",
   item.transcript_row_version AS "transcriptRowVersion",
+  item.decided_by_subject AS "decidedBySubject",
   CASE WHEN item.decided_at IS NULL THEN NULL ELSE ${timestamp("item.decided_at")} END AS "decidedAt",
   item.row_version AS "rowVersion"`;
 
@@ -917,14 +918,16 @@ class PostgresAdminSermonTransaction implements AdminSermonTransaction {
     itemId: string,
     input: import("../../api/contracts/admin-sermons").EnrichmentReviewItemDecisionInput,
     transcriptRowVersion: number,
+    originalWording: string | null,
     actorSubject: string
   ): Promise<void> {
     await this.client.query(
       `UPDATE sermon_enrichment_review_items
        SET decision_status = $2,
            correction_text = $3,
-           transcript_row_version = $4,
-           decided_by_subject = $5,
+           source_marker = CASE WHEN $2 = 'corrected' THEN $4 ELSE source_marker END,
+           transcript_row_version = $5,
+           decided_by_subject = $6,
            decided_at = now(),
            updated_at = now(),
            row_version = row_version + 1
@@ -933,6 +936,7 @@ class PostgresAdminSermonTransaction implements AdminSermonTransaction {
         itemId,
         input.decision,
         input.decision === "corrected" ? input.correctionText : null,
+        originalWording,
         transcriptRowVersion,
         actorSubject
       ]
@@ -946,6 +950,38 @@ class PostgresAdminSermonTransaction implements AdminSermonTransaction {
            row_version = row_version + 1
        WHERE sermon_id = (SELECT sermon_id FROM sermon_enrichment_review_items WHERE id = $1)`,
       [itemId, actorSubject]
+    );
+  }
+
+  async preserveEnrichmentReviewItemsForFindingCorrection(
+    sermonId: string,
+    transcriptRowVersion: number,
+    actorSubject: string
+  ): Promise<void> {
+    await this.client.query(
+      `UPDATE sermon_enrichment_review_items
+       SET transcript_row_version = $2,
+           updated_at = now(),
+           row_version = row_version + 1
+       WHERE sermon_id = $1
+         AND transcript_row_version <> $2`,
+      [sermonId, transcriptRowVersion]
+    );
+    await this.client.query(
+      `UPDATE sermon_enrichment_reviews
+       SET current_stage = 2,
+           completed_by_subject = NULL,
+           completed_at = NULL,
+           expected_transcript_sha256 = (
+             SELECT encode(digest(transcript.body_text, 'sha256'), 'hex')
+             FROM sermon_transcripts transcript WHERE transcript.sermon_id = $1
+           ),
+           expected_transcript_row_version = $2,
+           updated_at = now(),
+           updated_by_subject = $3,
+           row_version = row_version + 1
+       WHERE sermon_id = $1`,
+      [sermonId, transcriptRowVersion, actorSubject]
     );
   }
 

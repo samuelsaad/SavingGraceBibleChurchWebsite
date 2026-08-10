@@ -5,9 +5,10 @@ export const prerender = true;
 export const GET: APIRoute = () =>
   new Response(
     JSON.stringify({
-      status: "ok",
+      kind: "build-information",
       service: "saving-grace-website",
-      environment: "local-foundation"
+      environment: "local-foundation",
+      runtimeHealth: false
     }),
     {
       headers: {

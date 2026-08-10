@@ -3,20 +3,28 @@
 ## Technical Architecture, Advanced Sermons Migration, Security, and Delivery Plan
 
 **Document status:** Authoritative working specification  
-**Revision:** 2.8
-**Updated:** 7 August 2026
+**Revision:** 2.9
+**Updated:** 10 August 2026
 **Primary audience:** Codex implementation chat, project owner, and church technical administrator  
 **Purpose:** Give the implementation assistant a complete, precise account of what has been agreed, what has been discovered, what remains unknown, and how to proceed safely.
 
 > **Phase 3B decision update (5 August 2026):** Yang has approved one active administration role, `admin`, plus safeguarded permanent deletion from `archived`. The provisional editor/contributor model and archive-only policy are superseded. The local dashboard, API, deletion tombstones, and redirect/gone dispositions use only the disposable loopback PostgreSQL target. Cognito, AWS, production adapters, deployment, real sermon imports, and every production system remain deferred and untouched.
 
-> **Phase 3B.1 final content decision (5 August 2026):** Every sermon has exactly one speaker; a draft/imported record may be temporarily null only while incomplete. All 453 included historical records (448 published and five titled pending) require one speaker, an approved complete transcript, five to ten ordered approved question-and-answer pairs, required metadata, and valid controlled media before launch. The five pending records remain non-public. New records cannot be scheduled or published until complete. This decision supersedes every earlier many-speaker runtime proposal. Real historical enrichment is not complete and Phase 3C remains paused.
+> **Phase 3B.1 content-model decision (5 August 2026; launch count superseded 10 August):** Every sermon has exactly one speaker; a draft/imported record may be temporarily null only while incomplete. Schedule/publish still require one speaker, an approved complete transcript, five to ten ordered approved Q&A pairs, required metadata and valid controlled media. The earlier 453/453 launch count is superseded by the current 448-published-candidate direction below. The five pending records remain non-public. Real historical enrichment is incomplete and Phase 3C remains paused.
 
-> **Phase 3B.1a approved-description decision (5 August 2026):** Every public sermon requires one concise, human-reviewed and approved plain-text sermon description. `sermons.summary` remains the canonical field and the administration label is **Sermon description**; `seo_description` is a separate optional controlled override. Only approved summaries are public, searchable at weight C, or readiness-eligible. All 453 included historical records require approved descriptions before launch, and none of those real descriptions is claimed complete. Migration `0005_approved_sermon_descriptions.sql` adds the minimal lifecycle/provenance metadata and approved-only search input without duplicating the summary field.
+> **Phase 3B.1a approved-description decision (5 August 2026; launch count superseded 10 August):** Every public sermon requires one concise, human-reviewed and approved plain-text sermon description. `sermons.summary` remains the canonical field and the administration label is **Sermon description**; `seo_description` is a separate optional controlled override. Only approved summaries are public, searchable at weight C, or readiness-eligible. The 448 currently published candidates require approved descriptions for replacement launch; pending sermons stay unpublished unless separately approved. Migration `0005_approved_sermon_descriptions.sql` adds the minimal lifecycle/provenance metadata and approved-only search input without duplicating the summary field.
 
 > **Phase 3B.2b administrator-review correction (6 August 2026):** Imported enrichment drafts use a dedicated one-stage-at-a-time private review route rather than the general all-in-one lifecycle form. Migration `0007_guided_sermon_review.sql` adds typed pending-by-default caption/name/Scripture decisions, transcript-version association, optimistic concurrency, audit attribution and pause/resume progress. Transcript edits invalidate earlier transcript-bound decisions. Finishing review does not submit, schedule, publish, archive or delete; the sermon remains draft/private and the human administrator retains every approval decision.
 
 > **Phase 3B.2b atomic-preservation correction (7 August 2026):** The six aggregate prompts from migration `0007` cannot represent the 86 authoritative private findings. Migration `0008_atomic_sermon_review_items.sql` preserves exactly 42 and 44 deterministic atomic items with truthful category, stable ordinal, private detail, supporting paragraphs and transcript hash/version. Completion reconciles the exact ordered identity set; aggregate warnings never count as decisions. Every item remains pending until Samuel makes an explicit individual decision.
+
+> **Current whole-site replacement direction (10 August 2026):** This paragraph supersedes every earlier statement that all 453 included sermon rows must be complete before public launch. The replacement will ultimately replace the complete WordPress church website, while WordPress remains live until an explicitly authorised cutover. Public launch requires the 448 currently published sermon candidates to have reviewed descriptions, transcripts, 5–10 ordered Q&A pairs, one reconciled speaker, required metadata and controlled media. The five pending sermons stay unpublished unless separately approved and do not block public launch; the three WordPress drafts remain excluded. This must never be reinterpreted as approval to publish all 453 rows.
+
+> Continue the custom Astro/API/PostgreSQL design. The preferred production direction is a statically generated Astro public site with a separately protected administrator/API/PostgreSQL environment. Production administration must support Samuel and Yang or another authorised church administrator through individual attributable identities and MFA. The exact identity provider and other AWS services/prices remain undecided; this supersedes earlier Cognito-specific production selections, which are historical design options only. Target ongoing hosting below A$70/month where practical, and avoid NAT gateways, Fargate, RDS Proxy and Multi-AZ services unless later evidence justifies and approval authorises them. There is no fixed launch month, and frontend/whole-site work may proceed while historical review continues.
+
+> Before replacement, inventory the whole WordPress site—including pages, forms, events, service information, staff, beliefs, giving, visitor information, calendar, SEO and URLs—and preserve verified slugs and URLs through reviewed direct redirects. Bulk migration remains repeatable extract/rehearse/delta/no-clobber work with explicit historical-speaker reconciliation, atomic findings, provenance, audit, checksums, draft isolation and production forward-only migrations backed by tested backup/restore. Keep dormant resource/media structures unless evidence shows harm. Hide scheduling controls until a real worker exists. Static `health.json` is build information, not runtime health. Social content, thumbnails, sermon-audio metadata, extra resources and advertising remain future backlog.
+
+> **Phase 3B.2b finding-correction refinement (10 August 2026):** Stage 2 displays the exact transcript paragraphs associated by stable ordinals. A correction requires the current wording, unchanged transcript hash/version and optimistic row versions, then atomically stores original/corrected wording and attribution while changing only those paragraphs. Accept/correct removes only that finding from the active unresolved queue; sibling decision states remain intact. Full-transcript edits outside the per-finding action still invalidate transcript-bound decisions.
 
 > **Permanent SEO decision:** The existing website performs well in organic search. Whole-site SEO non-regression is a launch-blocking acceptance criterion for every future milestone. Preserve existing search signals at minimum, improve technical SEO safely where possible, and do not launch unless one-to-one URL, metadata, canonical, crawlability, redirect, indexability, performance, and structured-data parity is demonstrated through the process in `seo-migration-validation-plan.md`.
 
@@ -65,7 +73,7 @@ The proposed replacement is a custom Astro-based website with:
 - An application-owned backend API.
 - PostgreSQL as the durable source of truth for the replacement system.
 - Server-side, indexed sermon search.
-- Amazon Cognito for administrator authentication.
+- Provider-independent administrator authentication with individual identities and MFA; the production provider remains undecided.
 - Simple role-based access control.
 - YouTube and other approved providers continuing to host sermon media.
 - A deliberately designed events model with future Google Calendar integration.
@@ -89,7 +97,7 @@ The existing WordPress database is a migration source only. It must not become a
 | JSON | Use JSON only to exchange data through the API; do not use a growing JSON file as the database. |
 | Public search | Execute search server-side against indexed database fields and return paginated matches only. |
 | Administration | Provide a secure dashboard for managing sermons, events, and approved website content. |
-| Authentication | Use Amazon Cognito rather than building password storage in the application. |
+| Authentication | Use a managed provider with individual identities and MFA rather than application password storage; the exact provider remains undecided. |
 | Authorisation | Use simple role-based access control from the first release. |
 | Registration | No public administrator registration; accounts are invite-only/admin-created. |
 | Sermon video | Continue hosting video with YouTube or the existing approved provider; store identifiers and metadata, not duplicate large video files. |
@@ -99,7 +107,7 @@ The existing WordPress database is a migration source only. It must not become a
 | Whole-site SEO | Preserve existing organic-search signals at minimum; SEO parity is a launch gate and unexplained regression blocks cutover. |
 | Sermon date migration | Map the exact local WordPress `post_date` to preached/service date; preserve non-Sundays and flag them rather than changing them. |
 | Sermon migration scope | Include published and titled pending Advanced Sermons records; exclude drafts, blank-title pending, `wp_sb_*`, and other sermon-plugin post types. |
-| Sermon content completeness | Exactly one speaker, one approved sermon description, an approved full transcript, and 5–10 approved ordered Q&A pairs are required for scheduling/publishing; all 453 included historical records must pass before launch. |
+| Sermon content completeness | Exactly one speaker, one approved sermon description, an approved full transcript, and 5–10 approved ordered Q&A pairs are required for publication; all 448 currently published candidates must pass before replacement launch. Pending rows remain unpublished/non-blocking unless separately approved. |
 | Scripture conflicts | Preserve postmeta and taxonomy values with independent provenance and reconcile reversibly. |
 | Media migration | Normalise YouTube and SermonAudio; never render imported embed HTML directly. |
 
@@ -202,8 +210,8 @@ flowchart TD
     Visitor["Public visitor"] --> Web["Astro public website"]
     Admin["Authorised church administrator"] --> Dashboard["Secure admin dashboard"]
     Web --> API["Backend API"]
-    Dashboard --> Cognito["Amazon Cognito"]
-    Cognito --> API
+    Dashboard --> Identity["Approved managed identity provider"]
+    Identity --> API
     API --> PostgreSQL["PostgreSQL source of truth"]
     API --> Media["YouTube and approved media providers"]
     API --> Calendar["Google Calendar integration"]
@@ -216,7 +224,7 @@ flowchart TD
 | --- | --- | --- |
 | Astro public website | Render pages, listings, detail views, search, filters, events, and media. | Connect directly to PostgreSQL from browser code. |
 | Admin dashboard | Provide protected content workflows and clear validation feedback. | Treat hidden buttons as authorisation. |
-| Amazon Cognito | Authenticate invited administrators, manage recovery/MFA, and issue signed tokens. | Decide application business permissions alone. |
+| Managed identity provider (exact service undecided) | Authenticate invited administrators, manage recovery/MFA, and issue signed tokens. | Decide application business permissions alone. |
 | Backend API | Verify tokens and roles, validate input, enforce state transitions, query PostgreSQL, and return controlled JSON. | Expose raw database errors or internal fields. |
 | PostgreSQL | Store records, relationships, audit information, migration mappings, and indexed search documents. | Be publicly accessible in production. |
 | YouTube/media providers | Host video/audio where approved. | Become the canonical store for application metadata. |
@@ -481,7 +489,7 @@ Extract only required entities and fields:
 - Legacy identifiers and URLs
 - Required plugin settings for behaviour reconstruction
 
-Do not migrate WordPress administrator passwords or password hashes. New administrators will be invited into Cognito.
+Do not migrate WordPress administrator passwords or password hashes. New administrators will be invited through the later-approved managed identity provider.
 
 ### 10.2 Controlled raw staging
 
@@ -635,7 +643,7 @@ SEO indexability and canonical policy are derived from route, template, environm
 #### Speakers
 
 - `speakers`: `id`, `name`, `slug`, `biography`, `image_asset_id`, source metadata, timestamps.
-- `sermons.speaker_id`: nullable foreign key while incomplete; exactly one valid speaker is mandatory before schedule/publish and for all 453 historical launch records.
+- `sermons.speaker_id`: nullable foreign key while incomplete; exactly one valid speaker is mandatory before publication and for all 448 currently published launch candidates.
 - `sermons.summary`: reused as the 1-2,000 character draft and 80-2,000 character approved description, with missing/draft/in-review/approved state, source type/reference, lifecycle timestamps, reviewer/approver subjects, and a summary row version. Two to four useful sentences is editorial guidance, not a mechanical rule.
 
 #### Full transcripts and questions
@@ -884,7 +892,7 @@ Example:
 - Frontends must tolerate missing optional data.
 - Keep internal database names out of public contracts.
 - Do not expose raw metadata merely because it exists in JSONB.
-- Never expose credentials, audit payloads, Cognito internals, source database details, or raw errors.
+- Never expose credentials, audit payloads, identity-provider internals, source database details, or raw errors.
 - Use `/api/v1` while the first stable contract is active.
 
 ### 14.3 Proposed public endpoints
@@ -944,15 +952,15 @@ State-changing endpoints must be idempotent where appropriate and enforce permis
 
 ### 15.1 Authentication provider
 
-Use an Amazon Cognito User Pool.
+Use a managed identity provider selected through a later approved production decision. Cognito remains one historical option, not the selected service.
 
 - Astro is the application framework, not the identity provider.
-- Cognito owns administrator identity, credential handling, recovery, and token issuance.
+- The selected provider owns administrator identity, credential handling, recovery, MFA and token issuance.
 - The application database must not store passwords or password hashes.
 - Public self-registration is disabled.
 - Administrators are created or invited by an authorised administrator.
 - Require MFA for privileged accounts, preferably authenticator-app TOTP unless the church approves another method.
-- Google sign-in may be federated through Cognito later if the church wants Workspace-based sign-on; it is not required for the initial release.
+- Google sign-in may be considered later if the church wants Workspace-based sign-on; it is not required for the initial release.
 
 ### 15.2 Final administration access model
 
@@ -966,9 +974,9 @@ Permanent deletion requires archived state, exact title/slug confirmation, curre
 
 ```text
 Administrator opens dashboard
-→ Redirected to Cognito managed authentication
-→ Cognito verifies identity and MFA
-→ Cognito issues signed tokens/session result
+→ Redirected to the approved managed authentication provider
+→ The provider verifies identity and MFA
+→ The provider issues signed tokens/session result
 → Server validates signature, issuer, audience, expiry, and token use
 → Server resolves application role from trusted claims/profile
 → Requested action is allowed or rejected
@@ -1106,18 +1114,18 @@ Preserve existing Vimeo, Facebook, SoundCloud, hosted-audio, and custom embed da
 
 ## 19. AWS Target Architecture
 
-The physical deployment must be chosen after inspecting the current AWS environment, traffic, operating budget, and repository. The logical target is:
+The physical deployment must be chosen after inspecting the current AWS environment, traffic, operating budget, and repository. Exact AWS services remain undecided; this is a provider-neutral logical target:
 
 ```mermaid
 flowchart TD
-    DNS["DNS and TLS"] --> Edge["CloudFront and web protections"]
+    DNS["DNS and TLS"] --> Edge["Static delivery and web protections"]
     Edge --> App["Astro and API runtime"]
-    App --> Cognito["Cognito User Pool"]
-    App --> RDS["Private RDS PostgreSQL"]
-    App --> S3["S3 assets"]
-    App --> Secrets["Secrets Manager or Parameter Store"]
-    Monitor["CloudWatch logs, metrics, and alerts"] --- App
-    Monitor --- RDS
+    App --> Identity["Managed identity provider"]
+    App --> Database["Protected PostgreSQL"]
+    App --> Assets["Managed asset storage"]
+    App --> Secrets["Managed secret storage"]
+    Monitor["Logs, metrics, and alerts"] --- App
+    Monitor --- Database
 ```
 
 ### 19.1 Deployment requirements
@@ -1151,7 +1159,7 @@ If the replacement initially deploys to existing EC2:
 
 - Separate AWS IAM identities; no shared root account.
 - Least-privilege IAM and application database roles.
-- MFA for AWS, Cognito administrators, GitHub, WordPress, Google, and YouTube.
+- MFA for AWS, the selected identity-provider administrators, GitHub, WordPress, Google, and YouTube.
 - Private GitHub repository if project work is non-public.
 - No secret may be committed even to a private repository.
 - HTTPS and secure response headers.
@@ -1319,7 +1327,7 @@ Target WCAG 2.2 AA practices:
 3. Implement create/edit/submit/withdraw/schedule/publish/unpublish/archive/restore workflows plus safeguarded permanent deletion from archived.
 4. Add server validation, audit logging, transactional relationship management, and concurrency protection.
 5. Complete local security and permission tests.
-6. After explicit authorisation, configure Cognito invite-only users/MFA and a verified claims adapter for protected staging.
+6. After explicit authorisation and provider selection, configure invite-only users/MFA and a verified claims adapter for protected staging.
 7. Add controlled administrator fields/previews for SEO title, description, social metadata/image, canonical path, and derived indexability; prohibit arbitrary head/meta/JSON-LD injection.
 8. Build and accept the responsive accessible local `/admin` dashboard using the portable contracts, with slug-change redirects and deletion redirect/gone decisions.
 
@@ -1332,7 +1340,7 @@ Target WCAG 2.2 AA practices:
 1. Replace runtime speaker joins with one nullable `speaker_id`; fail conversion on multi-speaker anomalies.
 2. Add reviewed transcript and ordered reviewed Q&A models with audit/provenance and approved-only lower-weight search.
 3. Derive readiness and block schedule/publish until one speaker, approved transcript, 5–10 approved Q&As, and controlled media are present.
-4. Add the exact 453/453 historical launch command, deterministic queue, safe draft contracts, idempotent local import receipts, dashboard progress/filters/checklist, and accessible six-step editor.
+4. Add deterministic inventory/readiness reporting, the enrichment queue, safe draft contracts, idempotent local import receipts, dashboard progress/filters/checklist, and accessible six-step editor. The former 453/453 launch interpretation is superseded by the 448-published-candidate gate.
 5. Render approved transcript and Q&A in initial server HTML; collapse transcript with native `<details>` without client fetch and never emit FAQ structured data automatically.
 
 **Verified local status:** Migration `0004`, rollback/reapply, importer rerun, repository/search/API/SSR, launch-gate, and dashboard tests pass on PostgreSQL 16.14 at the authorised loopback test target. The local three-record fixture remains intentionally incomplete. No real transcript/Q&A retrieval or production contact occurred.
@@ -1443,7 +1451,7 @@ Present the discovered schema, migration map, search-parity scope, and target sc
 | Existing EC2 reuse versus new managed runtime | Architecture decision | Phase 1 |
 | Event source of truth | Church decision | Before Phase 4 |
 | Need for recurring events | Church decision | Before Phase 4 |
-| Google federation through Cognito | Deferred | Optional future enhancement |
+| Google federation through the selected identity provider | Deferred | Optional future enhancement |
 | Backup retention and recovery objectives | Church/technical decision | Before production |
 | Launch window and rollback authority | Church decision | Before Phase 6 |
 
@@ -1460,7 +1468,7 @@ The first release is complete only when:
 - Public sermon pages and search meet the agreed current-site requirements.
 - Search is PostgreSQL-backed, indexed, paginated, permission-safe, and does not preload all sermons.
 - Every sermon has exactly one speaker; any multi-speaker source anomaly is reported without silent selection. Series, topics, books, and approved optional taxonomies migrate at their required cardinality.
-- All 453 included historical records pass the exact content gate: 453 speakers, 453 approved descriptions, 453 approved complete transcripts, 453 records with 5–10 approved ordered Q&As, valid metadata/media, and zero incomplete; pending records remain non-public.
+- All 448 currently published sermon candidates pass the content gate: one reconciled speaker, approved description, approved complete transcript, 5–10 approved ordered Q&As and valid required metadata/media. The five pending rows remain unpublished/non-blocking unless separately approved.
 - Required historic media and resources remain available.
 - Authorised users can safely manage the sermon lifecycle according to role.
 - Unauthorised users cannot access protected actions or draft data.
@@ -1488,7 +1496,7 @@ Build a staging-only vertical slice after discovery:
 2. Display a public sermon listing.
 3. Display a sermon detail page with speaker, series, scripture, media, and resources.
 4. Demonstrate PostgreSQL keyword search, taxonomy filters, date filtering, and pagination.
-5. Sign in through Cognito as a Content Manager.
+5. Sign in through the approved managed identity provider as an authorised administrator.
 6. Create and edit a draft sermon.
 7. Publish it and confirm it appears in public search.
 8. Archive and restore it.
@@ -1502,7 +1510,7 @@ This demonstration proves the architecture from legacy source through migration,
 
 Phase 3B.1a reuses `sermons.summary`, adds migration `0005`, and makes one approved description a permanent publication and launch criterion. The public SSR places the complete approved description below title/core metadata and before media, transcript and Q&A; it is visible, uncollapsed, escaped, and present without JavaScript. An approved explicit `seo_description` overrides metadata only, otherwise the approved visible description supplies deterministic description/social fallback. Search weights remain A title, B speaker/series/scripture/book, C approved description, and D body plus approved transcript/Q&A.
 
-The exact historical gate is 453 included, 453 sole speakers, 453 approved descriptions, 453 approved transcripts, 453 valid approved Q&A sets, 453 valid controlled-media records, 453 complete and zero incomplete. The current local anonymised fixture is intentionally incomplete and no real description, transcript or Q&A has been produced.
+The current public-launch gate covers the 448 published candidates and requires a sole reconciled speaker, approved description, approved transcript, valid approved Q&A set and controlled media for each. The five pending rows remain unpublished/non-blocking unless separately approved; all 453 rows remain part of migration inventory. The local anonymised fixture is intentionally incomplete.
 
 Phase 3C remains paused. The exact next milestone is **Phase 3B.2 - controlled historical description, transcript and Q&A production/review rehearsal**. It requires separate authorization for source/provider access, cost ceiling, privacy/retention terms, deterministic batches and retry/resume rules, reviewers/approvers, distinct quality rubrics for all three outputs, correction/audit evidence and rollback. Start with an approved anonymised/non-production rehearsal; do not contact a provider or produce any of the 453 real output sets under Phase 3B.1a.
 

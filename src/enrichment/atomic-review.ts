@@ -3,6 +3,7 @@ import { basename, dirname, resolve } from "node:path";
 import type { Pool, PoolClient } from "pg";
 import { z, type ZodType } from "zod";
 import { containsHtmlTag } from "../domain/content-readiness";
+import { authorisedLocalDatabaseName } from "../migration/local-database-safety";
 import {
   atomicReviewItemSetSha256,
   buildAtomicReviewItems,
@@ -71,6 +72,7 @@ async function parsePrivateJson<T>(path: string, schema: ZodType<T>, label: stri
 }
 
 async function verifyAtomicDatabase(client: PoolClient): Promise<void> {
+  const databaseName = authorisedLocalDatabaseName();
   const result = await client.query<{
     server_16: boolean;
     loopback: boolean;
@@ -83,14 +85,15 @@ async function verifyAtomicDatabase(client: PoolClient): Promise<void> {
        current_setting('server_version_num')::integer BETWEEN 160000 AND 169999 AS server_16,
        inet_server_addr() = '127.0.0.1'::inet AS loopback,
        inet_server_port() = 5432 AS port_5432,
-       current_database() = 'savinggrace_sermons_test' AS target_database,
+       current_database() = $1 AS target_database,
        version() LIKE 'PostgreSQL%' AS postgres_server,
        EXISTS (
          SELECT 1 FROM information_schema.columns
          WHERE table_schema = 'public'
            AND table_name = 'sermon_enrichment_review_items'
            AND column_name = 'item_identity_sha256'
-       ) AS atomic_columns`
+       ) AS atomic_columns`,
+    [databaseName]
   );
   if (!Object.values(result.rows[0] ?? {}).every(Boolean)) {
     throw new PunctuationWorkflowError(

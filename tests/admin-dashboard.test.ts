@@ -5,12 +5,15 @@ import {
   buildControlledMediaInputs,
   buildDeletionSeoDisposition,
   expectedPublicSermonUrl,
+  isResolvedReviewDecision,
+  unresolvedReviewQueue,
   shouldWarnAboutSlugChange
 } from "../src/admin/dashboard-model";
 
 describe("Phase 3B administration dashboard", () => {
   it("models lifecycle, safe media, slug warnings, and deletion SEO choices", () => {
     expect(allowedDashboardActions("archived")).toEqual(["restore"]);
+    expect(allowedDashboardActions("draft")).not.toContain("schedule");
     expect(allowedDashboardActions("published")).toEqual(["unpublish", "archive"]);
     expect(expectedPublicSermonUrl("grace-alone")).toBe(
       "https://www.savinggrace.org.au/sermons/grace-alone/"
@@ -38,6 +41,19 @@ describe("Phase 3B administration dashboard", () => {
       kind: "redirect",
       targetPath: "/sermons/replacement/"
     });
+  });
+
+  it("keeps resolved findings out of the active review queue", () => {
+    const items = [
+      { category: "caption_error", decisionStatus: "accepted" as const, id: "resolved" },
+      { category: "caption_error", decisionStatus: "pending" as const, id: "pending" },
+      { category: "name_or_scripture_reference", decisionStatus: "rejected" as const, id: "rejected" },
+      { category: "name_or_scripture_reference", decisionStatus: "corrected" as const, id: "corrected" }
+    ];
+    expect(isResolvedReviewDecision("accepted")).toBe(true);
+    expect(isResolvedReviewDecision("corrected")).toBe(true);
+    expect(unresolvedReviewQueue(items).map((item) => item.id)).toEqual(["pending", "rejected"]);
+    expect(unresolvedReviewQueue(items, "caption_error").map((item) => item.id)).toEqual(["pending"]);
   });
 
   it("contains the protected accessible shell and required workflows without a role selector", async () => {
@@ -82,9 +98,12 @@ describe("Phase 3B administration dashboard", () => {
     expect(client).toContain("Guided private review");
     expect(client).toContain("Identity and provenance");
     expect(client).toContain("Flagged review items");
-    expect(client).toContain("Next unresolved");
+    expect(client).toContain("Associated transcript wording");
     expect(client).toContain('id="review-item-category"');
-    expect(client).toContain('id="review-item-status"');
+    expect(client).not.toContain('id="review-item-status"');
+    expect(client).toContain("Resolved history");
+    expect(client).toContain("controls.forEach((control) => { control.disabled = true; })");
+    expect(client).not.toContain('id="scheduled-for"');
     expect(client).toContain("presentItemCount");
     expect(client).toContain("itemSetMatches");
     expect(client).toContain("supportingContext");
