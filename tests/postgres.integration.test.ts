@@ -191,7 +191,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     await pool.end();
   });
 
-  it("applies 0001-0011 and loads anonymised fixtures idempotently", async () => {
+  it("applies 0001-0012 and loads anonymised fixtures idempotently", async () => {
     const counts = await pool.query<{
       sermons: number;
       views: number;
@@ -320,6 +320,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   });
 
   it("aborts the one-speaker migration with affected IDs and cleanly reapplies", async () => {
+    await runSchema("rollback", "0012_description_semantic_runtime_provenance");
     await runSchema("rollback", "0011_description_semantic_relationships");
     await runSchema("rollback", "0010_zero_finding_guided_review");
     await runSchema("rollback", "0009_pilot_completion_safeguards");
@@ -365,6 +366,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     await runSchema("apply", "0009_pilot_completion_safeguards");
     await runSchema("apply", "0010_zero_finding_guided_review");
     await runSchema("apply", "0011_description_semantic_relationships");
+    await runSchema("apply", "0012_description_semantic_runtime_provenance");
     expect(
       (await pool.query("SELECT to_regclass('public.sermon_speakers') IS NULL AS removed")).rows[0]
     ).toEqual({ removed: true });
@@ -647,9 +649,13 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       documentPrefix: null,
       textNormalisation: "exact_utf8",
       modelIdentifier: "synthetic-fixed-vector-mechanics-v1",
+      modelRevision: "0".repeat(40),
       modelSha256: "1".repeat(64),
       tokenizerIdentifier: "synthetic-no-tokenizer-v1",
       tokenizerSha256: "2".repeat(64),
+      runtimeIdentifier: "synthetic-fixed-vector-runtime",
+      runtimeVersion: "1.0.0",
+      runtimePackageIntegrity: `sha512-${"A".repeat(86)}==`,
       pooling: "mean",
       normalisation: "l2_float32",
       truncationMaxTokens: 128,
@@ -828,12 +834,17 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         input_mode: string;
         query_prefix: string | null;
         document_prefix: string | null;
+        model_revision: string;
+        runtime_identifier: string;
+        runtime_version: string;
+        runtime_package_integrity: string;
         normalisation: string;
         dimensions: number;
         quality_status: string;
       }>(
         `SELECT input_field, input_mode, query_prefix, document_prefix,
-                normalisation, dimensions, quality_status
+                model_revision, runtime_identifier, runtime_version,
+                runtime_package_integrity, normalisation, dimensions, quality_status
          FROM description_semantic_builds`
       )).rows[0]!;
       expect(provenance).toMatchObject({
@@ -841,6 +852,10 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         input_mode: "symmetric_document",
         query_prefix: null,
         document_prefix: null,
+        model_revision: "0".repeat(40),
+        runtime_identifier: "synthetic-fixed-vector-runtime",
+        runtime_version: "1.0.0",
+        runtime_package_integrity: `sha512-${"A".repeat(86)}==`,
         normalisation: "l2_float32",
         dimensions: 3,
         quality_status: "approved"
@@ -2757,7 +2772,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
          (SELECT count(*)::integer FROM migration_records) AS content_records,
          (SELECT count(*)::integer FROM sermon_enrichment_draft_imports) AS draft_import_receipts`
     );
-    expect(before.rows[0]?.schema_receipts).toBe(11);
+    expect(before.rows[0]?.schema_receipts).toBe(12);
     expect(before.rows[0]?.content_records).toBe(5);
     expect(before.rows[0]?.draft_import_receipts).toBeGreaterThanOrEqual(0);
     await expect(runSchema("apply")).resolves.toEqual({
@@ -2765,7 +2780,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       outcome: "no_op",
       appliedMigrationIds: [],
       rolledBackMigrationIds: [],
-      journalReceiptCount: 11
+      journalReceiptCount: 12
     });
     expect((await pool.query<{
       schema_receipts: number;
@@ -2780,6 +2795,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   });
 
   it("applies only the pending canonical suffix from a valid partial journal", async () => {
+    await runSchema("rollback", "0012_description_semantic_runtime_provenance");
     await runSchema("rollback", "0011_description_semantic_relationships");
     await runSchema("rollback", "0010_zero_finding_guided_review");
     await runSchema("rollback", "0009_pilot_completion_safeguards");
@@ -2802,10 +2818,11 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         "0008_atomic_sermon_review_items",
         "0009_pilot_completion_safeguards",
         "0010_zero_finding_guided_review",
-        "0011_description_semantic_relationships"
+        "0011_description_semantic_relationships",
+        "0012_description_semantic_runtime_provenance"
       ],
       rolledBackMigrationIds: [],
-      journalReceiptCount: 11
+      journalReceiptCount: 12
     });
   });
 
@@ -2829,6 +2846,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       "UPDATE schema_migrations SET checksum_sha256 = $1 WHERE migration_order = 8",
       [eighth.checksumSha256]
     );
+    await runSchema("rollback", "0012_description_semantic_runtime_provenance");
     await runSchema("rollback", "0011_description_semantic_relationships");
     await runSchema("rollback", "0010_zero_finding_guided_review");
     await runSchema("rollback", "0009_pilot_completion_safeguards");
@@ -2881,6 +2899,8 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 10 });
     await expect(runSchema("apply", "0011_description_semantic_relationships"))
       .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 11 });
+    await expect(runSchema("apply", "0012_description_semantic_runtime_provenance"))
+      .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 12 });
   });
 
   it("refuses unjournalled objects and serialises concurrent fresh application", async () => {
@@ -2900,12 +2920,12 @@ integration("disposable PostgreSQL Phase 3B application", () => {
 
     const results = await Promise.all([runSchema("apply"), runSchema("apply")]);
     expect(results.map((result) => result.outcome).sort()).toEqual(["applied", "no_op"]);
-    expect(results.reduce((count, result) => count + result.appliedMigrationIds.length, 0)).toBe(11);
+    expect(results.reduce((count, result) => count + result.appliedMigrationIds.length, 0)).toBe(12);
     expect((await pool.query<{ receipts: number; distinct_receipts: number }>(
       `SELECT count(*)::integer AS receipts,
               count(DISTINCT migration_id)::integer AS distinct_receipts
        FROM schema_migrations`
-    )).rows[0]).toEqual({ receipts: 11, distinct_receipts: 11 });
+    )).rows[0]).toEqual({ receipts: 12, distinct_receipts: 12 });
 
     await expect(runSchema("rollback")).resolves.toMatchObject({
       outcome: "rolled_back",
@@ -2913,7 +2933,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     });
     await expect(runSchema("apply")).resolves.toMatchObject({
       outcome: "applied",
-      journalReceiptCount: 11
+      journalReceiptCount: 12
     });
   });
 });

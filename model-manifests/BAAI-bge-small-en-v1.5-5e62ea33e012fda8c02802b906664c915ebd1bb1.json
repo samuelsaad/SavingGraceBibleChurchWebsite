@@ -1,0 +1,113 @@
+{
+  "schemaVersion": "sgbc-approved-local-embedding-model-v1",
+  "model": {
+    "identifier": "BAAI/bge-small-en-v1.5",
+    "revision": "5e62ea33e012fda8c02802b906664c915ebd1bb1",
+    "license": "MIT",
+    "format": "unquantised ONNX",
+    "artifactSetSha256": "49ead429e2bd87a3edb4397ffba8ac621fad87f216c2527b915522a9fbdb1f8f"
+  },
+  "runtime": {
+    "identifier": "@huggingface/transformers",
+    "version": "4.2.0",
+    "license": "Apache-2.0",
+    "repository": "https://github.com/huggingface/transformers.js",
+    "registryTarball": "https://registry.npmjs.org/@huggingface/transformers/-/transformers-4.2.0.tgz",
+    "packageIntegrity": "sha512-8BRCoBMH0XsWaEIamuR0LrJGAfftgHAfb2Vrffy0VKlSAE/MnUJ5/h/zTfEP3fDIft+nk7TqB8xXEyABGitBjQ=="
+  },
+  "pipeline": {
+    "task": "feature-extraction",
+    "pooling": "cls",
+    "normalisation": "l2_float32",
+    "dimensions": 384,
+    "maximumInputTokens": 512,
+    "dtype": "fp32",
+    "queryPrefix": null,
+    "documentPrefix": null,
+    "batchSize": 8
+  },
+  "storage": {
+    "rootSetting": "DESCRIPTION_EMBEDDING_MODEL_ROOT",
+    "externalToRepository": true,
+    "remoteModelsAllowed": false
+  },
+  "files": [
+    {
+      "path": "1_Pooling/config.json",
+      "sourceUrl": "https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/5e62ea33e012fda8c02802b906664c915ebd1bb1/1_Pooling/config.json",
+      "redirectHosts": ["huggingface.co"],
+      "bytes": 190,
+      "sha256": "d1caf60c96f5fba2157c0c26b76d80818fad6cf0b8eb5e73ec372ff9818eba5c"
+    },
+    {
+      "path": "config_sentence_transformers.json",
+      "sourceUrl": "https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/5e62ea33e012fda8c02802b906664c915ebd1bb1/config_sentence_transformers.json",
+      "redirectHosts": ["huggingface.co"],
+      "bytes": 124,
+      "sha256": "940d5f50db195fa6e5e6a4f122c095f77880de259d74b14a65779ed48bdd7c56"
+    },
+    {
+      "path": "config.json",
+      "sourceUrl": "https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/5e62ea33e012fda8c02802b906664c915ebd1bb1/config.json",
+      "redirectHosts": ["huggingface.co"],
+      "bytes": 743,
+      "sha256": "094f8e891b932f2000c92cfc663bac4c62069f5d8af5b5278c4306aef3084750"
+    },
+    {
+      "path": "modules.json",
+      "sourceUrl": "https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/5e62ea33e012fda8c02802b906664c915ebd1bb1/modules.json",
+      "redirectHosts": ["huggingface.co"],
+      "bytes": 349,
+      "sha256": "84e40c8e006c9b1d6c122e02cba9b02458120b5fb0c87b746c41e0207cf642cf"
+    },
+    {
+      "path": "onnx/model.onnx",
+      "sourceUrl": "https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/5e62ea33e012fda8c02802b906664c915ebd1bb1/onnx/model.onnx",
+      "redirectHosts": ["us.aws.cdn.hf.co"],
+      "bytes": 133093490,
+      "sha256": "828e1496d7fabb79cfa4dcd84fa38625c0d3d21da474a00f08db0f559940cf35"
+    },
+    {
+      "path": "README.md",
+      "sourceUrl": "https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/5e62ea33e012fda8c02802b906664c915ebd1bb1/README.md",
+      "redirectHosts": ["huggingface.co"],
+      "bytes": 94783,
+      "sha256": "ddb964361a55c6e5dfca6361615854b260c9c960205d04c7520151aaa1d75837"
+    },
+    {
+      "path": "sentence_bert_config.json",
+      "sourceUrl": "https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/5e62ea33e012fda8c02802b906664c915ebd1bb1/sentence_bert_config.json",
+      "redirectHosts": ["huggingface.co"],
+      "bytes": 52,
+      "sha256": "84e39fda68ccbff05bfa723ae9c0e70e23e2ec373b76e0f8c6e71af72a693cbf"
+    },
+    {
+      "path": "special_tokens_map.json",
+      "sourceUrl": "https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/5e62ea33e012fda8c02802b906664c915ebd1bb1/special_tokens_map.json",
+      "redirectHosts": ["huggingface.co"],
+      "bytes": 125,
+      "sha256": "b6d346be366a7d1d48332dbc9fdf3bf8960b5d879522b7799ddba59e76237ee3"
+    },
+    {
+      "path": "tokenizer_config.json",
+      "sourceUrl": "https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/5e62ea33e012fda8c02802b906664c915ebd1bb1/tokenizer_config.json",
+      "redirectHosts": ["huggingface.co"],
+      "bytes": 366,
+      "sha256": "9261e7d79b44c8195c1cada2b453e55b00aeb81e907a6664974b4d7776172ab3"
+    },
+    {
+      "path": "tokenizer.json",
+      "sourceUrl": "https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/5e62ea33e012fda8c02802b906664c915ebd1bb1/tokenizer.json",
+      "redirectHosts": ["huggingface.co"],
+      "bytes": 711396,
+      "sha256": "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66"
+    },
+    {
+      "path": "vocab.txt",
+      "sourceUrl": "https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/5e62ea33e012fda8c02802b906664c915ebd1bb1/vocab.txt",
+      "redirectHosts": ["huggingface.co"],
+      "bytes": 231508,
+      "sha256": "07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3"
+    }
+  ]
+}

@@ -20,7 +20,8 @@ export type SchemaMigrationScope =
   | "0008_atomic_sermon_review_items"
   | "0009_pilot_completion_safeguards"
   | "0010_zero_finding_guided_review"
-  | "0011_description_semantic_relationships";
+  | "0011_description_semantic_relationships"
+  | "0012_description_semantic_runtime_provenance";
 
 interface SchemaMigrationDefinition {
   id: string;
@@ -209,6 +210,13 @@ export const schemaMigrationDefinitions: readonly SchemaMigrationDefinition[] = 
     ],
     addedFunctions: ["remove_stale_description_semantic_relationships()"],
     addedTriggers: ["sermons_remove_stale_description_semantics"]
+  },
+  {
+    id: "0012_description_semantic_runtime_provenance",
+    order: 12,
+    upPath: "db/migrations/0012_description_semantic_runtime_provenance.sql",
+    downPath: "db/migrations/0012_description_semantic_runtime_provenance.down.sql",
+    addedRelations: []
   }
 ] as const;
 

@@ -2,7 +2,7 @@
 
 > **LOCAL MODEL VERIFIED — NOT APPROVED FOR PRODUCTION CREATION**
 
-This is the reviewed migration-contract schema. It incorporates the completed read-only database inventory, Yang's approved inclusion/date/legacy decisions, the exact installed Advanced Sermons 3.7 plus Pro 2.2 source review, and Yang's final one-speaker/description/transcript/Q&A completeness decision. The ordered local SQL set is `0001`-`0011`. No production PostgreSQL object has been created.
+This is the reviewed migration-contract schema. It incorporates the completed read-only database inventory, Yang's approved inclusion/date/legacy decisions, the exact installed Advanced Sermons 3.7 plus Pro 2.2 source review, and Yang's final one-speaker/description/transcript/Q&A completeness decision. The ordered local SQL set is `0001`-`0012`. No production PostgreSQL object has been created.
 
 For this authorised milestone, migration and rollback verification ran only in one uniquely named `savinggrace_test_run_*` PostgreSQL 16 database on loopback port `5432`; the protected `savinggrace_sermons_test` pilot database was not selected or changed. Intended application relations, constraints, foreign keys, indexes, generated search vector, GIN index, `pgcrypto`, fixture loads, rollback and clean reapplication are covered by local verification. This is local evidence only and does not authorise production creation.
 
@@ -145,6 +145,8 @@ Current sermon PDFs, bulletins, and featured images are absent, so migration sho
 ### Description-only semantic relationship tables
 
 Migration `0011_description_semantic_relationships.sql` adds the private `sermon_description_semantic_eligibility` view, `description_semantic_builds` and `description_semantic_relationships`. The view is the shared published/non-deleted/approved/nonblank description predicate and projects only sermon identity, exact approved description and SHA-256. Builds retain full pipeline, model, tokenizer, pooling, normalisation, truncation, dimension, corpus, quality-policy and generation provenance. Relationships retain source/neighbour identities and description hashes, rank, raw float32 cosine score and generation time; they store no description/body, metadata or embedding vector.
+
+Migration `0012_description_semantic_runtime_provenance.sql` extends every future build with the immutable 40-hex model revision and exact runtime identifier, version and npm SHA-512 package integrity. The columns are mandatory and enter the application pipeline fingerprint; the migration fails closed rather than inventing provenance for a pre-existing build.
 
 Every build defaults to quality-pending and has no public adapter. A sermon trigger deletes inbound and outbound relationships on status, deletion, summary-approval or summary-text changes, while retrieval revalidates both eligible rows and hashes. The application replaces a complete build transactionally after rechecking the full corpus. This is exact pairwise comparison for the small corpus without pgvector, ANN indexes or an external store.
 

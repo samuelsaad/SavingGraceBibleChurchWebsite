@@ -1,6 +1,6 @@
 # Description-only Related Themes Foundation
 
-**Status:** Offline model-independent mechanics only; no model acquired, no real description embedded, no quality approval, no public feature
+**Status:** Verified external local model and locked adapter; synthetic inference only, no real description embedded, no quality approval, no public feature
 
 ## Boundary
 
@@ -35,37 +35,21 @@ An update trigger removes every inbound and outbound relationship involving a se
 - The current sermon is excluded, neighbours are unique, and equal scores use stable sermon-ID ordering.
 - A build-specific quality policy supplies a later evidence-backed minimum score and maximum result count. The foundation defines no universal threshold. Candidates below the supplied policy threshold are omitted rather than used to fill a quota.
 - Vectors remain in process memory only for scoring and are not persisted.
-- Stored relationships contain identities, both description hashes, build/pipeline provenance, rank, raw cosine score and generation time. Build provenance includes model/tokenizer identifiers and hashes, pooling, normalisation, truncation, dimensions, corpus version and quality-policy identity.
+- Stored relationships contain identities, both description hashes, build/pipeline provenance, rank, raw cosine score and generation time. Build provenance includes immutable model revision, model/tokenizer hashes, exact runtime version and registry integrity, pooling, normalisation, truncation, dimensions, corpus version and quality-policy identity.
 
 Every build starts `pending`. Retrieval requires `quality_status = 'approved'`, and no application method in this foundation grants that status. No semantic data is wired into the public API or renderer, so **Related themes** cannot appear publicly. Synthetic PostgreSQL tests mark only a disposable fixture build as approved to exercise the read gate.
 
-## Local model inspection result
+## Approved local model and runtime
 
-No approved embedding model, tokenizer, weight file, model runtime or project-specific private model directory was found. No download, package installation, model execution, API call or provider contact occurred. Deterministic fixed synthetic vectors test mechanics only and are not evidence of language understanding or recommendation quality.
+The acquired model is exactly `BAAI/bge-small-en-v1.5` at immutable revision `5e62ea33e012fda8c02802b906664c915ebd1bb1`, licensed MIT, using the unquantised `onnx/model.onnx`. Its approved SHA-256 is `828e1496d7fabb79cfa4dcd84fa38625c0d3d21da474a00f08db0f559940cf35`. The complete public filenames, immutable source URLs, redirect hosts, byte sizes and hashes are recorded in `model-manifests/BAAI-bge-small-en-v1.5-5e62ea33e012fda8c02802b906664c915ebd1bb1.json`.
 
-## Future model-acquisition request
+Model files remain outside the repository. `DESCRIPTION_EMBEDDING_MODEL_ROOT` must point to the exact external revision directory; no machine-specific path or `.env` file is committed. The adapter rejects a relative, unavailable, linked, repository-contained, incomplete, altered or unexpected model directory before runtime loading.
 
-**Request ID:** `description-embedding-model-acquisition-v1`
-**Candidate model:** `sentence-transformers/all-MiniLM-L6-v2`
-**Intended use:** symmetric English sentence/document embeddings for approved public descriptions only
-**Candidate license:** Apache-2.0, requiring primary-source verification before approval
-**Source domain:** `huggingface.co`, requiring separate explicit network/provider authorisation
-**Local destination:** ACL-restricted `C:\Users\samue\AppData\Local\SavingGraceBibleChurch\PrivateModels\description-embedding-v1`, outside Git and outside content/inventory storage
-**Text transmission:** none; approved descriptions must remain local
-**Operational cost:** no provider/billable inference; local CPU time only
-**Expected rebuild scale:** one offline pass over at most 453 descriptions plus exact pairwise comparison; timing must be measured on the approved runtime rather than asserted from synthetic vectors
+The runtime is exactly `@huggingface/transformers@4.2.0` with npm SHA-512 integrity locked in `package-lock.json`. Loading sets `env.allowRemoteModels = false`, enables only local files, points `env.localModelPath` to the configured external root, disables browser/filesystem caches, passes `local_files_only: true`, selects CPU plus `fp32`, and requests only `onnx/model.onnx`. Inference uses feature extraction, CLS pooling, L2 normalisation, 384 dimensions, the model-configured 512-token maximum and deterministic batches of eight. No query or document prefix is added.
 
-This request is intentionally not executable yet. Offline evidence does not establish an approved immutable upstream revision, exact runtime file set, byte sizes or trusted SHA-256 values. A later approval must provide and verify, before any download:
+The npm install used lifecycle scripts disabled. Required Windows x64 ONNX CPU binaries were already present in the integrity-locked package, and the dormant ONNX postinstall reported no Windows x64 download requirement. The runtime is server-only, has no public endpoint, is not imported by the public renderer, and does not ship model or vector data to a browser. See `local-embedding-model-acquisition.md` for verification and rollback controls.
 
-1. One immutable 40-hex upstream revision; floating branches/tags are forbidden.
-2. The minimal non-quantised weight file plus configuration, tokenizer vocabulary/model, tokenizer configuration, special-token mapping, pooling/module configuration and license/model-card files needed by the approved runtime.
-3. Exact expected byte size and SHA-256 for every file, derived from the immutable primary-source objects or an independently authenticated release manifest.
-4. A deterministic aggregate manifest hash over sorted `relative-path<TAB>bytes<TAB>sha256` records.
-5. Runtime dependency names, immutable versions, lockfile integrity, license review and an offline vulnerability scan. No Python/ONNX/Transformers runtime is selected by this foundation.
-6. Download limits, retry count, cost ceiling, retention, rollback and deletion rules.
-7. Post-download verification in a temporary ACL-restricted directory, followed by atomic promotion only after every file and aggregate hash passes; otherwise remove the rejected task-owned files.
-
-No model may be acquired until the unresolved immutable revision, exact files, sizes, hashes and runtime dependencies receive explicit approval. This prevents invented artifact evidence from becoming a supply-chain control.
+The synthetic acceptance test is a compatibility smoke test only. No real description was supplied and no real relationship was generated.
 
 ## Future human quality gate
 

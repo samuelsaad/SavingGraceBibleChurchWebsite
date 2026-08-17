@@ -12,6 +12,7 @@
     "preview": "cross-env ASTRO_TELEMETRY_DISABLED=1 astro preview",
     "check": "cross-env ASTRO_TELEMETRY_DISABLED=1 astro check",
     "test": "vitest run",
+    "test:model-local": "tsx scripts/local-model-acceptance.ts",
     "test:postgres": "tsx tests/postgres-test-runner.ts",
     "test:watch": "vitest",
     "migration:dry-run": "tsx src/migration/cli.ts --dry-run",
@@ -40,6 +41,7 @@
     "dashboard:local": "cross-env API_HOST=127.0.0.1 ENABLE_LOCAL_TEST_IDENTITIES=1 ENABLE_LOCAL_DASHBOARD=1 tsx src/server/local-api.ts"
   },
   "dependencies": {
+    "@huggingface/transformers": "4.2.0",
     "astro": "7.1.6",
     "pg": "8.22.0",
     "zod": "4.4.3"

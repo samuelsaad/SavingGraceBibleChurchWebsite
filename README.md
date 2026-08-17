@@ -10,7 +10,7 @@ Local Phase 3B.2 caption/enrichment rehearsal, Phase 3B.2b punctuation hardening
 - Parameterized PostgreSQL public sermon repository
 - Framework-independent `/api/v1/sermons` list/detail HTTP router
 - Server-rendered local public sermon archive/detail routes with legacy-compatible search and filters, stable pagination, metadata-related sermons, mapped `301`/`410` handling, and a published-only sermon sitemap
-- Offline model-independent description-only semantic foundation with exact float32 scoring, precomputed private relationships, shared public-eligibility/stale-removal guards, pending quality status, no model weights and no public **Related themes** output
+- Offline description-only semantic foundation with a verified external BAAI ONNX model, locked local-only Transformers.js adapter, exact float32 scoring, shared eligibility/stale-removal guards, pending quality status, no model files in Git and no public **Related themes** output
 - Provider-independent protected admin handlers with allowlisted local test identities
 - Final default-deny single-`admin` policy with no editor/contributor or ownership-based behaviour
 - Transactional create/update/relationship operations, explicit lifecycle transitions, audit, and row-version concurrency

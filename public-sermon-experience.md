@@ -46,7 +46,7 @@ The current schema has no manually curated related-sermon override and no approv
 
 This interim baseline is metadata-based; it is not description-based semantic similarity and must not be labelled **Related themes**. A future **Related themes** feature is explicitly deferred. If separately authorised, that score must use approved public sermon descriptions only: Scripture, title, series, speaker, topics and every other metadata field must not influence it. Scripture-based recommendations may remain separate and clearly labelled, for example **More on this passage**.
 
-The offline description-semantic foundation now defines the separate model/persistence contract, exact float32 mechanics, shared approval/publication eligibility and stale-data removal. No approved local model exists, no real description has been embedded, no build has passed human quality review, and semantic results are not wired to this public page or API. Missing or pending semantic data therefore produces no **Related themes** heading. See `description-related-themes-foundation.md`.
+The offline description-semantic foundation now has a verified external local model and locked server-only adapter alongside the separate persistence contract, exact float32 mechanics, shared approval/publication eligibility and stale-data removal. Only synthetic inference has run: no real description has been embedded, no build has passed human quality review, and semantic results are not wired to this public page or API. Missing or pending semantic data therefore produces no **Related themes** heading. See `description-related-themes-foundation.md`.
 
 ## Publication and privacy enforcement
 

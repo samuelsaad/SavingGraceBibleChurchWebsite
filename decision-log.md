@@ -222,6 +222,12 @@ The semantic recommendation mechanism is separate from keyword/structured search
 
 Use a model-independent symmetric document interface, L2-normalised float32 vectors, exact pairwise float32 cosine comparison and private precomputed relationships. Do not add pgvector, ANN indexes, quantisation, client vector files, an embedding endpoint or a provider runtime. One shared database eligibility view governs generation, persistence and retrieval. Description/status/approval/deletion changes remove inbound and outbound relationships, reads revalidate both current hashes, and a full rebuild replaces stale state even for an empty corpus. Every build retains complete pipeline/model/tokenizer/corpus/policy provenance and remains quality-pending until a later human gate; the public API and renderer remain unwired. No approved local model exists, so only synthetic fixed-vector mechanics are authorised. (`approved offline foundation; not quality-approved or production-authorised`)
 
+### D-128 - Locked external model for synthetic-only local verification
+
+Acquire only MIT-licensed `BAAI/bge-small-en-v1.5` at immutable revision `5e62ea33e012fda8c02802b906664c915ebd1bb1`, using the unquantised ONNX artifact with approved SHA-256 `828e1496d7fabb79cfa4dcd84fa38625c0d3d21da474a00f08db0f559940cf35`. Keep every model file outside Git and address the exact revision directory only through `DESCRIPTION_EMBEDDING_MODEL_ROOT`.
+
+Use only integrity-locked `@huggingface/transformers@4.2.0`, with lifecycle scripts disabled at installation. The server-only adapter disables remote models and caches, requires local files, CPU/FP32, feature extraction, CLS pooling, L2 float32 output, 384 dimensions, the model-configured 512-token limit, no prefixes and deterministic batching. Migration `0012` adds immutable model revision and exact runtime identity/version/integrity to build provenance and therefore the pipeline fingerprint. Only fictional synthetic acceptance text is authorised; the adapter remains unwired from public routes and real build execution. (`approved local acquisition and synthetic integration; not human-quality-approved, public or production-authorised`)
+
 ## Decisions still required
 
 - Final AWS runtime/adapter and production networking.

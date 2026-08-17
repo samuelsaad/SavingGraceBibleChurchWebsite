@@ -150,6 +150,20 @@ describe("PostgreSQL schema contract", () => {
     expect(down).toContain("DROP TABLE IF EXISTS description_semantic_builds");
   });
 
+  it("extends semantic provenance with immutable model and runtime evidence", async () => {
+    const [up, down] = await Promise.all([
+      readFile("db/migrations/0012_description_semantic_runtime_provenance.sql", "utf8"),
+      readFile("db/migrations/0012_description_semantic_runtime_provenance.down.sql", "utf8")
+    ]);
+    expect(up).toContain("ADD COLUMN model_revision");
+    expect(up).toContain("ADD COLUMN runtime_identifier");
+    expect(up).toContain("ADD COLUMN runtime_version");
+    expect(up).toContain("ADD COLUMN runtime_package_integrity");
+    expect(up).not.toMatch(/UPDATE\s+description_semantic_builds/i);
+    expect(down).toContain("DROP COLUMN IF EXISTS runtime_package_integrity");
+    expect(down).toContain("DROP COLUMN IF EXISTS model_revision");
+  });
+
   it("adds reversible atomic review identities without changing migration 0007", async () => {
     const [up, down] = await Promise.all([
       readFile("db/migrations/0008_atomic_sermon_review_items.sql", "utf8"),

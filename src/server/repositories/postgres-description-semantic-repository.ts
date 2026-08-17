@@ -128,13 +128,15 @@ export class PostgresDescriptionSemanticRepository implements DescriptionSemanti
         `INSERT INTO description_semantic_builds (
            build_fingerprint, pipeline_fingerprint, pipeline_version, input_field,
            input_mode, query_prefix, document_prefix, text_normalisation,
-           model_identifier, model_sha256, tokenizer_identifier, tokenizer_sha256,
+           model_identifier, model_revision, model_sha256,
+           tokenizer_identifier, tokenizer_sha256,
+           runtime_identifier, runtime_version, runtime_package_integrity,
            pooling, normalisation, truncation_max_tokens, dimensions,
            corpus_build_version, quality_policy_id, minimum_cosine_score,
            maximum_results, eligible_sermon_count, relationship_count, generated_at
          ) VALUES (
            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14,
-           $15, $16, $17, $18, $19, $20, $21, $22, $23
+           $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27
          ) RETURNING id`,
         [
           plan.buildFingerprint,
@@ -146,9 +148,13 @@ export class PostgresDescriptionSemanticRepository implements DescriptionSemanti
           plan.pipeline.documentPrefix,
           plan.pipeline.textNormalisation,
           plan.pipeline.modelIdentifier,
+          plan.pipeline.modelRevision,
           plan.pipeline.modelSha256,
           plan.pipeline.tokenizerIdentifier,
           plan.pipeline.tokenizerSha256,
+          plan.pipeline.runtimeIdentifier,
+          plan.pipeline.runtimeVersion,
+          plan.pipeline.runtimePackageIntegrity,
           plan.pipeline.pooling,
           plan.pipeline.normalisation,
           plan.pipeline.truncationMaxTokens,
