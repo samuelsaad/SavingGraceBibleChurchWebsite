@@ -1,7 +1,7 @@
 # Project Decision Log
 
-**Status:** Approved decisions through D-128; Phase 3B.2 administrator actions reconciled read-only on 17 August 2026
-**Authority:** `church-website-architecture-plan.md` plus Yang’s confirmed migration decisions
+**Status:** Approved decisions through D-129; Phase 3B.2 pilot explicitly accepted by Samuel Saad on 17 August 2026
+**Authority:** `church-website-architecture-plan.md` plus Yang’s confirmed migration decisions and Samuel Saad’s recorded project-owner decisions
 
 ## Evidence classifications
 
@@ -168,7 +168,7 @@ All successful outputs import as private drafts with structured source hash/file
 
 The provisional offline completion path is limited to exactly the two records that the committed Phase 3B.2 outcome identified as `manual_punctuation_required`; it rejects the already-successful record and every unknown record. Trusted source state defines identity. Playlist and tracking parameters do not change the canonical 11-character video identity.
 
-Source and cleaned text are normalised to Unicode NFC and tokenised independently on whitespace. Unicode punctuation is removed from within each token and the remaining text is case-folded; the resulting token count, boundaries, order and content must match exactly. Only punctuation, capitalisation and paragraph/line-break formatting may change. Stable non-overlapping chunks carry exact source ranges and source/output hashes, and deterministic whole-sermon reassembly is revalidated before any persistence. No-clobber paths, retained uncertainty/provenance, structured failures, exact-two scope and comprehensive fail-closed verification are mandatory. The authorised exact-two private processing and idempotent import completed with both sermons retained as drafts. Later administrator actions approved their content and completed their guided reviews without publishing them. Explicit whole-pilot acceptance remains outstanding. (`approved implementation contract; administrator review later completed`)
+Source and cleaned text are normalised to Unicode NFC and tokenised independently on whitespace. Unicode punctuation is removed from within each token and the remaining text is case-folded; the resulting token count, boundaries, order and content must match exactly. Only punctuation, capitalisation and paragraph/line-break formatting may change. Stable non-overlapping chunks carry exact source ranges and source/output hashes, and deterministic whole-sermon reassembly is revalidated before any persistence. No-clobber paths, retained uncertainty/provenance, structured failures, exact-two scope and comprehensive fail-closed verification are mandatory. The authorised exact-two private processing and idempotent import completed with both sermons retained as drafts. Later administrator actions approved their content and completed their guided reviews without publishing them. Samuel Saad subsequently accepted the bounded pilot under D-129. (`approved implementation contract; administrator review and bounded pilot acceptance completed later`)
 
 ### D-120 - Fail-closed schema migration journal
 
@@ -228,6 +228,12 @@ Acquire only MIT-licensed `BAAI/bge-small-en-v1.5` at immutable revision `5e62ea
 
 Use only integrity-locked `@huggingface/transformers@4.2.0`, with lifecycle scripts disabled at installation. The server-only adapter disables remote models and caches, requires local files, CPU/FP32, feature extraction, CLS pooling, L2 float32 output, 384 dimensions, the model-configured 512-token limit, no prefixes and deterministic batching. Migration `0012` adds immutable model revision and exact runtime identity/version/integrity to build provenance and therefore the pipeline fingerprint. Only fictional synthetic acceptance text is authorised; the adapter remains unwired from public routes and real build execution. (`approved local acquisition and synthetic integration; not human-quality-approved, public or production-authorised`)
 
+### D-129 - Explicit bounded acceptance of the Phase 3B.2 three-sermon pilot
+
+On 17 August 2026, Samuel Saad explicitly accepted the Phase 3B.2 three-sermon pilot as successfully completed. The accepted result demonstrates that the local private workflow can import existing caption files, prepare readable transcripts, generate description and Q&A drafts, support detailed administrator review and corrections, record explicit approvals and audit evidence, and keep all content private until publication is separately authorised.
+
+This acceptance applies only to the completed three-sermon pilot. It does not authorise processing any of the remaining 450 sermons; publishing the three pilot sermons; enabling **Related themes** publicly; accepting semantic recommendation quality; deploying or accessing production; or beginning Phase 3C. It is an explicit tracked human decision, not a database approval action and not authority for any later batch or public operation. (`explicit project-owner acceptance; documentation-only record`)
+
 ## Decisions still required
 
 - Final AWS runtime/adapter and production networking.
@@ -237,4 +243,4 @@ Use only integrity-locked `@huggingface/transformers@4.2.0`, with lifecycle scri
 - Approved runtime secret-provider integration before any future upgrade from `pg` 8 to `pg` 9, whose automatic `pgpass` support is deprecated.
 - Explicit read-only approval and access method for the fresh whole-site crawl and church-owned Search Console/analytics baseline.
 - Production canonical host/slash policy, any intentionally crawlable filter landing pages, and baseline-derived SEO performance/rollback thresholds.
-- Explicit acceptance or rejection of the bounded three-sermon pilot result. All three per-sermon dashboard reviews, content approvals and required Bible-book assignments are recorded as complete, but no whole-pilot acceptance field or audit action exists. Acceptance, workload evidence, the next exact allowlist/batch, reviewer/approver assignments and confirmed source identities/dates remain required before any of the remaining 450 sermons is processed.
+- Separate explicit authority for any processing beyond the accepted three-sermon pilot. D-129 grants no authority over the remaining 450 sermons, publication, public **Related themes**, semantic quality acceptance, production/deployment or Phase 3C.
