@@ -2,9 +2,9 @@
 
 > **LOCAL MODEL VERIFIED — NOT APPROVED FOR PRODUCTION CREATION**
 
-This is the reviewed migration-contract schema. It incorporates the completed read-only database inventory, Yang's approved inclusion/date/legacy decisions, the exact installed Advanced Sermons 3.7 plus Pro 2.2 source review, and Yang's final one-speaker/description/transcript/Q&A completeness decision. The ordered local SQL set is `0001`-`0008`. No production PostgreSQL object has been created.
+This is the reviewed migration-contract schema. It incorporates the completed read-only database inventory, Yang's approved inclusion/date/legacy decisions, the exact installed Advanced Sermons 3.7 plus Pro 2.2 source review, and Yang's final one-speaker/description/transcript/Q&A completeness decision. The ordered local SQL set is `0001`-`0011`. No production PostgreSQL object has been created.
 
-Migration and rollback verification is restricted to the authorised disposable PostgreSQL 16 database `savinggrace_sermons_test` on loopback port 5432. Intended application relations, constraints, foreign keys, indexes, generated search vector, GIN index, `pgcrypto`, fixture loads, rollback and clean reapplication are covered by local verification. This is local evidence only and does not authorise production creation.
+For this authorised milestone, migration and rollback verification ran only in one uniquely named `savinggrace_test_run_*` PostgreSQL 16 database on loopback port `5432`; the protected `savinggrace_sermons_test` pilot database was not selected or changed. Intended application relations, constraints, foreign keys, indexes, generated search vector, GIN index, `pgcrypto`, fixture loads, rollback and clean reapplication are covered by local verification. This is local evidence only and does not authorise production creation.
 
 ## Evidence-driven design conclusions
 
@@ -142,6 +142,12 @@ Current sermon PDFs, bulletins, and featured images are absent, so migration sho
 
 ## Migration, redirect, and warning tables
 
+### Description-only semantic relationship tables
+
+Migration `0011_description_semantic_relationships.sql` adds the private `sermon_description_semantic_eligibility` view, `description_semantic_builds` and `description_semantic_relationships`. The view is the shared published/non-deleted/approved/nonblank description predicate and projects only sermon identity, exact approved description and SHA-256. Builds retain full pipeline, model, tokenizer, pooling, normalisation, truncation, dimension, corpus, quality-policy and generation provenance. Relationships retain source/neighbour identities and description hashes, rank, raw float32 cosine score and generation time; they store no description/body, metadata or embedding vector.
+
+Every build defaults to quality-pending and has no public adapter. A sermon trigger deletes inbound and outbound relationships on status, deletion, summary-approval or summary-text changes, while retrieval revalidates both eligible rows and hashes. The application replaces a complete build transactionally after rechecking the full corpus. This is exact pairwise comparison for the small corpus without pgvector, ANN indexes or an external store.
+
 ### `schema_migrations`
 
 Runner-owned schema history, separate from source/content migration and draft-import receipts. Required fields are positive canonical order, unique canonical migration identity, lowercase SHA-256 checksum of the paired normalised up/down definitions, and database application timestamp. The runner accepts only an exact trusted prefix, uses an advisory lock, writes DDL and its receipt transactionally, removes the receipt transactionally with rollback, and never auto-baselines existing application objects.
@@ -181,7 +187,7 @@ Store run UUID, code/config version, start/end, source snapshot identity without
 
 ## Final schema objects and boundaries
 
-The ordered local migrations create `sermons` with its sole speaker foreign key; private `sermon_legacy_metrics`; `speakers`; `series`/`sermon_series_map`; transcripts, ordered Q&A, draft-import receipts, and readiness view; canonical Bible books and source book classifications; preserved source taxonomy terms/joins; scripture references plus immutable source rows; provider-normalised media plus private source-audit rows; nullable resources/assets; redirect/gone dispositions; migration runs/records/warnings; audit events; minimal sermon deletion tombstones; private enrichment provenance and guided-review state/items; and schema-validated namespaced sermon extensions. The runner creates and owns the separate `schema_migrations` journal.
+The ordered local migrations create `sermons` with its sole speaker foreign key; private `sermon_legacy_metrics`; `speakers`; `series`/`sermon_series_map`; transcripts, ordered Q&A, draft-import receipts, and readiness view; canonical Bible books and source book classifications; preserved source taxonomy terms/joins; scripture references plus immutable source rows; provider-normalised media plus private source-audit rows; nullable resources/assets; redirect/gone dispositions; migration runs/records/warnings; audit events; minimal sermon deletion tombstones; private enrichment provenance and guided-review state/items; description-only semantic eligibility/build/relationship structures; and schema-validated namespaced sermon extensions. The runner creates and owns the separate `schema_migrations` journal.
 
 Constraints include stable UUID identities, case-insensitive unique active slugs, explicit status/provider/outcome checks, unique join relationships, source-identity uniqueness, JSON object checks only for versioned controlled extension/embed configuration, timestamps, optimistic row versions, and indexes for visibility/date/filter joins. The full-text vector weights title highest, relationship terms next, summary next, and body lowest.
 

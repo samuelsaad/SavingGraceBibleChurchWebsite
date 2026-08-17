@@ -56,6 +56,7 @@ describe("server-rendered public sermon page", () => {
     expect(html).toContain(`meta name="description" content="${sermon.summary}"`);
     expect(html).toContain("Related sermons");
     expect(html).toContain("Related by same speaker");
+    expect(html).not.toContain("Related themes");
   });
 
   it("uses the controlled SEO override for metadata without changing visible description", () => {
@@ -80,5 +81,6 @@ describe("server-rendered public sermon page", () => {
     expect(html).not.toContain("Questions for reflection");
     expect(html).not.toContain("Watch or listen");
     expect(html).not.toContain("Related sermons");
+    expect(html).not.toContain("Related themes");
   });
 });

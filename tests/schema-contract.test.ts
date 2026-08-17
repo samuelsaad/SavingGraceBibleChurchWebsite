@@ -128,6 +128,28 @@ describe("PostgreSQL schema contract", () => {
     expect(down).toContain("zero_finding_review_rollback_refused_acknowledgement_evidence");
   });
 
+  it("stores only precomputed description-semantic provenance with shared eligibility and stale removal", async () => {
+    const [up, down] = await Promise.all([
+      readFile("db/migrations/0011_description_semantic_relationships.sql", "utf8"),
+      readFile("db/migrations/0011_description_semantic_relationships.down.sql", "utf8")
+    ]);
+    expect(up).toContain("CREATE VIEW sermon_description_semantic_eligibility");
+    expect(up).toContain("status = 'published'");
+    expect(up).toContain("summary_status = 'approved'");
+    expect(up).toContain("CREATE TABLE description_semantic_builds");
+    expect(up).toContain("CREATE TABLE description_semantic_relationships");
+    expect(up).toContain("input_field = 'approved_public_description'");
+    expect(up).toContain("input_mode = 'symmetric_document'");
+    expect(up).toContain("normalisation = 'l2_float32'");
+    expect(up).toContain("remove_stale_description_semantic_relationships");
+    expect(up).toContain("source_sermon_id = NEW.id");
+    expect(up).toContain("neighbour_sermon_id = NEW.id");
+    expect(up).not.toMatch(/\b(?:title|speaker|series|scripture|topic|transcript|question|answer)_text\b/i);
+    expect(up).not.toMatch(/CREATE EXTENSION\s+(?:vector|pgvector)/i);
+    expect(down).toContain("DROP TABLE IF EXISTS description_semantic_relationships");
+    expect(down).toContain("DROP TABLE IF EXISTS description_semantic_builds");
+  });
+
   it("adds reversible atomic review identities without changing migration 0007", async () => {
     const [up, down] = await Promise.all([
       readFile("db/migrations/0008_atomic_sermon_review_items.sql", "utf8"),

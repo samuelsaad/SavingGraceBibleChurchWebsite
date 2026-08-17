@@ -19,7 +19,8 @@ export type SchemaMigrationScope =
   | "0007_guided_sermon_review"
   | "0008_atomic_sermon_review_items"
   | "0009_pilot_completion_safeguards"
-  | "0010_zero_finding_guided_review";
+  | "0010_zero_finding_guided_review"
+  | "0011_description_semantic_relationships";
 
 interface SchemaMigrationDefinition {
   id: string;
@@ -195,6 +196,19 @@ export const schemaMigrationDefinitions: readonly SchemaMigrationDefinition[] = 
     upPath: "db/migrations/0010_zero_finding_guided_review.sql",
     downPath: "db/migrations/0010_zero_finding_guided_review.down.sql",
     addedRelations: []
+  },
+  {
+    id: "0011_description_semantic_relationships",
+    order: 11,
+    upPath: "db/migrations/0011_description_semantic_relationships.sql",
+    downPath: "db/migrations/0011_description_semantic_relationships.down.sql",
+    addedRelations: [
+      "sermon_description_semantic_eligibility",
+      "description_semantic_builds",
+      "description_semantic_relationships"
+    ],
+    addedFunctions: ["remove_stale_description_semantic_relationships()"],
+    addedTriggers: ["sermons_remove_stale_description_semantics"]
   }
 ] as const;
 

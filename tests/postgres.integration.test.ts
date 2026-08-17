@@ -69,7 +69,13 @@ import {
 import { LocalTestIdentityProvider } from "../src/server/auth/local-test-identity-provider";
 import { createApplicationApiRouter } from "../src/server/http/application-api-router";
 import { PostgresAdminSermonRepository } from "../src/server/repositories/postgres-admin-sermon-repository";
+import { PostgresDescriptionSemanticRepository } from "../src/server/repositories/postgres-description-semantic-repository";
 import { PostgresSermonRepository } from "../src/server/repositories/postgres-sermon-repository";
+import {
+  rebuildDescriptionSemanticRelationships,
+  type DescriptionEmbeddingModel,
+  type DescriptionSemanticPipeline
+} from "../src/semantic/description-related-themes";
 import { anonymisedAtomicManifest } from "./fixtures/atomic-review";
 
 const enabled = process.env.RUN_POSTGRES_INTEGRATION === "1";
@@ -185,7 +191,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     await pool.end();
   });
 
-  it("applies 0001-0010 and loads anonymised fixtures idempotently", async () => {
+  it("applies 0001-0011 and loads anonymised fixtures idempotently", async () => {
     const counts = await pool.query<{
       sermons: number;
       views: number;
@@ -314,6 +320,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   });
 
   it("aborts the one-speaker migration with affected IDs and cleanly reapplies", async () => {
+    await runSchema("rollback", "0011_description_semantic_relationships");
     await runSchema("rollback", "0010_zero_finding_guided_review");
     await runSchema("rollback", "0009_pilot_completion_safeguards");
     await runSchema("rollback", "0008_atomic_sermon_review_items");
@@ -357,6 +364,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     await runSchema("apply", "0008_atomic_sermon_review_items");
     await runSchema("apply", "0009_pilot_completion_safeguards");
     await runSchema("apply", "0010_zero_finding_guided_review");
+    await runSchema("apply", "0011_description_semantic_relationships");
     expect(
       (await pool.query("SELECT to_regclass('public.sermon_speakers') IS NULL AS removed")).rows[0]
     ).toEqual({ removed: true });
@@ -594,6 +602,262 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     }
 
     expect(await repository.findPublishedBySlug("an-anonymised-pending-sermon")).toBeNull();
+  });
+
+  it("precomputes description-only semantic relationships with eligibility, provenance, quality and stale-data gates", async () => {
+    const semanticRepository = new PostgresDescriptionSemanticRepository(pool);
+    const ids = {
+      source: "a1000000-0000-4000-8000-000000000001",
+      neighbour: "a1000000-0000-4000-8000-000000000002",
+      weak: "a1000000-0000-4000-8000-000000000003",
+      draft: "a2000000-0000-4000-8000-000000000001",
+      pending: "a2000000-0000-4000-8000-000000000002",
+      scheduled: "a2000000-0000-4000-8000-000000000003",
+      unpublished: "a2000000-0000-4000-8000-000000000004",
+      archived: "a2000000-0000-4000-8000-000000000005",
+      deleted: "a2000000-0000-4000-8000-000000000006",
+      unapproved: "a2000000-0000-4000-8000-000000000007",
+      blank: "a2000000-0000-4000-8000-000000000008"
+    } as const;
+    const descriptions = {
+      source: "An anonymised approved description reflects on patient hope, faithful endurance, and compassionate care in a wholly synthetic example.",
+      neighbour: "A separate anonymised approved description considers enduring hope, steady faith, and caring service in a synthetic congregation.",
+      weak: "This anonymised approved description discusses an intentionally unrelated mechanical fixture without any real sermon or private material.",
+      changed: "This changed anonymised approved description reflects on hope and compassionate care using only deterministic synthetic wording.",
+      ineligible: "This anonymised description is long enough for lifecycle constraints but belongs to a deliberately ineligible synthetic sermon record."
+    };
+    const rows = [
+      [ids.source, "Synthetic semantic source", "synthetic-semantic-source", "published", descriptions.source, "approved", null],
+      [ids.neighbour, "Synthetic semantic neighbour", "synthetic-semantic-neighbour", "published", descriptions.neighbour, "approved", null],
+      [ids.weak, "Synthetic weak candidate", "synthetic-weak-candidate", "published", descriptions.weak, "approved", null],
+      [ids.draft, "Synthetic draft", "synthetic-semantic-draft", "draft", descriptions.ineligible, "approved", null],
+      [ids.pending, "Synthetic pending", "synthetic-semantic-pending", "pending", descriptions.ineligible, "approved", null],
+      [ids.scheduled, "Synthetic scheduled", "synthetic-semantic-scheduled", "scheduled", descriptions.ineligible, "approved", null],
+      [ids.unpublished, "Synthetic unpublished", "synthetic-semantic-unpublished", "unpublished", descriptions.ineligible, "approved", null],
+      [ids.archived, "Synthetic archived", "synthetic-semantic-archived", "archived", descriptions.ineligible, "approved", null],
+      [ids.deleted, "Synthetic deleted", "synthetic-semantic-deleted", "published", descriptions.ineligible, "approved", "2026-08-17T00:00:00.000Z"],
+      [ids.unapproved, "Synthetic unapproved", "synthetic-semantic-unapproved", "published", descriptions.ineligible, "draft", null],
+      [ids.blank, "Synthetic blank", "synthetic-semantic-blank", "published", null, "missing", null]
+    ] as const;
+    const pipeline: DescriptionSemanticPipeline = {
+      pipelineVersion: "description-only-semantic-v1",
+      inputField: "approved_public_description",
+      inputMode: "symmetric_document",
+      queryPrefix: null,
+      documentPrefix: null,
+      textNormalisation: "exact_utf8",
+      modelIdentifier: "synthetic-fixed-vector-mechanics-v1",
+      modelSha256: "1".repeat(64),
+      tokenizerIdentifier: "synthetic-no-tokenizer-v1",
+      tokenizerSha256: "2".repeat(64),
+      pooling: "mean",
+      normalisation: "l2_float32",
+      truncationMaxTokens: 128,
+      dimensions: 3
+    };
+    const policy = {
+      corpusBuildVersion: "synthetic-postgres-corpus-v1",
+      qualityPolicyId: "synthetic-mechanics-threshold-v1",
+      minimumCosineScore: 0.8,
+      maximumResults: 3
+    };
+    const vectors = new Map<string, Float32Array>([
+      [descriptions.source, new Float32Array([1, 0, 0])],
+      [descriptions.neighbour, new Float32Array([0.9, 0.1, 0])],
+      [descriptions.changed, new Float32Array([0.95, 0.05, 0])],
+      [descriptions.weak, new Float32Array([0, 1, 0])]
+    ]);
+    const model: DescriptionEmbeddingModel = {
+      async embedApprovedDescriptions(values) {
+        return values.map((value) => vectors.get(value) ?? new Float32Array([0, 0, 1]));
+      }
+    };
+    const insertedIds = Object.values(ids);
+    try {
+      for (const [id, title, slug, status, summary, summaryStatus, deletedAt] of rows) {
+        const approved = summaryStatus === "approved";
+        await pool.query(
+          `INSERT INTO sermons (
+             id, title, slug, summary, status, service_date, published_at,
+             scheduled_for, deleted_at, summary_status, summary_source_kind,
+             summary_created_at, summary_updated_at, summary_reviewed_by_subject,
+             summary_approved_by_subject, summary_reviewed_at, summary_approved_at
+           ) VALUES (
+             $1, $2, $3, $4, $5, '2026-08-17',
+             CASE WHEN $5 = 'published' THEN now() ELSE NULL END,
+             CASE WHEN $5 = 'scheduled' THEN now() + interval '1 day' ELSE NULL END,
+             $7, $6, 'manual',
+             CASE WHEN $4::text IS NOT NULL THEN now() ELSE NULL END,
+             CASE WHEN $4::text IS NOT NULL THEN now() ELSE NULL END,
+             CASE WHEN $8 THEN 'synthetic-test' ELSE NULL END,
+             CASE WHEN $8 THEN 'synthetic-test' ELSE NULL END,
+             CASE WHEN $8 THEN now() ELSE NULL END,
+             CASE WHEN $8 THEN now() ELSE NULL END
+           )`,
+          [id, title, slug, summary, status, summaryStatus, deletedAt, approved]
+        );
+      }
+
+      const eligibleIds = (await semanticRepository.listEligibleApprovedDescriptions())
+        .map((source) => source.sermonId);
+      expect(eligibleIds).toEqual(expect.arrayContaining([ids.source, ids.neighbour, ids.weak]));
+      for (const ineligibleId of [
+        ids.draft, ids.pending, ids.scheduled, ids.unpublished, ids.archived,
+        ids.deleted, ids.unapproved, ids.blank
+      ]) {
+        expect(eligibleIds).not.toContain(ineligibleId);
+      }
+
+      const firstPlan = await rebuildDescriptionSemanticRelationships({
+        store: semanticRepository,
+        model,
+        pipeline,
+        policy,
+        generatedAt: new Date("2026-08-17T00:00:00.000Z")
+      });
+      expect(await semanticRepository.listQualityApprovedRelated({
+        sourceSermonId: ids.source,
+        pipelineFingerprint: firstPlan.pipelineFingerprint,
+        corpusBuildVersion: policy.corpusBuildVersion,
+        limit: 3
+      })).toEqual([]);
+      await pool.query(
+        `UPDATE description_semantic_builds
+         SET quality_status = 'approved',
+             quality_approved_by_subject = 'synthetic-test-only',
+             quality_approved_at = now()`
+      );
+      const selectedBeforeMetadata = await semanticRepository.listQualityApprovedRelated({
+        sourceSermonId: ids.source,
+        pipelineFingerprint: firstPlan.pipelineFingerprint,
+        corpusBuildVersion: policy.corpusBuildVersion,
+        limit: 3
+      });
+      expect(selectedBeforeMetadata.map((item) => item.neighbourSermonId)).toEqual([ids.neighbour]);
+
+      const metadata = (await pool.query<{
+        speaker_id: string;
+        series_id: string;
+        source_term_id: string;
+        book_id: string;
+      }>(
+        `SELECT
+           (SELECT id FROM speakers ORDER BY id LIMIT 1) AS speaker_id,
+           (SELECT id FROM series ORDER BY id LIMIT 1) AS series_id,
+           (SELECT id FROM source_taxonomy_terms ORDER BY id LIMIT 1) AS source_term_id,
+           (SELECT id FROM book_classifications WHERE review_status = 'approved' ORDER BY id LIMIT 1) AS book_id`
+      )).rows[0]!;
+      await pool.query(
+        "UPDATE sermons SET title = 'Changed synthetic metadata title', service_date = '2030-12-31', speaker_id = $2 WHERE id = $1",
+        [ids.neighbour, metadata.speaker_id]
+      );
+      await pool.query("INSERT INTO sermon_series_map (sermon_id, series_id) VALUES ($1, $2)", [ids.neighbour, metadata.series_id]);
+      await pool.query("INSERT INTO sermon_source_terms (sermon_id, source_taxonomy_term_id) VALUES ($1, $2)", [ids.neighbour, metadata.source_term_id]);
+      await pool.query("INSERT INTO sermon_book_classifications (sermon_id, book_classification_id) VALUES ($1, $2)", [ids.neighbour, metadata.book_id]);
+      await pool.query(
+        `INSERT INTO scripture_references (sermon_id, display_text, display_order, parse_status)
+         VALUES ($1, 'Synthetic changed reference', 0, 'curated')`,
+        [ids.neighbour]
+      );
+      expect(await semanticRepository.listQualityApprovedRelated({
+        sourceSermonId: ids.source,
+        pipelineFingerprint: firstPlan.pipelineFingerprint,
+        corpusBuildVersion: policy.corpusBuildVersion,
+        limit: 3
+      })).toEqual(selectedBeforeMetadata);
+
+      await pool.query(
+        `UPDATE sermons
+         SET summary = $2, summary_updated_at = now(), summary_row_version = summary_row_version + 1
+         WHERE id = $1`,
+        [ids.neighbour, descriptions.changed]
+      );
+      expect((await pool.query<{ count: number }>(
+        `SELECT count(*)::integer AS count
+         FROM description_semantic_relationships
+         WHERE source_sermon_id = $1 OR neighbour_sermon_id = $1`,
+        [ids.neighbour]
+      )).rows[0]).toEqual({ count: 0 });
+
+      const changedPlan = await rebuildDescriptionSemanticRelationships({
+        store: semanticRepository,
+        model,
+        pipeline,
+        policy,
+        generatedAt: new Date("2026-08-17T01:00:00.000Z")
+      });
+      expect(changedPlan.buildFingerprint).not.toBe(firstPlan.buildFingerprint);
+      await pool.query(
+        `UPDATE description_semantic_builds
+         SET quality_status = 'approved',
+             quality_approved_by_subject = 'synthetic-test-only',
+             quality_approved_at = now()`
+      );
+      expect((await semanticRepository.listQualityApprovedRelated({
+        sourceSermonId: ids.source,
+        pipelineFingerprint: changedPlan.pipelineFingerprint,
+        corpusBuildVersion: policy.corpusBuildVersion,
+        limit: 3
+      })).map((item) => item.neighbourSermonId)).toEqual([ids.neighbour]);
+
+      await pool.query(
+        `UPDATE sermons
+         SET summary_status = 'draft',
+             summary_approved_by_subject = NULL,
+             summary_approved_at = NULL
+         WHERE id = $1`,
+        [ids.neighbour]
+      );
+      const request = {
+        sourceSermonId: ids.source,
+        pipelineFingerprint: changedPlan.pipelineFingerprint,
+        corpusBuildVersion: policy.corpusBuildVersion,
+        limit: 3
+      };
+      expect(await semanticRepository.listQualityApprovedRelated(request)).toEqual([]);
+      expect(await semanticRepository.listQualityApprovedRelated(request)).toEqual([]);
+      expect((await pool.query<{ count: number }>(
+        `SELECT count(*)::integer AS count
+         FROM description_semantic_relationships
+         WHERE source_sermon_id = $1 OR neighbour_sermon_id = $1`,
+        [ids.neighbour]
+      )).rows[0]).toEqual({ count: 0 });
+
+      const provenance = (await pool.query<{
+        input_field: string;
+        input_mode: string;
+        query_prefix: string | null;
+        document_prefix: string | null;
+        normalisation: string;
+        dimensions: number;
+        quality_status: string;
+      }>(
+        `SELECT input_field, input_mode, query_prefix, document_prefix,
+                normalisation, dimensions, quality_status
+         FROM description_semantic_builds`
+      )).rows[0]!;
+      expect(provenance).toMatchObject({
+        input_field: "approved_public_description",
+        input_mode: "symmetric_document",
+        query_prefix: null,
+        document_prefix: null,
+        normalisation: "l2_float32",
+        dimensions: 3,
+        quality_status: "approved"
+      });
+      const relationshipColumns = (await pool.query<{ column_name: string }>(
+        `SELECT column_name FROM information_schema.columns
+         WHERE table_name = 'description_semantic_relationships'
+         ORDER BY column_name`
+      )).rows.map((row) => row.column_name);
+      expect(relationshipColumns).not.toEqual(expect.arrayContaining([
+        "description", "title", "scripture", "speaker", "series", "topics",
+        "body", "transcript", "question", "answer", "embedding"
+      ]));
+    } finally {
+      await pool.query("DELETE FROM description_semantic_builds");
+      await pool.query("DELETE FROM sermons WHERE id = ANY($1::uuid[])", [insertedIds]);
+    }
   });
 
   it("exports deterministic work and imports enrichment drafts idempotently without approval", async () => {
@@ -2466,7 +2730,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     expect((await route(new Request("http://127.0.0.1/api/v1/admin/audit", { headers: { "x-local-identity": "admin" } }))).status).toBe(200);
   });
 
-  it("keeps eight schema receipts separate from content-import receipts and verifies a no-op", async () => {
+  it("keeps schema receipts separate from content-import receipts and verifies a no-op", async () => {
     const migrations = await loadSchemaMigrations();
     const journal = await pool.query<{
       migration_order: number;
@@ -2493,7 +2757,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
          (SELECT count(*)::integer FROM migration_records) AS content_records,
          (SELECT count(*)::integer FROM sermon_enrichment_draft_imports) AS draft_import_receipts`
     );
-    expect(before.rows[0]?.schema_receipts).toBe(10);
+    expect(before.rows[0]?.schema_receipts).toBe(11);
     expect(before.rows[0]?.content_records).toBe(5);
     expect(before.rows[0]?.draft_import_receipts).toBeGreaterThanOrEqual(0);
     await expect(runSchema("apply")).resolves.toEqual({
@@ -2501,7 +2765,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       outcome: "no_op",
       appliedMigrationIds: [],
       rolledBackMigrationIds: [],
-      journalReceiptCount: 10
+      journalReceiptCount: 11
     });
     expect((await pool.query<{
       schema_receipts: number;
@@ -2516,6 +2780,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   });
 
   it("applies only the pending canonical suffix from a valid partial journal", async () => {
+    await runSchema("rollback", "0011_description_semantic_relationships");
     await runSchema("rollback", "0010_zero_finding_guided_review");
     await runSchema("rollback", "0009_pilot_completion_safeguards");
     await runSchema("rollback", "0008_atomic_sermon_review_items");
@@ -2536,10 +2801,11 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         "0007_guided_sermon_review",
         "0008_atomic_sermon_review_items",
         "0009_pilot_completion_safeguards",
-        "0010_zero_finding_guided_review"
+        "0010_zero_finding_guided_review",
+        "0011_description_semantic_relationships"
       ],
       rolledBackMigrationIds: [],
-      journalReceiptCount: 10
+      journalReceiptCount: 11
     });
   });
 
@@ -2563,6 +2829,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       "UPDATE schema_migrations SET checksum_sha256 = $1 WHERE migration_order = 8",
       [eighth.checksumSha256]
     );
+    await runSchema("rollback", "0011_description_semantic_relationships");
     await runSchema("rollback", "0010_zero_finding_guided_review");
     await runSchema("rollback", "0009_pilot_completion_safeguards");
 
@@ -2612,6 +2879,8 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 9 });
     await expect(runSchema("apply", "0010_zero_finding_guided_review"))
       .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 10 });
+    await expect(runSchema("apply", "0011_description_semantic_relationships"))
+      .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 11 });
   });
 
   it("refuses unjournalled objects and serialises concurrent fresh application", async () => {
@@ -2631,12 +2900,12 @@ integration("disposable PostgreSQL Phase 3B application", () => {
 
     const results = await Promise.all([runSchema("apply"), runSchema("apply")]);
     expect(results.map((result) => result.outcome).sort()).toEqual(["applied", "no_op"]);
-    expect(results.reduce((count, result) => count + result.appliedMigrationIds.length, 0)).toBe(10);
+    expect(results.reduce((count, result) => count + result.appliedMigrationIds.length, 0)).toBe(11);
     expect((await pool.query<{ receipts: number; distinct_receipts: number }>(
       `SELECT count(*)::integer AS receipts,
               count(DISTINCT migration_id)::integer AS distinct_receipts
        FROM schema_migrations`
-    )).rows[0]).toEqual({ receipts: 10, distinct_receipts: 10 });
+    )).rows[0]).toEqual({ receipts: 11, distinct_receipts: 11 });
 
     await expect(runSchema("rollback")).resolves.toMatchObject({
       outcome: "rolled_back",
@@ -2644,7 +2913,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     });
     await expect(runSchema("apply")).resolves.toMatchObject({
       outcome: "applied",
-      journalReceiptCount: 10
+      journalReceiptCount: 11
     });
   });
 });

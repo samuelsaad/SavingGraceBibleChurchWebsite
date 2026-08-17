@@ -216,6 +216,12 @@ Related sermons use published/non-deleted metadata only: shared series 100, exac
 
 This is an interim metadata-based baseline, not description-based semantic similarity, and it must not be labelled **Related themes**. A future **Related themes** score is explicitly deferred and, if separately authorised, must use approved public sermon descriptions only; Scripture, title, series, speaker, topics and all other metadata must not influence that score. Scripture-based recommendations may remain as a separate clearly labelled feature such as **More on this passage**. (`approved local implementation decision; isolated PostgreSQL 16 integration verified; production runtime remains gated`)
 
+### D-127 - Description-only Related themes foundation
+
+The semantic recommendation mechanism is separate from keyword/structured search and D-126 metadata recommendations. Its only model input is the exact approved public `sermons.summary`; title, Scripture, canonical book, speaker, series, topics, body, transcript, Q&A, dates, keywords, synonyms and all other metadata are excluded from embedding and scoring. Metadata may be displayed only after neighbour identities are selected. `Romans 8` and every other visitor query remain on the existing PostgreSQL keyword/structured-reference path.
+
+Use a model-independent symmetric document interface, L2-normalised float32 vectors, exact pairwise float32 cosine comparison and private precomputed relationships. Do not add pgvector, ANN indexes, quantisation, client vector files, an embedding endpoint or a provider runtime. One shared database eligibility view governs generation, persistence and retrieval. Description/status/approval/deletion changes remove inbound and outbound relationships, reads revalidate both current hashes, and a full rebuild replaces stale state even for an empty corpus. Every build retains complete pipeline/model/tokenizer/corpus/policy provenance and remains quality-pending until a later human gate; the public API and renderer remain unwired. No approved local model exists, so only synthetic fixed-vector mechanics are authorised. (`approved offline foundation; not quality-approved or production-authorised`)
+
 ## Decisions still required
 
 - Final AWS runtime/adapter and production networking.
