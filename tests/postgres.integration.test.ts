@@ -408,12 +408,13 @@ integration("disposable PostgreSQL Phase 3B application", () => {
        WHERE id = $1`,
       [searchableId, approvedDescription]
     );
-    const draftDescriptionId = (
-      await pool.query<{ id: string }>(
-        "SELECT id FROM sermons WHERE status = 'published' AND id <> $1 ORDER BY id LIMIT 1",
+    const draftDescription = (
+      await pool.query<{ id: string; slug: string; body: string | null }>(
+        "SELECT id, slug, body FROM sermons WHERE status = 'published' AND id <> $1 ORDER BY id LIMIT 1",
         [searchableId]
       )
-    ).rows[0]!.id;
+    ).rows[0]!;
+    const draftDescriptionId = draftDescription.id;
     await pool.query(
       `UPDATE sermons
        SET summary = 'This private draft contains draftonlydescriptiontoken and remains unavailable to public response and search consumers.',
@@ -464,6 +465,37 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         publicSermonListQuerySchema.parse({ query: "draftonlydescriptiontoken" })
       )
     ).toMatchObject({ data: [], totalItems: 0 });
+    await pool.query(
+      `INSERT INTO sermon_transcripts (sermon_id, body_text, status, source_kind)
+       VALUES ($1, 'A private draft transcript with privatetranscripttoken.', 'draft', 'manual')`,
+      [draftDescriptionId]
+    );
+    await pool.query(
+      `INSERT INTO sermon_question_answers (
+         sermon_id, question_text, answer_text, display_order, status, source_kind
+       ) VALUES ($1, 'A private draft question?', 'privatequestiontoken', 1, 'draft', 'manual')`,
+      [draftDescriptionId]
+    );
+    try {
+      expect(
+        await repository.listPublished(
+          publicSermonListQuerySchema.parse({ query: "privatetranscripttoken" })
+        )
+      ).toMatchObject({ data: [], totalItems: 0 });
+      expect(
+        await repository.listPublished(
+          publicSermonListQuerySchema.parse({ query: "privatequestiontoken" })
+        )
+      ).toMatchObject({ data: [], totalItems: 0 });
+      expect(await repository.findPublishedBySlug(draftDescription.slug)).toMatchObject({
+        summary: null,
+        transcript: null,
+        questionAnswers: []
+      });
+    } finally {
+      await pool.query("DELETE FROM sermon_question_answers WHERE sermon_id = $1", [draftDescriptionId]);
+      await pool.query("DELETE FROM sermon_transcripts WHERE sermon_id = $1", [draftDescriptionId]);
+    }
     expect(
       (
         await repository.listPublished(
@@ -486,6 +518,82 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     expect(publicList.data.find((item) => item.id === searchableId)?.summary).toBe(approvedDescription);
     expect(publicList.data.find((item) => item.id === draftDescriptionId)?.summary).toBeNull();
     expect(JSON.stringify(publicList)).not.toMatch(/transcript|questionAnswers|draftonlydescriptiontoken/);
+
+    await pool.query("UPDATE sermons SET body = 'An anonymised lower-weight body mentions grace.' WHERE id = $1", [draftDescriptionId]);
+    try {
+      const ranked = await repository.listPublished(
+        publicSermonListQuerySchema.parse({ query: "grace", pageSize: 50 })
+      );
+      expect(ranked.data[0]?.id).toBe(searchableId);
+    } finally {
+      await pool.query("UPDATE sermons SET body = $2 WHERE id = $1", [draftDescriptionId, draftDescription.body]);
+    }
+
+    const filterOptions = await repository.listPublishedFilterOptions();
+    expect(filterOptions.speakers.map((item) => item.slug)).toEqual([
+      "example-speaker",
+      "second-speaker"
+    ]);
+    expect(filterOptions.series.map((item) => item.slug)).toEqual([
+      "example-series",
+      "second-example-series"
+    ]);
+    expect(filterOptions.passages.map((item) => item.slug)).toEqual([
+      "psalm-13",
+      "romans-8-1-4"
+    ]);
+    expect(filterOptions.books.map((item) => item.slug)).toEqual(["psalms", "romans"]);
+    expect(JSON.stringify(filterOptions)).not.toContain("an-anonymised-pending-sermon");
+
+    const sitemapEntries = await repository.listPublishedSitemapEntries();
+    expect(sitemapEntries.map((item) => item.slug).sort()).toEqual([
+      "grace-for-an-anonymised-congregation",
+      "hope-in-an-anonymised-trial"
+    ]);
+    expect(JSON.stringify(sitemapEntries)).not.toContain("pending");
+  });
+
+  it("ranks deterministic related sermons without duplicates or private rows", async () => {
+    const repository = new PostgresSermonRepository(pool);
+    const current = (await pool.query<{ id: string; slug: string; speaker_id: string }>(
+      `SELECT id, slug, speaker_id FROM sermons
+       WHERE slug = 'grace-for-an-anonymised-congregation'`
+    )).rows[0]!;
+    const candidate = (await pool.query<{ id: string; slug: string; speaker_id: string }>(
+      `SELECT id, slug, speaker_id FROM sermons
+       WHERE slug = 'hope-in-an-anonymised-trial'`
+    )).rows[0]!;
+    const sharedSeries = (await pool.query<{ series_id: string }>(
+      "SELECT series_id FROM sermon_series_map WHERE sermon_id = $1 ORDER BY display_order LIMIT 1",
+      [current.id]
+    )).rows[0]!;
+
+    await pool.query("UPDATE sermons SET speaker_id = $2 WHERE id = $1", [candidate.id, current.speaker_id]);
+    await pool.query(
+      `INSERT INTO sermon_series_map (sermon_id, series_id, display_order)
+       VALUES ($1, $2, 0)`,
+      [candidate.id, sharedSeries.series_id]
+    );
+    try {
+      const detail = await repository.findPublishedBySlug(current.slug);
+      expect(detail?.relatedSermons).toHaveLength(1);
+      expect(detail?.relatedSermons[0]).toMatchObject({
+        slug: candidate.slug,
+        relationshipReasons: ["same_series", "same_speaker"]
+      });
+      expect(detail?.relatedSermons.some((item) => item.id === current.id)).toBe(false);
+      expect(new Set(detail?.relatedSermons.map((item) => item.id)).size).toBe(
+        detail?.relatedSermons.length
+      );
+    } finally {
+      await pool.query(
+        "DELETE FROM sermon_series_map WHERE sermon_id = $1 AND series_id = $2",
+        [candidate.id, sharedSeries.series_id]
+      );
+      await pool.query("UPDATE sermons SET speaker_id = $2 WHERE id = $1", [candidate.id, candidate.speaker_id]);
+    }
+
+    expect(await repository.findPublishedBySlug("an-anonymised-pending-sermon")).toBeNull();
   });
 
   it("exports deterministic work and imports enrichment drafts idempotently without approval", async () => {
@@ -2262,6 +2370,10 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         { old_path: "/sermons/delete-safeguard-renamed/", new_path: null, status_code: 410 },
         { old_path: "/sermons/delete-safeguard-sermon/", new_path: null, status_code: 410 }
       ]);
+      const publicRepository = new PostgresSermonRepository(pool);
+      expect(
+        await publicRepository.findPublicPathDisposition("/sermons/delete-safeguard-sermon/")
+      ).toEqual({ kind: "gone" });
       const history = await service.auditHistory(admin);
       const tombstone = history.deletionTombstones.find((item) => item.formerSermonId === created.id);
       expect(tombstone).toMatchObject({ formerSlug: "delete-safeguard-renamed", reason: "Duplicate content retired", seoDisposition: "gone" });
@@ -2322,6 +2434,12 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       ).toEqual({
         new_path: "/sermons/grace-for-an-anonymised-congregation/",
         status_code: 301
+      });
+      expect(
+        await publicRepository.findPublicPathDisposition("/sermons/redirect-retired-sermon/")
+      ).toEqual({
+        kind: "redirect",
+        location: "/sermons/grace-for-an-anonymised-congregation/"
       });
     } finally {
       if (createdIds.length) await pool.query("DELETE FROM sermons WHERE id = ANY($1::uuid[])", [createdIds]);

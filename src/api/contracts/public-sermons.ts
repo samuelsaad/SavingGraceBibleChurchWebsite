@@ -5,7 +5,12 @@ const optionalSlug = z.string().min(1).max(200).regex(/^[a-z0-9-]+$/).optional()
 
 export const publicSermonListQuerySchema = z
   .object({
-    query: z.string().trim().min(1).max(120).optional(),
+    query: z
+      .string()
+      .trim()
+      .max(120)
+      .transform((value) => (/[^\p{P}\p{S}\s]/u.test(value) ? value : undefined))
+      .optional(),
     speaker: optionalSlug,
     series: optionalSlug,
     passage: optionalSlug,

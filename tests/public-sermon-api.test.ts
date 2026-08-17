@@ -4,6 +4,8 @@ import type { SermonDetail, SermonSummary } from "../src/domain/sermon";
 import { createPublicApiRouter } from "../src/server/http/public-api-router";
 import type {
   PaginatedSermons,
+  PublicSermonFilterOptions,
+  PublicSermonPathDisposition,
   PublicSermonRepository
 } from "../src/server/repositories/sermon-repository";
 
@@ -34,7 +36,8 @@ const detail: SermonDetail = {
   transcript: { bodyText: "An approved transcript." },
   questionAnswers: [
     { question: "What does grace change?", answer: "It changes how we live.", displayOrder: 1 }
-  ]
+  ],
+  relatedSermons: []
 };
 
 class FakeRepository implements PublicSermonRepository {
@@ -47,6 +50,18 @@ class FakeRepository implements PublicSermonRepository {
 
   async findPublishedBySlug(slug: string): Promise<SermonDetail | null> {
     return slug === detail.slug ? detail : null;
+  }
+
+  async listPublishedFilterOptions(): Promise<PublicSermonFilterOptions> {
+    return { speakers: [], series: [], passages: [], books: [] };
+  }
+
+  async listPublishedSitemapEntries() {
+    return [];
+  }
+
+  async findPublicPathDisposition(): Promise<PublicSermonPathDisposition | null> {
+    return null;
   }
 }
 

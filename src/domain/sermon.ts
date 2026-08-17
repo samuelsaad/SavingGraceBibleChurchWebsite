@@ -24,8 +24,32 @@ export const publicMediaSchema = z.object({
   provider: z.enum(["youtube", "sermonaudio"]),
   mediaType: z.enum(["video", "audio"]),
   externalId: z.string().min(1).nullable(),
-  canonicalUrl: z.url(),
+  canonicalUrl: z.url().max(2_000),
   title: z.string().min(1)
+}).strict().superRefine((value, context) => {
+  const url = new URL(value.canonicalUrl);
+  const host = url.hostname.toLowerCase().replace(/^www\./, "");
+  if (url.protocol !== "https:") {
+    context.addIssue({ code: "custom", path: ["canonicalUrl"], message: "Public media must use HTTPS" });
+  }
+  if (
+    value.provider === "youtube" &&
+    !(host === "youtube.com" || host === "m.youtube.com" || host === "youtu.be")
+  ) {
+    context.addIssue({ code: "custom", path: ["canonicalUrl"], message: "Expected a YouTube URL" });
+  }
+  if (
+    value.provider === "sermonaudio" &&
+    !(host === "sermonaudio.com" || host.endsWith(".sermonaudio.com"))
+  ) {
+    context.addIssue({ code: "custom", path: ["canonicalUrl"], message: "Expected a SermonAudio URL" });
+  }
+  if (value.provider === "youtube" && value.mediaType !== "video") {
+    context.addIssue({ code: "custom", path: ["mediaType"], message: "YouTube media must be video" });
+  }
+  if (value.provider === "sermonaudio" && value.mediaType !== "audio") {
+    context.addIssue({ code: "custom", path: ["mediaType"], message: "SermonAudio media must be audio" });
+  }
 });
 
 export type PublicMedia = z.infer<typeof publicMediaSchema>;
@@ -50,6 +74,19 @@ export const sermonSummarySchema = z.object({
 
 export type SermonSummary = z.infer<typeof sermonSummarySchema>;
 
+export const relatedSermonReasonSchema = z.enum([
+  "same_series",
+  "overlapping_scripture",
+  "same_bible_book",
+  "same_speaker"
+]);
+
+export const relatedSermonSummarySchema = sermonSummarySchema.extend({
+  relationshipReasons: z.array(relatedSermonReasonSchema).min(1).max(4)
+});
+
+export type RelatedSermonSummary = z.infer<typeof relatedSermonSummarySchema>;
+
 export const sermonDetailSchema = sermonSummarySchema.extend({
   seoDescription: z.string().min(1).max(320).nullable(),
   body: z.string().nullable(),
@@ -59,7 +96,8 @@ export const sermonDetailSchema = sermonSummarySchema.extend({
     question: z.string().min(1),
     answer: z.string().min(1),
     displayOrder: z.number().int().min(1).max(10)
-  }))
+  })),
+  relatedSermons: z.array(relatedSermonSummarySchema).max(6).default([])
 });
 
 export type SermonDetail = z.infer<typeof sermonDetailSchema>;

@@ -208,6 +208,14 @@ Public launch requires all 448 currently published sermon candidates to pass the
 
 The replacement requires a whole-WordPress inventory and preserved verified slugs/URLs. Bulk migration is repeatable extract/rehearse/delta/no-clobber work with explicit speaker reconciliation; production migrations are forward-only with backup/restore. Atomic findings, private provenance, audit history, migration checksums and draft isolation remain. Dormant resource/media structures stay unless proven harmful. Scheduling controls remain hidden until a real worker exists, static `health.json` is build information rather than runtime health, and social content, thumbnails, audio metadata, extra resources and advertising remain future backlog. (`approved architecture direction`)
 
+### D-126 - Local public sermon discovery and deterministic related results
+
+The local public sermon vertical slice preserves the existing PostgreSQL/API boundaries and adds a server-rendered archive, stable nine-item pagination, legacy-compatible keyword/speaker/series/passage/book/date filters, active-filter and empty states, the existing approved-only detail enrichment, a sermon-only sitemap, and stored redirect/gone handling. Search/filter pages are functional but non-indexable; no dedicated crawlable taxonomy landing pages are invented before the canonical/indexability allowlist is approved. The production Astro adapter remains undecided.
+
+Related sermons use published/non-deleted metadata only: shared series 100, exact or overlapping Scripture 70, same approved canonical Bible-book classification 35, and same speaker 15. Results exclude the current sermon, omit zero-score/private candidates, deduplicate by candidate, limit to three, and tie-break by score, service date and stable ID. The current schema provides neither a curated override nor an approved topic lifecycle, so neither is invented.
+
+This is an interim metadata-based baseline, not description-based semantic similarity, and it must not be labelled **Related themes**. A future **Related themes** score is explicitly deferred and, if separately authorised, must use approved public sermon descriptions only; Scripture, title, series, speaker, topics and all other metadata must not influence that score. Scripture-based recommendations may remain as a separate clearly labelled feature such as **More on this passage**. (`approved local implementation decision; isolated PostgreSQL 16 integration verified; production runtime remains gated`)
+
 ## Decisions still required
 
 - Final AWS runtime/adapter and production networking.

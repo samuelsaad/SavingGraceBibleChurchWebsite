@@ -14,10 +14,31 @@ import {
 } from "../src/api/contracts/admin-sermons";
 import {
   buildPublishedSermonDetailQuery,
-  buildPublishedSermonListQuery
+  buildPublishedSermonListQuery,
+  buildPublishedSermonFilterOptionsQuery,
+  buildPublicSermonPathDispositionQuery,
+  buildRelatedPublishedSermonsQuery
 } from "../src/server/queries/public-sermons";
+import { publicMediaSchema } from "../src/domain/sermon";
 
 describe("public sermon API contract", () => {
+  it("fails closed on provider-mismatched or non-HTTPS public media", () => {
+    const media = {
+      provider: "youtube" as const,
+      mediaType: "video" as const,
+      externalId: "abcdefghijk",
+      title: "Controlled video"
+    };
+    expect(() => publicMediaSchema.parse({
+      ...media,
+      canonicalUrl: "https://evil.example/watch?v=abcdefghijk"
+    })).toThrow("Expected a YouTube URL");
+    expect(() => publicMediaSchema.parse({
+      ...media,
+      canonicalUrl: "http://www.youtube.com/watch?v=abcdefghijk"
+    })).toThrow("Public media must use HTTPS");
+  });
+
   it("applies safe pagination defaults", () => {
     const parsed = publicSermonListQuerySchema.parse({});
     expect(parsed).toMatchObject({ page: 1, pageSize: 9, order: "DESC" });
@@ -28,6 +49,13 @@ describe("public sermon API contract", () => {
       publicSermonListQuerySchema.parse({ dateFrom: "2026-08-03", dateTo: "2026-08-02" })
     ).toThrow();
     expect(() => publicSermonListQuerySchema.parse({ dateFrom: "2026-02-30" })).toThrow();
+  });
+
+  it("bounds search text and treats blank or punctuation-only input as browse", () => {
+    expect(publicSermonListQuerySchema.parse({ query: "  " }).query).toBeUndefined();
+    expect(publicSermonListQuerySchema.parse({ query: "--- | !!!" }).query).toBeUndefined();
+    expect(publicSermonListQuerySchema.parse({ query: "  grace!  " }).query).toBe("grace!");
+    expect(() => publicSermonListQuerySchema.parse({ query: "x".repeat(121) })).toThrow();
   });
 
   it("builds parameterized search/filter SQL without interpolating user values", () => {
@@ -45,6 +73,15 @@ describe("public sermon API contract", () => {
     expect(query.values).toContain("grace' OR true--");
     expect(query.values).toContain("%grace' OR true--%");
     expect(query.values).toContain("example-speaker");
+    expect(query.text).toContain("priority_reference.display_text");
+    expect(query.text).toContain("priority_book.review_status = 'approved'");
+    expect(query.text).toContain("priority_speaker.name");
+    expect(query.text).toContain("priority_series.name");
+    expect(query.text).toContain("coalesce(s.summary_search_document, '')");
+    expect(query.text).toContain("THEN 4");
+    expect(query.text).toContain("THEN 3");
+    expect(query.text).toContain("THEN 2");
+    expect(query.text).toContain("THEN 1");
   });
 
   it("keeps every taxonomy dimension as an independent AND predicate", () => {
@@ -71,6 +108,39 @@ describe("public sermon API contract", () => {
     const query = buildPublishedSermonDetailQuery("an-anonymised-sermon");
     expect(query.text).toContain("s.body");
     expect(query.text.match(/summary_status = 'approved'/g)).toHaveLength(2);
+  });
+
+  it("uses deterministic bounded related-sermon scoring over published candidates", () => {
+    const query = buildRelatedPublishedSermonsQuery(
+      "75df2144-b557-50f6-98bd-011cd696bfb9",
+      3
+    );
+    expect(query.values).toEqual(["75df2144-b557-50f6-98bd-011cd696bfb9", 3]);
+    expect(query.text).toContain("candidate.id <> current_sermon.id");
+    expect(query.text).toContain("candidate.status = 'published'");
+    expect(query.text).toContain("candidate.deleted_at IS NULL");
+    expect(query.text).toContain("CASE WHEN score.same_series THEN 100");
+    expect(query.text).toContain("CASE WHEN score.overlapping_scripture THEN 70");
+    expect(query.text).toContain("COALESCE(current_reference.start_verse, 1)");
+    expect(query.text).toContain("COALESCE(candidate_reference.end_verse, candidate_reference.start_verse, 999)");
+    expect(query.text).toContain("CASE WHEN score.same_bible_book THEN 35");
+    expect(query.text).toContain("CASE WHEN score.same_speaker THEN 15");
+    expect(query.text).toContain("ORDER BY s.related_score DESC, s.service_date DESC, s.id");
+    expect(query.text).toContain("LIMIT $2");
+  });
+
+  it("keeps filter options and legacy dispositions public-only and mapped", () => {
+    const options = buildPublishedSermonFilterOptionsQuery();
+    expect(options.text.match(/sermon.status = 'published'/g)).toHaveLength(4);
+    expect(options.text.match(/sermon.deleted_at IS NULL/g)).toHaveLength(4);
+    expect(options.text).toContain("classification.review_status = 'approved'");
+    expect(options.text).not.toMatch(/pending|draft/);
+
+    const disposition = buildPublicSermonPathDispositionQuery("/sermons/old-slug/");
+    expect(disposition.values).toEqual(["/sermons/old-slug/"]);
+    expect(disposition.text).toContain("redirect.status_code = 301");
+    expect(disposition.text).toContain("target.status = 'published'");
+    expect(disposition.text).toContain("redirect.status_code = 410");
   });
 });
 

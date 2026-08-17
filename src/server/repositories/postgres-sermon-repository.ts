@@ -1,6 +1,8 @@
 import type { QueryResult, QueryResultRow } from "pg";
+import { z } from "zod";
 import type { PublicSermonListQuery } from "../../api/contracts/public-sermons";
 import {
+  relatedSermonSummarySchema,
   sermonDetailSchema,
   sermonSummarySchema,
   type SermonDetail,
@@ -9,9 +11,19 @@ import {
 import {
   buildPublishedSermonCountQuery,
   buildPublishedSermonDetailQuery,
-  buildPublishedSermonListQuery
+  buildPublishedSermonFilterOptionsQuery,
+  buildPublishedSermonListQuery,
+  buildPublishedSermonSitemapQuery,
+  buildPublicSermonPathDispositionQuery,
+  buildRelatedPublishedSermonsQuery
 } from "../queries/public-sermons";
-import type { PaginatedSermons, PublicSermonRepository } from "./sermon-repository";
+import type {
+  PaginatedSermons,
+  PublicSermonFilterOptions,
+  PublicSermonPathDisposition,
+  PublicSermonRepository,
+  PublicSermonSitemapEntry
+} from "./sermon-repository";
 
 export interface SqlExecutor {
   query(text: string, values?: unknown[]): Promise<QueryResult<QueryResultRow>>;
@@ -39,6 +51,27 @@ type PublicSermonDetailRow = PublicSermonRow & {
   question_answers: unknown;
 };
 
+type RelatedSermonRow = PublicSermonRow & {
+  relationship_reasons: unknown;
+};
+
+const filterOptionSchema = z.object({
+  name: z.string().min(1),
+  slug: z.string().min(1).max(200).regex(/^[a-z0-9-]+$/)
+});
+
+const filterOptionsSchema = z.object({
+  speakers: z.array(filterOptionSchema),
+  series: z.array(filterOptionSchema),
+  passages: z.array(filterOptionSchema),
+  books: z.array(filterOptionSchema)
+});
+
+const sitemapEntrySchema = z.object({
+  slug: z.string().min(1).max(200).regex(/^[a-z0-9-]+$/),
+  lastModified: z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
+});
+
 function summaryFromRow(row: PublicSermonRow): SermonSummary {
   return sermonSummarySchema.parse({
     id: row.id,
@@ -54,14 +87,25 @@ function summaryFromRow(row: PublicSermonRow): SermonSummary {
   });
 }
 
-function detailFromRow(row: PublicSermonDetailRow): SermonDetail {
+function detailFromRow(
+  row: PublicSermonDetailRow,
+  relatedSermons: SermonDetail["relatedSermons"]
+): SermonDetail {
   return sermonDetailSchema.parse({
     ...summaryFromRow(row),
     seoDescription: row.seo_description ?? null,
     body: row.body,
     media: row.media,
     transcript: row.transcript,
-    questionAnswers: row.question_answers
+    questionAnswers: row.question_answers,
+    relatedSermons
+  });
+}
+
+function relatedFromRow(row: RelatedSermonRow) {
+  return relatedSermonSummarySchema.parse({
+    ...summaryFromRow(row),
+    relationshipReasons: row.relationship_reasons
   });
 }
 
@@ -95,6 +139,48 @@ export class PostgresSermonRepository implements PublicSermonRepository {
     const statement = buildPublishedSermonDetailQuery(slug);
     const result = await this.database.query(statement.text, statement.values);
     const row = (result.rows as PublicSermonDetailRow[])[0];
-    return row ? detailFromRow(row) : null;
+    if (!row) return null;
+
+    const relatedStatement = buildRelatedPublishedSermonsQuery(row.id, 3);
+    const relatedResult = await this.database.query(
+      relatedStatement.text,
+      relatedStatement.values
+    );
+    return detailFromRow(
+      row,
+      (relatedResult.rows as RelatedSermonRow[]).map(relatedFromRow)
+    );
+  }
+
+  async listPublishedFilterOptions(): Promise<PublicSermonFilterOptions> {
+    const statement = buildPublishedSermonFilterOptionsQuery();
+    const result = await this.database.query(statement.text, statement.values);
+    const row = result.rows[0] as
+      | { speakers: unknown; series: unknown; passages: unknown; books: unknown }
+      | undefined;
+    return filterOptionsSchema.parse(row ?? {
+      speakers: [], series: [], passages: [], books: []
+    });
+  }
+
+  async listPublishedSitemapEntries(): Promise<PublicSermonSitemapEntry[]> {
+    const statement = buildPublishedSermonSitemapQuery();
+    const result = await this.database.query(statement.text, statement.values);
+    return result.rows.map((row) => sitemapEntrySchema.parse({
+      slug: row.slug,
+      lastModified: row.last_modified
+    }));
+  }
+
+  async findPublicPathDisposition(path: string): Promise<PublicSermonPathDisposition | null> {
+    const statement = buildPublicSermonPathDispositionQuery(path);
+    const result = await this.database.query(statement.text, statement.values);
+    const row = result.rows[0] as { status_code: number; new_path: string | null } | undefined;
+    if (!row) return null;
+    if (row.status_code === 410) return { kind: "gone" };
+    if (row.status_code === 301 && row.new_path) {
+      return { kind: "redirect", location: row.new_path };
+    }
+    return null;
   }
 }
