@@ -9,6 +9,43 @@ import type {
 } from "./types";
 
 async function upsertSpeaker(client: PoolClient, term: LegacyTerm): Promise<string> {
+  const existing = await client.query<{
+    id: string;
+    name: string;
+    slug: string;
+    source_term_id: string | null;
+    source_term_taxonomy_id: string | null;
+  }>(
+    `SELECT id, name, slug, source_term_id, source_term_taxonomy_id
+     FROM speakers
+     WHERE source_term_taxonomy_id = $1 OR slug = $2 OR lower(trim(name)) = lower(trim($3))
+     ORDER BY CASE WHEN source_term_taxonomy_id = $1 THEN 0 ELSE 1 END, id`,
+    [term.termTaxonomyId, term.slug, term.name]
+  );
+  if (existing.rows.length > 0) {
+    const exact = existing.rows.find((row) =>
+      row.slug === term.slug && row.name.trim().toLocaleLowerCase("en-AU") === term.name.trim().toLocaleLowerCase("en-AU")
+    );
+    if (!exact || existing.rows.some((row) => row.id !== exact.id)) {
+      throw new Error("A speaker source mapping conflicts with an existing catalogue identity.");
+    }
+    if (
+      (exact.source_term_id !== null && Number(exact.source_term_id) !== term.termId) ||
+      (exact.source_term_taxonomy_id !== null && Number(exact.source_term_taxonomy_id) !== term.termTaxonomyId)
+    ) {
+      throw new Error("A speaker source mapping conflicts with existing provenance.");
+    }
+    await client.query(
+      `UPDATE speakers
+       SET source_term_id = $2, source_term_taxonomy_id = $3,
+           updated_at = CASE
+             WHEN source_term_id IS DISTINCT FROM $2 OR source_term_taxonomy_id IS DISTINCT FROM $3
+             THEN now() ELSE updated_at END
+       WHERE id = $1`,
+      [exact.id, term.termId, term.termTaxonomyId]
+    );
+    return exact.id;
+  }
   const id = deterministicSourceUuid("wordpress-speaker", term.termTaxonomyId);
   await client.query(
     `INSERT INTO speakers (id, name, slug, source_term_id, source_term_taxonomy_id)
@@ -108,7 +145,8 @@ async function upsertPassageTerm(client: PoolClient, term: LegacyTerm): Promise<
 async function upsertSermon(
   client: PoolClient,
   sermon: ImportedSermon,
-  privateAudit: PrivateMigrationSourceAudit | undefined
+  privateAudit: PrivateMigrationSourceAudit | undefined,
+  forcePrivateDraft = false
 ): Promise<void> {
   const speakerId = sermon.speaker ? await upsertSpeaker(client, sermon.speaker) : null;
   await client.query(
@@ -178,9 +216,9 @@ async function upsertSermon(
       sermon.slug,
       sermon.summary,
       sermon.body,
-      sermon.status,
+      forcePrivateDraft ? "draft" : sermon.status,
       sermon.serviceDate,
-      sermon.publishedAt,
+      forcePrivateDraft ? null : sermon.publishedAt,
       sermon.sourceWordPressId,
       sermon.sourceStatus,
       sermon.sourceCreatedLocal,
@@ -379,7 +417,8 @@ async function upsertSermon(
 export async function loadMigrationResult(
   pool: Pool,
   result: MigrationDryRunResult,
-  sourceSnapshotId = "anonymised-local-fixture"
+  sourceSnapshotId = "anonymised-local-fixture",
+  options: { forcePrivateDraft?: boolean } = {}
 ): Promise<{ runId: string; imported: number }> {
   const client = await pool.connect();
   const runId = deterministicSourceUuid("migration-run", sourceSnapshotId);
@@ -398,7 +437,7 @@ export async function loadMigrationResult(
       result.privateSourceAudit.map((audit) => [audit.targetSermonId, audit])
     );
     for (const sermon of result.candidates) {
-      await upsertSermon(client, sermon, audits.get(sermon.id));
+      await upsertSermon(client, sermon, audits.get(sermon.id), options.forcePrivateDraft === true);
     }
 
     for (const record of result.records) {

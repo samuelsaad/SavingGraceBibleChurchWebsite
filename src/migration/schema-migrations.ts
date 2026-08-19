@@ -21,7 +21,8 @@ export type SchemaMigrationScope =
   | "0009_pilot_completion_safeguards"
   | "0010_zero_finding_guided_review"
   | "0011_description_semantic_relationships"
-  | "0012_description_semantic_runtime_provenance";
+  | "0012_description_semantic_runtime_provenance"
+  | "0013_official_youtube_caption_provenance";
 
 interface SchemaMigrationDefinition {
   id: string;
@@ -216,6 +217,13 @@ export const schemaMigrationDefinitions: readonly SchemaMigrationDefinition[] = 
     order: 12,
     upPath: "db/migrations/0012_description_semantic_runtime_provenance.sql",
     downPath: "db/migrations/0012_description_semantic_runtime_provenance.down.sql",
+    addedRelations: []
+  },
+  {
+    id: "0013_official_youtube_caption_provenance",
+    order: 13,
+    upPath: "db/migrations/0013_official_youtube_caption_provenance.sql",
+    downPath: "db/migrations/0013_official_youtube_caption_provenance.down.sql",
     addedRelations: []
   }
 ] as const;

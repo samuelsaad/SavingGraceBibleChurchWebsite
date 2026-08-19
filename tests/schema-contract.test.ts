@@ -164,6 +164,21 @@ describe("PostgreSQL schema contract", () => {
     expect(down).toContain("DROP COLUMN IF EXISTS model_revision");
   });
 
+  it("adds only the official YouTube API provenance value and preserves a guarded rollback", async () => {
+    const [up, down] = await Promise.all([
+      readFile("db/migrations/0013_official_youtube_caption_provenance.sql", "utf8"),
+      readFile("db/migrations/0013_official_youtube_caption_provenance.down.sql", "utf8")
+    ]);
+    expect(up).toContain("ALTER TABLE sermon_enrichment_sources");
+    expect(up).toContain("'authorised_youtube_studio_export'");
+    expect(up).toContain("'authorised_youtube_data_api'");
+    expect(up).not.toMatch(/\b(?:INSERT|UPDATE|DELETE)\b/i);
+    expect(up).not.toMatch(/description_semantic_(?:builds|relationships)/i);
+    expect(down).toContain("WHERE retrieval_attribution <> 'authorised_youtube_studio_export'");
+    expect(down).toContain("Cannot roll back official YouTube caption provenance while dependent rows exist");
+    expect(down).toContain("retrieval_attribution = 'authorised_youtube_studio_export'");
+  });
+
   it("adds reversible atomic review identities without changing migration 0007", async () => {
     const [up, down] = await Promise.all([
       readFile("db/migrations/0008_atomic_sermon_review_items.sql", "utf8"),

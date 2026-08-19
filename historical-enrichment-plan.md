@@ -2,7 +2,9 @@
 
 ## Current boundary
 
-Phase 3B.2b remains limited to exactly the two records that the committed Phase 3B.2 outcome identified as `manual_punctuation_required`; the already-successful record and all other records remain excluded. The authorised exact-two private workflow produced and idempotently imported two draft enrichment sets, and the original Phase 3B.2 path produced the third. A read-only reconciliation on 17 August 2026 confirmed that all three sermons remain private drafts while their guided reviews, transcripts, descriptions and seven Q&A pairs each are approved. Each has confirmed identity metadata and one canonical Bible-book assignment. Import and automated verification did not create those approvals; they are attributable administrator actions. Samuel Saad subsequently accepted the bounded three-sermon pilot as successfully completed. The acceptance applies only to that pilot; the remaining 450 sermons and Phase 3C are out of scope and unauthorised.
+Phase 3B.2b remains limited to exactly the two records that the committed Phase 3B.2 outcome identified as `manual_punctuation_required`; the already-successful record was completed through the original path. A read-only reconciliation on 17 August 2026 confirmed that all three pilot sermons remain private drafts while their guided reviews, transcripts, descriptions and seven Q&A pairs each are approved. Each has confirmed identity metadata and one canonical Bible-book assignment. Import and automated verification did not create those approvals; they are attributable administrator actions. Samuel Saad subsequently accepted the bounded three-sermon pilot as successfully completed.
+
+Phase 3B.2c now has one separately bounded representative Wave 1. A deterministic private manifest contains 36 primaries and 12 predetermined alternates, but only the first 12 resolved positions were authorised for retrieval and processing. All 12 Wave 1 primaries were available, so no alternate was used. Their prepared captions produced exactly 12 transcript drafts, 12 description drafts and 84 ordered Q&A drafts. Every item remains private and unapproved, all 12 imports were unchanged on an identical second run, and no later wave or other sermon is authorised.
 
 Administrator review uses the dedicated `/admin/sermons/:id/review` route. It presents identity/provenance, 42 and 44 individually preserved atomic findings, transcript, description, ordered Q&A and final summary one stage at a time. The database now records 76 accepted and ten corrected current atomic decisions, zero pending/unresolved/rejected current items, an explicit zero-finding acknowledgement for the third record and three completed reviews. Every current atomic decision has exact subject/timestamp audit attribution. Retained warning codes—including unresolved caption-track type and the fact that punctuation was applied—remain provenance rather than active blockers. Saving, viewing and finishing review never publish. Whole-pilot acceptance is a separate human decision rather than a database field or audit action; Samuel Saad supplied that explicit bounded acceptance on 17 August 2026.
 
@@ -27,11 +29,11 @@ Manifest schema version 2 orders records by anonymised source WordPress ID and s
 
 ## Post-pilot authorization boundary
 
-Phase 3B.2b does not authorise a larger batch. The three per-sermon administrator reviews are complete, and Samuel Saad has explicitly accepted the bounded pilot as successfully completed. That acceptance does not authorise processing any of the remaining 450 sermons. Any future processing requires separate explicit authority for its exact allowlist and limits. Publishing the pilot sermons, enabling public **Related themes**, accepting semantic recommendation quality, accessing or deploying production, and beginning Phase 3C also remain unauthorised.
+The three pilot reviews are complete and their bounded pilot is accepted. The separate Wave 1 execution ended with 12 private drafts awaiting genuine administrator review; it does not inherit pilot acceptance. Wave 2, Wave 3, any additional sermon, publication, public **Related themes**, semantic quality acceptance, production/deployment and Phase 3C remain unauthorised. Any later execution requires separate explicit authority for its exact allowlist and limits.
 
 ## Pilot preparation boundary
 
-- Inputs are local UTF-8 `.txt` exports attributed to authorised YouTube Studio access.
+- Inputs may be authorised local YouTube Studio exports or exact official YouTube Data API VTT bytes whose provenance is retained. Official-API source material remains private and is never treated as administrator-approved wording.
 - URL identity is the allowlisted 11-character video ID; playlist/tracking parameters are discarded.
 - The processor removes only timestamp-only lines and exact adjacent duplicate paragraphs, normalises whitespace, and capitalises existing sentence boundaries.
 - A case-insensitive word-sequence equality check blocks any preparation that changes retained words.
@@ -44,7 +46,7 @@ Phase 3B.2b does not authorise a larger batch. The three per-sermon administrato
 
 ## Remaining workload
 
-No Phase 3B.2b private processing time, warning/review count or workload extrapolation is verified by the hardening task. Recalculate workload only after a separately authorised private rerun and administrator review, using clearly identified measured and estimated components. A larger authorised sample remains necessary before treating any extrapolation as a commitment.
+The Wave 1 processor estimated 777 administrator minutes across the 12 records, or about 13 hours. This is a formula-derived planning estimate, not observed human effort. Actual review time, corrections and acceptance outcomes must be recorded by the administrator before workload or quality is extrapolated. Semantic evaluation cannot use these descriptions until they are individually approved, and no embedding or relationship generation is authorised by Wave 1.
 
 ## Launch gate
 

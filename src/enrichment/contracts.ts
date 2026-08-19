@@ -68,7 +68,10 @@ export const phase3b2SourceProvenanceSchema = z.object({
     "Store a source filename, not a filesystem path"
   ),
   sourceContentSha256: z.string().regex(/^[0-9a-f]{64}$/),
-  retrievalAttribution: z.literal("authorised_youtube_studio_export"),
+  retrievalAttribution: z.enum([
+    "authorised_youtube_studio_export",
+    "authorised_youtube_data_api"
+  ]),
   sourceCharacterCount: z.number().int().positive(),
   cleanedCharacterCount: z.number().int().positive(),
   apparentCompleteness: z.enum(["apparently_complete", "requires_manual_review"]),

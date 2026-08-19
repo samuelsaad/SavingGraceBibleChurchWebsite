@@ -254,6 +254,16 @@ Comparison version 3 applies the same Unicode NFKC, locale-stable case, punctuat
 
 Two pilots produced `normalized_exact_match`: 5,402/5,402 and 5,685/5,685 normalized words respectively, with zero aligned changes. The remaining pilot produced `differences_detected_manual_review_required`: 7,260 official versus 7,263 Studio normalized words, 7,182 matches, 28 insertions, 31 deletions and 50 substitutions, totalling 109 changes across 87 regions, a largest region of three, 1.500757% WER and 98.499243% normalized similarity. Its aligned passages and cue references are confined to one ignored private human-review artifact. No automated result decides which source is correct or constitutes administrator approval. (`explicit project-owner amendment; independently completed official-API proof; one manual-review result remains`)
 
+### D-133 - Phase 3B.2c Wave 1 private evaluation boundary
+
+The representative evaluation uses a deterministic private selection of 36 primary records and 12 predetermined alternates. Metadata mapping and caption-availability inspection covered those 48 records, but execution authority covered only the 12 resolved Wave 1 positions. All 12 primaries were available; no alternate was used. Records reserved for later waves were neither downloaded nor processed, and their inclusion in the private manifest is not future execution authority.
+
+The official YouTube Data API caption provenance is recorded by migration `0013_official_youtube_caption_provenance`, which adds `authorised_youtube_data_api` while preserving `authorised_youtube_studio_export` and rejecting other values. Samuel Saad explicitly authorised retaining already-applied local migrations `0011`, `0012` and `0013` in only `savinggrace_sermons_test`. Read-only verification found the exact journal through `0013`, no later migration, and zero semantic eligibility, build or relationship rows. Migrations `0011` and `0012` therefore added structure only; no embedding or semantic relationship was generated.
+
+Wave 1 imported exactly 12 transcripts, 12 descriptions and 84 ordered Q&A items as private unapproved drafts from already-prepared ignored material. The import retained official-API provenance, source hashes, uncertainty and warning evidence, including `audio_track_type_unverified` for every record. An identical second import returned unchanged for all 12. No approval marker, administrator-complete record, public-search candidate, semantic eligibility row, embedding or relationship was created.
+
+Administrator review is now the only authorised next action for these 12 records. This decision does not accept transcript/content quality, administrator workload or semantic recommendation quality; authorise Wave 2, Wave 3, another sermon, embeddings or Related themes; or permit approval by automation, publication, production access, deployment, a Git push or Phase 3C. (`explicit bounded execution and migration-retention authority; Wave 1 ready for human review`)
+
 ## Decisions still required
 
 - Final AWS runtime/adapter and production networking.
@@ -263,4 +273,4 @@ Two pilots produced `normalized_exact_match`: 5,402/5,402 and 5,685/5,685 normal
 - Approved runtime secret-provider integration before any future upgrade from `pg` 8 to `pg` 9, whose automatic `pgpass` support is deprecated.
 - Explicit read-only approval and access method for the fresh whole-site crawl and church-owned Search Console/analytics baseline.
 - Production canonical host/slash policy, any intentionally crawlable filter landing pages, and baseline-derived SEO performance/rollback thresholds.
-- Separate explicit authority for any processing beyond the accepted three-sermon pilot. D-129 grants no authority over the remaining 450 sermons, publication, public **Related themes**, semantic quality acceptance, production/deployment or Phase 3C.
+- Human review and separate acceptance decisions for the 12 Wave 1 private drafts. D-133 grants no authority for Wave 2, Wave 3, another sermon, publication, public **Related themes**, semantic quality acceptance, production/deployment or Phase 3C.

@@ -89,7 +89,7 @@ export interface StoredSermonDetail extends StoredSermonSummary {
     captionTrackType: "manual" | "automatic" | "unknown";
     originalFilename: string;
     sourceContentSha256: string;
-    retrievalAttribution: "authorised_youtube_studio_export";
+    retrievalAttribution: "authorised_youtube_studio_export" | "authorised_youtube_data_api";
     sourceCharacterCount: number;
     cleanedCharacterCount: number;
     apparentCompleteness: "apparently_complete" | "requires_manual_review";

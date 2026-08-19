@@ -191,7 +191,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     await pool.end();
   });
 
-  it("applies 0001-0012 and loads anonymised fixtures idempotently", async () => {
+  it("applies 0001-0013 and loads anonymised fixtures idempotently", async () => {
     const counts = await pool.query<{
       sermons: number;
       views: number;
@@ -229,6 +229,55 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       review_item_table: "sermon_enrichment_review_items",
       speaker_join_removed: true
     });
+  });
+
+  it("accepts both authorised caption provenances and still rejects invalid provenance", async () => {
+    const constraint = await pool.query<{ definition: string }>(
+      `SELECT pg_get_constraintdef(oid) AS definition
+       FROM pg_constraint
+       WHERE conrelid = 'sermon_enrichment_sources'::regclass
+         AND conname = 'sermon_enrichment_sources_retrieval_attribution_check'`
+    );
+    expect(constraint.rows[0]!.definition).toContain("authorised_youtube_studio_export");
+    expect(constraint.rows[0]!.definition).toContain("authorised_youtube_data_api");
+
+    const target = await pool.query<{ id: string }>(
+      `SELECT sermon.id FROM sermons sermon
+       WHERE NOT EXISTS (SELECT 1 FROM sermon_enrichment_sources source WHERE source.sermon_id = sermon.id)
+       ORDER BY sermon.id LIMIT 1`
+    );
+    const client = await pool.connect();
+    await client.query("BEGIN");
+    try {
+      await client.query(
+        `INSERT INTO sermon_enrichment_sources (
+           sermon_id, provider, video_id, canonical_url, caption_language,
+           caption_track_type, original_filename, source_content_sha256,
+           retrieval_attribution, source_character_count, cleaned_character_count,
+           apparent_completeness, uncertainty_marker_count, warnings,
+           unresolved_passages, processing_version, imported_at, processed_at,
+           processing_duration_ms, estimated_review_minutes,
+           manual_attention_required, accuracy_review_status
+         ) VALUES (
+           $1, 'youtube', 'provtest001', 'https://www.youtube.com/watch?v=provtest001', 'en',
+           'automatic', 'anonymised.vtt', $2, 'authorised_youtube_data_api', 100, 100,
+           'requires_manual_review', 0, '[]'::jsonb, '[]'::jsonb, 'anonymised-provenance-v1',
+           now(), now(), 1, 1, true, 'required'
+         )`,
+        [target.rows[0]!.id, "a".repeat(64)]
+      );
+      await client.query(
+        "UPDATE sermon_enrichment_sources SET retrieval_attribution = 'authorised_youtube_studio_export' WHERE sermon_id = $1",
+        [target.rows[0]!.id]
+      );
+      await expect(client.query(
+        "UPDATE sermon_enrichment_sources SET retrieval_attribution = 'invalid' WHERE sermon_id = $1",
+        [target.rows[0]!.id]
+      )).rejects.toMatchObject({ code: "23514" });
+    } finally {
+      await client.query("ROLLBACK");
+      client.release();
+    }
   });
 
   it("seeds reference catalogues idempotently, orders selectors, and derives scoped counts", async () => {
@@ -320,6 +369,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   });
 
   it("aborts the one-speaker migration with affected IDs and cleanly reapplies", async () => {
+    await runSchema("rollback", "0013_official_youtube_caption_provenance");
     await runSchema("rollback", "0012_description_semantic_runtime_provenance");
     await runSchema("rollback", "0011_description_semantic_relationships");
     await runSchema("rollback", "0010_zero_finding_guided_review");
@@ -367,6 +417,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     await runSchema("apply", "0010_zero_finding_guided_review");
     await runSchema("apply", "0011_description_semantic_relationships");
     await runSchema("apply", "0012_description_semantic_runtime_provenance");
+    await runSchema("apply", "0013_official_youtube_caption_provenance");
     expect(
       (await pool.query("SELECT to_regclass('public.sermon_speakers') IS NULL AS removed")).rows[0]
     ).toEqual({ removed: true });
@@ -2772,7 +2823,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
          (SELECT count(*)::integer FROM migration_records) AS content_records,
          (SELECT count(*)::integer FROM sermon_enrichment_draft_imports) AS draft_import_receipts`
     );
-    expect(before.rows[0]?.schema_receipts).toBe(12);
+    expect(before.rows[0]?.schema_receipts).toBe(13);
     expect(before.rows[0]?.content_records).toBe(5);
     expect(before.rows[0]?.draft_import_receipts).toBeGreaterThanOrEqual(0);
     await expect(runSchema("apply")).resolves.toEqual({
@@ -2780,7 +2831,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       outcome: "no_op",
       appliedMigrationIds: [],
       rolledBackMigrationIds: [],
-      journalReceiptCount: 12
+      journalReceiptCount: 13
     });
     expect((await pool.query<{
       schema_receipts: number;
@@ -2795,6 +2846,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   });
 
   it("applies only the pending canonical suffix from a valid partial journal", async () => {
+    await runSchema("rollback", "0013_official_youtube_caption_provenance");
     await runSchema("rollback", "0012_description_semantic_runtime_provenance");
     await runSchema("rollback", "0011_description_semantic_relationships");
     await runSchema("rollback", "0010_zero_finding_guided_review");
@@ -2819,10 +2871,11 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         "0009_pilot_completion_safeguards",
         "0010_zero_finding_guided_review",
         "0011_description_semantic_relationships",
-        "0012_description_semantic_runtime_provenance"
+        "0012_description_semantic_runtime_provenance",
+        "0013_official_youtube_caption_provenance"
       ],
       rolledBackMigrationIds: [],
-      journalReceiptCount: 12
+      journalReceiptCount: 13
     });
   });
 
@@ -2846,6 +2899,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       "UPDATE schema_migrations SET checksum_sha256 = $1 WHERE migration_order = 8",
       [eighth.checksumSha256]
     );
+    await runSchema("rollback", "0013_official_youtube_caption_provenance");
     await runSchema("rollback", "0012_description_semantic_runtime_provenance");
     await runSchema("rollback", "0011_description_semantic_relationships");
     await runSchema("rollback", "0010_zero_finding_guided_review");
@@ -2901,6 +2955,8 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 11 });
     await expect(runSchema("apply", "0012_description_semantic_runtime_provenance"))
       .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 12 });
+    await expect(runSchema("apply", "0013_official_youtube_caption_provenance"))
+      .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 13 });
   });
 
   it("refuses unjournalled objects and serialises concurrent fresh application", async () => {
@@ -2920,12 +2976,12 @@ integration("disposable PostgreSQL Phase 3B application", () => {
 
     const results = await Promise.all([runSchema("apply"), runSchema("apply")]);
     expect(results.map((result) => result.outcome).sort()).toEqual(["applied", "no_op"]);
-    expect(results.reduce((count, result) => count + result.appliedMigrationIds.length, 0)).toBe(12);
+    expect(results.reduce((count, result) => count + result.appliedMigrationIds.length, 0)).toBe(13);
     expect((await pool.query<{ receipts: number; distinct_receipts: number }>(
       `SELECT count(*)::integer AS receipts,
               count(DISTINCT migration_id)::integer AS distinct_receipts
        FROM schema_migrations`
-    )).rows[0]).toEqual({ receipts: 12, distinct_receipts: 12 });
+    )).rows[0]).toEqual({ receipts: 13, distinct_receipts: 13 });
 
     await expect(runSchema("rollback")).resolves.toMatchObject({
       outcome: "rolled_back",
@@ -2933,7 +2989,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     });
     await expect(runSchema("apply")).resolves.toMatchObject({
       outcome: "applied",
-      journalReceiptCount: 12
+      journalReceiptCount: 13
     });
   });
 });
