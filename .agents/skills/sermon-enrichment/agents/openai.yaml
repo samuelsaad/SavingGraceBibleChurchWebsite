@@ -1,0 +1,4 @@
+interface:
+  display_name: "Sermon Enrichment"
+  short_description: "Ground and validate private sermon enrichment"
+  default_prompt: "Use $sermon-enrichment to prepare or review transcript-grounded private sermon descriptions and Q&A drafts."

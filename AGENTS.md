@@ -66,6 +66,8 @@ For milestone evidence, record safe commands/results/defects/regressions in the 
 
 Every sermon has one speaker; temporary absence is allowed only while incomplete. Never silently choose among multiple source speakers.
 
+Use the repository-scoped `sermon-enrichment` skill for every creation, regeneration, review, or validation of transcript-grounded sermon descriptions or Q&A drafts. Its current approved-transcript, grounding-evidence, private-draft, stale-result, and human-authority gates are mandatory; mechanical excerpt assembly is not an enrichment method.
+
 Schedule, publish, and historical launch readiness require that speaker, approved `sermons.summary`, approved transcript, five to ten ordered approved Q&A, required metadata, and controlled media. Generated/imported content stays draft; it never self-approves or silently overwrites approved content.
 
 Administration uses one approved `admin` level, default denial, explicit transitions, and optimistic concurrency. Only published sermons with approved content are public/searchable; everything else stays unavailable and non-indexable.

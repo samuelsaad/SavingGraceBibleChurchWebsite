@@ -127,7 +127,13 @@ describe("Phase 3B administration dashboard", () => {
     expect(client).toContain("requiresEmptyItemSetAcknowledgement");
     expect(client).toContain("stageCompletion.findings");
     expect(client).toContain("Complete earlier stage first");
+    expect(client).toContain("Generated description and Q&A quarantined.");
+    expect(client).toContain("Superseded defective generation — replacement required.");
+    expect(client).toContain("Transcript-grounded replacement draft.");
+    expect(client).toContain("summary.trim().length < 80 || quarantined");
     expect(service).toContain("Save changed transcript wording as draft");
+    expect(service).toContain("superseded extractive Wave 1 generator");
+    expect(service).toContain("generated draft is stale");
     expect(client).toContain("/^\\/admin\\/sermons\\/[0-9a-f-]+\\/review$/i");
     const guidedRouteSource = client.slice(
       client.indexOf("const enrichmentReviewStages"),

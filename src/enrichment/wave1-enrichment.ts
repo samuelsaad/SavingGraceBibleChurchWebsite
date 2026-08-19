@@ -217,6 +217,12 @@ function buildQuestionAnswers(transcript: string): Array<{ question: string; ans
 }
 
 export function prepareWaveOneContent(bytes: Uint8Array): PreparedWaveOneContent {
+  const retired: boolean = true;
+  if (retired) {
+    throw new Error(
+      "mechanical_wave1_generation_retired: use the repository sermon-enrichment skill and grounded private result contract"
+    );
+  }
   const { transcript, sourceText } = sourcePreservingTranscript(bytes);
   const sourceWordCount = lexicalTokens(sourceText).length;
   const cleanedWordCount = lexicalTokens(transcript).length;

@@ -756,7 +756,16 @@ async function main(): Promise<void> {
     throw new SafeWaveProcessError("command_invalid", "Use exactly one Wave 1 command: metadata, process or verify");
   }
   if (command === "metadata") await metadataCommand();
-  if (command === "process") await processCommand();
+  if (command === "process") {
+    const retired: boolean = true;
+    if (retired) {
+      throw new SafeWaveProcessError(
+        "mechanical_generation_retired",
+        "Wave 1 extractive description and Q&A generation is retired; use the sermon-enrichment skill workflow"
+      );
+    }
+    await processCommand();
+  }
   if (command === "verify") await verifyCommand();
 }
 

@@ -43,6 +43,7 @@ import {
   buildEnrichmentQueue,
   importEnrichmentDraftBundle
 } from "../src/enrichment/postgres-enrichment";
+import { supersededWave1GenerationVersion } from "../src/enrichment/sermon-enrichment-policy";
 import {
   atomicReviewItemSetSha256,
   buildAtomicReviewItems
@@ -1065,6 +1066,57 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       })
     ).rejects.toThrow("approved_question_answers_conflict");
     expect(await new PostgresSermonRepository(pool).findPublishedBySlug("an-anonymised-pending-sermon")).toBeNull();
+  });
+
+  it("prevents administrator approval of superseded extractive descriptions and Q&A", async () => {
+    const repository = new PostgresAdminSermonRepository(pool);
+    const service = new AdminSermonService(repository, () => new Date("2026-08-19T00:00:00.000Z"));
+    const admin = { subject: "local-admin-0001", role: "admin" } satisfies ApplicationIdentity;
+    const reference = `anonymised:${supersededWave1GenerationVersion}`;
+    const created = await service.create(createSermonInputSchema.parse({
+      title: "Anonymised superseded-generation gate",
+      slug: "anonymised-superseded-generation-gate",
+      serviceDate: "2026-01-01",
+      summary: "This anonymised description is long enough for review but remains a superseded private draft that must never be approved.",
+      summaryStatus: "draft",
+      summarySourceKind: "generated_draft",
+      summarySourceReference: reference,
+      transcript: {
+        bodyText: "A complete anonymised approved transcript exists solely to exercise the superseded-generation approval gate.",
+        status: "approved",
+        sourceKind: "manual",
+        sourceReference: null
+      },
+      questionAnswers: Array.from({ length: 7 }, (_, index) => ({
+        question: `Which anonymised concern is considered in pair ${index + 1}?`,
+        answer: `This complete anonymised answer remains a superseded draft for pair ${index + 1}.`,
+        status: "draft",
+        sourceKind: "generated_draft",
+        sourceReference: reference
+      }))
+    }), admin, "anonymised-create-superseded");
+    try {
+      await expect(service.update(created.id, updateSermonInputSchema.parse({
+        rowVersion: created.rowVersion,
+        summary: created.summary,
+        summaryStatus: "approved",
+        summarySourceKind: created.summarySourceKind,
+        summarySourceReference: created.summarySourceReference
+      }), admin, "anonymised-approve-description")).rejects.toThrow("superseded extractive Wave 1 generator");
+
+      await expect(service.update(created.id, updateSermonInputSchema.parse({
+        rowVersion: created.rowVersion,
+        questionAnswers: created.questionAnswers.map((item, index) => ({
+          question: item.question,
+          answer: item.answer,
+          status: index === 0 ? "approved" : "draft",
+          sourceKind: item.sourceKind,
+          sourceReference: item.sourceReference
+        }))
+      }), admin, "anonymised-approve-question")).rejects.toThrow("superseded extractive Wave 1 generator");
+    } finally {
+      await pool.query("DELETE FROM sermons WHERE id = $1", [created.id]);
+    }
   });
 
   it("runs the real Phase 3B.2b filesystem, orchestration, importer and fail-closed verifier paths", async () => {

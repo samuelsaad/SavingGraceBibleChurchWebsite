@@ -272,6 +272,14 @@ The authorised repair is limited to the exact 12 rows identified by the Wave 1 p
 
 Post-repair application verification found all 12 review sets valid, with explicit zero-item acknowledgement available on all 12. The one confirmed identity remains ready at Stage 2; no zero-item acknowledgement or later-stage completion was manufactured, and all later stages remain locked. All 12 remain private, unapproved and absent from public search; semantic eligibility, build and relationship counts remain zero. (`explicit local metadata-only repair authority; genuine administrator review still required`)
 
+### D-135 - Quarantine superseded Wave 1 generation and require grounded skill workflow
+
+The deterministic Wave 1 description/Q&A generator is rejected as a content-quality failure. It ranked mechanically punctuated caption passages, inserted a generic description wrapper and paired a fixed seven-question set with transcript excerpts. All 12 descriptions and 84 Q&A items produced by `phase3b2c-wave1-extractive-drafts-v2` are defective generation evidence, not approvable drafts. Their original bodies and hashes remain in preserved private bundles; database provenance, warnings and audit evidence remain intact. Current database bodies with the superseded source reference cannot enter review or approval, and the dashboard identifies the quarantine. The old `process` command and preparation function fail closed.
+
+Every future creation, regeneration, review or validation of transcript-grounded descriptions or Q&A must use the repository-scoped `sermon-enrichment` skill. The current approved transcript is the sole claim authority. A structured private result binds the transcript identity, SHA-256 and row version; records support ranges for every description paragraph and Q&A pair; rejects stale, unsupported, generic, fragmentary, excerpt-assembled or public/approved output; and preserves warnings and uncertainty for human review. Automated checks establish structure and recorded grounding only, never transcript accuracy, Scripture accuracy, theology, content approval or publication approval.
+
+The separately authorised repair canary is limited to one stable source/application identity. Its replacement contains a 200-word description, seven Q&A pairs and 12 private support records. The atomic import changed only the untouched unapproved description and Q&A fields, retained the original bundle, preserved transcript/provenance/review/genuine-administrator/other-Wave-1 evidence, created no approval or public/search/semantic state, and returned unchanged on a second import. The remaining 11 description/Q&A sets stay quarantined. Human canary review is required before any request to regenerate another record. (`explicit bounded quality-repair authority; one private canary awaiting administrator review`)
+
 ## Decisions still required
 
 - Final AWS runtime/adapter and production networking.
@@ -281,4 +289,4 @@ Post-repair application verification found all 12 review sets valid, with explic
 - Approved runtime secret-provider integration before any future upgrade from `pg` 8 to `pg` 9, whose automatic `pgpass` support is deprecated.
 - Explicit read-only approval and access method for the fresh whole-site crawl and church-owned Search Console/analytics baseline.
 - Production canonical host/slash policy, any intentionally crawlable filter landing pages, and baseline-derived SEO performance/rollback thresholds.
-- Human review and separate acceptance decisions for the 12 Wave 1 private drafts. D-133 grants no authority for Wave 2, Wave 3, another sermon, publication, public **Related themes**, semantic quality acceptance, production/deployment or Phase 3C.
+- Human review and a separate acceptance/rejection decision for the one grounded replacement canary. The other 11 Wave 1 description/Q&A sets remain quarantined and have no regeneration authority. D-133/D-135 grant no authority for Wave 2, Wave 3, another sermon, publication, public **Related themes**, semantic quality acceptance, production/deployment or Phase 3C.

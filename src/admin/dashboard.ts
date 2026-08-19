@@ -8,6 +8,10 @@ import {
   unresolvedReviewQueue
 } from "./dashboard-model";
 import type { SermonStatus } from "../domain/sermon";
+import {
+  isSupersededWave1SourceReference,
+  parseGroundedSermonEnrichmentSourceReference
+} from "../enrichment/sermon-enrichment-policy";
 
 type Relationship = { id: string; name: string; slug: string };
 type Readiness = {
@@ -595,22 +599,25 @@ function renderTranscriptReviewStage(review: EnrichmentReviewResponse): string {
 
 function renderDescriptionReviewStage(review: EnrichmentReviewResponse): string {
   const summary = review.sermon.summary ?? "";
+  const quarantined = isSupersededWave1SourceReference(review.sermon.summarySourceReference);
   return `<form id="review-description-form" class="review-stage-panel stack" novalidate>
     <header class="review-stage-heading"><p>Stage 4 of 6</p><h2>Sermon description</h2><p>Review the visible description separately from the transcript. Approval still does not publish the sermon.</p></header>
     <div id="review-stage-feedback"></div>
+    ${quarantined ? '<div class="callout"><strong>Superseded defective generation — replacement required.</strong><p>This extractive Wave 1 description is retained privately for evidence, but it cannot enter review or be approved. A transcript-grounded replacement must be prepared first.</p></div>' : ""}
     <div class="review-content-status"><span>Current status</span><strong>${escapeHtml(plainReviewStatus(review.sermon.summaryStatus))}</strong></div>
     <label class="review-editor-label"><span>Sermon description</span><textarea id="review-description-body" name="summary" maxlength="2000" required>${escapeHtml(summary)}</textarea><small class="field-hint">Approval requires 80–2,000 characters of useful plain text.</small></label>
     <p class="review-counts" id="review-description-counts">${summary.trim().length.toLocaleString()} of 80–2,000 characters</p>
     <div class="review-decision-bar">
       <button class="button" type="submit" data-description-review-action="save">Save description draft</button>
       <button class="button danger" type="submit" data-description-review-action="reject">Reject and return to draft</button>
-      <button class="button primary" type="submit" data-description-review-action="approve"${summary.trim().length < 80 ? " disabled" : ""}>Approve description</button>
+      <button class="button primary" type="submit" data-description-review-action="approve"${summary.trim().length < 80 || quarantined ? " disabled" : ""}>Approve description</button>
     </div>
     ${reviewStageActions(review, 4)}
   </form>`;
 }
 
 function reviewQuestionCard(item: SermonDetail["questionAnswers"][number], index: number, total: number): string {
+  const quarantined = isSupersededWave1SourceReference(item.sourceReference);
   return `<form class="review-qa-card" data-review-qa="${escapeHtml(item.id)}">
     <header><div><p>Question ${index + 1} of ${total}</p><h3>Question ${index + 1}</h3></div><span class="status-pill">${escapeHtml(plainReviewStatus(item.status))}</span></header>
     <label><span>Question</span><textarea name="question" maxlength="1000" required>${escapeHtml(item.question)}</textarea></label>
@@ -622,7 +629,7 @@ function reviewQuestionCard(item: SermonDetail["questionAnswers"][number], index
     <div class="review-decision-bar">
       <button class="button" type="submit" data-qa-action="save">Save pair</button>
       <button class="button danger" type="submit" data-qa-action="reject">Reject pair</button>
-      <button class="button primary" type="submit" data-qa-action="approve">Approve pair</button>
+      <button class="button primary" type="submit" data-qa-action="approve"${quarantined ? " disabled" : ""}>Approve pair</button>
     </div>
   </form>`;
 }
@@ -630,9 +637,11 @@ function reviewQuestionCard(item: SermonDetail["questionAnswers"][number], index
 function renderQuestionReviewStage(review: EnrichmentReviewResponse): string {
   const questions = [...review.sermon.questionAnswers].sort((a, b) => a.displayOrder - b.displayOrder);
   const approved = questions.filter((item) => item.status === "approved").length;
+  const quarantined = questions.some((item) => isSupersededWave1SourceReference(item.sourceReference));
   return `<section class="review-stage-panel" aria-labelledby="qa-review-heading">
     <header class="review-stage-heading"><p>Stage 5 of 6</p><h2 id="qa-review-heading">Ordered questions and answers</h2><p>Review each pair independently. Five to ten retained pairs must all be approved before the collection is complete.</p></header>
     <div id="review-stage-feedback"></div>
+    ${quarantined ? '<div class="callout"><strong>Superseded defective generation — replacement required.</strong><p>These extractive Wave 1 Q&A bodies are retained privately for evidence, but no pair can enter review or be approved until it has been replaced from the approved transcript.</p></div>' : ""}
     <div class="review-content-status"><span>Collection progress</span><strong>${approved} of ${questions.length} pairs approved</strong></div>
     <div class="review-qa-list">${questions.map((item, index) => reviewQuestionCard(item, index, questions.length)).join("")}</div>
     ${reviewStageActions(review, 5)}
@@ -895,11 +904,12 @@ function wireDescriptionReview(
   const body = document.querySelector<HTMLTextAreaElement>("#review-description-body");
   const counts = document.querySelector<HTMLElement>("#review-description-counts");
   if (!form || !body || !counts) return;
+  const quarantined = isSupersededWave1SourceReference(review.sermon.summarySourceReference);
   body.addEventListener("input", () => {
     const length = body.value.trim().length;
     counts.textContent = `${length.toLocaleString()} of 80–2,000 characters`;
     const approve = form.querySelector<HTMLButtonElement>('[data-description-review-action="approve"]');
-    if (approve) approve.disabled = length < 80;
+    if (approve) approve.disabled = length < 80 || quarantined;
   });
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -1052,11 +1062,24 @@ async function renderGuidedSermonReview(id: string, readOnlyStage?: number): Pro
     review.review.currentStage = Math.max(1, Math.min(6, readOnlyStage));
   }
   dirty = false;
+  const hasQuarantinedDescription = isSupersededWave1SourceReference(review.sermon.summarySourceReference);
+  const hasQuarantinedQuestions = review.sermon.questionAnswers.some((item) =>
+    isSupersededWave1SourceReference(item.sourceReference)
+  );
+  const hasGroundedReplacement = Boolean(
+    parseGroundedSermonEnrichmentSourceReference(review.sermon.summarySourceReference) &&
+    review.sermon.questionAnswers.every((item) => parseGroundedSermonEnrichmentSourceReference(item.sourceReference))
+  );
   main.innerHTML = `<header class="review-record-header">
     <div><a href="/admin/sermons" data-route>Back to sermons</a><p class="eyebrow">Guided private review</p><h1>${escapeHtml(review.sermon.title)}</h1><p>Record ${review.recordPosition} of ${review.recordCount}</p></div>
     <div class="review-record-status"><span class="status-pill">Draft • Private</span><strong>${review.review.completedAt ? "Content review complete" : `${review.progress.percentReviewed}% reviewed`}</strong>${review.review.completedAt ? "<small>Completed editorial stages are read-only. Bible-book metadata remains available in Stage 1.</small>" : ""}</div>
     <progress max="100" value="${review.progress.percentReviewed}">${review.progress.percentReviewed}%</progress>
   </header>
+  ${hasQuarantinedDescription || hasQuarantinedQuestions
+    ? '<div class="callout"><strong>Generated description and Q&A quarantined.</strong><p>The original Wave 1 extractive generator was superseded after a quality failure. The affected bodies remain private evidence and cannot be approved; transcript-grounded replacements are required.</p></div>'
+    : hasGroundedReplacement
+      ? '<div class="callout"><strong>Transcript-grounded replacement draft.</strong><p>This private replacement passed automated structure, transcript-binding and grounding checks. It remains unapproved and still requires Samuel’s full editorial, Scripture and theological review.</p></div>'
+      : ""}
   <div class="review-workflow-layout">
     ${reviewStageNavigation(review)}
     <div class="review-stage-workspace">${reviewStageMarkup(review, taxonomies.speakers, taxonomies.books)}</div>

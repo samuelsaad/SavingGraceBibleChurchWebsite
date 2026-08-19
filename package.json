@@ -26,6 +26,7 @@
     "enrichment:wave1-process-local": "tsx src/enrichment/wave1-process-cli.ts process",
     "enrichment:wave1-verify-local": "tsx src/enrichment/wave1-process-cli.ts verify",
     "enrichment:wave1-review-repair-local": "tsx src/enrichment/wave1-review-repair-cli.ts",
+    "enrichment:canary-local": "tsx src/enrichment/sermon-enrichment-canary-cli.ts",
     "migration:dry-run": "tsx src/migration/cli.ts --dry-run",
     "migration:load-local": "tsx src/migration/load-cli.ts",
     "db:apply-local": "tsx src/migration/schema-cli.ts --apply",

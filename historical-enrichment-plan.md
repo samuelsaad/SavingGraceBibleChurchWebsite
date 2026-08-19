@@ -8,15 +8,23 @@ Phase 3B.2c now has one separately bounded representative Wave 1. A deterministi
 
 The 12 original Wave 1 review rows had no atomic expectation metadata because the later review-seeding function no longer populated it. A bounded repair filled only the all-null source-identity, item-count, empty-set identity and transcript hash/version expectations from the existing private drafts. All 12 now verify as valid zero-finding review sets. The repair preserved the one genuine identity confirmation already recorded, created no acknowledgement, decision, approval or completion, and left every later stage locked until genuine administrator action. Every content body, provenance hash, warning, uncertainty marker and private state remained unchanged.
 
+Subsequent read-only quality diagnosis proved that the Wave 1 descriptions and Q&A were mechanical excerpt assemblies rather than coherent synthesis. The processing version is now retired. Its 12 descriptions and 84 Q&A bodies remain preserved privately as superseded evidence and cannot be reviewed or approved. One authorised canary has been replaced from its current approved transcript using the repository `sermon-enrichment` skill, with transcript hash/version binding and private support ranges for each description paragraph and Q&A pair. The replacement remains draft/unapproved. The other 11 records remain quarantined; no regeneration authority extends to them.
+
 Administrator review uses the dedicated `/admin/sermons/:id/review` route. It presents identity/provenance, 42 and 44 individually preserved atomic findings, transcript, description, ordered Q&A and final summary one stage at a time. The database now records 76 accepted and ten corrected current atomic decisions, zero pending/unresolved/rejected current items, an explicit zero-finding acknowledgement for the third record and three completed reviews. Every current atomic decision has exact subject/timestamp audit attribution. Retained warning codes—including unresolved caption-track type and the fact that punctuation was applied—remain provenance rather than active blockers. Saving, viewing and finishing review never publish. Whole-pilot acceptance is a separate human decision rather than a database field or audit action; Samuel Saad supplied that explicit bounded acceptance on 17 August 2026.
 
 ## Required outputs per included sermon
 
 1. One complete plain-text transcript draft.
-2. One concise sermon-description draft grounded in the transcript and scripture context.
+2. One coherent 180–220 word sermon-description draft grounded in the current approved transcript.
 3. Five to ten ordered scripture- and transcript-grounded Q&A drafts.
 
-Every output remains draft after import. Human review is mandatory. The sermon description uses `sermons.summary`; it must reach approved state and 80-2,000 characters before it becomes public, searchable or readiness-eligible. Approximately two to four useful sentences is guidance, not a mechanical sentence count. `seo_description` is a separate optional controlled override and is not an enrichment substitute.
+Every output remains draft after import. Human review is mandatory. The sermon description uses `sermons.summary`; it must reach approved state before it becomes public, searchable or readiness-eligible. The enrichment contract requires a coherent 180–220 word synthesis of subject, reasoning and application; it forbids generic wrappers, disconnected excerpts and caption fragments. `seo_description` is a separate optional controlled override and is not an enrichment substitute.
+
+## Grounded replacement workflow
+
+The repository-scoped `sermon-enrichment` skill is mandatory for creating, regenerating, reviewing or validating sermon descriptions and Q&A. It uses the complete current approved transcript as the sole content authority; metadata is orientation only. Private requests and results record stable target identity, transcript hash/version/approval evidence, skill version, generation method, warnings, uncertainty, original-bundle hashes and bounded support locations for every description paragraph and every Q&A pair. A transcript identity, hash or version change makes the result stale.
+
+Automated validation checks private/draft state, 180–220 description words, 5–10 ordered Q&A, support bounds/hashes, obvious generic wrappers/fragments/excerpt copying, fixed questions, disconnected answers and detectable unsupported claims. These checks are not theological review. Atomic import refuses approved or administrator-edited content, preserves the superseded bundle and genuine administrator evidence, updates only the description/Q&A drafts, creates no approval, search, semantic or publication state, and must be unchanged on an identical rerun.
 
 ## Deterministic manifest and import
 
@@ -31,7 +39,7 @@ Manifest schema version 2 orders records by anonymised source WordPress ID and s
 
 ## Post-pilot authorization boundary
 
-The three pilot reviews are complete and their bounded pilot is accepted. The separate Wave 1 execution ended with 12 private drafts awaiting genuine administrator review; it does not inherit pilot acceptance. Wave 2, Wave 3, any additional sermon, publication, public **Related themes**, semantic quality acceptance, production/deployment and Phase 3C remain unauthorised. Any later execution requires separate explicit authority for its exact allowlist and limits.
+The three pilot reviews are complete and their bounded pilot is accepted. The separate Wave 1 execution does not inherit pilot acceptance. One grounded replacement canary awaits genuine administrator review; the other 11 description/Q&A sets are quarantined. Wave 2, Wave 3, regeneration of another sermon, publication, public **Related themes**, semantic quality acceptance, production/deployment and Phase 3C remain unauthorised. Any later execution requires separate explicit authority for its exact allowlist and limits.
 
 ## Pilot preparation boundary
 
@@ -48,7 +56,7 @@ The three pilot reviews are complete and their bounded pilot is accepted. The se
 
 ## Remaining workload
 
-The Wave 1 processor estimated 777 administrator minutes across the 12 records, or about 13 hours. This is a formula-derived planning estimate, not observed human effort. Actual review time, corrections and acceptance outcomes must be recorded by the administrator before workload or quality is extrapolated. Semantic evaluation cannot use these descriptions until they are individually approved, and no embedding or relationship generation is authorised by Wave 1.
+The superseded Wave 1 processor's 777-minute estimate is retained only as prior-run evidence and cannot validate defective content or forecast the grounded workflow. Actual canary review time, corrections and acceptance outcome must be recorded by the administrator before quality or workload is extrapolated. Semantic evaluation cannot use any description until it is individually approved, and no embedding or relationship generation is authorised by Wave 1 or the canary.
 
 ## Launch gate
 

@@ -49,6 +49,28 @@ import type {
   TaxonomyWriteInput
 } from "../server/repositories/admin-sermon-repository";
 import { evaluateReviewSetIntegrity } from "../enrichment/review-set-integrity";
+import {
+  isSupersededWave1SourceReference,
+  parseGroundedSermonEnrichmentSourceReference
+} from "../enrichment/sermon-enrichment-policy";
+
+function transcriptSha256(value: string): string {
+  return createHash("sha256").update(value, "utf8").digest("hex");
+}
+
+function assertGroundedReferenceIsCurrent(
+  reference: string | null | undefined,
+  sermon: StoredSermonDetail,
+  path: string
+): void {
+  const grounded = parseGroundedSermonEnrichmentSourceReference(reference);
+  if (!grounded) return;
+  if (!sermon.transcript || sermon.transcript.status !== "approved" || sermon.transcript.approvedAt === null ||
+    sermon.transcript.rowVersion !== grounded.transcriptRowVersion ||
+    transcriptSha256(sermon.transcript.bodyText) !== grounded.transcriptSha256) {
+    invalid(path, "This generated draft is stale because its approved transcript identity or version changed");
+  }
+}
 
 function sermonSummaryDto(sermon: StoredSermonSummary) {
   return {
@@ -700,6 +722,9 @@ export class AdminSermonService {
       }
       const summary = input.summary !== undefined ? input.summary : sermon.summary;
       const summaryStatus = input.summaryStatus ?? sermon.summaryStatus;
+      const summarySourceReference = input.summarySourceReference !== undefined
+        ? input.summarySourceReference
+        : sermon.summarySourceReference;
       const summaryLength = summary?.trim().length ?? 0;
       if (summaryStatus === "missing" && summaryLength > 0) {
         invalid("summaryStatus", "A nonblank sermon description cannot have missing status");
@@ -709,6 +734,30 @@ export class AdminSermonService {
       }
       if (summaryStatus === "approved" && summaryLength < 80) {
         invalid("summary", "An approved sermon description must contain at least 80 characters");
+      }
+      if (summaryStatus !== "draft" && summaryStatus !== "missing") {
+        if (isSupersededWave1SourceReference(sermon.summarySourceReference) ||
+          isSupersededWave1SourceReference(summarySourceReference)) {
+          invalid(
+            "summaryStatus",
+            "This description came from the superseded extractive Wave 1 generator and must be replaced before review or approval"
+          );
+        }
+        assertGroundedReferenceIsCurrent(summarySourceReference, sermon, "summaryStatus");
+      }
+      if (input.questionAnswers !== undefined) {
+        for (const [index, item] of input.questionAnswers.entries()) {
+          if (item.status === "draft") continue;
+          const current = sermon.questionAnswers[index];
+          if (isSupersededWave1SourceReference(current?.sourceReference) ||
+            isSupersededWave1SourceReference(item.sourceReference)) {
+            invalid(
+              `questionAnswers.${index}.status`,
+              "This Q&A pair came from the superseded extractive Wave 1 generator and must be replaced before review or approval"
+            );
+          }
+          assertGroundedReferenceIsCurrent(item.sourceReference, sermon, `questionAnswers.${index}.status`);
+        }
       }
       const seoDescription = input.seoDescription !== undefined
         ? input.seoDescription

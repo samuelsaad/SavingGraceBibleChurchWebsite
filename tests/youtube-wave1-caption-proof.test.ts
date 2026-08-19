@@ -11,7 +11,6 @@ import {
   type VerifiedSelection
 } from "../src/youtube/wave1-caption-proof";
 import { prepareWaveOneContent } from "../src/enrichment/wave1-enrichment";
-import { enrichmentDraftBundleSchema } from "../src/enrichment/contracts";
 
 const firstVideo = "AbCdEfGhI12";
 const secondVideo = "JkLmNoPqR34";
@@ -169,56 +168,7 @@ describe("anonymised Wave 1 preparation", () => {
     return Buffer.from(blocks.join("\n"));
   }
 
-  it("adds readable structure without changing the source lexical sequence", () => {
-    const prepared = prepareWaveOneContent(longVtt());
-    expect(prepared.sourceWordCount).toBe(prepared.cleanedWordCount);
-    expect(prepared.sourceWordSequenceSha256).toBe(prepared.cleanedWordSequenceSha256);
-    expect(prepared.transcript).toContain(".\n\n");
-    expect(prepared.description.length).toBeGreaterThanOrEqual(80);
-    expect(prepared.description.length).toBeLessThanOrEqual(2_000);
-    expect(prepared.questionAnswers).toHaveLength(7);
-    expect(prepared.questionAnswers.every((item) => item.question.length > 0 && item.answer.length > 40)).toBe(true);
-    expect(prepared.uncertaintyMarkers).toHaveLength(1);
-    expect(prepared.warnings.map((warning) => warning.code)).toContain("administrator_accuracy_review_required");
-  });
-
-  it("accepts official API provenance while retaining mandatory human review", () => {
-    const prepared = prepareWaveOneContent(longVtt());
-    const parsed = enrichmentDraftBundleSchema.parse({
-      schemaVersion: 3,
-      sourceWordPressId: 123,
-      targetSermonId: "11111111-1111-4111-8111-111111111111",
-      expectedRowVersion: 1,
-      description: { bodyText: prepared.description, provenance: { sourceKind: "generated_draft", sourceReference: "anonymised" } },
-      transcript: { bodyText: prepared.transcript, provenance: { sourceKind: "caption", sourceReference: "anonymised" } },
-      questionAnswers: prepared.questionAnswers.map((item) => ({ ...item, provenance: { sourceKind: "generated_draft", sourceReference: "anonymised" } })),
-      sourceProvenance: {
-        provider: "youtube",
-        videoId: firstVideo,
-        canonicalUrl: `https://www.youtube.com/watch?v=${firstVideo}`,
-        captionLanguage: "en",
-        captionTrackType: "automatic",
-        originalFilename: "anonymised.vtt",
-        sourceContentSha256: "a".repeat(64),
-        retrievalAttribution: "authorised_youtube_data_api",
-        sourceCharacterCount: 4_000,
-        cleanedCharacterCount: prepared.transcript.length,
-        apparentCompleteness: "requires_manual_review",
-        uncertaintyMarkerCount: prepared.uncertaintyMarkers.length,
-        warnings: prepared.warnings,
-        unresolvedPassages: prepared.uncertaintyMarkers,
-        processingVersion: "anonymised-v1",
-        importedAt: "2026-01-01T00:00:00.000Z",
-        processedAt: "2026-01-01T00:00:00.000Z",
-        processingDurationMs: 1,
-        estimatedReviewMinutes: 45,
-        manualAttentionRequired: true,
-        accuracyReviewStatus: "required"
-      }
-    });
-    expect(parsed.schemaVersion).toBe(3);
-    if (parsed.schemaVersion !== 3) throw new Error("Expected Phase 3B.2 provenance bundle");
-    expect(parsed.sourceProvenance.retrievalAttribution).toBe("authorised_youtube_data_api");
-    expect(parsed.sourceProvenance.accuracyReviewStatus).toBe("required");
+  it("refuses to create any further transcript, description or Q&A drafts", () => {
+    expect(() => prepareWaveOneContent(longVtt())).toThrow("mechanical_wave1_generation_retired");
   });
 });
