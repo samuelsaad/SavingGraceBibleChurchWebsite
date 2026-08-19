@@ -5,7 +5,10 @@ import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   analyzeStudioExport,
+  audioTrackTypeUnverifiedWarning,
   assertExactVideoScope,
+  captionAudioAssociationProvenance,
+  captionParseFailureCode,
   compareCaptionAnalyses,
   parseVttBytes,
   persistExactCaptionBytes,
@@ -71,6 +74,26 @@ describe("caption-track selection", () => {
     });
   });
 
+  it("allows one otherwise eligible unknown-audio track with an explicit provenance warning", () => {
+    const selection = selectCaptionTrack(anonymisedVideoId, [track({ trackKind: "ASR", audioTrackType: "unknown" })]);
+    expect(selection).toEqual({
+      outcome: "selected",
+      track: track({ trackKind: "ASR", audioTrackType: "unknown" }),
+      eligibleTrackCount: 1,
+      warnings: [audioTrackTypeUnverifiedWarning]
+    });
+    if (selection.outcome !== "selected") throw new Error("Expected fallback selection");
+    expect(captionAudioAssociationProvenance(selection)).toEqual({
+      audioTrackType: "unknown",
+      primaryAudioAssociationConfirmed: false,
+      warnings: [audioTrackTypeUnverifiedWarning]
+    });
+    expect(selectCaptionTrack(anonymisedVideoId, [track({ trackKind: "standard", audioTrackType: "unknown" })])).toMatchObject({
+      outcome: "selected",
+      warnings: [audioTrackTypeUnverifiedWarning]
+    });
+  });
+
   it("stops on equal-priority ambiguity", () => {
     expect(selectCaptionTrack(anonymisedVideoId, [track({ id: "one" }), track({ id: "two" })])).toEqual({
       outcome: "ambiguous_track",
@@ -83,15 +106,26 @@ describe("caption-track selection", () => {
     ])).toEqual({ outcome: "ambiguous_track", priority: "asr", eligibleTrackCount: 2 });
   });
 
-  it("rejects absent, wrong-language, draft, non-serving and non-primary tracks", () => {
+  it("rejects absent, wrong-language, draft, non-serving, descriptive and unsupported tracks", () => {
     expect(selectCaptionTrack(anonymisedVideoId, [])).toEqual({ outcome: "no_eligible_track", eligibleTrackCount: 0 });
     expect(selectCaptionTrack(anonymisedVideoId, [
       track({ id: "french", language: "fr" }),
       track({ id: "draft", isDraft: true }),
       track({ id: "syncing", status: "syncing" }),
       track({ id: "dubbed", audioTrackType: "dubbed" }),
-      track({ id: "unknown-audio", audioTrackType: "unknown" }),
+      track({ id: "descriptive", audioTrackType: "descriptive" }),
       track({ id: "unknown-kind", trackKind: "unknown" })
+    ])).toEqual({ outcome: "no_eligible_track", eligibleTrackCount: 0 });
+  });
+
+  it("rejects unknown audio when it is not the video's sole caption track", () => {
+    expect(selectCaptionTrack(anonymisedVideoId, [
+      track({ id: "unknown-one", trackKind: "ASR", audioTrackType: "unknown" }),
+      track({ id: "unknown-two", trackKind: "ASR", audioTrackType: "unknown" })
+    ])).toEqual({ outcome: "no_eligible_track", eligibleTrackCount: 0 });
+    expect(selectCaptionTrack(anonymisedVideoId, [
+      track({ id: "unknown-one", trackKind: "ASR", audioTrackType: "unknown" }),
+      track({ id: "french", language: "fr" })
     ])).toEqual({ outcome: "no_eligible_track", eligibleTrackCount: 0 });
   });
 
@@ -108,11 +142,11 @@ describe("private caption validation and comparison", () => {
     "Alpha beta",
     "",
     "00:00:01.800 --> 00:00:04.250",
-    "gamma",
+    "beta gamma",
     ""
   ].join("\r\n"));
 
-  it("parses VTT and compares normalized wording independently of cue layout", () => {
+  it("removes repeated rolling text when adjacent cues overlap or touch in time", () => {
     const official = parseVttBytes(exactVtt);
     const studio = analyzeStudioExport("Alpha beta gamma\n");
     expect(official).toMatchObject({ wordCount: 3, cueCount: 2, firstCueTimeMs: 500, finalCueTimeMs: 4_250 });
@@ -121,6 +155,20 @@ describe("private caption validation and comparison", () => {
       meaningfulWordingDifference: false,
       requiresManualReview: false
     });
+  });
+
+  it("retains repeated words when adjacent cues have a positive time gap", () => {
+    const parsed = parseVttBytes(Buffer.from([
+      "WEBVTT",
+      "",
+      "00:00:00.000 --> 00:00:01.000",
+      "Alpha beta",
+      "",
+      "00:00:01.100 --> 00:00:02.000",
+      "beta gamma",
+      ""
+    ].join("\n")));
+    expect(parsed).toMatchObject({ wordCount: 4, normalizedWords: ["alpha", "beta", "beta", "gamma"] });
   });
 
   it("flags any normalized wording difference for manual review", () => {
@@ -135,9 +183,43 @@ describe("private caption validation and comparison", () => {
   });
 
   it("rejects malformed and non-UTF-8 downloads", () => {
-    expect(() => parseVttBytes(Buffer.from("not vtt\n"))).toThrow();
-    expect(() => parseVttBytes(Buffer.from("WEBVTT\n\n00:00:05.000 --> 00:00:01.000\nwords\n"))).toThrow();
-    expect(() => parseVttBytes(Buffer.from([0xff, 0xfe, 0xfd]))).toThrow();
+    for (const [value, code] of [
+      [Buffer.from("not vtt\n"), "invalid_webvtt_header"],
+      [Buffer.from("WEBVTT\n\n00:00:05.000 --> 00:00:01.000\nwords\n"), "cue_time_reversed"],
+      [Buffer.from([0xff, 0xfe, 0xfd]), "invalid_utf8"]
+    ] as const) {
+      try {
+        parseVttBytes(value);
+        throw new Error("Expected malformed fixture rejection");
+      } catch (error) {
+        expect(captionParseFailureCode(error)).toBe(code);
+      }
+    }
+  });
+
+  it("accepts optional WEBVTT header text and empty cues without inventing words", () => {
+    const parsed = parseVttBytes(Buffer.from([
+      "WEBVTT generated export",
+      "",
+      "00:00:00.000 --> 00:00:01.000",
+      "",
+      "00:00:01.000 --> 00:00:02.000",
+      "Alpha beta",
+      ""
+    ].join("\n")));
+    expect(parsed).toMatchObject({ cueCount: 2, wordCount: 2 });
+  });
+
+  it("keeps whitespace-only payload lines inside a cue until a truly empty separator", () => {
+    const parsed = parseVttBytes(Buffer.from([
+      "WEBVTT",
+      "",
+      "00:00:00.000 --> 00:00:02.000",
+      " ",
+      "<00:00:00.500>Alpha beta",
+      ""
+    ].join("\n")));
+    expect(parsed).toMatchObject({ cueCount: 1, wordCount: 2, normalizedWords: ["alpha", "beta"] });
   });
 
   it("preserves exact bytes and makes identical reruns non-mutating", async () => {

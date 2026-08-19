@@ -19,6 +19,8 @@ import { CodeChallengeMethod, type Credentials, type OAuth2Client } from "google
 import {
   analyzeStudioExport,
   assertExactVideoScope,
+  captionAudioAssociationProvenance,
+  captionParseFailureCode,
   compareCaptionAnalyses,
   expectedYouTubeChannelTitle,
   parseVttBytes,
@@ -416,6 +418,7 @@ async function inspectCommand(): Promise<void> {
     results.push({
       videoId,
       outcome: inspection.selection.outcome,
+      warnings: inspection.selection.outcome === "selected" ? inspection.selection.warnings : [],
       tracks: inspection.tracks.map((track) => safeTrackView(track, selectedId))
     });
   }
@@ -536,25 +539,36 @@ async function retrieveCommand(): Promise<void> {
     const inspection = await inspectTracks(youtube, videoId);
     if (inspection.selection.outcome !== "selected") {
       results.push({ videoId, outcome: inspection.selection.outcome, downloaded: false });
-      continue;
+      process.stdout.write(`${JSON.stringify({ outcome: "pilot_caption_retrieval_stopped", results }, null, 2)}\n`);
+      return;
     }
     const track = inspection.selection.track;
     const bytes = await downloadCaptionBytes(youtube, track.id);
+    const persisted = await persistExactCaptionBytes(privateProofRoot, videoId, track.id, bytes);
     let officialAnalysis: CaptionAnalysis;
     try {
       officialAnalysis = parseVttBytes(bytes);
-    } catch {
-      results.push({ videoId, outcome: "malformed_vtt", downloaded: false, requiresManualReview: true });
-      continue;
+    } catch (error) {
+      results.push({
+        videoId,
+        outcome: "malformed_vtt",
+        downloaded: true,
+        persistence: persisted.persistence,
+        byteCount: persisted.byteCount,
+        sha256: persisted.sha256,
+        parseFailure: captionParseFailureCode(error),
+        requiresManualReview: true
+      });
+      process.stdout.write(`${JSON.stringify({ outcome: "pilot_caption_retrieval_stopped", results }, null, 2)}\n`);
+      return;
     }
     const studio = studioSources.get(videoId)!;
     const studioSource = await readFile(studio.captionPath, "utf8");
     const studioAnalysis = analyzeStudioExport(studioSource);
     const comparison = compareCaptionAnalyses(officialAnalysis, studioAnalysis);
-    const persisted = await persistExactCaptionBytes(privateProofRoot, videoId, track.id, bytes);
     const video = verified.videos.get(videoId)!;
-    const lastUpdatedKey = sha256(track.lastUpdated ?? "unknown").slice(0, 16);
-    const provenancePath = persisted.path.replace(/\.vtt$/u, `.${lastUpdatedKey}.provenance.private.json`);
+    const provenanceKey = sha256(`${track.lastUpdated ?? "unknown"}\n${youtubeCaptionProofVersion}`).slice(0, 16);
+    const provenancePath = persisted.path.replace(/\.vtt$/u, `.${provenanceKey}.provenance.private.json`);
     const retrievedAt = new Date().toISOString();
     const provenance = {
       schemaVersion: 1,
@@ -565,7 +579,7 @@ async function retrieveCommand(): Promise<void> {
       captionId: track.id,
       language: track.language,
       trackKind: track.trackKind,
-      audioTrackType: track.audioTrackType,
+      ...captionAudioAssociationProvenance(inspection.selection),
       captionLastUpdatedAt: track.lastUpdated,
       retrievedAt,
       byteCount: persisted.byteCount,
@@ -606,6 +620,7 @@ async function retrieveCommand(): Promise<void> {
       provenancePersistence,
       language: track.language,
       trackKind: track.trackKind,
+      warnings: inspection.selection.warnings,
       byteCount: persisted.byteCount,
       cueCount: officialAnalysis.cueCount,
       sha256: persisted.sha256,
@@ -613,6 +628,10 @@ async function retrieveCommand(): Promise<void> {
       meaningfulWordingDifference: comparison.meaningfulWordingDifference,
       requiresManualReview: comparison.requiresManualReview
     });
+    if (comparison.requiresManualReview) {
+      process.stdout.write(`${JSON.stringify({ outcome: "pilot_caption_retrieval_stopped_manual_review", results }, null, 2)}\n`);
+      return;
+    }
   }
   process.stdout.write(`${JSON.stringify({ outcome: "pilot_caption_retrieval_complete", results }, null, 2)}\n`);
 }

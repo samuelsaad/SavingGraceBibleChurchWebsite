@@ -1,6 +1,6 @@
 # Project Decision Log
 
-**Status:** Approved decisions through D-130; bounded official YouTube pilot-caption inspection completed fail-closed on 19 August 2026
+**Status:** Approved decisions through D-131; amended official YouTube pilot-caption proof stopped for manual wording review on 19 August 2026
 **Authority:** `church-website-architecture-plan.md` plus Yang’s confirmed migration decisions and Samuel Saad’s recorded project-owner decisions
 
 ## Evidence classifications
@@ -239,6 +239,12 @@ This acceptance applies only to the completed three-sermon pilot. It does not au
 The official YouTube Data API proof is restricted to the three accepted pilot video identities hard-coded in the server-only local command. Owner OAuth forces fresh account selection and retains its protected out-of-repository token only after all three pilots resolve to one common owner channel and the authenticated `mine` channel is exactly that owner with the expected church-channel title. The tool implements only channel/video/caption read calls, disables retries, has no arbitrary video argument and cannot write to YouTube.
 
 Track selection admits only serving, non-draft English tracks explicitly associated with primary audio, preferring one standard track and otherwise one ASR track; equal best-priority tracks are ambiguous and block retrieval. The 19 August 2026 inspection found exactly one serving, non-draft English ASR track per pilot, but every track reported `audioTrackType` as `unknown`. All three therefore produced `no_eligible_track`. No caption download, Studio-export read/comparison, database access, content generation, evaluation-batch processing, publication or deployment occurred. Treating `unknown` as `primary` is not authorised by this decision. (`explicitly authorised official-API proof; metadata inspection completed; retrieval stopped fail-closed`)
+
+### D-131 - Three-pilot-only unknown-audio fallback and wording-review stop
+
+For only the three already allowlisted pilots, an `audioTrackType` of `unknown` is eligible when the video has exactly one caption track in total and that sole track is English, serving, non-draft, unambiguous and either standard or ASR. Private provenance must record `audio_track_type_unverified` and must not claim that YouTube confirmed primary-audio association. Descriptive, dubbed, unexpected-audio, failed, draft, non-English, unsupported-kind and ambiguous tracks remain rejected. This amendment does not apply to another video or evaluation batch.
+
+Reinspection selected all three sole ASR tracks with the required warning. The first exact VTT was privately retained without translation. Standards-compatible parsing and exact rolling suffix/prefix normalization across YouTube's contiguous cue boundaries reduced segmentation repetition; repetition across a positive timing gap remains untouched. The normalized official sequence contained 7,262 words versus 7,265 in the Studio export and did not match, with 45 common leading and 158 common trailing words. The proof stopped for manual review without exposing the differing wording. The other two pilots were not downloaded or compared. (`explicit project-owner amendment; first-pilot wording gate failed; no further retrieval authorised by this run`)
 
 ## Decisions still required
 

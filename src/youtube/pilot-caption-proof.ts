@@ -5,7 +5,7 @@ import { basename, join, resolve } from "node:path";
 export const pilotYouTubeVideoIds = ["RAMFOAOWwMA", "--U52ZfBC48", "H2-Rh_w8Dfg"] as const;
 export const expectedYouTubeChannelTitle = "Saving Grace Bible Church";
 export const youtubeForceSslScope = "https://www.googleapis.com/auth/youtube.force-ssl";
-export const youtubeCaptionProofVersion = "phase3b2-official-youtube-captions-v1";
+export const youtubeCaptionProofVersion = "phase3b2-official-youtube-captions-v2";
 
 const videoIdPattern = /^[A-Za-z0-9_-]{11}$/;
 const captionIdPattern = /^[A-Za-z0-9_-]{1,200}$/;
@@ -29,8 +29,16 @@ export interface PilotVideoOwnerMetadata {
   channelId: string;
 }
 
+export const audioTrackTypeUnverifiedWarning = "audio_track_type_unverified" as const;
+export type CaptionProvenanceWarning = typeof audioTrackTypeUnverifiedWarning;
+
 export type CaptionTrackSelection =
-  | { outcome: "selected"; track: CaptionTrackMetadata; eligibleTrackCount: number }
+  | {
+    outcome: "selected";
+    track: CaptionTrackMetadata;
+    eligibleTrackCount: number;
+    warnings: CaptionProvenanceWarning[];
+  }
   | { outcome: "ambiguous_track"; priority: "standard" | "asr"; eligibleTrackCount: number }
   | { outcome: "no_eligible_track"; eligibleTrackCount: 0 };
 
@@ -64,6 +72,21 @@ export interface CaptionComparison {
   officialFinalCueTimeMs: number | null;
   studioFinalCueTimeMs: number | null;
   requiresManualReview: boolean;
+}
+
+const captionParseFailures = new Map<string, string>([
+  ["Caption download is not valid UTF-8", "invalid_utf8"],
+  ["Caption download is not a WEBVTT file", "invalid_webvtt_header"],
+  ["Caption download contains a malformed cue", "malformed_cue"],
+  ["Malformed caption timestamp", "malformed_timestamp"],
+  ["Caption timestamp is out of range", "timestamp_out_of_range"],
+  ["Caption cue ends before it starts", "cue_time_reversed"],
+  ["Caption download contains no cues", "no_cues"],
+  ["Caption download contains no readable words", "no_readable_words"]
+]);
+
+export function captionParseFailureCode(error: unknown): string {
+  return error instanceof Error ? captionParseFailures.get(error.message) ?? "invalid_vtt" : "invalid_vtt";
 }
 
 export function sha256(value: Uint8Array | string): string {
@@ -111,12 +134,16 @@ function normalizedTrackKind(value: string): "standard" | "asr" | "other" {
   return "other";
 }
 
-function isEligibleEnglishPrimaryTrack(track: CaptionTrackMetadata): boolean {
+function isServingEnglishTrackWithSupportedKind(track: CaptionTrackMetadata): boolean {
   return track.status.trim().toLocaleLowerCase("en-AU") === "serving" &&
     !track.isDraft &&
     /^en(?:-|$)/iu.test(track.language.trim()) &&
-    track.audioTrackType.trim().toLocaleLowerCase("en-AU") === "primary" &&
     normalizedTrackKind(track.trackKind) !== "other";
+}
+
+function isEligibleEnglishPrimaryTrack(track: CaptionTrackMetadata): boolean {
+  return isServingEnglishTrackWithSupportedKind(track) &&
+    track.audioTrackType.trim().toLocaleLowerCase("en-AU") === "primary";
 }
 
 export function selectCaptionTrack(
@@ -131,17 +158,43 @@ export function selectCaptionTrack(
     throw new Error("YouTube returned an invalid caption-track identity");
   }
   const eligible = tracks.filter(isEligibleEnglishPrimaryTrack);
-  if (eligible.length === 0) return { outcome: "no_eligible_track", eligibleTrackCount: 0 };
   for (const priority of ["standard", "asr"] as const) {
     const matching = eligible.filter((track) => normalizedTrackKind(track.trackKind) === priority);
     if (matching.length > 1) {
       return { outcome: "ambiguous_track", priority, eligibleTrackCount: eligible.length };
     }
     if (matching.length === 1) {
-      return { outcome: "selected", track: matching[0]!, eligibleTrackCount: eligible.length };
+      return { outcome: "selected", track: matching[0]!, eligibleTrackCount: eligible.length, warnings: [] };
     }
   }
+  const onlyTrack = tracks.length === 1 ? tracks[0]! : null;
+  if (
+    onlyTrack && isServingEnglishTrackWithSupportedKind(onlyTrack) &&
+    onlyTrack.audioTrackType.trim().toLocaleLowerCase("en-AU") === "unknown"
+  ) {
+    return {
+      outcome: "selected",
+      track: onlyTrack,
+      eligibleTrackCount: 1,
+      warnings: [audioTrackTypeUnverifiedWarning]
+    };
+  }
   return { outcome: "no_eligible_track", eligibleTrackCount: 0 };
+}
+
+export function captionAudioAssociationProvenance(
+  selection: Extract<CaptionTrackSelection, { outcome: "selected" }>
+): {
+  audioTrackType: string;
+  primaryAudioAssociationConfirmed: boolean;
+  warnings: CaptionProvenanceWarning[];
+} {
+  return {
+    audioTrackType: selection.track.audioTrackType,
+    primaryAudioAssociationConfirmed:
+      selection.track.audioTrackType.trim().toLocaleLowerCase("en-AU") === "primary",
+    warnings: [...selection.warnings]
+  };
 }
 
 function parseTimestamp(value: string): number {
@@ -184,6 +237,24 @@ function sequenceHash(words: readonly string[]): string {
   return sha256(words.join("\n"));
 }
 
+function appendWithRollingCueOverlap(target: string[], next: readonly string[]): void {
+  const maximum = Math.min(target.length, next.length);
+  for (let length = maximum; length > 0; length -= 1) {
+    let equal = true;
+    for (let index = 0; index < length; index += 1) {
+      if (target[target.length - length + index] !== next[index]) {
+        equal = false;
+        break;
+      }
+    }
+    if (equal) {
+      target.push(...next.slice(length));
+      return;
+    }
+  }
+  target.push(...next);
+}
+
 export function parseVttBytes(bytes: Uint8Array): CaptionAnalysis {
   let source: string;
   try {
@@ -193,15 +264,17 @@ export function parseVttBytes(bytes: Uint8Array): CaptionAnalysis {
   }
   const normalized = source.replace(/\r\n?/gu, "\n");
   const lines = normalized.split("\n");
-  if (lines[0]?.trim() !== "WEBVTT") throw new Error("Caption download is not a WEBVTT file");
+  if (!/^WEBVTT(?:[\t ].*)?$/u.test(lines[0]?.trim() ?? "")) {
+    throw new Error("Caption download is not a WEBVTT file");
+  }
   const cues: Array<{ start: number; end: number; text: string }> = [];
   let index = 1;
-  while (index < lines.length && lines[index]!.trim() !== "") index += 1;
+  while (index < lines.length && lines[index] !== "") index += 1;
   while (index < lines.length) {
-    while (index < lines.length && lines[index]!.trim() === "") index += 1;
+    while (index < lines.length && lines[index] === "") index += 1;
     if (index >= lines.length) break;
     if (/^(NOTE|STYLE|REGION)(?:\s|$)/u.test(lines[index]!)) {
-      while (index < lines.length && lines[index]!.trim() !== "") index += 1;
+      while (index < lines.length && lines[index] !== "") index += 1;
       continue;
     }
     let timingLine = lines[index]!;
@@ -216,17 +289,22 @@ export function parseVttBytes(bytes: Uint8Array): CaptionAnalysis {
     if (end < start) throw new Error("Caption cue ends before it starts");
     index += 1;
     const textLines: string[] = [];
-    while (index < lines.length && lines[index]!.trim() !== "") {
+    while (index < lines.length && lines[index] !== "") {
       textLines.push(lines[index]!);
       index += 1;
     }
     const text = visibleCueText(textLines.join(" "));
-    if (!text) throw new Error("Caption download contains an empty cue");
     cues.push({ start, end, text });
   }
   if (cues.length === 0) throw new Error("Caption download contains no cues");
   const words: string[] = [];
-  for (const cue of cues) words.push(...normalizedWords(cue.text));
+  for (let cueIndex = 0; cueIndex < cues.length; cueIndex += 1) {
+    const cue = cues[cueIndex]!;
+    const cueWords = normalizedWords(cue.text);
+    const previous = cues[cueIndex - 1];
+    if (previous && cue.start <= previous.end) appendWithRollingCueOverlap(words, cueWords);
+    else words.push(...cueWords);
+  }
   if (words.length === 0) throw new Error("Caption download contains no readable words");
   return {
     format: "vtt",
