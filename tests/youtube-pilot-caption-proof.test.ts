@@ -5,14 +5,18 @@ import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   analyzeStudioExport,
+  alignCaptionAnalyses,
   audioTrackTypeUnverifiedWarning,
   assertExactVideoScope,
+  buildPrivateCaptionReviewArtifact,
   captionAudioAssociationProvenance,
   captionParseFailureCode,
   compareCaptionAnalyses,
   parseVttBytes,
   persistExactCaptionBytes,
+  persistPrivateCaptionReviewArtifact,
   pilotYouTubeVideoIds,
+  processItemsIndependently,
   requireCommonPilotOwner,
   selectCaptionTrack,
   type CaptionTrackMetadata
@@ -177,8 +181,71 @@ describe("private caption validation and comparison", () => {
       normalizedWordSequenceMatches: false,
       meaningfulWordingDifference: true,
       requiresManualReview: true,
+      substitutionCount: 1,
+      insertionCount: 0,
+      deletionCount: 0,
+      differenceRegionCount: 1,
       commonPrefixWordCount: 1,
       commonSuffixWordCount: 1
+    });
+  });
+
+  it("normalizes Unicode, case, punctuation and whitespace consistently", () => {
+    const official = parseVttBytes(Buffer.from([
+      "WEBVTT",
+      "",
+      "00:00:00.000 --> 00:00:01.000",
+      "Café, GRACE! Don’t stop.",
+      ""
+    ].join("\n")));
+    const studio = analyzeStudioExport("cafe\u0301 grace dont   stop\n");
+    expect(compareCaptionAnalyses(official, studio)).toMatchObject({
+      outcome: "normalized_exact_match",
+      totalChangedTokenCount: 0,
+      overallSimilarityPercentage: 100
+    });
+  });
+
+  it("finds an isolated early difference without treating the remaining sequence as changed", () => {
+    const words = Array.from({ length: 120 }, (_, index) => `word${index}`);
+    const studio = analyzeStudioExport(words.join(" "));
+    const changed = [...words];
+    changed[2] = "replacement";
+    const official = analyzeStudioExport(changed.join(" "));
+    const comparison = compareCaptionAnalyses(official, studio);
+    expect(comparison).toMatchObject({
+      exactMatchedTokenCount: 119,
+      substitutionCount: 1,
+      totalChangedTokenCount: 1,
+      differenceRegionCount: 1,
+      largestConsecutiveDifferenceRegion: 1
+    });
+  });
+
+  it("distinguishes insertions, deletions and substitutions", () => {
+    expect(compareCaptionAnalyses(
+      analyzeStudioExport("alpha extra beta"),
+      analyzeStudioExport("alpha beta")
+    )).toMatchObject({ insertionCount: 1, deletionCount: 0, substitutionCount: 0 });
+    expect(compareCaptionAnalyses(
+      analyzeStudioExport("alpha beta"),
+      analyzeStudioExport("alpha missing beta")
+    )).toMatchObject({ insertionCount: 0, deletionCount: 1, substitutionCount: 0 });
+    expect(compareCaptionAnalyses(
+      analyzeStudioExport("alpha changed beta"),
+      analyzeStudioExport("alpha original beta")
+    )).toMatchObject({ insertionCount: 0, deletionCount: 0, substitutionCount: 1 });
+  });
+
+  it("reports separated difference regions", () => {
+    const comparison = compareCaptionAnalyses(
+      analyzeStudioExport("alpha changed middle altered omega"),
+      analyzeStudioExport("alpha first middle second omega")
+    );
+    expect(comparison).toMatchObject({
+      substitutionCount: 2,
+      differenceRegionCount: 2,
+      largestConsecutiveDifferenceRegion: 1
     });
   });
 
@@ -230,6 +297,47 @@ describe("private caption validation and comparison", () => {
     expect(first.persistence).toBe("created");
     expect(second).toEqual({ ...first, persistence: "unchanged" });
     expect(await readFile(first.path)).toEqual(exactVtt);
+  });
+
+  it("stores aligned wording only in a private review artifact and makes reruns idempotent", async () => {
+    const root = await mkdtemp(join(tmpdir(), "youtube-caption-review-private-"));
+    temporaryDirectories.push(root);
+    const official = parseVttBytes(exactVtt);
+    const studio = analyzeStudioExport("Alpha changed gamma\n");
+    const alignment = alignCaptionAnalyses(official, studio);
+    const artifact = buildPrivateCaptionReviewArtifact({
+      videoId: anonymisedVideoId,
+      captionSha256: "a".repeat(64),
+      studioSourceSha256: "b".repeat(64),
+      official,
+      studio,
+      alignment,
+      contextOperationCount: 1
+    });
+    const first = await persistPrivateCaptionReviewArtifact(root, artifact);
+    const second = await persistPrivateCaptionReviewArtifact(root, artifact);
+    expect(first.persistence).toBe("created");
+    expect(second).toEqual({ ...first, persistence: "unchanged" });
+    expect(first.path.startsWith(join(root, anonymisedVideoId))).toBe(true);
+    expect(first.path).not.toContain("changed");
+    const retained = JSON.parse(await readFile(first.path, "utf8")) as { privateContent: boolean; differenceRegions: unknown[] };
+    expect(retained.privateContent).toBe(true);
+    expect(retained.differenceRegions).toHaveLength(1);
+  });
+
+  it("continues independent items after one comparison fails", async () => {
+    const visited: number[] = [];
+    const results = await processItemsIndependently({
+      items: [1, 2, 3],
+      process: async (item) => {
+        visited.push(item);
+        if (item === 1) throw new Error("isolated failure");
+        return `complete-${item}`;
+      },
+      unavailable: (item) => `unavailable-${item}`
+    });
+    expect(visited).toEqual([1, 2, 3]);
+    expect(results).toEqual(["unavailable-1", "complete-2", "complete-3"]);
   });
 });
 

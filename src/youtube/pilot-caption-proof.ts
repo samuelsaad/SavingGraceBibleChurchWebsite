@@ -5,13 +5,12 @@ import { basename, join, resolve } from "node:path";
 export const pilotYouTubeVideoIds = ["RAMFOAOWwMA", "--U52ZfBC48", "H2-Rh_w8Dfg"] as const;
 export const expectedYouTubeChannelTitle = "Saving Grace Bible Church";
 export const youtubeForceSslScope = "https://www.googleapis.com/auth/youtube.force-ssl";
-export const youtubeCaptionProofVersion = "phase3b2-official-youtube-captions-v2";
+export const youtubeCaptionProofVersion = "phase3b2-official-youtube-captions-v3";
 
 const videoIdPattern = /^[A-Za-z0-9_-]{11}$/;
 const captionIdPattern = /^[A-Za-z0-9_-]{1,200}$/;
 const timestampPattern = /^(?:(\d{1,2}):)?(\d{1,2}):(\d{2})[.,](\d{3})$/;
 const timestampOnlyPattern = /^\s*(?:(?:\d{1,2}:)?\d{1,2}:\d{2}(?:[.,]\d{3})?)(?:\s*(?:-->|→)\s*(?:(?:\d{1,2}:)?\d{1,2}:\d{2}(?:[.,]\d{3})?))?\s*$/;
-const wordPattern = /[\p{L}\p{N}]+(?:['’\-][\p{L}\p{N}]+)*/gu;
 
 export interface CaptionTrackMetadata {
   id: string;
@@ -52,11 +51,40 @@ export interface CaptionAnalysis {
   finalCueTimeMs: number | null;
   normalizedWords: string[];
   normalizedWordSequenceSha256: string;
+  normalizedWordCueTimes: Array<{ startMs: number; endMs: number }> | null;
+}
+
+export type AlignmentOperationKind = "match" | "substitution" | "insertion" | "deletion";
+
+export interface AlignmentOperation {
+  kind: AlignmentOperationKind;
+  officialIndex: number | null;
+  studioIndex: number | null;
+}
+
+export interface DifferenceRegionSummary {
+  operationStart: number;
+  operationEndExclusive: number;
+  changedTokenCount: number;
+  insertionCount: number;
+  deletionCount: number;
+  substitutionCount: number;
 }
 
 export interface CaptionComparison {
+  outcome: "normalized_exact_match" | "differences_detected_manual_review_required";
   normalizedWordSequenceMatches: boolean;
   meaningfulWordingDifference: boolean;
+  exactMatchedTokenCount: number;
+  insertionCount: number;
+  deletionCount: number;
+  substitutionCount: number;
+  totalChangedTokenCount: number;
+  wordErrorRate: number;
+  normalizedDifferenceRate: number;
+  overallSimilarityPercentage: number;
+  differenceRegionCount: number;
+  largestConsecutiveDifferenceRegion: number;
   commonPrefixWordCount: number;
   commonSuffixWordCount: number;
   officialCharacterCount: number;
@@ -72,6 +100,37 @@ export interface CaptionComparison {
   officialFinalCueTimeMs: number | null;
   studioFinalCueTimeMs: number | null;
   requiresManualReview: boolean;
+}
+
+export interface CaptionAlignmentResult {
+  comparison: CaptionComparison;
+  operations: AlignmentOperation[];
+  differenceRegions: DifferenceRegionSummary[];
+}
+
+export interface PrivateCaptionReviewArtifact {
+  schemaVersion: 1;
+  processingVersion: string;
+  privateContent: true;
+  videoId: string;
+  captionSha256: string;
+  studioSourceSha256: string;
+  comparisonFingerprint: string;
+  comparison: CaptionComparison;
+  differenceRegions: Array<{
+    regionNumber: number;
+    summary: DifferenceRegionSummary;
+    officialCueReference: { startMs: number; endMs: number } | null;
+    alignedPassage: Array<{
+      kind: AlignmentOperationKind;
+      officialTokenIndex: number | null;
+      studioTokenIndex: number | null;
+      officialToken: string | null;
+      studioToken: string | null;
+      officialCueStartMs: number | null;
+      officialCueEndMs: number | null;
+    }>;
+  }>;
 }
 
 const captionParseFailures = new Map<string, string>([
@@ -229,15 +288,19 @@ function visibleCueText(value: string): string {
 }
 
 export function normalizedWords(value: string): string[] {
-  return (value.normalize("NFC").match(wordPattern) ?? [])
-    .map((word) => word.toLocaleLowerCase("en-AU"));
+  return value
+    .normalize("NFKC")
+    .toLocaleLowerCase("en-AU")
+    .split(/\s+/u)
+    .map((token) => token.replace(/[^\p{L}\p{N}\p{M}]/gu, ""))
+    .filter((token) => token.length > 0);
 }
 
 function sequenceHash(words: readonly string[]): string {
   return sha256(words.join("\n"));
 }
 
-function appendWithRollingCueOverlap(target: string[], next: readonly string[]): void {
+function rollingCueOverlapLength(target: readonly string[], next: readonly string[]): number {
   const maximum = Math.min(target.length, next.length);
   for (let length = maximum; length > 0; length -= 1) {
     let equal = true;
@@ -247,12 +310,9 @@ function appendWithRollingCueOverlap(target: string[], next: readonly string[]):
         break;
       }
     }
-    if (equal) {
-      target.push(...next.slice(length));
-      return;
-    }
+    if (equal) return length;
   }
-  target.push(...next);
+  return 0;
 }
 
 export function parseVttBytes(bytes: Uint8Array): CaptionAnalysis {
@@ -298,12 +358,17 @@ export function parseVttBytes(bytes: Uint8Array): CaptionAnalysis {
   }
   if (cues.length === 0) throw new Error("Caption download contains no cues");
   const words: string[] = [];
+  const normalizedWordCueTimes: Array<{ startMs: number; endMs: number }> = [];
   for (let cueIndex = 0; cueIndex < cues.length; cueIndex += 1) {
     const cue = cues[cueIndex]!;
     const cueWords = normalizedWords(cue.text);
     const previous = cues[cueIndex - 1];
-    if (previous && cue.start <= previous.end) appendWithRollingCueOverlap(words, cueWords);
-    else words.push(...cueWords);
+    const overlap = previous && cue.start <= previous.end
+      ? rollingCueOverlapLength(words, cueWords)
+      : 0;
+    const appended = cueWords.slice(overlap);
+    words.push(...appended);
+    normalizedWordCueTimes.push(...appended.map(() => ({ startMs: cue.start, endMs: cue.end })));
   }
   if (words.length === 0) throw new Error("Caption download contains no readable words");
   return {
@@ -315,7 +380,8 @@ export function parseVttBytes(bytes: Uint8Array): CaptionAnalysis {
     firstCueTimeMs: cues[0]!.start,
     finalCueTimeMs: cues.at(-1)!.end,
     normalizedWords: words,
-    normalizedWordSequenceSha256: sequenceHash(words)
+    normalizedWordSequenceSha256: sequenceHash(words),
+    normalizedWordCueTimes
   };
 }
 
@@ -353,16 +419,178 @@ export function analyzeStudioExport(source: string): CaptionAnalysis {
     firstCueTimeMs: cueTimes[0]?.start ?? null,
     finalCueTimeMs: cueTimes.at(-1)?.end ?? cueTimes.at(-1)?.start ?? null,
     normalizedWords: words,
-    normalizedWordSequenceSha256: sequenceHash(words)
+    normalizedWordSequenceSha256: sequenceHash(words),
+    normalizedWordCueTimes: null
   };
 }
 
-export function compareCaptionAnalyses(
+function alignmentScoreRow(official: readonly string[], studio: readonly string[]): Uint32Array {
+  let previous = new Uint32Array(studio.length + 1);
+  for (let studioIndex = 0; studioIndex <= studio.length; studioIndex += 1) {
+    previous[studioIndex] = studioIndex;
+  }
+  for (let officialIndex = 1; officialIndex <= official.length; officialIndex += 1) {
+    const current = new Uint32Array(studio.length + 1);
+    current[0] = officialIndex;
+    for (let studioIndex = 1; studioIndex <= studio.length; studioIndex += 1) {
+      const diagonal = previous[studioIndex - 1]! +
+        (official[officialIndex - 1] === studio[studioIndex - 1] ? 0 : 1);
+      const insertion = previous[studioIndex]! + 1;
+      const deletion = current[studioIndex - 1]! + 1;
+      current[studioIndex] = Math.min(diagonal, insertion, deletion);
+    }
+    previous = current;
+  }
+  return previous;
+}
+
+function alignSmall(
+  official: readonly string[],
+  studio: readonly string[],
+  officialOffset: number,
+  studioOffset: number
+): AlignmentOperation[] {
+  const width = studio.length + 1;
+  const matrix = new Uint32Array((official.length + 1) * width);
+  for (let index = 0; index <= official.length; index += 1) matrix[index * width] = index;
+  for (let index = 0; index <= studio.length; index += 1) matrix[index] = index;
+  for (let officialIndex = 1; officialIndex <= official.length; officialIndex += 1) {
+    for (let studioIndex = 1; studioIndex <= studio.length; studioIndex += 1) {
+      const diagonal = matrix[(officialIndex - 1) * width + studioIndex - 1]! +
+        (official[officialIndex - 1] === studio[studioIndex - 1] ? 0 : 1);
+      const insertion = matrix[(officialIndex - 1) * width + studioIndex]! + 1;
+      const deletion = matrix[officialIndex * width + studioIndex - 1]! + 1;
+      matrix[officialIndex * width + studioIndex] = Math.min(diagonal, insertion, deletion);
+    }
+  }
+
+  const reversed: AlignmentOperation[] = [];
+  let officialIndex = official.length;
+  let studioIndex = studio.length;
+  while (officialIndex > 0 || studioIndex > 0) {
+    const current = matrix[officialIndex * width + studioIndex]!;
+    if (officialIndex > 0 && studioIndex > 0) {
+      const same = official[officialIndex - 1] === studio[studioIndex - 1];
+      const diagonal = matrix[(officialIndex - 1) * width + studioIndex - 1]! + (same ? 0 : 1);
+      if (current === diagonal) {
+        reversed.push({
+          kind: same ? "match" : "substitution",
+          officialIndex: officialOffset + officialIndex - 1,
+          studioIndex: studioOffset + studioIndex - 1
+        });
+        officialIndex -= 1;
+        studioIndex -= 1;
+        continue;
+      }
+    }
+    if (officialIndex > 0 && current === matrix[(officialIndex - 1) * width + studioIndex]! + 1) {
+      reversed.push({
+        kind: "insertion",
+        officialIndex: officialOffset + officialIndex - 1,
+        studioIndex: null
+      });
+      officialIndex -= 1;
+      continue;
+    }
+    reversed.push({
+      kind: "deletion",
+      officialIndex: null,
+      studioIndex: studioOffset + studioIndex - 1
+    });
+    studioIndex -= 1;
+  }
+  return reversed.reverse();
+}
+
+function alignHirschberg(
+  official: readonly string[],
+  studio: readonly string[],
+  officialOffset = 0,
+  studioOffset = 0
+): AlignmentOperation[] {
+  if (official.length === 0) {
+    return studio.map((_, index) => ({
+      kind: "deletion" as const,
+      officialIndex: null,
+      studioIndex: studioOffset + index
+    }));
+  }
+  if (studio.length === 0) {
+    return official.map((_, index) => ({
+      kind: "insertion" as const,
+      officialIndex: officialOffset + index,
+      studioIndex: null
+    }));
+  }
+  if (official.length === 1 || studio.length === 1 || official.length * studio.length <= 4_096) {
+    return alignSmall(official, studio, officialOffset, studioOffset);
+  }
+
+  const officialMiddle = Math.floor(official.length / 2);
+  const forward = alignmentScoreRow(official.slice(0, officialMiddle), studio);
+  const backward = alignmentScoreRow(
+    [...official.slice(officialMiddle)].reverse(),
+    [...studio].reverse()
+  );
+  let studioMiddle = 0;
+  let bestScore = Number.POSITIVE_INFINITY;
+  for (let index = 0; index <= studio.length; index += 1) {
+    const score = forward[index]! + backward[studio.length - index]!;
+    if (score < bestScore) {
+      bestScore = score;
+      studioMiddle = index;
+    }
+  }
+  return [
+    ...alignHirschberg(
+      official.slice(0, officialMiddle),
+      studio.slice(0, studioMiddle),
+      officialOffset,
+      studioOffset
+    ),
+    ...alignHirschberg(
+      official.slice(officialMiddle),
+      studio.slice(studioMiddle),
+      officialOffset + officialMiddle,
+      studioOffset + studioMiddle
+    )
+  ];
+}
+
+function summarizeDifferenceRegions(operations: readonly AlignmentOperation[]): DifferenceRegionSummary[] {
+  const regions: DifferenceRegionSummary[] = [];
+  let start: number | null = null;
+  for (let index = 0; index <= operations.length; index += 1) {
+    const changed = index < operations.length && operations[index]!.kind !== "match";
+    if (changed && start === null) start = index;
+    if (!changed && start !== null) {
+      const regionOperations = operations.slice(start, index);
+      regions.push({
+        operationStart: start,
+        operationEndExclusive: index,
+        changedTokenCount: regionOperations.length,
+        insertionCount: regionOperations.filter((operation) => operation.kind === "insertion").length,
+        deletionCount: regionOperations.filter((operation) => operation.kind === "deletion").length,
+        substitutionCount: regionOperations.filter((operation) => operation.kind === "substitution").length
+      });
+      start = null;
+    }
+  }
+  return regions;
+}
+
+export function alignCaptionAnalyses(
   official: CaptionAnalysis,
   studio: CaptionAnalysis
-): CaptionComparison {
-  const matches = official.normalizedWords.length === studio.normalizedWords.length &&
-    official.normalizedWords.every((word, index) => word === studio.normalizedWords[index]);
+): CaptionAlignmentResult {
+  const operations = alignHirschberg(official.normalizedWords, studio.normalizedWords);
+  const exactMatchedTokenCount = operations.filter((operation) => operation.kind === "match").length;
+  const insertionCount = operations.filter((operation) => operation.kind === "insertion").length;
+  const deletionCount = operations.filter((operation) => operation.kind === "deletion").length;
+  const substitutionCount = operations.filter((operation) => operation.kind === "substitution").length;
+  const totalChangedTokenCount = insertionCount + deletionCount + substitutionCount;
+  const matches = totalChangedTokenCount === 0;
+  const differenceRegions = summarizeDifferenceRegions(operations);
   let commonPrefixWordCount = 0;
   while (
     commonPrefixWordCount < official.normalizedWords.length &&
@@ -376,9 +604,28 @@ export function compareCaptionAnalyses(
     official.normalizedWords[official.normalizedWords.length - 1 - commonSuffixWordCount] ===
       studio.normalizedWords[studio.normalizedWords.length - 1 - commonSuffixWordCount]
   ) commonSuffixWordCount += 1;
-  return {
+  const referenceWordCount = studio.normalizedWords.length;
+  const largerWordCount = Math.max(official.normalizedWords.length, referenceWordCount);
+  const normalizedDifferenceRate = largerWordCount === 0 ? 0 : totalChangedTokenCount / largerWordCount;
+  const comparison: CaptionComparison = {
+    outcome: matches ? "normalized_exact_match" : "differences_detected_manual_review_required",
     normalizedWordSequenceMatches: matches,
     meaningfulWordingDifference: !matches,
+    exactMatchedTokenCount,
+    insertionCount,
+    deletionCount,
+    substitutionCount,
+    totalChangedTokenCount,
+    wordErrorRate: referenceWordCount === 0
+      ? (totalChangedTokenCount === 0 ? 0 : 1)
+      : totalChangedTokenCount / referenceWordCount,
+    normalizedDifferenceRate,
+    overallSimilarityPercentage: Math.max(0, (1 - normalizedDifferenceRate) * 100),
+    differenceRegionCount: differenceRegions.length,
+    largestConsecutiveDifferenceRegion: differenceRegions.reduce(
+      (largest, region) => Math.max(largest, region.changedTokenCount),
+      0
+    ),
     commonPrefixWordCount,
     commonSuffixWordCount,
     officialCharacterCount: official.characterCount,
@@ -395,6 +642,164 @@ export function compareCaptionAnalyses(
     studioFinalCueTimeMs: studio.finalCueTimeMs,
     requiresManualReview: !matches
   };
+  return { comparison, operations, differenceRegions };
+}
+
+export function compareCaptionAnalyses(
+  official: CaptionAnalysis,
+  studio: CaptionAnalysis
+): CaptionComparison {
+  return alignCaptionAnalyses(official, studio).comparison;
+}
+
+export function buildPrivateCaptionReviewArtifact(input: {
+  videoId: string;
+  captionSha256: string;
+  studioSourceSha256: string;
+  official: CaptionAnalysis;
+  studio: CaptionAnalysis;
+  alignment: CaptionAlignmentResult;
+  contextOperationCount?: number;
+}): PrivateCaptionReviewArtifact {
+  if (!videoIdPattern.test(input.videoId)) throw new Error("Unsafe private review video identity");
+  if (!/^[a-f0-9]{64}$/u.test(input.captionSha256) || !/^[a-f0-9]{64}$/u.test(input.studioSourceSha256)) {
+    throw new Error("Unsafe private review source hash");
+  }
+  if (!input.alignment.comparison.requiresManualReview || input.alignment.differenceRegions.length === 0) {
+    throw new Error("A private review artifact is only valid for a non-exact comparison");
+  }
+  const contextOperationCount = input.contextOperationCount ?? 8;
+  if (!Number.isSafeInteger(contextOperationCount) || contextOperationCount < 0 || contextOperationCount > 100) {
+    throw new Error("Unsafe private review context size");
+  }
+  const differenceRegions = input.alignment.differenceRegions.map((summary, index) => {
+    const passageStart = Math.max(0, summary.operationStart - contextOperationCount);
+    const passageEnd = Math.min(
+      input.alignment.operations.length,
+      summary.operationEndExclusive + contextOperationCount
+    );
+    const alignedPassage = input.alignment.operations.slice(passageStart, passageEnd).map((operation) => {
+      const timing = operation.officialIndex === null
+        ? null
+        : input.official.normalizedWordCueTimes?.[operation.officialIndex] ?? null;
+      return {
+        kind: operation.kind,
+        officialTokenIndex: operation.officialIndex,
+        studioTokenIndex: operation.studioIndex,
+        officialToken: operation.officialIndex === null
+          ? null
+          : input.official.normalizedWords[operation.officialIndex] ?? null,
+        studioToken: operation.studioIndex === null
+          ? null
+          : input.studio.normalizedWords[operation.studioIndex] ?? null,
+        officialCueStartMs: timing?.startMs ?? null,
+        officialCueEndMs: timing?.endMs ?? null
+      };
+    });
+    const regionTimings = input.alignment.operations
+      .slice(summary.operationStart, summary.operationEndExclusive)
+      .flatMap((operation) => {
+        if (operation.officialIndex === null) return [];
+        const timing = input.official.normalizedWordCueTimes?.[operation.officialIndex];
+        return timing ? [timing] : [];
+      });
+    return {
+      regionNumber: index + 1,
+      summary,
+      officialCueReference: regionTimings.length === 0
+        ? null
+        : {
+          startMs: Math.min(...regionTimings.map((timing) => timing.startMs)),
+          endMs: Math.max(...regionTimings.map((timing) => timing.endMs))
+        },
+      alignedPassage
+    };
+  });
+  const comparisonFingerprint = sha256(JSON.stringify({
+    processingVersion: youtubeCaptionProofVersion,
+    videoId: input.videoId,
+    captionSha256: input.captionSha256,
+    studioSourceSha256: input.studioSourceSha256,
+    comparison: input.alignment.comparison,
+    differenceRegions: input.alignment.differenceRegions
+  }));
+  return {
+    schemaVersion: 1,
+    processingVersion: youtubeCaptionProofVersion,
+    privateContent: true,
+    videoId: input.videoId,
+    captionSha256: input.captionSha256,
+    studioSourceSha256: input.studioSourceSha256,
+    comparisonFingerprint,
+    comparison: input.alignment.comparison,
+    differenceRegions
+  };
+}
+
+export async function persistPrivateCaptionReviewArtifact(
+  privateRoot: string,
+  artifact: PrivateCaptionReviewArtifact
+): Promise<{ path: string; sha256: string; persistence: "created" | "unchanged" }> {
+  if (!videoIdPattern.test(artifact.videoId) || !/^[a-f0-9]{64}$/u.test(artifact.comparisonFingerprint)) {
+    throw new Error("Unsafe private review persistence identity");
+  }
+  const root = resolve(privateRoot);
+  await mkdir(root, { recursive: true, mode: 0o700 });
+  const rootStat = await lstat(root);
+  if (!rootStat.isDirectory() || rootStat.isSymbolicLink()) throw new Error("Unsafe private review directory");
+  const videoDirectory = resolve(root, artifact.videoId);
+  if (resolve(videoDirectory, "..") !== root) throw new Error("Unsafe private review video directory");
+  await mkdir(videoDirectory, { recursive: true, mode: 0o700 });
+  const videoStat = await lstat(videoDirectory);
+  if (!videoStat.isDirectory() || videoStat.isSymbolicLink()) {
+    throw new Error("Unsafe private review video directory");
+  }
+  const filename = `comparison.${artifact.comparisonFingerprint}.review.private.json`;
+  if (basename(filename) !== filename) throw new Error("Unsafe private review filename");
+  const path = join(videoDirectory, filename);
+  const bytes = Buffer.from(`${JSON.stringify(artifact, null, 2)}\n`, "utf8");
+  const digest = sha256(bytes);
+  let createdHandle: Awaited<ReturnType<typeof open>> | null = null;
+  let createdPath = false;
+  try {
+    createdHandle = await open(path, "wx", 0o600);
+    createdPath = true;
+    try {
+      await createdHandle.writeFile(bytes);
+      await createdHandle.sync();
+    } finally {
+      await createdHandle.close();
+      createdHandle = null;
+    }
+    return { path, sha256: digest, persistence: "created" };
+  } catch (error) {
+    if (createdHandle) await createdHandle.close().catch(() => undefined);
+    if (!(error instanceof Error && "code" in error && error.code === "EEXIST")) {
+      if (createdPath) await unlink(path).catch(() => undefined);
+      throw error;
+    }
+    const existing = await readFile(path);
+    if (!existing.equals(bytes)) throw new Error("Private review persistence hash collision or conflict");
+    return { path, sha256: digest, persistence: "unchanged" };
+  }
+}
+
+export async function processItemsIndependently<T, R>(input: {
+  items: readonly T[];
+  process: (item: T) => Promise<R>;
+  unavailable: (item: T, error: unknown) => Promise<R> | R;
+  isGlobalFailure?: (error: unknown) => boolean;
+}): Promise<R[]> {
+  const results: R[] = [];
+  for (const item of input.items) {
+    try {
+      results.push(await input.process(item));
+    } catch (error) {
+      if (input.isGlobalFailure?.(error)) throw error;
+      results.push(await input.unavailable(item, error));
+    }
+  }
+  return results;
 }
 
 export async function persistExactCaptionBytes(

@@ -18,14 +18,17 @@ import { google, type youtube_v3 } from "googleapis";
 import { CodeChallengeMethod, type Credentials, type OAuth2Client } from "google-auth-library";
 import {
   analyzeStudioExport,
+  alignCaptionAnalyses,
   assertExactVideoScope,
+  buildPrivateCaptionReviewArtifact,
   captionAudioAssociationProvenance,
   captionParseFailureCode,
-  compareCaptionAnalyses,
   expectedYouTubeChannelTitle,
   parseVttBytes,
   persistExactCaptionBytes,
+  persistPrivateCaptionReviewArtifact,
   pilotYouTubeVideoIds,
+  processItemsIndependently,
   requireCommonPilotOwner,
   selectCaptionTrack,
   sha256,
@@ -82,6 +85,31 @@ class SafeProofError extends Error {
   constructor(readonly code: string, message: string) {
     super(message);
   }
+}
+
+const globalProofFailureCodes = new Set([
+  "authentication_or_permission_failed",
+  "channel_changed",
+  "pilot_owner_mismatch",
+  "private_storage_failed",
+  "studio_mapping_invalid",
+  "token_invalid",
+  "wrong_channel"
+]);
+
+function providerFailureIsGlobal(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const candidate = error as {
+    response?: { status?: unknown; data?: { error?: { errors?: Array<{ reason?: unknown }> } } };
+    code?: unknown;
+  };
+  if (candidate.response?.status === 401 || candidate.code === 401) return true;
+  const reasons = candidate.response?.data?.error?.errors ?? [];
+  return reasons.some((item) => item.reason === "authError" || item.reason === "insufficientPermissions");
+}
+
+function perVideoFailureCode(error: unknown): string {
+  return error instanceof SafeProofError ? error.code : "unexpected_per_video_failure";
 }
 
 function requireString(value: unknown, field: string): string {
@@ -354,7 +382,10 @@ async function inspectTracks(
   youtube: YouTubeClient,
   videoId: string
 ): Promise<{ tracks: CaptionTrackMetadata[]; selection: CaptionTrackSelection }> {
-  const response = await youtube.captions.list({ part: ["snippet"], videoId }, { retry: false }).catch(() => {
+  const response = await youtube.captions.list({ part: ["snippet"], videoId }, { retry: false }).catch((error: unknown) => {
+    if (providerFailureIsGlobal(error)) {
+      throw new SafeProofError("authentication_or_permission_failed", "The official API rejected the authenticated proof authority");
+    }
     throw new SafeProofError("caption_list_failed", "The official captions.list request failed safely");
   });
   const tracks = (response.data.items ?? []).map((item) => trackMetadata(item, videoId));
@@ -459,10 +490,6 @@ async function loadStudioSources(): Promise<Map<string, StudioSource>> {
       throw new SafeProofError("studio_mapping_invalid", "Private pilot record is outside the exact proof scope");
     }
     const captionPath = safeDirectPilotChild(captionFilename);
-    const captionFile = await lstat(captionPath).catch(() => null);
-    if (!captionFile?.isFile() || captionFile.isSymbolicLink()) {
-      throw new SafeProofError("studio_source_missing", "A mapped private Studio export is unavailable");
-    }
     sources.set(videoId, { videoId, captionPath, language, trackType: trackType as StudioSource["trackType"] });
   }
   if (sources.size !== pilotYouTubeVideoIds.length) {
@@ -493,7 +520,10 @@ async function downloadCaptionBytes(youtube: YouTubeClient, captionId: string): 
   const response = await youtube.captions.download({ id: captionId, tfmt: "vtt" }, {
     responseType: "arraybuffer",
     retry: false
-  }).catch(() => {
+  }).catch((error: unknown) => {
+    if (providerFailureIsGlobal(error)) {
+      throw new SafeProofError("authentication_or_permission_failed", "The official API rejected the authenticated proof authority");
+    }
     throw new SafeProofError("caption_download_failed", "The official captions.download request failed safely");
   });
   const data = response.data;
@@ -534,106 +564,205 @@ async function retrieveCommand(): Promise<void> {
   const verified = await verifyStoredChannel(client, token);
   const studioSources = await loadStudioSources();
   const youtube = google.youtube({ version: "v3", auth: client });
-  const results = [];
-  for (const videoId of pilotYouTubeVideoIds) {
-    const inspection = await inspectTracks(youtube, videoId);
-    if (inspection.selection.outcome !== "selected") {
-      results.push({ videoId, outcome: inspection.selection.outcome, downloaded: false });
-      process.stdout.write(`${JSON.stringify({ outcome: "pilot_caption_retrieval_stopped", results }, null, 2)}\n`);
-      return;
-    }
-    const track = inspection.selection.track;
-    const bytes = await downloadCaptionBytes(youtube, track.id);
-    const persisted = await persistExactCaptionBytes(privateProofRoot, videoId, track.id, bytes);
-    let officialAnalysis: CaptionAnalysis;
-    try {
-      officialAnalysis = parseVttBytes(bytes);
-    } catch (error) {
-      results.push({
+  const results = await processItemsIndependently<typeof pilotYouTubeVideoIds[number], Record<string, unknown>>({
+    items: pilotYouTubeVideoIds,
+    process: async (videoId) => {
+      const inspection = await inspectTracks(youtube, videoId);
+      if (inspection.selection.outcome !== "selected") {
+        return {
+          videoId,
+          outcome: "comparison_unavailable" as const,
+          downloaded: false,
+          reason: inspection.selection.outcome
+        };
+      }
+      const track = inspection.selection.track;
+      const bytes = await downloadCaptionBytes(youtube, track.id);
+      let persisted: Awaited<ReturnType<typeof persistExactCaptionBytes>>;
+      try {
+        persisted = await persistExactCaptionBytes(privateProofRoot, videoId, track.id, bytes);
+      } catch {
+        throw new SafeProofError("private_storage_failed", "Private exact-byte caption persistence failed safely");
+      }
+      let officialAnalysis: CaptionAnalysis;
+      try {
+        officialAnalysis = parseVttBytes(bytes);
+      } catch (error) {
+        return {
+          videoId,
+          outcome: "comparison_unavailable" as const,
+          downloaded: true,
+          persistence: persisted.persistence,
+          byteCount: persisted.byteCount,
+          sha256: persisted.sha256,
+          reason: captionParseFailureCode(error)
+        };
+      }
+
+      const studio = studioSources.get(videoId)!;
+      const studioFile = await lstat(studio.captionPath).catch(() => null);
+      if (!studioFile?.isFile() || studioFile.isSymbolicLink()) {
+        return {
+          videoId,
+          outcome: "comparison_unavailable" as const,
+          downloaded: true,
+          persistence: persisted.persistence,
+          byteCount: persisted.byteCount,
+          cueCount: officialAnalysis.cueCount,
+          sha256: persisted.sha256,
+          reason: "studio_source_missing"
+        };
+      }
+      const studioBytes = await readFile(studio.captionPath).catch(() => null);
+      if (!studioBytes) {
+        return {
+          videoId,
+          outcome: "comparison_unavailable" as const,
+          downloaded: true,
+          persistence: persisted.persistence,
+          byteCount: persisted.byteCount,
+          cueCount: officialAnalysis.cueCount,
+          sha256: persisted.sha256,
+          reason: "studio_source_unreadable"
+        };
+      }
+      let studioSource: string;
+      let studioAnalysis: CaptionAnalysis;
+      try {
+        studioSource = new TextDecoder("utf-8", { fatal: true }).decode(studioBytes);
+        studioAnalysis = analyzeStudioExport(studioSource);
+      } catch {
+        return {
+          videoId,
+          outcome: "comparison_unavailable" as const,
+          downloaded: true,
+          persistence: persisted.persistence,
+          byteCount: persisted.byteCount,
+          cueCount: officialAnalysis.cueCount,
+          sha256: persisted.sha256,
+          reason: "studio_source_invalid"
+        };
+      }
+
+      const alignment = alignCaptionAnalyses(officialAnalysis, studioAnalysis);
+      const comparison = alignment.comparison;
+      const video = verified.videos.get(videoId)!;
+      const audioAssociation = captionAudioAssociationProvenance(inspection.selection);
+      let reviewArtifactRelativePath: string | null = null;
+      let reviewArtifactSha256: string | null = null;
+      let reviewArtifactPersistence: "created" | "unchanged" | null = null;
+      if (comparison.requiresManualReview) {
+        try {
+          const reviewArtifact = buildPrivateCaptionReviewArtifact({
+            videoId,
+            captionSha256: persisted.sha256,
+            studioSourceSha256: sha256(studioBytes),
+            official: officialAnalysis,
+            studio: studioAnalysis,
+            alignment
+          });
+          const reviewPersistence = await persistPrivateCaptionReviewArtifact(privateProofRoot, reviewArtifact);
+          reviewArtifactRelativePath = relative(privatePilotRoot, reviewPersistence.path).replaceAll("\\", "/");
+          reviewArtifactSha256 = reviewPersistence.sha256;
+          reviewArtifactPersistence = reviewPersistence.persistence;
+        } catch {
+          throw new SafeProofError("private_storage_failed", "Private aligned-review persistence failed safely");
+        }
+      }
+
+      const provenanceKey = sha256(`${track.lastUpdated ?? "unknown"}\n${youtubeCaptionProofVersion}`).slice(0, 16);
+      const provenancePath = persisted.path.replace(/\.vtt$/u, `.${provenanceKey}.provenance.private.json`);
+      const retrievedAt = new Date().toISOString();
+      const provenance = {
+        schemaVersion: 1,
+        processingVersion: youtubeCaptionProofVersion,
+        provider: "official_youtube_data_api_v3",
         videoId,
-        outcome: "malformed_vtt",
+        channelId: video.channelId,
+        captionId: track.id,
+        language: track.language,
+        trackKind: track.trackKind,
+        ...audioAssociation,
+        captionLastUpdatedAt: track.lastUpdated,
+        retrievedAt,
+        byteCount: persisted.byteCount,
+        cueCount: officialAnalysis.cueCount,
+        sha256: persisted.sha256,
+        sourceRelativePath: relative(privatePilotRoot, persisted.path).replaceAll("\\", "/"),
+        vtt: {
+          parsed: true,
+          characterCount: officialAnalysis.characterCount,
+          visibleCharacterCount: officialAnalysis.visibleCharacterCount,
+          wordCount: officialAnalysis.wordCount,
+          normalizedWordSequenceSha256: officialAnalysis.normalizedWordSequenceSha256,
+          firstCueTimeMs: officialAnalysis.firstCueTimeMs,
+          finalCueTimeMs: officialAnalysis.finalCueTimeMs,
+          apparentDurationCoverage: coverageMetrics(officialAnalysis, video.durationMs)
+        },
+        studioComparison: {
+          videoIdentityMatches: studio.videoId === videoId,
+          officialLanguage: track.language,
+          studioLanguage: studio.language,
+          bothEnglish: /^en(?:-|$)/iu.test(track.language) && /^en(?:-|$)/iu.test(studio.language),
+          exactLanguageTagMatches: track.language.toLocaleLowerCase("en-AU") === studio.language.toLocaleLowerCase("en-AU"),
+          officialTrackKind: track.trackKind,
+          studioTrackType: studio.trackType,
+          trackTypeMatches: studio.trackType === "unknown" ? null :
+            (studio.trackType === "automatic" ? track.trackKind.toLocaleLowerCase("en-AU") === "asr" : track.trackKind.toLocaleLowerCase("en-AU") === "standard"),
+          studioNormalizedWordSequenceSha256: studioAnalysis.normalizedWordSequenceSha256,
+          studioApparentDurationCoverage: coverageMetrics(studioAnalysis, video.durationMs),
+          privateReviewArtifactRelativePath: reviewArtifactRelativePath,
+          privateReviewArtifactSha256: reviewArtifactSha256,
+          ...comparison
+        }
+      };
+      let provenancePersistence: "created" | "unchanged";
+      try {
+        provenancePersistence = await writeProvenanceNoClobber(provenancePath, provenance);
+      } catch {
+        throw new SafeProofError("private_storage_failed", "Private caption provenance persistence failed safely");
+      }
+      return {
+        videoId,
+        outcome: comparison.outcome,
         downloaded: true,
         persistence: persisted.persistence,
+        provenancePersistence,
+        reviewArtifactPersistence,
+        privateReviewArtifactRelativePath: reviewArtifactRelativePath,
+        language: track.language,
+        trackKind: track.trackKind,
+        warnings: inspection.selection.warnings,
+        primaryAudioAssociationConfirmed: audioAssociation.primaryAudioAssociationConfirmed,
         byteCount: persisted.byteCount,
+        cueCount: officialAnalysis.cueCount,
         sha256: persisted.sha256,
-        parseFailure: captionParseFailureCode(error),
-        requiresManualReview: true
-      });
-      process.stdout.write(`${JSON.stringify({ outcome: "pilot_caption_retrieval_stopped", results }, null, 2)}\n`);
-      return;
-    }
-    const studio = studioSources.get(videoId)!;
-    const studioSource = await readFile(studio.captionPath, "utf8");
-    const studioAnalysis = analyzeStudioExport(studioSource);
-    const comparison = compareCaptionAnalyses(officialAnalysis, studioAnalysis);
-    const video = verified.videos.get(videoId)!;
-    const provenanceKey = sha256(`${track.lastUpdated ?? "unknown"}\n${youtubeCaptionProofVersion}`).slice(0, 16);
-    const provenancePath = persisted.path.replace(/\.vtt$/u, `.${provenanceKey}.provenance.private.json`);
-    const retrievedAt = new Date().toISOString();
-    const provenance = {
-      schemaVersion: 1,
-      processingVersion: youtubeCaptionProofVersion,
-      provider: "official_youtube_data_api_v3",
+        exactMatchedTokenCount: comparison.exactMatchedTokenCount,
+        insertionCount: comparison.insertionCount,
+        deletionCount: comparison.deletionCount,
+        substitutionCount: comparison.substitutionCount,
+        totalChangedTokenCount: comparison.totalChangedTokenCount,
+        wordErrorRate: comparison.wordErrorRate,
+        normalizedDifferenceRate: comparison.normalizedDifferenceRate,
+        overallSimilarityPercentage: comparison.overallSimilarityPercentage,
+        differenceRegionCount: comparison.differenceRegionCount,
+        largestConsecutiveDifferenceRegion: comparison.largestConsecutiveDifferenceRegion,
+        commonPrefixWordCount: comparison.commonPrefixWordCount,
+        commonSuffixWordCount: comparison.commonSuffixWordCount,
+        officialWordCount: comparison.officialWordCount,
+        studioWordCount: comparison.studioWordCount,
+        requiresManualReview: comparison.requiresManualReview
+      };
+    },
+    unavailable: (videoId, error) => ({
       videoId,
-      channelId: video.channelId,
-      captionId: track.id,
-      language: track.language,
-      trackKind: track.trackKind,
-      ...captionAudioAssociationProvenance(inspection.selection),
-      captionLastUpdatedAt: track.lastUpdated,
-      retrievedAt,
-      byteCount: persisted.byteCount,
-      cueCount: officialAnalysis.cueCount,
-      sha256: persisted.sha256,
-      sourceRelativePath: relative(privatePilotRoot, persisted.path).replaceAll("\\", "/"),
-      vtt: {
-        parsed: true,
-        characterCount: officialAnalysis.characterCount,
-        visibleCharacterCount: officialAnalysis.visibleCharacterCount,
-        wordCount: officialAnalysis.wordCount,
-        normalizedWordSequenceSha256: officialAnalysis.normalizedWordSequenceSha256,
-        firstCueTimeMs: officialAnalysis.firstCueTimeMs,
-        finalCueTimeMs: officialAnalysis.finalCueTimeMs,
-        apparentDurationCoverage: coverageMetrics(officialAnalysis, video.durationMs)
-      },
-      studioComparison: {
-        videoIdentityMatches: studio.videoId === videoId,
-        officialLanguage: track.language,
-        studioLanguage: studio.language,
-        bothEnglish: /^en(?:-|$)/iu.test(track.language) && /^en(?:-|$)/iu.test(studio.language),
-        exactLanguageTagMatches: track.language.toLocaleLowerCase("en-AU") === studio.language.toLocaleLowerCase("en-AU"),
-        officialTrackKind: track.trackKind,
-        studioTrackType: studio.trackType,
-        trackTypeMatches: studio.trackType === "unknown" ? null :
-          (studio.trackType === "automatic" ? track.trackKind.toLocaleLowerCase("en-AU") === "asr" : track.trackKind.toLocaleLowerCase("en-AU") === "standard"),
-        studioNormalizedWordSequenceSha256: studioAnalysis.normalizedWordSequenceSha256,
-        studioApparentDurationCoverage: coverageMetrics(studioAnalysis, video.durationMs),
-        ...comparison
-      }
-    };
-    const provenancePersistence = await writeProvenanceNoClobber(provenancePath, provenance);
-    results.push({
-      videoId,
-      outcome: comparison.requiresManualReview ? "retrieved_manual_review_required" : "retrieved_agrees_with_studio",
-      downloaded: true,
-      persistence: persisted.persistence,
-      provenancePersistence,
-      language: track.language,
-      trackKind: track.trackKind,
-      warnings: inspection.selection.warnings,
-      byteCount: persisted.byteCount,
-      cueCount: officialAnalysis.cueCount,
-      sha256: persisted.sha256,
-      normalizedWordSequenceMatches: comparison.normalizedWordSequenceMatches,
-      meaningfulWordingDifference: comparison.meaningfulWordingDifference,
-      requiresManualReview: comparison.requiresManualReview
-    });
-    if (comparison.requiresManualReview) {
-      process.stdout.write(`${JSON.stringify({ outcome: "pilot_caption_retrieval_stopped_manual_review", results }, null, 2)}\n`);
-      return;
-    }
-  }
-  process.stdout.write(`${JSON.stringify({ outcome: "pilot_caption_retrieval_complete", results }, null, 2)}\n`);
+      outcome: "comparison_unavailable" as const,
+      downloaded: false,
+      reason: perVideoFailureCode(error)
+    }),
+    isGlobalFailure: (error) => error instanceof SafeProofError && globalProofFailureCodes.has(error.code)
+  });
+  process.stdout.write(`${JSON.stringify({ outcome: "three_pilot_caption_comparison_complete", results }, null, 2)}\n`);
 }
 
 async function main(): Promise<void> {

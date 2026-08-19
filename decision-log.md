@@ -1,6 +1,6 @@
 # Project Decision Log
 
-**Status:** Approved decisions through D-131; amended official YouTube pilot-caption proof stopped for manual wording review on 19 August 2026
+**Status:** Approved decisions through D-132; official YouTube three-pilot comparison complete with one private manual-review result on 19 August 2026
 **Authority:** `church-website-architecture-plan.md` plus Yang’s confirmed migration decisions and Samuel Saad’s recorded project-owner decisions
 
 ## Evidence classifications
@@ -245,6 +245,14 @@ Track selection admits only serving, non-draft English tracks explicitly associa
 For only the three already allowlisted pilots, an `audioTrackType` of `unknown` is eligible when the video has exactly one caption track in total and that sole track is English, serving, non-draft, unambiguous and either standard or ASR. Private provenance must record `audio_track_type_unverified` and must not claim that YouTube confirmed primary-audio association. Descriptive, dubbed, unexpected-audio, failed, draft, non-English, unsupported-kind and ambiguous tracks remain rejected. This amendment does not apply to another video or evaluation batch.
 
 Reinspection selected all three sole ASR tracks with the required warning. The first exact VTT was privately retained without translation. Standards-compatible parsing and exact rolling suffix/prefix normalization across YouTube's contiguous cue boundaries reduced segmentation repetition; repetition across a positive timing gap remains untouched. The normalized official sequence contained 7,262 words versus 7,265 in the Studio export and did not match, with 45 common leading and 158 common trailing words. The proof stopped for manual review without exposing the differing wording. The other two pilots were not downloaded or compared. (`explicit project-owner amendment; first-pilot wording gate failed; no further retrieval authorised by this run`)
+
+### D-132 - Independent completion and deterministic alignment of the three-pilot caption proof
+
+Samuel Saad explicitly superseded only D-131's global stop-on-first-difference behavior. For the same three hard-coded pilots, a substantive difference or per-video failure must be recorded separately without preventing retrieval/comparison of the other authorised pilots. Global authentication/channel/credential, allowlist and private-storage failures still stop the command. This decision neither accepts a caption source nor extends authority to another sermon or operation.
+
+Comparison version 3 applies the same Unicode NFKC, locale-stable case, punctuation/symbol and whitespace normalization to both sources, then uses deterministic full-sequence Hirschberg/Levenshtein alignment. All three exact untranslated VTT responses were retained in ignored private storage. All three tracks remained sole English serving non-draft ASR tracks with `audio_track_type_unverified`; YouTube-confirmed primary-audio association remains false.
+
+Two pilots produced `normalized_exact_match`: 5,402/5,402 and 5,685/5,685 normalized words respectively, with zero aligned changes. The remaining pilot produced `differences_detected_manual_review_required`: 7,260 official versus 7,263 Studio normalized words, 7,182 matches, 28 insertions, 31 deletions and 50 substitutions, totalling 109 changes across 87 regions, a largest region of three, 1.500757% WER and 98.499243% normalized similarity. Its aligned passages and cue references are confined to one ignored private human-review artifact. No automated result decides which source is correct or constitutes administrator approval. (`explicit project-owner amendment; independently completed official-API proof; one manual-review result remains`)
 
 ## Decisions still required
 
