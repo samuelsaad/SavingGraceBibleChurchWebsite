@@ -70,6 +70,7 @@ npm run youtube:wave1-retrieve-local
 npm run enrichment:wave1-metadata-local
 npm run enrichment:wave1-process-local
 npm run enrichment:wave1-verify-local
+npm run enrichment:wave1-review-repair-local
 npm run db:apply-atomic-review-local
 npm run db:rollback-atomic-review-local
 npm run reference:apply-local
@@ -84,6 +85,8 @@ The enrichment queue is deterministic by safe source WordPress ID and missing re
 The bounded official API pilot proof completed on 19 August 2026 after owner authentication verified the common owner channel of all three pilots. Each video exposed one serving, non-draft English ASR track with an `unknown` audio association. The explicit three-pilot-only amendment allowed such a track only when it is the video's sole caption track, retaining `audio_track_type_unverified` and never claiming confirmed primary audio. All three exact VTT responses were retained privately without translation. Deterministic full-sequence alignment produced two normalized exact matches and one `differences_detected_manual_review_required` result: 109 insertions/deletions/substitutions across 87 short regions, 98.499243% normalized similarity. The aligned wording and cue references exist only in an ignored private review artifact; neither source was automatically accepted. Per-video continuation does not authorise another video, content processing, database work, publication or deployment.
 
 The separately authorised Phase 3B.2c run inspected caption metadata for the deterministic 36 primaries and 12 mapped alternates, then retrieved and processed only the 12 resolved Wave 1 primaries. Migration `0013_official_youtube_caption_provenance` accepts both authorised Studio-export and official-API provenance while rejecting other values. The exact local database retains migrations `0011`–`0013`; the semantic migrations created structure only and all semantic eligibility/build/relationship counts remain zero. Wave 1 contains 12 private transcript drafts, 12 private description drafts and 84 private Q&A drafts. All have mandatory review provenance and `audio_track_type_unverified`; none has an approval marker, public-search eligibility or semantic output. The second import was unchanged for every record.
+
+The original Wave 1 import left all six atomic guided-review expectation fields uninitialised. This made every one of the 12 review sets fail source-identity, item-count, item-identity and transcript-version verification even though their stored zero-finding sets and draft bodies were intact. The bounded local repair command synchronises only those expectation fields from the existing private drafts, records a safe system audit event and refuses any unexpected review/content/provenance state. Its identical rerun is a no-op. All 12 review sets are now verified and offer explicit zero-finding acknowledgement; no acknowledgement, content decision, approval or completion was created automatically, and later stages remain locked until genuine administrator action.
 
 When a disposable loopback PostgreSQL database is available, apply the schema and load the anonymised fixture only with both `DATABASE_URL` and `ALLOW_LOCAL_DB_WRITE=1`:
 

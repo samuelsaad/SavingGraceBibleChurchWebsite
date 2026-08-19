@@ -264,6 +264,14 @@ Wave 1 imported exactly 12 transcripts, 12 descriptions and 84 ordered Q&A items
 
 Administrator review is now the only authorised next action for these 12 records. This decision does not accept transcript/content quality, administrator workload or semantic recommendation quality; authorise Wave 2, Wave 3, another sermon, embeddings or Related themes; or permit approval by automation, publication, production access, deployment, a Git push or Phase 3C. (`explicit bounded execution and migration-retention authority; Wave 1 ready for human review`)
 
+### D-134 - Repair uninitialised Wave 1 guided-review expectations without content changes
+
+The Wave 1 importer created the 12 private draft review rows after migration `0008` had replaced the earlier review seeding function, so the six atomic expectation fields remained null. The dashboard therefore reported four simultaneous integrity failures for every Wave 1 review set: source identity, expected item count, expected item identity set and transcript version. The underlying 12 transcripts, 12 descriptions, 84 Q&A items, provenance hashes, warnings, uncertainty markers and privacy states remained present and unchanged. There were no content decisions, approvals, review completions or zero-finding acknowledgements; one genuine identity confirmation and its Stage 2 position were preserved.
+
+The authorised repair is limited to the exact 12 rows identified by the Wave 1 processing version. It derives a stable private source key, the cryptographic identity of the empty item set and the existing transcript hash/version, then fills only the previously all-null expectation fields. It creates no atomic finding because the stored sources contain zero unresolved markers, does not change current stage or administrator attribution, does not touch any sermon/transcript/description/Q&A/provenance body, and records one safe system audit event per repaired review. The command fails closed on an unexpected database, migration ledger, scope, content/provenance state, administrator decision or semantic/public state and is idempotent.
+
+Post-repair application verification found all 12 review sets valid, with explicit zero-item acknowledgement available on all 12. The one confirmed identity remains ready at Stage 2; no zero-item acknowledgement or later-stage completion was manufactured, and all later stages remain locked. All 12 remain private, unapproved and absent from public search; semantic eligibility, build and relationship counts remain zero. (`explicit local metadata-only repair authority; genuine administrator review still required`)
+
 ## Decisions still required
 
 - Final AWS runtime/adapter and production networking.

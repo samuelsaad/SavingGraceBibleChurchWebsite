@@ -48,6 +48,7 @@ import type {
   TaxonomyUpdateInput,
   TaxonomyWriteInput
 } from "../server/repositories/admin-sermon-repository";
+import { evaluateReviewSetIntegrity } from "../enrichment/review-set-integrity";
 
 function sermonSummaryDto(sermon: StoredSermonSummary) {
   return {
@@ -170,46 +171,30 @@ function enrichmentReviewDto(
   workflow: EnrichmentReviewWorkflowDto
 ): EnrichmentReviewResponse {
   const transcript = sermon.transcript?.bodyText ?? "";
-  const expectedItemCount = workflow.state.expectedItemCount ?? workflow.items.length;
-  const actualItemSetSha256 = sha256(
-    workflow.items.map((item) => item.identitySha256).join("\n")
-  );
-  const itemSetMatches =
-    workflow.state.sourceRecordKey !== null &&
-    workflow.state.expectedItemCount !== null &&
-    workflow.state.expectedItemSetSha256 !== null &&
-    workflow.state.storedItemCount === workflow.state.expectedItemCount &&
-    workflow.state.atomicItemCount === workflow.state.expectedItemCount &&
-    workflow.state.actualItemSetSha256 === workflow.state.expectedItemSetSha256 &&
-    workflow.items.length === workflow.state.expectedItemCount &&
-    actualItemSetSha256 === workflow.state.expectedItemSetSha256 &&
-    workflow.items.every((item, index) =>
-      item.displayOrder === index + 1 && item.sourceRecordKey === workflow.state.sourceRecordKey
-    );
-  const transcriptMatchesExpected =
-    sermon.transcript !== null &&
-    workflow.state.expectedTranscriptSha256 !== null &&
-    workflow.state.expectedTranscriptRowVersion !== null &&
-    sha256(transcript) === workflow.state.expectedTranscriptSha256 &&
-    sermon.transcript.rowVersion === workflow.state.expectedTranscriptRowVersion &&
-    workflow.items.every((item) => item.transcriptRowVersion === sermon.transcript!.rowVersion);
-  const resolvedItemCount = workflow.items.filter((item) =>
-    item.decisionStatus === "accepted" || item.decisionStatus === "corrected"
-  ).length;
-  const unresolvedItemCount = Math.max(expectedItemCount - resolvedItemCount, 0);
-  const reviewSetVerified = itemSetMatches && transcriptMatchesExpected;
   const emptyItemSetAcknowledged =
     workflow.state.emptyItemSetAcknowledgedBySubject !== null &&
     workflow.state.emptyItemSetAcknowledgedAt !== null;
+  const integrity = evaluateReviewSetIntegrity({
+    sourceRecordKey: workflow.state.sourceRecordKey,
+    expectedItemCount: workflow.state.expectedItemCount,
+    expectedItemSetSha256: workflow.state.expectedItemSetSha256,
+    databaseItemSetSha256: workflow.state.actualItemSetSha256,
+    expectedTranscriptSha256: workflow.state.expectedTranscriptSha256,
+    expectedTranscriptRowVersion: workflow.state.expectedTranscriptRowVersion,
+    storedItemCount: workflow.state.storedItemCount,
+    atomicItemCount: workflow.state.atomicItemCount,
+    transcriptBody: transcript,
+    transcriptRowVersion: sermon.transcript?.rowVersion ?? null,
+    emptyItemSetAcknowledged,
+    items: workflow.items
+  });
   const stageCompletion = {
     identity: workflow.state.completedAt !== null || (
       workflow.state.identityStatus === "confirmed" &&
       sermon.speaker !== null &&
       sermon.serviceDate !== "1970-01-01"
     ),
-    findings: reviewSetVerified && unresolvedItemCount === 0 && (
-      expectedItemCount > 0 || emptyItemSetAcknowledged
-    ),
+    findings: integrity.findingsComplete,
     transcript: workflow.state.completedAt !== null || (
       sermon.transcript?.status === "approved" && sermon.transcript.approvedAt !== null
     ),
@@ -258,15 +243,14 @@ function enrichmentReviewDto(
       supportingContext: supportingParagraphContext(transcript, item.supportingParagraphs)
     })),
     progress: {
-      resolvedItemCount,
-      unresolvedItemCount,
-      totalItemCount: expectedItemCount,
+      resolvedItemCount: integrity.resolvedItemCount,
+      unresolvedItemCount: integrity.unresolvedItemCount,
+      totalItemCount: integrity.expectedItemCount,
       presentItemCount: workflow.state.storedItemCount,
-      itemSetMatches,
-      transcriptMatchesExpected,
-      reviewSetVerified,
-      requiresEmptyItemSetAcknowledgement:
-        expectedItemCount === 0 && reviewSetVerified && !emptyItemSetAcknowledged,
+      itemSetMatches: integrity.itemSetMatches,
+      transcriptMatchesExpected: integrity.transcriptMatchesExpected,
+      reviewSetVerified: integrity.reviewSetVerified,
+      requiresEmptyItemSetAcknowledgement: integrity.requiresEmptyItemSetAcknowledgement,
       stageCompletion,
       completedStageCount,
       percentReviewed: Math.round((completedStageCount / 6) * 100),
