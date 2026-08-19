@@ -1,6 +1,6 @@
 # Project Decision Log
 
-**Status:** Approved decisions through D-129; Phase 3B.2 pilot explicitly accepted by Samuel Saad on 17 August 2026
+**Status:** Approved decisions through D-130; bounded official YouTube pilot-caption inspection completed fail-closed on 19 August 2026
 **Authority:** `church-website-architecture-plan.md` plus Yang’s confirmed migration decisions and Samuel Saad’s recorded project-owner decisions
 
 ## Evidence classifications
@@ -233,6 +233,12 @@ Use only integrity-locked `@huggingface/transformers@4.2.0`, with lifecycle scri
 On 17 August 2026, Samuel Saad explicitly accepted the Phase 3B.2 three-sermon pilot as successfully completed. The accepted result demonstrates that the local private workflow can import existing caption files, prepare readable transcripts, generate description and Q&A drafts, support detailed administrator review and corrections, record explicit approvals and audit evidence, and keep all content private until publication is separately authorised.
 
 This acceptance applies only to the completed three-sermon pilot. It does not authorise processing any of the remaining 450 sermons; publishing the three pilot sermons; enabling **Related themes** publicly; accepting semantic recommendation quality; deploying or accessing production; or beginning Phase 3C. It is an explicit tracked human decision, not a database approval action and not authority for any later batch or public operation. (`explicit project-owner acceptance; documentation-only record`)
+
+### D-130 - Bounded official YouTube pilot-caption proof
+
+The official YouTube Data API proof is restricted to the three accepted pilot video identities hard-coded in the server-only local command. Owner OAuth forces fresh account selection and retains its protected out-of-repository token only after all three pilots resolve to one common owner channel and the authenticated `mine` channel is exactly that owner with the expected church-channel title. The tool implements only channel/video/caption read calls, disables retries, has no arbitrary video argument and cannot write to YouTube.
+
+Track selection admits only serving, non-draft English tracks explicitly associated with primary audio, preferring one standard track and otherwise one ASR track; equal best-priority tracks are ambiguous and block retrieval. The 19 August 2026 inspection found exactly one serving, non-draft English ASR track per pilot, but every track reported `audioTrackType` as `unknown`. All three therefore produced `no_eligible_track`. No caption download, Studio-export read/comparison, database access, content generation, evaluation-batch processing, publication or deployment occurred. Treating `unknown` as `primary` is not authorised by this decision. (`explicitly authorised official-API proof; metadata inspection completed; retrieval stopped fail-closed`)
 
 ## Decisions still required
 

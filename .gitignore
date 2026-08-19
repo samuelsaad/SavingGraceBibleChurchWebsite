@@ -22,6 +22,7 @@ playwright-report/
 pgpass.conf
 id_rsa*
 id_ed25519*
+/youtube-oath/
 
 # Proprietary reference archives and extracted plugin sources
 advanced-sermons*.zip

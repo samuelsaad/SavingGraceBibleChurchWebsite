@@ -15,6 +15,9 @@
     "test:model-local": "tsx scripts/local-model-acceptance.ts",
     "test:postgres": "tsx tests/postgres-test-runner.ts",
     "test:watch": "vitest",
+    "youtube:pilot-auth-local": "tsx src/youtube/pilot-caption-cli.ts auth",
+    "youtube:pilot-inspect-local": "tsx src/youtube/pilot-caption-cli.ts inspect",
+    "youtube:pilot-retrieve-local": "tsx src/youtube/pilot-caption-cli.ts retrieve",
     "migration:dry-run": "tsx src/migration/cli.ts --dry-run",
     "migration:load-local": "tsx src/migration/load-cli.ts",
     "db:apply-local": "tsx src/migration/schema-cli.ts --apply",
@@ -43,6 +46,7 @@
   "dependencies": {
     "@huggingface/transformers": "4.2.0",
     "astro": "7.1.6",
+    "googleapis": "175.0.0",
     "pg": "8.22.0",
     "zod": "4.4.3"
   },
