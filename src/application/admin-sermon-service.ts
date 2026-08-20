@@ -17,6 +17,7 @@ import {
   type EnrichmentReviewResponse,
   type FinishEnrichmentReviewInput,
   type PermanentlyDeleteSermonInput,
+  type PrimaryPassageDecisionInput,
   type SermonStateAction,
   type SermonTransitionInput,
   type TaxonomyKind,
@@ -109,6 +110,7 @@ function sermonDetailDto(sermon: StoredSermonDetail): AdminSermonDetail {
     series: sermon.series,
     books: sermon.books,
     scriptureReferences: sermon.scriptureReferences,
+    primaryPassageReview: sermon.primaryPassageReview,
     media: sermon.media,
     transcript: sermon.transcript,
     questionAnswers: sermon.questionAnswers,
@@ -850,6 +852,45 @@ export class AdminSermonService {
           )
         );
       }
+      const updated = await transaction.findSermonForUpdate(id);
+      if (!updated) notFound("Updated sermon could not be read");
+      return sermonDetailDto(updated);
+    });
+  }
+
+  async decidePrimaryPassage(
+    id: string,
+    input: PrimaryPassageDecisionInput,
+    identity: ApplicationIdentity,
+    requestCorrelationId: string
+  ): Promise<AdminSermonDetail> {
+    assertAdminAccess(identity);
+    return this.repository.transaction(async (transaction) => {
+      const sermon = await transaction.findSermonForUpdate(id);
+      if (!sermon) notFound("Sermon was not found");
+      if (sermon.rowVersion !== input.sermonRowVersion) conflict();
+      assertMayEditSermon(identity, sermon);
+      if (!sermon.primaryPassageReview) {
+        notFound("Primary-passage preparation is not available for this sermon");
+      }
+      if (sermon.primaryPassageReview.rowVersion !== input.reviewRowVersion) conflict();
+      await transaction.decidePrimaryPassage(id, input, identity.subject);
+      await transaction.refreshSearchTerms(id);
+      const action = input.action === "confirm_passages"
+        ? "sermon.primary_passages_confirmed"
+        : input.action === "confirm_no_primary_passage"
+          ? "sermon.no_primary_passage_confirmed"
+          : "sermon.primary_passage_proposal_rejected";
+      await transaction.appendAudit(
+        successfulAudit(
+          identity,
+          action,
+          "sermon",
+          id,
+          ["primaryPassageReview", "scriptureReferences"],
+          requestCorrelationId
+        )
+      );
       const updated = await transaction.findSermonForUpdate(id);
       if (!updated) notFound("Updated sermon could not be read");
       return sermonDetailDto(updated);

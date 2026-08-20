@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { isoDateSchema, sermonStatusSchema } from "../../domain/sermon";
 import { containsHtmlTag } from "../../domain/content-readiness";
+import { formatBiblePassage, validateBiblePassage } from "../../domain/bible-passage";
 
 export const applicationRoleSchema = z.literal("admin");
 export type ApplicationRole = z.infer<typeof applicationRoleSchema>;
@@ -109,7 +110,9 @@ export const scriptureReferenceInputSchema = z
     startChapter: z.number().int().positive().nullable().default(null),
     startVerse: z.number().int().positive().nullable().default(null),
     endChapter: z.number().int().positive().nullable().default(null),
-    endVerse: z.number().int().positive().nullable().default(null)
+    endVerse: z.number().int().positive().nullable().default(null),
+    relationshipRole: z.enum(["primary", "supporting", "unclassified"]).default("unclassified"),
+    isLead: z.boolean().default(false)
   })
   .strict()
   .refine((value) => value.endChapter === null || value.startChapter !== null, {
@@ -119,7 +122,68 @@ export const scriptureReferenceInputSchema = z
   .refine((value) => value.endVerse === null || value.startVerse !== null, {
     path: ["endVerse"],
     message: "endVerse requires startVerse"
-  });
+  })
+  .refine((value) => !value.isLead || value.relationshipRole === "primary", {
+    path: ["isLead"],
+    message: "Only a primary passage can be the lead passage"
+  })
+  .refine(
+    (value) => value.relationshipRole !== "primary" ||
+      (value.canonicalBookId !== null && value.startChapter !== null && value.endChapter !== null),
+    { path: ["relationshipRole"], message: "A primary passage requires a canonical book and structured chapter range" }
+  );
+
+export const primaryPassageInputSchema = z.object({
+  canonicalBookId: z.number().int().min(1).max(66),
+  startChapter: z.number().int().positive(),
+  startVerse: z.number().int().positive().nullable().default(null),
+  endChapter: z.number().int().positive(),
+  endVerse: z.number().int().positive().nullable().default(null),
+  relationshipRole: z.enum(["primary", "supporting"]),
+  isLead: z.boolean().default(false)
+}).strict().superRefine((value, context) => {
+  const result = validateBiblePassage(value);
+  for (const message of result.issues) {
+    context.addIssue({ code: "custom", path: ["startChapter"], message });
+  }
+  if (value.isLead && value.relationshipRole !== "primary") {
+    context.addIssue({ code: "custom", path: ["isLead"], message: "Only a primary passage can be the lead passage" });
+  }
+  try {
+    formatBiblePassage(value);
+  } catch {
+    context.addIssue({ code: "custom", path: ["canonicalBookId"], message: "Unknown canonical Bible book" });
+  }
+});
+
+export const primaryPassageDecisionInputSchema = z.object({
+  sermonRowVersion: z.number().int().positive(),
+  reviewRowVersion: z.number().int().positive(),
+  action: z.enum(["confirm_passages", "reject_proposal", "confirm_no_primary_passage"]),
+  passages: z.array(primaryPassageInputSchema).max(10).default([])
+}).strict().superRefine((value, context) => {
+  if (value.action === "confirm_passages") {
+    if (!value.passages.some((passage) => passage.relationshipRole === "primary")) {
+      context.addIssue({ code: "custom", path: ["passages"], message: "Confirm at least one primary preaching passage" });
+    }
+    if (value.passages.filter((passage) => passage.isLead).length !== 1) {
+      context.addIssue({ code: "custom", path: ["passages"], message: "Choose exactly one lead primary passage" });
+    }
+    const identities = value.passages.map((passage) => [
+      passage.canonicalBookId,
+      passage.startChapter,
+      passage.startVerse ?? 0,
+      passage.endChapter,
+      passage.endVerse ?? 0
+    ].join(":"));
+    if (new Set(identities).size !== identities.length) {
+      context.addIssue({ code: "custom", path: ["passages"], message: "Do not enter the same passage and relationship twice" });
+    }
+  } else if (value.passages.length !== 0) {
+    context.addIssue({ code: "custom", path: ["passages"], message: "This decision does not accept passage values" });
+  }
+});
+export type PrimaryPassageDecisionInput = z.infer<typeof primaryPassageDecisionInputSchema>;
 
 const editableSermonFieldsShape = {
   title: z.string().trim().min(1).max(240),
@@ -362,9 +426,25 @@ export const adminSermonDetailSchema = adminSermonSummarySchema.extend({
   scriptureReferences: z.array(
     scriptureReferenceInputSchema.extend({
       id: z.uuid(),
-      parseStatus: z.enum(["unparsed", "exact", "partial", "unresolved", "curated"])
+      parseStatus: z.enum(["unparsed", "exact", "partial", "unresolved", "curated"]),
+      originalReferenceText: z.string().nullable(),
+      provenance: z.enum(["legacy_import", "administrator", "title_proposal", "administrator_correction"]),
+      reviewStatus: z.enum(["unreviewed", "proposed", "confirmed", "rejected"]),
+      reviewerSubject: z.string().nullable(),
+      reviewedAt: z.iso.datetime().nullable(),
+      parserVersion: z.string().nullable(),
+      rowVersion: z.number().int().positive()
     })
   ),
+  primaryPassageReview: z.object({
+    proposalOutcome: z.enum(["proposed", "no_reference", "manual_review_required", "administrator_entered"]),
+    evidenceSource: z.enum(["local_youtube_title", "administrator"]),
+    parserVersion: z.string(),
+    reviewStatus: z.enum(["pending", "confirmed_passage", "confirmed_none", "rejected"]),
+    reviewedBySubject: z.string().nullable(),
+    reviewedAt: z.iso.datetime().nullable(),
+    rowVersion: z.number().int().positive()
+  }).nullable(),
   media: z.array(controlledMediaInputSchema.extend({ id: z.uuid() })),
   transcript: transcriptInputSchema.extend({
     rowVersion: z.number().int().positive(),
@@ -639,6 +719,10 @@ export const adminSermonApiContracts = {
   permanentDelete: {
     method: "POST",
     path: "/api/v1/admin/sermons/:id/permanent-delete"
+  },
+  primaryPassageDecision: {
+    method: "POST",
+    path: "/api/v1/admin/sermons/:id/primary-passage-decision"
   },
   enrichmentReview: {
     detail: { method: "GET", path: "/api/v1/admin/sermons/:id/review" },

@@ -18,6 +18,7 @@ const summary: SermonSummary = {
   speaker: { name: "Example Speaker", slug: "example-speaker" },
   series: [{ name: "Example Series", slug: "example-series" }],
   scriptureReferences: [{ displayText: "Romans 8:1", parseStatus: "exact" }],
+  primaryPassages: [{ displayText: "Romans 8:1", isLead: true }],
   books: [{ name: "Romans", slug: "romans" }],
   primaryMedia: {
     provider: "youtube",

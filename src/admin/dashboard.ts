@@ -8,6 +8,7 @@ import {
   unresolvedReviewQueue
 } from "./dashboard-model";
 import type { SermonStatus } from "../domain/sermon";
+import { bibleBooks } from "../domain/bible-passage";
 import {
   isSupersededWave1SourceReference,
   parseGroundedSermonEnrichmentSourceReference
@@ -58,6 +59,15 @@ type ScriptureReference = {
   endChapter: number | null;
   endVerse: number | null;
   parseStatus: string;
+  relationshipRole: "primary" | "supporting" | "unclassified";
+  isLead: boolean;
+  originalReferenceText: string | null;
+  provenance: "legacy_import" | "administrator" | "title_proposal" | "administrator_correction";
+  reviewStatus: "unreviewed" | "proposed" | "confirmed" | "rejected";
+  reviewerSubject: string | null;
+  reviewedAt: string | null;
+  parserVersion: string | null;
+  rowVersion: number;
 };
 type ControlledMedia = {
   id: string;
@@ -81,6 +91,15 @@ type SermonDetail = SermonSummary & {
   body: string | null;
   books: Relationship[];
   scriptureReferences: ScriptureReference[];
+  primaryPassageReview: {
+    proposalOutcome: "proposed" | "no_reference" | "manual_review_required" | "administrator_entered";
+    evidenceSource: "local_youtube_title" | "administrator";
+    parserVersion: string;
+    reviewStatus: "pending" | "confirmed_passage" | "confirmed_none" | "rejected";
+    reviewedBySubject: string | null;
+    reviewedAt: string | null;
+    rowVersion: number;
+  } | null;
   media: ControlledMedia[];
   transcript: {
     bodyText: string;
@@ -493,6 +512,86 @@ function reviewStageActions(review: EnrichmentReviewResponse, stage: number): st
   </div>`;
 }
 
+type PrimaryPassageEditorValue = {
+  canonicalBookId: number | null;
+  startChapter: number | null;
+  startVerse: number | null;
+  endChapter: number | null;
+  endVerse: number | null;
+  relationshipRole: "primary" | "supporting";
+  isLead: boolean;
+};
+
+function primaryPassageBookOptions(selectedBookId: number | null): string {
+  return `<option value="">Choose a canonical book</option>${(["old", "new"] as const).map((testament) =>
+    `<optgroup label="${testament === "old" ? "Old Testament" : "New Testament"}">${bibleBooks
+      .filter((book) => book.testament === testament)
+      .map((book) => `<option value="${book.id}"${selectedBookId === book.id ? " selected" : ""}>${escapeHtml(book.canonicalName)}</option>`)
+      .join("")}</optgroup>`
+  ).join("")}`;
+}
+
+function primaryPassageEditorRow(value: PrimaryPassageEditorValue, index: number): string {
+  return `<fieldset class="primary-passage-row" data-primary-passage-row>
+    <legend>Passage <span data-primary-passage-number>${index + 1}</span></legend>
+    <div class="review-form-grid">
+      <label><span>Bible book</span><select data-primary-book data-primary-passage-control>${primaryPassageBookOptions(value.canonicalBookId)}</select></label>
+      <label><span>Starting chapter</span><input data-primary-start-chapter data-primary-passage-control type="number" min="1" max="150" value="${value.startChapter ?? ""}" /></label>
+      <label><span>Starting verse (optional)</span><input data-primary-start-verse data-primary-passage-control type="number" min="1" max="176" value="${value.startVerse ?? ""}" /></label>
+      <label><span>Ending chapter</span><input data-primary-end-chapter data-primary-passage-control type="number" min="1" max="150" value="${value.endChapter ?? ""}" /></label>
+      <label><span>Ending verse (optional)</span><input data-primary-end-verse data-primary-passage-control type="number" min="1" max="176" value="${value.endVerse ?? ""}" /></label>
+      <label><span>Relationship</span><select data-primary-role data-primary-passage-control><option value="primary"${value.relationshipRole === "primary" ? " selected" : ""}>Primary preaching passage</option><option value="supporting"${value.relationshipRole === "supporting" ? " selected" : ""}>Supporting passage</option></select></label>
+      <label class="checkbox-label"><input data-primary-lead data-primary-passage-control type="checkbox"${value.isLead ? " checked" : ""} /> <span>Lead primary passage</span></label>
+    </div>
+    <button class="button quiet" type="button" data-remove-primary-passage data-primary-passage-control>Remove passage</button>
+  </fieldset>`;
+}
+
+function primaryPassageReviewPanel(sermon: SermonDetail): string {
+  const review = sermon.primaryPassageReview;
+  if (!review) return "";
+  const candidates = sermon.scriptureReferences.filter((reference) =>
+    (reference.reviewStatus === "proposed" || reference.reviewStatus === "confirmed") &&
+    (reference.relationshipRole === "primary" || reference.relationshipRole === "supporting")
+  );
+  const values: PrimaryPassageEditorValue[] = candidates.length
+    ? candidates.map((reference) => ({
+        canonicalBookId: reference.canonicalBookId,
+        startChapter: reference.startChapter,
+        startVerse: reference.startVerse,
+        endChapter: reference.endChapter,
+        endVerse: reference.endVerse,
+        relationshipRole: reference.relationshipRole as "primary" | "supporting",
+        isLead: reference.isLead
+      }))
+    : [{ canonicalBookId: null, startChapter: null, startVerse: null, endChapter: null, endVerse: null, relationshipRole: "primary", isLead: true }];
+  const status = review.reviewStatus === "pending"
+    ? "Awaiting administrator decision"
+    : review.reviewStatus === "confirmed_passage"
+      ? "Primary passage confirmed"
+      : review.reviewStatus === "confirmed_none"
+        ? "No primary passage confirmed"
+        : "Title proposal rejected";
+  const proposal = review.proposalOutcome === "proposed"
+    ? "One structured reference was proposed from the locally stored YouTube title. Verify it personally before confirming."
+    : review.proposalOutcome === "no_reference"
+      ? "No usable primary reference was found in the locally stored YouTube title. Enter one manually only if the sermon has a clear primary passage."
+      : review.proposalOutcome === "manual_review_required"
+        ? "The title could not support a single safe proposal. Enter verified passages manually or reject the proposal."
+        : "This passage was entered through administrator controls.";
+  return `<section class="source-summary" aria-labelledby="primary-passage-heading" data-primary-passage-panel>
+    <div><p class="eyebrow">Structured Scripture metadata</p><h3 id="primary-passage-heading">Primary preaching passage</h3><p><strong>${escapeHtml(status)}</strong></p><p>${escapeHtml(proposal)}</p><p class="field-hint">This decision does not change transcript, description, Q&amp;A, guided-review completion or publication state.</p></div>
+    <div id="primary-passage-feedback"></div>
+    <div class="stack" id="primary-passage-rows">${values.map(primaryPassageEditorRow).join("")}</div>
+    <div class="action-row">
+      <button class="button" type="button" id="add-primary-passage" data-primary-passage-control>Add passage</button>
+      <button class="button primary" type="button" id="confirm-primary-passages" data-primary-passage-control>Confirm entered passages</button>
+      <button class="button" type="button" id="reject-primary-passage" data-primary-passage-control>Reject title proposal</button>
+      <button class="button quiet" type="button" id="confirm-no-primary-passage" data-primary-passage-control>Confirm no primary passage</button>
+    </div>
+  </section>`;
+}
+
 function renderIdentityReviewStage(
   review: EnrichmentReviewResponse,
   speakers: Taxonomy[],
@@ -524,6 +623,7 @@ function renderIdentityReviewStage(
       </dl>
       ${technicalProvenance(source)}
     </section>
+    ${primaryPassageReviewPanel(sermon)}
     <div class="review-decision-bar">
       <button class="button${completed ? " primary" : ""}" type="submit" data-identity-action="save">${completed ? "Save Bible-book assignment" : "Save identity draft"}</button>
       ${completed ? "" : '<button class="button primary" type="submit" data-identity-action="confirm">Save and confirm identity</button>'}
@@ -1089,7 +1189,7 @@ async function renderGuidedSermonReview(id: string, readOnlyStage?: number): Pro
     for (const control of document.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | HTMLButtonElement>(
       ".review-stage-workspace input, .review-stage-workspace select, .review-stage-workspace textarea, .review-stage-workspace button"
     )) {
-      const isBibleBookControl = control.matches('[name="bookClassificationId"], [data-identity-action="save"]');
+      const isBibleBookControl = control.matches('[name="bookClassificationId"], [data-identity-action="save"], [data-primary-passage-control]');
       const isReadOnlyNavigation = control.matches("[data-review-stage]");
       if (!isBibleBookControl && !isReadOnlyNavigation) {
         control.disabled = true;
@@ -1195,6 +1295,79 @@ async function renderGuidedSermonReview(id: string, readOnlyStage?: number): Pro
       stageFeedback()!.innerHTML = feedback(errorMessage(error), true);
     }
   });
+
+  const passageRows = document.querySelector<HTMLElement>("#primary-passage-rows");
+  const passageFeedback = document.querySelector<HTMLElement>("#primary-passage-feedback");
+  const renumberPassageRows = () => {
+    passageRows?.querySelectorAll<HTMLElement>("[data-primary-passage-row]").forEach((row, index) => {
+      row.querySelector<HTMLElement>("[data-primary-passage-number]")!.textContent = String(index + 1);
+    });
+  };
+  const wirePassageRow = (row: HTMLElement) => {
+    row.querySelector<HTMLButtonElement>("[data-remove-primary-passage]")?.addEventListener("click", () => {
+      row.remove();
+      renumberPassageRows();
+    });
+    row.querySelector<HTMLSelectElement>("[data-primary-role]")?.addEventListener("change", (event) => {
+      if ((event.currentTarget as HTMLSelectElement).value === "supporting") {
+        row.querySelector<HTMLInputElement>("[data-primary-lead]")!.checked = false;
+      }
+    });
+  };
+  passageRows?.querySelectorAll<HTMLElement>("[data-primary-passage-row]").forEach(wirePassageRow);
+  document.querySelector<HTMLButtonElement>("#add-primary-passage")?.addEventListener("click", () => {
+    if (!passageRows || passageRows.children.length >= 10) return;
+    passageRows.insertAdjacentHTML("beforeend", primaryPassageEditorRow({
+      canonicalBookId: null,
+      startChapter: null,
+      startVerse: null,
+      endChapter: null,
+      endVerse: null,
+      relationshipRole: "supporting",
+      isLead: false
+    }, passageRows.children.length));
+    wirePassageRow(passageRows.lastElementChild as HTMLElement);
+  });
+  const optionalNumber = (element: HTMLInputElement): number | null => element.value ? Number(element.value) : null;
+  const collectPrimaryPassages = () => [...(passageRows?.querySelectorAll<HTMLElement>("[data-primary-passage-row]") ?? [])].map((row) => ({
+    canonicalBookId: Number(row.querySelector<HTMLSelectElement>("[data-primary-book]")!.value),
+    startChapter: Number(row.querySelector<HTMLInputElement>("[data-primary-start-chapter]")!.value),
+    startVerse: optionalNumber(row.querySelector<HTMLInputElement>("[data-primary-start-verse]")!),
+    endChapter: Number(row.querySelector<HTMLInputElement>("[data-primary-end-chapter]")!.value),
+    endVerse: optionalNumber(row.querySelector<HTMLInputElement>("[data-primary-end-verse]")!),
+    relationshipRole: row.querySelector<HTMLSelectElement>("[data-primary-role]")!.value,
+    isLead: row.querySelector<HTMLInputElement>("[data-primary-lead]")!.checked
+  }));
+  const decidePrimaryPassage = async (
+    action: "confirm_passages" | "reject_proposal" | "confirm_no_primary_passage"
+  ) => {
+    if (!review.sermon.primaryPassageReview || !passageFeedback) return;
+    if (action !== "confirm_passages" && !window.confirm(
+      action === "reject_proposal"
+        ? "Reject the title-derived proposal? This does not reject any sermon content."
+        : "Confirm that this sermon has no clear primary preaching passage?"
+    )) return;
+    try {
+      passageFeedback.innerHTML = feedback("Saving the explicit passage decision…");
+      await api(`/api/v1/admin/sermons/${id}/primary-passage-decision`, {
+        method: "POST",
+        body: JSON.stringify({
+          sermonRowVersion: review.sermon.rowVersion,
+          reviewRowVersion: review.sermon.primaryPassageReview.rowVersion,
+          action,
+          passages: action === "confirm_passages" ? collectPrimaryPassages() : []
+        })
+      });
+      announce(action === "confirm_passages" ? "Primary preaching passage confirmed" : "Primary-passage decision recorded");
+      await renderGuidedSermonReview(id);
+    } catch (error) {
+      passageFeedback.innerHTML = feedback(errorMessage(error), true);
+      passageFeedback.focus();
+    }
+  };
+  document.querySelector<HTMLButtonElement>("#confirm-primary-passages")?.addEventListener("click", () => void decidePrimaryPassage("confirm_passages"));
+  document.querySelector<HTMLButtonElement>("#reject-primary-passage")?.addEventListener("click", () => void decidePrimaryPassage("reject_proposal"));
+  document.querySelector<HTMLButtonElement>("#confirm-no-primary-passage")?.addEventListener("click", () => void decidePrimaryPassage("confirm_no_primary_passage"));
 
   wireFlaggedReviewItems(review, id, stageFeedback);
   wireTranscriptReview(review, id, stageFeedback);
@@ -1384,7 +1557,7 @@ async function renderSermonForm(id?: string): Promise<void> {
         <label><span>Speaker</span><select name="speakerId" aria-describedby="speaker-help"><option value="">Choose one speaker</option>${selectOptions(taxonomies.speakers, new Set(detail?.speaker ? [detail.speaker.id] : []))}</select><small id="speaker-help" class="field-hint">A draft may be saved without a speaker, but it cannot be scheduled or published.</small></label>
         <fieldset><legend>Series</legend><select name="seriesIds" multiple>${selectOptions(taxonomies.series, new Set(detail?.series.map((item) => item.id) ?? []))}</select></fieldset>
         <fieldset><legend>Books</legend><select name="bookClassificationIds" multiple>${selectOptions(taxonomies.books, new Set(detail?.books.map((item) => item.id) ?? []))}</select></fieldset>
-        <label><span>Scripture references</span><textarea name="scriptureReferences" placeholder="One display reference per line">${escapeHtml(detail?.scriptureReferences.map((item) => item.displayText).join("\n") ?? "")}</textarea><small class="field-hint">Each edited line is stored as a curated reference. Imported source provenance remains separate and is never exposed here.</small></label>
+        <div class="review-readonly-field"><span>Scripture references</span><strong>${escapeHtml(detail?.scriptureReferences.map((item) => item.displayText).join(", ") || "None recorded")}</strong><small>Structured primary-passage decisions use the dedicated reviewed controls on prepared records; general sermon saves do not replace Scripture provenance.</small></div>
       </section>
       <section class="panel form-grid">
         <div class="wide step-heading"><span>Step 3 of 6</span><h2>3. Media</h2><p>Add controlled provider URLs. Raw embed or iframe code is never accepted.</p></div>
@@ -1510,7 +1683,6 @@ async function renderSermonForm(id?: string): Promise<void> {
       speakerId: String(data.get("speakerId") ?? "") || null,
       seriesIds: selectedValues(form.elements.namedItem("seriesIds") as HTMLSelectElement),
       bookClassificationIds: selectedValues(form.elements.namedItem("bookClassificationIds") as HTMLSelectElement),
-      scriptureReferences: String(data.get("scriptureReferences") ?? "").split(/\r?\n/).map((line) => line.trim()).filter(Boolean).map((displayText) => ({ displayText })),
       media,
       transcript: {
         bodyText: String(data.get("transcriptBody") ?? ""),

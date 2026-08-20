@@ -10,6 +10,7 @@ import {
   enrichmentReviewProgressInputSchema,
   finishEnrichmentReviewInputSchema,
   permanentlyDeleteSermonInputSchema,
+  primaryPassageDecisionInputSchema,
   updateSermonInputSchema
 } from "../src/api/contracts/admin-sermons";
 import {
@@ -74,6 +75,7 @@ describe("public sermon API contract", () => {
     expect(query.values).toContain("%grace' OR true--%");
     expect(query.values).toContain("example-speaker");
     expect(query.text).toContain("priority_reference.display_text");
+    expect(query.text).toContain("priority_reference.review_status IN ('unreviewed', 'confirmed')");
     expect(query.text).toContain("priority_book.review_status = 'approved'");
     expect(query.text).toContain("priority_speaker.name");
     expect(query.text).toContain("priority_series.name");
@@ -104,6 +106,33 @@ describe("public sermon API contract", () => {
     ]);
   });
 
+  it("keeps primary-passage overlap separate and limited to confirmed primary references", () => {
+    const query = buildPublishedSermonListQuery(publicSermonListQuerySchema.parse({
+      query: "Romans 8",
+      passageBook: "romans",
+      passageChapter: 8,
+      passageVerse: 2,
+      passageEndVerse: 3
+    }));
+    expect(query.text).toContain("websearch_to_tsquery");
+    expect(query.text).toContain("primary_filter.relationship_role = 'primary'");
+    expect(query.text).toContain("primary_filter.review_status = 'confirmed'");
+    expect(query.text).toContain("ref.review_status IN ('unreviewed', 'confirmed')");
+    expect(query.text).toContain("primary_filter.canonical_book_id");
+    expect(query.text).toContain("COALESCE(primary_filter.start_verse, 0)");
+    expect(query.text).toContain("COALESCE(primary_filter.end_verse, 999)");
+    expect(query.text).not.toMatch(/description_semantic|embedding/i);
+    expect(query.values).toEqual(["Romans 8", "%Romans 8%", 45, 8002, 8003, 9, 0]);
+  });
+
+  it("validates passage-selector dependencies and canonical chapter ranges", () => {
+    expect(publicSermonListQuerySchema.parse({ passageBook: "romans" })).toMatchObject({ passageBook: "romans" });
+    expect(() => publicSermonListQuerySchema.parse({ passageChapter: 8 })).toThrow("Choose a Bible book first");
+    expect(() => publicSermonListQuerySchema.parse({ passageBook: "romans", passageChapter: 17 })).toThrow("outside the canonical book");
+    expect(() => publicSermonListQuerySchema.parse({ passageBook: "romans", passageVerse: 1 })).toThrow("Choose a chapter before a verse");
+    expect(() => publicSermonListQuerySchema.parse({ passageBook: "romans", passageChapter: 8, passageVerse: 4, passageEndVerse: 1 })).toThrow("reversed");
+  });
+
   it("keeps the detail body while gating description and SEO override together", () => {
     const query = buildPublishedSermonDetailQuery("an-anonymised-sermon");
     expect(query.text).toContain("s.body");
@@ -121,6 +150,8 @@ describe("public sermon API contract", () => {
     expect(query.text).toContain("candidate.deleted_at IS NULL");
     expect(query.text).toContain("CASE WHEN score.same_series THEN 100");
     expect(query.text).toContain("CASE WHEN score.overlapping_scripture THEN 70");
+    expect(query.text).toContain("current_reference.review_status IN ('unreviewed', 'confirmed')");
+    expect(query.text).toContain("candidate_reference.review_status IN ('unreviewed', 'confirmed')");
     expect(query.text).toContain("COALESCE(current_reference.start_verse, 1)");
     expect(query.text).toContain("COALESCE(candidate_reference.end_verse, candidate_reference.start_verse, 999)");
     expect(query.text).toContain("CASE WHEN score.same_bible_book THEN 35");
@@ -145,6 +176,30 @@ describe("public sermon API contract", () => {
 });
 
 describe("admin sermon API contract", () => {
+  it("requires one explicit lead primary passage and permits explicit reject or no-primary decisions", () => {
+    expect(primaryPassageDecisionInputSchema.parse({
+      sermonRowVersion: 2,
+      reviewRowVersion: 1,
+      action: "confirm_passages",
+      passages: [{
+        canonicalBookId: 45,
+        startChapter: 8,
+        startVerse: 1,
+        endChapter: 8,
+        endVerse: 4,
+        relationshipRole: "primary",
+        isLead: true
+      }]
+    })).toMatchObject({ action: "confirm_passages", passages: [{ isLead: true }] });
+    expect(() => primaryPassageDecisionInputSchema.parse({
+      sermonRowVersion: 2,
+      reviewRowVersion: 1,
+      action: "confirm_passages",
+      passages: [{ canonicalBookId: 45, startChapter: 8, startVerse: 1, endChapter: 8, endVerse: 4, relationshipRole: "supporting", isLead: false }]
+    })).toThrow("primary preaching passage");
+    expect(primaryPassageDecisionInputSchema.parse({ sermonRowVersion: 2, reviewRowVersion: 1, action: "reject_proposal" })).toMatchObject({ action: "reject_proposal", passages: [] });
+    expect(primaryPassageDecisionInputSchema.parse({ sermonRowVersion: 2, reviewRowVersion: 1, action: "confirm_no_primary_passage" })).toMatchObject({ action: "confirm_no_primary_passage", passages: [] });
+  });
   it("has one active application role and validates admin list filters", () => {
     expect(applicationRoleSchema.parse("admin")).toBe("admin");
     expect(() => applicationRoleSchema.parse("editor")).toThrow();

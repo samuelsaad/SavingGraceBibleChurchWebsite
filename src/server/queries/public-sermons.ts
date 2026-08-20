@@ -1,4 +1,5 @@
 import type { PublicSermonListQuery } from "../../api/contracts/public-sermons";
+import { bibleBookBySlug } from "../../domain/bible-passage";
 
 export interface ParameterizedQuery {
   text: string;
@@ -66,6 +67,31 @@ function buildPublishedConditions(input: PublicSermonListQuery): PublishedCondit
         AND lower(bc_filter.slug) = lower(${book})
     )`);
   }
+  if (input.passageBook) {
+    const book = bibleBookBySlug(input.passageBook);
+    if (!book) throw new Error("Validated passage book was not found in the canonical catalogue");
+    const bookId = parameter(book.id);
+    const passageConditions = [
+      "primary_filter.sermon_id = s.id",
+      "primary_filter.relationship_role = 'primary'",
+      "primary_filter.review_status = 'confirmed'",
+      `primary_filter.canonical_book_id = ${bookId}`
+    ];
+    if (input.passageChapter !== undefined) {
+      const queryStart = input.passageChapter * 1_000 + (input.passageVerse ?? 0);
+      const queryEnd = input.passageChapter * 1_000 + (input.passageEndVerse ?? input.passageVerse ?? 999);
+      const start = parameter(queryStart);
+      const end = parameter(queryEnd);
+      passageConditions.push(
+        `(primary_filter.start_chapter * 1000 + COALESCE(primary_filter.start_verse, 0)) <= ${end}`,
+        `(primary_filter.end_chapter * 1000 + COALESCE(primary_filter.end_verse, 999)) >= ${start}`
+      );
+    }
+    conditions.push(`EXISTS (
+      SELECT 1 FROM scripture_references primary_filter
+      WHERE ${passageConditions.join("\n        AND ")}
+    )`);
+  }
   if (input.dateFrom) conditions.push(`s.service_date >= ${parameter(input.dateFrom)}::date`);
   if (input.dateTo) conditions.push(`s.service_date <= ${parameter(input.dateTo)}::date`);
 
@@ -95,7 +121,19 @@ function publicRelationshipProjection(alias = "s"): string {
     )
     FROM scripture_references ref
     WHERE ref.sermon_id = ${alias}.id
+      AND ref.review_status IN ('unreviewed', 'confirmed')
+      AND NOT (ref.relationship_role = 'primary' AND ref.review_status = 'confirmed')
   ), '[]'::jsonb) AS scripture_references,
+  COALESCE((
+    SELECT jsonb_agg(
+      jsonb_build_object('displayText', primary_ref.display_text, 'isLead', primary_ref.is_lead)
+      ORDER BY primary_ref.is_lead DESC, primary_ref.display_order, primary_ref.id
+    )
+    FROM scripture_references primary_ref
+    WHERE primary_ref.sermon_id = ${alias}.id
+      AND primary_ref.relationship_role = 'primary'
+      AND primary_ref.review_status = 'confirmed'
+  ), '[]'::jsonb) AS primary_passages,
   COALESCE((
     SELECT jsonb_agg(
       jsonb_build_object('name', bc.name, 'slug', bc.slug)
@@ -138,6 +176,7 @@ export function buildPublishedSermonListQuery(input: PublicSermonListQuery): Par
       WHEN EXISTS (
         SELECT 1 FROM scripture_references priority_reference
         WHERE priority_reference.sermon_id = s.id
+          AND priority_reference.review_status IN ('unreviewed', 'confirmed')
           AND to_tsvector('english'::regconfig, priority_reference.display_text) @@ ${state.searchExpression}
       ) OR EXISTS (
         SELECT 1 FROM sermon_book_classifications priority_book_map
@@ -267,6 +306,8 @@ export function buildRelatedPublishedSermonsQuery(
             JOIN scripture_references candidate_reference
               ON candidate_reference.sermon_id = candidate.id
             WHERE current_reference.sermon_id = current_sermon.id
+              AND current_reference.review_status IN ('unreviewed', 'confirmed')
+              AND candidate_reference.review_status IN ('unreviewed', 'confirmed')
               AND (
                 lower(regexp_replace(trim(current_reference.display_text), '[[:space:]]+', ' ', 'g')) =
                   lower(regexp_replace(trim(candidate_reference.display_text), '[[:space:]]+', ' ', 'g'))

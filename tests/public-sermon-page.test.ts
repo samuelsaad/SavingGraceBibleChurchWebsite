@@ -12,6 +12,7 @@ const sermon: SermonDetail = {
   speaker: { name: "Example Speaker", slug: "example-speaker" },
   series: [],
   scriptureReferences: [{ displayText: "Romans 8:1", parseStatus: "exact" }],
+  primaryPassages: [{ displayText: "Romans 8:1", isLead: true }],
   books: [],
   primaryMedia: null,
   body: null,
@@ -30,6 +31,7 @@ const sermon: SermonDetail = {
       speaker: { name: "Example Speaker", slug: "example-speaker" },
       series: [],
       scriptureReferences: [],
+      primaryPassages: [],
       books: [],
       primaryMedia: null,
       relationshipReasons: ["same_speaker"]
@@ -55,6 +57,7 @@ describe("server-rendered public sermon page", () => {
     expect(html).not.toMatch(/fetch\(|XMLHttpRequest/);
     expect(html).toContain(`meta name="description" content="${sermon.summary}"`);
     expect(html).toContain("Related sermons");
+    expect(html).toContain("Preached from:");
     expect(html).toContain("Related by same speaker");
     expect(html).not.toContain("Related themes");
   });

@@ -22,7 +22,8 @@ export type SchemaMigrationScope =
   | "0010_zero_finding_guided_review"
   | "0011_description_semantic_relationships"
   | "0012_description_semantic_runtime_provenance"
-  | "0013_official_youtube_caption_provenance";
+  | "0013_official_youtube_caption_provenance"
+  | "0014_primary_preaching_passages";
 
 interface SchemaMigrationDefinition {
   id: string;
@@ -225,6 +226,18 @@ export const schemaMigrationDefinitions: readonly SchemaMigrationDefinition[] = 
     upPath: "db/migrations/0013_official_youtube_caption_provenance.sql",
     downPath: "db/migrations/0013_official_youtube_caption_provenance.down.sql",
     addedRelations: []
+  },
+  {
+    id: "0014_primary_preaching_passages",
+    order: 14,
+    upPath: "db/migrations/0014_primary_preaching_passages.sql",
+    downPath: "db/migrations/0014_primary_preaching_passages.down.sql",
+    addedRelations: ["sermon_primary_passage_reviews"],
+    addedFunctions: ["enforce_primary_passage_review_consistency()"],
+    addedTriggers: [
+      "scripture_references_primary_review_consistency",
+      "sermon_primary_passage_reviews_consistency"
+    ]
   }
 ] as const;
 

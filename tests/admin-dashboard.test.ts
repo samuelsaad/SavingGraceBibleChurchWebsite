@@ -86,6 +86,12 @@ describe("Phase 3B administration dashboard", () => {
     expect(client).toContain("Phase 3B.2 pilot work queue");
     expect(client).toContain("Bible-book assignment required");
     expect(client).toContain("Primary Bible book");
+    expect(client).toContain("Primary preaching passage");
+    expect(client).toContain("Confirm entered passages");
+    expect(client).toContain("Reject title proposal");
+    expect(client).toContain("Confirm no primary passage");
+    expect(client).toContain("data-primary-passage-control");
+    expect(client).toContain("/primary-passage-decision");
     expect(client).toContain("No Bible book assigned");
     expect(client).toContain("Completed editorial stages are read-only");
     expect(client).toContain("isBibleBookControl");

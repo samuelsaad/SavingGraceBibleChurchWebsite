@@ -10,6 +10,7 @@ Local Phase 3B.2 caption/enrichment rehearsal, Phase 3B.2b punctuation hardening
 - Parameterized PostgreSQL public sermon repository
 - Framework-independent `/api/v1/sermons` list/detail HTTP router
 - Server-rendered local public sermon archive/detail routes with legacy-compatible search and filters, stable pagination, metadata-related sermons, mapped `301`/`410` handling, and a published-only sermon sitemap
+- Separate server-rendered **Browse by Bible passage** controls backed only by administrator-confirmed structured primary preaching passages; pending title proposals, supporting references and private sermons are excluded
 - Offline description-only semantic foundation with a verified external BAAI ONNX model, locked local-only Transformers.js adapter, exact float32 scoring, shared eligibility/stale-removal guards, pending quality status, no model files in Git and no public **Related themes** output
 - Provider-independent protected admin handlers with allowlisted local test identities
 - Final default-deny single-`admin` policy with no editor/contributor or ownership-based behaviour
@@ -77,6 +78,9 @@ npm run enrichment:canary-local -- import
 npm run enrichment:canary-local -- verify
 npm run db:apply-atomic-review-local
 npm run db:rollback-atomic-review-local
+npm run db:apply-primary-passage-local
+npm run scripture:prepare-current15-local
+npm run db:rollback-primary-passage-local
 npm run reference:apply-local
 npm run reference:rollback-local
 npm run launch-readiness:local
@@ -104,6 +108,8 @@ npm run db:rollback-local
 ```
 
 The schema commands keep schema history separate from `migration_records` and `sermon_enrichment_draft_imports`. Apply runs only the pending canonical suffix. Rollback removes only the latest requested receipt, or the full applied suffix for an unscoped rollback, in the same transaction as its down SQL. The SQL files remain independently executable rollback artifacts; the runner normalises CRLF/CR/LF differences before hashing their paired definitions.
+
+Migration `0014_primary_preaching_passages` extends the existing Scripture-reference model with reviewed primary/supporting/unclassified roles, one confirmed lead primary, provenance and concurrency fields plus private proposal-review state. Its bounded preparation command accepts no record argument: it requires the exact one/two/twelve processing-version split for the current three pilots and 12 Wave 1 records, reads only their stored titles, writes exact evidence to ignored private storage, and creates pending proposals or manual-review outcomes without altering sermon content or administrator decisions. The identical rerun preserves the existing rows. Only an administrator-confirmed primary passage can appear under **Preached from** or satisfy `passageBook`, `passageChapter`, `passageVerse` and `passageEndVerse` public query parameters.
 
 Reference seeding is a separate local data operation because the core schema already provides the required structure. It requires the same exact loopback PostgreSQL 16 test target and write opt-in, inserts only the confirmed seven speakers plus 66 canonical books/classifications, and is idempotent. Its guarded rollback refuses partial, changed, or in-use catalogue state. It never selects a speaker or Bible book for a sermon. Bible-book abbreviations and aliases are normalised only to resolve trusted import terms; ambiguous aliases fail closed. Administrator relationship counts include private drafts, while public counts include only complete published sermons, and neither count is stored as historical source truth.
 

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isoDateSchema, sermonDetailSchema, sermonSummarySchema } from "../../domain/sermon";
+import { bibleBookBySlug, validateBiblePassage } from "../../domain/bible-passage";
 
 const optionalSlug = z.string().min(1).max(200).regex(/^[a-z0-9-]+$/).optional();
 
@@ -15,6 +16,10 @@ export const publicSermonListQuerySchema = z
     series: optionalSlug,
     passage: optionalSlug,
     book: optionalSlug,
+    passageBook: optionalSlug,
+    passageChapter: z.coerce.number().int().positive().optional(),
+    passageVerse: z.coerce.number().int().positive().optional(),
+    passageEndVerse: z.coerce.number().int().positive().optional(),
     dateFrom: isoDateSchema.optional(),
     dateTo: isoDateSchema.optional(),
     order: z.enum(["ASC", "DESC"]).default("DESC"),
@@ -28,6 +33,37 @@ export const publicSermonListQuerySchema = z
         path: ["dateTo"],
         message: "dateTo must not be before dateFrom"
       });
+    }
+    if (!value.passageBook && (
+      value.passageChapter !== undefined || value.passageVerse !== undefined || value.passageEndVerse !== undefined
+    )) {
+      context.addIssue({ code: "custom", path: ["passageBook"], message: "Choose a Bible book first" });
+      return;
+    }
+    if (value.passageBook) {
+      const book = bibleBookBySlug(value.passageBook);
+      if (!book) {
+        context.addIssue({ code: "custom", path: ["passageBook"], message: "Unknown canonical Bible book" });
+        return;
+      }
+      if (value.passageVerse !== undefined && value.passageChapter === undefined) {
+        context.addIssue({ code: "custom", path: ["passageVerse"], message: "Choose a chapter before a verse" });
+      }
+      if (value.passageEndVerse !== undefined && value.passageVerse === undefined) {
+        context.addIssue({ code: "custom", path: ["passageEndVerse"], message: "Choose a starting verse first" });
+      }
+      if (value.passageChapter !== undefined) {
+        const passage = {
+          canonicalBookId: book.id,
+          startChapter: value.passageChapter,
+          startVerse: value.passageVerse ?? null,
+          endChapter: value.passageChapter,
+          endVerse: value.passageEndVerse ?? value.passageVerse ?? null
+        };
+        for (const message of validateBiblePassage(passage).issues) {
+          context.addIssue({ code: "custom", path: ["passageChapter"], message });
+        }
+      }
     }
   });
 

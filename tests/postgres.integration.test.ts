@@ -11,6 +11,7 @@ import {
   enrichmentReviewProgressInputSchema,
   finishEnrichmentReviewInputSchema,
   permanentlyDeleteSermonInputSchema,
+  primaryPassageDecisionInputSchema,
   sermonTransitionInputSchema,
   taxonomyWriteInputSchema,
   updateSermonInputSchema
@@ -370,6 +371,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   });
 
   it("aborts the one-speaker migration with affected IDs and cleanly reapplies", async () => {
+    await runSchema("rollback", "0014_primary_preaching_passages");
     await runSchema("rollback", "0013_official_youtube_caption_provenance");
     await runSchema("rollback", "0012_description_semantic_runtime_provenance");
     await runSchema("rollback", "0011_description_semantic_relationships");
@@ -419,6 +421,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     await runSchema("apply", "0011_description_semantic_relationships");
     await runSchema("apply", "0012_description_semantic_runtime_provenance");
     await runSchema("apply", "0013_official_youtube_caption_provenance");
+    await runSchema("apply", "0014_primary_preaching_passages");
     expect(
       (await pool.query("SELECT to_regclass('public.sermon_speakers') IS NULL AS removed")).rows[0]
     ).toEqual({ removed: true });
@@ -2431,6 +2434,114 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     }
   });
 
+  it("keeps title proposals private until an explicit versioned primary-passage decision", async () => {
+    const admin = { subject: "local-admin-0001", role: "admin" } satisfies ApplicationIdentity;
+    const repository = new PostgresAdminSermonRepository(pool);
+    const publicRepository = new PostgresSermonRepository(pool);
+    const service = new AdminSermonService(repository, () => new Date("2026-08-05T00:00:00.000Z"));
+    let sermonId: string | null = null;
+    try {
+      const speakerId = (await pool.query<{ id: string }>("SELECT id FROM speakers ORDER BY id LIMIT 1")).rows[0]!.id;
+      const bookClassificationId = (await pool.query<{ id: string }>(
+        "SELECT id FROM book_classifications WHERE canonical_book_id = 45 AND classification_type = 'canonical'"
+      )).rows[0]!.id;
+      const created = await service.create(createSermonInputSchema.parse({
+        title: "An anonymised primary-passage integration sermon",
+        slug: "anonymised-primary-passage-integration",
+        serviceDate: "2026-08-05",
+        speakerId,
+        bookClassificationIds: [bookClassificationId],
+        ...approvedEnrichment(),
+        media: [{
+          provider: "youtube",
+          mediaType: "video",
+          externalId: null,
+          canonicalUrl: "https://www.youtube.com/watch?v=passage0001",
+          title: "Anonymised controlled video"
+        }]
+      }), admin, "primary-passage-create");
+      sermonId = created.id;
+      await pool.query(
+        `INSERT INTO sermon_primary_passage_reviews (
+           sermon_id, proposal_outcome, evidence_source, evidence_sha256, parser_version
+         ) VALUES ($1, 'proposed', 'local_youtube_title', $2, 'saving-grace-primary-passage-v1')`,
+        [sermonId, "a".repeat(64)]
+      );
+      const proposed = await pool.query<{ id: string }>(
+        `INSERT INTO scripture_references (
+           sermon_id, display_text, canonical_book_id, start_chapter, start_verse, end_chapter, end_verse,
+           display_order, parse_status, relationship_role, is_lead, original_reference_text,
+           provenance, review_status, parser_version
+         ) VALUES ($1, 'Romans 8:1–4', 45, 8, 1, 8, 4, 0, 'exact', 'primary', true,
+                   'Romans 8:1-4', 'title_proposal', 'proposed', 'saving-grace-primary-passage-v1')
+         RETURNING id`,
+        [sermonId]
+      );
+      await pool.query(
+        "INSERT INTO scripture_reference_sources (scripture_reference_id, sermon_id, source_kind, original_value) VALUES ($1, $2, 'curated', 'Romans 8:1-4')",
+        [proposed.rows[0]!.id, sermonId]
+      );
+      const published = await service.transition(created.id, "publish", { rowVersion: created.rowVersion }, admin, "primary-passage-publish");
+      expect(await publicRepository.findPublishedBySlug(published.slug)).toMatchObject({
+        scriptureReferences: [],
+        primaryPassages: []
+      });
+      expect((await publicRepository.listPublished(publicSermonListQuerySchema.parse({
+        passageBook: "romans", passageChapter: 8, passageVerse: 2
+      }))).data).toHaveLength(0);
+      const before = (await pool.query<{ digest: string }>(
+        `SELECT encode(digest(convert_to(concat_ws(E'\\n', sermon.summary, transcript.body_text,
+          (SELECT string_agg(qa.question_text || E'\\n' || qa.answer_text, E'\\n' ORDER BY qa.display_order)
+           FROM sermon_question_answers qa WHERE qa.sermon_id = sermon.id)), 'UTF8'), 'sha256'), 'hex') AS digest
+         FROM sermons sermon JOIN sermon_transcripts transcript ON transcript.sermon_id = sermon.id WHERE sermon.id = $1`,
+        [sermonId]
+      )).rows[0]!.digest;
+      const prepared = await service.detail(sermonId, admin);
+      const confirmed = await service.decidePrimaryPassage(sermonId, primaryPassageDecisionInputSchema.parse({
+        sermonRowVersion: published.rowVersion,
+        reviewRowVersion: prepared.primaryPassageReview!.rowVersion,
+        action: "confirm_passages",
+        passages: [
+          { canonicalBookId: 45, startChapter: 8, startVerse: 1, endChapter: 8, endVerse: 4, relationshipRole: "primary", isLead: true },
+          { canonicalBookId: 43, startChapter: 3, startVerse: 16, endChapter: 3, endVerse: 16, relationshipRole: "supporting", isLead: false }
+        ]
+      }), admin, "primary-passage-confirm");
+      expect(confirmed.primaryPassageReview).toMatchObject({
+        reviewStatus: "confirmed_passage",
+        reviewedBySubject: admin.subject
+      });
+      expect(confirmed.scriptureReferences.filter((reference) => reference.reviewStatus === "confirmed")).toHaveLength(2);
+      expect((await publicRepository.listPublished(publicSermonListQuerySchema.parse({
+        passageBook: "romans", passageChapter: 8, passageVerse: 2
+      }))).data).toHaveLength(1);
+      expect(await publicRepository.findPublishedBySlug(published.slug)).toMatchObject({
+        scriptureReferences: [{ displayText: "John 3:16" }],
+        primaryPassages: [{ displayText: "Romans 8:1–4", isLead: true }]
+      });
+      expect((await publicRepository.listPublished(publicSermonListQuerySchema.parse({
+        passageBook: "john", passageChapter: 3, passageVerse: 16
+      }))).data).toHaveLength(0);
+      const after = (await pool.query<{ digest: string }>(
+        `SELECT encode(digest(convert_to(concat_ws(E'\\n', sermon.summary, transcript.body_text,
+          (SELECT string_agg(qa.question_text || E'\\n' || qa.answer_text, E'\\n' ORDER BY qa.display_order)
+           FROM sermon_question_answers qa WHERE qa.sermon_id = sermon.id)), 'UTF8'), 'sha256'), 'hex') AS digest
+         FROM sermons sermon JOIN sermon_transcripts transcript ON transcript.sermon_id = sermon.id WHERE sermon.id = $1`,
+        [sermonId]
+      )).rows[0]!.digest;
+      expect(after).toBe(before);
+      await expect(service.decidePrimaryPassage(sermonId, primaryPassageDecisionInputSchema.parse({
+        sermonRowVersion: published.rowVersion,
+        reviewRowVersion: prepared.primaryPassageReview!.rowVersion,
+        action: "confirm_no_primary_passage"
+      }), admin, "primary-passage-stale")).rejects.toMatchObject({ status: 409, code: "stale_write" });
+    } finally {
+      if (sermonId) {
+        await pool.query("DELETE FROM audit_events WHERE entity_id = $1", [sermonId]);
+        await pool.query("DELETE FROM sermons WHERE id = $1", [sermonId]);
+      }
+    }
+  });
+
   it("supports admin filters, counts, every state transition, and transactional edits", async () => {
     const admin = { subject: "local-admin-0001", role: "admin" } satisfies ApplicationIdentity;
     const repository = new PostgresAdminSermonRepository(pool);
@@ -2875,7 +2986,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
          (SELECT count(*)::integer FROM migration_records) AS content_records,
          (SELECT count(*)::integer FROM sermon_enrichment_draft_imports) AS draft_import_receipts`
     );
-    expect(before.rows[0]?.schema_receipts).toBe(13);
+    expect(before.rows[0]?.schema_receipts).toBe(14);
     expect(before.rows[0]?.content_records).toBe(5);
     expect(before.rows[0]?.draft_import_receipts).toBeGreaterThanOrEqual(0);
     await expect(runSchema("apply")).resolves.toEqual({
@@ -2883,7 +2994,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       outcome: "no_op",
       appliedMigrationIds: [],
       rolledBackMigrationIds: [],
-      journalReceiptCount: 13
+      journalReceiptCount: 14
     });
     expect((await pool.query<{
       schema_receipts: number;
@@ -2898,6 +3009,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   });
 
   it("applies only the pending canonical suffix from a valid partial journal", async () => {
+    await runSchema("rollback", "0014_primary_preaching_passages");
     await runSchema("rollback", "0013_official_youtube_caption_provenance");
     await runSchema("rollback", "0012_description_semantic_runtime_provenance");
     await runSchema("rollback", "0011_description_semantic_relationships");
@@ -2924,10 +3036,11 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         "0010_zero_finding_guided_review",
         "0011_description_semantic_relationships",
         "0012_description_semantic_runtime_provenance",
-        "0013_official_youtube_caption_provenance"
+        "0013_official_youtube_caption_provenance",
+        "0014_primary_preaching_passages"
       ],
       rolledBackMigrationIds: [],
-      journalReceiptCount: 13
+      journalReceiptCount: 14
     });
   });
 
@@ -2951,6 +3064,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       "UPDATE schema_migrations SET checksum_sha256 = $1 WHERE migration_order = 8",
       [eighth.checksumSha256]
     );
+    await runSchema("rollback", "0014_primary_preaching_passages");
     await runSchema("rollback", "0013_official_youtube_caption_provenance");
     await runSchema("rollback", "0012_description_semantic_runtime_provenance");
     await runSchema("rollback", "0011_description_semantic_relationships");
@@ -3009,6 +3123,8 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 12 });
     await expect(runSchema("apply", "0013_official_youtube_caption_provenance"))
       .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 13 });
+    await expect(runSchema("apply", "0014_primary_preaching_passages"))
+      .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 14 });
   });
 
   it("refuses unjournalled objects and serialises concurrent fresh application", async () => {
@@ -3028,12 +3144,12 @@ integration("disposable PostgreSQL Phase 3B application", () => {
 
     const results = await Promise.all([runSchema("apply"), runSchema("apply")]);
     expect(results.map((result) => result.outcome).sort()).toEqual(["applied", "no_op"]);
-    expect(results.reduce((count, result) => count + result.appliedMigrationIds.length, 0)).toBe(13);
+    expect(results.reduce((count, result) => count + result.appliedMigrationIds.length, 0)).toBe(14);
     expect((await pool.query<{ receipts: number; distinct_receipts: number }>(
       `SELECT count(*)::integer AS receipts,
               count(DISTINCT migration_id)::integer AS distinct_receipts
        FROM schema_migrations`
-    )).rows[0]).toEqual({ receipts: 13, distinct_receipts: 13 });
+    )).rows[0]).toEqual({ receipts: 14, distinct_receipts: 14 });
 
     await expect(runSchema("rollback")).resolves.toMatchObject({
       outcome: "rolled_back",
@@ -3041,7 +3157,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     });
     await expect(runSchema("apply")).resolves.toMatchObject({
       outcome: "applied",
-      journalReceiptCount: 13
+      journalReceiptCount: 14
     });
   });
 });

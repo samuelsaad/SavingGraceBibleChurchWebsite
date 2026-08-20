@@ -5,6 +5,7 @@ import type {
   DeletionSeoDisposition,
   EnrichmentReviewItemDecisionInput,
   EnrichmentReviewProgressInput,
+  PrimaryPassageDecisionInput,
   TaxonomyKind,
   UpdateSermonInput,
   applicationRoleSchema,
@@ -66,8 +67,24 @@ export interface StoredSermonDetail extends StoredSermonSummary {
     ScriptureReferenceInput & {
       id: string;
       parseStatus: "unparsed" | "exact" | "partial" | "unresolved" | "curated";
+      originalReferenceText: string | null;
+      provenance: "legacy_import" | "administrator" | "title_proposal" | "administrator_correction";
+      reviewStatus: "unreviewed" | "proposed" | "confirmed" | "rejected";
+      reviewerSubject: string | null;
+      reviewedAt: string | null;
+      parserVersion: string | null;
+      rowVersion: number;
     }
   >;
+  primaryPassageReview: {
+    proposalOutcome: "proposed" | "no_reference" | "manual_review_required" | "administrator_entered";
+    evidenceSource: "local_youtube_title" | "administrator";
+    parserVersion: string;
+    reviewStatus: "pending" | "confirmed_passage" | "confirmed_none" | "rejected";
+    reviewedBySubject: string | null;
+    reviewedAt: string | null;
+    rowVersion: number;
+  } | null;
   media: Array<ControlledMediaInput & { id: string }>;
   transcript: (CreateSermonInput["transcript"] & {
     rowVersion: number;
@@ -266,6 +283,11 @@ export interface AdminSermonTransaction {
     actorSubject: string
   ): Promise<void>;
   refreshSearchTerms(id: string): Promise<void>;
+  decidePrimaryPassage(
+    sermonId: string,
+    input: PrimaryPassageDecisionInput,
+    actorSubject: string
+  ): Promise<void>;
   findEnrichmentReviewForUpdate(sermonId: string): Promise<EnrichmentReviewStateDto | null>;
   findEnrichmentReviewItemForUpdate(
     sermonId: string,

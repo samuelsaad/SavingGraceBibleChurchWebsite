@@ -179,6 +179,23 @@ describe("PostgreSQL schema contract", () => {
     expect(down).toContain("retrieval_attribution = 'authorised_youtube_studio_export'");
   });
 
+  it("adds reversible reviewed primary-passage roles without storing source titles", async () => {
+    const [up, down] = await Promise.all([
+      readFile("db/migrations/0014_primary_preaching_passages.sql", "utf8"),
+      readFile("db/migrations/0014_primary_preaching_passages.down.sql", "utf8")
+    ]);
+    expect(up).toContain("ADD COLUMN relationship_role");
+    expect(up).toContain("ADD COLUMN is_lead");
+    expect(up).toContain("CREATE TABLE sermon_primary_passage_reviews");
+    expect(up).toContain("scripture_references_one_confirmed_lead_primary_uq");
+    expect(up).toContain("WHERE relationship_role = 'primary' AND review_status = 'confirmed'");
+    expect(up).toContain("confirmed_passage_decision_requires_exactly_one_lead_primary");
+    expect(up).not.toMatch(/ADD COLUMN (?:source_title|post_title|youtube_title)/i);
+    expect(down).toContain("DROP TABLE IF EXISTS sermon_primary_passage_reviews");
+    expect(down).toContain("primary_passage_rollback_refused_preserved_review_evidence");
+    expect(down).toContain("DROP COLUMN IF EXISTS relationship_role");
+  });
+
   it("adds reversible atomic review identities without changing migration 0007", async () => {
     const [up, down] = await Promise.all([
       readFile("db/migrations/0008_atomic_sermon_review_items.sql", "utf8"),

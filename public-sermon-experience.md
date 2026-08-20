@@ -31,6 +31,10 @@ Vector rank is descending within the match-priority tier, followed by requested 
 
 The public archive supports the legacy-compatible query names for speaker, series, passage, Bible book, keyword, and order, plus inclusive service-date bounds. Dimensions combine with `AND`. Pagination is fixed at nine results per page in the public HTML route. Filter options are derived only from relationships attached to published, non-deleted sermons; pending-only and private relationships cannot become public options.
 
+The separately labelled **Browse by Bible passage** fieldset uses `passageBook`, `passageChapter`, `passageVerse` and optional `passageEndVerse`. Book-only, whole-chapter, single-verse and verse-range requests use inclusive interval overlap against only administrator-confirmed `primary` relationships. Supporting, unclassified, pending, rejected and private relationships never satisfy this filter. A keyword and primary-passage request combines with `AND`; the active-filter summary names both dimensions. The controls are a server-rendered GET form with canonical Old/New Testament ordering, persistent labels, disabled dependent fields, a no-JavaScript path and a small CSP-hashed enhancement that resets invalid dependent choices after a book/chapter change.
+
+Matching cards and detail pages label reviewed coordinates as **Preached from**. Other historic Scripture metadata remains separately labelled and continues to power the existing keyword/structured Scripture path where already approved. This passage filter does not query title text, run an embedding model, read semantic relationships or alter metadata-related sermon scoring.
+
 ## Interim metadata-related sermon scoring
 
 Related results are deterministic and explainable. Each published candidate receives:

@@ -38,6 +38,7 @@ type PublicSermonRow = QueryResultRow & {
   speaker: unknown;
   series: unknown;
   scripture_references: unknown;
+  primary_passages: unknown;
   books: unknown;
   primary_media: unknown;
   total_items?: number;
@@ -82,6 +83,7 @@ function summaryFromRow(row: PublicSermonRow): SermonSummary {
     speaker: row.speaker,
     series: row.series,
     scriptureReferences: row.scripture_references,
+    primaryPassages: row.primary_passages,
     books: row.books,
     primaryMedia: row.primary_media
   });

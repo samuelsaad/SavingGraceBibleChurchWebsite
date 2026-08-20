@@ -1,4 +1,5 @@
 import { ZodError } from "zod";
+import { createHash } from "node:crypto";
 import {
   publicSermonListQuerySchema,
   type PublicSermonListQuery
@@ -8,6 +9,7 @@ import {
   translateLegacySermonQuery
 } from "../../api/legacy-sermon-query";
 import type { RelatedSermonSummary, SermonDetail, SermonSummary } from "../../domain/sermon";
+import { bibleBookBySlug, bibleBooks, passageQueryLabel } from "../../domain/bible-passage";
 import type {
   PublicSermonFilterOption,
   PublicSermonFilterOptions,
@@ -18,13 +20,22 @@ const canonicalOrigin = "https://www.savinggrace.org.au";
 const archivePath = "/sermons/";
 const archivePageSize = 9;
 
-const responseHeaders = {
+const baseResponseHeaders = {
   "Content-Type": "text/html; charset=utf-8",
   "Cache-Control": "no-store",
-  "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' https:; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
   "Referrer-Policy": "strict-origin-when-cross-origin",
   "X-Content-Type-Options": "nosniff"
 };
+
+const passageEnhancementScript = `(function(){const book=document.querySelector('#passage-book');const chapter=document.querySelector('#passage-chapter');const verse=document.querySelector('#passage-verse');const end=document.querySelector('#passage-end-verse');if(!book||!chapter||!verse||!end)return;const fill=(select,count,label)=>{select.replaceChildren(new Option(label,''));for(let value=1;value<=count;value+=1)select.add(new Option(String(value),String(value)));};book.addEventListener('change',()=>{fill(chapter,Number(book.selectedOptions[0]?.dataset.chapters||0),'All chapters');fill(verse,176,'All verses');fill(end,176,'Same as start');chapter.disabled=!book.value;verse.disabled=true;end.disabled=true;});chapter.addEventListener('change',()=>{verse.value='';end.value='';verse.disabled=!chapter.value;end.disabled=true;});verse.addEventListener('change',()=>{end.value='';end.disabled=!verse.value;});})();`;
+const passageScriptHash = createHash("sha256").update(passageEnhancementScript).digest("base64");
+
+function responseHeaders(includePassageScript = false): Record<string, string> {
+  return {
+    ...baseResponseHeaders,
+    "Content-Security-Policy": `default-src 'none'; style-src 'unsafe-inline';${includePassageScript ? ` script-src 'sha256-${passageScriptHash}';` : ""} img-src 'self' https:; base-uri 'none'; frame-ancestors 'none'; form-action 'self'`
+  };
+}
 
 function escapeHtml(value: string): string {
   return value
@@ -73,7 +84,7 @@ function commonStyles(): string {
       header{background:#123f2d;color:#fff}.site-header{width:min(72rem,calc(100% - 2rem));margin:auto;padding:1rem 0;display:flex;align-items:center;justify-content:space-between;gap:1rem}.site-header a{color:#fff}.brand{font-family:Georgia,serif;font-size:1.15rem;font-weight:700;text-decoration:none}
       main{width:min(72rem,calc(100% - 2rem));margin:auto;padding:2.5rem 0 5rem}h1,h2,h3{font-family:Georgia,serif;line-height:1.15;color:#163829}h1{font-size:clamp(2.1rem,7vw,4.4rem);margin:.5rem 0 1rem}h2{font-size:clamp(1.5rem,4vw,2.25rem)}p{max-width:72ch}.eyebrow{font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;font-weight:800;color:#8f6215}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
       .panel,.sermon-card,.content-section,.related-card{background:#fff;border:1px solid #d7e0da;border-radius:1rem;box-shadow:0 .45rem 1.5rem rgba(20,55,40,.06)}.panel{padding:clamp(1rem,3vw,1.5rem)}
-      .filter-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}.filter-field{display:grid;gap:.35rem}.filter-field label{font-weight:750}.filter-field input,.filter-field select{width:100%;min-height:2.75rem;border:1px solid #8fa199;border-radius:.55rem;background:#fff;color:#17241e;padding:.6rem .7rem;font:inherit}.filter-actions{display:flex;align-items:center;flex-wrap:wrap;gap:.75rem;margin-top:1rem}.button{display:inline-flex;align-items:center;justify-content:center;min-height:2.75rem;padding:.65rem 1rem;border:0;border-radius:.55rem;background:#155b40;color:#fff;font:inherit;font-weight:800;text-decoration:none;cursor:pointer}.button-secondary{background:#fff;color:#155b40;border:1px solid #155b40}
+      .filter-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}.filter-grid>.wide{grid-column:1/-1}.filter-field{display:grid;gap:.35rem}.filter-field label{font-weight:750}.filter-field input,.filter-field select{width:100%;min-height:2.75rem;border:1px solid #8fa199;border-radius:.55rem;background:#fff;color:#17241e;padding:.6rem .7rem;font:inherit}.filter-field select:disabled{background:#eef2ef;color:#6b776f}.filter-actions{display:flex;align-items:center;flex-wrap:wrap;gap:.75rem;margin-top:1rem}.button{display:inline-flex;align-items:center;justify-content:center;min-height:2.75rem;padding:.65rem 1rem;border:0;border-radius:.55rem;background:#155b40;color:#fff;font:inherit;font-weight:800;text-decoration:none;cursor:pointer}.button-secondary{background:#fff;color:#155b40;border:1px solid #155b40}.passage-search{border:1px solid #b7c7be;border-radius:.75rem;padding:1rem;margin:.25rem 0 0}.passage-search legend{font-weight:800;color:#163829;padding:0 .35rem}.field-hint{color:#53675d;margin:.15rem 0 .75rem}
       .active-filters{display:flex;flex-wrap:wrap;gap:.5rem;padding:0;list-style:none}.active-filters li{background:#e7eee9;border-radius:999px;padding:.35rem .7rem}.result-status{margin:1.5rem 0;font-weight:700}.sermon-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem}.sermon-card{padding:1.25rem;display:flex;flex-direction:column;gap:.65rem}.sermon-card h2,.sermon-card h3{margin:0;font-size:1.35rem}.sermon-card p{margin:0}.card-meta{color:#53675d;font-size:.95rem}.card-description{color:#30463b}.tag-list{display:flex;flex-wrap:wrap;gap:.4rem;padding:0;list-style:none}.tag-list li{font-size:.9rem}.tag-list a,.tag{display:inline-block;background:#edf2ee;border-radius:999px;padding:.25rem .55rem;text-decoration:none}
       .pagination{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:.5rem;margin-top:2rem}.pagination a,.pagination span{display:inline-flex;align-items:center;justify-content:center;min-width:2.75rem;min-height:2.75rem;border:1px solid #a9b8b0;border-radius:.55rem;padding:.4rem .7rem}.pagination [aria-current="page"]{background:#123f2d;color:#fff;border-color:#123f2d;font-weight:800}
       .sermon-layout{display:grid;grid-template-columns:minmax(0,1fr) 18rem;gap:2rem;align-items:start}.sermon-main{min-width:0}.sermon-meta{color:#53675d}.sermon-meta p{margin:.4rem 0}.content-section{padding:clamp(1rem,3vw,1.5rem);margin:1.25rem 0}.sermon-description{font-size:1.08rem;line-height:1.75;border-left:.35rem solid #c78927}.media-list{padding-left:1.25rem}.transcript-disclosure{border:1px solid #cbd8d0;border-radius:.75rem;background:#fbfcfb}.transcript-disclosure summary{cursor:pointer;padding:1rem;font-weight:800}.transcript-body{padding:0 1rem 1rem;line-height:1.8;overflow-wrap:anywhere}.question-list{display:grid;gap:1rem;padding-left:1.5rem}.question-list li{padding:1rem;border-left:.25rem solid #c78927;background:#f8faf8}.question-list h3{font-size:1.1rem}.related-list{display:grid;gap:1rem}.related-card{padding:1rem}.related-card h3{margin:.2rem 0}.related-reason{color:#53675d;font-size:.92rem}.empty-state{padding:2rem;text-align:center;background:#fff;border:1px dashed #8fa199;border-radius:1rem}
@@ -91,6 +102,7 @@ interface PageShellInput {
   robots: "index, follow" | "noindex, follow" | "noindex, nofollow";
   body: string;
   openGraphType?: "website" | "article";
+  inlineScript?: string;
 }
 
 function pageShell(input: PageShellInput): string {
@@ -116,7 +128,7 @@ function pageShell(input: PageShellInput): string {
   <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
     <header><div class="site-header"><a class="brand" href="/">Saving Grace Bible Church</a><nav aria-label="Primary"><a href="/sermons/">Sermons</a></nav></div></header>
-    <main id="main-content">${input.body}</main>
+    <main id="main-content">${input.body}</main>${input.inlineScript ? `<script>${input.inlineScript}</script>` : ""}
   </body>
 </html>`;
 }
@@ -148,10 +160,38 @@ function standardizedFilterParameters(query: PublicSermonListQuery): URLSearchPa
   if (query.series) parameters.set("sermon_series", query.series);
   if (query.passage) parameters.set("sermon_topics", query.passage);
   if (query.book) parameters.set("sermon_book", query.book);
+  if (query.passageBook) parameters.set("passageBook", query.passageBook);
+  if (query.passageChapter !== undefined) parameters.set("passageChapter", String(query.passageChapter));
+  if (query.passageVerse !== undefined) parameters.set("passageVerse", String(query.passageVerse));
+  if (query.passageEndVerse !== undefined) parameters.set("passageEndVerse", String(query.passageEndVerse));
   if (query.dateFrom) parameters.set("dateFrom", query.dateFrom);
   if (query.dateTo) parameters.set("dateTo", query.dateTo);
   if (query.order !== "DESC") parameters.set("order", query.order);
   return parameters;
+}
+
+function passageClearUrl(query: PublicSermonListQuery): string {
+  const parameters = standardizedFilterParameters(query);
+  for (const name of ["passageBook", "passageChapter", "passageVerse", "passageEndVerse"]) {
+    parameters.delete(name);
+  }
+  return `${archivePath}${parameters.size ? `?${parameters.toString()}` : ""}`;
+}
+
+function numberedOptions(maximum: number, value: number | undefined, emptyLabel: string): string {
+  return `<option value="">${escapeHtml(emptyLabel)}</option>${Array.from({ length: maximum }, (_, index) => index + 1)
+    .map((number) => `<option value="${number}"${value === number ? " selected" : ""}>${number}</option>`)
+    .join("")}`;
+}
+
+function bibleBookOptions(value: string | undefined): string {
+  return (["old", "new"] as const).map((testament) => {
+    const label = testament === "old" ? "Old Testament" : "New Testament";
+    const options = bibleBooks.filter((book) => book.testament === testament).map((book) =>
+      `<option value="${book.slug}" data-chapters="${book.chapterCount}"${selected(value, book.slug)}>${escapeHtml(book.canonicalName)}</option>`
+    ).join("");
+    return `<optgroup label="${label}">${options}</optgroup>`;
+  }).join("");
 }
 
 function paginationUrl(page: number, query: PublicSermonListQuery): string {
@@ -176,7 +216,8 @@ function sermonCard(sermon: SermonSummary, headingLevel: 2 | 3 = 2): string {
   return `<article class="sermon-card">
     <p class="card-meta"><time datetime="${escapeHtml(sermon.serviceDate)}">${escapeHtml(formattedDate(sermon.serviceDate))}</time></p>
     <${heading}><a href="/sermons/${encodeURIComponent(sermon.slug)}/">${escapeHtml(sermon.title)}</a></${heading}>
-    ${sermon.scriptureReferences.length ? `<p class="card-meta">${sermon.scriptureReferences.map((item) => escapeHtml(item.displayText)).join(", ")}</p>` : ""}
+    ${sermon.primaryPassages.length ? `<p class="card-meta"><strong>Preached from:</strong> ${sermon.primaryPassages.map((item) => escapeHtml(item.displayText)).join(", ")}</p>` : ""}
+    ${sermon.scriptureReferences.length ? `<p class="card-meta">Other Scripture metadata: ${sermon.scriptureReferences.map((item) => escapeHtml(item.displayText)).join(", ")}</p>` : ""}
     ${relationships.length ? `<ul class="tag-list" aria-label="Sermon classifications">${relationships.join("")}</ul>` : ""}
     ${sermon.summary ? `<p class="card-description">${escapeHtml(sermon.summary)}</p>` : ""}
   </article>`;
@@ -192,6 +233,7 @@ function activeFiltersMarkup(
     query.series ? `Series: ${optionName(options.series, query.series)}` : "",
     query.passage ? `Scripture: ${optionName(options.passages, query.passage)}` : "",
     query.book ? `Bible book: ${optionName(options.books, query.book)}` : "",
+    passageQueryLabel(query) ? `Primary passage: ${passageQueryLabel(query)}` : "",
     query.dateFrom ? `From: ${query.dateFrom}` : "",
     query.dateTo ? `To: ${query.dateTo}` : "",
     query.order === "ASC" ? "Oldest first" : ""
@@ -214,6 +256,13 @@ export function renderPublicSermonArchivePage(input: {
   const totalPages = Math.ceil(input.totalItems / input.query.pageSize);
   const description = "Browse published sermons from Saving Grace Bible Church by speaker, series, Scripture, Bible book, or service date.";
   const resultLabel = input.totalItems === 1 ? "1 published sermon" : `${input.totalItems} published sermons`;
+  const passageBook = input.query.passageBook ? bibleBookBySlug(input.query.passageBook) : null;
+  const passageSearch = `<fieldset class="passage-search wide"><legend>Browse by Bible passage</legend><p class="field-hint">This searches only administrator-confirmed primary preaching passages. It is separate from keyword and Scripture-topic search.</p><div class="filter-grid">
+      <div class="filter-field"><label for="passage-book">Book</label><select id="passage-book" name="passageBook"><option value="">Choose a book</option>${bibleBookOptions(input.query.passageBook)}</select></div>
+      <div class="filter-field"><label for="passage-chapter">Chapter</label><select id="passage-chapter" name="passageChapter"${passageBook ? "" : " disabled"}>${numberedOptions(passageBook?.chapterCount ?? 0, input.query.passageChapter, "All chapters")}</select></div>
+      <div class="filter-field"><label for="passage-verse">Starting verse</label><select id="passage-verse" name="passageVerse"${input.query.passageChapter === undefined ? " disabled" : ""}>${numberedOptions(176, input.query.passageVerse, "All verses")}</select></div>
+      <div class="filter-field"><label for="passage-end-verse">Ending verse</label><select id="passage-end-verse" name="passageEndVerse"${input.query.passageVerse === undefined ? " disabled" : ""}>${numberedOptions(176, input.query.passageEndVerse, "Same as start")}</select></div>
+    </div><div class="filter-actions"><button class="button" type="submit">Search sermons</button><a class="button button-secondary" href="${escapeHtml(passageClearUrl(input.query))}">Clear passage</a></div></fieldset>`;
   const filters = `<section class="panel" aria-labelledby="find-sermons-heading">
     <h2 id="find-sermons-heading">Find sermons</h2>
     <form method="get" action="/sermons/" role="search">
@@ -226,6 +275,7 @@ export function renderPublicSermonArchivePage(input: {
         <div class="filter-field"><label for="sort-order">Order</label><select id="sort-order" name="order"><option value="DESC"${selected(input.query.order, "DESC")}>Newest first</option><option value="ASC"${selected(input.query.order, "ASC")}>Oldest first</option></select></div>
         <div class="filter-field"><label for="date-from">Service date from</label><input id="date-from" name="dateFrom" type="date" value="${escapeHtml(input.query.dateFrom ?? "")}" /></div>
         <div class="filter-field"><label for="date-to">Service date to</label><input id="date-to" name="dateTo" type="date" value="${escapeHtml(input.query.dateTo ?? "")}" /></div>
+        ${passageSearch}
       </div>
       <div class="filter-actions"><button class="button" type="submit">Apply filters</button><a class="button button-secondary" href="/sermons/">Clear filters</a></div>
     </form>
@@ -249,7 +299,8 @@ export function renderPublicSermonArchivePage(input: {
     description,
     canonicalPath: archivePagePath(input.query.page),
     robots: input.hasQueryParameters ? "noindex, follow" : "index, follow",
-    body: `<p class="eyebrow">Sermon library</p><h1>Sermons</h1><p>${description}</p>${filters}${activeFiltersMarkup(input.query, input.options)}<p class="result-status" role="status" aria-live="polite">${escapeHtml(resultLabel)}${totalPages ? ` · Page ${input.query.page} of ${totalPages}` : ""}</p>${results}${pagination}`
+    body: `<p class="eyebrow">Sermon library</p><h1>Sermons</h1><p>${description}</p>${filters}${activeFiltersMarkup(input.query, input.options)}<p class="result-status" role="status" aria-live="polite">${escapeHtml(resultLabel)}${totalPages ? ` · Page ${input.query.page} of ${totalPages}` : ""}</p>${results}${pagination}`,
+    inlineScript: passageEnhancementScript
   });
 }
 
@@ -286,7 +337,10 @@ export function renderPublicSermonPage(sermon: SermonDetail): string {
       </section>`
     : "";
   const scripture = sermon.scriptureReferences.length
-    ? `<p><strong>Scripture:</strong> ${sermon.scriptureReferences.map((item) => escapeHtml(item.displayText)).join(", ")}</p>`
+    ? `<p><strong>Other Scripture metadata:</strong> ${sermon.scriptureReferences.map((item) => escapeHtml(item.displayText)).join(", ")}</p>`
+    : "";
+  const primaryPassages = sermon.primaryPassages.length
+    ? `<p><strong>Preached from:</strong> ${sermon.primaryPassages.map((item) => escapeHtml(item.displayText)).join(", ")}</p>`
     : "";
   const speaker = sermon.speaker
     ? `<p><strong>Speaker:</strong> <a href="${filterUrl("sermon_speaker", sermon.speaker.slug)}">${escapeHtml(sermon.speaker.name)}</a></p>`
@@ -312,7 +366,7 @@ export function renderPublicSermonPage(sermon: SermonDetail): string {
     canonicalPath,
     robots: "index, follow",
     openGraphType: "article",
-    body: `<p><a href="/sermons/">← All sermons</a></p><div class="sermon-layout"><article class="sermon-main"><p class="eyebrow">Sermon</p><h1>${escapeHtml(sermon.title)}</h1><div class="sermon-meta"><p><strong>Service date:</strong> <time datetime="${escapeHtml(sermon.serviceDate)}">${escapeHtml(formattedDate(sermon.serviceDate))}</time></p>${speaker}${series}${scripture}${books}</div>${sermon.summary ? `<section class="content-section sermon-description" aria-labelledby="description-heading"><h2 id="description-heading">About this sermon</h2>${plainTextMarkup(sermon.summary)}</section>` : ""}${media}${transcript}${questions}</article>${related}</div>`
+    body: `<p><a href="/sermons/">← All sermons</a></p><div class="sermon-layout"><article class="sermon-main"><p class="eyebrow">Sermon</p><h1>${escapeHtml(sermon.title)}</h1><div class="sermon-meta"><p><strong>Service date:</strong> <time datetime="${escapeHtml(sermon.serviceDate)}">${escapeHtml(formattedDate(sermon.serviceDate))}</time></p>${speaker}${series}${primaryPassages}${scripture}${books}</div>${sermon.summary ? `<section class="content-section sermon-description" aria-labelledby="description-heading"><h2 id="description-heading">About this sermon</h2>${plainTextMarkup(sermon.summary)}</section>` : ""}${media}${transcript}${questions}</article>${related}</div>`
   });
 }
 
@@ -323,13 +377,13 @@ function renderErrorPage(status: 400 | 404 | 410 | 500, heading: string, message
     robots: "noindex, nofollow",
     body: `<div class="empty-state"><h1>${escapeHtml(heading)}</h1><p>${escapeHtml(message)}</p><p><a class="button" href="/sermons/">Browse sermons</a></p></div>`
   });
-  return new Response(body, { status, headers: responseHeaders });
+  return new Response(body, { status, headers: responseHeaders() });
 }
 
 function methodNotAllowed(): Response {
   return new Response("Method not allowed", {
     status: 405,
-    headers: { ...responseHeaders, Allow: "GET" }
+    headers: { ...responseHeaders(), Allow: "GET" }
   });
 }
 
@@ -413,7 +467,7 @@ export function createPublicSermonSiteHandler(repository: PublicSermonRepository
           query,
           options,
           hasQueryParameters: url.searchParams.size > 0
-        }), { status: 200, headers: responseHeaders });
+        }), { status: 200, headers: responseHeaders(true) });
       }
 
       if (detailMatch) {
@@ -421,7 +475,7 @@ export function createPublicSermonSiteHandler(repository: PublicSermonRepository
         if (sermon) {
           return new Response(renderPublicSermonPage(sermon), {
             status: 200,
-            headers: responseHeaders
+            headers: responseHeaders()
           });
         }
         const disposition = await repository.findPublicPathDisposition(url.pathname);

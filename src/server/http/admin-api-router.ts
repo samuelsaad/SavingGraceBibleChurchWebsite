@@ -9,6 +9,7 @@ import {
   enrichmentReviewProgressInputSchema,
   finishEnrichmentReviewInputSchema,
   permanentlyDeleteSermonInputSchema,
+  primaryPassageDecisionInputSchema,
   sermonStateActionSchema,
   sermonTransitionInputSchema,
   taxonomyKindSchema,
@@ -149,6 +150,22 @@ export function createAdminApiRouter(
         return json(
           200,
           await service.permanentlyDelete(id, input, identity, requestCorrelationId)
+        );
+      }
+
+      const primaryPassageDecision =
+        /^\/api\/v1\/admin\/sermons\/([^/]+)\/primary-passage-decision\/?$/.exec(path);
+      if (primaryPassageDecision) {
+        if (request.method !== "POST") {
+          return json(405, { error: { code: "method_not_allowed" } }, { Allow: "POST" });
+        }
+        const { id } = adminSermonIdParamsSchema.parse({
+          id: decodeURIComponent(primaryPassageDecision[1]!)
+        });
+        const input = primaryPassageDecisionInputSchema.parse(await readJson(request));
+        return json(
+          200,
+          await service.decidePrimaryPassage(id, input, identity, requestCorrelationId)
         );
       }
 

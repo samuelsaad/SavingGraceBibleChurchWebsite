@@ -66,6 +66,7 @@ GET    /api/v1/admin/sermons/:id/review
 PATCH  /api/v1/admin/sermons/:id/review/progress
 POST   /api/v1/admin/sermons/:id/review/items/:itemId/decision
 POST   /api/v1/admin/sermons/:id/review/finish
+POST   /api/v1/admin/sermons/:id/primary-passage-decision
 POST   /api/v1/admin/sermons/:id/submit
 POST   /api/v1/admin/sermons/:id/withdraw
 POST   /api/v1/admin/sermons/:id/schedule
@@ -91,6 +92,7 @@ The sermon list accepts bounded title/slug search, state, sole speaker ID, serie
 - Sermon description, transcript and Q&A are plain text, bounded, status-controlled, provenance-aware, concurrency-protected and audited. Approved transitions stamp the verified administrator subject and time; generated/imported drafts never approve themselves. Description text changes require an explicit description status.
 - Media writes accept only provider-matched YouTube video or SermonAudio audio URLs with controlled labels.
 - Relationship UUIDs must exist; dashboard-edited scripture references are `curated` while immutable imported provenance remains separate and private.
+- A primary-passage decision requires current sermon and passage-review row versions. `confirm_passages` requires at least one structured primary passage and exactly one lead; `reject_proposal` and `confirm_no_primary_passage` accept no passage payload. Only the approved administrator can create reviewer identity/time and audit evidence. Viewing a proposal never confirms it.
 - Relationship replacement, search refresh, slug dispositions, tombstone/audit writes, and deletion share the relevant transaction.
 - Stale writes return `409 stale_write`; validation, authentication, authorization, conflict, and not-found errors use safe codes without database details.
 - Normal admin responses exclude migration mappings, private source values, legacy metrics, embed configuration, internal warnings, credentials, and iframe HTML.
@@ -103,6 +105,8 @@ Public `/api/v1/sermons` selects only non-deleted `published` records. List resp
 The static Astro dashboard is served by the local Node harness at `/admin` only when `ENABLE_LOCAL_DASHBOARD=1`. It opens with a visible anonymised-demonstration notice and aggregate completion progress. The general sermon editor retains the existing lifecycle and relationship controls for sermons without imported enrichment.
 
 Imported enrichment drafts use `/admin/sermons/:id/review`, not the all-in-one lifecycle form. That route renders one of six stages at a time: identity/provenance, flagged items, transcript, description, ordered Q&A and final summary. Stage 2 normally shows unresolved items only and places the exact associated transcript paragraphs in a large editable field. Accepting leaves the transcript unchanged; correcting transactionally stores original/corrected wording and attribution, updates only the exact versioned association, preserves sibling decisions and advances to the next unresolved item. Resolved items are read-only history. The route stores progress for pause/resume, renders epoch dates blank/unresolved, collapses technical provenance by default, provides large responsive transcript/Q&A controls, and requires explicit actions. An unsaved-change warning precedes navigation. The route contains no submit, schedule, publish, archive or deletion action.
+
+Prepared records also show a separate primary-preaching-passage panel in Stage 1. It identifies local-title proposal provenance, supports canonical book/chapter/verse ranges, primary versus supporting roles, one lead passage, correction, rejection and explicit no-primary decisions. These controls do not advance guided review, approve sermon content or publish a record.
 
 The shell is labelled local-development-only, sends no remote requests, receives `X-Robots-Tag: noindex`, and is served with restrictive content/security headers. Navigation, forms, dialogs, tables, live status feedback, visible focus, reduced-motion support, and mobile/tablet/desktop layouts use semantic accessible controls. The interface does not duplicate service authorization or lifecycle decisions.
 

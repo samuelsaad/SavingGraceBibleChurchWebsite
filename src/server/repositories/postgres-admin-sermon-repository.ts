@@ -3,12 +3,14 @@ import type {
   AdminSermonListQuery,
   CreateSermonInput,
   DeletionSeoDisposition,
+  PrimaryPassageDecisionInput,
   TaxonomyKind,
   UpdateSermonInput
 } from "../../api/contracts/admin-sermons";
 import { ApplicationError } from "../../application/errors";
 import type { ContentReadinessIssue, ContentReadinessResult } from "../../domain/content-readiness";
 import type { SermonStatus } from "../../domain/sermon";
+import { biblePassageParserVersion, formatBiblePassage } from "../../domain/bible-passage";
 import type {
   AdminSermonRepository,
   AdminSermonTransaction,
@@ -67,6 +69,7 @@ type SermonRow = QueryResultRow & {
   };
   books?: StoredSermonDetail["books"];
   scripture_references?: StoredSermonDetail["scriptureReferences"];
+  primary_passage_review?: StoredSermonDetail["primaryPassageReview"];
   media?: StoredSermonDetail["media"];
   transcript?: StoredSermonDetail["transcript"];
   question_answers?: StoredSermonDetail["questionAnswers"];
@@ -204,11 +207,33 @@ const sermonDetailProjection = `${sermonSummaryProjection},
       'startVerse', ref.start_verse,
       'endChapter', ref.end_chapter,
       'endVerse', ref.end_verse,
-      'parseStatus', ref.parse_status
+      'parseStatus', ref.parse_status,
+      'relationshipRole', ref.relationship_role,
+      'isLead', ref.is_lead,
+      'originalReferenceText', ref.original_reference_text,
+      'provenance', ref.provenance,
+      'reviewStatus', ref.review_status,
+      'reviewerSubject', ref.reviewer_subject,
+      'reviewedAt', CASE WHEN ref.reviewed_at IS NULL THEN NULL ELSE ${timestamp("ref.reviewed_at")} END,
+      'parserVersion', ref.parser_version,
+      'rowVersion', ref.row_version
     ) ORDER BY ref.display_order, ref.id)
     FROM scripture_references ref
     WHERE ref.sermon_id = s.id
   ), '[]'::jsonb) AS scripture_references,
+  (
+    SELECT jsonb_build_object(
+      'proposalOutcome', passage_review.proposal_outcome,
+      'evidenceSource', passage_review.evidence_source,
+      'parserVersion', passage_review.parser_version,
+      'reviewStatus', passage_review.review_status,
+      'reviewedBySubject', passage_review.reviewed_by_subject,
+      'reviewedAt', CASE WHEN passage_review.reviewed_at IS NULL THEN NULL ELSE ${timestamp("passage_review.reviewed_at")} END,
+      'rowVersion', passage_review.row_version
+    )
+    FROM sermon_primary_passage_reviews passage_review
+    WHERE passage_review.sermon_id = s.id
+  ) AS primary_passage_review,
   COALESCE((
     SELECT jsonb_agg(jsonb_build_object(
       'id', media.id,
@@ -380,6 +405,7 @@ function detailFromRow(row: SermonRow): StoredSermonDetail {
     body: row.body ?? null,
     books: row.books ?? [],
     scriptureReferences: row.scripture_references ?? [],
+    primaryPassageReview: row.primary_passage_review ?? null,
     media: row.media ?? [],
     transcript: row.transcript ?? null,
     questionAnswers: row.question_answers ?? [],
@@ -755,13 +781,22 @@ class PostgresAdminSermonTransaction implements AdminSermonTransaction {
       }
     }
     if (input.scriptureReferences !== undefined) {
-      await this.client.query("DELETE FROM scripture_references WHERE sermon_id = $1", [id]);
+      await this.client.query(
+        `DELETE FROM scripture_references
+         WHERE sermon_id = $1 AND provenance = 'administrator' AND review_status = 'unreviewed'`,
+        [id]
+      );
+      const orderStart = await this.client.query<{ next_order: number }>(
+        "SELECT COALESCE(max(display_order), -1)::integer + 1 AS next_order FROM scripture_references WHERE sermon_id = $1",
+        [id]
+      );
       for (const [order, reference] of input.scriptureReferences.entries()) {
         const inserted = await this.client.query<{ id: string }>(
           `INSERT INTO scripture_references (
              sermon_id, display_text, canonical_book_id, start_chapter, start_verse,
-             end_chapter, end_verse, display_order, parse_status
-           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'curated')
+             end_chapter, end_verse, display_order, parse_status, relationship_role,
+             is_lead, original_reference_text, provenance
+           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'curated', $9, $10, $2, 'administrator')
            RETURNING id`,
           [
             id,
@@ -771,7 +806,9 @@ class PostgresAdminSermonTransaction implements AdminSermonTransaction {
             reference.startVerse,
             reference.endChapter,
             reference.endVerse,
-            order
+            orderStart.rows[0]!.next_order + order,
+            reference.relationshipRole,
+            reference.isLead
           ]
         );
         await this.client.query(
@@ -879,6 +916,135 @@ class PostgresAdminSermonTransaction implements AdminSermonTransaction {
     }
   }
 
+  async decidePrimaryPassage(
+    sermonId: string,
+    input: PrimaryPassageDecisionInput,
+    actorSubject: string
+  ): Promise<void> {
+    const review = await this.client.query<{
+      row_version: number;
+      evidence_source: "local_youtube_title" | "administrator";
+      proposal_outcome: "proposed" | "no_reference" | "manual_review_required" | "administrator_entered";
+      review_status: "pending" | "confirmed_passage" | "confirmed_none" | "rejected";
+    }>(`SELECT row_version, evidence_source, proposal_outcome, review_status
+        FROM sermon_primary_passage_reviews
+        WHERE sermon_id = $1
+        FOR UPDATE`, [sermonId]);
+    const current = review.rows[0];
+    if (!current || current.row_version !== input.reviewRowVersion) {
+      throw new ApplicationError(409, "stale_write", "The passage review changed; reload before saving");
+    }
+
+    if (input.action === "confirm_passages") {
+      const proposals = await this.client.query<{
+        canonical_book_id: number;
+        start_chapter: number;
+        start_verse: number | null;
+        end_chapter: number;
+        end_verse: number | null;
+        original_reference_text: string | null;
+      }>(`SELECT canonical_book_id, start_chapter, start_verse, end_chapter, end_verse,
+                 original_reference_text
+          FROM scripture_references
+          WHERE sermon_id = $1 AND provenance = 'title_proposal'`, [sermonId]);
+      await this.client.query(
+        `DELETE FROM scripture_references
+         WHERE sermon_id = $1
+           AND relationship_role IN ('primary', 'supporting')
+           AND provenance IN ('title_proposal', 'administrator', 'administrator_correction')`,
+        [sermonId]
+      );
+      const order = await this.client.query<{ next_order: number }>(
+        "SELECT COALESCE(max(display_order), -1)::integer + 1 AS next_order FROM scripture_references WHERE sermon_id = $1",
+        [sermonId]
+      );
+      for (const [index, passage] of input.passages.entries()) {
+        const exactProposal = proposals.rows.find((candidate) =>
+          candidate.canonical_book_id === passage.canonicalBookId &&
+          candidate.start_chapter === passage.startChapter &&
+          candidate.start_verse === passage.startVerse &&
+          candidate.end_chapter === passage.endChapter &&
+          candidate.end_verse === passage.endVerse
+        );
+        const provenance = exactProposal ? "title_proposal" : proposals.rowCount ? "administrator_correction" : "administrator";
+        const displayText = formatBiblePassage(passage);
+        const inserted = await this.client.query<{ id: string }>(
+          `INSERT INTO scripture_references (
+             sermon_id, display_text, canonical_book_id, start_chapter, start_verse,
+             end_chapter, end_verse, display_order, parse_status, relationship_role,
+             is_lead, original_reference_text, provenance, review_status,
+             reviewer_subject, reviewed_at, parser_version
+           ) VALUES (
+             $1, $2, $3, $4, $5, $6, $7, $8, 'curated', $9, $10, $11, $12,
+             'confirmed', $13, now(), $14
+           ) RETURNING id`,
+          [
+            sermonId,
+            displayText,
+            passage.canonicalBookId,
+            passage.startChapter,
+            passage.startVerse,
+            passage.endChapter,
+            passage.endVerse,
+            order.rows[0]!.next_order + index,
+            passage.relationshipRole,
+            passage.isLead,
+            exactProposal?.original_reference_text ?? displayText,
+            provenance,
+            actorSubject,
+            current.evidence_source === "local_youtube_title" ? biblePassageParserVersion : "administrator-manual-v1"
+          ]
+        );
+        await this.client.query(
+          `INSERT INTO scripture_reference_sources (
+             scripture_reference_id, sermon_id, source_kind, original_value
+           ) VALUES ($1, $2, 'curated', $3)`,
+          [inserted.rows[0]!.id, sermonId, exactProposal?.original_reference_text ?? displayText]
+        );
+      }
+      await this.client.query(
+        `UPDATE sermon_primary_passage_reviews
+         SET review_status = 'confirmed_passage', reviewed_by_subject = $2,
+             reviewed_at = now(), updated_at = now(), row_version = row_version + 1
+         WHERE sermon_id = $1`,
+        [sermonId, actorSubject]
+      );
+    } else {
+      if (current.review_status !== "pending") {
+        await this.client.query(
+          `DELETE FROM scripture_references
+           WHERE sermon_id = $1
+             AND relationship_role IN ('primary', 'supporting')
+             AND provenance IN ('title_proposal', 'administrator', 'administrator_correction')`,
+          [sermonId]
+        );
+      }
+      await this.client.query(
+        `UPDATE scripture_references
+         SET review_status = 'rejected', is_lead = false, reviewer_subject = $2,
+             reviewed_at = now(), updated_at = now(), row_version = row_version + 1
+         WHERE sermon_id = $1 AND provenance = 'title_proposal' AND review_status = 'proposed'`,
+        [sermonId, actorSubject]
+      );
+      await this.client.query(
+        `UPDATE sermon_primary_passage_reviews
+         SET review_status = $2, reviewed_by_subject = $3, reviewed_at = now(),
+             updated_at = now(), row_version = row_version + 1
+         WHERE sermon_id = $1`,
+        [
+          sermonId,
+          input.action === "confirm_no_primary_passage" ? "confirmed_none" : "rejected",
+          actorSubject
+        ]
+      );
+    }
+    await this.client.query(
+      `UPDATE sermons SET row_version = row_version + 1, updated_at = now(), updated_by_subject = $2
+       WHERE id = $1`,
+      [sermonId, actorSubject]
+    );
+  }
+
   async refreshSearchTerms(id: string): Promise<void> {
     await this.client.query(
       `UPDATE sermons s SET search_terms = concat_ws(' ',
@@ -887,7 +1053,8 @@ class PostgresAdminSermonTransaction implements AdminSermonTransaction {
           FROM sermon_series_map sm JOIN series sr ON sr.id = sm.series_id
           WHERE sm.sermon_id = s.id),
          (SELECT string_agg(ref.display_text, ' ' ORDER BY ref.display_order, ref.id)
-          FROM scripture_references ref WHERE ref.sermon_id = s.id),
+          FROM scripture_references ref
+          WHERE ref.sermon_id = s.id AND ref.review_status IN ('unreviewed', 'confirmed')),
          (SELECT string_agg(bc.name, ' ' ORDER BY sbc.display_order, bc.id)
           FROM sermon_book_classifications sbc
           JOIN book_classifications bc ON bc.id = sbc.book_classification_id

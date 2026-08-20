@@ -68,6 +68,10 @@ export const sermonSummarySchema = z.object({
   speaker: z.object({ name: z.string(), slug: z.string() }).nullable(),
   series: z.array(z.object({ name: z.string(), slug: z.string() })),
   scriptureReferences: z.array(scriptureReferenceDtoSchema),
+  primaryPassages: z.array(z.object({
+    displayText: z.string().min(1),
+    isLead: z.boolean()
+  })).default([]),
   books: z.array(z.object({ name: z.string(), slug: z.string() })),
   primaryMedia: publicMediaSchema.nullable()
 });

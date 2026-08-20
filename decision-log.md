@@ -280,6 +280,12 @@ Every future creation, regeneration, review or validation of transcript-grounded
 
 The separately authorised repair canary is limited to one stable source/application identity. Its replacement contains a 200-word description, seven Q&A pairs and 12 private support records. The atomic import changed only the untouched unapproved description and Q&A fields, retained the original bundle, preserved transcript/provenance/review/genuine-administrator/other-Wave-1 evidence, created no approval or public/search/semantic state, and returned unchanged on a second import. The remaining 11 description/Q&A sets stay quarantined. Human canary review is required before any request to regenerate another record. (`explicit bounded quality-repair authority; one private canary awaiting administrator review`)
 
+### D-136 - Reviewed primary preaching passages remain separate from search and recommendations
+
+Primary preaching passage is a reviewed relationship on the existing `scripture_references` model, not a replacement for imported Scripture metadata. Relationships distinguish `primary`, `supporting` and historic `unclassified` roles; a confirmed set has exactly one lead primary passage and may have additional co-preached or supporting passages. Title extraction creates only a pending private proposal with exact ignored evidence and parser provenance. Missing, malformed or multiple title references require manual review, and no proposal is an administrator decision. Samuel must explicitly confirm, correct, reject or confirm no primary passage with current row versions and attributable audit evidence.
+
+Public Bible-passage search uses only confirmed `primary` coordinates and inclusive structured interval overlap. It remains an independent `AND` dimension beside PostgreSQL keyword/structured Scripture-topic search. Existing metadata-related sermons are unchanged, and description-only semantic **Related themes** remains unwired and publicly disabled. Parameterised passage results remain `noindex, follow` with the archive canonical; no crawlable verse-page system or unsupported structured data is created. Migration `0014_primary_preaching_passages` is the bounded local schema change, and preparation is restricted to the three accepted pilots plus 12 Wave 1 records selected by their exact existing processing versions. (`explicit local implementation direction; administrator confirmation remains required`)
+
 ## Decisions still required
 
 - Final AWS runtime/adapter and production networking.

@@ -18,6 +18,7 @@ const summary: SermonSummary = {
   speaker: { name: "Example Speaker", slug: "example-speaker" },
   series: [{ name: "Example Series", slug: "example-series" }],
   scriptureReferences: [{ displayText: "Romans 8:1-4", parseStatus: "exact" }],
+  primaryPassages: [{ displayText: "Romans 8:1–4", isLead: true }],
   books: [{ name: "Romans", slug: "romans" }],
   primaryMedia: null
 };
@@ -112,6 +113,39 @@ describe("public sermon site routes", () => {
     ));
     expect(invalid?.status).toBe(400);
     expect(await invalid!.text()).toContain("Check the sermon filters");
+  });
+
+  it("renders a shareable mobile-friendly primary-passage browser independently of legacy Scripture filters", async () => {
+    const repository = new SiteRepository();
+    const route = createPublicSermonSiteHandler(repository);
+    const response = await route(new Request(
+      "http://localhost/sermons/?s=faith&sermon_topics=legacy-topic&passageBook=romans&passageChapter=8&passageVerse=1&passageEndVerse=4"
+    ));
+    const html = await response!.text();
+    expect(response?.status).toBe(200);
+    expect(repository.lastQuery).toMatchObject({
+      query: "faith",
+      passage: "legacy-topic",
+      passageBook: "romans",
+      passageChapter: 8,
+      passageVerse: 1,
+      passageEndVerse: 4
+    });
+    expect(html).toContain("Browse by Bible passage");
+    expect(html).toContain('id="passage-book"');
+    expect(html).toContain('<optgroup label="Old Testament">');
+    expect(html).toContain('<optgroup label="New Testament">');
+    expect(html).toContain('id="passage-chapter"');
+    expect(html).toContain('id="passage-verse"');
+    expect(html).toContain('id="passage-end-verse"');
+    expect(html).toContain("Primary passage: Romans 8:1–4");
+    expect(html).toContain("Preached from:");
+    expect(html).toContain("Search sermons");
+    expect(html).toContain("Clear passage");
+    expect(html).toContain("sermon_topics=legacy-topic");
+    expect(html).toContain("passageBook=romans");
+    expect(response?.headers.get("content-security-policy")).toContain("script-src 'sha256-");
+    expect(html).toContain("@media (max-width:38rem)");
   });
 
   it("returns useful empty and out-of-range states without private details", async () => {
