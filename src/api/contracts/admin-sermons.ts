@@ -185,6 +185,16 @@ export const primaryPassageDecisionInputSchema = z.object({
 });
 export type PrimaryPassageDecisionInput = z.infer<typeof primaryPassageDecisionInputSchema>;
 
+export const adminPrimaryPassageStateSchema = z.enum([
+  "proposed_passage",
+  "confirmed_passage",
+  "pending_review",
+  "no_primary_passage",
+  "no_proposal_detected",
+  "proposal_rejected"
+]);
+export type AdminPrimaryPassageState = z.infer<typeof adminPrimaryPassageStateSchema>;
+
 const editableSermonFieldsShape = {
   title: z.string().trim().min(1).max(240),
   slug: slugSchema,
@@ -326,15 +336,49 @@ export const adminSermonListQuerySchema = z.object({
     "questions_awaiting_review",
     "missing_media"
   ]).optional(),
+  passageBook: z.coerce.number().int().min(1).max(66).optional(),
+  passageChapter: z.coerce.number().int().min(1).max(150).optional(),
+  passageVerse: z.coerce.number().int().min(1).max(176).optional(),
+  passageEndVerse: z.coerce.number().int().min(1).max(176).optional(),
+  passageReviewState: adminPrimaryPassageStateSchema.optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(50).default(20)
-}).refine(
-  (value) =>
+}).superRefine((value, context) => {
+  if (
     !value.serviceDateFrom ||
     !value.serviceDateTo ||
-    value.serviceDateFrom <= value.serviceDateTo,
-  { path: ["serviceDateTo"], message: "serviceDateTo must not precede serviceDateFrom" }
-);
+    value.serviceDateFrom <= value.serviceDateTo
+  ) {
+    // Valid date range.
+  } else {
+    context.addIssue({ code: "custom", path: ["serviceDateTo"], message: "serviceDateTo must not precede serviceDateFrom" });
+  }
+  if (value.passageBook === undefined &&
+    (value.passageChapter !== undefined || value.passageVerse !== undefined || value.passageEndVerse !== undefined)) {
+    context.addIssue({ code: "custom", path: ["passageBook"], message: "Choose a Bible book first" });
+  }
+  if (value.passageChapter === undefined && (value.passageVerse !== undefined || value.passageEndVerse !== undefined)) {
+    context.addIssue({ code: "custom", path: ["passageChapter"], message: "Choose a chapter first" });
+  }
+  if (value.passageEndVerse !== undefined && value.passageVerse === undefined) {
+    context.addIssue({ code: "custom", path: ["passageEndVerse"], message: "Choose a starting verse first" });
+  }
+  if (value.passageVerse !== undefined && value.passageEndVerse !== undefined && value.passageEndVerse < value.passageVerse) {
+    context.addIssue({ code: "custom", path: ["passageEndVerse"], message: "Ending verse must not precede the starting verse" });
+  }
+  if (value.passageBook !== undefined && value.passageChapter !== undefined) {
+    const validity = validateBiblePassage({
+      canonicalBookId: value.passageBook,
+      startChapter: value.passageChapter,
+      startVerse: value.passageVerse ?? null,
+      endChapter: value.passageChapter,
+      endVerse: value.passageEndVerse ?? value.passageVerse ?? null
+    });
+    for (const message of validity.issues) {
+      context.addIssue({ code: "custom", path: ["passageChapter"], message });
+    }
+  }
+});
 export type AdminSermonListQuery = z.infer<typeof adminSermonListQuerySchema>;
 
 const adminRelationshipSchema = z.object({ id: z.uuid(), name: z.string(), slug: z.string() });
@@ -377,6 +421,10 @@ export const adminSermonSummarySchema = z.object({
     pendingItemCount: z.number().int().nonnegative(),
     totalItemCount: z.number().int().nonnegative()
   }).nullable(),
+  primaryPassage: z.object({
+    state: adminPrimaryPassageStateSchema,
+    displayText: z.string().nullable()
+  }).optional(),
   readiness: contentReadinessResponseSchema
 });
 

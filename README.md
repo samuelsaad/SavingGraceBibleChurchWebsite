@@ -23,6 +23,7 @@ Local Phase 3B.2 caption/enrichment rehearsal, Phase 3B.2b punctuation hardening
 - Private YouTube Studio caption-file processor with trusted exact-scope derivation, deterministic punctuation-only chunks and hashes, whole-sermon lexical-token preservation/rollback, structured source provenance/warnings, and no media/network implementation
 - Bounded official YouTube Data API proof for owner-authenticated, read-only inspection and exact-byte VTT retrieval of only the three accepted pilots, with ignored private provenance, deterministic full-sequence alignment and private human-review evidence
 - Deterministic Phase 3B.2c selection controls for 36 primaries plus 12 predetermined alternates, with caption inspection separated from the exact 12-record Wave 1 retrieval/processing boundary
+- One-shot, retry-disabled official YouTube `videos.list(part=snippet)` title provenance for only the fixed 12-record Wave 1 allowlist, with exact UTF-8 titles and integrity hashes confined to ignored private storage
 - Exact Wave 1 private import of 12 transcript drafts, 12 description drafts and 84 Q&A drafts, followed by quarantine of the superseded extractive descriptions/Q&A and one approved-transcript-grounded replacement canary; everything remains unapproved and private
 - Repository-scoped `sermon-enrichment` skill with mandatory approved-transcript binding, paragraph/Q&A support ranges, stale-result rejection, administrator-only quality decisions and a private atomic replacement workflow
 - Legacy query/date compatibility translation
@@ -32,6 +33,7 @@ Local Phase 3B.2 caption/enrichment rehearsal, Phase 3B.2b punctuation hardening
 - Structured migration audit/warning output
 - Permanent whole-site SEO non-regression, one-to-one URL mapping, and launch-gate planning
 - Responsive accessible local `/admin` foundation plus a dedicated one-stage-at-a-time `/admin/sermons/:id/review` workflow for imported drafts, with one decision per deterministic atomic finding, exact identity-set completion gates, large transcript/Q&A editors, persistent progress, explicit approval, optimistic concurrency and audit
+- Administrator sermon-list primary-passage filters for book/chapter/verse/range and review state, plus an explicit Primary passage column that distinguishes pending proposals, confirmed passages and unresolved outcomes
 - Server-rendered uncollapsed approved description before media/transcript/Q&A; collapsed transcript remains in initial markup and list payloads omit heavy bodies
 - Automated migration, security, lifecycle, configuration, and schema-contract tests
 - Static `/health.json` build metadata explicitly marked `runtimeHealth: false`; a genuine runtime health check remains future work
@@ -69,6 +71,7 @@ npm run youtube:pilot-retrieve-local
 npm run youtube:wave1-map-local
 npm run youtube:wave1-inspect-local
 npm run youtube:wave1-retrieve-local
+npm run youtube:wave1-titles-local
 npm run enrichment:wave1-metadata-local
 npm run enrichment:wave1-verify-local
 npm run enrichment:wave1-review-repair-local
@@ -80,6 +83,7 @@ npm run db:apply-atomic-review-local
 npm run db:rollback-atomic-review-local
 npm run db:apply-primary-passage-local
 npm run scripture:prepare-current15-local
+npm run scripture:repair-current15-official-titles-local
 npm run db:rollback-primary-passage-local
 npm run reference:apply-local
 npm run reference:rollback-local
@@ -109,7 +113,7 @@ npm run db:rollback-local
 
 The schema commands keep schema history separate from `migration_records` and `sermon_enrichment_draft_imports`. Apply runs only the pending canonical suffix. Rollback removes only the latest requested receipt, or the full applied suffix for an unscoped rollback, in the same transaction as its down SQL. The SQL files remain independently executable rollback artifacts; the runner normalises CRLF/CR/LF differences before hashing their paired definitions.
 
-Migration `0014_primary_preaching_passages` extends the existing Scripture-reference model with reviewed primary/supporting/unclassified roles, one confirmed lead primary, provenance and concurrency fields plus private proposal-review state. Its bounded preparation command accepts no record argument: it requires the exact one/two/twelve processing-version split for the current three pilots and 12 Wave 1 records, reads only their stored titles, writes exact evidence to ignored private storage, and creates pending proposals or manual-review outcomes without altering sermon content or administrator decisions. The identical rerun preserves the existing rows. Only an administrator-confirmed primary passage can appear under **Preached from** or satisfy `passageBook`, `passageChapter`, `passageVerse` and `passageEndVerse` public query parameters.
+Migration `0014_primary_preaching_passages` extends the existing Scripture-reference model with reviewed primary/supporting/unclassified roles, one confirmed lead primary, provenance and concurrency fields plus private proposal-review state. Its bounded preparation command accepts no record argument: it requires the exact one/two/twelve processing-version split for the current three pilots and 12 Wave 1 records, writes exact evidence to ignored private storage, and creates pending proposals or manual-review outcomes without altering sermon content or administrator decisions. The later authorised repair used one retry-disabled official `videos.list(part=snippet)` response for exactly the fixed 12 Wave 1 identities, retained only their exact title provenance privately, preserved the three pilot proposals, and changed the Wave 1 aggregate from 12 no-reference outcomes to 11 pending proposals plus one pending no-reference outcome. Its identical rerun preserved all 12 repaired records. Only an administrator-confirmed primary passage can appear under **Preached from** or satisfy `passageBook`, `passageChapter`, `passageVerse` and `passageEndVerse` public query parameters.
 
 Reference seeding is a separate local data operation because the core schema already provides the required structure. It requires the same exact loopback PostgreSQL 16 test target and write opt-in, inserts only the confirmed seven speakers plus 66 canonical books/classifications, and is idempotent. Its guarded rollback refuses partial, changed, or in-use catalogue state. It never selects a speaker or Bible book for a sermon. Bible-book abbreviations and aliases are normalised only to resolve trusted import terms; ambiguous aliases fail closed. Administrator relationship counts include private drafts, while public counts include only complete published sermons, and neither count is stored as historical source truth.
 

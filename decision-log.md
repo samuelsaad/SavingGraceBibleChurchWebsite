@@ -1,6 +1,6 @@
 # Project Decision Log
 
-**Status:** Approved decisions through D-132; official YouTube three-pilot comparison complete with one private manual-review result on 19 August 2026
+**Status:** Approved decisions through D-137; current-15 primary-passage proposals repaired from bounded official title evidence on 21 August 2026
 **Authority:** `church-website-architecture-plan.md` plus Yang’s confirmed migration decisions and Samuel Saad’s recorded project-owner decisions
 
 ## Evidence classifications
@@ -285,6 +285,14 @@ The separately authorised repair canary is limited to one stable source/applicat
 Primary preaching passage is a reviewed relationship on the existing `scripture_references` model, not a replacement for imported Scripture metadata. Relationships distinguish `primary`, `supporting` and historic `unclassified` roles; a confirmed set has exactly one lead primary passage and may have additional co-preached or supporting passages. Title extraction creates only a pending private proposal with exact ignored evidence and parser provenance. Missing, malformed or multiple title references require manual review, and no proposal is an administrator decision. Samuel must explicitly confirm, correct, reject or confirm no primary passage with current row versions and attributable audit evidence.
 
 Public Bible-passage search uses only confirmed `primary` coordinates and inclusive structured interval overlap. It remains an independent `AND` dimension beside PostgreSQL keyword/structured Scripture-topic search. Existing metadata-related sermons are unchanged, and description-only semantic **Related themes** remains unwired and publicly disabled. Parameterised passage results remain `noindex, follow` with the archive canonical; no crawlable verse-page system or unsupported structured data is created. Migration `0014_primary_preaching_passages` is the bounded local schema change, and preparation is restricted to the three accepted pilots plus 12 Wave 1 records selected by their exact existing processing versions. (`explicit local implementation direction; administrator confirmation remains required`)
+
+### D-137 - Bounded official-title evidence repairs only current Wave 1 passage proposals
+
+The official title read is one retry-disabled YouTube Data API `videos.list` request with `part=snippet` for exactly the 12 fixed Wave 1 video identities. It reuses the previously verified protected owner token and recorded common church-channel identity, accepts no arbitrary identifier and calls no other endpoint. Exact UTF-8 title, video/channel identity, retrieval time/version and SHA-256 evidence are retained only in one ignored private artifact; descriptions, tags, thumbnails and every unrelated snippet field are discarded. All 12 identities were returned by the common channel with no missing, duplicate, wrong-channel or manual-review result.
+
+The local repair maps that evidence only to the 12 existing Wave 1 source identities, preserves the three pilot proposal records, rejects any administrator decision or unexpected prior state, and never changes display title or sermon/transcript/description/Q&A content. Eleven Wave 1 titles produced one valid pending primary-passage proposal each; one remained a pending no-reference outcome; none was ambiguous. The first run repaired 12 review records, the second preserved all 12, and there are now 14 pending proposals across the current 15 records, one pending no-reference outcome, zero confirmed passages and zero administrator decisions. Protected content, provenance, guided-review and privacy hashes remained unchanged.
+
+The administrator list may filter proposed and confirmed primary passages by inclusive book/chapter/verse overlap and by explicit review state, and its Primary passage column must name the state. Public `/sermons/` passage search remains confirmed-only, independent from keyword/structured Scripture search, metadata recommendations and disabled description-only **Related themes**. Pending proposals remain private and absent from public results. (`explicit project-owner official-title and local metadata-repair authority; all 15 passage records still await administrator decisions`)
 
 ## Decisions still required
 

@@ -79,6 +79,18 @@ describe("Phase 3B administration dashboard", () => {
     expect(page).toContain("overflow-x: hidden");
     expect(page).toContain(":focus-visible");
     expect(client).toContain('name="serviceDateTo"');
+    expect(client).toContain('name="passageBook"');
+    expect(client).toContain('name="passageChapter"');
+    expect(client).toContain('name="passageVerse"');
+    expect(client).toContain('name="passageEndVerse"');
+    expect(client).toContain('name="passageReviewState"');
+    expect(client).toContain("Clear passage filters");
+    expect(client).toContain("Primary passage</th>");
+    expect(client).toContain("Proposed passage");
+    expect(client).toContain("Confirmed passage");
+    expect(client).toContain("Pending review");
+    expect(client).toContain("No primary passage");
+    expect(client).toContain("No proposal detected");
     expect(client).toContain("Permanently delete sermon");
     expect(client).toContain("This action cannot be undone");
     expect(client).toContain("Unsaved changes");

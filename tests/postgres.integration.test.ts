@@ -6,6 +6,7 @@ import { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   acknowledgeEmptyEnrichmentReviewInputSchema,
+  adminSermonListQuerySchema,
   createSermonInputSchema,
   enrichmentReviewItemDecisionInputSchema,
   enrichmentReviewProgressInputSchema,
@@ -2481,6 +2482,18 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         "INSERT INTO scripture_reference_sources (scripture_reference_id, sermon_id, source_kind, original_value) VALUES ($1, $2, 'curated', 'Romans 8:1-4')",
         [proposed.rows[0]!.id, sermonId]
       );
+      const proposedAdminResults = await repository.listSermons(adminSermonListQuerySchema.parse({
+        passageBook: 45,
+        passageChapter: 8,
+        passageVerse: 2,
+        passageReviewState: "proposed_passage"
+      }));
+      expect(proposedAdminResults.data).toEqual(expect.arrayContaining([
+        expect.objectContaining({
+          id: sermonId,
+          primaryPassage: { state: "proposed_passage", displayText: "Romans 8:1–4" }
+        })
+      ]));
       const published = await service.transition(created.id, "publish", { rowVersion: created.rowVersion }, admin, "primary-passage-publish");
       expect(await publicRepository.findPublishedBySlug(published.slug)).toMatchObject({
         scriptureReferences: [],
@@ -2511,6 +2524,23 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         reviewedBySubject: admin.subject
       });
       expect(confirmed.scriptureReferences.filter((reference) => reference.reviewStatus === "confirmed")).toHaveLength(2);
+      const confirmedAdminResults = await repository.listSermons(adminSermonListQuerySchema.parse({
+        passageBook: 45,
+        passageChapter: 8,
+        passageVerse: 4,
+        passageReviewState: "confirmed_passage"
+      }));
+      expect(confirmedAdminResults.data).toEqual(expect.arrayContaining([
+        expect.objectContaining({
+          id: sermonId,
+          primaryPassage: { state: "confirmed_passage", displayText: "Romans 8:1–4" }
+        })
+      ]));
+      expect((await repository.listSermons(adminSermonListQuerySchema.parse({
+        passageBook: 45,
+        passageChapter: 8,
+        passageVerse: 5
+      }))).data.some((sermon) => sermon.id === sermonId)).toBe(false);
       expect((await publicRepository.listPublished(publicSermonListQuerySchema.parse({
         passageBook: "romans", passageChapter: 8, passageVerse: 2
       }))).data).toHaveLength(1);

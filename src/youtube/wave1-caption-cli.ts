@@ -35,6 +35,14 @@ import {
   type ResolvedWavePosition,
   type VerifiedSelection
 } from "./wave1-caption-proof";
+import {
+  buildOfficialTitleRecords,
+  buildPrivateOfficialTitleArtifact,
+  exactWaveOneVideoAllowlist,
+  waveOneOfficialTitleRetrievalMethod,
+  waveOneOfficialTitleRetrievalVersion,
+  type WaveOneRetrievalIdentity
+} from "./wave1-title-proof";
 
 type YouTubeClient = youtube_v3.Youtube;
 
@@ -124,6 +132,7 @@ const mappingPath = join(metadataRoot, "phase3b2c-selected-youtube-mapping.priva
 const waveOneRoot = join(repositoryRoot, "private", "phase-3b2c-wave1");
 const inspectionPath = join(waveOneRoot, "caption-inspection.private.json");
 const retrievalPath = join(waveOneRoot, "caption-retrieval.private.json");
+const officialTitlePath = join(waveOneRoot, "official-youtube-titles.private.json");
 const captionRoot = join(waveOneRoot, "source-captions");
 const oauthConfigurationDirectory = join(repositoryRoot, "youtube-oath");
 const tokenPath = join(homedir(), "AppData", "Local", "SavingGraceBibleChurch", "youtube-oauth", "token.json");
@@ -356,12 +365,8 @@ function parseStoredToken(input: unknown): StoredToken {
 }
 
 async function loadAuthenticatedClient(): Promise<{ client: OAuth2Client; token: StoredToken }> {
-  const tokenFile = await lstat(tokenPath).catch(() => null);
-  if (!tokenFile?.isFile() || tokenFile.isSymbolicLink()) throw new SafeWaveError("reauthentication_required", "The verified owner token is unavailable");
-  const token = parseStoredToken(JSON.parse(await readFile(tokenPath, "utf8")) as unknown);
-  const configuration = await loadOAuthClientConfiguration();
-  const client = new google.auth.OAuth2(configuration.clientId, configuration.clientSecret);
-  client.setCredentials(token.credentials);
+  const authenticated = await loadStoredOAuthClient();
+  const { client, token } = authenticated;
   const youtube = google.youtube({ version: "v3", auth: client });
   const response = await youtube.channels.list({ part: ["id", "snippet"], mine: true, maxResults: 50 }, { retry: false })
     .catch(() => { throw new SafeWaveError("reauthentication_required", "The official API could not verify the owner token"); });
@@ -370,6 +375,16 @@ async function loadAuthenticatedClient(): Promise<{ client: OAuth2Client; token:
     channels[0]!.snippet?.title?.trim() !== expectedYouTubeChannelTitle) {
     throw new SafeWaveError("wrong_channel", "The authenticated channel no longer matches the verified church channel");
   }
+  return authenticated;
+}
+
+async function loadStoredOAuthClient(): Promise<{ client: OAuth2Client; token: StoredToken }> {
+  const tokenFile = await lstat(tokenPath).catch(() => null);
+  if (!tokenFile?.isFile() || tokenFile.isSymbolicLink()) throw new SafeWaveError("reauthentication_required", "The verified owner token is unavailable");
+  const token = parseStoredToken(JSON.parse(await readFile(tokenPath, "utf8")) as unknown);
+  const configuration = await loadOAuthClientConfiguration();
+  const client = new google.auth.OAuth2(configuration.clientId, configuration.clientSecret);
+  client.setCredentials(token.credentials);
   return { client, token };
 }
 
@@ -629,6 +644,69 @@ async function retrieveOne(input: {
   };
 }
 
+async function loadRetrieval(): Promise<PrivateRetrievalArtifact> {
+  const value = await loadJson(retrievalPath) as PrivateRetrievalArtifact;
+  if (value.schemaVersion !== 1 || value.privateContent !== true || value.processingVersion !== wave1CaptionProcessingVersion ||
+    value.integrity?.recordSetSha256 !== sha256(JSON.stringify(value.records))) {
+    throw new SafeWaveError("private_retrieval_invalid", "Private Wave 1 retrieval evidence failed integrity verification");
+  }
+  return value;
+}
+
+async function officialTitleCommand(): Promise<void> {
+  await loadSelection();
+  const retrieval = await loadRetrieval();
+  let videoIds: string[];
+  try {
+    videoIds = exactWaveOneVideoAllowlist(retrieval.records as WaveOneRetrievalIdentity[]);
+  } catch {
+    throw new SafeWaveError("private_retrieval_scope_mismatch", "Private Wave 1 evidence did not produce the exact 12-video allowlist");
+  }
+  const { client, token } = await loadStoredOAuthClient();
+  const youtube = google.youtube({ version: "v3", auth: client });
+  const response = await youtube.videos.list({
+    part: ["snippet"],
+    id: videoIds,
+    maxResults: 12
+  }, { retry: false }).catch(() => {
+    throw new SafeWaveError("youtube_title_retrieval_failed", "The official API title retrieval failed safely");
+  });
+  const retrievedAt = new Date().toISOString();
+  let records;
+  try {
+    records = buildOfficialTitleRecords({
+      allowlistedVideoIds: videoIds,
+      expectedChannelId: token.channel.id,
+      retrievedAt,
+      items: response.data.items ?? []
+    });
+  } catch {
+    throw new SafeWaveError("youtube_title_scope_violation", "The official API title response violated the exact allowlist");
+  }
+  const artifact = buildPrivateOfficialTitleArtifact({
+    expectedChannelId: token.channel.id,
+    retrievedAt,
+    records
+  });
+  const stable = { ...artifact };
+  const persistence = await persistJsonNoClobber(officialTitlePath, artifact, stable);
+  process.stdout.write(safeJson({
+    outcome: "wave_1_official_titles_complete",
+    requestedVideos: videoIds.length,
+    retrievedTitles: records.filter((record) => record.outcome === "retrieved").length,
+    manualReviewRequired: records.filter((record) => record.outcome === "manual_review_required").length,
+    retrievalMethod: waveOneOfficialTitleRetrievalMethod,
+    retrievalVersion: waveOneOfficialTitleRetrievalVersion,
+    artifactContentSha256: artifact.integrity.recordSetSha256,
+    privatePersistence: persistence,
+    apiRequestCount: 1,
+    retries: 0,
+    identifiersDisplayed: false,
+    titlesDisplayed: false,
+    unnecessarySnippetFieldsPersisted: false
+  }));
+}
+
 async function retrievalCommand(): Promise<void> {
   const selection = await loadSelection();
   const inspection = await loadInspection();
@@ -709,12 +787,13 @@ async function retrievalCommand(): Promise<void> {
 
 async function main(): Promise<void> {
   const [command, ...rest] = process.argv.slice(2);
-  if (rest.length > 0 || !new Set(["map", "inspect", "retrieve"]).has(command ?? "")) {
-    throw new SafeWaveError("command_invalid", "Use exactly one bounded command: map, inspect, or retrieve");
+  if (rest.length > 0 || !new Set(["map", "inspect", "retrieve", "titles"]).has(command ?? "")) {
+    throw new SafeWaveError("command_invalid", "Use exactly one bounded command: map, inspect, retrieve, or titles");
   }
   if (command === "map") await mappingCommand();
   if (command === "inspect") await inspectionCommand();
   if (command === "retrieve") await retrievalCommand();
+  if (command === "titles") await officialTitleCommand();
 }
 
 main().catch((error: unknown) => {

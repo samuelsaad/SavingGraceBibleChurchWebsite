@@ -208,15 +208,36 @@ describe("admin sermon API contract", () => {
       adminSermonListQuerySchema.parse({
         query: "grace",
         serviceDateFrom: "2026-08-01",
-        serviceDateTo: "2026-08-31"
+        serviceDateTo: "2026-08-31",
+        passageBook: "41",
+        passageChapter: "10",
+        passageVerse: "46",
+        passageEndVerse: "50",
+        passageReviewState: "proposed_passage"
       })
-    ).toMatchObject({ page: 1, pageSize: 20 });
+    ).toMatchObject({
+      page: 1,
+      pageSize: 20,
+      passageBook: 41,
+      passageChapter: 10,
+      passageVerse: 46,
+      passageEndVerse: 50,
+      passageReviewState: "proposed_passage"
+    });
     expect(() =>
       adminSermonListQuerySchema.parse({
         serviceDateFrom: "2026-09-01",
         serviceDateTo: "2026-08-31"
       })
     ).toThrow();
+    expect(() => adminSermonListQuerySchema.parse({ passageChapter: 10 })).toThrow("Bible book");
+    expect(() => adminSermonListQuerySchema.parse({ passageBook: 41, passageVerse: 46 })).toThrow("chapter");
+    expect(() => adminSermonListQuerySchema.parse({
+      passageBook: 41,
+      passageChapter: 10,
+      passageVerse: 50,
+      passageEndVerse: 46
+    })).toThrow("Ending verse");
   });
 
   it("requires optimistic concurrency and an actual edit", () => {

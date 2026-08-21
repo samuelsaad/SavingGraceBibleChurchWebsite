@@ -91,4 +91,21 @@ describe("structured primary preaching passage parsing", () => {
     expect(extractPrimaryPassageFromTitle("Anonymised part 2 of 5")).toEqual({ outcome: "no_reference", passage: null });
     expect(extractPrimaryPassageFromTitle("Anonymised — Mark 10:177")).toMatchObject({ outcome: "manual_review_required", reason: "invalid_reference" });
   });
+
+  it("parses a question-style official source title without changing a separate display title", () => {
+    const displayTitle = "An anonymised display title";
+    const sourceTitle = "An anonymised question? | Mark 10:46-50";
+    expect(extractPrimaryPassageFromTitle(sourceTitle)).toMatchObject({
+      outcome: "one_valid_reference",
+      passage: {
+        canonicalBookId: 41,
+        startChapter: 10,
+        startVerse: 46,
+        endChapter: 10,
+        endVerse: 50,
+        displayText: "Mark 10:46–50"
+      }
+    });
+    expect(displayTitle).toBe("An anonymised display title");
+  });
 });

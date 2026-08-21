@@ -45,6 +45,10 @@ export interface StoredSermonSummary {
     pendingItemCount: number;
     totalItemCount: number;
   } | null;
+  primaryPassage?: {
+    state: "proposed_passage" | "confirmed_passage" | "pending_review" | "no_primary_passage" | "no_proposal_detected" | "proposal_rejected";
+    displayText: string | null;
+  };
   readiness: ContentReadinessResult;
 }
 

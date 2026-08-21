@@ -10,6 +10,13 @@ import {
   type CaptionInspectionRecord,
   type VerifiedSelection
 } from "../src/youtube/wave1-caption-proof";
+import {
+  buildOfficialTitleRecords,
+  buildPrivateOfficialTitleArtifact,
+  exactWaveOneVideoAllowlist,
+  verifyPrivateOfficialTitleArtifact,
+  type WaveOneRetrievalIdentity
+} from "../src/youtube/wave1-title-proof";
 import { prepareWaveOneContent } from "../src/enrichment/wave1-enrichment";
 
 const firstVideo = "AbCdEfGhI12";
@@ -116,6 +123,89 @@ describe("predetermined Wave 1 replacement controls", () => {
       selected(501)
     ]);
     expect(resolved[1]).toMatchObject({ resolution: "unavailable", resolvedSourceId: null, reason: "source_outside_authorized_workflow" });
+  });
+});
+
+describe("bounded official Wave 1 title provenance", () => {
+  const videoIds = Array.from({ length: 12 }, (_, index) => `VideoId${String(index + 1).padStart(4, "0")}`);
+  const retrieval = videoIds.map((videoId, index): WaveOneRetrievalIdentity => ({
+    waveOrder: index + 1,
+    primarySourceId: 700 + index,
+    resolvedSourceId: 700 + index,
+    outcome: "retrieved",
+    videoId,
+    channelId: "anonymised-church-channel"
+  }));
+
+  it("derives only the exact ordered 12-video retrieval allowlist", () => {
+    expect(exactWaveOneVideoAllowlist([...retrieval].reverse())).toEqual(videoIds);
+    expect(() => exactWaveOneVideoAllowlist(retrieval.slice(0, 11))).toThrow("exactly 12");
+    expect(() => exactWaveOneVideoAllowlist([
+      ...retrieval.slice(0, 11),
+      { ...retrieval[11]!, videoId: videoIds[0]! }
+    ])).toThrow("duplicate");
+    expect(() => exactWaveOneVideoAllowlist([
+      { ...retrieval[0]!, outcome: "unavailable", videoId: null },
+      ...retrieval.slice(1)
+    ])).toThrow("complete ordered videos");
+  });
+
+  it("preserves the exact UTF-8 title while excluding unnecessary snippet fields", () => {
+    const exactTitle = "Anonymised Café  e\u0301vidence | Mark 10:46–50  ";
+    const records = buildOfficialTitleRecords({
+      allowlistedVideoIds: videoIds,
+      expectedChannelId: "anonymised-church-channel",
+      retrievedAt: "2026-08-20T00:00:00.000Z",
+      items: videoIds.map((id, index) => ({
+        id,
+        snippet: {
+          title: index === 0 ? exactTitle : `Anonymised title ${index + 1}`,
+          channelId: "anonymised-church-channel",
+          description: "discarded description",
+          tags: ["discarded"],
+          thumbnails: { default: { url: "https://invalid.example/discarded" } }
+        }
+      }))
+    });
+    expect(records[0]!.title).toBe(exactTitle);
+    expect(JSON.stringify(records)).not.toMatch(/discarded description|thumbnails|tags/u);
+    expect(records.every((record) => /^[a-f0-9]{64}$/u.test(record.recordSha256))).toBe(true);
+    const artifact = buildPrivateOfficialTitleArtifact({
+      expectedChannelId: "anonymised-church-channel",
+      retrievedAt: "2026-08-20T00:00:00.000Z",
+      records
+    });
+    expect(verifyPrivateOfficialTitleArtifact(artifact)).toEqual(artifact);
+    const tampered = structuredClone(artifact);
+    tampered.records[0]!.title = "Changed";
+    expect(() => verifyPrivateOfficialTitleArtifact(tampered)).toThrow("integrity");
+  });
+
+  it("records missing, duplicate and wrong-channel videos for manual review without guessing", () => {
+    const items = videoIds.slice(1).map((id, index) => ({
+      id,
+      snippet: { title: `Anonymised title ${index + 2}`, channelId: "anonymised-church-channel" }
+    }));
+    items.push({ ...items[0]! });
+    items[1] = { ...items[1]!, snippet: { ...items[1]!.snippet, channelId: "another-channel" } };
+    const records = buildOfficialTitleRecords({
+      allowlistedVideoIds: videoIds,
+      expectedChannelId: "anonymised-church-channel",
+      retrievedAt: "2026-08-20T00:00:00.000Z",
+      items
+    });
+    expect(records[0]).toMatchObject({ outcome: "manual_review_required", failureCode: "missing_video", title: null });
+    expect(records[1]).toMatchObject({ outcome: "manual_review_required", failureCode: "duplicate_video", title: null });
+    expect(records[2]).toMatchObject({ outcome: "manual_review_required", failureCode: "wrong_channel", title: null });
+  });
+
+  it("rejects any response identity outside the allowlist", () => {
+    expect(() => buildOfficialTitleRecords({
+      allowlistedVideoIds: videoIds,
+      expectedChannelId: "anonymised-church-channel",
+      retrievedAt: "2026-08-20T00:00:00.000Z",
+      items: [{ id: "Outside00001", snippet: { title: "Outside", channelId: "anonymised-church-channel" } }]
+    })).toThrow("outside");
   });
 });
 

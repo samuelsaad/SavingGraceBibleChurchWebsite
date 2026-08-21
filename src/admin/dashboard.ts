@@ -48,6 +48,10 @@ type SermonSummary = {
     pendingItemCount: number;
     totalItemCount: number;
   } | null;
+  primaryPassage?: {
+    state: "proposed_passage" | "confirmed_passage" | "pending_review" | "no_primary_passage" | "no_proposal_detected" | "proposal_rejected";
+    displayText: string | null;
+  };
   readiness: Readiness;
 };
 type ScriptureReference = {
@@ -360,16 +364,28 @@ function pageHeading(title: string, description: string, action = ""): string {
 }
 
 function sermonRows(sermons: SermonSummary[]): string {
-  if (!sermons.length) return `<tr><td colspan="7" class="empty-state"><strong>No sermons match these filters.</strong><br />Try clearing a filter or choosing another content task.</td></tr>`;
-  return sermons.map((sermon) => `<tr>
+  if (!sermons.length) return `<tr><td colspan="8" class="empty-state"><strong>No sermons match these filters.</strong><br />Try clearing a filter or choosing another content task.</td></tr>`;
+  return sermons.map((sermon) => {
+    const passage = sermon.primaryPassage ?? { state: "no_proposal_detected" as const, displayText: null };
+    const stateLabels = {
+      proposed_passage: "Proposed passage",
+      confirmed_passage: "Confirmed passage",
+      pending_review: "Pending review",
+      no_primary_passage: "No primary passage",
+      no_proposal_detected: "No proposal detected",
+      proposal_rejected: "Proposal rejected"
+    } as const;
+    return `<tr>
     <td><a href="/admin/sermons/${sermon.id}" data-route>${escapeHtml(sermon.title)}</a><div class="subtle">/${escapeHtml(sermon.slug)}/</div></td>
     <td><span class="status-pill ${escapeHtml(sermon.status)}">${escapeHtml(sermon.status)}</span></td>
     <td>${escapeHtml(humanDate(sermon.serviceDate))}</td>
     <td>${escapeHtml(sermon.speaker?.name ?? "—")}</td>
     <td>${escapeHtml(sermon.series.map((item) => item.name).join(", ") || "—")}</td>
+    <td>${passage.displayText ? `<strong>${escapeHtml(passage.displayText)}</strong><div class="subtle">${escapeHtml(stateLabels[passage.state])}</div>` : escapeHtml(stateLabels[passage.state])}</td>
     <td>${sermon.scheduledFor ? `<strong>${escapeHtml(humanDate(sermon.scheduledFor))}</strong>` : "—"}</td>
     <td><span class="status-pill ${sermon.readiness.isComplete ? "published" : "scheduled"}">${sermon.readiness.isComplete ? "Complete" : "Needs work"}</span></td>
-  </tr>`).join("");
+  </tr>`;
+  }).join("");
 }
 
 async function renderDashboard(): Promise<void> {
@@ -410,7 +426,7 @@ async function renderDashboard(): Promise<void> {
       ${statuses.map((status) => `<article class="stat-card"><span>${escapeHtml(status)}</span><strong>${sermons.countsByStatus[status]}</strong></article>`).join("")}
     </section>
     <div class="grid-two">
-      <section class="panel"><h2>Recently updated</h2><div class="table-wrap"><table><thead><tr><th>Sermon</th><th>State</th><th>Service date</th><th>Speaker</th><th>Series</th><th>Scheduled</th><th>Checklist</th></tr></thead><tbody>${sermonRows(sermons.data)}</tbody></table></div></section>
+      <section class="panel"><h2>Recently updated</h2><div class="table-wrap"><table><thead><tr><th>Sermon</th><th>State</th><th>Service date</th><th>Speaker</th><th>Series</th><th>Primary passage</th><th>Scheduled</th><th>Checklist</th></tr></thead><tbody>${sermonRows(sermons.data)}</tbody></table></div></section>
       <aside class="panel"><h2>What the states mean</h2><dl>${statuses.map((status) => `<dt><span class="status-pill ${status}">${status}</span></dt><dd>${escapeHtml(stateDescriptions[status])}</dd>`).join("")}</dl><div class="callout"><strong>SEO non-regression is a launch gate.</strong><p>Published slugs retain their paths. Unapproved descriptions, transcripts and questions are never public.</p></div></aside>
     </div>`;
 }
@@ -426,6 +442,22 @@ async function loadTaxonomies(): Promise<Record<"speakers" | "series" | "books",
 
 function filterOption(items: Taxonomy[], selected: string, placeholder: string): string {
   return `<option value="">${escapeHtml(placeholder)}</option>${items.map((item) => `<option value="${item.id}"${item.id === selected ? " selected" : ""}>${escapeHtml(item.name)}</option>`).join("")}`;
+}
+
+function canonicalBookFilterOptions(selectedBookId: number | null): string {
+  return `<option value="">All Bible books</option>${(["old", "new"] as const).map((testament) =>
+    `<optgroup label="${testament === "old" ? "Old Testament" : "New Testament"}">${bibleBooks
+      .filter((book) => book.testament === testament)
+      .map((book) => `<option value="${book.id}"${selectedBookId === book.id ? " selected" : ""}>${escapeHtml(book.canonicalName)}</option>`)
+      .join("")}</optgroup>`
+  ).join("")}`;
+}
+
+function numberedFilterOptions(maximum: number, selected: number | null, allLabel: string): string {
+  const values = Array.from({ length: maximum }, (_, index) => index + 1);
+  return `<option value="">${escapeHtml(allLabel)}</option>${values.map((value) =>
+    `<option value="${value}"${selected === value ? " selected" : ""}>${value}</option>`
+  ).join("")}`;
 }
 
 const enrichmentReviewStages = [
@@ -1400,6 +1432,16 @@ async function renderSermonList(): Promise<void> {
     loadTaxonomies()
   ]);
   const currentPage = sermons.pagination.page;
+  const passageBookId = Number(query.get("passageBook")) || null;
+  const passageBook = bibleBooks.find((book) => book.id === passageBookId) ?? null;
+  const passageChapter = Number(query.get("passageChapter")) || null;
+  const passageVerse = Number(query.get("passageVerse")) || null;
+  const passageEndVerse = Number(query.get("passageEndVerse")) || null;
+  const clearPassageQuery = new URLSearchParams(query);
+  for (const name of ["passageBook", "passageChapter", "passageVerse", "passageEndVerse", "passageReviewState"]) {
+    clearPassageQuery.delete(name);
+  }
+  clearPassageQuery.set("page", "1");
   const pageQuery = (page: number) => {
     const next = new URLSearchParams(query);
     next.set("page", String(page));
@@ -1428,9 +1470,26 @@ async function renderSermonList(): Promise<void> {
             ["missing_media", "Missing controlled media"]
           ].map(([value, label]) => `<option value="${value}"${query.get("contentIssue") === value ? " selected" : ""}>${label}</option>`).join("")}
         </select></label>
-        <button class="button" type="submit">Apply filters</button>
+        <fieldset class="wide"><legend>Primary passage filters</legend><div class="filters">
+          <label><span>Book</span><select id="admin-passage-book" name="passageBook">${canonicalBookFilterOptions(passageBookId)}</select></label>
+          <label><span>Chapter</span><select id="admin-passage-chapter" name="passageChapter"${passageBook ? "" : " disabled"}>${numberedFilterOptions(passageBook?.chapterCount ?? 0, passageChapter, "All chapters")}</select></label>
+          <label><span>Verse</span><select id="admin-passage-verse" name="passageVerse"${passageChapter ? "" : " disabled"}>${numberedFilterOptions(176, passageVerse, "All verses")}</select></label>
+          <label><span>Ending verse (optional)</span><select id="admin-passage-end-verse" name="passageEndVerse"${passageVerse ? "" : " disabled"}>${numberedFilterOptions(176, passageEndVerse, "Same as start")}</select></label>
+          <label><span>Passage review state</span><select name="passageReviewState">
+            <option value="">All passage states</option>
+            ${[
+              ["proposed_passage", "Proposed passage"],
+              ["confirmed_passage", "Confirmed passage"],
+              ["pending_review", "Pending review"],
+              ["no_primary_passage", "No primary passage"],
+              ["no_proposal_detected", "No proposal detected"],
+              ["proposal_rejected", "Proposal rejected"]
+            ].map(([value, label]) => `<option value="${value}"${query.get("passageReviewState") === value ? " selected" : ""}>${label}</option>`).join("")}
+          </select></label>
+        </div></fieldset>
+        <div class="action-row"><button class="button" type="submit">Apply filters</button><a class="button quiet" href="/admin/sermons?${clearPassageQuery.toString()}" data-route>Clear passage filters</a></div>
       </form>
-      <div class="table-wrap"><table><caption class="sr-only">Filtered sermons</caption><thead><tr><th>Sermon</th><th>State</th><th>Service date</th><th>Speaker</th><th>Series</th><th>Scheduled</th><th>Checklist</th></tr></thead><tbody>${sermonRows(sermons.data)}</tbody></table></div>
+      <div class="table-wrap"><table><caption class="sr-only">Filtered sermons</caption><thead><tr><th>Sermon</th><th>State</th><th>Service date</th><th>Speaker</th><th>Series</th><th>Primary passage</th><th>Scheduled</th><th>Checklist</th></tr></thead><tbody>${sermonRows(sermons.data)}</tbody></table></div>
       <div class="pagination"><span class="subtle">${sermons.pagination.totalItems} result${sermons.pagination.totalItems === 1 ? "" : "s"} · Page ${currentPage} of ${Math.max(sermons.pagination.totalPages, 1)}</span><div class="action-row">${currentPage > 1 ? `<a class="button" href="${pageQuery(currentPage - 1)}" data-route>Previous</a>` : ""}${currentPage < sermons.pagination.totalPages ? `<a class="button" href="${pageQuery(currentPage + 1)}" data-route>Next</a>` : ""}</div></div>
     </section>`;
   document.querySelector<HTMLFormElement>("#sermon-filters")?.addEventListener("submit", (event) => {
@@ -1439,6 +1498,29 @@ async function renderSermonList(): Promise<void> {
     const params = new URLSearchParams({ page: "1", pageSize: "20" });
     for (const [key, value] of data.entries()) if (String(value).trim()) params.set(key, String(value).trim());
     void navigate(`/admin/sermons?${params.toString()}`);
+  });
+  const passageBookControl = document.querySelector<HTMLSelectElement>("#admin-passage-book");
+  const passageChapterControl = document.querySelector<HTMLSelectElement>("#admin-passage-chapter");
+  const passageVerseControl = document.querySelector<HTMLSelectElement>("#admin-passage-verse");
+  const passageEndVerseControl = document.querySelector<HTMLSelectElement>("#admin-passage-end-verse");
+  passageBookControl?.addEventListener("change", () => {
+    const book = bibleBooks.find((item) => item.id === Number(passageBookControl.value));
+    passageChapterControl!.innerHTML = numberedFilterOptions(book?.chapterCount ?? 0, null, "All chapters");
+    passageChapterControl!.disabled = !book;
+    passageVerseControl!.value = "";
+    passageVerseControl!.disabled = true;
+    passageEndVerseControl!.value = "";
+    passageEndVerseControl!.disabled = true;
+  });
+  passageChapterControl?.addEventListener("change", () => {
+    passageVerseControl!.value = "";
+    passageVerseControl!.disabled = !passageChapterControl.value;
+    passageEndVerseControl!.value = "";
+    passageEndVerseControl!.disabled = true;
+  });
+  passageVerseControl?.addEventListener("change", () => {
+    passageEndVerseControl!.value = "";
+    passageEndVerseControl!.disabled = !passageVerseControl.value;
   });
 }
 

@@ -54,6 +54,7 @@ type SermonRow = QueryResultRow & {
   series: StoredSermonDetail["series"];
   historical_backfill_required: boolean;
   enrichment_review: StoredSermonSummary["enrichmentReview"];
+  primary_passage: StoredSermonSummary["primaryPassage"];
   readiness: {
     isComplete: boolean;
     isContentComplete: boolean;
@@ -158,6 +159,40 @@ const sermonSummaryProjection = `
     FROM sermon_enrichment_reviews review
     WHERE review.sermon_id = s.id
   ) AS enrichment_review,
+  (
+    SELECT jsonb_build_object(
+      'state', CASE
+        WHEN EXISTS (
+          SELECT 1 FROM scripture_references confirmed
+          WHERE confirmed.sermon_id = s.id
+            AND confirmed.relationship_role = 'primary'
+            AND confirmed.review_status = 'confirmed'
+        ) THEN 'confirmed_passage'
+        WHEN passage_review.review_status = 'confirmed_none' THEN 'no_primary_passage'
+        WHEN passage_review.review_status = 'rejected' THEN 'proposal_rejected'
+        WHEN passage_review.review_status = 'pending' AND EXISTS (
+          SELECT 1 FROM scripture_references proposed
+          WHERE proposed.sermon_id = s.id
+            AND proposed.relationship_role = 'primary'
+            AND proposed.review_status = 'proposed'
+        ) THEN 'proposed_passage'
+        WHEN passage_review.review_status = 'pending' THEN 'pending_review'
+        ELSE 'no_proposal_detected'
+      END,
+      'displayText', (
+        SELECT passage.display_text
+        FROM scripture_references passage
+        WHERE passage.sermon_id = s.id
+          AND passage.relationship_role = 'primary'
+          AND passage.review_status IN ('proposed', 'confirmed')
+        ORDER BY (passage.review_status = 'confirmed') DESC, passage.is_lead DESC,
+                 passage.display_order, passage.id
+        LIMIT 1
+      )
+    )
+    FROM (SELECT 1) singleton
+    LEFT JOIN sermon_primary_passage_reviews passage_review ON passage_review.sermon_id = s.id
+  ) AS primary_passage,
   (
     SELECT jsonb_build_object(
       'isComplete', readiness.is_complete,
@@ -385,6 +420,7 @@ function summaryFromRow(row: SermonRow): StoredSermonSummary {
     series: row.series ?? [],
     historicalBackfillRequired: row.historical_backfill_required,
     enrichmentReview: row.enrichment_review ?? null,
+    primaryPassage: row.primary_passage ?? { state: "no_proposal_detected", displayText: null },
     readiness: readinessFromRow(row)
   };
 }
@@ -1529,6 +1565,63 @@ export class PostgresAdminSermonRepository implements AdminSermonRepository {
     if (query.serviceDateTo) {
       values.push(query.serviceDateTo);
       conditions.push(`s.service_date <= $${values.length}::date`);
+    }
+    if (query.passageBook !== undefined) {
+      values.push(query.passageBook);
+      const passageConditions = [
+        "passage_filter.sermon_id = s.id",
+        "passage_filter.relationship_role = 'primary'",
+        "passage_filter.review_status IN ('proposed', 'confirmed')",
+        `passage_filter.canonical_book_id = $${values.length}`
+      ];
+      if (query.passageChapter !== undefined) {
+        const start = query.passageChapter * 1_000 + (query.passageVerse ?? 0);
+        const end = query.passageChapter * 1_000 + (query.passageEndVerse ?? query.passageVerse ?? 999);
+        values.push(start, end);
+        passageConditions.push(
+          `(passage_filter.start_chapter * 1000 + COALESCE(passage_filter.start_verse, 0)) <= $${values.length}`,
+          `(passage_filter.end_chapter * 1000 + COALESCE(passage_filter.end_verse, 999)) >= $${values.length - 1}`
+        );
+      }
+      conditions.push(`EXISTS (SELECT 1 FROM scripture_references passage_filter WHERE ${passageConditions.join(" AND ")})`);
+    }
+    if (query.passageReviewState === "confirmed_passage") {
+      conditions.push(`EXISTS (
+        SELECT 1 FROM sermon_primary_passage_reviews passage_state
+        WHERE passage_state.sermon_id = s.id AND passage_state.review_status = 'confirmed_passage'
+      )`);
+    } else if (query.passageReviewState === "proposed_passage") {
+      conditions.push(`EXISTS (
+        SELECT 1 FROM sermon_primary_passage_reviews passage_state
+        WHERE passage_state.sermon_id = s.id AND passage_state.review_status = 'pending'
+      ) AND EXISTS (
+        SELECT 1 FROM scripture_references passage_state_ref
+        WHERE passage_state_ref.sermon_id = s.id
+          AND passage_state_ref.relationship_role = 'primary'
+          AND passage_state_ref.review_status = 'proposed'
+      )`);
+    } else if (query.passageReviewState === "pending_review") {
+      conditions.push(`EXISTS (
+        SELECT 1 FROM sermon_primary_passage_reviews passage_state
+        WHERE passage_state.sermon_id = s.id AND passage_state.review_status = 'pending'
+      ) AND NOT EXISTS (
+        SELECT 1 FROM scripture_references passage_state_ref
+        WHERE passage_state_ref.sermon_id = s.id
+          AND passage_state_ref.relationship_role = 'primary'
+          AND passage_state_ref.review_status = 'proposed'
+      )`);
+    } else if (query.passageReviewState === "no_primary_passage") {
+      conditions.push(`EXISTS (
+        SELECT 1 FROM sermon_primary_passage_reviews passage_state
+        WHERE passage_state.sermon_id = s.id AND passage_state.review_status = 'confirmed_none'
+      )`);
+    } else if (query.passageReviewState === "proposal_rejected") {
+      conditions.push(`EXISTS (
+        SELECT 1 FROM sermon_primary_passage_reviews passage_state
+        WHERE passage_state.sermon_id = s.id AND passage_state.review_status = 'rejected'
+      )`);
+    } else if (query.passageReviewState === "no_proposal_detected") {
+      conditions.push("NOT EXISTS (SELECT 1 FROM sermon_primary_passage_reviews passage_state WHERE passage_state.sermon_id = s.id)");
     }
     if (query.contentIssue === "complete") {
       conditions.push("EXISTS (SELECT 1 FROM sermon_content_readiness r WHERE r.sermon_id = s.id AND r.is_complete)");
