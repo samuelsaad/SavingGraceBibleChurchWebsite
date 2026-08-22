@@ -294,6 +294,12 @@ The local repair maps that evidence only to the 12 existing Wave 1 source identi
 
 The administrator list may filter proposed and confirmed primary passages by inclusive book/chapter/verse overlap and by explicit review state, and its Primary passage column must name the state. Public `/sermons/` passage search remains confirmed-only, independent from keyword/structured Scripture search, metadata recommendations and disabled description-only **Related themes**. Pending proposals remain private and absent from public results. (`explicit project-owner official-title and local metadata-repair authority; all 15 passage records still await administrator decisions`)
 
+### D-138 - Administrator YouTube source links use reconciled stored identity
+
+Administrator surfaces derive a nullable canonical YouTube source from the existing `sermon_media` relationship and private `sermon_enrichment_sources` provenance row. Every populated candidate must be an approved HTTPS YouTube URL form with a valid 11-character video ID, and all candidates for one sermon must agree. Missing evidence, an invalid candidate or conflicting IDs fails closed to no link; no identity is guessed. Playlist, tracking and timestamp parameters do not affect identity, and the rendered destination is always the canonical HTTPS watch URL.
+
+The source action appears separately from the administrator sermon-record link on list, overview/edit and guided-review surfaces, including identity/provenance and primary-passage review. It uses descriptive accessible text, a visible external-link indicator, a new tab and `noopener noreferrer`. It never embeds or preloads YouTube and does not alter public pages. The bounded current-data check covers only the three pilots and 12 Wave 1 records; it grants no provider request, historical backfill, content processing, approval, publication or deployment authority. (`explicit administrator convenience implementation; current-15 read-only verification only`)
+
 ## Decisions still required
 
 - Final AWS runtime/adapter and production networking.

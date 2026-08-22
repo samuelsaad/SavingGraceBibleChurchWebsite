@@ -1,6 +1,7 @@
 import type { SermonStatus } from "../domain/sermon";
 import type { DeletionSeoDisposition } from "../api/contracts/admin-sermons";
 import type { ControlledMediaInput } from "../server/repositories/admin-sermon-repository";
+import { canonicalYouTubeUrl, youtubeVideoIdFromUrl } from "../domain/youtube";
 
 const actionMap: Record<SermonStatus, string[]> = {
   draft: ["submit", "publish", "archive"],
@@ -37,6 +38,18 @@ function optionalControlledMedia(
 ): ControlledMediaInput | null {
   const trimmedUrl = canonicalUrl.trim();
   if (!trimmedUrl) return null;
+  if (provider === "youtube") {
+    const videoId = youtubeVideoIdFromUrl(trimmedUrl);
+    if (videoId) {
+      return {
+        provider: "youtube",
+        mediaType: "video",
+        externalId: videoId,
+        canonicalUrl: canonicalYouTubeUrl(videoId)!,
+        title: title.trim() || "Sermon video"
+      };
+    }
+  }
   return {
     provider,
     mediaType: provider === "youtube" ? "video" : "audio",

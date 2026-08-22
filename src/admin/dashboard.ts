@@ -52,6 +52,7 @@ type SermonSummary = {
     state: "proposed_passage" | "confirmed_passage" | "pending_review" | "no_primary_passage" | "no_proposal_detected" | "proposal_rejected";
     displayText: string | null;
   };
+  youtubeSource: { videoId: string; canonicalUrl: string } | null;
   readiness: Readiness;
 };
 type ScriptureReference = {
@@ -289,6 +290,14 @@ function feedback(message: string, error = false): string {
   return `<div class="feedback${error ? " error" : ""}" role="${error ? "alert" : "status"}">${escapeHtml(message)}</div>`;
 }
 
+function youtubeSourceLink(
+  source: SermonSummary["youtubeSource"],
+  visibleText: "Open video" | "Watch source video on YouTube" = "Watch source video on YouTube"
+): string {
+  if (!source) return '<span class="no-source-link">No YouTube link</span>';
+  return `<a class="source-video-link" href="${escapeHtml(source.canonicalUrl)}" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer" aria-label="${escapeHtml(visibleText)} — source sermon video (opens in a new tab)">${escapeHtml(visibleText)} <span class="external-link-icon" aria-hidden="true">↗</span></a>`;
+}
+
 function errorMessage(error: unknown): string {
   if (error instanceof DashboardRequestError) {
     if (error.status === 409 && error.code === "stale_write") {
@@ -364,7 +373,7 @@ function pageHeading(title: string, description: string, action = ""): string {
 }
 
 function sermonRows(sermons: SermonSummary[]): string {
-  if (!sermons.length) return `<tr><td colspan="8" class="empty-state"><strong>No sermons match these filters.</strong><br />Try clearing a filter or choosing another content task.</td></tr>`;
+  if (!sermons.length) return `<tr><td colspan="9" class="empty-state"><strong>No sermons match these filters.</strong><br />Try clearing a filter or choosing another content task.</td></tr>`;
   return sermons.map((sermon) => {
     const passage = sermon.primaryPassage ?? { state: "no_proposal_detected" as const, displayText: null };
     const stateLabels = {
@@ -376,14 +385,15 @@ function sermonRows(sermons: SermonSummary[]): string {
       proposal_rejected: "Proposal rejected"
     } as const;
     return `<tr>
-    <td><a href="/admin/sermons/${sermon.id}" data-route>${escapeHtml(sermon.title)}</a><div class="subtle">/${escapeHtml(sermon.slug)}/</div></td>
-    <td><span class="status-pill ${escapeHtml(sermon.status)}">${escapeHtml(sermon.status)}</span></td>
-    <td>${escapeHtml(humanDate(sermon.serviceDate))}</td>
-    <td>${escapeHtml(sermon.speaker?.name ?? "—")}</td>
-    <td>${escapeHtml(sermon.series.map((item) => item.name).join(", ") || "—")}</td>
-    <td>${passage.displayText ? `<strong>${escapeHtml(passage.displayText)}</strong><div class="subtle">${escapeHtml(stateLabels[passage.state])}</div>` : escapeHtml(stateLabels[passage.state])}</td>
-    <td>${sermon.scheduledFor ? `<strong>${escapeHtml(humanDate(sermon.scheduledFor))}</strong>` : "—"}</td>
-    <td><span class="status-pill ${sermon.readiness.isComplete ? "published" : "scheduled"}">${sermon.readiness.isComplete ? "Complete" : "Needs work"}</span></td>
+    <td data-label="Sermon"><a href="/admin/sermons/${sermon.id}" data-route>${escapeHtml(sermon.title)}</a><div class="subtle">/${escapeHtml(sermon.slug)}/</div></td>
+    <td data-label="State"><span class="status-pill ${escapeHtml(sermon.status)}">${escapeHtml(sermon.status)}</span></td>
+    <td data-label="Service date">${escapeHtml(humanDate(sermon.serviceDate))}</td>
+    <td data-label="Speaker">${escapeHtml(sermon.speaker?.name ?? "—")}</td>
+    <td data-label="Series">${escapeHtml(sermon.series.map((item) => item.name).join(", ") || "—")}</td>
+    <td data-label="Primary passage">${passage.displayText ? `<strong>${escapeHtml(passage.displayText)}</strong><div class="subtle">${escapeHtml(stateLabels[passage.state])}</div>` : escapeHtml(stateLabels[passage.state])}</td>
+    <td data-label="YouTube">${youtubeSourceLink(sermon.youtubeSource, "Open video")}</td>
+    <td data-label="Scheduled">${sermon.scheduledFor ? `<strong>${escapeHtml(humanDate(sermon.scheduledFor))}</strong>` : "—"}</td>
+    <td data-label="Checklist"><span class="status-pill ${sermon.readiness.isComplete ? "published" : "scheduled"}">${sermon.readiness.isComplete ? "Complete" : "Needs work"}</span></td>
   </tr>`;
   }).join("");
 }
@@ -426,7 +436,7 @@ async function renderDashboard(): Promise<void> {
       ${statuses.map((status) => `<article class="stat-card"><span>${escapeHtml(status)}</span><strong>${sermons.countsByStatus[status]}</strong></article>`).join("")}
     </section>
     <div class="grid-two">
-      <section class="panel"><h2>Recently updated</h2><div class="table-wrap"><table><thead><tr><th>Sermon</th><th>State</th><th>Service date</th><th>Speaker</th><th>Series</th><th>Primary passage</th><th>Scheduled</th><th>Checklist</th></tr></thead><tbody>${sermonRows(sermons.data)}</tbody></table></div></section>
+      <section class="panel"><h2>Recently updated</h2><div class="table-wrap"><table class="sermon-table"><thead><tr><th>Sermon</th><th>State</th><th>Service date</th><th>Speaker</th><th>Series</th><th>Primary passage</th><th>YouTube</th><th>Scheduled</th><th>Checklist</th></tr></thead><tbody>${sermonRows(sermons.data)}</tbody></table></div></section>
       <aside class="panel"><h2>What the states mean</h2><dl>${statuses.map((status) => `<dt><span class="status-pill ${status}">${status}</span></dt><dd>${escapeHtml(stateDescriptions[status])}</dd>`).join("")}</dl><div class="callout"><strong>SEO non-regression is a launch gate.</strong><p>Published slugs retain their paths. Unapproved descriptions, transcripts and questions are never public.</p></div></aside>
     </div>`;
 }
@@ -612,7 +622,7 @@ function primaryPassageReviewPanel(sermon: SermonDetail): string {
         ? "The title could not support a single safe proposal. Enter verified passages manually or reject the proposal."
         : "This passage was entered through administrator controls.";
   return `<section class="source-summary" aria-labelledby="primary-passage-heading" data-primary-passage-panel>
-    <div><p class="eyebrow">Structured Scripture metadata</p><h3 id="primary-passage-heading">Primary preaching passage</h3><p><strong>${escapeHtml(status)}</strong></p><p>${escapeHtml(proposal)}</p><p class="field-hint">This decision does not change transcript, description, Q&amp;A, guided-review completion or publication state.</p></div>
+    <div><p class="eyebrow">Structured Scripture metadata</p><h3 id="primary-passage-heading">Primary preaching passage</h3><p><strong>${escapeHtml(status)}</strong></p><p>${escapeHtml(proposal)}</p><p>${youtubeSourceLink(sermon.youtubeSource)}</p><p class="field-hint">This decision does not change transcript, description, Q&amp;A, guided-review completion or publication state.</p></div>
     <div id="primary-passage-feedback"></div>
     <div class="stack" id="primary-passage-rows">${values.map(primaryPassageEditorRow).join("")}</div>
     <div class="action-row">
@@ -647,6 +657,7 @@ function renderIdentityReviewStage(
     </div>
     <section class="source-summary" aria-labelledby="source-summary-heading">
       <div><p class="eyebrow">Private source</p><h3 id="source-summary-heading">Authorised YouTube Studio export</h3></div>
+      <p>${youtubeSourceLink(sermon.youtubeSource)}</p>
       <dl class="source-facts">
         <div><dt>Video identity</dt><dd><code>${escapeHtml(source.videoId)}</code></dd></div>
         <div><dt>Caption language</dt><dd>${escapeHtml(source.captionLanguage)}</dd></div>
@@ -1204,7 +1215,7 @@ async function renderGuidedSermonReview(id: string, readOnlyStage?: number): Pro
   );
   main.innerHTML = `<header class="review-record-header">
     <div><a href="/admin/sermons" data-route>Back to sermons</a><p class="eyebrow">Guided private review</p><h1>${escapeHtml(review.sermon.title)}</h1><p>Record ${review.recordPosition} of ${review.recordCount}</p></div>
-    <div class="review-record-status"><span class="status-pill">Draft • Private</span><strong>${review.review.completedAt ? "Content review complete" : `${review.progress.percentReviewed}% reviewed`}</strong>${review.review.completedAt ? "<small>Completed editorial stages are read-only. Bible-book metadata remains available in Stage 1.</small>" : ""}</div>
+    <div class="review-record-status"><span class="status-pill">Draft • Private</span><strong>${review.review.completedAt ? "Content review complete" : `${review.progress.percentReviewed}% reviewed`}</strong>${youtubeSourceLink(review.sermon.youtubeSource)}${review.review.completedAt ? "<small>Completed editorial stages are read-only. Bible-book metadata remains available in Stage 1.</small>" : ""}</div>
     <progress max="100" value="${review.progress.percentReviewed}">${review.progress.percentReviewed}%</progress>
   </header>
   ${hasQuarantinedDescription || hasQuarantinedQuestions
@@ -1489,7 +1500,7 @@ async function renderSermonList(): Promise<void> {
         </div></fieldset>
         <div class="action-row"><button class="button" type="submit">Apply filters</button><a class="button quiet" href="/admin/sermons?${clearPassageQuery.toString()}" data-route>Clear passage filters</a></div>
       </form>
-      <div class="table-wrap"><table><caption class="sr-only">Filtered sermons</caption><thead><tr><th>Sermon</th><th>State</th><th>Service date</th><th>Speaker</th><th>Series</th><th>Primary passage</th><th>Scheduled</th><th>Checklist</th></tr></thead><tbody>${sermonRows(sermons.data)}</tbody></table></div>
+      <div class="table-wrap"><table class="sermon-table"><caption class="sr-only">Filtered sermons</caption><thead><tr><th>Sermon</th><th>State</th><th>Service date</th><th>Speaker</th><th>Series</th><th>Primary passage</th><th>YouTube</th><th>Scheduled</th><th>Checklist</th></tr></thead><tbody>${sermonRows(sermons.data)}</tbody></table></div>
       <div class="pagination"><span class="subtle">${sermons.pagination.totalItems} result${sermons.pagination.totalItems === 1 ? "" : "s"} · Page ${currentPage} of ${Math.max(sermons.pagination.totalPages, 1)}</span><div class="action-row">${currentPage > 1 ? `<a class="button" href="${pageQuery(currentPage - 1)}" data-route>Previous</a>` : ""}${currentPage < sermons.pagination.totalPages ? `<a class="button" href="${pageQuery(currentPage + 1)}" data-route>Next</a>` : ""}</div></div>
     </section>`;
   document.querySelector<HTMLFormElement>("#sermon-filters")?.addEventListener("submit", (event) => {
@@ -1560,7 +1571,10 @@ function readinessChecklist(readiness: Readiness | null): string {
   return `<ul class="checklist">${items.map(([label, complete]) => `<li class="${complete ? "complete" : "incomplete"}"><span aria-hidden="true">${complete ? "✓" : "○"}</span><span>${escapeHtml(label)}</span></li>`).join("")}</ul>`;
 }
 
-function enrichmentSourcePanel(source: SermonDetail["enrichmentSource"]): string {
+function enrichmentSourcePanel(
+  source: SermonDetail["enrichmentSource"],
+  youtubeSource: SermonDetail["youtubeSource"]
+): string {
   if (!source) return "";
   const warnings = source.warnings.length
     ? `<ul>${source.warnings.map((warning) => `<li><code>${escapeHtml(warning.code)}</code> — ${escapeHtml(warning.safeDetail)}</li>`).join("")}</ul>`
@@ -1571,6 +1585,7 @@ function enrichmentSourcePanel(source: SermonDetail["enrichmentSource"]): string
   return `<section class="wide callout" aria-labelledby="enrichment-source-heading">
     <h3 id="enrichment-source-heading">Private caption source and warnings</h3>
     <p><strong>Administrator review is required.</strong> This source and all generated material remain private until each content area is explicitly approved.</p>
+    <p>${youtubeSourceLink(youtubeSource)}</p>
     <dl class="provenance-grid">
       <dt>YouTube video ID</dt><dd><code>${escapeHtml(source.videoId)}</code></dd>
       <dt>Canonical source</dt><dd><code>${escapeHtml(source.canonicalUrl)}</code></dd>
@@ -1620,7 +1635,8 @@ async function renderSermonForm(id?: string): Promise<void> {
   const description = detail
     ? "Update content and relationships, then use explicit actions for every state change."
     : "Create a draft using controlled relationships, scripture provenance, and safe media fields.";
-  main.innerHTML = `${pageHeading(title, description, '<a class="button" href="/admin/sermons" data-route>Back to sermons</a>')}
+  const headingActions = `<div class="action-row">${detail ? youtubeSourceLink(detail.youtubeSource) : ""}<a class="button" href="/admin/sermons" data-route>Back to sermons</a></div>`;
+  main.innerHTML = `${pageHeading(title, description, headingActions)}
     <div id="form-feedback"></div>
     <form id="sermon-form" class="stack" novalidate>
       <section class="panel form-grid">
@@ -1649,7 +1665,7 @@ async function renderSermonForm(id?: string): Promise<void> {
       </section>
       <section class="panel form-grid">
         <div class="wide step-heading"><span>Step 4 of 6</span><h2>4. Full transcript</h2><p>Add the complete plain-text transcript, then move it through human review. Only approved text can appear publicly.</p></div>
-        ${enrichmentSourcePanel(detail?.enrichmentSource ?? null)}
+        ${enrichmentSourcePanel(detail?.enrichmentSource ?? null, detail?.youtubeSource ?? null)}
         <label class="wide"><span>Complete transcript</span><textarea name="transcriptBody" maxlength="500000" rows="20" placeholder="Paste or type the complete spoken sermon in plain text">${escapeHtml(detail?.transcript?.bodyText ?? "")}</textarea><small class="field-hint">HTML tags are rejected. Paragraph breaks are preserved when the approved transcript is rendered.</small></label>
         <label><span>Transcript status</span><select name="transcriptStatus"><option value="missing"${!detail?.transcript || detail.transcript.status === "missing" ? " selected" : ""}>Missing</option><option value="draft"${detail?.transcript?.status === "draft" ? " selected" : ""}>Draft — not public</option><option value="in_review"${detail?.transcript?.status === "in_review" ? " selected" : ""}>Ready for human review</option><option value="approved"${detail?.transcript?.status === "approved" ? " selected" : ""}>Approved for public page</option></select></label>
         <div class="callout"><strong>Public behaviour</strong><p>An approved transcript is already present in the initial server-generated sermon page. It is visually collapsed under “Read full transcript”, but never loaded later by JavaScript.</p></div>

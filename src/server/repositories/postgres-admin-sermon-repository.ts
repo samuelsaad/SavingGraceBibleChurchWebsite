@@ -11,6 +11,7 @@ import { ApplicationError } from "../../application/errors";
 import type { ContentReadinessIssue, ContentReadinessResult } from "../../domain/content-readiness";
 import type { SermonStatus } from "../../domain/sermon";
 import { biblePassageParserVersion, formatBiblePassage } from "../../domain/bible-passage";
+import { resolveYouTubeIdentity, type YouTubeIdentityCandidate } from "../../domain/youtube";
 import type {
   AdminSermonRepository,
   AdminSermonTransaction,
@@ -55,6 +56,7 @@ type SermonRow = QueryResultRow & {
   historical_backfill_required: boolean;
   enrichment_review: StoredSermonSummary["enrichmentReview"];
   primary_passage: StoredSermonSummary["primaryPassage"];
+  youtube_identity_candidates: YouTubeIdentityCandidate[];
   readiness: {
     isComplete: boolean;
     isContentComplete: boolean;
@@ -193,6 +195,20 @@ const sermonSummaryProjection = `
     FROM (SELECT 1) singleton
     LEFT JOIN sermon_primary_passage_reviews passage_review ON passage_review.sermon_id = s.id
   ) AS primary_passage,
+  COALESCE((
+    SELECT jsonb_agg(candidate.value ORDER BY candidate.source_order, candidate.item_order)
+    FROM (
+      SELECT 0 AS source_order, 0 AS item_order,
+             jsonb_build_object('videoId', source.video_id, 'canonicalUrl', source.canonical_url) AS value
+      FROM sermon_enrichment_sources source
+      WHERE source.sermon_id = s.id
+      UNION ALL
+      SELECT 1 AS source_order, media.display_order AS item_order,
+             jsonb_build_object('videoId', media.external_id, 'canonicalUrl', media.canonical_url) AS value
+      FROM sermon_media media
+      WHERE media.sermon_id = s.id AND media.provider = 'youtube'
+    ) candidate
+  ), '[]'::jsonb) AS youtube_identity_candidates,
   (
     SELECT jsonb_build_object(
       'isComplete', readiness.is_complete,
@@ -406,6 +422,7 @@ function readinessFromRow(row: SermonRow): ContentReadinessResult {
 }
 
 function summaryFromRow(row: SermonRow): StoredSermonSummary {
+  const youtubeResolution = resolveYouTubeIdentity(row.youtube_identity_candidates ?? []);
   return {
     id: row.id,
     title: row.title,
@@ -421,6 +438,9 @@ function summaryFromRow(row: SermonRow): StoredSermonSummary {
     historicalBackfillRequired: row.historical_backfill_required,
     enrichmentReview: row.enrichment_review ?? null,
     primaryPassage: row.primary_passage ?? { state: "no_proposal_detected", displayText: null },
+    youtubeSource: youtubeResolution.status === "available"
+      ? { videoId: youtubeResolution.videoId, canonicalUrl: youtubeResolution.canonicalUrl }
+      : null,
     readiness: readinessFromRow(row)
   };
 }

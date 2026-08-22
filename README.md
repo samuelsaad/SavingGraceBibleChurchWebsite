@@ -34,6 +34,7 @@ Local Phase 3B.2 caption/enrichment rehearsal, Phase 3B.2b punctuation hardening
 - Permanent whole-site SEO non-regression, one-to-one URL mapping, and launch-gate planning
 - Responsive accessible local `/admin` foundation plus a dedicated one-stage-at-a-time `/admin/sermons/:id/review` workflow for imported drafts, with one decision per deterministic atomic finding, exact identity-set completion gates, large transcript/Q&A editors, persistent progress, explicit approval, optimistic concurrency and audit
 - Administrator sermon-list primary-passage filters for book/chapter/verse/range and review state, plus an explicit Primary passage column that distinguishes pending proposals, confirmed passages and unresolved outcomes
+- Canonical administrator-only YouTube source links on sermon lists, edit/overview pages and every guided-review stage, resolved fail-closed from controlled media plus private provenance without embeds, thumbnails or provider requests
 - Server-rendered uncollapsed approved description before media/transcript/Q&A; collapsed transcript remains in initial markup and list payloads omit heavy bodies
 - Automated migration, security, lifecycle, configuration, and schema-contract tests
 - Static `/health.json` build metadata explicitly marked `runtimeHealth: false`; a genuine runtime health check remains future work
@@ -128,6 +129,8 @@ npm run dashboard:local
 Open `http://127.0.0.1:4322/admin`. The harness refuses non-loopback database and listener targets. Stop it with `Ctrl+C` after local review.
 
 Imported Phase 3B.2 drafts, including the 12 Wave 1 records, appear in the dashboard's imported-sermon review queue and open in the dedicated `/admin/sermons/:id/review` route. The authorised canary is labelled as a transcript-grounded replacement draft and remains available for full review. The other 11 records display an explicit superseded-generation quarantine and have disabled description/Q&A approval actions until separately authorised replacements exist. The administrator must review identity/provenance, every warning or finding, the complete transcript, description and each ordered Q&A before any approval. Viewing or saving never implies approval. The route has no publish, schedule, archive or deletion action, and the general dashboard also hides scheduling until a real publication worker exists.
+
+Administrator sermon responses derive `youtubeSource` from the existing controlled `sermon_media` relationship and, when present, the private `sermon_enrichment_sources` provenance row. A link is returned only when every stored YouTube candidate is valid and all candidates identify the same 11-character video ID; missing, invalid or conflicting evidence fails closed to no link. The dashboard constructs one HTTPS canonical watch URL, strips playlist/tracking/timestamp parameters from identity, never embeds or preloads YouTube, and opens the source in a new tab with `noopener noreferrer`. This field is administrator-only and does not alter public sermon pages.
 
 Operational loaders refuse every target except `savinggrace_sermons_test` on loopback port 5432. The integration runner requires its generated token and exact `savinggrace_test_run_<token>` database, and explicitly rejects the persistent pilot target.
 

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { isoDateSchema, sermonStatusSchema } from "../../domain/sermon";
 import { containsHtmlTag } from "../../domain/content-readiness";
 import { formatBiblePassage, validateBiblePassage } from "../../domain/bible-passage";
+import { youtubeVideoIdFromUrl, youtubeVideoIdPattern } from "../../domain/youtube";
 
 export const applicationRoleSchema = z.literal("admin");
 export type ApplicationRole = z.infer<typeof applicationRoleSchema>;
@@ -83,6 +84,9 @@ export const controlledMediaInputSchema = z
   .superRefine((value, context) => {
     const url = new URL(value.canonicalUrl);
     const host = url.hostname.toLowerCase().replace(/^www\./, "");
+    if (url.protocol !== "https:") {
+      context.addIssue({ code: "custom", path: ["canonicalUrl"], message: "Controlled media must use HTTPS" });
+    }
     if (
       value.provider === "youtube" &&
       !(host === "youtube.com" || host === "m.youtube.com" || host === "youtu.be")
@@ -97,6 +101,18 @@ export const controlledMediaInputSchema = z
     }
     if (value.provider === "youtube" && value.mediaType !== "video") {
       context.addIssue({ code: "custom", path: ["mediaType"], message: "YouTube media must be video" });
+    }
+    if (value.provider === "youtube") {
+      const canonicalId = youtubeVideoIdFromUrl(value.canonicalUrl);
+      if (canonicalId === null) {
+        context.addIssue({ code: "custom", path: ["canonicalUrl"], message: "Expected a supported YouTube video URL" });
+      }
+      if (value.externalId !== null && !youtubeVideoIdPattern.test(value.externalId)) {
+        context.addIssue({ code: "custom", path: ["externalId"], message: "Expected a YouTube video ID" });
+      }
+      if (value.externalId !== null && canonicalId !== null && value.externalId !== canonicalId) {
+        context.addIssue({ code: "custom", path: ["externalId"], message: "YouTube URL and video ID must match" });
+      }
     }
     if (value.provider === "sermonaudio" && value.mediaType !== "audio") {
       context.addIssue({ code: "custom", path: ["mediaType"], message: "SermonAudio media must be audio" });
@@ -425,6 +441,10 @@ export const adminSermonSummarySchema = z.object({
     state: adminPrimaryPassageStateSchema,
     displayText: z.string().nullable()
   }).optional(),
+  youtubeSource: z.object({
+    videoId: z.string().regex(/^[A-Za-z0-9_-]{11}$/),
+    canonicalUrl: z.string().regex(/^https:\/\/www\.youtube\.com\/watch\?v=[A-Za-z0-9_-]{11}$/)
+  }).nullable(),
   readiness: contentReadinessResponseSchema
 });
 

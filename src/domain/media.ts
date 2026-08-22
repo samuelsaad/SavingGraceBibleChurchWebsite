@@ -1,5 +1,13 @@
 import { createHash } from "node:crypto";
 import type { PublicMedia } from "./sermon";
+import { canonicalYouTubeUrl, youtubeVideoIdFromUrl } from "./youtube";
+export {
+  canonicalYouTubeUrl,
+  resolveYouTubeIdentity,
+  youtubeVideoIdFromUrl,
+  youtubeVideoIdPattern
+} from "./youtube";
+export type { YouTubeIdentityCandidate, YouTubeIdentityResolution } from "./youtube";
 
 export interface MediaSourceAudit {
   sourceMetaKey: string;
@@ -24,33 +32,15 @@ export function normalizeYouTube(
   originalValue: string,
   title: string
 ): NormalizedMediaResult | null {
-  let url: URL;
-  try {
-    url = new URL(originalValue.trim());
-  } catch {
-    return null;
-  }
-
-  const hostname = url.hostname.toLowerCase().replace(/^www\./, "");
-  let externalId: string | null = null;
-
-  if (hostname === "youtu.be") {
-    externalId = url.pathname.split("/").filter(Boolean)[0] ?? null;
-  } else if (hostname === "youtube.com" || hostname === "m.youtube.com") {
-    if (url.pathname === "/watch") externalId = url.searchParams.get("v");
-    if (url.pathname.startsWith("/embed/") || url.pathname.startsWith("/shorts/")) {
-      externalId = url.pathname.split("/").filter(Boolean)[1] ?? null;
-    }
-  }
-
-  if (!externalId || !/^[A-Za-z0-9_-]{11}$/.test(externalId)) return null;
+  const externalId = youtubeVideoIdFromUrl(originalValue);
+  if (!externalId) return null;
 
   return {
     media: {
       provider: "youtube",
       mediaType: "video",
       externalId,
-      canonicalUrl: `https://www.youtube.com/watch?v=${externalId}`,
+      canonicalUrl: canonicalYouTubeUrl(externalId)!,
       title: `Video: ${title}`
     },
     sourceAudit: audit("asp_sermon_youtube", originalValue)

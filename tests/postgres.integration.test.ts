@@ -2080,6 +2080,10 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         sermon: {
           status: "draft",
           serviceDate: "1970-01-01",
+          youtubeSource: {
+            videoId: "review00001",
+            canonicalUrl: "https://www.youtube.com/watch?v=review00001"
+          },
           enrichmentSource: { warningResolutionStatus: "unresolved" }
         },
         review: { identityStatus: "pending", currentStage: 1, completedAt: null },

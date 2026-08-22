@@ -49,6 +49,7 @@ export interface StoredSermonSummary {
     state: "proposed_passage" | "confirmed_passage" | "pending_review" | "no_primary_passage" | "no_proposal_detected" | "proposal_rejected";
     displayText: string | null;
   };
+  youtubeSource: { videoId: string; canonicalUrl: string } | null;
   readiness: ContentReadinessResult;
 }
 

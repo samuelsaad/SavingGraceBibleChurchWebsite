@@ -126,6 +126,10 @@ const pageTitle = "Local administration — Saving Grace Bible Church";
   .button.danger { border-color: #e8b8b4; background: var(--danger-soft); color: var(--danger); }
   .button.quiet { background: transparent; }
   .button:disabled { opacity: .55; cursor: not-allowed; }
+  .source-video-link { display: inline-flex; min-height: 2.75rem; align-items: center; gap: .35rem; padding: .55rem .7rem; border: 1px solid #a9c8b7; border-radius: .6rem; background: white; color: var(--forest-dark); font-weight: 800; line-height: 1.25; text-decoration-thickness: .08em; text-underline-offset: .18em; }
+  .source-video-link:hover { border-color: var(--forest); background: #edf5f0; }
+  .external-link-icon { font-size: 1.05em; font-weight: 900; }
+  .no-source-link { display: inline-block; color: var(--muted); line-height: 1.4; }
   .stats-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 1rem; margin-bottom: 1.5rem; }
   .stats-grid.compact { grid-template-columns: repeat(4, minmax(0,1fr)); margin: 1rem 0; }
   .stat-card { padding: 1.15rem; border: 1px solid var(--line); border-radius: .85rem; background: white; }
@@ -304,6 +308,15 @@ const pageTitle = "Local administration — Saving Grace Bible Church";
     .review-stage-nav ol, .review-form-grid, .source-facts, .review-item-toolbar { grid-template-columns: 1fr; }
     .review-item-toolbar p { margin: 0; }
     .review-decision-bar { position: static; }
+    .sermon-table, .sermon-table tbody, .sermon-table tr, .sermon-table td { display: block; width: 100%; }
+    .sermon-table thead { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+    .sermon-table tbody { display: grid; gap: .85rem; padding: .75rem; }
+    .sermon-table tr { overflow: hidden; border: 1px solid var(--line); border-radius: .75rem; }
+    .sermon-table td { display: grid; grid-template-columns: minmax(7.5rem, 35%) minmax(0, 1fr); gap: .65rem; align-items: center; overflow-wrap: anywhere; }
+    .sermon-table td::before { content: attr(data-label); color: var(--muted); font-size: .72rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+    .sermon-table td.empty-state { display: block; }
+    .sermon-table td.empty-state::before { content: none; }
+    .sermon-table .source-video-link { justify-self: start; }
   }
   @media (max-width: 480px) {
     main { padding: 1rem; }

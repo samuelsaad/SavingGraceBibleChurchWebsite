@@ -31,7 +31,7 @@ describe("Phase 3B administration dashboard", () => {
       {
         provider: "youtube",
         mediaType: "video",
-        externalId: null,
+        externalId: "abcdefghijk",
         canonicalUrl: "https://www.youtube.com/watch?v=abcdefghijk",
         title: "Video"
       }
@@ -78,6 +78,9 @@ describe("Phase 3B administration dashboard", () => {
     expect(page).toContain(".panel { min-width: 0;");
     expect(page).toContain("overflow-x: hidden");
     expect(page).toContain(":focus-visible");
+    expect(page).toContain(".source-video-link");
+    expect(page).toContain("min-height: 2.75rem");
+    expect(page).toContain(".sermon-table td::before");
     expect(client).toContain('name="serviceDateTo"');
     expect(client).toContain('name="passageBook"');
     expect(client).toContain('name="passageChapter"');
@@ -86,6 +89,15 @@ describe("Phase 3B administration dashboard", () => {
     expect(client).toContain('name="passageReviewState"');
     expect(client).toContain("Clear passage filters");
     expect(client).toContain("Primary passage</th>");
+    expect(client).toContain("<th>YouTube</th>");
+    expect(client).toContain("Open video");
+    expect(client).toContain("No YouTube link");
+    expect(client).toContain("Watch source video on YouTube");
+    expect(client).toContain('target="_blank"');
+    expect(client).toContain('rel="noopener noreferrer"');
+    expect(client).toContain('referrerpolicy="no-referrer"');
+    expect(client).toContain("source sermon video (opens in a new tab)");
+    expect(client).toContain('class="external-link-icon" aria-hidden="true"');
     expect(client).toContain("Proposed passage");
     expect(client).toContain("Confirmed passage");
     expect(client).toContain("Pending review");
@@ -169,5 +181,26 @@ describe("Phase 3B administration dashboard", () => {
     expect(client).toContain("x-local-identity\", \"admin");
     expect(`${page}\n${client}`).not.toMatch(/role selector|local-editor|local-contributor/i);
     expect(client).not.toContain("<iframe");
+    expect(client).not.toContain("youtube.com/embed/");
+    const passagePanel = client.slice(
+      client.indexOf("function primaryPassageReviewPanel"),
+      client.indexOf("function renderIdentityReviewStage")
+    );
+    expect(passagePanel).toContain("youtubeSourceLink(sermon.youtubeSource)");
+    const identityStage = client.slice(
+      client.indexOf("function renderIdentityReviewStage"),
+      client.indexOf("function renderFlaggedReviewStage")
+    );
+    expect(identityStage).toContain("youtubeSourceLink(sermon.youtubeSource)");
+    const guidedReview = client.slice(
+      client.indexOf("async function renderGuidedSermonReview"),
+      client.indexOf("async function renderSermonList")
+    );
+    expect(guidedReview).toContain("youtubeSourceLink(review.sermon.youtubeSource)");
+    const sermonEditor = client.slice(
+      client.indexOf("async function renderSermonForm"),
+      client.indexOf("function deletionDialog")
+    );
+    expect(sermonEditor).toContain("youtubeSourceLink(detail.youtubeSource)");
   });
 });

@@ -399,6 +399,33 @@ describe("admin sermon API contract", () => {
         embedHtml: "<iframe>unsafe</iframe>"
       })
     ).toThrow();
+    expect(() =>
+      controlledMediaInputSchema.parse({
+        provider: "youtube",
+        mediaType: "video",
+        externalId: "abcdefghijk",
+        canonicalUrl: "http://www.youtube.com/watch?v=abcdefghijk",
+        title: "Insecure"
+      })
+    ).toThrow("Controlled media must use HTTPS");
+    expect(() =>
+      controlledMediaInputSchema.parse({
+        provider: "youtube",
+        mediaType: "video",
+        externalId: "abcdefghijk",
+        canonicalUrl: "https://youtu.be/lmnopqrstuv?list=discarded",
+        title: "Conflicting"
+      })
+    ).toThrow("YouTube URL and video ID must match");
+    expect(
+      controlledMediaInputSchema.parse({
+        provider: "youtube",
+        mediaType: "video",
+        externalId: "abcdefghijk",
+        canonicalUrl: "https://youtu.be/abcdefghijk?list=discarded&t=12",
+        title: "Allowed form"
+      })
+    ).toMatchObject({ externalId: "abcdefghijk" });
   });
 
   it("requires explicit, bounded permanent-deletion confirmation data", () => {

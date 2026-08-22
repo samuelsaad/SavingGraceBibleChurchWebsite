@@ -89,6 +89,7 @@ function sermonSummaryDto(sermon: StoredSermonSummary) {
     historicalBackfillRequired: sermon.historicalBackfillRequired,
     enrichmentReview: sermon.enrichmentReview,
     primaryPassage: sermon.primaryPassage,
+    youtubeSource: sermon.youtubeSource,
     readiness: sermon.readiness
   };
 }
