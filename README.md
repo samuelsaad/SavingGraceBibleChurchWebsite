@@ -26,6 +26,7 @@ Local Phase 3B.2 caption/enrichment rehearsal, Phase 3B.2b punctuation hardening
 - One-shot, retry-disabled official YouTube `videos.list(part=snippet)` title provenance for only the fixed 12-record Wave 1 allowlist, with exact UTF-8 titles and integrity hashes confined to ignored private storage
 - Exact Wave 1 private import of 12 transcript drafts, 12 description drafts and 84 Q&A drafts, followed by quarantine of the superseded extractive descriptions/Q&A and one approved-transcript-grounded replacement canary; everything remains unapproved and private
 - Repository-scoped `sermon-enrichment` skill with mandatory approved-transcript binding, paragraph/Q&A support ranges, stale-result rejection, administrator-only quality decisions and a private atomic replacement workflow
+- Independent generated-description/Q&A mechanical proofreading with blocking pre-import/pre-approval checks, safe contextual review flags and a bounded idempotent current-15 draft correction command
 - Legacy query/date compatibility translation
 - Deterministic Advanced Sermons dry-run importer
 - Loopback-only anonymised fixture loader with an explicit write opt-in
@@ -80,6 +81,7 @@ npm run enrichment:canary-local -- prepare
 npm run enrichment:canary-local -- validate
 npm run enrichment:canary-local -- import
 npm run enrichment:canary-local -- verify
+npm run enrichment:mechanical-qa-current15-local
 npm run db:apply-atomic-review-local
 npm run db:rollback-atomic-review-local
 npm run db:apply-primary-passage-local
@@ -102,6 +104,8 @@ The separately authorised Phase 3B.2c run inspected caption metadata for the det
 The original Wave 1 import left all six atomic guided-review expectation fields uninitialised. This made every one of the 12 review sets fail source-identity, item-count, item-identity and transcript-version verification even though their stored zero-finding sets and draft bodies were intact. The bounded local repair command synchronises only those expectation fields from the existing private drafts, records a safe system audit event and refuses any unexpected review/content/provenance state. Its identical rerun is a no-op. All 12 review sets are now verified and offer explicit zero-finding acknowledgement; no acknowledgement, content decision, approval or completion was created automatically, and later stages remain locked until genuine administrator action.
 
 The Wave 1 extractive description/Q&A path is retired and its `process` command fails closed. Existing bodies carrying that processing reference remain in their private bundles and database audit history, but the service and dashboard prevent them from entering review or approval. The `sermon-enrichment` skill is required for replacement work. Its canary command prepares a private request from the current approved transcript, validates a structured private result with transcript hash/version and per-output support ranges, atomically replaces only untouched unapproved description/Q&A fields, preserves transcript/provenance/review/audit evidence, and proves a second import is unchanged. Automated validation is structural and grounding evidence only; it is never theological or administrator approval.
+
+Generated descriptions and Q&A additionally pass `generated-text-mechanical-qa-v1`. Incorrect Jesus/Christ casing and obvious mechanical spacing, punctuation, sentence-start and join defects block grounded import and generated-content review/approval. Context-dependent capitalization and possible name/fragment concerns are shown as review flags and are never blindly corrected. The bounded current-15 command requires the exact three-pilot/12-Wave-1 processing-version scope and local write gate; it updates only indisputable defects in unreviewed generated drafts, records safe system audit evidence, preserves privacy/provenance/administrator state and must be unchanged on rerun. The completed current audit corrected 13 capitalization defects across three sermons; one sentence-start finding and 15 contextual flags remain for human review in quarantined material.
 
 When a disposable loopback PostgreSQL database is available, apply the schema and load the anonymised fixture only with both `DATABASE_URL` and `ALLOW_LOCAL_DB_WRITE=1`:
 

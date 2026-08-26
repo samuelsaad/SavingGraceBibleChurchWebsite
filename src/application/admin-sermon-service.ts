@@ -54,6 +54,7 @@ import {
   isSupersededWave1SourceReference,
   parseGroundedSermonEnrichmentSourceReference
 } from "../enrichment/sermon-enrichment-policy";
+import { inspectGeneratedText } from "../enrichment/generated-text-mechanical-qa";
 
 function transcriptSha256(value: string): string {
   return createHash("sha256").update(value, "utf8").digest("hex");
@@ -70,6 +71,24 @@ function assertGroundedReferenceIsCurrent(
     sermon.transcript.rowVersion !== grounded.transcriptRowVersion ||
     transcriptSha256(sermon.transcript.bodyText) !== grounded.transcriptSha256) {
     invalid(path, "This generated draft is stale because its approved transcript identity or version changed");
+  }
+}
+
+function assertGeneratedDescriptionPassedMechanicalQa(summary: string | null, path: string): void {
+  if (!summary) return;
+  const mechanicalQa = inspectGeneratedText(summary, []);
+  if (mechanicalQa.blockingIssueCount > 0) {
+    invalid(path, "The generated description must pass the deterministic editorial proofread before review or approval");
+  }
+}
+
+function assertGeneratedQuestionAnswerPassedMechanicalQa(
+  item: { question: string; answer: string },
+  path: string
+): void {
+  const mechanicalQa = inspectGeneratedText("", [item]);
+  if (mechanicalQa.blockingIssueCount > 0) {
+    invalid(path, "The generated Q&A pair must pass the deterministic editorial proofread before review or approval");
   }
 }
 
@@ -95,6 +114,14 @@ function sermonSummaryDto(sermon: StoredSermonSummary) {
 }
 
 function sermonDetailDto(sermon: StoredSermonDetail): AdminSermonDetail {
+  const generatedDescription = sermon.summarySourceKind === "generated_draft" ? (sermon.summary ?? "") : "";
+  const hasGeneratedQuestionAnswer = sermon.questionAnswers.some((item) => item.sourceKind === "generated_draft");
+  const generatedQuestionAnswers = sermon.questionAnswers.map((item) => item.sourceKind === "generated_draft"
+    ? { question: item.question, answer: item.answer }
+    : { question: "", answer: "" });
+  const generatedTextMechanicalQa = generatedDescription || hasGeneratedQuestionAnswer
+    ? inspectGeneratedText(generatedDescription, generatedQuestionAnswers)
+    : null;
   return adminSermonDetailSchema.parse({
     ...sermonSummaryDto(sermon),
     summary: sermon.summary,
@@ -116,6 +143,7 @@ function sermonDetailDto(sermon: StoredSermonDetail): AdminSermonDetail {
     media: sermon.media,
     transcript: sermon.transcript,
     questionAnswers: sermon.questionAnswers,
+    generatedTextMechanicalQa,
     enrichmentSource: sermon.enrichmentSource
   });
 }
@@ -671,6 +699,15 @@ export class AdminSermonService {
   ): Promise<AdminSermonDetail> {
     assertAdminAccess(identity);
     return this.repository.transaction(async (transaction) => {
+      if (input.summarySourceKind === "generated_draft" &&
+        input.summaryStatus !== "draft" && input.summaryStatus !== "missing") {
+        assertGeneratedDescriptionPassedMechanicalQa(input.summary, "summaryStatus");
+      }
+      for (const [index, item] of input.questionAnswers.entries()) {
+        if (item.sourceKind === "generated_draft" && item.status !== "draft") {
+          assertGeneratedQuestionAnswerPassedMechanicalQa(item, `questionAnswers.${index}.status`);
+        }
+      }
       const invalidRelationship = await transaction.validateRelationshipIds(input);
       if (invalidRelationship) invalid(invalidRelationship, "One or more relationship IDs do not exist");
       const id = await transaction.insertSermon(input, identity.subject);
@@ -729,6 +766,7 @@ export class AdminSermonService {
       const summarySourceReference = input.summarySourceReference !== undefined
         ? input.summarySourceReference
         : sermon.summarySourceReference;
+      const summarySourceKind = input.summarySourceKind ?? sermon.summarySourceKind;
       const summaryLength = summary?.trim().length ?? 0;
       if (summaryStatus === "missing" && summaryLength > 0) {
         invalid("summaryStatus", "A nonblank sermon description cannot have missing status");
@@ -748,6 +786,9 @@ export class AdminSermonService {
           );
         }
         assertGroundedReferenceIsCurrent(summarySourceReference, sermon, "summaryStatus");
+        if (summarySourceKind === "generated_draft" && summary) {
+          assertGeneratedDescriptionPassedMechanicalQa(summary, "summaryStatus");
+        }
       }
       if (input.questionAnswers !== undefined) {
         for (const [index, item] of input.questionAnswers.entries()) {
@@ -761,6 +802,9 @@ export class AdminSermonService {
             );
           }
           assertGroundedReferenceIsCurrent(item.sourceReference, sermon, `questionAnswers.${index}.status`);
+          if (item.sourceKind === "generated_draft") {
+            assertGeneratedQuestionAnswerPassedMechanicalQa(item, `questionAnswers.${index}.status`);
+          }
         }
       }
       const seoDescription = input.seoDescription !== undefined

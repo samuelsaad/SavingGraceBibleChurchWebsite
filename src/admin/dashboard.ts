@@ -127,6 +127,21 @@ type SermonDetail = SermonSummary & {
     reviewedAt: string | null;
     approvedAt: string | null;
   }>;
+  generatedTextMechanicalQa: {
+    version: "generated-text-mechanical-qa-v1";
+    completed: true;
+    outcome: "passed" | "passed_with_review_flags" | "failed";
+    blockingIssueCount: number;
+    reviewIssueCount: number;
+    issues: Array<{
+      code: string;
+      severity: "blocking" | "review";
+      contentArea: "description" | "question" | "answer";
+      itemIndex: number | null;
+      characterIndex: number;
+      autoCorrectable: boolean;
+    }>;
+  } | null;
   enrichmentSource: {
     provider: "youtube";
     videoId: string;
@@ -740,29 +755,64 @@ function renderTranscriptReviewStage(review: EnrichmentReviewResponse): string {
   </form>`;
 }
 
+const generatedTextIssueLabels: Record<string, string> = {
+  jesus_incorrect_capitalisation: "Jesus capitalisation",
+  christ_incorrect_capitalisation: "Christ capitalisation",
+  sentence_initial_lowercase: "sentence-start capitalisation",
+  repeated_spacing: "repeated spacing",
+  space_before_punctuation: "punctuation spacing",
+  duplicated_punctuation: "duplicated punctuation",
+  broken_sentence_join: "broken sentence join",
+  possible_caption_fragment: "possible caption fragment",
+  biblical_name_or_book_capitalisation: "biblical name or book capitalisation",
+  contextual_divine_term_capitalisation: "context-sensitive divine term",
+  inconsistent_name_or_place_spelling: "inconsistent name or place spelling"
+};
+
+function generatedTextQaCallout(
+  sermon: SermonDetail,
+  contentAreas: readonly ("description" | "question" | "answer")[],
+  itemIndex?: number
+): string {
+  const findings = sermon.generatedTextMechanicalQa?.issues.filter((finding) =>
+    contentAreas.includes(finding.contentArea) && (itemIndex === undefined || finding.itemIndex === itemIndex)) ?? [];
+  if (findings.length === 0) return "";
+  const blockers = findings.filter((finding) => finding.severity === "blocking").length;
+  const reviewFlags = findings.length - blockers;
+  const categories = [...new Set(findings.map((finding) => generatedTextIssueLabels[finding.code] ?? "editorial issue"))];
+  return `<div class="callout"><strong>${blockers > 0 ? "Mechanical proofreading failed." : "Mechanical proofreading needs human attention."}</strong><p>${blockers} blocking issue${blockers === 1 ? "" : "s"}; ${reviewFlags} contextual review flag${reviewFlags === 1 ? "" : "s"}. Categories: ${escapeHtml(categories.join(", "))}. Automated checks do not decide theology or meaning.</p></div>`;
+}
+
 function renderDescriptionReviewStage(review: EnrichmentReviewResponse): string {
   const summary = review.sermon.summary ?? "";
   const quarantined = isSupersededWave1SourceReference(review.sermon.summarySourceReference);
+  const mechanicalBlockers = review.sermon.generatedTextMechanicalQa?.issues.filter((finding) =>
+    finding.contentArea === "description" && finding.severity === "blocking").length ?? 0;
   return `<form id="review-description-form" class="review-stage-panel stack" novalidate>
     <header class="review-stage-heading"><p>Stage 4 of 6</p><h2>Sermon description</h2><p>Review the visible description separately from the transcript. Approval still does not publish the sermon.</p></header>
     <div id="review-stage-feedback"></div>
     ${quarantined ? '<div class="callout"><strong>Superseded defective generation — replacement required.</strong><p>This extractive Wave 1 description is retained privately for evidence, but it cannot enter review or be approved. A transcript-grounded replacement must be prepared first.</p></div>' : ""}
+    ${generatedTextQaCallout(review.sermon, ["description"])}
     <div class="review-content-status"><span>Current status</span><strong>${escapeHtml(plainReviewStatus(review.sermon.summaryStatus))}</strong></div>
     <label class="review-editor-label"><span>Sermon description</span><textarea id="review-description-body" name="summary" maxlength="2000" required>${escapeHtml(summary)}</textarea><small class="field-hint">Approval requires 80–2,000 characters of useful plain text.</small></label>
     <p class="review-counts" id="review-description-counts">${summary.trim().length.toLocaleString()} of 80–2,000 characters</p>
     <div class="review-decision-bar">
       <button class="button" type="submit" data-description-review-action="save">Save description draft</button>
       <button class="button danger" type="submit" data-description-review-action="reject">Reject and return to draft</button>
-      <button class="button primary" type="submit" data-description-review-action="approve"${summary.trim().length < 80 || quarantined ? " disabled" : ""}>Approve description</button>
+      <button class="button primary" type="submit" data-description-review-action="approve"${summary.trim().length < 80 || quarantined || mechanicalBlockers > 0 ? " disabled" : ""}>Approve description</button>
     </div>
     ${reviewStageActions(review, 4)}
   </form>`;
 }
 
-function reviewQuestionCard(item: SermonDetail["questionAnswers"][number], index: number, total: number): string {
+function reviewQuestionCard(sermon: SermonDetail, item: SermonDetail["questionAnswers"][number], index: number, total: number): string {
   const quarantined = isSupersededWave1SourceReference(item.sourceReference);
+  const mechanicalBlockers = sermon.generatedTextMechanicalQa?.issues.filter((finding) =>
+    finding.itemIndex === index && finding.severity === "blocking" &&
+    (finding.contentArea === "question" || finding.contentArea === "answer")).length ?? 0;
   return `<form class="review-qa-card" data-review-qa="${escapeHtml(item.id)}">
     <header><div><p>Question ${index + 1} of ${total}</p><h3>Question ${index + 1}</h3></div><span class="status-pill">${escapeHtml(plainReviewStatus(item.status))}</span></header>
+    ${generatedTextQaCallout(sermon, ["question", "answer"], index)}
     <label><span>Question</span><textarea name="question" maxlength="1000" required>${escapeHtml(item.question)}</textarea></label>
     <label><span>Answer</span><textarea name="answer" maxlength="10000" required>${escapeHtml(item.answer)}</textarea></label>
     <div class="qa-order-actions" aria-label="Reorder question ${index + 1}">
@@ -772,7 +822,7 @@ function reviewQuestionCard(item: SermonDetail["questionAnswers"][number], index
     <div class="review-decision-bar">
       <button class="button" type="submit" data-qa-action="save">Save pair</button>
       <button class="button danger" type="submit" data-qa-action="reject">Reject pair</button>
-      <button class="button primary" type="submit" data-qa-action="approve"${quarantined ? " disabled" : ""}>Approve pair</button>
+      <button class="button primary" type="submit" data-qa-action="approve"${quarantined || mechanicalBlockers > 0 ? " disabled" : ""}>Approve pair</button>
     </div>
   </form>`;
 }
@@ -786,7 +836,7 @@ function renderQuestionReviewStage(review: EnrichmentReviewResponse): string {
     <div id="review-stage-feedback"></div>
     ${quarantined ? '<div class="callout"><strong>Superseded defective generation — replacement required.</strong><p>These extractive Wave 1 Q&A bodies are retained privately for evidence, but no pair can enter review or be approved until it has been replaced from the approved transcript.</p></div>' : ""}
     <div class="review-content-status"><span>Collection progress</span><strong>${approved} of ${questions.length} pairs approved</strong></div>
-    <div class="review-qa-list">${questions.map((item, index) => reviewQuestionCard(item, index, questions.length)).join("")}</div>
+    <div class="review-qa-list">${questions.map((item, index) => reviewQuestionCard(review.sermon, item, index, questions.length)).join("")}</div>
     ${reviewStageActions(review, 5)}
   </section>`;
 }

@@ -124,7 +124,14 @@ function validResult(): SermonEnrichmentResult {
       supports: [support("question_answer", index + 1, Number(paragraphNumber), "answer_support")]
     })),
     warnings: [{ code: "human_theological_review_required", safeDetail: "Automated checks do not establish theological or editorial approval." }],
-    uncertainties: []
+    uncertainties: [],
+    mechanicalProofread: {
+      version: "generated-text-mechanical-qa-v1",
+      completed: true,
+      outcome: "passed",
+      blockingIssueCount: 0,
+      reviewIssueCount: 0
+    }
   };
   return { ...withoutIntegrity, integrity: { canonicalSha256: sermonEnrichmentResultSha256(withoutIntegrity) } };
 }
@@ -181,6 +188,32 @@ describe("sermon-enrichment private grounded result", () => {
     const application = validResult();
     application.description.application = "Listeners should reflect on the message and apply it to our lives.";
     expect(issueCodes(rehash(application))).toContain("application_generic_or_missing");
+  });
+
+  it("requires a completed deterministic editorial proofread and rejects lowercase jesus", () => {
+    const defective = validResult();
+    defective.description.bodyText = defective.description.bodyText.replace("The speaker", "jesus and the speaker");
+    defective.mechanicalProofread = {
+      version: "generated-text-mechanical-qa-v1",
+      completed: true,
+      outcome: "failed",
+      blockingIssueCount: 1,
+      reviewIssueCount: 0
+    };
+    const validation = validateSermonEnrichmentResult(rehash(defective), current);
+    expect(validation.mechanicalQa?.completed).toBe(true);
+    expect(validation.mechanicalQa?.outcome).toBe("failed");
+    expect(validation.issues.map((issue) => issue.code)).toContain("jesus_incorrect_capitalisation");
+  });
+
+  it("requires and independently verifies the declared version 1.1 proofread result", () => {
+    const missing = validResult();
+    delete missing.mechanicalProofread;
+    expect(issueCodes(rehash(missing))).toContain("mechanical_proofread_missing");
+
+    const mismatch = validResult();
+    mismatch.mechanicalProofread!.reviewIssueCount = 1;
+    expect(issueCodes(rehash(mismatch))).toContain("mechanical_proofread_mismatch");
   });
 
   it("rejects detectable unsupported Scripture claims and invalid evidence", () => {

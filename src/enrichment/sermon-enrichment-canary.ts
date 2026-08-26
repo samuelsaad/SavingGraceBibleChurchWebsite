@@ -92,6 +92,9 @@ export interface CanaryValidationResult {
   questionAnswerCount: number;
   supportCount: number;
   maximumCopiedWordRun: number;
+  mechanicalProofreadCompleted: true;
+  mechanicalProofreadOutcome: "passed" | "passed_with_review_flags";
+  mechanicalReviewFlagCount: number;
   transcriptBindingCurrent: true;
   originalBundlePreserved: true;
   privateDraftOnly: true;
@@ -432,6 +435,7 @@ async function loadRequestAndResult(): Promise<{ request: SermonEnrichmentReques
   if (request.integrity.canonicalSha256 !== sermonEnrichmentRequestSha256(request) ||
     result.integrity.canonicalSha256 !== sermonEnrichmentResultSha256(result) ||
     result.requestSha256 !== request.integrity.canonicalSha256 ||
+    result.skillVersion !== request.skillVersion ||
     canonical(result.target) !== canonical(request.target) || canonical(result.transcript) !== canonical({ ...request.transcript, bodyText: undefined }) ||
     canonical(result.original) !== canonical(request.original)) {
     throw new SermonEnrichmentCanaryError("request_result_binding_mismatch", "The private generation result does not match its exact request or original evidence");
@@ -476,6 +480,9 @@ export async function validateSermonEnrichmentCanary(pool: Pool): Promise<Canary
       questionAnswerCount: validation.metrics.questionAnswerCount,
       supportCount: validation.metrics.supportCount,
       maximumCopiedWordRun: validation.metrics.maximumCopiedWordRun,
+      mechanicalProofreadCompleted: true,
+      mechanicalProofreadOutcome: validation.mechanicalQa!.outcome as "passed" | "passed_with_review_flags",
+      mechanicalReviewFlagCount: validation.mechanicalQa!.reviewIssueCount,
       transcriptBindingCurrent: true,
       originalBundlePreserved: true,
       privateDraftOnly: true,

@@ -28,6 +28,7 @@
     "enrichment:wave1-verify-local": "tsx src/enrichment/wave1-process-cli.ts verify",
     "enrichment:wave1-review-repair-local": "tsx src/enrichment/wave1-review-repair-cli.ts",
     "enrichment:canary-local": "tsx src/enrichment/sermon-enrichment-canary-cli.ts",
+    "enrichment:mechanical-qa-current15-local": "tsx src/enrichment/current15-generated-text-mechanical-qa-cli.ts",
     "scripture:prepare-current15-local": "tsx src/scripture/primary-passage-preparation-cli.ts",
     "scripture:repair-current15-official-titles-local": "tsx src/scripture/primary-passage-official-title-repair-cli.ts",
     "migration:dry-run": "tsx src/migration/cli.ts --dry-run",

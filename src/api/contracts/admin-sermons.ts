@@ -526,6 +526,21 @@ export const adminSermonDetailSchema = adminSermonSummarySchema.extend({
     reviewedAt: z.iso.datetime().nullable(),
     approvedAt: z.iso.datetime().nullable()
   })),
+  generatedTextMechanicalQa: z.object({
+    version: z.literal("generated-text-mechanical-qa-v1"),
+    completed: z.literal(true),
+    outcome: z.enum(["passed", "passed_with_review_flags", "failed"]),
+    blockingIssueCount: z.number().int().nonnegative(),
+    reviewIssueCount: z.number().int().nonnegative(),
+    issues: z.array(z.object({
+      code: z.string(),
+      severity: z.enum(["blocking", "review"]),
+      contentArea: z.enum(["description", "question", "answer"]),
+      itemIndex: z.number().int().nonnegative().nullable(),
+      characterIndex: z.number().int().nonnegative(),
+      autoCorrectable: z.boolean()
+    }))
+  }).nullable(),
   enrichmentSource: enrichmentSourceResponseSchema.nullable()
 });
 export type AdminSermonDetail = z.infer<typeof adminSermonDetailSchema>;

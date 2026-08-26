@@ -26,6 +26,8 @@ The repository-scoped `sermon-enrichment` skill is mandatory for creating, regen
 
 Automated validation checks private/draft state, 180–220 description words, 5–10 ordered Q&A, support bounds/hashes, obvious generic wrappers/fragments/excerpt copying, fixed questions, disconnected answers and detectable unsupported claims. These checks are not theological review. Atomic import refuses approved or administrator-edited content, preserves the superseded bundle and genuine administrator evidence, updates only the description/Q&A drafts, creates no approval, search, semantic or publication state, and must be unchanged on an identical rerun.
 
+Every new result also requires a completed deterministic `generated-text-mechanical-qa-v1` proofread before import or generated-content review/approval. The gate rejects incorrect Jesus/Christ casing and obvious spacing, punctuation, sentence-start and broken-join defects. It retains context-dependent capitalization, possible caption fragments and uncertain biblical-name or spelling findings for administrator review rather than changing meaning by inference. This mechanical outcome is separate from coherence, grounding, Scripture and theological judgment. The application enforces the contract independently; it does not invoke or impersonate the repository skill.
+
 ## Deterministic manifest and import
 
 Manifest schema version 2 orders records by anonymised source WordPress ID and stable missing-requirement codes, including `missing_description` and `description_awaiting_review`. A bundle carries target/source identity, expected sermon row version, the three draft outputs, safe source type/reference, and bounded plain text. The importer:
@@ -40,6 +42,8 @@ Manifest schema version 2 orders records by anonymised source WordPress ID and s
 ## Post-pilot authorization boundary
 
 The three pilot reviews are complete and their bounded pilot is accepted. The separate Wave 1 execution does not inherit pilot acceptance. One grounded replacement canary awaits genuine administrator review; the other 11 description/Q&A sets are quarantined. Wave 2, Wave 3, regeneration of another sermon, publication, public **Related themes**, semantic quality acceptance, production/deployment and Phase 3C remain unauthorised. Any later execution requires separate explicit authority for its exact allowlist and limits.
+
+The bounded current-15 mechanical audit corrected 13 indisputable Jesus/Christ capitalization defects in unreviewed generated drafts across three sermons. It changed two descriptions and six Q&A pairs, changed no approved content, and was unchanged on its second run. One sentence-start finding and 15 context-dependent review flags remain unmodified in quarantined Wave 1 material. The repair did not regenerate wording or alter transcript, provenance, administrator, passage, privacy, public-search or semantic state.
 
 ## Pilot preparation boundary
 

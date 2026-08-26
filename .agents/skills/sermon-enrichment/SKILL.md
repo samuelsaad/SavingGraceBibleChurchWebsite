@@ -26,9 +26,10 @@ Produce coherent, transcript-grounded private drafts for later human review. Tre
 3. Read the complete transcript. Identify the actual controlling subject, the sermon’s reasoning or development, its use of Scripture as stated in the transcript, and its concrete application.
 4. Draft the description and Q&A set from the sermon as a whole. Do not rank, concatenate, or wrap transcript excerpts.
 5. Attach bounded transcript support to every description paragraph and every Q&A pair using the private contract in `references/grounding-contract.md`.
-6. Validate structure, grounding, transcript binding, coherence proxies, privacy state, and stale-result prevention. Automated checks are safeguards, not theological approval.
-7. Import only through an atomic draft-only operation that refuses approved or administrator-edited content and preserves the superseded bundle and hashes.
-8. Present the replacement to the real administrator for independent review. Do not carry forward any prior acknowledgement or approval.
+6. Complete the final editorial-proofreading checklist below after drafting. Record the deterministic result and retain every contextual flag for human review.
+7. Validate structure, grounding, transcript binding, coherence proxies, privacy state, mechanical proofreading, and stale-result prevention. Automated checks are safeguards, not theological approval.
+8. Import only through an atomic draft-only operation that refuses approved or administrator-edited content and preserves the superseded bundle and hashes.
+9. Present the replacement to the real administrator for independent review. Do not carry forward any prior acknowledgement or approval.
 
 ## Description requirements
 
@@ -62,8 +63,23 @@ Reject the result when any of these conditions is true:
 - Questions match a fixed generic set, answers paste unrelated passages, or pairs are substantially duplicated.
 - A detectable Scripture or theological assertion has no recorded supporting location.
 - The result requests, implies, or records approval, publication, indexing, or semantic eligibility.
+- The final mechanical proofreading result is missing or contains an unresolved blocking defect.
 
 If an automated rule cannot decide a matter reliably, add a warning for human review; never convert uncertainty into approval.
+
+## Final editorial-proofreading checklist
+
+Run this after the description and every Q&A pair are complete, before the result is considered ready for administrator review:
+
+- Verify that every reference to Jesus and Christ uses the correct proper-name capitalisation.
+- Check biblical names and Bible-book names for capitalisation and consistent spelling.
+- Check sentence starts, repeated spacing, spaces before punctuation, duplicated punctuation, and obvious broken sentence joins.
+- Reject incomplete sentences, raw caption fragments, and wording that reads like mechanically stitched transcript material.
+- Check that the same person and place are spelled consistently within the result.
+- Flag lowercase or otherwise uncertain uses of context-sensitive terms such as god, spirit, and scripture for human review. Do not blindly capitalise them.
+- Record the completed `generated-text-mechanical-qa-v1` outcome, blocking count, review-flag count, and safe issue categories without copying sermon text into logs or tracked files.
+
+This mechanical pass is separate from the administrator's semantic, theological, Scripture, tone, application, and usefulness review. The application validator is an independent enforcement layer; do not claim that application code invokes this skill.
 
 ## Provenance and preservation
 
@@ -74,6 +90,7 @@ Record privately:
 - Support locations and hashes for each description paragraph and every Q&A pair.
 - Original superseded bundle path and integrity hash plus original description and Q&A hashes.
 - Replacement result hash, validation result, import time, and idempotency evidence.
+- Completed `generated-text-mechanical-qa-v1` result and any unresolved context-dependent review flags.
 
 Mark a result stale whenever the approved transcript’s identity, body hash, or row version changes. Preserve superseded draft bodies and audit evidence; never delete or silently overwrite them.
 

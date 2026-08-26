@@ -1123,6 +1123,67 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     }
   });
 
+  it("blocks generated descriptions and Q&A from review when the mechanical proofread fails", async () => {
+    const repository = new PostgresAdminSermonRepository(pool);
+    const service = new AdminSermonService(repository, () => new Date("2026-08-26T00:00:00.000Z"));
+    const admin = { subject: "local-admin-0001", role: "admin" } satisfies ApplicationIdentity;
+    const reference = "anonymised-grounded-generated-draft";
+    const input = {
+      title: "Anonymised mechanical-proofread gate",
+      slug: "anonymised-mechanical-proofread-gate",
+      serviceDate: "2026-01-02",
+      summary: "This anonymised generated description explains that jesus is misspelled for the regression case while remaining long enough for review.",
+      summaryStatus: "draft",
+      summarySourceKind: "generated_draft",
+      summarySourceReference: reference,
+      transcript: {
+        bodyText: "A complete anonymised approved transcript exists solely to exercise the generated-text mechanical gate.",
+        status: "approved",
+        sourceKind: "manual",
+        sourceReference: null
+      },
+      questionAnswers: Array.from({ length: 7 }, (_, index) => ({
+        question: index === 0 ? "Why does jesus matter in this anonymised example?" : `Which concern is considered in pair ${index + 1}?`,
+        answer: `This complete anonymised answer remains a generated draft for pair ${index + 1}.`,
+        status: "draft",
+        sourceKind: "generated_draft",
+        sourceReference: reference
+      }))
+    };
+    await expect(service.create(createSermonInputSchema.parse({
+      ...input,
+      summaryStatus: "in_review"
+    }), admin, "anonymised-create-in-review-mechanical-gate")).rejects.toThrow("deterministic editorial proofread");
+    const created = await service.create(
+      createSermonInputSchema.parse(input),
+      admin,
+      "anonymised-create-mechanical-gate"
+    );
+    try {
+      expect(created.generatedTextMechanicalQa?.outcome).toBe("failed");
+      await expect(service.update(created.id, updateSermonInputSchema.parse({
+        rowVersion: created.rowVersion,
+        summary: created.summary,
+        summaryStatus: "in_review",
+        summarySourceKind: created.summarySourceKind,
+        summarySourceReference: created.summarySourceReference
+      }), admin, "anonymised-review-mechanical-description")).rejects.toThrow("deterministic editorial proofread");
+
+      await expect(service.update(created.id, updateSermonInputSchema.parse({
+        rowVersion: created.rowVersion,
+        questionAnswers: created.questionAnswers.map((item, index) => ({
+          question: item.question,
+          answer: item.answer,
+          status: index === 0 ? "in_review" : "draft",
+          sourceKind: item.sourceKind,
+          sourceReference: item.sourceReference
+        }))
+      }), admin, "anonymised-review-mechanical-question")).rejects.toThrow("deterministic editorial proofread");
+    } finally {
+      await pool.query("DELETE FROM sermons WHERE id = $1", [created.id]);
+    }
+  });
+
   it("runs the real Phase 3B.2b filesystem, orchestration, importer and fail-closed verifier paths", async () => {
     const roots: string[] = [];
     const makeCaption = (punctuated: boolean) => Array.from(

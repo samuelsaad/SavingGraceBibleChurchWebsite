@@ -3,8 +3,13 @@ import { z } from "zod";
 import {
   sermonEnrichmentGenerationMethod,
   sermonEnrichmentSkillName,
-  sermonEnrichmentSkillVersion
+  supportedSermonEnrichmentSkillVersions
 } from "./sermon-enrichment-policy";
+import {
+  generatedTextMechanicalQaVersion,
+  inspectGeneratedText,
+  type GeneratedTextMechanicalQaReport
+} from "./generated-text-mechanical-qa";
 
 const sha256Schema = z.string().regex(/^[0-9a-f]{64}$/u);
 const safeText = z.string().trim().min(1);
@@ -25,7 +30,7 @@ export const sermonEnrichmentRequestSchema = z.object({
   schemaVersion: z.literal(1),
   privateContent: z.literal(true),
   skillName: z.literal(sermonEnrichmentSkillName),
-  skillVersion: z.literal(sermonEnrichmentSkillVersion),
+  skillVersion: z.enum(supportedSermonEnrichmentSkillVersions),
   requestedAt: z.iso.datetime(),
   target: z.object({
     sourceWordPressId: z.number().int().positive(),
@@ -67,7 +72,7 @@ export const sermonEnrichmentResultSchema = z.object({
   searchEligible: z.literal(false),
   semanticEligible: z.literal(false),
   skillName: z.literal(sermonEnrichmentSkillName),
-  skillVersion: z.literal(sermonEnrichmentSkillVersion),
+  skillVersion: z.enum(supportedSermonEnrichmentSkillVersions),
   generationMethod: z.literal(sermonEnrichmentGenerationMethod),
   generatedAt: z.iso.datetime(),
   requestSha256: sha256Schema,
@@ -104,6 +109,13 @@ export const sermonEnrichmentResultSchema = z.object({
   }).strict()).min(5).max(10),
   warnings: z.array(z.object({ code: z.string().regex(/^[a-z0-9_]+$/u), safeDetail: safeText.max(1_000) }).strict()),
   uncertainties: z.array(z.object({ marker: z.string().regex(/^[a-z0-9_-]+$/u), safeReason: safeText.max(1_000) }).strict()),
+  mechanicalProofread: z.object({
+    version: z.literal(generatedTextMechanicalQaVersion),
+    completed: z.literal(true),
+    outcome: z.enum(["passed", "passed_with_review_flags", "failed"]),
+    blockingIssueCount: z.number().int().nonnegative(),
+    reviewIssueCount: z.number().int().nonnegative()
+  }).strict().optional(),
   integrity: z.object({ canonicalSha256: sha256Schema }).strict()
 }).strict();
 
@@ -129,6 +141,7 @@ export interface EnrichmentValidationIssue {
 export interface EnrichmentValidationResult {
   valid: boolean;
   issues: EnrichmentValidationIssue[];
+  mechanicalQa: GeneratedTextMechanicalQaReport | null;
   metrics: {
     descriptionWordCount: number;
     questionAnswerCount: number;
@@ -289,6 +302,7 @@ export function validateSermonEnrichmentResult(
         path: issue.path.join("."),
         message: issue.message
       })),
+      mechanicalQa: null,
       metrics: { descriptionWordCount: 0, questionAnswerCount: 0, descriptionParagraphCount: 0, supportCount: 0, maximumCopiedWordRun: 0 }
     };
   }
@@ -312,6 +326,28 @@ export function validateSermonEnrichmentResult(
   const descriptionWords = lexicalWordOffsets(value.description.bodyText).length;
   const descriptionParagraphs = paragraphRanges(value.description.bodyText);
   const maximumCopiedWordRun = longestCopiedRun(value.description.bodyText, current.bodyText);
+  const mechanicalQa = inspectGeneratedText(value.description.bodyText, value.questionAnswers);
+  if (value.skillVersion === "1.1.0" && value.mechanicalProofread === undefined) {
+    add(issues, "mechanical_proofread_missing", "mechanicalProofread", "Skill version 1.1 results must record the completed mechanical proofread");
+  }
+  if (value.mechanicalProofread && (
+    value.mechanicalProofread.outcome !== mechanicalQa.outcome ||
+    value.mechanicalProofread.blockingIssueCount !== mechanicalQa.blockingIssueCount ||
+    value.mechanicalProofread.reviewIssueCount !== mechanicalQa.reviewIssueCount
+  )) {
+    add(issues, "mechanical_proofread_mismatch", "mechanicalProofread", "The recorded mechanical proofread does not match independent validation");
+  }
+  for (const finding of mechanicalQa.issues.filter((item) => item.severity === "blocking")) {
+    const itemPath = finding.itemIndex === null ? "" : `[${finding.itemIndex}]`;
+    add(
+      issues,
+      finding.code,
+      finding.contentArea === "description"
+        ? "description.bodyText"
+        : `questionAnswers${itemPath}.${finding.contentArea}`,
+      "Generated text did not pass the required deterministic editorial proofread"
+    );
+  }
   if (descriptionWords < 180 || descriptionWords > 220) {
     add(issues, "description_word_count", "description.bodyText", "The description must contain 180–220 words");
   }
@@ -391,6 +427,7 @@ export function validateSermonEnrichmentResult(
   return {
     valid: issues.length === 0,
     issues,
+    mechanicalQa,
     metrics: {
       descriptionWordCount: descriptionWords,
       questionAnswerCount: value.questionAnswers.length,

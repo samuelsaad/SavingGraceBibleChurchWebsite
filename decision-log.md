@@ -300,6 +300,14 @@ Administrator surfaces derive a nullable canonical YouTube source from the exist
 
 The source action appears separately from the administrator sermon-record link on list, overview/edit and guided-review surfaces, including identity/provenance and primary-passage review. It uses descriptive accessible text, a visible external-link indicator, a new tab and `noopener noreferrer`. It never embeds or preloads YouTube and does not alter public pages. The bounded current-data check covers only the three pilots and 12 Wave 1 records; it grants no provider request, historical backfill, content processing, approval, publication or deployment authority. (`explicit administrator convenience implementation; current-15 read-only verification only`)
 
+### D-139 - Generated-text mechanical proofreading and bounded current-15 repair
+
+The current-15 quality diagnosis confirmed that the affected description and Q&A wording came from the retired `phase3b2c-wave1-extractive-drafts-v2` path. That command ranked and wrapped transcript sentences, applied only structural/length checks and did not invoke the repository-scoped `sermon-enrichment` skill or perform a final editorial proofread. The skill existed only for the later grounded replacement workflow; application code does not and must not claim to invoke an external Codex skill.
+
+Generated descriptions and Q&A now pass an independent deterministic `generated-text-mechanical-qa-v1` gate before grounded import and before generated drafts can enter review or approval. Incorrect Jesus/Christ casing and obvious mechanical spacing, punctuation, sentence-start or join defects are blocking. Context-dependent uses of terms such as god, spirit and scripture, possible fragments and uncertain biblical-name spelling are retained as human-review flags rather than blindly changed. The skill checklist separately requires the same final proofread and records its safe outcome; neither layer decides meaning, Scripture accuracy, theology or approval.
+
+The authorised current-15 command inspected exactly three accepted pilots plus 12 Wave 1 records. It corrected 13 indisputable capitalisation defects in unreviewed generated drafts across three sermons: 12 references to Jesus and one to Christ, affecting two descriptions and six Q&A pairs. No approved content was changed. One separate sentence-start finding and 15 context-dependent review flags remain unchanged for human judgment within already-quarantined Wave 1 material. Transcript bodies, source hashes, warnings, provenance, administrator progress, passage decisions, privacy, public-search state and zero semantic rows were preserved. The identical second run changed zero records. (`explicit bounded local draft repair; quarantine and human review remain`)
+
 ## Decisions still required
 
 - Final AWS runtime/adapter and production networking.
