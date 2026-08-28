@@ -74,6 +74,18 @@ export const sermonEnrichmentResultSchema = z.object({
   skillName: z.literal(sermonEnrichmentSkillName),
   skillVersion: z.enum(supportedSermonEnrichmentSkillVersions),
   generationMethod: z.literal(sermonEnrichmentGenerationMethod),
+  generator: z.object({
+    provider: z.string().trim().regex(/^[A-Za-z0-9._-]+$/u).max(100),
+    model: z.string().trim().min(1).max(240),
+    modelRevision: z.string().trim().min(1).max(240),
+    approvalReference: z.string().trim().regex(/^[A-Za-z0-9._:-]+$/u).max(240)
+  }).strict().optional(),
+  promptPolicy: z.object({
+    version: z.string().trim().regex(/^[A-Za-z0-9._-]+$/u).max(100),
+    skillInstructionsSha256: sha256Schema,
+    groundingContractSha256: sha256Schema,
+    combinedSha256: sha256Schema
+  }).strict().optional(),
   generatedAt: z.iso.datetime(),
   requestSha256: sha256Schema,
   target: z.object({
@@ -288,6 +300,94 @@ const retiredQuestions = new Set([
 ]);
 
 const scriptureClaimPattern = /\b(?:genesis|exodus|psalms?|isaiah|matthew|mark|luke|john|acts|romans|corinthians|galatians|ephesians|philippians|colossians|thessalonians|timothy|hebrews|james|peter|revelation)\s+\d|\b(?:the bible teaches|god promises|jesus says|scripture says|salvation requires)\b/iu;
+const unexplainedVerseFragmentPattern = /\b(?:chapter|verse)\s+\d{1,3}\b|\b\d{1,3}:\d{1,3}(?:[-–]\d{1,3})?\b/iu;
+const abruptTransitionPattern = /(?:^|[.!?]["'’)]?\s+)(?:And|But|So)\s+(?:then|now)\b|\b(?:and|but|so)\s+(?:and|but|so)\b/u;
+
+function hasRepeatedWordSequence(value: string, size = 8): boolean {
+  const words = lexicalWordOffsets(value).map((item) => item.word);
+  const observed = new Set<string>();
+  for (let index = 0; index + size <= words.length; index += 1) {
+    const sequence = words.slice(index, index + size).join(" ");
+    if (observed.has(sequence)) return true;
+    observed.add(sequence);
+  }
+  return false;
+}
+
+export interface DescriptionQualityInspection {
+  issues: EnrichmentValidationIssue[];
+  metrics: {
+    wordCount: number;
+    paragraphCount: number;
+    maximumCopiedWordRun: number;
+  };
+}
+
+export function inspectDescriptionQuality(
+  description: SermonEnrichmentResult["description"],
+  current: CurrentApprovedTranscript
+): DescriptionQualityInspection {
+  const issues: EnrichmentValidationIssue[] = [];
+  const descriptionWords = lexicalWordOffsets(description.bodyText).length;
+  const descriptionParagraphs = paragraphRanges(description.bodyText);
+  const maximumCopiedWordRun = longestCopiedRun(description.bodyText, current.bodyText);
+  if (descriptionWords < 180 || descriptionWords > 220) {
+    add(issues, "description_word_count", "description.bodyText", "The description must contain 180–220 words");
+  }
+  if (descriptionParagraphs.length < 2 || descriptionParagraphs.length > 4) {
+    add(issues, "description_paragraph_count", "description.bodyText", "The description must use two to four coherent paragraphs");
+  }
+  const fragments = sentenceFragments(description.bodyText);
+  if (fragments.some((sentence) => !/[.!?]["'’)]*$/u.test(sentence) || lexicalWordOffsets(sentence).length < 5)) {
+    add(issues, "description_incomplete_sentence", "description.bodyText", "The description contains an incomplete sentence or caption fragment");
+  }
+  const lowerDescription = description.bodyText.toLocaleLowerCase("en-AU");
+  if (retiredWrapperPhrases.some((phrase) => lowerDescription.includes(phrase))) {
+    add(issues, "generic_wrapper", "description.bodyText", "The description contains retired generic wrapper text");
+  }
+  if (maximumCopiedWordRun >= 18) {
+    add(issues, "disconnected_excerpt_risk", "description.bodyText", "The description contains an overlong verbatim transcript run");
+  }
+  if (hasRepeatedWordSequence(description.bodyText)) {
+    add(issues, "description_repetition", "description.bodyText", "The description repeats an overlong wording sequence");
+  }
+  if (abruptTransitionPattern.test(description.bodyText)) {
+    add(issues, "description_abrupt_transition", "description.bodyText", "The description contains an abrupt caption-like transition");
+  }
+  if (overlapCount(description.centralSubject, description.bodyText) < 2 ||
+    overlapCount(description.centralSubject, current.bodyText) < 2) {
+    add(issues, "central_subject_missing", "description.centralSubject", "The declared central subject is not grounded in both transcript and description");
+  }
+  if (/faith and daily life|apply (?:it|this) to (?:our|your) lives|consider these points|reflect on the message/iu.test(description.application) ||
+    overlapCount(description.application, description.bodyText) < 2 ||
+    overlapCount(description.application, current.bodyText) < 2) {
+    add(issues, "application_generic_or_missing", "description.application", "The application must be specific to the sermon and transcript-grounded");
+  }
+  for (const paragraph of descriptionParagraphs) {
+    const supports = description.supports.filter((support) => support.outputIndex === paragraph.number);
+    validateSupports(supports, current.bodyText, "description_paragraph", paragraph.number, `description.supports.paragraph${paragraph.number}`, issues);
+    const paragraphText = description.bodyText.slice(paragraph.start, paragraph.end);
+    if (supports.length > 0 && overlapCount(paragraphText, supportText(supports, current.bodyText)) < 2) {
+      add(issues, "description_support_disconnected", `description.supports.paragraph${paragraph.number}`, "The paragraph is disconnected from its recorded transcript support");
+    }
+  }
+  if (!description.supports.some((support) => support.purpose === "subject" || support.purpose === "reasoning") ||
+    !description.supports.some((support) => support.purpose === "application")) {
+    add(issues, "description_required_grounding_missing", "description.supports", "Subject/reasoning and application support are both required");
+  }
+  if ((scriptureClaimPattern.test(description.bodyText) || unexplainedVerseFragmentPattern.test(description.bodyText)) &&
+    !description.supports.some((support) => support.purpose === "scripture_use" || support.purpose === "theological_claim")) {
+    add(issues, "unsupported_scripture_or_theology", "description", "A detectable Scripture, verse or theological claim lacks explicit supporting evidence");
+  }
+  return {
+    issues,
+    metrics: {
+      wordCount: descriptionWords,
+      paragraphCount: descriptionParagraphs.length,
+      maximumCopiedWordRun
+    }
+  };
+}
 
 export function validateSermonEnrichmentResult(
   input: unknown,
@@ -323,12 +423,14 @@ export function validateSermonEnrichmentResult(
     add(issues, "result_integrity_mismatch", "integrity", "The result integrity hash is invalid");
   }
 
-  const descriptionWords = lexicalWordOffsets(value.description.bodyText).length;
-  const descriptionParagraphs = paragraphRanges(value.description.bodyText);
-  const maximumCopiedWordRun = longestCopiedRun(value.description.bodyText, current.bodyText);
+  const descriptionQuality = inspectDescriptionQuality(value.description, current);
+  issues.push(...descriptionQuality.issues);
   const mechanicalQa = inspectGeneratedText(value.description.bodyText, value.questionAnswers);
-  if (value.skillVersion === "1.1.0" && value.mechanicalProofread === undefined) {
-    add(issues, "mechanical_proofread_missing", "mechanicalProofread", "Skill version 1.1 results must record the completed mechanical proofread");
+  if (value.skillVersion !== "1.0.0" && value.mechanicalProofread === undefined) {
+    add(issues, "mechanical_proofread_missing", "mechanicalProofread", "Current skill results must record the completed mechanical proofread");
+  }
+  if (value.skillVersion === "1.2.0" && (!value.generator || !value.promptPolicy)) {
+    add(issues, "generator_provenance_missing", "generator", "Skill version 1.2 results must identify the approved generator and prompt policy");
   }
   if (value.mechanicalProofread && (
     value.mechanicalProofread.outcome !== mechanicalQa.outcome ||
@@ -348,37 +450,6 @@ export function validateSermonEnrichmentResult(
       "Generated text did not pass the required deterministic editorial proofread"
     );
   }
-  if (descriptionWords < 180 || descriptionWords > 220) {
-    add(issues, "description_word_count", "description.bodyText", "The description must contain 180–220 words");
-  }
-  if (descriptionParagraphs.length < 2 || descriptionParagraphs.length > 4) {
-    add(issues, "description_paragraph_count", "description.bodyText", "The description must use two to four coherent paragraphs");
-  }
-  const fragments = sentenceFragments(value.description.bodyText);
-  if (fragments.some((sentence) => !/[.!?]["'’)]*$/u.test(sentence) || lexicalWordOffsets(sentence).length < 5)) {
-    add(issues, "description_incomplete_sentence", "description.bodyText", "The description contains an incomplete sentence or caption fragment");
-  }
-  const lowerDescription = value.description.bodyText.toLocaleLowerCase("en-AU");
-  if (retiredWrapperPhrases.some((phrase) => lowerDescription.includes(phrase))) {
-    add(issues, "generic_wrapper", "description.bodyText", "The description contains retired generic wrapper text");
-  }
-  if (maximumCopiedWordRun >= 18) {
-    add(issues, "disconnected_excerpt_risk", "description.bodyText", "The description contains an overlong verbatim transcript run");
-  }
-  if (overlapCount(value.description.centralSubject, value.description.bodyText) < 2 ||
-    overlapCount(value.description.centralSubject, current.bodyText) < 2) {
-    add(issues, "central_subject_missing", "description.centralSubject", "The declared central subject is not grounded in both transcript and description");
-  }
-  if (/faith and daily life|apply (?:it|this) to (?:our|your) lives|consider these points|reflect on the message/iu.test(value.description.application) ||
-    overlapCount(value.description.application, value.description.bodyText) < 2 ||
-    overlapCount(value.description.application, current.bodyText) < 2) {
-    add(issues, "application_generic_or_missing", "description.application", "The application must be specific to the sermon and transcript-grounded");
-  }
-  for (const paragraph of descriptionParagraphs) {
-    const supports = value.description.supports.filter((support) => support.outputIndex === paragraph.number);
-    validateSupports(supports, current.bodyText, "description_paragraph", paragraph.number, `description.supports.paragraph${paragraph.number}`, issues);
-  }
-
   const expectedOrders = value.questionAnswers.map((_item, index) => index + 1);
   if (!value.questionAnswers.every((item, index) => item.displayOrder === expectedOrders[index])) {
     add(issues, "question_order_invalid", "questionAnswers", "Q&A display orders must be consecutive and ordered");
@@ -419,21 +490,16 @@ export function validateSermonEnrichmentResult(
       }
     }
   }
-  if (scriptureClaimPattern.test(value.description.bodyText) &&
-    !value.description.supports.some((support) => support.purpose === "scripture_use" || support.purpose === "theological_claim")) {
-    add(issues, "unsupported_scripture_or_theology", "description", "A detectable Scripture or theological claim lacks explicit supporting evidence");
-  }
-
   return {
     valid: issues.length === 0,
     issues,
     mechanicalQa,
     metrics: {
-      descriptionWordCount: descriptionWords,
+      descriptionWordCount: descriptionQuality.metrics.wordCount,
       questionAnswerCount: value.questionAnswers.length,
-      descriptionParagraphCount: descriptionParagraphs.length,
+      descriptionParagraphCount: descriptionQuality.metrics.paragraphCount,
       supportCount: value.description.supports.length + value.questionAnswers.reduce((sum, item) => sum + item.supports.length, 0),
-      maximumCopiedWordRun
+      maximumCopiedWordRun: descriptionQuality.metrics.maximumCopiedWordRun
     }
   };
 }

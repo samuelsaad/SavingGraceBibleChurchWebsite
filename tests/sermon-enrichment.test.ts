@@ -18,6 +18,15 @@ import {
   supersededWave1GenerationVersion
 } from "../src/enrichment/sermon-enrichment-policy";
 import { canaryPreservedEvidenceMatches } from "../src/enrichment/sermon-enrichment-canary";
+import {
+  approvedDescriptionGenerationPipelineVersion,
+  descriptionGenerationPromptPolicyVersion,
+  generateApprovedDescriptionDraft,
+  loadDescriptionGenerationPromptPolicy,
+  type ApprovedDescriptionGenerationRequest,
+  type ApprovedDescriptionTextGenerator,
+  type GeneratedDescriptionCandidate
+} from "../src/enrichment/approved-description-generation";
 
 const sermonId = "11111111-1111-4111-8111-111111111111";
 const approvedAt = "2026-01-02T03:04:05.000Z";
@@ -81,6 +90,18 @@ function validResult(): SermonEnrichmentResult {
     skillName: sermonEnrichmentSkillName,
     skillVersion: sermonEnrichmentSkillVersion,
     generationMethod: sermonEnrichmentGenerationMethod,
+    generator: {
+      provider: "approved-anonymised-provider",
+      model: "approved-anonymised-generative-model",
+      modelRevision: "immutable-test-revision",
+      approvalReference: "D-TEST-ONLY"
+    },
+    promptPolicy: {
+      version: descriptionGenerationPromptPolicyVersion,
+      skillInstructionsSha256: "4".repeat(64),
+      groundingContractSha256: "5".repeat(64),
+      combinedSha256: "6".repeat(64)
+    },
     generatedAt: "2026-01-03T00:00:00.000Z",
     requestSha256: "9".repeat(64),
     target: { sourceWordPressId: current.sourceWordPressId, sermonId },
@@ -144,6 +165,42 @@ function issueCodes(value: unknown, snapshot = current): string[] {
   return validateSermonEnrichmentResult(value, snapshot).issues.map((issue) => issue.code);
 }
 
+function generatedDescriptionCandidate(): GeneratedDescriptionCandidate {
+  const result = validResult();
+  return {
+    bodyText: result.description.bodyText,
+    centralSubject: result.description.centralSubject,
+    application: result.description.application,
+    supports: result.description.supports
+  };
+}
+
+function generationInput() {
+  return {
+    authorizedTarget: { sourceWordPressId: current.sourceWordPressId, sermonId },
+    transcript: current,
+    requestedAt: "2026-01-03T00:00:00.000Z"
+  };
+}
+
+function testGenerator(
+  result: unknown,
+  inspect?: (request: ApprovedDescriptionGenerationRequest) => void
+): ApprovedDescriptionTextGenerator {
+  return {
+    identity: {
+      provider: "approved-anonymised-provider",
+      model: "approved-anonymised-generative-model",
+      modelRevision: "immutable-test-revision",
+      approvalReference: "D-TEST-ONLY"
+    },
+    async generateDescription(request) {
+      inspect?.(request);
+      return result;
+    }
+  };
+}
+
 describe("sermon-enrichment private grounded result", () => {
   it("accepts a coherent, private, transcript-bound anonymised result", () => {
     const result = validateSermonEnrichmentResult(validResult(), current);
@@ -190,6 +247,23 @@ describe("sermon-enrichment private grounded result", () => {
     expect(issueCodes(rehash(application))).toContain("application_generic_or_missing");
   });
 
+  it("rejects repeated wording, abrupt caption transitions, and unexplained verse fragments", () => {
+    const repeated = validResult();
+    repeated.description.bodyText = repeated.description.bodyText.replace(
+      "The central concern is therefore not personal recognition",
+      "Skill matters, yet patience and cooperation matter as well, because hurried action can damage both the work and the people carrying it. The central concern is therefore not personal recognition"
+    );
+    expect(issueCodes(rehash(repeated))).toContain("description_repetition");
+
+    const abrupt = validResult();
+    abrupt.description.bodyText = abrupt.description.bodyText.replace("The sermon then turns", "And then the sermon turns");
+    expect(issueCodes(rehash(abrupt))).toContain("description_abrupt_transition");
+
+    const verse = validResult();
+    verse.description.bodyText = verse.description.bodyText.replace("The sermon then turns", "Verse 14 then turns");
+    expect(issueCodes(rehash(verse))).toContain("unsupported_scripture_or_theology");
+  });
+
   it("requires a completed deterministic editorial proofread and rejects lowercase jesus", () => {
     const defective = validResult();
     defective.description.bodyText = defective.description.bodyText.replace("The speaker", "jesus and the speaker");
@@ -206,7 +280,7 @@ describe("sermon-enrichment private grounded result", () => {
     expect(validation.issues.map((issue) => issue.code)).toContain("jesus_incorrect_capitalisation");
   });
 
-  it("requires and independently verifies the declared version 1.1 proofread result", () => {
+  it("requires and independently verifies the declared current proofread result", () => {
     const missing = validResult();
     delete missing.mechanicalProofread;
     expect(issueCodes(rehash(missing))).toContain("mechanical_proofread_missing");
@@ -214,6 +288,13 @@ describe("sermon-enrichment private grounded result", () => {
     const mismatch = validResult();
     mismatch.mechanicalProofread!.reviewIssueCount = 1;
     expect(issueCodes(rehash(mismatch))).toContain("mechanical_proofread_mismatch");
+  });
+
+  it("requires identified generator and prompt-policy provenance for current skill results", () => {
+    const missing = validResult();
+    delete missing.generator;
+    delete missing.promptPolicy;
+    expect(issueCodes(rehash(missing))).toContain("generator_provenance_missing");
   });
 
   it("rejects detectable unsupported Scripture claims and invalid evidence", () => {
@@ -271,6 +352,139 @@ describe("sermon-enrichment private grounded result", () => {
     ];
     const contents = await Promise.all(files.map((file) => readFile(file, "utf8")));
     expect(contents.every((content) => !content.includes(privateTitle))).toBe(true);
+  });
+});
+
+describe("approved description-generation boundary", () => {
+  it("loads the complete skill and grounding policies with versioned hashes", async () => {
+    const policy = await loadDescriptionGenerationPromptPolicy();
+    expect(policy.policyVersion).toBe(descriptionGenerationPromptPolicyVersion);
+    expect(policy.skillName).toBe(sermonEnrichmentSkillName);
+    expect(policy.skillVersion).toBe(sermonEnrichmentSkillVersion);
+    expect(policy.skillInstructions).toContain("Do not rank, concatenate, or wrap transcript excerpts");
+    expect(policy.skillInstructions).toContain("Final editorial-proofreading checklist");
+    expect(policy.groundingContract).toContain("Do not store support quotations separately");
+    expect(policy.skillInstructionsSha256).toMatch(/^[0-9a-f]{64}$/u);
+    expect(policy.groundingContractSha256).toMatch(/^[0-9a-f]{64}$/u);
+    expect(policy.combinedSha256).toMatch(/^[0-9a-f]{64}$/u);
+  });
+
+  it("fails closed without an approved text-generation model and creates no draft", async () => {
+    const result = await generateApprovedDescriptionDraft(generationInput(), null);
+    expect(result).toMatchObject({
+      outcome: "generation_failed",
+      draftCreated: false,
+      approvalState: "not_created",
+      candidate: null,
+      generator: null,
+      publicVisibility: "private",
+      searchEligible: false,
+      semanticEligible: false,
+      failure: { code: "approved_text_generation_model_unavailable", manualAttentionRequired: true }
+    });
+    expect(result.promptPolicy?.version).toBe(descriptionGenerationPromptPolicyVersion);
+  });
+
+  it("passes the full approved transcript and complete safeguards to an identified generator", async () => {
+    let invocationCount = 0;
+    const generator = testGenerator(generatedDescriptionCandidate(), (request) => {
+      invocationCount += 1;
+      expect(request.pipelineVersion).toBe(approvedDescriptionGenerationPipelineVersion);
+      expect(request.transcript.bodyText).toBe(transcript);
+      expect(request.transcript.sha256).toBe(sha256Utf8(transcript));
+      expect(request.instructions.promptPolicyVersion).toBe(descriptionGenerationPromptPolicyVersion);
+      expect(request.instructions.skillInstructions).toContain("Do not rank, concatenate, or wrap transcript excerpts");
+      expect(request.instructions.groundingContract).toContain("Private grounding contract");
+      expect(request.requirements).toMatchObject({
+        descriptionWordMinimum: 180,
+        descriptionWordMaximum: 220,
+        completeTranscriptRequired: true,
+        transcriptGroundingRequired: true,
+        privateUnapprovedDraftOnly: true,
+        finalProofreadRequired: true
+      });
+      expect(request.requirements.prohibitedMethods).toEqual([
+        "transcript_excerpt_ranking",
+        "fixed_generic_wrapper",
+        "deterministic_extraction_fallback"
+      ]);
+    });
+    const result = await generateApprovedDescriptionDraft(generationInput(), generator);
+    expect(invocationCount).toBe(1);
+    expect(result).toMatchObject({
+      outcome: "generated_private_draft",
+      draftCreated: true,
+      approvalState: "draft",
+      publicVisibility: "private",
+      searchEligible: false,
+      semanticEligible: false,
+      manualAdministratorReviewRequired: true,
+      generator: generator.identity,
+      validation: { valid: true }
+    });
+    expect(result.transcript.sha256).toBe(sha256Utf8(transcript));
+    expect(result.promptPolicy?.combinedSha256).toMatch(/^[0-9a-f]{64}$/u);
+    expect(result.integrity.canonicalSha256).toMatch(/^[0-9a-f]{64}$/u);
+  });
+
+  it("returns no candidate when the model fails instead of using an extractive fallback", async () => {
+    const generator = testGenerator(null);
+    generator.generateDescription = async () => {
+      throw new Error("anonymised model failure");
+    };
+    const result = await generateApprovedDescriptionDraft(generationInput(), generator);
+    expect(result).toMatchObject({
+      outcome: "generation_failed",
+      draftCreated: false,
+      candidate: null,
+      failure: { code: "text_generation_failed" }
+    });
+  });
+
+  it("rejects the retired wrapper pattern and capitalisation errors before a draft exists", async () => {
+    const wrapper = generatedDescriptionCandidate();
+    wrapper.bodyText = wrapper.bodyText.replace(
+      "An anonymised message examines dependable service",
+      "This sermon explores its central themes and applications through the speaker's teaching and examines dependable service"
+    );
+    const wrapperResult = await generateApprovedDescriptionDraft(generationInput(), testGenerator(wrapper));
+    expect(wrapperResult.outcome).toBe("generation_failed");
+    expect(wrapperResult.validation.issueCodes).toContain("generic_wrapper");
+    expect(wrapperResult.candidate).toBeNull();
+
+    const capitalisation = generatedDescriptionCandidate();
+    capitalisation.bodyText = capitalisation.bodyText.replace("The speaker", "jesus and the speaker");
+    const capitalisationResult = await generateApprovedDescriptionDraft(
+      generationInput(),
+      testGenerator(capitalisation)
+    );
+    expect(capitalisationResult.outcome).toBe("generation_failed");
+    expect(capitalisationResult.validation.issueCodes).toContain("jesus_incorrect_capitalisation");
+    expect(capitalisationResult.candidate).toBeNull();
+  });
+
+  it("refuses a target mismatch before invoking the generator", async () => {
+    let called = false;
+    const generator = testGenerator(generatedDescriptionCandidate(), () => { called = true; });
+    const input = generationInput();
+    input.authorizedTarget = { ...input.authorizedTarget, sermonId: "22222222-2222-4222-8222-222222222222" };
+    const result = await generateApprovedDescriptionDraft(input, generator);
+    expect(called).toBe(false);
+    expect(result).toMatchObject({
+      outcome: "generation_failed",
+      draftCreated: false,
+      candidate: null,
+      failure: { code: "target_scope_mismatch" }
+    });
+  });
+
+  it("contains no extractive implementation in the retired Wave 1 entry point", async () => {
+    const source = await readFile("src/enrichment/wave1-enrichment.ts", "utf8");
+    expect(source).not.toContain("rankedSentences");
+    expect(source).not.toContain("buildDescription");
+    expect(source).not.toContain("buildQuestionAnswers");
+    expect(source).not.toContain("This sermon explores its central themes");
+    expect(source).toContain("mechanical_wave1_generation_retired");
   });
 });
 

@@ -12,12 +12,14 @@ Produce coherent, transcript-grounded private drafts for later human review. Tre
 ## Non-negotiable boundaries
 
 - Use only the complete current administrator-approved transcript for content claims.
+- Invoke an explicitly approved text-generation model for synthesis and record its provider, model, immutable revision and approval reference. If no approved generator is configured or it fails, create no draft and return a structured manual-attention failure.
 - Use title, date, speaker, series, and classifications only for orientation and identity checks. Do not use metadata as authority for sermon claims.
 - Stop when the approved transcript is missing, unreliable, stale, internally inconsistent, or cannot support a faithful draft.
 - Preserve explicit uncertainty. Do not repair unclear names, quotations, Bible references, or doctrine by guessing.
 - Keep every generated result private, draft, unapproved, non-public, and absent from search.
 - Never mark transcript accuracy, theological accuracy, content approval, or publication approval on an administrator's behalf.
 - Never create embeddings or semantic relationships as part of this workflow.
+- Never use the description-only Related-themes embedding model as a text generator, and never fall back to ranked excerpts, fixed wrappers or deterministic transcript extraction.
 
 ## Workflow
 
@@ -87,6 +89,7 @@ Record privately:
 
 - Transcript identity, row version, SHA-256, approval evidence, and generation request hash.
 - Skill name and version, generation method, generation time, warnings, and uncertainties.
+- Actual generator provider, model, immutable revision and approval reference; prompt-policy version and hashes of the complete skill and grounding instructions supplied; and the approved transcript source hash.
 - Support locations and hashes for each description paragraph and every Q&A pair.
 - Original superseded bundle path and integrity hash plus original description and Q&A hashes.
 - Replacement result hash, validation result, import time, and idempotency evidence.
