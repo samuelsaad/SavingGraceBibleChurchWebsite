@@ -6,9 +6,18 @@ function parsedLocalDatabase(connectionString: string): { url: URL; databaseName
   const url = new URL(connectionString);
   const databaseName = decodeURIComponent(url.pathname.slice(1));
   if (!loopbackHosts.has(url.hostname) || url.port !== "5432") {
-    throw new Error("Local database writes require loopback PostgreSQL on port 5432");
+    throw new Error("Local access requires loopback PostgreSQL on port 5432");
   }
   return { url, databaseName };
+}
+
+export function assertReadOnlyLocalDatabase(connectionString: string): void {
+  const { databaseName } = parsedLocalDatabase(connectionString);
+  if (databaseName !== "savinggrace_sermons_test") {
+    throw new Error(
+      "Local database reads are restricted to savinggrace_sermons_test on loopback port 5432"
+    );
+  }
 }
 
 function assertWriteOptIn(writeOptIn: string | undefined): void {

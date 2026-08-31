@@ -12,9 +12,117 @@ interface PublishedConditions {
   searchExpression: string | null;
 }
 
-function buildPublishedConditions(input: PublicSermonListQuery): PublishedConditions {
+export type FrontendSermonScope = "public" | "completed_preview";
+
+const previewProcessingVersions = [
+  "phase3b2-caption-v1",
+  "phase3b2b-punctuation-v2",
+  "phase3b2c-wave1-extractive-drafts-v2"
+] as const;
+
+function groundedReferenceIsCurrentSql(
+  sermonAlias: string,
+  transcriptAlias: string,
+  sourceKindSql: string,
+  sourceReferenceSql: string
+): string {
+  const transcriptHash = `encode(digest(convert_to(${transcriptAlias}.body_text, 'UTF8'), 'sha256'), 'hex')`;
+  return `(
+    ${sourceKindSql} IS DISTINCT FROM 'generated_draft'
+    OR ${sourceReferenceSql} !~ '^sermon-enrichment:v[12]:'
+    OR ${sourceReferenceSql} ~ ('^sermon-enrichment:v2:' || ${transcriptAlias}.grounding_revision_id::text || ':' || ${transcriptHash} || ':[a-f0-9]{64}$')
+    OR (
+      ${sourceReferenceSql} ~ '^sermon-enrichment:v1:[a-f0-9]{64}:[1-9][0-9]*:[a-f0-9]{64}$'
+      AND EXISTS (
+        SELECT 1
+        FROM sermon_transcript_legacy_grounding_bindings grounding_binding
+        WHERE grounding_binding.sermon_id = ${sermonAlias}.id
+          AND grounding_binding.transcript_sha256 = ${transcriptHash}
+          AND grounding_binding.grounding_revision_id = ${transcriptAlias}.grounding_revision_id
+          AND grounding_binding.transcript_row_version = split_part(${sourceReferenceSql}, ':', 4)::integer
+          AND split_part(${sourceReferenceSql}, ':', 3) = grounding_binding.transcript_sha256
+      )
+    )
+  )`;
+}
+
+export function frontendSermonEligibilitySql(
+  sermonAlias: string,
+  scope: FrontendSermonScope
+): string {
+  const transcriptAlias = `${sermonAlias}_eligible_transcript`;
+  const summaryCurrent = groundedReferenceIsCurrentSql(
+    sermonAlias,
+    transcriptAlias,
+    `${sermonAlias}.summary_source_kind`,
+    `${sermonAlias}.summary_source_reference`
+  );
+  const qaCurrent = groundedReferenceIsCurrentSql(
+    sermonAlias,
+    transcriptAlias,
+    `${sermonAlias}_eligible_qa.source_kind`,
+    `${sermonAlias}_eligible_qa.source_reference`
+  );
+  const lifecycle = scope === "public"
+    ? `${sermonAlias}.status = 'published'`
+    : `${sermonAlias}.status = 'draft'
+      AND ${sermonAlias}.published_at IS NULL
+      AND EXISTS (
+        SELECT 1
+        FROM sermon_enrichment_reviews preview_review
+        WHERE preview_review.sermon_id = ${sermonAlias}.id
+          AND preview_review.current_stage = 6
+          AND preview_review.completed_at IS NOT NULL
+      )
+      AND EXISTS (
+        SELECT 1
+        FROM sermon_enrichment_sources preview_source
+        WHERE preview_source.sermon_id = ${sermonAlias}.id
+          AND preview_source.processing_version IN (${previewProcessingVersions.map((value) => `'${value}'`).join(", ")})
+      )`;
+
+  return `(
+    ${sermonAlias}.deleted_at IS NULL
+    AND ${lifecycle}
+    AND EXISTS (
+      SELECT 1 FROM sermon_content_readiness frontend_readiness
+      WHERE frontend_readiness.sermon_id = ${sermonAlias}.id
+        AND frontend_readiness.is_complete
+        AND frontend_readiness.has_required_passage_decision
+    )
+    AND ${sermonAlias}.summary_status = 'approved'
+    AND ${sermonAlias}.summary IS NOT NULL
+    AND (
+      ${sermonAlias}.summary_source_reference IS NULL
+      OR ${sermonAlias}.summary_source_reference NOT LIKE '%:phase3b2c-wave1-extractive-drafts-v2'
+    )
+    AND EXISTS (
+      SELECT 1
+      FROM sermon_transcripts ${transcriptAlias}
+      WHERE ${transcriptAlias}.sermon_id = ${sermonAlias}.id
+        AND ${transcriptAlias}.status = 'approved'
+        AND char_length(trim(${transcriptAlias}.body_text)) > 0
+        AND ${summaryCurrent}
+        AND NOT EXISTS (
+          SELECT 1
+          FROM sermon_question_answers ${sermonAlias}_eligible_qa
+          WHERE ${sermonAlias}_eligible_qa.sermon_id = ${sermonAlias}.id
+            AND (
+              ${sermonAlias}_eligible_qa.status <> 'approved'
+              OR ${sermonAlias}_eligible_qa.source_reference LIKE '%:phase3b2c-wave1-extractive-drafts-v2'
+              OR NOT ${qaCurrent}
+            )
+        )
+    )
+  )`;
+}
+
+function buildPublishedConditions(
+  input: PublicSermonListQuery,
+  scope: FrontendSermonScope = "public"
+): PublishedConditions {
   const values: Array<string | number> = [];
-  const conditions = ["s.status = 'published'", "s.deleted_at IS NULL"];
+  const conditions = [frontendSermonEligibilitySql("s", scope)];
   let searchExpression: string | null = null;
 
   const parameter = (value: string | number): string => {
@@ -98,7 +206,7 @@ function buildPublishedConditions(input: PublicSermonListQuery): PublishedCondit
   return { conditions, values, searchExpression };
 }
 
-function publicRelationshipProjection(alias = "s"): string {
+export function publicRelationshipProjection(alias = "s"): string {
   return `
   (
     SELECT jsonb_build_object('name', sp.name, 'slug', sp.slug)
@@ -134,6 +242,19 @@ function publicRelationshipProjection(alias = "s"): string {
       AND primary_ref.relationship_role = 'primary'
       AND primary_ref.review_status = 'confirmed'
   ), '[]'::jsonb) AS primary_passages,
+  CASE
+    WHEN EXISTS (
+      SELECT 1 FROM sermon_primary_passage_reviews passage_state
+      WHERE passage_state.sermon_id = ${alias}.id AND passage_state.review_status = 'confirmed_none'
+    ) THEN 'none'
+    WHEN EXISTS (
+      SELECT 1 FROM scripture_references assigned_passage
+      WHERE assigned_passage.sermon_id = ${alias}.id
+        AND assigned_passage.relationship_role = 'primary'
+        AND assigned_passage.review_status = 'confirmed'
+    ) THEN 'assigned'
+    ELSE 'unresolved'
+  END AS primary_passage_state,
   COALESCE((
     SELECT jsonb_agg(
       jsonb_build_object('name', bc.name, 'slug', bc.slug)
@@ -162,8 +283,11 @@ function publicRelationshipProjection(alias = "s"): string {
   ) AS primary_media`;
 }
 
-export function buildPublishedSermonListQuery(input: PublicSermonListQuery): ParameterizedQuery {
-  const state = buildPublishedConditions(input);
+export function buildPublishedSermonListQuery(
+  input: PublicSermonListQuery,
+  scope: FrontendSermonScope = "public"
+): ParameterizedQuery {
+  const state = buildPublishedConditions(input, scope);
   const parameter = (value: string | number): string => {
     state.values.push(value);
     return `$${state.values.length}`;
@@ -220,8 +344,11 @@ export function buildPublishedSermonListQuery(input: PublicSermonListQuery): Par
   };
 }
 
-export function buildPublishedSermonCountQuery(input: PublicSermonListQuery): ParameterizedQuery {
-  const state = buildPublishedConditions(input);
+export function buildPublishedSermonCountQuery(
+  input: PublicSermonListQuery,
+  scope: FrontendSermonScope = "public"
+): ParameterizedQuery {
+  const state = buildPublishedConditions(input, scope);
   return {
     text: `
       SELECT count(*)::integer AS total_items
@@ -232,7 +359,10 @@ export function buildPublishedSermonCountQuery(input: PublicSermonListQuery): Pa
   };
 }
 
-export function buildPublishedSermonDetailQuery(slug: string): ParameterizedQuery {
+export function buildPublishedSermonDetailQuery(
+  slug: string,
+  scope: FrontendSermonScope = "public"
+): ParameterizedQuery {
   return {
     text: `
       SELECT s.id, s.title, s.slug, to_char(s.service_date, 'YYYY-MM-DD') AS service_date,
@@ -271,8 +401,7 @@ export function buildPublishedSermonDetailQuery(slug: string): ParameterizedQuer
                WHERE qa.sermon_id = s.id AND qa.status = 'approved'
              ), '[]'::jsonb) AS question_answers
       FROM sermons s
-      WHERE s.status = 'published'
-        AND s.deleted_at IS NULL
+      WHERE ${frontendSermonEligibilitySql("s", scope)}
         AND lower(s.slug) = lower($1)
       LIMIT 1
     `.trim(),
@@ -282,14 +411,15 @@ export function buildPublishedSermonDetailQuery(slug: string): ParameterizedQuer
 
 export function buildRelatedPublishedSermonsQuery(
   sermonId: string,
-  limit: number
+  limit: number,
+  scope: FrontendSermonScope = "public"
 ): ParameterizedQuery {
   return {
     text: `
       WITH current_sermon AS (
         SELECT id, speaker_id
         FROM sermons
-        WHERE id = $1::uuid AND status = 'published' AND deleted_at IS NULL
+        WHERE id = $1::uuid AND ${frontendSermonEligibilitySql("sermons", scope)}
       ), candidate_scores AS (
         SELECT candidate.id,
           EXISTS (
@@ -353,8 +483,7 @@ export function buildRelatedPublishedSermonsQuery(
         FROM sermons candidate
         CROSS JOIN current_sermon
         WHERE candidate.id <> current_sermon.id
-          AND candidate.status = 'published'
-          AND candidate.deleted_at IS NULL
+          AND ${frontendSermonEligibilitySql("candidate", scope)}
       ), ranked AS (
         SELECT candidate.*,
           (CASE WHEN score.same_series THEN 100 ELSE 0 END
@@ -383,7 +512,9 @@ export function buildRelatedPublishedSermonsQuery(
   };
 }
 
-export function buildPublishedSermonFilterOptionsQuery(): ParameterizedQuery {
+export function buildPublishedSermonFilterOptionsQuery(
+  scope: FrontendSermonScope = "public"
+): ParameterizedQuery {
   return {
     text: `
       SELECT
@@ -394,7 +525,7 @@ export function buildPublishedSermonFilterOptionsQuery(): ParameterizedQuery {
             SELECT DISTINCT speaker.name, speaker.slug
             FROM speakers speaker
             JOIN sermons sermon ON sermon.speaker_id = speaker.id
-            WHERE sermon.status = 'published' AND sermon.deleted_at IS NULL
+            WHERE ${frontendSermonEligibilitySql("sermon", scope)}
           ) options
         ), '[]'::jsonb) AS speakers,
         COALESCE((
@@ -405,7 +536,7 @@ export function buildPublishedSermonFilterOptionsQuery(): ParameterizedQuery {
             FROM series sermon_series
             JOIN sermon_series_map series_map ON series_map.series_id = sermon_series.id
             JOIN sermons sermon ON sermon.id = series_map.sermon_id
-            WHERE sermon.status = 'published' AND sermon.deleted_at IS NULL
+            WHERE ${frontendSermonEligibilitySql("sermon", scope)}
           ) options
         ), '[]'::jsonb) AS series,
         COALESCE((
@@ -418,7 +549,7 @@ export function buildPublishedSermonFilterOptionsQuery(): ParameterizedQuery {
               ON source_map.source_taxonomy_term_id = source_term.id
             JOIN sermons sermon ON sermon.id = source_map.sermon_id
             WHERE source_term.taxonomy = 'sermon_topics'
-              AND sermon.status = 'published' AND sermon.deleted_at IS NULL
+              AND ${frontendSermonEligibilitySql("sermon", scope)}
           ) options
         ), '[]'::jsonb) AS passages,
         COALESCE((
@@ -431,7 +562,7 @@ export function buildPublishedSermonFilterOptionsQuery(): ParameterizedQuery {
               ON book_map.book_classification_id = classification.id
             JOIN sermons sermon ON sermon.id = book_map.sermon_id
             WHERE classification.review_status = 'approved'
-              AND sermon.status = 'published' AND sermon.deleted_at IS NULL
+              AND ${frontendSermonEligibilitySql("sermon", scope)}
           ) options
         ), '[]'::jsonb) AS books
     `.trim(),
@@ -444,7 +575,7 @@ export function buildPublishedSermonSitemapQuery(): ParameterizedQuery {
     text: `
       SELECT slug, to_char(updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD') AS last_modified
       FROM sermons
-      WHERE status = 'published' AND deleted_at IS NULL
+      WHERE ${frontendSermonEligibilitySql("sermons", "public")}
       ORDER BY slug, id
     `.trim(),
     values: []
@@ -465,8 +596,7 @@ export function buildPublicSermonPathDispositionQuery(path: string): Parameteriz
             AND EXISTS (
               SELECT 1
               FROM sermons target
-              WHERE target.status = 'published'
-                AND target.deleted_at IS NULL
+              WHERE ${frontendSermonEligibilitySql("target", "public")}
                 AND '/sermons/' || target.slug || '/' = redirect.new_path
             )
           )

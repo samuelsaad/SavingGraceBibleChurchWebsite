@@ -72,6 +72,7 @@ export const sermonSummarySchema = z.object({
     displayText: z.string().min(1),
     isLead: z.boolean()
   })).default([]),
+  primaryPassageState: z.enum(["assigned", "none", "unresolved"]).default("unresolved"),
   books: z.array(z.object({ name: z.string(), slug: z.string() })),
   primaryMedia: publicMediaSchema.nullable()
 });

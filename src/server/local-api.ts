@@ -6,9 +6,11 @@ import { createApplicationApiRouter } from "./http/application-api-router";
 import { IncomingRequestTooLargeError, toWebRequest } from "./http/node-request-adapter";
 import { serveLocalDashboard } from "./http/local-dashboard-static";
 import { createPublicSermonPageHandler } from "./http/public-sermon-page";
+import { createLocalFrontendPreviewHandler } from "./http/local-frontend-preview";
 import { PostgresAdminSermonRepository } from "./repositories/postgres-admin-sermon-repository";
 import { PostgresSermonRepository } from "./repositories/postgres-sermon-repository";
 import { assertLoopbackApiHost } from "./local-api-safety";
+import { LocalFrontendPreviewSession } from "./auth/local-frontend-preview-session";
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) throw new Error("DATABASE_URL is required");
@@ -23,17 +25,23 @@ if (!Number.isInteger(port) || port < 1 || port > 65_535) {
 
 const pool = createPostgresPool(connectionString);
 const publicRepository = new PostgresSermonRepository(pool);
+const previewRepository = new PostgresSermonRepository(pool, "completed_preview");
+const identityProvider = new LocalTestIdentityProvider(process.env.ENABLE_LOCAL_TEST_IDENTITIES === "1");
 const route = createApplicationApiRouter(
   publicRepository,
   new PostgresAdminSermonRepository(pool),
-  new LocalTestIdentityProvider(process.env.ENABLE_LOCAL_TEST_IDENTITIES === "1")
+  identityProvider
 );
 const publicSermonPage = createPublicSermonPageHandler(publicRepository);
+const previewSession = new LocalFrontendPreviewSession();
+const frontendPreview = createLocalFrontendPreviewHandler(previewRepository, previewSession);
 const server = createServer(async (incoming, outgoing) => {
   try {
     const originHostname = hostname.includes(":") ? `[${hostname}]` : hostname;
     const request = await toWebRequest(incoming, `http://${originHostname}:${port}`);
-    const response =
+    const response = new URL(request.url).pathname === "/api/v1/admin/frontend-preview-session"
+      ? await previewSession.issue(request, identityProvider)
+      : (await frontendPreview(request)) ??
       (await publicSermonPage(request)) ??
       (await serveLocalDashboard(
         request,

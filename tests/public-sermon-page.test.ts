@@ -13,6 +13,7 @@ const sermon: SermonDetail = {
   series: [],
   scriptureReferences: [{ displayText: "Romans 8:1", parseStatus: "exact" }],
   primaryPassages: [{ displayText: "Romans 8:1", isLead: true }],
+  primaryPassageState: "assigned",
   books: [],
   primaryMedia: null,
   body: null,
@@ -32,6 +33,7 @@ const sermon: SermonDetail = {
       series: [],
       scriptureReferences: [],
       primaryPassages: [],
+      primaryPassageState: "none",
       books: [],
       primaryMedia: null,
       relationshipReasons: ["same_speaker"]

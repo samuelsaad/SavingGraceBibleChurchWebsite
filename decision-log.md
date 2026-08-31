@@ -1,6 +1,6 @@
 # Project Decision Log
 
-**Status:** Approved decisions through D-142; legacy passage decisions are carried forward only from complete pre-gate evidence
+**Status:** Approved decisions through D-143; public frontend preview remains private and local
 **Authority:** `church-website-architecture-plan.md` plus Yang’s confirmed migration decisions and Samuel Saad’s recorded project-owner decisions
 
 ## Evidence classifications
@@ -331,6 +331,12 @@ Migration `0015_optional_passage_and_grounding_identity` implements these rules.
 Migration `0015` correctly made an unresolved primary-passage decision incomplete, but legacy reviews completed before that gate could contain an unchanged structurally valid passage without a separate passage-decision row. Migration `0016_legacy_completed_passage_reviews` adds the forward rule: Stage 6 cannot finish with a pending passage decision, and a completed review cannot later be made passage-pending.
 
 The bounded carry-forward is not a general auto-approval. It requires the exact current 15-record pilot/Wave-1 scope, completion before `0015`, intact transcript/description/Q&A/final-review decisions, one structurally valid lead primary passage, proof that the proposal existed unchanged through completion, and no later passage audit. Nine records met all conditions. Each gained a new `local-admin-0001` audit event under authorization `SAMUEL-LEGACY-PASSAGE-REVIEW-CARRY-FORWARD-2026-08-31`, while all original review actors and timestamps were preserved. Five later, changed or post-gate proposals remain pending and `Needs Work`; the existing explicit no-primary decision remains unchanged. The dashboard identifies carried-forward results as `Reviewed passage`, not as a newly performed confirmation. (`explicit bounded legacy-review carry-forward authority; no new content judgment or publication authority`)
+
+### D-143 - First cohesive sermon frontend uses an authenticated private preview
+
+The first cohesive sermon frontend reuses one server-rendered component system for the homepage, archive, detail, metadata-related sermons, search/filter controls, taxonomy browsing and controlled empty/error/private states. The approved description precedes media, transcript and Q&A. Complete approved transcript and Q&A text stays in initial HTML behind accessible native disclosures. YouTube is click-to-load through the privacy-enhanced host with no autoplay. Keyword/structured Scripture search, metadata-based **Related sermons**, and the disabled description-only **Related themes** foundation remain separate.
+
+The 15 completed pilot/Wave-1 sermons remain private drafts. Their design preview is limited to loopback `/frontend-preview/`, requires a short-lived session issued through the existing local administrator identity, uses strict private/no-store/noindex headers, emits no canonical, social metadata, sitemap, feed or structured data, and is absent from the static production build. Both public and preview selectors independently require approved current content, controlled media and a reviewed primary-passage outcome; D-141's explicit no-primary outcome remains valid without an invented Bible-book classification. Lifecycle state alone cannot expose a sermon. This decision authorises no publication, staging, deployment, production access, external service, semantic generation, public **Related themes**, remote or Git push. (`explicit bounded frontend implementation and authenticated local-preview authority`)
 
 ## Decisions still required
 

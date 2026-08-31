@@ -17,6 +17,7 @@ import {
   buildPublicSermonPathDispositionQuery,
   buildRelatedPublishedSermonsQuery
 } from "../queries/public-sermons";
+import type { FrontendSermonScope } from "../queries/public-sermons";
 import type {
   PaginatedSermons,
   PublicSermonFilterOptions,
@@ -39,6 +40,7 @@ type PublicSermonRow = QueryResultRow & {
   series: unknown;
   scripture_references: unknown;
   primary_passages: unknown;
+  primary_passage_state: unknown;
   books: unknown;
   primary_media: unknown;
   total_items?: number;
@@ -84,6 +86,7 @@ function summaryFromRow(row: PublicSermonRow): SermonSummary {
     series: row.series,
     scriptureReferences: row.scripture_references,
     primaryPassages: row.primary_passages,
+    primaryPassageState: row.primary_passage_state,
     books: row.books,
     primaryMedia: row.primary_media
   });
@@ -112,10 +115,13 @@ function relatedFromRow(row: RelatedSermonRow) {
 }
 
 export class PostgresSermonRepository implements PublicSermonRepository {
-  constructor(private readonly database: SqlExecutor) {}
+  constructor(
+    private readonly database: SqlExecutor,
+    private readonly scope: FrontendSermonScope = "public"
+  ) {}
 
   async listPublished(query: PublicSermonListQuery): Promise<PaginatedSermons> {
-    const statement = buildPublishedSermonListQuery(query);
+    const statement = buildPublishedSermonListQuery(query, this.scope);
     const result = await this.database.query(statement.text, statement.values);
     const rows = result.rows as PublicSermonRow[];
     let totalItems = rows[0]?.total_items ?? 0;
@@ -123,7 +129,7 @@ export class PostgresSermonRepository implements PublicSermonRepository {
     // A window count cannot report a total for an out-of-range page because it
     // returns no row. Preserve pagination metadata with one parameterized count.
     if (rows.length === 0 && query.page > 1) {
-      const countStatement = buildPublishedSermonCountQuery(query);
+      const countStatement = buildPublishedSermonCountQuery(query, this.scope);
       const countResult = await this.database.query(
         countStatement.text,
         countStatement.values
@@ -138,12 +144,12 @@ export class PostgresSermonRepository implements PublicSermonRepository {
   }
 
   async findPublishedBySlug(slug: string): Promise<SermonDetail | null> {
-    const statement = buildPublishedSermonDetailQuery(slug);
+    const statement = buildPublishedSermonDetailQuery(slug, this.scope);
     const result = await this.database.query(statement.text, statement.values);
     const row = (result.rows as PublicSermonDetailRow[])[0];
     if (!row) return null;
 
-    const relatedStatement = buildRelatedPublishedSermonsQuery(row.id, 3);
+    const relatedStatement = buildRelatedPublishedSermonsQuery(row.id, 3, this.scope);
     const relatedResult = await this.database.query(
       relatedStatement.text,
       relatedStatement.values
@@ -155,7 +161,7 @@ export class PostgresSermonRepository implements PublicSermonRepository {
   }
 
   async listPublishedFilterOptions(): Promise<PublicSermonFilterOptions> {
-    const statement = buildPublishedSermonFilterOptionsQuery();
+    const statement = buildPublishedSermonFilterOptionsQuery(this.scope);
     const result = await this.database.query(statement.text, statement.values);
     const row = result.rows[0] as
       | { speakers: unknown; series: unknown; passages: unknown; books: unknown }
@@ -166,6 +172,7 @@ export class PostgresSermonRepository implements PublicSermonRepository {
   }
 
   async listPublishedSitemapEntries(): Promise<PublicSermonSitemapEntry[]> {
+    if (this.scope !== "public") return [];
     const statement = buildPublishedSermonSitemapQuery();
     const result = await this.database.query(statement.text, statement.values);
     return result.rows.map((row) => sitemapEntrySchema.parse({
@@ -175,6 +182,7 @@ export class PostgresSermonRepository implements PublicSermonRepository {
   }
 
   async findPublicPathDisposition(path: string): Promise<PublicSermonPathDisposition | null> {
+    if (this.scope !== "public") return null;
     const statement = buildPublicSermonPathDispositionQuery(path);
     const result = await this.database.query(statement.text, statement.values);
     const row = result.rows[0] as { status_code: number; new_path: string | null } | undefined;

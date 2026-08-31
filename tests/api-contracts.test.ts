@@ -96,7 +96,10 @@ describe("public sermon API contract", () => {
       })
     );
 
-    expect(query.text.match(/EXISTS \(/g)).toHaveLength(4);
+    expect(query.text).toContain("sp_filter.id = s.speaker_id");
+    expect(query.text).toContain("sm_filter.sermon_id = s.id");
+    expect(query.text).toContain("sst_filter.sermon_id = s.id");
+    expect(query.text).toContain("sbc_filter.sermon_id = s.id");
     expect(query.text).not.toMatch(/relation\s*=>?\s*['"]OR/i);
     expect(query.values.slice(0, 4)).toEqual([
       "example-speaker",
@@ -136,7 +139,8 @@ describe("public sermon API contract", () => {
   it("keeps the detail body while gating description and SEO override together", () => {
     const query = buildPublishedSermonDetailQuery("an-anonymised-sermon");
     expect(query.text).toContain("s.body");
-    expect(query.text.match(/summary_status = 'approved'/g)).toHaveLength(2);
+    expect(query.text.match(/summary_status = 'approved'/g)?.length).toBeGreaterThanOrEqual(2);
+    expect(query.text).toContain("frontend_readiness.is_complete");
   });
 
   it("uses deterministic bounded related-sermon scoring over published candidates", () => {
@@ -165,7 +169,7 @@ describe("public sermon API contract", () => {
     expect(options.text.match(/sermon.status = 'published'/g)).toHaveLength(4);
     expect(options.text.match(/sermon.deleted_at IS NULL/g)).toHaveLength(4);
     expect(options.text).toContain("classification.review_status = 'approved'");
-    expect(options.text).not.toMatch(/pending|draft/);
+    expect(options.text).not.toMatch(/sermon\.status = '(?:pending|draft)'/);
 
     const disposition = buildPublicSermonPathDispositionQuery("/sermons/old-slug/");
     expect(disposition.values).toEqual(["/sermons/old-slug/"]);

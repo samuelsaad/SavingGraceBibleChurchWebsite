@@ -18,6 +18,12 @@ Requests without the canonical trailing slash receive one direct `301`. Search a
 
 The static Astro production adapter remains undecided. These local routes are framework-independent server handlers exercised through the existing loopback Node/PostgreSQL harness; they do not select a production runtime.
 
+## Authenticated local frontend preview
+
+The local loopback harness also provides `/frontend-preview/`, archive/detail pages and preview-only speaker, series and Bible-book taxonomy pages. These pages reuse the same rendering components as the public experience, but the selector is limited to the exact completed three-pilot/12-Wave-1 source scope and independently requires private draft lifecycle, completed guided review, approved current description/transcript/Q&A, controlled media, a reviewed primary-passage outcome, and non-superseded provenance. In accordance with D-141, an explicit no-primary outcome is complete without inventing a Bible-book classification.
+
+The dashboard obtains a short-lived in-memory preview session through the existing local administrator identity. The session cookie is `HttpOnly` and `SameSite=Strict`; a copied URL, preview query parameter or identity header is insufficient. Every preview response is private/no-store and `noindex, nofollow, noarchive`, omits canonical/Open Graph metadata, and has no sitemap, feed or structured-data endpoint. The dashboard link is injected only by the loopback runtime, so neither it nor private preview wiring enters the static production build.
+
 ## Search and filters
 
 Search uses the existing generated PostgreSQL search vector and GIN index. An explicit match-priority tier orders whole-query matches as title first, Scripture reference or approved Bible book second, series or speaker third, approved description fourth, and body/approved transcript/approved Q&A fallback last. Within that tier, PostgreSQL’s vector weights are:
@@ -54,10 +60,8 @@ The offline description-semantic foundation now has a verified external local mo
 
 ## Publication and privacy enforcement
 
-- Public list, detail, filter-option, sitemap, related-sermon, and redirect-target queries all require `status = 'published'` and `deleted_at IS NULL` where applicable.
-- Description text appears only when `summary_status = 'approved'`.
-- Transcript text appears only when the transcript row is `approved`.
-- Q&A returns only individually approved rows.
+- Public list, detail, filter-option, sitemap, related-sermon, and redirect-target queries share one strict selector requiring `status = 'published'`, no deletion, complete readiness, a reviewed primary-passage outcome, approved current description/transcript/Q&A, controlled media and no superseded generation provenance.
+- A published lifecycle flag alone is therefore insufficient to expose a sermon.
 - Heavy transcript and Q&A bodies remain absent from archive/list responses.
 - Missing enrichment omits its heading and section; it does not render a misleading placeholder.
 - Search refresh documents include only approved description, transcript, and Q&A text.
@@ -68,7 +72,7 @@ The offline description-semantic foundation now has a verified external local mo
 
 ## Rendering, SEO, and accessibility
 
-Archive and detail content is present in initial server HTML and does not require JavaScript. The approved description is visible before media, transcript, and Q&A. The transcript alone uses a closed native `<details>` disclosure; Q&A remains ordinary initial HTML and does not automatically emit FAQ structured data.
+Archive and detail content is present in initial server HTML and does not require JavaScript. The approved description is visible before media, transcript, and Q&A. The transcript and each Q&A pair use accessible closed native `<details>` disclosures while their complete approved text remains in the initial HTML; no FAQ structured data is emitted. A valid controlled YouTube player is click-to-load, uses the privacy-enhanced host, never autoplays and makes no provider request until the visitor explicitly chooses to load it. The direct controlled media links remain available without JavaScript.
 
 Pages provide stable canonicals, controlled title/description and Open Graph metadata, correct `404`/`410` behavior, a published-only sermon sitemap, labelled filters, keyboard-visible focus, a skip link, semantic headings and landmarks, live result-count status, useful empty/error states, responsive grids, long-transcript wrapping, readable Q&A, and reduced-motion handling.
 

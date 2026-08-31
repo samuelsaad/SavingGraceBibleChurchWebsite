@@ -132,6 +132,83 @@ function approvedEnrichment() {
   };
 }
 
+async function makeAnonymisedPublishedFixturesFrontendEligible(
+  pool: Pool,
+  slugs = ["grace-for-an-anonymised-congregation", "hope-in-an-anonymised-trial"]
+): Promise<void> {
+  const fixtures = await pool.query<{ id: string }>(
+    `SELECT id
+     FROM sermons
+     WHERE slug = ANY($1::text[])
+     ORDER BY slug`,
+    [slugs]
+  );
+  expect(fixtures.rows).toHaveLength(slugs.length);
+
+  for (const [fixtureIndex, fixture] of fixtures.rows.entries()) {
+    await pool.query(
+      `UPDATE sermons
+       SET summary = $2,
+           summary_status = 'approved',
+           summary_source_kind = 'manual',
+           summary_source_reference = NULL,
+           summary_created_at = COALESCE(summary_created_at, now()),
+           summary_updated_at = now(),
+           summary_reviewed_by_subject = 'local-admin-0001',
+           summary_approved_by_subject = 'local-admin-0001',
+           summary_reviewed_at = now(),
+           summary_approved_at = now()
+       WHERE id = $1`,
+      [
+        fixture.id,
+        `This approved anonymised description ${fixtureIndex + 1} explains the sermon message and its scripture-grounded application for public-selector integration testing.`
+      ]
+    );
+    await pool.query(
+      `INSERT INTO sermon_transcripts (
+         sermon_id, body_text, status, source_kind, reviewed_by_subject,
+         approved_by_subject, reviewed_at, approved_at
+       ) VALUES ($1, $2, 'approved', 'manual', 'local-admin-0001',
+         'local-admin-0001', now(), now())
+       ON CONFLICT (sermon_id) DO UPDATE SET
+         body_text = EXCLUDED.body_text,
+         status = EXCLUDED.status,
+         source_kind = EXCLUDED.source_kind,
+         source_reference = NULL,
+         reviewed_by_subject = EXCLUDED.reviewed_by_subject,
+         approved_by_subject = EXCLUDED.approved_by_subject,
+         reviewed_at = EXCLUDED.reviewed_at,
+         approved_at = EXCLUDED.approved_at`,
+      [fixture.id, `A complete approved anonymised transcript ${fixtureIndex + 1} for public-selector integration testing.`]
+    );
+    await pool.query("DELETE FROM sermon_question_answers WHERE sermon_id = $1", [fixture.id]);
+    for (let index = 1; index <= 5; index += 1) {
+      await pool.query(
+        `INSERT INTO sermon_question_answers (
+           sermon_id, question_text, answer_text, display_order, status, source_kind,
+           reviewed_by_subject, approved_by_subject, reviewed_at, approved_at
+         ) VALUES ($1, $2, $3, $4, 'approved', 'manual',
+           'local-admin-0001', 'local-admin-0001', now(), now())`,
+        [
+          fixture.id,
+          `What truth should be considered in fixture ${fixtureIndex + 1}, question ${index}?`,
+          `This approved anonymised answer ${index} remains grounded in the synthetic fixture sermon.`,
+          index
+        ]
+      );
+    }
+    await pool.query(
+      `INSERT INTO sermon_primary_passage_reviews (
+         sermon_id, proposal_outcome, evidence_source, evidence_sha256, parser_version,
+         review_status, reviewed_by_subject, reviewed_at
+       ) VALUES ($1, 'no_reference', 'administrator', $2, 'anonymised-fixture-v1',
+         'confirmed_none', 'local-admin-0001', now())
+       ON CONFLICT (sermon_id) DO NOTHING`,
+      [fixture.id, `${fixtureIndex + 1}`.repeat(64)]
+    );
+  }
+}
+
 integration("disposable PostgreSQL Phase 3B application", () => {
   let pool: Pool;
 
@@ -439,6 +516,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   });
 
   it("preserves published-only public list, search, filters, pagination, and safe detail", async () => {
+    await makeAnonymisedPublishedFixturesFrontendEligible(pool);
     const repository = new PostgresSermonRepository(pool);
     const page = await repository.listPublished(publicSermonListQuerySchema.parse({ pageSize: 1 }));
     expect(page).toMatchObject({ totalItems: 2 });
@@ -500,20 +578,24 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       [draftDescriptionId]
     );
     await pool.query(
-      `INSERT INTO sermon_transcripts (
-         sermon_id, body_text, status, source_kind, reviewed_by_subject,
-         approved_by_subject, reviewed_at, approved_at
-       ) VALUES ($1, 'An approved transcript with eschatologicalneologism.', 'approved',
-         'manual', 'local-admin-0001', 'local-admin-0001', now(), now())`,
+      `UPDATE sermon_transcripts
+       SET body_text = 'An approved transcript with eschatologicalneologism.',
+           status = 'approved', source_kind = 'manual', source_reference = NULL,
+           reviewed_by_subject = 'local-admin-0001',
+           approved_by_subject = 'local-admin-0001',
+           reviewed_at = now(), approved_at = now()
+       WHERE sermon_id = $1`,
       [searchableId]
     );
     for (let index = 1; index <= 5; index += 1) {
       await pool.query(
-        `INSERT INTO sermon_question_answers (
-           sermon_id, question_text, answer_text, display_order, status, source_kind,
-           reviewed_by_subject, approved_by_subject, reviewed_at, approved_at
-         ) VALUES ($1, $2, $3, $4, 'approved', 'manual',
-           'local-admin-0001', 'local-admin-0001', now(), now())`,
+        `UPDATE sermon_question_answers
+         SET question_text = $2, answer_text = $3, status = 'approved',
+             source_kind = 'manual', source_reference = NULL,
+             reviewed_by_subject = 'local-admin-0001',
+             approved_by_subject = 'local-admin-0001',
+             reviewed_at = now(), approved_at = now()
+         WHERE sermon_id = $1 AND display_order = $4`,
         [
           searchableId,
           `How does covenantalthoughtword ${index} shape this passage?`,
@@ -542,14 +624,21 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       )
     ).toMatchObject({ data: [], totalItems: 0 });
     await pool.query(
-      `INSERT INTO sermon_transcripts (sermon_id, body_text, status, source_kind)
-       VALUES ($1, 'A private draft transcript with privatetranscripttoken.', 'draft', 'manual')`,
+      `UPDATE sermon_transcripts
+       SET body_text = 'A private draft transcript with privatetranscripttoken.',
+           status = 'draft', source_kind = 'manual', source_reference = NULL,
+           reviewed_by_subject = NULL, approved_by_subject = NULL,
+           reviewed_at = NULL, approved_at = NULL
+       WHERE sermon_id = $1`,
       [draftDescriptionId]
     );
     await pool.query(
-      `INSERT INTO sermon_question_answers (
-         sermon_id, question_text, answer_text, display_order, status, source_kind
-       ) VALUES ($1, 'A private draft question?', 'privatequestiontoken', 1, 'draft', 'manual')`,
+      `UPDATE sermon_question_answers
+       SET question_text = 'A private draft question?', answer_text = 'privatequestiontoken',
+           status = 'draft', source_kind = 'manual', source_reference = NULL,
+           reviewed_by_subject = NULL, approved_by_subject = NULL,
+           reviewed_at = NULL, approved_at = NULL
+       WHERE sermon_id = $1 AND display_order = 1`,
       [draftDescriptionId]
     );
     try {
@@ -563,14 +652,9 @@ integration("disposable PostgreSQL Phase 3B application", () => {
           publicSermonListQuerySchema.parse({ query: "privatequestiontoken" })
         )
       ).toMatchObject({ data: [], totalItems: 0 });
-      expect(await repository.findPublishedBySlug(draftDescription.slug)).toMatchObject({
-        summary: null,
-        transcript: null,
-        questionAnswers: []
-      });
+      expect(await repository.findPublishedBySlug(draftDescription.slug)).toBeNull();
     } finally {
-      await pool.query("DELETE FROM sermon_question_answers WHERE sermon_id = $1", [draftDescriptionId]);
-      await pool.query("DELETE FROM sermon_transcripts WHERE sermon_id = $1", [draftDescriptionId]);
+      await makeAnonymisedPublishedFixturesFrontendEligible(pool, [draftDescription.slug]);
     }
     expect(
       (
@@ -592,7 +676,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       publicSermonListQuerySchema.parse({ pageSize: 50 })
     );
     expect(publicList.data.find((item) => item.id === searchableId)?.summary).toBe(approvedDescription);
-    expect(publicList.data.find((item) => item.id === draftDescriptionId)?.summary).toBeNull();
+    expect(publicList.data.find((item) => item.id === draftDescriptionId)?.summary).toBeTruthy();
     expect(JSON.stringify(publicList)).not.toMatch(/transcript|questionAnswers|draftonlydescriptiontoken/);
 
     await pool.query("UPDATE sermons SET body = 'An anonymised lower-weight body mentions grace.' WHERE id = $1", [draftDescriptionId]);
@@ -630,6 +714,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   });
 
   it("ranks deterministic related sermons without duplicates or private rows", async () => {
+    await makeAnonymisedPublishedFixturesFrontendEligible(pool);
     const repository = new PostgresSermonRepository(pool);
     const current = (await pool.query<{ id: string; slug: string; speaker_id: string }>(
       `SELECT id, slug, speaker_id FROM sermons
@@ -667,6 +752,14 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         [candidate.id, sharedSeries.series_id]
       );
       await pool.query("UPDATE sermons SET speaker_id = $2 WHERE id = $1", [candidate.id, candidate.speaker_id]);
+      await pool.query(
+        `DELETE FROM sermon_primary_passage_reviews
+         WHERE sermon_id IN (
+           SELECT id FROM sermons
+           WHERE slug = ANY($1::text[])
+         )`,
+        [["grace-for-an-anonymised-congregation", "hope-in-an-anonymised-trial"]]
+      );
     }
 
     expect(await repository.findPublishedBySlug("an-anonymised-pending-sermon")).toBeNull();
@@ -3210,6 +3303,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   });
 
   it("records slug redirects and enforces permanent deletion safeguards with minimal tombstones", async () => {
+    await makeAnonymisedPublishedFixturesFrontendEligible(pool);
     const admin = { subject: "local-admin-0001", role: "admin" } satisfies ApplicationIdentity;
     const repository = new PostgresAdminSermonRepository(pool);
     const service = new AdminSermonService(repository, () => new Date("2026-08-05T00:00:00.000Z"));
@@ -3437,6 +3531,14 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       });
     } finally {
       if (createdIds.length) await pool.query("DELETE FROM sermons WHERE id = ANY($1::uuid[])", [createdIds]);
+      await pool.query(
+        `DELETE FROM sermon_primary_passage_reviews
+         WHERE sermon_id IN (
+           SELECT id FROM sermons
+           WHERE slug = ANY($1::text[])
+         )`,
+        [["grace-for-an-anonymised-congregation", "hope-in-an-anonymised-trial"]]
+      );
       await pool.query("DELETE FROM redirects WHERE source_sermon_id IS NOT NULL");
       await pool.query("DELETE FROM sermon_deletion_tombstones");
       await pool.query("DELETE FROM audit_events WHERE actor_subject = 'local-admin-0001'");

@@ -1,19 +1,41 @@
 ---
-const projectStatus = "Local foundation milestone";
+import { publicSiteStyles } from "../server/http/public-sermon-page";
 ---
 
 <!doctype html>
 <html lang="en-AU">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <meta name="robots" content="noindex" />
-    <title>Saving Grace Bible Church — {projectStatus}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <title>Saving Grace Bible Church</title>
+    <style is:global set:html={publicSiteStyles()} />
   </head>
   <body>
-    <main>
-      <h1>Saving Grace Bible Church</h1>
-      <p>{projectStatus} is ready for local development.</p>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+    <header class="site-header-wrap">
+      <div class="site-header">
+        <a class="brand" href="/"><span class="brand-mark" aria-hidden="true">SG</span><span>Saving Grace<br />Bible Church</span></a>
+        <nav class="desktop-nav" aria-label="Primary"><a href="/sermons/">Sermons</a></nav>
+        <details class="mobile-nav"><summary>Menu</summary><nav aria-label="Mobile primary"><a href="/sermons/">Sermons</a></nav></details>
+      </div>
+    </header>
+    <main id="main-content">
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Saving Grace Bible Church</p>
+          <h1>Scripture for faith and life.</h1>
+          <p class="lede">Explore sermon teaching through a clear, readable library designed for listening, reflection and careful study.</p>
+          <div class="hero-actions"><a class="button" href="/sermons/">Browse sermons</a></div>
+        </div>
+        <aside class="hero-note"><strong>Built around the sermon</strong><p>Search by keyword, speaker, series, Bible book or reviewed preaching passage.</p></aside>
+      </section>
+      <section class="empty-state" aria-labelledby="sermon-state-heading">
+        <p class="eyebrow">Sermon library</p>
+        <h2 id="sermon-state-heading">Sermons are being prepared</h2>
+        <p>Please check back soon.</p>
+      </section>
     </main>
+    <footer class="site-footer"><div class="footer-inner"><strong>Saving Grace Bible Church</strong><nav aria-label="Footer"><a href="/sermons/">Sermons</a></nav></div></footer>
   </body>
 </html>

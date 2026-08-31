@@ -57,6 +57,7 @@
     "enrichment:punctuation-local": "tsx src/enrichment/pilot-punctuation-cli.ts",
     "launch-readiness:local": "tsx src/readiness/cli.ts",
     "api:local": "tsx src/server/local-api.ts",
+    "frontend-preview:local": "cross-env API_HOST=127.0.0.1 ENABLE_LOCAL_TEST_IDENTITIES=1 tsx src/server/local-frontend-preview-server.ts",
     "dashboard:local": "cross-env API_HOST=127.0.0.1 ENABLE_LOCAL_TEST_IDENTITIES=1 ENABLE_LOCAL_DASHBOARD=1 tsx src/server/local-api.ts"
   },
   "dependencies": {
