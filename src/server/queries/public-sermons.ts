@@ -359,6 +359,39 @@ export function buildPublishedSermonCountQuery(
   };
 }
 
+export function buildPublishedSeriesRepresentativesQuery(
+  scope: FrontendSermonScope = "public"
+): ParameterizedQuery {
+  return {
+    text: `
+      WITH ranked_series AS (
+        SELECT sermon_series.id AS series_id,
+               sermon_series.name AS series_name,
+               sermon_series.slug AS series_slug,
+               sermon.id AS sermon_id,
+               row_number() OVER (
+                 PARTITION BY sermon_series.id
+                 ORDER BY sermon.service_date DESC, sermon.id
+               ) AS representative_rank
+        FROM series sermon_series
+        JOIN sermon_series_map series_map ON series_map.series_id = sermon_series.id
+        JOIN sermons sermon ON sermon.id = series_map.sermon_id
+        WHERE ${frontendSermonEligibilitySql("sermon", scope)}
+      )
+      SELECT s.id, s.title, s.slug, to_char(s.service_date, 'YYYY-MM-DD') AS service_date,
+             CASE WHEN s.summary_status = 'approved' THEN s.summary ELSE NULL END AS summary,
+             jsonb_build_object('name', ranked.series_name, 'slug', ranked.series_slug)
+               AS representative_series,
+             ${publicRelationshipProjection("s")}
+      FROM ranked_series ranked
+      JOIN sermons s ON s.id = ranked.sermon_id
+      WHERE ranked.representative_rank = 1
+      ORDER BY lower(ranked.series_name), ranked.series_slug, s.id
+    `.trim(),
+    values: []
+  };
+}
+
 export function buildPublishedSermonDetailQuery(
   slug: string,
   scope: FrontendSermonScope = "public"
@@ -564,7 +597,37 @@ export function buildPublishedSermonFilterOptionsQuery(
             WHERE classification.review_status = 'approved'
               AND ${frontendSermonEligibilitySql("sermon", scope)}
           ) options
-        ), '[]'::jsonb) AS books
+        ), '[]'::jsonb) AS books,
+        COALESCE((
+          SELECT jsonb_agg(
+            jsonb_build_object(
+              'bookSlug', availability.book_slug,
+              'chapter', availability.chapter,
+              'verses', availability.verses
+            ) ORDER BY availability.canonical_order, availability.chapter
+          )
+          FROM (
+            SELECT canonical_book.slug AS book_slug,
+                   canonical_book.canonical_order,
+                   primary_passage.start_chapter AS chapter,
+                   jsonb_agg(DISTINCT covered_verse.verse ORDER BY covered_verse.verse) AS verses
+            FROM scripture_references primary_passage
+            JOIN bible_books canonical_book ON canonical_book.id = primary_passage.canonical_book_id
+            JOIN sermons sermon ON sermon.id = primary_passage.sermon_id
+            CROSS JOIN LATERAL generate_series(
+              primary_passage.start_verse,
+              primary_passage.end_verse
+            ) AS covered_verse(verse)
+            WHERE primary_passage.relationship_role = 'primary'
+              AND primary_passage.review_status = 'confirmed'
+              AND primary_passage.start_chapter = primary_passage.end_chapter
+              AND primary_passage.start_verse IS NOT NULL
+              AND primary_passage.end_verse IS NOT NULL
+              AND ${frontendSermonEligibilitySql("sermon", scope)}
+            GROUP BY canonical_book.slug, canonical_book.canonical_order,
+                     primary_passage.start_chapter
+          ) availability
+        ), '[]'::jsonb) AS passage_verse_availability
     `.trim(),
     values: []
   };

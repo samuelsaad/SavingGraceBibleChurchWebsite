@@ -14,6 +14,7 @@ import {
   buildPublishedSermonFilterOptionsQuery,
   buildPublishedSermonListQuery,
   buildPublishedSermonSitemapQuery,
+  buildPublishedSeriesRepresentativesQuery,
   buildPublicSermonPathDispositionQuery,
   buildRelatedPublishedSermonsQuery
 } from "../queries/public-sermons";
@@ -23,7 +24,8 @@ import type {
   PublicSermonFilterOptions,
   PublicSermonPathDisposition,
   PublicSermonRepository,
-  PublicSermonSitemapEntry
+  PublicSermonSitemapEntry,
+  PublicSeriesRepresentative
 } from "./sermon-repository";
 
 export interface SqlExecutor {
@@ -58,6 +60,10 @@ type RelatedSermonRow = PublicSermonRow & {
   relationship_reasons: unknown;
 };
 
+type SeriesRepresentativeRow = PublicSermonRow & {
+  representative_series: unknown;
+};
+
 const filterOptionSchema = z.object({
   name: z.string().min(1),
   slug: z.string().min(1).max(200).regex(/^[a-z0-9-]+$/)
@@ -67,7 +73,12 @@ const filterOptionsSchema = z.object({
   speakers: z.array(filterOptionSchema),
   series: z.array(filterOptionSchema),
   passages: z.array(filterOptionSchema),
-  books: z.array(filterOptionSchema)
+  books: z.array(filterOptionSchema),
+  passageVerseAvailability: z.array(z.object({
+    bookSlug: z.string().min(1).max(200).regex(/^[a-z0-9-]+$/),
+    chapter: z.number().int().positive(),
+    verses: z.array(z.number().int().min(1).max(176))
+  }))
 });
 
 const sitemapEntrySchema = z.object({
@@ -164,11 +175,39 @@ export class PostgresSermonRepository implements PublicSermonRepository {
     const statement = buildPublishedSermonFilterOptionsQuery(this.scope);
     const result = await this.database.query(statement.text, statement.values);
     const row = result.rows[0] as
-      | { speakers: unknown; series: unknown; passages: unknown; books: unknown }
+      | {
+          speakers: unknown;
+          series: unknown;
+          passages: unknown;
+          books: unknown;
+          passage_verse_availability: unknown;
+        }
       | undefined;
-    return filterOptionsSchema.parse(row ?? {
-      speakers: [], series: [], passages: [], books: []
+    return filterOptionsSchema.parse(row ? {
+      speakers: row.speakers,
+      series: row.series,
+      passages: row.passages,
+      books: row.books,
+      passageVerseAvailability: row.passage_verse_availability
+    } : {
+      speakers: [], series: [], passages: [], books: [], passageVerseAvailability: []
     });
+  }
+
+  async listPublishedTopicalSermons(): Promise<SermonSummary[]> {
+    // The current schema has no administrator-approved topical-classification
+    // lifecycle. An explicit no-primary-passage outcome is deliberately not
+    // treated as topical, so discovery fails closed until trusted metadata exists.
+    return [];
+  }
+
+  async listPublishedSeriesRepresentatives(): Promise<PublicSeriesRepresentative[]> {
+    const statement = buildPublishedSeriesRepresentativesQuery(this.scope);
+    const result = await this.database.query(statement.text, statement.values);
+    return (result.rows as SeriesRepresentativeRow[]).map((row) => ({
+      series: filterOptionSchema.parse(row.representative_series),
+      sermon: summaryFromRow(row)
+    }));
   }
 
   async listPublishedSitemapEntries(): Promise<PublicSermonSitemapEntry[]> {

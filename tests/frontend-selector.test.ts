@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { buildPublishedSermonDetailQuery, buildPublishedSermonListQuery, buildPublishedSermonSitemapQuery } from "../src/server/queries/public-sermons";
+import {
+  buildPublishedSeriesRepresentativesQuery,
+  buildPublishedSermonDetailQuery,
+  buildPublishedSermonFilterOptionsQuery,
+  buildPublishedSermonListQuery,
+  buildPublishedSermonSitemapQuery
+} from "../src/server/queries/public-sermons";
 import { publicSermonListQuerySchema } from "../src/api/contracts/public-sermons";
 
 describe("authoritative frontend sermon selector", () => {
@@ -35,5 +41,38 @@ describe("authoritative frontend sermon selector", () => {
     const sql = buildPublishedSermonSitemapQuery().text;
     expect(sql).toContain("status = 'published'");
     expect(sql).not.toContain("status = 'draft'");
+  });
+
+  it("uses stable recent and latest-per-series ordering", () => {
+    const recent = buildPublishedSermonListQuery(query, "public").text;
+    expect(recent).toContain("ORDER BY s.service_date DESC, s.id");
+
+    const representatives = buildPublishedSeriesRepresentativesQuery("completed_preview").text;
+    expect(representatives).toContain("PARTITION BY sermon_series.id");
+    expect(representatives).toContain("ORDER BY sermon.service_date DESC, sermon.id");
+    expect(representatives).toContain("WHERE ranked.representative_rank = 1");
+  });
+
+  it("derives selectable verses only from confirmed eligible single-chapter ranges", () => {
+    const sql = buildPublishedSermonFilterOptionsQuery("completed_preview").text;
+    expect(sql).toContain("primary_passage.relationship_role = 'primary'");
+    expect(sql).toContain("primary_passage.review_status = 'confirmed'");
+    expect(sql).toContain("primary_passage.start_chapter = primary_passage.end_chapter");
+    expect(sql).toContain("generate_series(");
+  });
+
+  it("matches a selected verse through inclusive primary-passage range overlap", () => {
+    const passage = publicSermonListQuerySchema.parse({
+      passageBook: "romans",
+      passageChapter: 8,
+      passageVerse: 3,
+      page: 1,
+      pageSize: 9
+    });
+    const sql = buildPublishedSermonListQuery(passage, "public").text;
+    expect(sql).toContain("primary_filter.relationship_role = 'primary'");
+    expect(sql).toContain("primary_filter.review_status = 'confirmed'");
+    expect(sql).toContain("<=");
+    expect(sql).toContain(">=");
   });
 });

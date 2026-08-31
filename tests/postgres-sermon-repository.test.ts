@@ -85,7 +85,8 @@ describe("PostgreSQL sermon repository", () => {
               speakers: [{ name: "Example Speaker", slug: "example-speaker" }],
               series: [{ name: "Example Series", slug: "example-series" }],
               passages: [{ name: "Romans 8", slug: "romans-8" }],
-              books: [{ name: "Romans", slug: "romans" }]
+              books: [{ name: "Romans", slug: "romans" }],
+              passage_verse_availability: [{ bookSlug: "romans", chapter: 8, verses: [1, 2, 3, 4] }]
             }], rowCount: 1, command: "SELECT", oid: 0, fields: []
           };
         }
@@ -115,7 +116,7 @@ describe("PostgreSQL sermon repository", () => {
       location: "/sermons/an-anonymised-sermon/"
     });
 
-    expect(calls[0]?.text.match(/sermon.status = 'published'/g)).toHaveLength(4);
+    expect(calls[0]?.text.match(/sermon.status = 'published'/g)).toHaveLength(5);
     expect(calls[1]?.text).toContain("status = 'published'");
     expect(calls[2]?.values).toEqual(["/sermons/old-sermon/"]);
   });

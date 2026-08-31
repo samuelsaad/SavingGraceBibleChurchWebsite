@@ -47,6 +47,7 @@ export function translateLegacySermonQuery(parameters: URLSearchParams): Record<
     ["dateFrom", "dateFrom"],
     ["dateTo", "dateTo"],
     ["order", "order"],
+    ["view", "view"],
     ["page", "page"],
     ["pageSize", "pageSize"]
   ];

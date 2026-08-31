@@ -703,7 +703,17 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       "romans-8-1-4"
     ]);
     expect(filterOptions.books.map((item) => item.slug)).toEqual(["psalms", "romans"]);
+    expect(filterOptions.passageVerseAvailability).toEqual([]);
     expect(JSON.stringify(filterOptions)).not.toContain("an-anonymised-pending-sermon");
+
+    expect(await repository.listPublishedTopicalSermons()).toEqual([]);
+    const seriesRepresentatives = await repository.listPublishedSeriesRepresentatives();
+    expect(seriesRepresentatives.map((item) => item.series.slug)).toEqual([
+      "example-series",
+      "second-example-series"
+    ]);
+    expect(new Set(seriesRepresentatives.map((item) => item.series.slug)).size)
+      .toBe(seriesRepresentatives.length);
 
     const sitemapEntries = await repository.listPublishedSitemapEntries();
     expect(sitemapEntries.map((item) => item.slug).sort()).toEqual([
@@ -2756,6 +2766,8 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       expect((await publicRepository.listPublished(publicSermonListQuerySchema.parse({
         passageBook: "john", passageChapter: 3, passageVerse: 16
       }))).data).toHaveLength(0);
+      expect((await publicRepository.listPublishedFilterOptions()).passageVerseAvailability)
+        .toEqual([{ bookSlug: "romans", chapter: 8, verses: [1, 2, 3, 4] }]);
       const after = (await pool.query<{ digest: string }>(
         `SELECT encode(digest(convert_to(concat_ws(E'\\n', sermon.summary, transcript.body_text,
           (SELECT string_agg(qa.question_text || E'\\n' || qa.answer_text, E'\\n' ORDER BY qa.display_order)

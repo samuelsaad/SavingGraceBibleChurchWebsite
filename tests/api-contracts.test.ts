@@ -166,8 +166,8 @@ describe("public sermon API contract", () => {
 
   it("keeps filter options and legacy dispositions public-only and mapped", () => {
     const options = buildPublishedSermonFilterOptionsQuery();
-    expect(options.text.match(/sermon.status = 'published'/g)).toHaveLength(4);
-    expect(options.text.match(/sermon.deleted_at IS NULL/g)).toHaveLength(4);
+    expect(options.text.match(/sermon.status = 'published'/g)).toHaveLength(5);
+    expect(options.text.match(/sermon.deleted_at IS NULL/g)).toHaveLength(5);
     expect(options.text).toContain("classification.review_status = 'approved'");
     expect(options.text).not.toMatch(/sermon\.status = '(?:pending|draft)'/);
 

@@ -11,11 +11,23 @@ export interface PublicSermonFilterOption {
   slug: string;
 }
 
+export interface PublicPassageVerseAvailability {
+  bookSlug: string;
+  chapter: number;
+  verses: number[];
+}
+
 export interface PublicSermonFilterOptions {
   speakers: PublicSermonFilterOption[];
   series: PublicSermonFilterOption[];
   passages: PublicSermonFilterOption[];
   books: PublicSermonFilterOption[];
+  passageVerseAvailability: PublicPassageVerseAvailability[];
+}
+
+export interface PublicSeriesRepresentative {
+  series: PublicSermonFilterOption;
+  sermon: SermonSummary;
 }
 
 export interface PublicSermonSitemapEntry {
@@ -31,6 +43,8 @@ export interface PublicSermonRepository {
   listPublished(query: PublicSermonListQuery): Promise<PaginatedSermons>;
   findPublishedBySlug(slug: string): Promise<SermonDetail | null>;
   listPublishedFilterOptions(): Promise<PublicSermonFilterOptions>;
+  listPublishedTopicalSermons(): Promise<SermonSummary[]>;
+  listPublishedSeriesRepresentatives(): Promise<PublicSeriesRepresentative[]>;
   listPublishedSitemapEntries(): Promise<PublicSermonSitemapEntry[]>;
   findPublicPathDisposition(path: string): Promise<PublicSermonPathDisposition | null>;
 }

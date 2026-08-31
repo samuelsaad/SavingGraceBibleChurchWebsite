@@ -50,7 +50,8 @@ const options: PublicSermonFilterOptions = {
   speakers: [{ name: "Example Speaker", slug: "example-speaker" }],
   series: [{ name: "Example Series", slug: "example-series" }],
   passages: [],
-  books: [{ name: "Romans", slug: "romans" }]
+  books: [{ name: "Romans", slug: "romans" }],
+  passageVerseAvailability: [{ bookSlug: "romans", chapter: 8, verses: [1, 2, 3, 4] }]
 };
 
 class PreviewRepository implements PublicSermonRepository {
@@ -72,6 +73,9 @@ class PreviewRepository implements PublicSermonRepository {
     this.queryCount += 1;
     return options;
   }
+
+  async listPublishedTopicalSermons(): Promise<SermonSummary[]> { return []; }
+  async listPublishedSeriesRepresentatives() { return [{ series: options.series[0]!, sermon: summary }]; }
 
   async listPublishedSitemapEntries() { return []; }
   async findPublicPathDisposition(): Promise<PublicSermonPathDisposition | null> { return null; }
@@ -137,6 +141,8 @@ describe("authenticated local frontend preview", () => {
     expect(sermonHtml.match(/class="qa-item"/gu)).toHaveLength(7);
     expect(sermonHtml).toContain('data-video-id="abcdefghijk"');
     expect(sermonHtml).not.toContain("autoplay");
+    expect(sermonHtml).not.toContain('href="https://www.youtube.com/watch?v=abcdefghijk"');
+    expect(sermonHtml).not.toContain("Open video");
     expect(sermonHtml).not.toContain("Related themes");
   });
 

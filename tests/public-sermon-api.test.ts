@@ -55,8 +55,11 @@ class FakeRepository implements PublicSermonRepository {
   }
 
   async listPublishedFilterOptions(): Promise<PublicSermonFilterOptions> {
-    return { speakers: [], series: [], passages: [], books: [] };
+    return { speakers: [], series: [], passages: [], books: [], passageVerseAvailability: [] };
   }
+
+  async listPublishedTopicalSermons() { return []; }
+  async listPublishedSeriesRepresentatives() { return []; }
 
   async listPublishedSitemapEntries() {
     return [];

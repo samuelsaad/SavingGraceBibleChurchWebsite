@@ -23,6 +23,7 @@ export const publicSermonListQuerySchema = z
     dateFrom: isoDateSchema.optional(),
     dateTo: isoDateSchema.optional(),
     order: z.enum(["ASC", "DESC"]).default("DESC"),
+    view: z.enum(["recent"]).optional(),
     page: z.coerce.number().int().min(1).default(1),
     pageSize: z.coerce.number().int().min(1).max(50).default(9)
   })
@@ -32,6 +33,13 @@ export const publicSermonListQuerySchema = z
         code: "custom",
         path: ["dateTo"],
         message: "dateTo must not be before dateFrom"
+      });
+    }
+    if (value.book && value.passageBook && value.book !== value.passageBook) {
+      context.addIssue({
+        code: "custom",
+        path: ["passageBook"],
+        message: "Broad Bible-book and exact-passage filters must use the same book"
       });
     }
     if (!value.passageBook && (

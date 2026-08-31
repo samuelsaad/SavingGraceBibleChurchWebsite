@@ -15,6 +15,7 @@ import type {
 } from "../repositories/sermon-repository";
 import {
   frontendResponseHeaders,
+  hasActiveSermonFilters,
   previewRenderContext,
   renderFrontendBoundaryPage,
   renderFrontendHomePage,
@@ -99,9 +100,14 @@ export function createLocalFrontendPreviewHandler(
         }
         const translated = translateLegacySermonQuery(url.searchParams);
         const query = publicSermonListQuerySchema.parse({ ...translated, page, pageSize: 9 });
-        const [sermons, options] = await Promise.all([
+        const discoveryRequested = query.page === 1
+          && query.view !== "recent"
+          && !hasActiveSermonFilters(query);
+        const [sermons, options, topicalSermons, seriesRepresentatives] = await Promise.all([
           repository.listPublished(query),
-          repository.listPublishedFilterOptions()
+          repository.listPublishedFilterOptions(),
+          discoveryRequested ? repository.listPublishedTopicalSermons() : Promise.resolve([]),
+          discoveryRequested ? repository.listPublishedSeriesRepresentatives() : Promise.resolve([])
         ]);
         const totalPages = Math.ceil(sermons.totalItems / query.pageSize);
         if (page > 1 && (totalPages === 0 || page > totalPages)) {
@@ -112,6 +118,8 @@ export function createLocalFrontendPreviewHandler(
           totalItems: sermons.totalItems,
           query,
           options,
+          topicalSermons,
+          seriesRepresentatives,
           hasQueryParameters: url.searchParams.size > 0
         }, previewRenderContext), 200, { passageScript: true });
       }

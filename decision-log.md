@@ -1,6 +1,6 @@
 # Project Decision Log
 
-**Status:** Approved decisions through D-143; public frontend preview remains private and local
+**Status:** Approved decisions through D-144; public frontend preview remains private and local
 **Authority:** `church-website-architecture-plan.md` plus Yang’s confirmed migration decisions and Samuel Saad’s recorded project-owner decisions
 
 ## Evidence classifications
@@ -337,6 +337,12 @@ The bounded carry-forward is not a general auto-approval. It requires the exact 
 The first cohesive sermon frontend reuses one server-rendered component system for the homepage, archive, detail, metadata-related sermons, search/filter controls, taxonomy browsing and controlled empty/error/private states. The approved description precedes media, transcript and Q&A. Complete approved transcript and Q&A text stays in initial HTML behind accessible native disclosures. YouTube is click-to-load through the privacy-enhanced host with no autoplay. Keyword/structured Scripture search, metadata-based **Related sermons**, and the disabled description-only **Related themes** foundation remain separate.
 
 The 15 completed pilot/Wave-1 sermons remain private drafts. Their design preview is limited to loopback `/frontend-preview/`, requires a short-lived session issued through the existing local administrator identity, uses strict private/no-store/noindex headers, emits no canonical, social metadata, sitemap, feed or structured data, and is absent from the static production build. Both public and preview selectors independently require approved current content, controlled media and a reviewed primary-passage outcome; D-141's explicit no-primary outcome remains valid without an invented Bible-book classification. Lifecycle state alone cannot expose a sermon. This decision authorises no publication, staging, deployment, production access, external service, semantic generation, public **Related themes**, remote or Git push. (`explicit bounded frontend implementation and authenticated local-preview authority`)
+
+### D-144 - Sermon archive separates compact search, recent discovery and trusted classifications
+
+The sermon archive uses one compact primary row containing exactly Search, Speaker, Bible book and Series. Advanced filters remain a native disclosure with server-rendered state and browser-history restoration. Precise passage selection cascades Book → Chapter → Verse and remains separate from both keyword/structured Scripture search and metadata recommendations. Canonical chapter counts are checked in; because complete per-chapter verse counts are not, the UI exposes only verse values verified from eligible confirmed single-chapter primary-passage ranges while the server retains inclusive structured overlap semantics.
+
+The unfiltered discovery view shows exactly three most recent full-description landscape cards. A URL-addressable expanded mode provides nine-item numbered pagination and hides discovery carousels, as does every search/filter result. Series discovery selects one latest eligible sermon per series deterministically. Topical discovery fails closed until an explicit administrator-approved topic lifecycle exists; neither absent primary passage nor unreviewed metadata is treated as topical. The public detail retains privacy-enhanced click-to-load YouTube but removes the separate website-owned outbound YouTube link; administrator source access is unchanged. All 15 preview records remain private drafts, and this revision creates no publication, semantic, staging, production or deployment authority. (`explicit bounded frontend revision; authenticated local-preview verification only`)
 
 ## Decisions still required
 

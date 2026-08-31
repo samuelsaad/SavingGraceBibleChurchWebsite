@@ -88,4 +88,23 @@ describe("server-rendered public sermon page", () => {
     expect(html).not.toContain("Related sermons");
     expect(html).not.toContain("Related themes");
   });
+
+  it("keeps click-to-load YouTube media without a website-owned outbound link", () => {
+    const html = renderPublicSermonPage({
+      ...sermon,
+      media: [{
+        provider: "youtube",
+        mediaType: "video",
+        externalId: "abcdefghijk",
+        canonicalUrl: "https://www.youtube.com/watch?v=abcdefghijk",
+        title: "An anonymised sermon video"
+      }]
+    });
+
+    expect(html).toContain('data-load-youtube');
+    expect(html).toContain('data-video-id="abcdefghijk"');
+    expect(html).toContain("youtube-nocookie.com/embed/");
+    expect(html).not.toContain('href="https://www.youtube.com/watch?v=abcdefghijk"');
+    expect(html).not.toContain("Open video");
+  });
 });
