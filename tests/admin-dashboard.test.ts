@@ -99,7 +99,7 @@ describe("Phase 3B administration dashboard", () => {
     expect(client).toContain("source sermon video (opens in a new tab)");
     expect(client).toContain('class="external-link-icon" aria-hidden="true"');
     expect(client).toContain("Proposed passage");
-    expect(client).toContain("Confirmed passage");
+    expect(client).toContain("Reviewed passage");
     expect(client).toContain("Pending review");
     expect(client).toContain("No single primary passage");
     expect(client).toContain("No proposal detected");
@@ -164,6 +164,7 @@ describe("Phase 3B administration dashboard", () => {
     expect(service).toContain("Save changed transcript wording as draft");
     expect(service).toContain("superseded extractive Wave 1 generator");
     expect(service).toContain("generated draft is stale");
+    expect(service).toContain("sermon.readiness.hasRequiredPassageDecision");
     expect(client).toContain("/^\\/admin\\/sermons\\/[0-9a-f-]+\\/review$/i");
     const guidedRouteSource = client.slice(
       client.indexOf("const enrichmentReviewStages"),

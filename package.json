@@ -31,6 +31,7 @@
     "enrichment:mechanical-qa-current15-local": "tsx src/enrichment/current15-generated-text-mechanical-qa-cli.ts",
     "scripture:prepare-current15-local": "tsx src/scripture/primary-passage-preparation-cli.ts",
     "scripture:repair-current15-official-titles-local": "tsx src/scripture/primary-passage-official-title-repair-cli.ts",
+    "scripture:carry-forward-legacy-completed-local": "tsx src/scripture/legacy-completed-passage-carry-forward-cli.ts",
     "migration:dry-run": "tsx src/migration/cli.ts --dry-run",
     "migration:load-local": "tsx src/migration/load-cli.ts",
     "db:apply-local": "tsx src/migration/schema-cli.ts --apply",

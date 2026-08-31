@@ -24,7 +24,8 @@ export type SchemaMigrationScope =
   | "0012_description_semantic_runtime_provenance"
   | "0013_official_youtube_caption_provenance"
   | "0014_primary_preaching_passages"
-  | "0015_optional_passage_and_grounding_identity";
+  | "0015_optional_passage_and_grounding_identity"
+  | "0016_legacy_completed_passage_reviews";
 
 interface SchemaMigrationDefinition {
   id: string;
@@ -248,6 +249,15 @@ export const schemaMigrationDefinitions: readonly SchemaMigrationDefinition[] = 
     addedRelations: ["sermon_transcript_legacy_grounding_bindings"],
     addedFunctions: ["rotate_sermon_transcript_grounding_revision()"],
     addedTriggers: ["sermon_transcripts_rotate_grounding_revision"]
+  },
+  {
+    id: "0016_legacy_completed_passage_reviews",
+    order: 16,
+    upPath: "db/migrations/0016_legacy_completed_passage_reviews.sql",
+    downPath: "db/migrations/0016_legacy_completed_passage_reviews.down.sql",
+    addedRelations: [],
+    addedFunctions: ["enforce_completed_enrichment_review_passage_decision()"],
+    addedTriggers: ["sermon_enrichment_reviews_passage_decision_consistency"]
   }
 ] as const;
 

@@ -674,6 +674,12 @@ export class AdminSermonService {
       if (!sermon.readiness.hasRequiredQuestionAnswers) {
         issues.push({ path: "questionAnswers", message: "Approve five to ten ordered Q&A pairs." });
       }
+      if (!sermon.readiness.hasRequiredPassageDecision) {
+        issues.push({
+          path: "primaryPassageReview",
+          message: "Confirm a valid primary passage or explicitly record that this sermon has no single primary passage."
+        });
+      }
       if (!sermon.readiness.hasValidControlledMedia) {
         issues.push({ path: "media", message: "Confirm valid controlled media." });
       }

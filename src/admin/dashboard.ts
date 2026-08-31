@@ -395,7 +395,7 @@ function sermonRows(sermons: SermonSummary[]): string {
     const passage = sermon.primaryPassage ?? { state: "no_proposal_detected" as const, displayText: null };
     const stateLabels = {
       proposed_passage: "Proposed passage",
-      confirmed_passage: "Confirmed passage",
+      confirmed_passage: "Reviewed passage",
       pending_review: "Pending review",
       no_primary_passage: "No single primary passage",
       no_proposal_detected: "No proposal detected",
@@ -627,11 +627,13 @@ function primaryPassageReviewPanel(sermon: SermonDetail): string {
   const status = review.reviewStatus === "pending"
     ? "Awaiting administrator decision"
     : review.reviewStatus === "confirmed_passage"
-      ? "Primary passage confirmed"
+      ? "Reviewed passage"
       : review.reviewStatus === "confirmed_none"
         ? "No single primary passage confirmed"
         : "Title proposal rejected";
-  const proposal = review.proposalOutcome === "proposed"
+  const proposal = review.reviewStatus === "confirmed_passage"
+    ? "This reviewed passage was carried forward or confirmed through an attributed administrator decision."
+    : review.proposalOutcome === "proposed"
     ? "One structured reference was proposed from the locally stored YouTube title. Verify it personally before confirming."
     : review.proposalOutcome === "no_reference"
       ? "No usable primary reference was found in the locally stored YouTube title. Enter one manually only if the sermon has a clear primary passage."
@@ -1542,7 +1544,7 @@ async function renderSermonList(): Promise<void> {
             <option value="">All passage states</option>
             ${[
               ["proposed_passage", "Proposed passage"],
-              ["confirmed_passage", "Confirmed passage"],
+              ["confirmed_passage", "Reviewed passage"],
               ["pending_review", "Pending review"],
               ["no_primary_passage", "No primary passage"],
               ["no_proposal_detected", "No proposal detected"],

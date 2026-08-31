@@ -1,6 +1,6 @@
 # Project Decision Log
 
-**Status:** Approved decisions through D-140; description generation now fails closed without an explicitly approved generative model
+**Status:** Approved decisions through D-142; legacy passage decisions are carried forward only from complete pre-gate evidence
 **Authority:** `church-website-architecture-plan.md` plus Yang’s confirmed migration decisions and Samuel Saad’s recorded project-owner decisions
 
 ## Evidence classifications
@@ -325,6 +325,12 @@ A canonical Bible-book classification or primary Scripture coordinate is not man
 Grounded descriptions and Q&A bind the transcript's immutable grounding revision and exact UTF-8 SHA-256. That revision rotates only when transcript bytes or source identity change. Approval metadata, passage decisions, generic row versions, review timestamps and saves in another generated content area do not create staleness. Legacy row-version references are usable only through migration-recorded compatibility evidence for the exact unchanged transcript hash and current grounding revision. Exact-hash repair is limited to private, unapproved, non-administrator-edited artifacts, preserves bodies and historical provenance, is idempotent, and creates no approval or publication state.
 
 Migration `0015_optional_passage_and_grounding_identity` implements these rules. The bounded local repair recorded one explicit administrator no-primary decision and rebound one private description plus seven private Q&A pairs byte-for-byte; an identical rerun was unchanged. The current 15-record scan found no other eligible automatic repair. No transcript, approval, public/search/semantic state or external system was changed. (`explicit product/governance and bounded local-repair authority; human content review remains required`)
+
+### D-142 - Legacy completed passage reviews require exact evidence before carry-forward
+
+Migration `0015` correctly made an unresolved primary-passage decision incomplete, but legacy reviews completed before that gate could contain an unchanged structurally valid passage without a separate passage-decision row. Migration `0016_legacy_completed_passage_reviews` adds the forward rule: Stage 6 cannot finish with a pending passage decision, and a completed review cannot later be made passage-pending.
+
+The bounded carry-forward is not a general auto-approval. It requires the exact current 15-record pilot/Wave-1 scope, completion before `0015`, intact transcript/description/Q&A/final-review decisions, one structurally valid lead primary passage, proof that the proposal existed unchanged through completion, and no later passage audit. Nine records met all conditions. Each gained a new `local-admin-0001` audit event under authorization `SAMUEL-LEGACY-PASSAGE-REVIEW-CARRY-FORWARD-2026-08-31`, while all original review actors and timestamps were preserved. Five later, changed or post-gate proposals remain pending and `Needs Work`; the existing explicit no-primary decision remains unchanged. The dashboard identifies carried-forward results as `Reviewed passage`, not as a newly performed confirmation. (`explicit bounded legacy-review carry-forward authority; no new content judgment or publication authority`)
 
 ## Decisions still required
 

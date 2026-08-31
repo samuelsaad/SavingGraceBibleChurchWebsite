@@ -79,6 +79,12 @@ import {
   type DescriptionEmbeddingModel,
   type DescriptionSemanticPipeline
 } from "../src/semantic/description-related-themes";
+import {
+  carryForwardLegacyCompletedPassageReviews,
+  legacyPassageCarryForwardAction,
+  legacyPassageCarryForwardActor,
+  legacyPassageCarryForwardAuthorization
+} from "../src/scripture/legacy-completed-passage-carry-forward";
 import { anonymisedAtomicManifest } from "./fixtures/atomic-review";
 
 const enabled = process.env.RUN_POSTGRES_INTEGRATION === "1";
@@ -372,6 +378,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   });
 
   it("aborts the one-speaker migration with affected IDs and cleanly reapplies", async () => {
+    await runSchema("rollback", "0016_legacy_completed_passage_reviews");
     await runSchema("rollback", "0015_optional_passage_and_grounding_identity");
     await runSchema("rollback", "0014_primary_preaching_passages");
     await runSchema("rollback", "0013_official_youtube_caption_provenance");
@@ -425,6 +432,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     await runSchema("apply", "0013_official_youtube_caption_provenance");
     await runSchema("apply", "0014_primary_preaching_passages");
     await runSchema("apply", "0015_optional_passage_and_grounding_identity");
+    await runSchema("apply", "0016_legacy_completed_passage_reviews");
     expect(
       (await pool.query("SELECT to_regclass('public.sermon_speakers') IS NULL AS removed")).rows[0]
     ).toEqual({ removed: true });
@@ -2333,6 +2341,22 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         admin,
         "guided-review-qa-approve"
       );
+      await pool.query(
+        `INSERT INTO sermon_primary_passage_reviews (
+           sermon_id, proposal_outcome, evidence_source, evidence_sha256, parser_version
+         ) VALUES ($1, 'no_reference', 'local_youtube_title', $2, 'saving-grace-primary-passage-v1')`,
+        [sermonId, "e".repeat(64)]
+      );
+      sermon = await service.decidePrimaryPassage(
+        sermonId,
+        primaryPassageDecisionInputSchema.parse({
+          sermonRowVersion: sermon.rowVersion,
+          reviewRowVersion: 1,
+          action: "confirm_no_primary_passage"
+        }),
+        admin,
+        "guided-review-no-primary-passage"
+      );
       review = await service.enrichmentReviewDetail(sermonId, admin);
       expect(review.items.every(
         (item) => item.transcriptRowVersion === review.sermon.transcript!.rowVersion
@@ -2366,7 +2390,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       expect(review.sermon).toMatchObject({
         readiness: {
           isContentComplete: true,
-          isComplete: false,
+          isComplete: true,
           hasRequiredBibleBook: false
         },
         enrichmentSource: { warningResolutionStatus: "resolved_by_completed_review" }
@@ -2387,23 +2411,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       expect(inspectedCompletedStage.review.completedAt).not.toBeNull();
       expect((await service.listAudit(sermonId, admin)).length).toBe(auditCountBeforeInspection);
 
-      await pool.query(
-        `INSERT INTO sermon_primary_passage_reviews (
-           sermon_id, proposal_outcome, evidence_source, evidence_sha256, parser_version
-         ) VALUES ($1, 'no_reference', 'administrator', $2, 'administrator-manual-v1')`,
-        [sermonId, "c".repeat(64)]
-      );
-      const passagePending = await service.detail(sermonId, admin);
-      const metadataComplete = await service.decidePrimaryPassage(
-        sermonId,
-        primaryPassageDecisionInputSchema.parse({
-          sermonRowVersion: passagePending.rowVersion,
-          reviewRowVersion: passagePending.primaryPassageReview!.rowVersion,
-          action: "confirm_no_primary_passage"
-        }),
-        admin,
-        "guided-review-no-primary-passage"
-      );
+      const metadataComplete = await service.detail(sermonId, admin);
       expect(metadataComplete).toMatchObject({
         summaryStatus: "approved",
         transcript: { status: "approved" },
@@ -2680,6 +2688,320 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         await pool.query("DELETE FROM audit_events WHERE entity_id = $1", [sermonId]);
         await pool.query("DELETE FROM sermons WHERE id = $1", [sermonId]);
       }
+    }
+  });
+
+  it("prevents Stage 6 completion while passage review is pending and accepts an explicit no-primary decision", async () => {
+    const admin = { subject: "local-admin-0001", role: "admin" } satisfies ApplicationIdentity;
+    const service = new AdminSermonService(new PostgresAdminSermonRepository(pool));
+    let sermonId: string | null = null;
+    try {
+      const created = await service.create(createSermonInputSchema.parse({
+        title: "An anonymised completed-review passage gate",
+        slug: "anonymised-completed-review-passage-gate",
+        serviceDate: "2026-08-05",
+        ...approvedEnrichment()
+      }), admin, "completed-review-passage-gate-create");
+      sermonId = created.id;
+      await pool.query(
+        `INSERT INTO sermon_enrichment_sources (
+           sermon_id, provider, video_id, canonical_url, caption_language,
+           caption_track_type, original_filename, source_content_sha256,
+           retrieval_attribution, source_character_count, cleaned_character_count,
+           apparent_completeness, uncertainty_marker_count, warnings,
+           unresolved_passages, processing_version, imported_at, processed_at,
+           processing_duration_ms, estimated_review_minutes,
+           manual_attention_required, accuracy_review_status
+         ) VALUES (
+           $1, 'youtube', 'gateproof01', 'https://www.youtube.com/watch?v=gateproof01', 'en',
+           'automatic', 'anonymised.vtt', $2, 'authorised_youtube_studio_export', 100, 100,
+           'requires_manual_review', 0, '[]'::jsonb, '[]'::jsonb, 'anonymised-stage6-gate-v1',
+           now(), now(), 1, 1, true, 'required'
+         )`,
+        [sermonId, "c".repeat(64)]
+      );
+
+      const pending = await pool.connect();
+      await pending.query("BEGIN");
+      try {
+        await pending.query(
+          `INSERT INTO sermon_primary_passage_reviews (
+             sermon_id, proposal_outcome, evidence_source, evidence_sha256, parser_version
+           ) VALUES ($1, 'proposed', 'local_youtube_title', $2, 'saving-grace-primary-passage-v1')`,
+          [sermonId, "a".repeat(64)]
+        );
+        await pending.query(
+          `UPDATE sermon_enrichment_reviews
+           SET identity_status = 'confirmed', current_stage = 6,
+               completed_by_subject = $2, completed_at = now()
+           WHERE sermon_id = $1`,
+          [sermonId, admin.subject]
+        );
+        await expect(pending.query("SET CONSTRAINTS ALL IMMEDIATE"))
+          .rejects.toThrow("completed_enrichment_review_requires_primary_passage_decision");
+      } finally {
+        await pending.query("ROLLBACK").catch(() => undefined);
+        pending.release();
+      }
+
+      const reviewedNone = await pool.connect();
+      await reviewedNone.query("BEGIN");
+      try {
+        await reviewedNone.query(
+          `INSERT INTO sermon_primary_passage_reviews (
+             sermon_id, proposal_outcome, evidence_source, evidence_sha256, parser_version,
+             review_status, reviewed_by_subject, reviewed_at
+           ) VALUES ($1, 'no_reference', 'local_youtube_title', $2,
+                     'saving-grace-primary-passage-v1', 'confirmed_none', $3, now())`,
+          [sermonId, "b".repeat(64), admin.subject]
+        );
+        await reviewedNone.query(
+          `UPDATE sermon_enrichment_reviews
+           SET identity_status = 'confirmed', current_stage = 6,
+               completed_by_subject = $2, completed_at = now()
+           WHERE sermon_id = $1`,
+          [sermonId, admin.subject]
+        );
+        await expect(reviewedNone.query("SET CONSTRAINTS ALL IMMEDIATE")).resolves.toBeDefined();
+      } finally {
+        await reviewedNone.query("ROLLBACK");
+        reviewedNone.release();
+      }
+    } finally {
+      if (sermonId) {
+        await pool.query("DELETE FROM audit_events WHERE entity_id = $1", [sermonId]);
+        await pool.query("DELETE FROM sermons WHERE id = $1", [sermonId]);
+      }
+    }
+  });
+
+  it("carries forward only the exact anonymised legacy-complete passage set with preserved content and idempotent audit", async () => {
+    const admin = { subject: "local-admin-0001", role: "admin" } satisfies ApplicationIdentity;
+    const legacyReviewer = "anonymised-legacy-reviewer";
+    const service = new AdminSermonService(new PostgresAdminSermonRepository(pool));
+    const sermonIds: string[] = [];
+    const protectedSnapshot = async () => (await pool.query(
+      `SELECT sermon.id,
+              sermon.row_version AS sermon_row_version,
+              encode(digest(convert_to(COALESCE(sermon.summary, ''), 'UTF8'), 'sha256'), 'hex') AS summary_sha256,
+              sermon.summary_status, sermon.summary_source_reference,
+              transcript.row_version AS transcript_row_version,
+              transcript.grounding_revision_id,
+              encode(digest(convert_to(transcript.body_text, 'UTF8'), 'sha256'), 'hex') AS transcript_sha256,
+              transcript.status AS transcript_status, transcript.source_reference AS transcript_source_reference,
+              review.completed_by_subject, review.completed_at, review.current_stage,
+              review.row_version AS review_row_version,
+              jsonb_agg(jsonb_build_object(
+                'id', qa.id,
+                'order', qa.display_order,
+                'bytes', encode(digest(convert_to(qa.question_text || E'\\n' || qa.answer_text, 'UTF8'), 'sha256'), 'hex'),
+                'status', qa.status,
+                'source', qa.source_reference,
+                'row_version', qa.row_version
+              ) ORDER BY qa.display_order, qa.id) AS qa_state
+       FROM sermons sermon
+       JOIN sermon_transcripts transcript ON transcript.sermon_id = sermon.id
+       JOIN sermon_enrichment_reviews review ON review.sermon_id = sermon.id
+       JOIN sermon_question_answers qa ON qa.sermon_id = sermon.id
+       WHERE sermon.id = ANY($1::uuid[])
+       GROUP BY sermon.id, transcript.sermon_id, review.sermon_id
+       ORDER BY sermon.id`,
+      [sermonIds]
+    )).rows;
+    try {
+      await runSchema("rollback", "0016_legacy_completed_passage_reviews");
+      const migration0015AppliedAt = (await pool.query<{ applied_at: Date }>(
+        "SELECT applied_at FROM schema_migrations WHERE migration_id = '0015_optional_passage_and_grounding_identity'"
+      )).rows[0]!.applied_at;
+      const completedBefore0015 = new Date(migration0015AppliedAt.getTime() - 120_000);
+      const proposedBeforeCompletion = new Date(migration0015AppliedAt.getTime() - 180_000);
+      const completedAfter0015 = new Date(migration0015AppliedAt.getTime() + 1);
+      const speakerId = (await pool.query<{ id: string }>(
+        "SELECT id FROM speakers ORDER BY id LIMIT 1"
+      )).rows[0]!.id;
+      const emptyItemSetSha256 = createHash("sha256").update("", "utf8").digest("hex");
+
+      for (let index = 0; index < 15; index += 1) {
+        const videoId = `lgycf${String(index + 1).padStart(6, "0")}`;
+        const title = index === 14
+          ? "God's Will For The Local Church"
+          : `Anonymised legacy passage review ${index + 1}`;
+        const processingVersion = index === 0
+          ? "phase3b2-caption-v1"
+          : index < 3
+            ? "phase3b2b-punctuation-v2"
+            : "phase3b2c-wave1-extractive-drafts-v2";
+        const created = await service.create(createSermonInputSchema.parse({
+          title,
+          slug: `anonymised-legacy-passage-review-${index + 1}`,
+          serviceDate: "2026-08-05",
+          speakerId,
+          ...approvedEnrichment(),
+          media: [{
+            provider: "youtube",
+            mediaType: "video",
+            externalId: videoId,
+            canonicalUrl: `https://www.youtube.com/watch?v=${videoId}`,
+            title: "Anonymised controlled video"
+          }]
+        }), admin, `legacy-passage-create-${index + 1}`);
+        sermonIds.push(created.id);
+        await pool.query(
+          `INSERT INTO sermon_enrichment_sources (
+             sermon_id, provider, video_id, canonical_url, caption_language,
+             caption_track_type, original_filename, source_content_sha256,
+             retrieval_attribution, source_character_count, cleaned_character_count,
+             apparent_completeness, uncertainty_marker_count, warnings,
+             unresolved_passages, processing_version, imported_at, processed_at,
+             processing_duration_ms, estimated_review_minutes,
+             manual_attention_required, accuracy_review_status
+           ) VALUES (
+             $1, 'youtube', $2, $3, 'en', 'automatic', 'anonymised.vtt', $4,
+             'authorised_youtube_studio_export', 100, 100, 'requires_manual_review',
+             0, '[]'::jsonb, '[]'::jsonb, $5, now(), now(), 1, 1, true, 'required'
+           )`,
+          [created.id, videoId, `https://www.youtube.com/watch?v=${videoId}`,
+            createHash("sha256").update(videoId).digest("hex"), processingVersion]
+        );
+        const transcript = (await pool.query<{
+          row_version: number;
+          transcript_sha256: string;
+          grounding_revision_id: string;
+        }>(`SELECT row_version,
+                  encode(digest(convert_to(body_text, 'UTF8'), 'sha256'), 'hex') AS transcript_sha256,
+                  grounding_revision_id
+             FROM sermon_transcripts WHERE sermon_id = $1`, [created.id])).rows[0]!;
+        const completionTime = index < 9 || index === 14
+          ? completedBefore0015
+          : completedAfter0015;
+        await pool.query(
+          `UPDATE sermon_enrichment_reviews
+           SET identity_status = 'confirmed', current_stage = 6,
+               completed_by_subject = $2, completed_at = $3,
+               source_record_key = $4, expected_item_count = 0,
+               expected_item_set_sha256 = $5, expected_transcript_sha256 = $6,
+               expected_transcript_row_version = $7, atomic_schema_version = 1,
+               empty_item_set_acknowledged_by_subject = $2,
+               empty_item_set_acknowledged_at = $3,
+               updated_by_subject = $2, updated_at = $3, row_version = row_version + 1
+           WHERE sermon_id = $1`,
+          [created.id, legacyReviewer, completionTime, `authorised-record-${1001 + index}`,
+            emptyItemSetSha256, transcript.transcript_sha256, transcript.row_version]
+        );
+        if (index === 14) {
+          await pool.query(
+            `INSERT INTO sermon_primary_passage_reviews (
+               sermon_id, proposal_outcome, evidence_source, evidence_sha256, parser_version,
+               review_status, reviewed_by_subject, reviewed_at, proposed_at, updated_at
+             ) VALUES ($1, 'no_reference', 'administrator', $2, 'administrator-manual-v1',
+                       'confirmed_none', $3, $4, $5, $5)`,
+            [created.id, createHash("sha256").update(`none-${index}`).digest("hex"),
+              legacyReviewer, completedBefore0015, proposedBeforeCompletion]
+          );
+        } else {
+          const proposalTime = index < 9 ? proposedBeforeCompletion : migration0015AppliedAt;
+          await pool.query(
+            `INSERT INTO sermon_primary_passage_reviews (
+               sermon_id, proposal_outcome, evidence_source, evidence_sha256, parser_version,
+               proposed_at, updated_at
+             ) VALUES ($1, 'proposed', 'local_youtube_title', $2,
+                       'saving-grace-primary-passage-v1', $3, $3)`,
+            [created.id, createHash("sha256").update(`passage-${index}`).digest("hex"), proposalTime]
+          );
+          await pool.query(
+            `INSERT INTO scripture_references (
+               sermon_id, display_text, canonical_book_id, start_chapter, start_verse,
+               end_chapter, end_verse, display_order, parse_status, relationship_role,
+               is_lead, original_reference_text, provenance, review_status,
+               parser_version, created_at, updated_at
+             ) VALUES ($1, $2, 45, 8, 1, 8, 4, 0, 'exact', 'primary', true,
+                       $2, 'title_proposal', 'proposed', 'saving-grace-primary-passage-v1', $3, $3)`,
+            [created.id, `Romans 8:${index + 1}`, proposalTime]
+          );
+        }
+      }
+
+      await runSchema("apply", "0016_legacy_completed_passage_reviews");
+      const beforeProtected = await protectedSnapshot();
+      const first = await carryForwardLegacyCompletedPassageReviews(pool);
+      const second = await carryForwardLegacyCompletedPassageReviews(pool);
+      const afterProtected = await protectedSnapshot();
+
+      expect(first).toMatchObject({
+        carriedForward: 9,
+        preservedFromPriorRun: 0,
+        leftPending: 5,
+        confirmedNoPrimaryPreserved: 1,
+        transcriptRowsChanged: 0,
+        descriptionRowsChanged: 0,
+        questionAnswerRowsChanged: 0,
+        completedReviewRowsChanged: 0,
+        publicRecordsCreated: 0,
+        semanticRowsCreated: 0
+      });
+      expect(second).toMatchObject({
+        carriedForward: 0,
+        preservedFromPriorRun: 9,
+        leftPending: 5,
+        confirmedNoPrimaryPreserved: 1
+      });
+      expect(second.protectedStateSha256).toBe(first.protectedStateSha256);
+      expect(afterProtected).toEqual(beforeProtected);
+
+      const audit = await pool.query<{
+        audit_count: number;
+        sermon_count: number;
+        actor_count: number;
+        actor_subject: string;
+        authorization_count: number;
+      }>(`SELECT count(*)::integer AS audit_count,
+                 count(DISTINCT entity_id)::integer AS sermon_count,
+                 count(DISTINCT actor_subject)::integer AS actor_count,
+                 min(actor_subject) AS actor_subject,
+                 count(DISTINCT request_correlation_id)::integer AS authorization_count
+          FROM audit_events
+          WHERE action = $1 AND request_correlation_id = $2`,
+      [legacyPassageCarryForwardAction, legacyPassageCarryForwardAuthorization]);
+      expect(audit.rows[0]).toEqual({
+        audit_count: 9,
+        sermon_count: 9,
+        actor_count: 1,
+        actor_subject: legacyPassageCarryForwardActor,
+        authorization_count: 1
+      });
+      expect((await pool.query(
+        `SELECT count(*)::integer AS count
+         FROM sermon_primary_passage_reviews
+         WHERE sermon_id = ANY($1::uuid[]) AND review_status = 'confirmed_passage'
+           AND reviewed_by_subject = $2`,
+        [sermonIds, legacyPassageCarryForwardActor]
+      )).rows[0]).toEqual({ count: 9 });
+      expect((await pool.query(
+        `SELECT count(*)::integer AS count
+         FROM sermon_primary_passage_reviews
+         WHERE sermon_id = ANY($1::uuid[]) AND review_status = 'pending'`,
+        [sermonIds]
+      )).rows[0]).toEqual({ count: 5 });
+      expect((await pool.query(
+        `SELECT review_status, reviewed_by_subject, reviewed_at
+         FROM sermon_primary_passage_reviews passage
+         JOIN sermons sermon ON sermon.id = passage.sermon_id
+         WHERE sermon.id = ANY($1::uuid[]) AND sermon.title = $2`,
+        [sermonIds, "God's Will For The Local Church"]
+      )).rows[0]).toEqual({
+        review_status: "confirmed_none",
+        reviewed_by_subject: legacyReviewer,
+        reviewed_at: completedBefore0015
+      });
+    } finally {
+      if (sermonIds.length) {
+        await pool.query("DELETE FROM audit_events WHERE entity_id = ANY($1::uuid[])", [sermonIds]);
+        await pool.query("DELETE FROM sermons WHERE id = ANY($1::uuid[])", [sermonIds]);
+      }
+      const migrationPresent = (await pool.query<{ present: boolean }>(
+        "SELECT EXISTS (SELECT 1 FROM schema_migrations WHERE migration_id = '0016_legacy_completed_passage_reviews') AS present"
+      )).rows[0]!.present;
+      if (!migrationPresent) await runSchema("apply", "0016_legacy_completed_passage_reviews");
     }
   });
 
@@ -3165,7 +3487,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
          (SELECT count(*)::integer FROM migration_records) AS content_records,
          (SELECT count(*)::integer FROM sermon_enrichment_draft_imports) AS draft_import_receipts`
     );
-    expect(before.rows[0]?.schema_receipts).toBe(15);
+    expect(before.rows[0]?.schema_receipts).toBe(16);
     expect(before.rows[0]?.content_records).toBe(5);
     expect(before.rows[0]?.draft_import_receipts).toBeGreaterThanOrEqual(0);
     await expect(runSchema("apply")).resolves.toEqual({
@@ -3173,7 +3495,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       outcome: "no_op",
       appliedMigrationIds: [],
       rolledBackMigrationIds: [],
-      journalReceiptCount: 15
+      journalReceiptCount: 16
     });
     expect((await pool.query<{
       schema_receipts: number;
@@ -3188,6 +3510,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   });
 
   it("applies only the pending canonical suffix from a valid partial journal", async () => {
+    await runSchema("rollback", "0016_legacy_completed_passage_reviews");
     await runSchema("rollback", "0015_optional_passage_and_grounding_identity");
     await runSchema("rollback", "0014_primary_preaching_passages");
     await runSchema("rollback", "0013_official_youtube_caption_provenance");
@@ -3218,10 +3541,11 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         "0012_description_semantic_runtime_provenance",
         "0013_official_youtube_caption_provenance",
         "0014_primary_preaching_passages",
-        "0015_optional_passage_and_grounding_identity"
+        "0015_optional_passage_and_grounding_identity",
+        "0016_legacy_completed_passage_reviews"
       ],
       rolledBackMigrationIds: [],
-      journalReceiptCount: 15
+      journalReceiptCount: 16
     });
   });
 
@@ -3245,6 +3569,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       "UPDATE schema_migrations SET checksum_sha256 = $1 WHERE migration_order = 8",
       [eighth.checksumSha256]
     );
+    await runSchema("rollback", "0016_legacy_completed_passage_reviews");
     await runSchema("rollback", "0015_optional_passage_and_grounding_identity");
     await runSchema("rollback", "0014_primary_preaching_passages");
     await runSchema("rollback", "0013_official_youtube_caption_provenance");
@@ -3309,6 +3634,8 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 14 });
     await expect(runSchema("apply", "0015_optional_passage_and_grounding_identity"))
       .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 15 });
+    await expect(runSchema("apply", "0016_legacy_completed_passage_reviews"))
+      .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 16 });
   });
 
   it("refuses unjournalled objects and serialises concurrent fresh application", async () => {
@@ -3328,12 +3655,12 @@ integration("disposable PostgreSQL Phase 3B application", () => {
 
     const results = await Promise.all([runSchema("apply"), runSchema("apply")]);
     expect(results.map((result) => result.outcome).sort()).toEqual(["applied", "no_op"]);
-    expect(results.reduce((count, result) => count + result.appliedMigrationIds.length, 0)).toBe(15);
+    expect(results.reduce((count, result) => count + result.appliedMigrationIds.length, 0)).toBe(16);
     expect((await pool.query<{ receipts: number; distinct_receipts: number }>(
       `SELECT count(*)::integer AS receipts,
               count(DISTINCT migration_id)::integer AS distinct_receipts
        FROM schema_migrations`
-    )).rows[0]).toEqual({ receipts: 15, distinct_receipts: 15 });
+    )).rows[0]).toEqual({ receipts: 16, distinct_receipts: 16 });
 
     await expect(runSchema("rollback")).resolves.toMatchObject({
       outcome: "rolled_back",
@@ -3341,7 +3668,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     });
     await expect(runSchema("apply")).resolves.toMatchObject({
       outcome: "applied",
-      journalReceiptCount: 15
+      journalReceiptCount: 16
     });
   });
 });
