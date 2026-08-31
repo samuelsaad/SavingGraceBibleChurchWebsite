@@ -20,6 +20,7 @@ type Readiness = {
   isContentComplete: boolean;
   hasOneSpeaker: boolean;
   hasRequiredBibleBook: boolean;
+  hasRequiredPassageDecision: boolean;
   hasApprovedDescription: boolean;
   hasApprovedTranscript: boolean;
   approvedQuestionCount: number;
@@ -185,6 +186,7 @@ type ListResponse = {
     remaining: number;
     withOneSpeaker: number;
     withRequiredBibleBook: number;
+    withRequiredPassageDecision: number;
     contentComplete: number;
     withApprovedDescription: number;
     withApprovedTranscript: number;
@@ -395,7 +397,7 @@ function sermonRows(sermons: SermonSummary[]): string {
       proposed_passage: "Proposed passage",
       confirmed_passage: "Confirmed passage",
       pending_review: "Pending review",
-      no_primary_passage: "No primary passage",
+      no_primary_passage: "No single primary passage",
       no_proposal_detected: "No proposal detected",
       proposal_rejected: "Proposal rejected"
     } as const;
@@ -426,7 +428,7 @@ async function renderDashboard(): Promise<void> {
       <progress max="${Math.max(progress.total, 1)}" value="${progress.complete}">${progress.complete} of ${progress.total}</progress>
       <div class="stats-grid compact">
         <article class="stat-card"><span>One speaker</span><strong>${progress.withOneSpeaker}/${progress.total}</strong></article>
-        <article class="stat-card"><span>Canonical Bible book</span><strong>${progress.withRequiredBibleBook}/${progress.total}</strong></article>
+        <article class="stat-card"><span>Passage decision reviewed</span><strong>${progress.withRequiredPassageDecision}/${progress.total}</strong></article>
         <article class="stat-card"><span>Approved description</span><strong>${progress.withApprovedDescription}/${progress.total}</strong></article>
         <article class="stat-card"><span>Approved transcript</span><strong>${progress.withApprovedTranscript}/${progress.total}</strong></article>
         <article class="stat-card"><span>Approved questions</span><strong>${progress.withRequiredQuestionAnswers}/${progress.total}</strong></article>
@@ -439,8 +441,8 @@ async function renderDashboard(): Promise<void> {
       <p class="subtle">Content review completion and replacement-launch metadata are shown separately.</p>
       <ol class="review-queue">${pilotQueue.map((sermon) => {
         const completed = sermon.enrichmentReview?.completedAt !== null;
-        const status = completed && !sermon.readiness.hasRequiredBibleBook
-          ? "Content reviewed · Bible-book assignment required"
+        const status = completed && !sermon.readiness.hasRequiredPassageDecision
+          ? "Content reviewed · passage decision required"
           : completed
             ? "Content reviewed"
             : "Administrator review required";
@@ -593,9 +595,9 @@ function primaryPassageEditorRow(value: PrimaryPassageEditorValue, index: number
     <legend>Passage <span data-primary-passage-number>${index + 1}</span></legend>
     <div class="review-form-grid">
       <label><span>Bible book</span><select data-primary-book data-primary-passage-control>${primaryPassageBookOptions(value.canonicalBookId)}</select></label>
-      <label><span>Starting chapter</span><input data-primary-start-chapter data-primary-passage-control type="number" min="1" max="150" value="${value.startChapter ?? ""}" /></label>
+      <label><span>Starting chapter (optional)</span><input data-primary-start-chapter data-primary-passage-control type="number" min="1" max="150" value="${value.startChapter ?? ""}" /></label>
       <label><span>Starting verse (optional)</span><input data-primary-start-verse data-primary-passage-control type="number" min="1" max="176" value="${value.startVerse ?? ""}" /></label>
-      <label><span>Ending chapter</span><input data-primary-end-chapter data-primary-passage-control type="number" min="1" max="150" value="${value.endChapter ?? ""}" /></label>
+      <label><span>Ending chapter (optional)</span><input data-primary-end-chapter data-primary-passage-control type="number" min="1" max="150" value="${value.endChapter ?? ""}" /></label>
       <label><span>Ending verse (optional)</span><input data-primary-end-verse data-primary-passage-control type="number" min="1" max="176" value="${value.endVerse ?? ""}" /></label>
       <label><span>Relationship</span><select data-primary-role data-primary-passage-control><option value="primary"${value.relationshipRole === "primary" ? " selected" : ""}>Primary preaching passage</option><option value="supporting"${value.relationshipRole === "supporting" ? " selected" : ""}>Supporting passage</option></select></label>
       <label class="checkbox-label"><input data-primary-lead data-primary-passage-control type="checkbox"${value.isLead ? " checked" : ""} /> <span>Lead primary passage</span></label>
@@ -627,7 +629,7 @@ function primaryPassageReviewPanel(sermon: SermonDetail): string {
     : review.reviewStatus === "confirmed_passage"
       ? "Primary passage confirmed"
       : review.reviewStatus === "confirmed_none"
-        ? "No primary passage confirmed"
+        ? "No single primary passage confirmed"
         : "Title proposal rejected";
   const proposal = review.proposalOutcome === "proposed"
     ? "One structured reference was proposed from the locally stored YouTube title. Verify it personally before confirming."
@@ -644,7 +646,7 @@ function primaryPassageReviewPanel(sermon: SermonDetail): string {
       <button class="button" type="button" id="add-primary-passage" data-primary-passage-control>Add passage</button>
       <button class="button primary" type="button" id="confirm-primary-passages" data-primary-passage-control>Confirm entered passages</button>
       <button class="button" type="button" id="reject-primary-passage" data-primary-passage-control>Reject title proposal</button>
-      <button class="button quiet" type="button" id="confirm-no-primary-passage" data-primary-passage-control>Confirm no primary passage</button>
+      <button class="button quiet" type="button" id="confirm-no-primary-passage" data-primary-passage-control>No single primary passage / topical or multi-passage sermon</button>
     </div>
   </section>`;
 }
@@ -853,7 +855,7 @@ function renderFinalReviewStage(review: EnrichmentReviewResponse): string {
     <div id="review-stage-feedback"></div>
     <ul class="checklist review-final-checklist">
       ${finalChecklistItem("One speaker confirmed", review.review.identityStatus === "confirmed" && Boolean(sermon.speaker), sermon.speaker ? "A verified speaker is selected." : "Return to Identity and choose the speaker.")}
-      ${finalChecklistItem("Canonical Bible book assigned", sermon.readiness.hasRequiredBibleBook, sermon.readiness.hasRequiredBibleBook ? "Replacement-launch metadata is complete." : "Content review may finish, but replacement launch remains blocked until Samuel assigns the Bible book.")}
+      ${finalChecklistItem("Primary-passage decision reviewed", sermon.readiness.hasRequiredPassageDecision, sermon.readiness.hasRequiredPassageDecision ? (sermon.primaryPassage?.state === "no_primary_passage" ? "No single primary passage was explicitly confirmed." : "A structurally valid primary passage was confirmed.") : "Confirm a valid primary passage or explicitly record that the sermon has no single primary passage.")}
       ${finalChecklistItem("Service date confirmed", dateConfirmed, dateConfirmed ? "The preached date was verified." : "The service date is unresolved.")}
       ${finalChecklistItem("Provenance reviewed", review.review.identityStatus === "confirmed", "Source identity, language, track and attribution were presented in Stage 1.")}
       ${finalChecklistItem("Flagged items resolved", review.progress.stageCompletion.findings, review.progress.totalItemCount === 0 ? review.progress.stageCompletion.findings ? "The verified empty set was explicitly acknowledged." : "The verified empty set requires an explicit acknowledgement." : `${review.progress.resolvedItemCount} of ${review.progress.totalItemCount} items resolved.`)}
@@ -1424,9 +1426,9 @@ async function renderGuidedSermonReview(id: string, readOnlyStage?: number): Pro
   const optionalNumber = (element: HTMLInputElement): number | null => element.value ? Number(element.value) : null;
   const collectPrimaryPassages = () => [...(passageRows?.querySelectorAll<HTMLElement>("[data-primary-passage-row]") ?? [])].map((row) => ({
     canonicalBookId: Number(row.querySelector<HTMLSelectElement>("[data-primary-book]")!.value),
-    startChapter: Number(row.querySelector<HTMLInputElement>("[data-primary-start-chapter]")!.value),
+    startChapter: optionalNumber(row.querySelector<HTMLInputElement>("[data-primary-start-chapter]")!),
     startVerse: optionalNumber(row.querySelector<HTMLInputElement>("[data-primary-start-verse]")!),
-    endChapter: Number(row.querySelector<HTMLInputElement>("[data-primary-end-chapter]")!.value),
+    endChapter: optionalNumber(row.querySelector<HTMLInputElement>("[data-primary-end-chapter]")!),
     endVerse: optionalNumber(row.querySelector<HTMLInputElement>("[data-primary-end-verse]")!),
     relationshipRole: row.querySelector<HTMLSelectElement>("[data-primary-role]")!.value,
     isLead: row.querySelector<HTMLInputElement>("[data-primary-lead]")!.checked
@@ -1438,7 +1440,7 @@ async function renderGuidedSermonReview(id: string, readOnlyStage?: number): Pro
     if (action !== "confirm_passages" && !window.confirm(
       action === "reject_proposal"
         ? "Reject the title-derived proposal? This does not reject any sermon content."
-        : "Confirm that this sermon has no clear primary preaching passage?"
+        : "Confirm that this topical or multi-passage sermon has no single primary preaching passage?"
     )) return;
     try {
       passageFeedback.innerHTML = feedback("Saving the explicit passage decision…");
@@ -1612,7 +1614,7 @@ function questionAnswerRow(item: Partial<EditableQuestionAnswer>, index: number)
 function readinessChecklist(readiness: Readiness | null): string {
   const items = [
     ["One speaker selected", readiness?.hasOneSpeaker ?? false],
-    ["Canonical Bible book assigned", readiness?.hasRequiredBibleBook ?? false],
+    ["Primary-passage decision reviewed", readiness?.hasRequiredPassageDecision ?? false],
     ["Sermon description approved", readiness?.hasApprovedDescription ?? false],
     ["Complete transcript approved", readiness?.hasApprovedTranscript ?? false],
     ["5–10 questions and answers approved", readiness?.hasRequiredQuestionAnswers ?? false],

@@ -20,7 +20,7 @@ export interface ContentReadinessIssue {
   path: string;
   code:
     | "missing_speaker"
-    | "missing_bible_book"
+    | "passage_review_pending"
     | "missing_description"
     | "description_awaiting_review"
     | "invalid_description_length"
@@ -40,6 +40,7 @@ export interface ContentReadinessResult {
   isContentComplete: boolean;
   hasOneSpeaker: boolean;
   hasRequiredBibleBook: boolean;
+  hasRequiredPassageDecision: boolean;
   hasApprovedDescription: boolean;
   hasApprovedTranscript: boolean;
   approvedQuestionCount: number;
@@ -53,6 +54,8 @@ export interface ContentReadinessResult {
 export interface ContentReadinessInput {
   speakerId: string | null;
   bookClassificationIds: string[];
+  primaryPassageState: "pending_review" | "assigned" | "confirmed_no_primary_passage";
+  hasStructurallyValidPrimaryPassage: boolean;
   summary: string | null;
   summaryStatus: DescriptionStatus;
   transcript: ReadinessTranscript | null;
@@ -76,11 +79,13 @@ export function evaluateContentReadiness(input: ContentReadinessInput): ContentR
   }
 
   const hasRequiredBibleBook = input.bookClassificationIds.length > 0;
-  if (!hasRequiredBibleBook) {
+  const hasRequiredPassageDecision = input.primaryPassageState === "confirmed_no_primary_passage" ||
+    (input.primaryPassageState === "assigned" && input.hasStructurallyValidPrimaryPassage);
+  if (!hasRequiredPassageDecision) {
     issues.push({
-      path: "bookClassificationIds",
-      code: "missing_bible_book",
-      message: "Assign a verified canonical Bible book before replacement launch."
+      path: "primaryPassageReview",
+      code: "passage_review_pending",
+      message: "Confirm a valid primary passage or explicitly record that this sermon has no single primary passage."
     });
   }
 
@@ -201,10 +206,11 @@ export function evaluateContentReadiness(input: ContentReadinessInput): ContentR
       hasValidControlledMedia &&
       !issues.some((issue) => issue.code === "blank_question" || issue.code === "blank_answer");
   return {
-    isComplete: isContentComplete && hasRequiredBibleBook,
+    isComplete: isContentComplete && hasRequiredPassageDecision,
     isContentComplete,
     hasOneSpeaker,
     hasRequiredBibleBook,
+    hasRequiredPassageDecision,
     hasApprovedDescription,
     hasApprovedTranscript,
     approvedQuestionCount,

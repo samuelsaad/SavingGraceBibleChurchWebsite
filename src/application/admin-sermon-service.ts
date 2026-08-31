@@ -51,6 +51,7 @@ import type {
 } from "../server/repositories/admin-sermon-repository";
 import { evaluateReviewSetIntegrity } from "../enrichment/review-set-integrity";
 import {
+  groundedSermonEnrichmentReferenceIsCurrent,
   isSupersededWave1SourceReference,
   parseGroundedSermonEnrichmentSourceReference
 } from "../enrichment/sermon-enrichment-policy";
@@ -68,9 +69,12 @@ function assertGroundedReferenceIsCurrent(
   const grounded = parseGroundedSermonEnrichmentSourceReference(reference);
   if (!grounded) return;
   if (!sermon.transcript || sermon.transcript.status !== "approved" || sermon.transcript.approvedAt === null ||
-    sermon.transcript.rowVersion !== grounded.transcriptRowVersion ||
-    transcriptSha256(sermon.transcript.bodyText) !== grounded.transcriptSha256) {
-    invalid(path, "This generated draft is stale because its approved transcript identity or version changed");
+    !groundedSermonEnrichmentReferenceIsCurrent(reference, {
+      groundingRevisionId: sermon.transcript.groundingRevisionId,
+      transcriptSha256: transcriptSha256(sermon.transcript.bodyText),
+      legacyBindings: sermon.transcript.legacyGroundingBindings
+    })) {
+    invalid(path, "This generated draft is stale because its approved transcript identity or content changed");
   }
 }
 

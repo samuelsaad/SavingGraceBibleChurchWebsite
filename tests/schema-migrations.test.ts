@@ -33,7 +33,7 @@ describe("journalled PostgreSQL schema migrations", () => {
     expect(schemaMigrationChecksum(upLf, downLf)).toMatch(/^[0-9a-f]{64}$/);
   });
 
-  it("loads the fourteen canonical paired migrations in stable order", async () => {
+  it("loads the fifteen canonical paired migrations in stable order", async () => {
     const migrations = await loadSchemaMigrations();
     expect(migrations.map((migration) => migration.id)).toEqual([
       "0001_initial",
@@ -49,18 +49,30 @@ describe("journalled PostgreSQL schema migrations", () => {
       "0011_description_semantic_relationships",
       "0012_description_semantic_runtime_provenance",
       "0013_official_youtube_caption_provenance",
-      "0014_primary_preaching_passages"
+      "0014_primary_preaching_passages",
+      "0015_optional_passage_and_grounding_identity"
     ]);
-    expect(migrations.map((migration) => migration.order)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]);
+    expect(migrations.map((migration) => migration.order)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
     expect(migrations.every((migration) => !/^\s*BEGIN;/i.test(migration.upBody))).toBe(true);
     expect(migrations.every((migration) => !/COMMIT;\s*$/i.test(migration.downBody))).toBe(true);
+  });
+
+  it("defines optional passage readiness and immutable transcript grounding in migration 0015", async () => {
+    const migration = (await loadSchemaMigrations()).find((item) => item.id === "0015_optional_passage_and_grounding_identity");
+    expect(migration?.upBody).toContain("grounding_revision_id uuid NOT NULL DEFAULT gen_random_uuid()");
+    expect(migration?.upBody).toContain("rotate_sermon_transcript_grounding_revision");
+    expect(migration?.upBody).toContain("NEW.body_text IS DISTINCT FROM OLD.body_text");
+    expect(migration?.upBody).toContain("NEW.source_reference IS DISTINCT FROM OLD.source_reference");
+    expect(migration?.upBody).toContain("relationship_role <> 'primary' OR canonical_book_id IS NOT NULL");
+    expect(migration?.upBody).toContain("review.review_status = 'confirmed_none'");
+    expect(migration?.downBody).toContain("DROP TABLE sermon_transcript_legacy_grounding_bindings");
   });
 
   it("accepts only an exact canonical prefix with matching checksums", async () => {
     const migrations = await loadSchemaMigrations();
     expect(validateSchemaMigrationJournal(migrations, [])).toBe(0);
     expect(validateSchemaMigrationJournal(migrations, receipts(migrations, 3))).toBe(3);
-    expect(validateSchemaMigrationJournal(migrations, receipts(migrations))).toBe(14);
+    expect(validateSchemaMigrationJournal(migrations, receipts(migrations))).toBe(15);
   });
 
   it("fails closed on duplicate, unknown, missing, reordered and changed receipts", async () => {

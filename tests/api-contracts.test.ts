@@ -200,6 +200,31 @@ describe("admin sermon API contract", () => {
     expect(primaryPassageDecisionInputSchema.parse({ sermonRowVersion: 2, reviewRowVersion: 1, action: "reject_proposal" })).toMatchObject({ action: "reject_proposal", passages: [] });
     expect(primaryPassageDecisionInputSchema.parse({ sermonRowVersion: 2, reviewRowVersion: 1, action: "confirm_no_primary_passage" })).toMatchObject({ action: "confirm_no_primary_passage", passages: [] });
   });
+  it("accepts book-only, chapter-only and full primary references but rejects orphan verses", () => {
+    const base = { sermonRowVersion: 2, reviewRowVersion: 1, action: "confirm_passages" as const };
+    expect(primaryPassageDecisionInputSchema.parse({
+      ...base,
+      passages: [{ canonicalBookId: 50, relationshipRole: "primary", isLead: true }]
+    }).passages[0]).toMatchObject({ startChapter: null, endChapter: null });
+    expect(primaryPassageDecisionInputSchema.parse({
+      ...base,
+      passages: [{ canonicalBookId: 50, startChapter: 4, endChapter: 4, relationshipRole: "primary", isLead: true }]
+    }).passages[0]).toMatchObject({ startChapter: 4, startVerse: null, endChapter: 4, endVerse: null });
+    expect(primaryPassageDecisionInputSchema.parse({
+      ...base,
+      passages: [{ canonicalBookId: 50, startChapter: 4, startVerse: 8, endChapter: 4, endVerse: 8, relationshipRole: "primary", isLead: true }]
+    }).passages[0]).toMatchObject({ startVerse: 8, endVerse: 8 });
+    expect(() => primaryPassageDecisionInputSchema.parse({
+      ...base,
+      passages: [{ canonicalBookId: 50, startVerse: 8, endVerse: 8, relationshipRole: "primary", isLead: true }]
+    })).toThrow("parent book and chapter");
+    expect(() => primaryPassageDecisionInputSchema.parse({
+      sermonRowVersion: 2,
+      reviewRowVersion: 1,
+      action: "confirm_no_primary_passage",
+      passages: [{ canonicalBookId: 50, relationshipRole: "primary", isLead: true }]
+    })).toThrow("does not accept passage values");
+  });
   it("has one active application role and validates admin list filters", () => {
     expect(applicationRoleSchema.parse("admin")).toBe("admin");
     expect(() => applicationRoleSchema.parse("editor")).toThrow();

@@ -93,6 +93,12 @@ export interface StoredSermonDetail extends StoredSermonSummary {
   media: Array<ControlledMediaInput & { id: string }>;
   transcript: (CreateSermonInput["transcript"] & {
     rowVersion: number;
+    groundingRevisionId: string;
+    legacyGroundingBindings: Array<{
+      transcriptRowVersion: number;
+      transcriptSha256: string;
+      groundingRevisionId: string;
+    }>;
     reviewedAt: string | null;
     approvedAt: string | null;
   }) | null;
@@ -139,6 +145,7 @@ export interface StoredSermonPage {
     remaining: number;
     withOneSpeaker: number;
     withRequiredBibleBook: number;
+    withRequiredPassageDecision: number;
     contentComplete: number;
     withApprovedDescription: number;
     withApprovedTranscript: number;

@@ -21,6 +21,8 @@ function questionAnswers(count: number) {
 const completeBase = {
   speakerId: "75df2144-b557-50f6-98bd-011cd696bfb9",
   bookClassificationIds: ["4b4ae324-6cf8-5510-9f77-c5c88a308fc4"],
+  primaryPassageState: "assigned" as const,
+  hasStructurallyValidPrimaryPassage: true,
   summary: "This approved description clearly explains the central sermon message and its application to the listener.",
   summaryStatus: "approved" as const,
   transcript: { bodyText: "A complete reviewed transcript.", status: "approved" as const },
@@ -49,6 +51,8 @@ describe("sermon content readiness", () => {
     const result = evaluateContentReadiness({
       speakerId: null,
       bookClassificationIds: [],
+      primaryPassageState: "pending_review",
+      hasStructurallyValidPrimaryPassage: false,
       summary: "A private description draft that has enough meaningful context for later human review and approval.",
       summaryStatus: "draft",
       transcript: { bodyText: "draft text", status: "draft" },
@@ -58,7 +62,7 @@ describe("sermon content readiness", () => {
     expect(result.isComplete).toBe(false);
     expect(result.issues.map((issue) => issue.code)).toEqual([
       "missing_speaker",
-      "missing_bible_book",
+      "passage_review_pending",
       "description_awaiting_review",
       "transcript_awaiting_review",
       "insufficient_questions",
@@ -66,18 +70,32 @@ describe("sermon content readiness", () => {
     ]);
   });
 
-  it("keeps approved content complete while Bible-book metadata is incomplete", () => {
+  it("keeps approved content complete after an explicit no-primary-passage decision", () => {
     const result = evaluateContentReadiness({
       ...completeBase,
       bookClassificationIds: [],
+      primaryPassageState: "confirmed_no_primary_passage",
+      hasStructurallyValidPrimaryPassage: false,
       questionAnswers: questionAnswers(5)
     });
     expect(result).toMatchObject({
-      isComplete: false,
+      isComplete: true,
       isContentComplete: true,
-      hasRequiredBibleBook: false
+      hasRequiredBibleBook: false,
+      hasRequiredPassageDecision: true
     });
-    expect(result.issues).toContainEqual(expect.objectContaining({ code: "missing_bible_book" }));
+    expect(result.issues).not.toContainEqual(expect.objectContaining({ code: "passage_review_pending" }));
+  });
+
+  it("keeps a bare missing passage pending even when other content is complete", () => {
+    const result = evaluateContentReadiness({
+      ...completeBase,
+      primaryPassageState: "pending_review",
+      hasStructurallyValidPrimaryPassage: false,
+      questionAnswers: questionAnswers(5)
+    });
+    expect(result).toMatchObject({ isComplete: false, isContentComplete: true, hasRequiredPassageDecision: false });
+    expect(result.issues).toContainEqual(expect.objectContaining({ code: "passage_review_pending" }));
   });
 
   it.each(["draft", "in_review"] as const)(

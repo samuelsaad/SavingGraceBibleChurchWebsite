@@ -23,6 +23,7 @@ interface QueueRow {
   slug: string;
   row_version: number;
   has_one_speaker: boolean;
+  has_required_passage_decision: boolean;
   summary_status: "missing" | "draft" | "in_review" | "approved";
   transcript_status: "missing" | "draft" | "in_review" | "approved" | null;
   total_question_count: number;
@@ -35,6 +36,7 @@ interface QueueRow {
 function needsFromRow(row: QueueRow): EnrichmentQueueManifest["records"][number]["needs"] {
   const needs: EnrichmentQueueManifest["records"][number]["needs"] = [];
   if (!row.has_one_speaker) needs.push("missing_speaker");
+  if (!row.has_required_passage_decision) needs.push("passage_review_pending");
   if (row.summary_status === "missing") {
     needs.push("missing_description");
   } else if (row.summary_status !== "approved") {
@@ -68,6 +70,7 @@ export async function buildEnrichmentQueue(
        s.slug,
        s.row_version,
        readiness.has_one_speaker,
+       readiness.has_required_passage_decision,
        s.summary_status,
        transcript.status AS transcript_status,
        readiness.total_question_count,

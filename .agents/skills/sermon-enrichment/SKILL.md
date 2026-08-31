@@ -24,7 +24,7 @@ Produce coherent, transcript-grounded private drafts for later human review. Tre
 ## Workflow
 
 1. Verify the exact private target by stable source identity and application identity, never by title alone.
-2. Verify that the transcript is current and approved. Capture its row version, UTF-8 SHA-256, character count, and lexical word count before reading it for generation.
+2. Verify that the transcript is current and approved. Capture its immutable grounding revision, UTF-8 SHA-256, character count, lexical word count, current administrative row version, and approval evidence before reading it for generation. Administrative row version and approval timestamps are audit/concurrency evidence; they are not grounding identity.
 3. Read the complete transcript. Identify the actual controlling subject, the sermon’s reasoning or development, its use of Scripture as stated in the transcript, and its concrete application.
 4. Draft the description and Q&A set from the sermon as a whole. Do not rank, concatenate, or wrap transcript excerpts.
 5. Attach bounded transcript support to every description paragraph and every Q&A pair using the private contract in `references/grounding-contract.md`.
@@ -57,7 +57,7 @@ Produce coherent, transcript-grounded private drafts for later human review. Tre
 
 Reject the result when any of these conditions is true:
 
-- Transcript identity, SHA-256, row version, or approval state differs from the request.
+- The immutable transcript grounding revision, content SHA-256, source identity, or approval state differs from the request. A row-version or approval-timestamp change alone is not staleness.
 - A support range is missing, outside transcript bounds, reversed, empty, or hash-mismatched.
 - Any description paragraph or Q&A pair lacks support.
 - The description is outside 180–220 words, lacks the central subject or application, contains incomplete sentences, or matches known generic wrappers.
@@ -87,7 +87,7 @@ This mechanical pass is separate from the administrator's semantic, theological,
 
 Record privately:
 
-- Transcript identity, row version, SHA-256, approval evidence, and generation request hash.
+- Immutable transcript grounding revision, transcript SHA-256 and source identity, plus current administrative row version, approval evidence, and generation request hash.
 - Skill name and version, generation method, generation time, warnings, and uncertainties.
 - Actual generator provider, model, immutable revision and approval reference; prompt-policy version and hashes of the complete skill and grounding instructions supplied; and the approved transcript source hash.
 - Support locations and hashes for each description paragraph and every Q&A pair.
@@ -95,7 +95,7 @@ Record privately:
 - Replacement result hash, validation result, import time, and idempotency evidence.
 - Completed `generated-text-mechanical-qa-v1` result and any unresolved context-dependent review flags.
 
-Mark a result stale whenever the approved transcript’s identity, body hash, or row version changes. Preserve superseded draft bodies and audit evidence; never delete or silently overwrite them.
+Mark a result stale whenever the approved transcript’s immutable grounding revision, source identity, or body hash changes, or its grounding evidence is missing or invalid. Do not mark it stale for a generic sermon/transcript row-version change, approval timestamp, passage decision, administrator-review timestamp, or a save in another generated content area. Preserve superseded draft bodies and audit evidence; never delete or silently overwrite them.
 
 ## Human authority
 

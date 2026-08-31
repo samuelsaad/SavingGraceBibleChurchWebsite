@@ -6,7 +6,7 @@ Required top-level fields:
 
 - `schemaVersion`, `privateContent`, `skillName`, `skillVersion`, `generationMethod`, `generatedAt`
 - `target`: stable private source identifier and application sermon identifier
-- `transcript`: application transcript identifier, row version, approval state, SHA-256, character count, and word count
+- `transcript`: application transcript identifier, immutable grounding revision, approval state, SHA-256, character count, and word count; retain the current row version only as concurrency/audit evidence
 - `original`: superseded private bundle path and SHA-256 plus original description and Q&A body hashes
 - `description`: body, central subject statement, application statement, and one support record per paragraph
 - `questionAnswers`: 5–10 ordered pairs, each with support records
@@ -22,4 +22,4 @@ Each support record contains:
 
 Do not store support quotations separately. The private transcript range is the evidence. Validate every range and hash before import.
 
-The integrity block records a canonical SHA-256 over the result excluding the integrity block. Refuse import when the result is stale, malformed, unsupported, not private, or not explicitly unapproved.
+The integrity block records a canonical SHA-256 over the result excluding the integrity block. Current results bind the immutable transcript grounding revision and exact content SHA-256. Approval metadata, passage changes, generic row versions and changes to another generated content area do not change that binding. Refuse import when the transcript revision/source/body differs, the result is stale, malformed, unsupported, not private, or not explicitly unapproved.

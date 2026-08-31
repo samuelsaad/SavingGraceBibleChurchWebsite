@@ -372,6 +372,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   });
 
   it("aborts the one-speaker migration with affected IDs and cleanly reapplies", async () => {
+    await runSchema("rollback", "0015_optional_passage_and_grounding_identity");
     await runSchema("rollback", "0014_primary_preaching_passages");
     await runSchema("rollback", "0013_official_youtube_caption_provenance");
     await runSchema("rollback", "0012_description_semantic_runtime_provenance");
@@ -423,6 +424,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     await runSchema("apply", "0012_description_semantic_runtime_provenance");
     await runSchema("apply", "0013_official_youtube_caption_provenance");
     await runSchema("apply", "0014_primary_preaching_passages");
+    await runSchema("apply", "0015_optional_passage_and_grounding_identity");
     expect(
       (await pool.query("SELECT to_regclass('public.sermon_speakers') IS NULL AS removed")).rows[0]
     ).toEqual({ removed: true });
@@ -1996,11 +1998,6 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       const speakerId = (
         await pool.query<{ id: string }>("SELECT id FROM speakers ORDER BY id LIMIT 1")
       ).rows[0]!.id;
-      const bookClassificationId = (
-        await pool.query<{ id: string }>(
-          "SELECT id FROM book_classifications WHERE classification_type = 'canonical' ORDER BY canonical_book_id LIMIT 1"
-        )
-      ).rows[0]!.id;
       const created = await service.create(
         createSermonInputSchema.parse({
           title: "Anonymised guided review",
@@ -2390,14 +2387,22 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       expect(inspectedCompletedStage.review.completedAt).not.toBeNull();
       expect((await service.listAudit(sermonId, admin)).length).toBe(auditCountBeforeInspection);
 
-      const metadataComplete = await service.update(
+      await pool.query(
+        `INSERT INTO sermon_primary_passage_reviews (
+           sermon_id, proposal_outcome, evidence_source, evidence_sha256, parser_version
+         ) VALUES ($1, 'no_reference', 'administrator', $2, 'administrator-manual-v1')`,
+        [sermonId, "c".repeat(64)]
+      );
+      const passagePending = await service.detail(sermonId, admin);
+      const metadataComplete = await service.decidePrimaryPassage(
         sermonId,
-        updateSermonInputSchema.parse({
-          rowVersion: review.sermon.rowVersion,
-          bookClassificationIds: [bookClassificationId]
+        primaryPassageDecisionInputSchema.parse({
+          sermonRowVersion: passagePending.rowVersion,
+          reviewRowVersion: passagePending.primaryPassageReview!.rowVersion,
+          action: "confirm_no_primary_passage"
         }),
         admin,
-        "guided-review-bible-book-assignment"
+        "guided-review-no-primary-passage"
       );
       expect(metadataComplete).toMatchObject({
         summaryStatus: "approved",
@@ -2405,7 +2410,8 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         readiness: {
           isContentComplete: true,
           isComplete: true,
-          hasRequiredBibleBook: true
+          hasRequiredBibleBook: false,
+          hasRequiredPassageDecision: true
         },
         enrichmentReview: { currentStage: 6 }
       });
@@ -2421,8 +2427,8 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       expect(itemAudits.every((event) => /^[0-9a-f]{64}$/.test(event.reviewItemIdentitySha256 ?? "")))
         .toBe(true);
       expect((await service.listAudit(sermonId, admin)).some(
-        (event) => event.action === "sermon.bible_book_assignment_updated"
-          && event.requestCorrelationId === "guided-review-bible-book-assignment"
+        (event) => event.action === "sermon.no_primary_passage_confirmed"
+          && event.requestCorrelationId === "guided-review-no-primary-passage"
       )).toBe(true);
 
       const auditTarget = itemAudits[0]!;
@@ -2559,11 +2565,14 @@ integration("disposable PostgreSQL Phase 3B application", () => {
           primaryPassage: { state: "proposed_passage", displayText: "Romans 8:1–4" }
         })
       ]));
-      const published = await service.transition(created.id, "publish", { rowVersion: created.rowVersion }, admin, "primary-passage-publish");
-      expect(await publicRepository.findPublishedBySlug(published.slug)).toMatchObject({
-        scriptureReferences: [],
-        primaryPassages: []
-      });
+      await expect(service.transition(
+        created.id,
+        "publish",
+        { rowVersion: created.rowVersion },
+        admin,
+        "primary-passage-pending-publish"
+      )).rejects.toMatchObject({ status: 400, code: "content_incomplete" });
+      expect(await publicRepository.findPublishedBySlug(created.slug)).toBeNull();
       expect((await publicRepository.listPublished(publicSermonListQuerySchema.parse({
         passageBook: "romans", passageChapter: 8, passageVerse: 2
       }))).data).toHaveLength(0);
@@ -2575,9 +2584,31 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         [sermonId]
       )).rows[0]!.digest;
       const prepared = await service.detail(sermonId, admin);
-      const confirmed = await service.decidePrimaryPassage(sermonId, primaryPassageDecisionInputSchema.parse({
-        sermonRowVersion: published.rowVersion,
+      const initialGroundingRevision = prepared.transcript!.groundingRevisionId;
+      const bookOnly = await service.decidePrimaryPassage(sermonId, primaryPassageDecisionInputSchema.parse({
+        sermonRowVersion: prepared.rowVersion,
         reviewRowVersion: prepared.primaryPassageReview!.rowVersion,
+        action: "confirm_passages",
+        passages: [
+          { canonicalBookId: 45, relationshipRole: "primary", isLead: true }
+        ]
+      }), admin, "primary-passage-book-only");
+      expect(bookOnly).toMatchObject({
+        primaryPassage: { state: "confirmed_passage", displayText: "Romans" },
+        readiness: { hasRequiredPassageDecision: true, isComplete: true }
+      });
+      const chapterOnly = await service.decidePrimaryPassage(sermonId, primaryPassageDecisionInputSchema.parse({
+        sermonRowVersion: bookOnly.rowVersion,
+        reviewRowVersion: bookOnly.primaryPassageReview!.rowVersion,
+        action: "confirm_passages",
+        passages: [
+          { canonicalBookId: 45, startChapter: 8, endChapter: 8, relationshipRole: "primary", isLead: true }
+        ]
+      }), admin, "primary-passage-chapter-only");
+      expect(chapterOnly.primaryPassage).toEqual({ state: "confirmed_passage", displayText: "Romans 8" });
+      const confirmed = await service.decidePrimaryPassage(sermonId, primaryPassageDecisionInputSchema.parse({
+        sermonRowVersion: chapterOnly.rowVersion,
+        reviewRowVersion: chapterOnly.primaryPassageReview!.rowVersion,
         action: "confirm_passages",
         passages: [
           { canonicalBookId: 45, startChapter: 8, startVerse: 1, endChapter: 8, endVerse: 4, relationshipRole: "primary", isLead: true },
@@ -2588,7 +2619,15 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         reviewStatus: "confirmed_passage",
         reviewedBySubject: admin.subject
       });
+      expect(confirmed.transcript!.groundingRevisionId).toBe(initialGroundingRevision);
       expect(confirmed.scriptureReferences.filter((reference) => reference.reviewStatus === "confirmed")).toHaveLength(2);
+      const published = await service.transition(
+        sermonId,
+        "publish",
+        { rowVersion: confirmed.rowVersion },
+        admin,
+        "primary-passage-publish"
+      );
       const confirmedAdminResults = await repository.listSermons(adminSermonListQuerySchema.parse({
         passageBook: 45,
         passageChapter: 8,
@@ -2626,9 +2665,16 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       expect(after).toBe(before);
       await expect(service.decidePrimaryPassage(sermonId, primaryPassageDecisionInputSchema.parse({
         sermonRowVersion: published.rowVersion,
-        reviewRowVersion: prepared.primaryPassageReview!.rowVersion,
+        reviewRowVersion: chapterOnly.primaryPassageReview!.rowVersion,
         action: "confirm_no_primary_passage"
       }), admin, "primary-passage-stale")).rejects.toMatchObject({ status: 409, code: "stale_write" });
+      await pool.query(
+        "UPDATE sermon_transcripts SET approved_at = approved_at + interval '1 second', row_version = row_version + 1 WHERE sermon_id = $1",
+        [sermonId]
+      );
+      expect((await service.detail(sermonId, admin)).transcript!.groundingRevisionId).toBe(initialGroundingRevision);
+      await pool.query("UPDATE sermon_transcripts SET body_text = body_text || ' Changed.' WHERE sermon_id = $1", [sermonId]);
+      expect((await service.detail(sermonId, admin)).transcript!.groundingRevisionId).not.toBe(initialGroundingRevision);
     } finally {
       if (sermonId) {
         await pool.query("DELETE FROM audit_events WHERE entity_id = $1", [sermonId]);
@@ -2753,24 +2799,28 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         isComplete: false,
         hasRequiredBibleBook: false
       });
-      const canonicalBookId = (
-        await pool.query<{ id: string }>(
-          "SELECT id FROM book_classifications WHERE classification_type = 'canonical' ORDER BY canonical_book_id LIMIT 1"
-        )
-      ).rows[0]!.id;
-      const metadataCompleted = await service.update(
+      await pool.query(
+        `INSERT INTO sermon_primary_passage_reviews (
+           sermon_id, proposal_outcome, evidence_source, evidence_sha256, parser_version
+         ) VALUES ($1, 'no_reference', 'administrator', $2, 'administrator-manual-v1')`,
+        [created.id, "d".repeat(64)]
+      );
+      const passagePending = await service.detail(created.id, admin);
+      const metadataCompleted = await service.decidePrimaryPassage(
         created.id,
-        updateSermonInputSchema.parse({
-          rowVersion: completed.rowVersion,
-          bookClassificationIds: [canonicalBookId]
+        primaryPassageDecisionInputSchema.parse({
+          sermonRowVersion: passagePending.rowVersion,
+          reviewRowVersion: passagePending.primaryPassageReview!.rowVersion,
+          action: "confirm_no_primary_passage"
         }),
         admin,
-        "phase3b-bible-book"
+        "phase3b-no-primary-passage"
       );
       expect(metadataCompleted.readiness).toMatchObject({
         isContentComplete: true,
         isComplete: true,
-        hasRequiredBibleBook: true
+        hasRequiredBibleBook: false,
+        hasRequiredPassageDecision: true
       });
       expect(metadataCompleted).toMatchObject({
         summaryStatus: "approved",
@@ -2872,7 +2922,24 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         "delete-create"
       );
       createdIds.push(created.id);
-      const published = await service.transition(created.id, "publish", { rowVersion: created.rowVersion }, admin, "delete-publish");
+      await pool.query(
+        `INSERT INTO sermon_primary_passage_reviews (
+           sermon_id, proposal_outcome, evidence_source, evidence_sha256, parser_version
+         ) VALUES ($1, 'no_reference', 'administrator', $2, 'administrator-manual-v1')`,
+        [created.id, "e".repeat(64)]
+      );
+      const passagePending = await service.detail(created.id, admin);
+      const passageComplete = await service.decidePrimaryPassage(
+        created.id,
+        primaryPassageDecisionInputSchema.parse({
+          sermonRowVersion: passagePending.rowVersion,
+          reviewRowVersion: passagePending.primaryPassageReview!.rowVersion,
+          action: "confirm_no_primary_passage"
+        }),
+        admin,
+        "delete-no-primary-passage"
+      );
+      const published = await service.transition(created.id, "publish", { rowVersion: passageComplete.rowVersion }, admin, "delete-publish");
       const renamed = await service.update(
         created.id,
         updateSermonInputSchema.parse({ rowVersion: published.rowVersion, slug: "delete-safeguard-renamed" }),
@@ -3001,7 +3068,24 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         admin,
         "redirect-delete-create"
       );
-      const redirectPublished = await service.transition(redirectSource.id, "publish", { rowVersion: redirectSource.rowVersion }, admin, "redirect-delete-publish");
+      await pool.query(
+        `INSERT INTO sermon_primary_passage_reviews (
+           sermon_id, proposal_outcome, evidence_source, evidence_sha256, parser_version
+         ) VALUES ($1, 'no_reference', 'administrator', $2, 'administrator-manual-v1')`,
+        [redirectSource.id, "f".repeat(64)]
+      );
+      const redirectPassagePending = await service.detail(redirectSource.id, admin);
+      const redirectPassageComplete = await service.decidePrimaryPassage(
+        redirectSource.id,
+        primaryPassageDecisionInputSchema.parse({
+          sermonRowVersion: redirectPassagePending.rowVersion,
+          reviewRowVersion: redirectPassagePending.primaryPassageReview!.rowVersion,
+          action: "confirm_no_primary_passage"
+        }),
+        admin,
+        "redirect-delete-no-primary-passage"
+      );
+      const redirectPublished = await service.transition(redirectSource.id, "publish", { rowVersion: redirectPassageComplete.rowVersion }, admin, "redirect-delete-publish");
       const redirectArchived = await service.transition(redirectSource.id, "archive", { rowVersion: redirectPublished.rowVersion }, admin, "redirect-delete-archive");
       await service.permanentlyDelete(
         redirectSource.id,
@@ -3081,7 +3165,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
          (SELECT count(*)::integer FROM migration_records) AS content_records,
          (SELECT count(*)::integer FROM sermon_enrichment_draft_imports) AS draft_import_receipts`
     );
-    expect(before.rows[0]?.schema_receipts).toBe(14);
+    expect(before.rows[0]?.schema_receipts).toBe(15);
     expect(before.rows[0]?.content_records).toBe(5);
     expect(before.rows[0]?.draft_import_receipts).toBeGreaterThanOrEqual(0);
     await expect(runSchema("apply")).resolves.toEqual({
@@ -3089,7 +3173,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       outcome: "no_op",
       appliedMigrationIds: [],
       rolledBackMigrationIds: [],
-      journalReceiptCount: 14
+      journalReceiptCount: 15
     });
     expect((await pool.query<{
       schema_receipts: number;
@@ -3104,6 +3188,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   });
 
   it("applies only the pending canonical suffix from a valid partial journal", async () => {
+    await runSchema("rollback", "0015_optional_passage_and_grounding_identity");
     await runSchema("rollback", "0014_primary_preaching_passages");
     await runSchema("rollback", "0013_official_youtube_caption_provenance");
     await runSchema("rollback", "0012_description_semantic_runtime_provenance");
@@ -3132,10 +3217,11 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         "0011_description_semantic_relationships",
         "0012_description_semantic_runtime_provenance",
         "0013_official_youtube_caption_provenance",
-        "0014_primary_preaching_passages"
+        "0014_primary_preaching_passages",
+        "0015_optional_passage_and_grounding_identity"
       ],
       rolledBackMigrationIds: [],
-      journalReceiptCount: 14
+      journalReceiptCount: 15
     });
   });
 
@@ -3159,6 +3245,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       "UPDATE schema_migrations SET checksum_sha256 = $1 WHERE migration_order = 8",
       [eighth.checksumSha256]
     );
+    await runSchema("rollback", "0015_optional_passage_and_grounding_identity");
     await runSchema("rollback", "0014_primary_preaching_passages");
     await runSchema("rollback", "0013_official_youtube_caption_provenance");
     await runSchema("rollback", "0012_description_semantic_runtime_provenance");
@@ -3220,6 +3307,8 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 13 });
     await expect(runSchema("apply", "0014_primary_preaching_passages"))
       .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 14 });
+    await expect(runSchema("apply", "0015_optional_passage_and_grounding_identity"))
+      .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 15 });
   });
 
   it("refuses unjournalled objects and serialises concurrent fresh application", async () => {
@@ -3239,12 +3328,12 @@ integration("disposable PostgreSQL Phase 3B application", () => {
 
     const results = await Promise.all([runSchema("apply"), runSchema("apply")]);
     expect(results.map((result) => result.outcome).sort()).toEqual(["applied", "no_op"]);
-    expect(results.reduce((count, result) => count + result.appliedMigrationIds.length, 0)).toBe(14);
+    expect(results.reduce((count, result) => count + result.appliedMigrationIds.length, 0)).toBe(15);
     expect((await pool.query<{ receipts: number; distinct_receipts: number }>(
       `SELECT count(*)::integer AS receipts,
               count(DISTINCT migration_id)::integer AS distinct_receipts
        FROM schema_migrations`
-    )).rows[0]).toEqual({ receipts: 14, distinct_receipts: 14 });
+    )).rows[0]).toEqual({ receipts: 15, distinct_receipts: 15 });
 
     await expect(runSchema("rollback")).resolves.toMatchObject({
       outcome: "rolled_back",
@@ -3252,7 +3341,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     });
     await expect(runSchema("apply")).resolves.toMatchObject({
       outcome: "applied",
-      journalReceiptCount: 14
+      journalReceiptCount: 15
     });
   });
 });

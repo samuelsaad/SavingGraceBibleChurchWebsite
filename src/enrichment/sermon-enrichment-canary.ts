@@ -53,6 +53,9 @@ type TargetRow = {
   transcript_body: string;
   transcript_status: string;
   transcript_row_version: number;
+  transcript_grounding_revision_id: string;
+  transcript_source_kind: string;
+  transcript_source_reference: string | null;
   transcript_approved_at: string | null;
   source_processing_version: string;
   source_evidence_sha256: string;
@@ -267,6 +270,9 @@ async function loadTarget(client: PoolClient, bundle: EnrichmentDraftBundle, loc
        transcript.body_text AS transcript_body,
        transcript.status AS transcript_status,
        transcript.row_version AS transcript_row_version,
+       transcript.grounding_revision_id AS transcript_grounding_revision_id,
+       transcript.source_kind AS transcript_source_kind,
+       transcript.source_reference AS transcript_source_reference,
        transcript.approved_at::text AS transcript_approved_at,
        source.processing_version AS source_processing_version,
        encode(digest(convert_to(to_jsonb(source)::text, 'UTF8'), 'sha256'), 'hex') AS source_evidence_sha256,
@@ -313,6 +319,9 @@ function currentTranscript(row: TargetRow): CurrentApprovedTranscript {
     sermonId: row.sermon_id,
     sourceWordPressId: Number(row.source_wordpress_id),
     rowVersion: row.transcript_row_version,
+    groundingRevisionId: row.transcript_grounding_revision_id,
+    sourceKind: row.transcript_source_kind,
+    sourceReference: row.transcript_source_reference,
     status: "approved",
     approvedAt: new Date(row.transcript_approved_at).toISOString(),
     bodyText: row.transcript_body
@@ -360,6 +369,7 @@ function buildRequest(
     transcript: {
       sermonId: transcript.sermonId,
       rowVersion: transcript.rowVersion,
+      groundingRevisionId: transcript.groundingRevisionId,
       status: "approved",
       approvedAt: transcript.approvedAt,
       sha256: sha256Utf8(transcript.bodyText),
@@ -583,17 +593,17 @@ function isReplacementState(row: TargetRow, questions: readonly QuestionRow[], r
 export async function importSermonEnrichmentCanary(pool: Pool): Promise<CanaryImportResult> {
   const original = await loadOriginalBundle();
   const { result } = await loadRequestAndResult();
-  const reference = groundedSermonEnrichmentSourceReference(
-    result.transcript.sha256,
-    result.transcript.rowVersion,
-    result.integrity.canonicalSha256
-  );
   const client = await pool.connect();
   try {
     await client.query("BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE");
     await client.query("SELECT pg_advisory_xact_lock(1397176901, 1397176921)");
     await verifyDatabaseTarget(client);
     const checked = await validateAgainstDatabase(client, original, result, true);
+    const reference = groundedSermonEnrichmentSourceReference(
+      result.transcript.sha256,
+      checked.row.transcript_grounding_revision_id,
+      result.integrity.canonicalSha256
+    );
     const beforeTranscript = sha256Utf8(canonical({
       body: checked.row.transcript_body,
       status: checked.row.transcript_status,

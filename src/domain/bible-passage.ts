@@ -139,16 +139,27 @@ export interface PassageValidationResult {
   issues: string[];
 }
 
+export interface PrimaryPassageCoordinates {
+  canonicalBookId: number;
+  startChapter: number | null;
+  startVerse: number | null;
+  endChapter: number | null;
+  endVerse: number | null;
+}
+
 export function validateBiblePassage(
-  value: Omit<StructuredBiblePassage, "displayText" | "originalReferenceText">
+  value: PrimaryPassageCoordinates
 ): PassageValidationResult {
   const issues: string[] = [];
   const book = bibleBookById(value.canonicalBookId);
   if (!book) issues.push("Unknown canonical Bible book");
-  if (!Number.isInteger(value.startChapter) || value.startChapter < 1 || (book && value.startChapter > book.chapterCount)) {
+  if ((value.startChapter === null) !== (value.endChapter === null)) {
+    issues.push("Starting and ending chapters must either both be present or both be absent");
+  }
+  if (value.startChapter !== null && (!Number.isInteger(value.startChapter) || value.startChapter < 1 || (book && value.startChapter > book.chapterCount))) {
     issues.push("Starting chapter is outside the canonical book");
   }
-  if (!Number.isInteger(value.endChapter) || value.endChapter < 1 || (book && value.endChapter > book.chapterCount)) {
+  if (value.endChapter !== null && (!Number.isInteger(value.endChapter) || value.endChapter < 1 || (book && value.endChapter > book.chapterCount))) {
     issues.push("Ending chapter is outside the canonical book");
   }
   for (const [label, verse] of [["Starting", value.startVerse], ["Ending", value.endVerse]] as const) {
@@ -156,22 +167,22 @@ export function validateBiblePassage(
       issues.push(`${label} verse is outside standard Protestant verse numbering`);
     }
   }
+  if ((value.startVerse !== null || value.endVerse !== null) && value.startChapter === null) {
+    issues.push("A verse requires a parent book and chapter");
+  }
   if (value.endVerse !== null && value.startVerse === null) issues.push("An ending verse requires a starting verse");
-  const start = value.startChapter * 1_000 + (value.startVerse ?? 0);
-  const end = value.endChapter * 1_000 + (value.endVerse ?? 999);
-  if (end < start) issues.push("Passage range is reversed");
+  if (value.startChapter !== null && value.endChapter !== null) {
+    const start = value.startChapter * 1_000 + (value.startVerse ?? 0);
+    const end = value.endChapter * 1_000 + (value.endVerse ?? 999);
+    if (end < start) issues.push("Passage range is reversed");
+  }
   return { valid: issues.length === 0, issues };
 }
 
-export function formatBiblePassage(value: {
-  canonicalBookId: number;
-  startChapter: number;
-  startVerse: number | null;
-  endChapter: number;
-  endVerse: number | null;
-}): string {
+export function formatBiblePassage(value: PrimaryPassageCoordinates): string {
   const book = bibleBookById(value.canonicalBookId);
   if (!book) throw new Error("Unknown canonical Bible book");
+  if (value.startChapter === null || value.endChapter === null) return book.canonicalName;
   const start = `${book.canonicalName} ${value.startChapter}${value.startVerse === null ? "" : `:${value.startVerse}`}`;
   if (value.endChapter === value.startChapter && value.endVerse === value.startVerse) return start;
   if (value.startVerse === null && value.endVerse === null) {

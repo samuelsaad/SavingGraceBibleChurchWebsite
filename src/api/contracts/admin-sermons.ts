@@ -135,6 +135,14 @@ export const scriptureReferenceInputSchema = z
     path: ["endChapter"],
     message: "endChapter requires startChapter"
   })
+  .refine((value) => (value.startChapter === null) === (value.endChapter === null), {
+    path: ["endChapter"],
+    message: "Starting and ending chapters must either both be present or both be absent"
+  })
+  .refine((value) => value.startVerse === null || value.startChapter !== null, {
+    path: ["startVerse"],
+    message: "startVerse requires startChapter"
+  })
   .refine((value) => value.endVerse === null || value.startVerse !== null, {
     path: ["endVerse"],
     message: "endVerse requires startVerse"
@@ -145,15 +153,15 @@ export const scriptureReferenceInputSchema = z
   })
   .refine(
     (value) => value.relationshipRole !== "primary" ||
-      (value.canonicalBookId !== null && value.startChapter !== null && value.endChapter !== null),
-    { path: ["relationshipRole"], message: "A primary passage requires a canonical book and structured chapter range" }
+      value.canonicalBookId !== null,
+    { path: ["relationshipRole"], message: "A primary passage requires a canonical Bible book" }
   );
 
 export const primaryPassageInputSchema = z.object({
   canonicalBookId: z.number().int().min(1).max(66),
-  startChapter: z.number().int().positive(),
+  startChapter: z.number().int().positive().nullable().default(null),
   startVerse: z.number().int().positive().nullable().default(null),
-  endChapter: z.number().int().positive(),
+  endChapter: z.number().int().positive().nullable().default(null),
   endVerse: z.number().int().positive().nullable().default(null),
   relationshipRole: z.enum(["primary", "supporting"]),
   isLead: z.boolean().default(false)
@@ -404,6 +412,7 @@ export const contentReadinessResponseSchema = z.object({
   isContentComplete: z.boolean(),
   hasOneSpeaker: z.boolean(),
   hasRequiredBibleBook: z.boolean(),
+  hasRequiredPassageDecision: z.boolean(),
   hasApprovedDescription: z.boolean(),
   hasApprovedTranscript: z.boolean(),
   approvedQuestionCount: z.number().int().nonnegative(),
@@ -516,6 +525,12 @@ export const adminSermonDetailSchema = adminSermonSummarySchema.extend({
   media: z.array(controlledMediaInputSchema.extend({ id: z.uuid() })),
   transcript: transcriptInputSchema.extend({
     rowVersion: z.number().int().positive(),
+    groundingRevisionId: z.uuid(),
+    legacyGroundingBindings: z.array(z.object({
+      transcriptRowVersion: z.number().int().positive(),
+      transcriptSha256: z.string().regex(/^[0-9a-f]{64}$/u),
+      groundingRevisionId: z.uuid()
+    }).strict()),
     reviewedAt: z.iso.datetime().nullable(),
     approvedAt: z.iso.datetime().nullable()
   }).nullable(),
@@ -687,6 +702,7 @@ export const adminSermonListResponseSchema = z.object({
     remaining: z.number().int().nonnegative(),
     withOneSpeaker: z.number().int().nonnegative(),
     withRequiredBibleBook: z.number().int().nonnegative(),
+    withRequiredPassageDecision: z.number().int().nonnegative(),
     contentComplete: z.number().int().nonnegative(),
     withApprovedDescription: z.number().int().nonnegative(),
     withApprovedTranscript: z.number().int().nonnegative(),

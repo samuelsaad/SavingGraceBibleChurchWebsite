@@ -9,6 +9,7 @@ const safePlainText = (maximum: number) =>
 
 export const enrichmentNeedSchema = z.enum([
   "missing_speaker",
+  "passage_review_pending",
   "missing_description",
   "description_awaiting_review",
   "missing_transcript",

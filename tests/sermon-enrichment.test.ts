@@ -9,9 +9,11 @@ import {
   type SermonEnrichmentResult
 } from "../src/enrichment/sermon-enrichment-contracts";
 import {
+  groundedSermonEnrichmentReferenceIsCurrent,
   groundedSermonEnrichmentSourceReference,
   isSupersededWave1SourceReference,
   parseGroundedSermonEnrichmentSourceReference,
+  rebindPrivateGroundedArtifact,
   sermonEnrichmentGenerationMethod,
   sermonEnrichmentSkillName,
   sermonEnrichmentSkillVersion,
@@ -40,6 +42,7 @@ const current = {
   sermonId,
   sourceWordPressId: 101,
   rowVersion: 3,
+  groundingRevisionId: "22222222-2222-4222-8222-222222222222",
   status: "approved" as const,
   approvedAt,
   bodyText: transcript
@@ -108,6 +111,7 @@ function validResult(): SermonEnrichmentResult {
     transcript: {
       sermonId,
       rowVersion: current.rowVersion,
+      groundingRevisionId: current.groundingRevisionId,
       status: "approved",
       approvedAt,
       sha256: sha256Utf8(transcript),
@@ -311,9 +315,20 @@ describe("sermon-enrichment private grounded result", () => {
     expect(issueCodes(rehash(hash))).toContain("grounding_hash_mismatch");
   });
 
-  it("marks transcript hash or row-version changes stale", () => {
-    expect(issueCodes(validResult(), { ...current, rowVersion: current.rowVersion + 1 })).toContain("transcript_binding_stale");
+  it("ignores approval-only row-version changes but marks transcript content or grounding identity changes stale", () => {
+    expect(issueCodes(validResult(), { ...current, rowVersion: current.rowVersion + 1, approvedAt: "2026-02-03T04:05:06.000Z" }))
+      .not.toContain("transcript_binding_stale");
     expect(issueCodes(validResult(), { ...current, bodyText: `${current.bodyText} changed` })).toContain("transcript_binding_stale");
+    const bound = validResult();
+    bound.transcript.groundingRevisionId = current.groundingRevisionId;
+    expect(issueCodes(rehash(bound), { ...current, groundingRevisionId: "33333333-3333-4333-8333-333333333333" }))
+      .toContain("transcript_binding_stale");
+  });
+
+  it("requires immutable transcript grounding identity for current skill results", () => {
+    const result = validResult();
+    delete result.transcript.groundingRevisionId;
+    expect(issueCodes(rehash(result))).toContain("transcript_binding_stale");
   });
 
   it("prevents approval, public visibility, search, or semantic eligibility in the result contract", () => {
@@ -497,9 +512,78 @@ describe("superseded and grounded source-reference policy", () => {
   it("round-trips transcript-bound grounded references", () => {
     const reference = groundedSermonEnrichmentSourceReference("a".repeat(64), 4, "b".repeat(64));
     expect(parseGroundedSermonEnrichmentSourceReference(reference)).toEqual({
+      version: 1,
       transcriptSha256: "a".repeat(64),
       transcriptRowVersion: 4,
       resultSha256: "b".repeat(64)
     });
+  });
+
+  it("binds current references to an immutable transcript revision and exact hash", () => {
+    const reference = groundedSermonEnrichmentSourceReference(
+      "a".repeat(64),
+      "22222222-2222-4222-8222-222222222222",
+      "b".repeat(64)
+    );
+    expect(parseGroundedSermonEnrichmentSourceReference(reference)).toEqual({
+      version: 2,
+      transcriptGroundingRevisionId: "22222222-2222-4222-8222-222222222222",
+      transcriptSha256: "a".repeat(64),
+      resultSha256: "b".repeat(64)
+    });
+    expect(groundedSermonEnrichmentReferenceIsCurrent(reference, {
+      groundingRevisionId: "22222222-2222-4222-8222-222222222222",
+      transcriptSha256: "a".repeat(64),
+      legacyBindings: []
+    })).toBe(true);
+    expect(groundedSermonEnrichmentReferenceIsCurrent(reference, {
+      groundingRevisionId: "33333333-3333-4333-8333-333333333333",
+      transcriptSha256: "a".repeat(64),
+      legacyBindings: []
+    })).toBe(false);
+  });
+
+  it("rebinds an exact legacy private draft once and refuses approved or edited artifacts", () => {
+    const legacy = groundedSermonEnrichmentSourceReference("a".repeat(64), 4, "b".repeat(64));
+    const currentBinding = {
+      groundingRevisionId: "22222222-2222-4222-8222-222222222222",
+      transcriptSha256: "a".repeat(64),
+      legacyBindings: [{
+        transcriptRowVersion: 4,
+        transcriptSha256: "a".repeat(64),
+        groundingRevisionId: "22222222-2222-4222-8222-222222222222"
+      }]
+    };
+    const rebound = rebindPrivateGroundedArtifact({
+      sourceReference: legacy,
+      sourceKind: "generated_draft",
+      status: "draft",
+      administratorEdited: false,
+      current: currentBinding
+    });
+    expect(rebound.outcome).toBe("rebound");
+    if (rebound.outcome !== "rebound") throw new Error("expected rebound");
+    expect(groundedSermonEnrichmentReferenceIsCurrent(legacy, currentBinding)).toBe(true);
+    expect(rebindPrivateGroundedArtifact({
+      sourceReference: rebound.sourceReference,
+      sourceKind: "generated_draft",
+      status: "draft",
+      administratorEdited: false,
+      current: currentBinding
+    }).outcome).toBe("unchanged");
+    expect(rebindPrivateGroundedArtifact({
+      sourceReference: legacy,
+      sourceKind: "generated_draft",
+      status: "approved",
+      administratorEdited: false,
+      current: currentBinding
+    })).toMatchObject({ outcome: "refused", reason: "approved" });
+    expect(rebindPrivateGroundedArtifact({
+      sourceReference: legacy,
+      sourceKind: "manual",
+      status: "draft",
+      administratorEdited: true,
+      current: currentBinding
+    })).toMatchObject({ outcome: "refused", reason: "administrator_edited" });
   });
 });

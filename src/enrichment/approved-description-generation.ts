@@ -69,6 +69,7 @@ export interface ApprovedDescriptionGenerationRequest {
   transcript: {
     sermonId: string;
     rowVersion: number;
+    groundingRevisionId?: string;
     status: "approved";
     approvedAt: string;
     sha256: string;
@@ -124,6 +125,7 @@ interface GenerationResultBase {
   target: { sourceWordPressId: number; sermonId: string };
   transcript: {
     rowVersion: number;
+    groundingRevisionId?: string;
     approvedAt: string;
     sha256: string;
     characterCount: number;
@@ -201,6 +203,7 @@ function resultSha256(value: Omit<ApprovedDescriptionGenerationResult, "integrit
 function transcriptEvidence(transcript: CurrentApprovedTranscript): GenerationResultBase["transcript"] {
   return {
     rowVersion: transcript.rowVersion,
+    ...(transcript.groundingRevisionId ? { groundingRevisionId: transcript.groundingRevisionId } : {}),
     approvedAt: transcript.approvedAt,
     sha256: sha256Utf8(transcript.bodyText),
     characterCount: transcript.bodyText.length,
@@ -332,6 +335,9 @@ export async function generateApprovedDescriptionDraft(
     transcript: {
       sermonId: input.transcript.sermonId,
       rowVersion: input.transcript.rowVersion,
+      ...(input.transcript.groundingRevisionId
+        ? { groundingRevisionId: input.transcript.groundingRevisionId }
+        : {}),
       status: "approved",
       approvedAt: input.transcript.approvedAt,
       sha256: sourceSha256,

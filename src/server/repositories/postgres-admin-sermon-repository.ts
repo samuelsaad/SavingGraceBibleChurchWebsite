@@ -62,6 +62,7 @@ type SermonRow = QueryResultRow & {
     isContentComplete: boolean;
     hasOneSpeaker: boolean;
     hasRequiredBibleBook: boolean;
+    hasRequiredPassageDecision: boolean;
     hasApprovedDescription: boolean;
     hasApprovedTranscript: boolean;
     approvedQuestionCount: number;
@@ -215,6 +216,7 @@ const sermonSummaryProjection = `
       'isContentComplete', readiness.is_content_complete,
       'hasOneSpeaker', readiness.has_one_speaker,
       'hasRequiredBibleBook', readiness.has_required_bible_book,
+      'hasRequiredPassageDecision', readiness.has_required_passage_decision,
       'hasApprovedDescription', readiness.has_approved_description,
       'hasApprovedTranscript', readiness.has_approved_transcript,
       'approvedQuestionCount', readiness.approved_question_count,
@@ -307,6 +309,16 @@ const sermonDetailProjection = `${sermonSummaryProjection},
       'sourceKind', transcript.source_kind,
       'sourceReference', transcript.source_reference,
       'rowVersion', transcript.row_version,
+      'groundingRevisionId', transcript.grounding_revision_id,
+      'legacyGroundingBindings', COALESCE((
+        SELECT jsonb_agg(jsonb_build_object(
+          'transcriptRowVersion', binding.transcript_row_version,
+          'transcriptSha256', binding.transcript_sha256,
+          'groundingRevisionId', binding.grounding_revision_id
+        ) ORDER BY binding.transcript_row_version, binding.transcript_sha256)
+        FROM sermon_transcript_legacy_grounding_bindings binding
+        WHERE binding.sermon_id = transcript.sermon_id
+      ), '[]'::jsonb),
       'reviewedAt', CASE WHEN transcript.reviewed_at IS NULL THEN NULL ELSE ${timestamp("transcript.reviewed_at")} END,
       'approvedAt', CASE WHEN transcript.approved_at IS NULL THEN NULL ELSE ${timestamp("transcript.approved_at")} END
     )
@@ -370,8 +382,12 @@ function readinessFromRow(row: SermonRow): ContentReadinessResult {
   if (!value.hasOneSpeaker) {
     issues.push({ path: "speakerId", code: "missing_speaker", message: "Choose one speaker before scheduling or publishing." });
   }
-  if (!value.hasRequiredBibleBook) {
-    issues.push({ path: "bookClassificationIds", code: "missing_bible_book", message: "Assign a verified canonical Bible book before replacement launch." });
+  if (!value.hasRequiredPassageDecision) {
+    issues.push({
+      path: "primaryPassageReview",
+      code: "passage_review_pending",
+      message: "Confirm a valid primary passage or explicitly record that this sermon has no single primary passage."
+    });
   }
   if (!value.hasApprovedDescription) {
     const hasText = Boolean(row.summary?.trim());
@@ -410,6 +426,7 @@ function readinessFromRow(row: SermonRow): ContentReadinessResult {
     isContentComplete: value.isContentComplete,
     hasOneSpeaker: value.hasOneSpeaker,
     hasRequiredBibleBook: value.hasRequiredBibleBook,
+    hasRequiredPassageDecision: value.hasRequiredPassageDecision,
     hasApprovedDescription: value.hasApprovedDescription,
     hasApprovedTranscript: value.hasApprovedTranscript,
     approvedQuestionCount: value.approvedQuestionCount,
@@ -994,9 +1011,9 @@ class PostgresAdminSermonTransaction implements AdminSermonTransaction {
     if (input.action === "confirm_passages") {
       const proposals = await this.client.query<{
         canonical_book_id: number;
-        start_chapter: number;
+        start_chapter: number | null;
         start_verse: number | null;
-        end_chapter: number;
+        end_chapter: number | null;
         end_verse: number | null;
         original_reference_text: string | null;
       }>(`SELECT canonical_book_id, start_chapter, start_verse, end_chapter, end_verse,
@@ -1688,6 +1705,7 @@ export class PostgresAdminSermonRepository implements AdminSermonRepository {
         complete: number;
         with_one_speaker: number;
         with_required_bible_book: number;
+        with_required_passage_decision: number;
         content_complete: number;
         with_approved_description: number;
         with_approved_transcript: number;
@@ -1699,6 +1717,7 @@ export class PostgresAdminSermonRepository implements AdminSermonRepository {
            count(*) FILTER (WHERE is_complete)::integer AS complete,
            count(*) FILTER (WHERE has_one_speaker)::integer AS with_one_speaker,
            count(*) FILTER (WHERE has_required_bible_book)::integer AS with_required_bible_book,
+           count(*) FILTER (WHERE has_required_passage_decision)::integer AS with_required_passage_decision,
            count(*) FILTER (WHERE is_content_complete)::integer AS content_complete,
            count(*) FILTER (WHERE has_approved_description)::integer AS with_approved_description,
            count(*) FILTER (WHERE has_approved_transcript)::integer AS with_approved_transcript,
@@ -1738,6 +1757,7 @@ export class PostgresAdminSermonRepository implements AdminSermonRepository {
         remaining: progress.total - progress.complete,
         withOneSpeaker: progress.with_one_speaker,
         withRequiredBibleBook: progress.with_required_bible_book,
+        withRequiredPassageDecision: progress.with_required_passage_decision,
         contentComplete: progress.content_complete,
         withApprovedDescription: progress.with_approved_description,
         withApprovedTranscript: progress.with_approved_transcript,

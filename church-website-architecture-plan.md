@@ -652,9 +652,9 @@ SEO indexability and canonical policy are derived from route, template, environm
 
 #### Full transcripts and questions
 
-- `sermon_transcripts`: one row per sermon; plain text body; `missing`, `draft`, `in_review`, or `approved`; non-secret provenance; created/updated/reviewed/approved timestamps and actors; optimistic row version.
+- `sermon_transcripts`: one row per sermon; plain text body; `missing`, `draft`, `in_review`, or `approved`; non-secret provenance; created/updated/reviewed/approved timestamps and actors; optimistic row version; and an immutable grounding revision that rotates only when transcript bytes or source identity change.
 - `sermon_question_answers`: five to ten ordered plain-text question/answer rows for readiness; `draft`, `in_review`, or `approved`; provenance, timestamps, reviewer/approver, row version, and unique `(sermon_id, display_order)`.
-- `sermon_content_readiness`: derived view covering speaker, approved description, approved transcript, 5–10 all-approved Q&As, and controlled media. The service rejects schedule/publish with field-level issues when incomplete.
+- `sermon_content_readiness`: derived view covering speaker, a reviewed primary-passage decision, approved description, approved transcript, 5–10 all-approved Q&As, and controlled media. A structurally valid confirmed passage or an attributed explicit no-primary decision satisfies the passage gate; missing/unreviewed passage metadata does not. A canonical Bible-book classification is informative rather than universally mandatory. The service rejects schedule/publish with field-level issues when incomplete.
 - `sermon_enrichment_draft_imports`: local idempotency receipts only; imported description/transcript/Q&A content remains `draft` and requires human approval. A different import is refused when a description is already approved.
 
 #### Series
@@ -687,7 +687,7 @@ Create only if live discovery confirms use:
 - `sermon_id`
 - `display_text` required
 - Optional canonical `book_id`
-- Optional start/end chapter and verse
+- Optional start/end chapter and verse. Primary references may be book-only, chapter-level or verse-level; verses cannot exist without their parent chapter. A separate reviewed state records an explicit no-primary decision without inventing coordinates.
 - `display_order`
 - `parse_status` and original source value
 

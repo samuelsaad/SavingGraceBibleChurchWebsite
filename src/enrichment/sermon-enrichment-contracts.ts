@@ -39,6 +39,7 @@ export const sermonEnrichmentRequestSchema = z.object({
   transcript: z.object({
     sermonId: z.uuid(),
     rowVersion: z.number().int().positive(),
+    groundingRevisionId: z.uuid().optional(),
     status: z.literal("approved"),
     approvedAt: z.iso.datetime(),
     sha256: sha256Schema,
@@ -95,6 +96,7 @@ export const sermonEnrichmentResultSchema = z.object({
   transcript: z.object({
     sermonId: z.uuid(),
     rowVersion: z.number().int().positive(),
+    groundingRevisionId: z.uuid().optional(),
     status: z.literal("approved"),
     approvedAt: z.iso.datetime(),
     sha256: sha256Schema,
@@ -139,6 +141,9 @@ export interface CurrentApprovedTranscript {
   sermonId: string;
   sourceWordPressId: number;
   rowVersion: number;
+  groundingRevisionId?: string;
+  sourceKind?: string;
+  sourceReference?: string | null;
   status: "approved";
   approvedAt: string;
   bodyText: string;
@@ -414,9 +419,11 @@ export function validateSermonEnrichmentResult(
     value.transcript.sermonId !== current.sermonId) {
     add(issues, "target_identity_mismatch", "target", "The result target does not match the approved transcript identity");
   }
-  if (value.transcript.rowVersion !== current.rowVersion || value.transcript.sha256 !== transcriptSha256 ||
+  if (value.transcript.sha256 !== transcriptSha256 ||
     value.transcript.characterCount !== current.bodyText.length || value.transcript.wordCount !== transcriptWords.length ||
-    value.transcript.status !== current.status || value.transcript.approvedAt !== current.approvedAt) {
+    value.transcript.status !== current.status ||
+    (value.transcript.groundingRevisionId !== undefined &&
+      value.transcript.groundingRevisionId !== current.groundingRevisionId)) {
     add(issues, "transcript_binding_stale", "transcript", "The result is stale or does not match the current approved transcript");
   }
   if (value.integrity.canonicalSha256 !== sermonEnrichmentResultSha256(value)) {
@@ -429,8 +436,11 @@ export function validateSermonEnrichmentResult(
   if (value.skillVersion !== "1.0.0" && value.mechanicalProofread === undefined) {
     add(issues, "mechanical_proofread_missing", "mechanicalProofread", "Current skill results must record the completed mechanical proofread");
   }
-  if (value.skillVersion === "1.2.0" && (!value.generator || !value.promptPolicy)) {
-    add(issues, "generator_provenance_missing", "generator", "Skill version 1.2 results must identify the approved generator and prompt policy");
+  if ((value.skillVersion === "1.2.0" || value.skillVersion === "1.3.0") && (!value.generator || !value.promptPolicy)) {
+    add(issues, "generator_provenance_missing", "generator", "Current results must identify the approved generator and prompt policy");
+  }
+  if (value.skillVersion === "1.3.0" && value.transcript.groundingRevisionId === undefined) {
+    add(issues, "transcript_binding_stale", "transcript.groundingRevisionId", "The immutable transcript grounding revision is required");
   }
   if (value.mechanicalProofread && (
     value.mechanicalProofread.outcome !== mechanicalQa.outcome ||
