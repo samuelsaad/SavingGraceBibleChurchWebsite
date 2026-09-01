@@ -2,6 +2,8 @@
 
 Local Phase 3B.2 caption/enrichment rehearsal, Phase 3B.2b punctuation hardening, and a guided private administrator-review workflow for the Astro/TypeScript/PostgreSQL replacement described in `church-website-architecture-plan.md`.
 
+For current repository status and safe continuation rules, read the tracked public-safe [`CURRENT_PROJECT_HANDOVER.md`](CURRENT_PROJECT_HANDOVER.md) before acting. Repository bytes and Git history remain authoritative when an older external handover differs.
+
 ## Current scope
 
 - Fail-closed journalled local PostgreSQL schema runner plus explicit standalone rollback SQL
@@ -43,6 +45,8 @@ Local Phase 3B.2 caption/enrichment rehearsal, Phase 3B.2b punctuation hardening
 - Static `/health.json` build metadata explicitly marked `runtimeHealth: false`; a genuine runtime health check remains future work
 
 This milestone does not include deployment, cloud infrastructure, Cognito configuration, production loading, audio/video processing, new transcription, or any WordPress/YouTube mutation. The completed official YouTube reads were separately bounded: first to the three accepted pilots, then to metadata inspection of the deterministic 36-primary/12-alternate set and exact-byte retrieval of only the resolved 12-record Wave 1. No continuing provider authority is implied. The current local checkpoint contains 15 completed pilot/Wave-1 guided reviews with approved current transcripts, descriptions and required Q&A, resolved passage outcomes and controlled media. Every one remains a private draft. This frontend milestone authorises local authenticated preview only; it does not publish a sermon, accept semantic recommendation quality, enable public **Related themes**, access production, deploy, push or begin Phase 3C. The AWS runtime and Astro production adapter remain intentionally undecided.
+
+Samuel has separately authorised a future public, repository-tracked development seed containing the real church-owned display content for exactly those 15 preview sermons. This governance decision does not itself export or commit that dataset. A later bounded implementation must derive it only from approved local sources, use an exact scope manifest and idempotent importer, exclude raw captions and all credentials/authentication/audit material, and prove that imported records remain draft/unpublished and absent from public routes, search, feeds, sitemaps, semantic processing and production builds. GitHub visibility of a development seed is not application publication.
 
 The approved direction is a complete WordPress replacement, with WordPress remaining live until authorised cutover. Continue Astro/API/PostgreSQL, preferably a statically generated public site separated from protected administration/API/PostgreSQL. Production administration will use individually attributable MFA identities for Samuel and Yang or another authorised church administrator. Exact AWS services/pricing are undecided; target ongoing hosting below A$70/month where practical and avoid unnecessary NAT, Fargate, RDS Proxy or Multi-AZ infrastructure. There is no fixed launch month. The five pending sermons remain unpublished and do not block the 448-candidate public launch gate; the three WordPress drafts remain excluded.
 

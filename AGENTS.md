@@ -2,7 +2,7 @@
 
 ## 1. Authority and startup
 
-Before repository-changing or state-dependent work, read this file, `README.md`, `church-website-architecture-plan.md`, `decision-log.md`, and relevant plans/contracts; inspect relevant Git state. Do not rely on prior-chat memory. Higher-priority instructions govern; this file cannot expand authority.
+Before repository-changing or state-dependent work, read this file, `CURRENT_PROJECT_HANDOVER.md`, `README.md`, `church-website-architecture-plan.md`, `decision-log.md`, and relevant plans/contracts; inspect relevant Git state. Do not rely on prior-chat memory. Higher-priority instructions govern; this file cannot expand authority.
 
 Inspect private ignored contents only when required. Report only remote names and redacted configuration.
 
@@ -46,17 +46,23 @@ New dependencies or material architecture changes require explicit authority and
 
 Never expose or commit credentials, non-public connection details, tokens, password hashes, private keys, licence/authentication data, or unrelated personal data. `.gitignore` does not replace scanning.
 
-Never commit proprietary archives, extracted source, or copied implementation. Keep real captions/transcripts/descriptions/Q&A/manifests/reports in approved ignored/private storage; exclude bodies from repository artifacts and output. Evidence uses anonymised fixtures plus safe aggregates, non-sensitive identifiers, hashes, statuses, and warnings.
+Never commit proprietary archives, extracted source, or copied implementation.
+
+The sole approved real-sermon-content exception is one public, repository-tracked development dataset for exactly the existing 15 sermons used by the authenticated frontend preview: the three accepted pilots and 12 Wave 1 records. After a separate current-task export/implementation authorisation, that designated dataset may contain their church-owned titles, slugs, service dates, speakers, series, Bible books and passages, current descriptions, cleaned transcripts, ordered Q&A, YouTube video IDs, public media metadata, and frontend-required taxonomy relationships. It must be a curated, idempotently importable development seed with an exact identity/scope manifest, never a raw PostgreSQL dump. It must retain every sermon as application-level draft/unpublished data and must remain absent from ordinary public routes, public search, feeds, sitemaps, semantic processing and production builds unless later publication authority changes those application states.
+
+That exception never includes raw YouTube Studio/API caption exports, OAuth/client/token material, cookies or administrator sessions, administrator audit evidence, database credentials, secret-bearing environment files, private keys, AWS/Google/YouTube account credentials, unrelated records, production database content, proprietary source, or model payloads. Do not infer authority for a sixteenth sermon, another dataset, publication, deployment, production access or provider activity. Outside the designated 15-sermon dataset, keep real captions/transcripts/descriptions/Q&A/manifests/reports in approved ignored/private storage and use anonymised fixtures plus safe aggregates, non-sensitive identifiers, hashes, statuses and warnings.
+
+`CURRENT_PROJECT_HANDOVER.md` at the repository root is the canonical tracked handover. It is public-safe orientation: it may record decisions, safe repository facts, aggregate verification, the designated dataset location/format and setup commands, but it must not duplicate sermon bodies, credentials, authentication material, private local paths, administrator-session data, raw caption exports or unrelated private evidence. Update it when a completed milestone materially changes current state; historical external handovers are non-authoritative once superseded by repository bytes and the tracked handover.
 
 ## 8. Git and user changes
 
 Preserve every user state/change. Exact current-task authority is required to mutate files, index, branches, or history, including destructive operations, switching, staging, unstaging, or committing.
 
-Before commit, review names/diffs and scan credentials, keys, proprietary source, private content, and symlinks; stage only intended files; invent no identity. Remote configuration/use/publication needs separate authority. Remote inspection stays local and redacted.
+Before commit, review names/diffs and scan credentials, keys, proprietary source, private content, and symlinks; stage only intended files; invent no identity. For the designated 15-sermon dataset, content-body matching is allowed only inside its approved dataset path and exact manifest scope; the same material appearing elsewhere, any out-of-scope identity, or any excluded secret/authentication/source artifact remains a blocking finding. Remote configuration/use/publication needs separate authority. Remote inspection stays local and redacted.
 
 ## 9. Verification and evidence
 
-For task-authorised material implementation, run applicable gated checks: `npm test`, `npm run check`, `npm run build`, anonymised importer dry run, offline dependency audit, and secret/key/cloud/proprietary/private-content scans.
+For task-authorised material implementation, run applicable gated checks: `npm test`, `npm run check`, `npm run build`, anonymised importer dry run, offline dependency audit, and secret/key/cloud/proprietary/private-content scans. A future designated-dataset scan must separately prove exact 15-record scope, allowed-field/path confinement, draft/unpublished import state, public/search/feed/sitemap/build exclusion and absence of every excluded credential/authentication/raw-source class.
 
 Database changes require `npm run test:postgres` on the authorised disposable database with zero skips; skipped tests are not evidence. Migrations also require apply, independent rollback, clean reapply, idempotent rerun, and object/constraint/index checks.
 

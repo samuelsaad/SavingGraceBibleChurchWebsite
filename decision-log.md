@@ -1,6 +1,6 @@
 # Project Decision Log
 
-**Status:** Approved decisions through D-147; public frontend preview remains private and local
+**Status:** Approved decisions through D-148; public frontend preview remains private and local
 **Authority:** `church-website-architecture-plan.md` plus Yang’s confirmed migration decisions and Samuel Saad’s recorded project-owner decisions
 
 ## Evidence classifications
@@ -363,6 +363,14 @@ The visual categories are Law/Pentateuch, History, Wisdom/Poetry, Major Prophets
 In the authenticated frontend preview, the four former top-level Sermons, Speakers, Series and Bible books links are grouped under one top-level **Sermons** disclosure. Its compact desktop panel contains the same destinations in that order and changes no route, slug, canonical rule or page content. The control is a real button with explicit expanded/controlled state; the panel remains a normal list of links rather than an application menu. Repeated activation, link selection, Escape, focus departure and click-away close it, while keyboard activation and ordered Tab/Shift+Tab traversal retain visible focus. The parent and exact section link have separate non-colour active indicators.
 
 The mobile **Menu** retains those links as an expandable in-flow Sermons section rather than reusing the floating desktop panel. The footer continues to expose the direct links, and the public-mode header remains Home plus Sermons because the three preview taxonomy indexes are not public routes. A CSP hash covers the small navigation enhancement only in authenticated preview responses; public pages receive neither that script nor its hash. This decision changes no sermon data, search behavior, privacy/publication rule, semantic feature, public route or deployment boundary. (`explicit bounded navigation revision; authenticated local-preview verification only`)
+
+### D-148 - Exact 15-sermon public development dataset and tracked handover governance
+
+Samuel Saad explicitly authorises a future public, repository-tracked curated development dataset for exactly the three accepted pilot sermons and 12 Wave 1 sermons already used by the authenticated frontend preview. This narrowly supersedes D-103 and the former blanket real-content-in-Git prohibition only for that designated dataset. It may contain church-owned titles/slugs/dates, speakers, series, Bible-book and passage relationships, current descriptions, cleaned transcripts, ordered Q&A, YouTube video IDs, public media metadata and the taxonomy relationships needed to reproduce the frontend preview. It must use an exact identity/scope manifest and idempotent no-clobber importer; it must not be a raw PostgreSQL dump.
+
+Raw YouTube Studio/API caption exports, credentials, secret-bearing environment files, OAuth configuration/tokens, cookies/sessions, administrator audit evidence, private keys, AWS/Google/YouTube account credentials, unrelated records, production database content, proprietary source and model payloads remain prohibited. The dataset must import every record as draft/unpublished and remain absent from ordinary public routes, public search, feeds, sitemaps, semantic processing and production builds. Public GitHub visibility is source-sharing authority only; it is not administrator approval, website publication, deployment or authority for a sixteenth sermon.
+
+The canonical tracked handover is `/CURRENT_PROJECT_HANDOVER.md`. It must stay public-safe and may record safe repository facts, decisions, aggregate verification, the designated dataset location/format and setup commands, but never sermon bodies, secrets, authentication/session data, raw captions, administrator audit detail, private local paths or unrelated private evidence. This governance-only decision creates no dataset and authorises no PostgreSQL access; a later bounded task must implement and verify the export/import path before any real content is staged. (`explicit project-owner governance change; documentation-only milestone`)
 
 ## Decisions still required
 

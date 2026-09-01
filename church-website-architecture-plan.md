@@ -30,6 +30,8 @@
 
 > **Phase 3B.2 bounded human acceptance (17 August 2026):** Samuel Saad explicitly accepts the completed Phase 3B.2 three-sermon pilot as successful evidence that the local private workflow can import existing captions, prepare readable transcripts, generate description/Q&A drafts, support detailed administrator correction and approval, retain audit evidence and keep content private pending separate publication authority. This tracked human acceptance is distinct from database approval actions and applies only to the three-sermon pilot. It does not authorise any of the remaining 450 sermons, publication of the pilot sermons, public **Related themes**, semantic recommendation quality acceptance, production access/deployment or Phase 3C.
 
+> **Public development-dataset governance decision (1 September 2026):** Samuel Saad authorises a future public, repository-tracked curated development seed containing the church-owned frontend display content for exactly the existing 15 authenticated-preview sermons. This is a narrow exception to the former real-content-in-Git prohibition, not authority for a raw database dump, raw caption export, credential/authentication/audit material, another sermon or production data. The seed must import idempotently as draft/unpublished data and remain excluded from ordinary public routes, search, feeds, sitemaps, semantic processing and production builds. GitHub visibility does not change application publication or approval state. The governance-only milestone creates no dataset; export/import implementation and verification require a later bounded task.
+
 > **Permanent SEO decision:** The existing website performs well in organic search. Whole-site SEO non-regression is a launch-blocking acceptance criterion for every future milestone. Preserve existing search signals at minimum, improve technical SEO safely where possible, and do not launch unless one-to-one URL, metadata, canonical, crawlability, redirect, indexability, performance, and structured-data parity is demonstrated through the process in `seo-migration-validation-plan.md`.
 
 ---
@@ -505,6 +507,8 @@ If a raw extract must be persisted:
 - Record extraction time and source database identity.
 - Avoid unrelated WordPress tables.
 - Apply a defined retention and deletion date.
+
+The authorised 15-sermon public development seed is not raw staging. It must be a separately verified, field-limited, exact-scope export/import artifact governed by D-148 and `AGENTS.md`; raw database dumps and raw caption/source exports remain outside the repository.
 
 ### 10.3 Transform and normalise
 
@@ -1164,7 +1168,7 @@ If the replacement initially deploys to existing EC2:
 - Separate AWS IAM identities; no shared root account.
 - Least-privilege IAM and application database roles.
 - MFA for AWS, the selected identity-provider administrators, GitHub, WordPress, Google, and YouTube.
-- Private GitHub repository if project work is non-public.
+- Repository visibility and any real development content require an explicit owner decision. D-148 permits only the exact 15-sermon curated public development seed; all credentials, authentication material, raw sources, unrelated data and production content remain prohibited even in a private repository.
 - No secret may be committed even to a private repository.
 - HTTPS and secure response headers.
 - Content Security Policy permitting only required YouTube/analytics resources.
