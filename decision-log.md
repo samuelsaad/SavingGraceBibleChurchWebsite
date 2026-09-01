@@ -1,6 +1,6 @@
 # Project Decision Log
 
-**Status:** Approved decisions through D-145; public frontend preview remains private and local
+**Status:** Approved decisions through D-147; public frontend preview remains private and local
 **Authority:** `church-website-architecture-plan.md` plus Yang’s confirmed migration decisions and Samuel Saad’s recorded project-owner decisions
 
 ## Evidence classifications
@@ -351,6 +351,18 @@ The three default **Most Recent Sermons** cards retain title, date, speaker, ser
 The precise-passage control is a progressive Books → Chapters → Verses tile picker backed by a checked-in count-only Protestant/KJV versification revision. It contains all 66 books in canonical order, 1,189 chapters and 31,102 verses, plus stable abbreviations and ten labelled colour categories. A single book/chapter activation reveals the next level without submitting; double activation and explicit controls search the whole book/chapter; a verse activation searches the exact verse. URL state records `book`, `chapter` or `verse` scope explicitly. Keyboard, touch, Back/Escape navigation, live announcements, focus movement, minimum target size and non-colour selected/applied markers are required behavior.
 
 Passage results continue to use confirmed-primary inclusive interval overlap only. Keyword/structured Scripture search, the broad Bible-book filter, metadata-based **Related sermons**, and the publicly disabled description-only **Related themes** foundation remain separate. Scripture-shaped keyword searches such as `Romans 8` are not diverted to the picker. All current preview data remains private; this decision creates no content change, publication, semantic, staging, production or deployment authority. (`explicit bounded frontend revision; local canonical count data and authenticated private-preview verification only`)
+
+### D-146 - Bible picker follows the approved flat three-grid visual reference
+
+The supplied visual reference supersedes only D-145's picker presentation and ten-colour grouping. On desktop and tablet, Books, Chapters and Verses are aligned adjacent panels within one flat navigation surface. Each uses five equal columns where the 44-pixel minimum target permits, near-square tiles, two-pixel gaps, centred compact labels, restrained category colour and neutral blue-grey number tiles. Secondary colour-key and whole-book/chapter controls sit below the primary grids. Mobile and 200%-equivalent layouts progressively reveal one panel while retaining the same tile system.
+
+The visual categories are Law/Pentateuch, History, Wisdom/Poetry, Major Prophets, Minor Prophets, Gospels and Acts, Pauline Epistles, General Epistles and Revelation. Dark selected state, a visible check, applied-state marker and keyboard focus remain distinct. Search scope, URL state, confirmed-primary interval overlap, single/double activation, reset behavior, explicit touch/keyboard alternatives and every separation from keyword search, broad book filtering, metadata recommendations and disabled semantic **Related themes** remain unchanged. The supplied reference image is not a project asset and must not enter Git. (`explicit visual-source-of-truth correction; no search or data-boundary change`)
+
+### D-147 - Sermon discovery links use one accessible header disclosure
+
+In the authenticated frontend preview, the four former top-level Sermons, Speakers, Series and Bible books links are grouped under one top-level **Sermons** disclosure. Its compact desktop panel contains the same destinations in that order and changes no route, slug, canonical rule or page content. The control is a real button with explicit expanded/controlled state; the panel remains a normal list of links rather than an application menu. Repeated activation, link selection, Escape, focus departure and click-away close it, while keyboard activation and ordered Tab/Shift+Tab traversal retain visible focus. The parent and exact section link have separate non-colour active indicators.
+
+The mobile **Menu** retains those links as an expandable in-flow Sermons section rather than reusing the floating desktop panel. The footer continues to expose the direct links, and the public-mode header remains Home plus Sermons because the three preview taxonomy indexes are not public routes. A CSP hash covers the small navigation enhancement only in authenticated preview responses; public pages receive neither that script nor its hash. This decision changes no sermon data, search behavior, privacy/publication rule, semantic feature, public route or deployment boundary. (`explicit bounded navigation revision; authenticated local-preview verification only`)
 
 ## Decisions still required
 

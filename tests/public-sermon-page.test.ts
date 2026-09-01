@@ -54,6 +54,7 @@ describe("server-rendered public sermon page", () => {
     expect(html).toContain("Second &lt;strong&gt;plain&lt;/strong&gt;");
     expect(html).toContain("Why &lt;img src=x&gt;?");
     expect(html).not.toContain("<script>");
+    expect(html).not.toContain("data-navigation-enhancement");
     expect(html).not.toContain("application/ld+json");
     expect(html).toContain('rel="canonical" href="https://www.savinggrace.org.au/sermons/grace-alone/"');
     expect(html).not.toMatch(/fetch\(|XMLHttpRequest/);

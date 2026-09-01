@@ -159,6 +159,59 @@ describe("authenticated local frontend preview", () => {
     expect(repository.lastQuery).toMatchObject({ speaker: "example-speaker" });
   });
 
+  it("groups sermon discovery routes in accessible desktop and mobile disclosures", async () => {
+    const { route, cookie } = await authorisedRoute();
+    const home = await route(new Request("http://127.0.0.1/frontend-preview/", { headers: { cookie } }));
+    const html = await home!.text();
+    const desktop = html.slice(html.indexOf('<nav class="desktop-nav"'), html.indexOf('<details class="mobile-nav"'));
+    const mobile = html.slice(html.indexOf('<details class="mobile-nav"'), html.indexOf('</header>'));
+    const expectedRoutes = [
+      "/frontend-preview/sermons/",
+      "/frontend-preview/speakers/",
+      "/frontend-preview/series/",
+      "/frontend-preview/books/"
+    ];
+
+    expect(desktop).toContain('<a href="/frontend-preview/" aria-current="page">Home</a><div class="sermon-nav"');
+    expect(desktop.match(/id="sermon-nav-toggle"/gu)).toHaveLength(1);
+    expect(desktop).toContain('type="button" aria-expanded="false" aria-controls="sermon-nav-submenu"');
+    expect(desktop).not.toContain('Home</a><a href="/frontend-preview/speakers/"');
+    expect(mobile.match(/id="mobile-sermon-nav-toggle"/gu)).toHaveLength(1);
+    expect(mobile).toContain('aria-controls="mobile-sermon-nav-submenu"');
+    expect(mobile).toContain('class="mobile-sermon-submenu" data-nav-disclosure-panel hidden');
+    for (const routePath of expectedRoutes) {
+      expect(desktop).toContain(`href="${routePath}"`);
+      expect(mobile).toContain(`href="${routePath}"`);
+    }
+    expect(desktop.indexOf(expectedRoutes[0]!)).toBeLessThan(desktop.indexOf(expectedRoutes[1]!));
+    expect(desktop.indexOf(expectedRoutes[1]!)).toBeLessThan(desktop.indexOf(expectedRoutes[2]!));
+    expect(desktop.indexOf(expectedRoutes[2]!)).toBeLessThan(desktop.indexOf(expectedRoutes[3]!));
+    expect(html).toContain("button.addEventListener('click'");
+    expect(html).toContain("['pointerdown','click']");
+    expect(html).toContain("root.addEventListener('focusout'");
+    expect(html).toContain("event.key==='Tab'");
+    expect(html).toContain("event.shiftKey?-1:1");
+    expect(html).toContain("event.key!=='Escape'");
+    expect(html).toContain("button.focus()");
+    expect(html).toContain("if(event.target.closest?.('a'))");
+    expect(html).toContain(".sermon-nav-submenu{position:absolute;z-index:30;top:calc(100% + .12rem)");
+    expect(html).toContain(".mobile-sermon-submenu{display:grid;margin:.08rem 0 .3rem .58rem");
+    expect(html).toContain("min-height:2.75rem");
+    expect(home?.headers.get("content-security-policy")).toContain("script-src 'sha256-");
+  });
+
+  it("marks the sermon parent and the current child section independently", async () => {
+    const { route, cookie } = await authorisedRoute();
+    const speakers = await route(new Request("http://127.0.0.1/frontend-preview/speakers/", { headers: { cookie } }));
+    const html = await speakers!.text();
+    const desktop = html.slice(html.indexOf('<nav class="desktop-nav"'), html.indexOf('<details class="mobile-nav"'));
+
+    expect(desktop).toContain('class="sermon-nav-toggle is-active-section"');
+    expect(desktop).toContain('Sermons<span class="sr-only">, current section</span>');
+    expect(desktop).toContain('<a href="/frontend-preview/speakers/" aria-current="page">Speakers</a>');
+    expect(desktop).not.toContain('<a href="/frontend-preview/sermons/" aria-current="page">Sermons</a>');
+  });
+
   it("has no preview sitemap, feed, or structured-data endpoint", async () => {
     const { route, cookie } = await authorisedRoute();
     for (const path of ["sitemap.xml", "feed.xml", "structured-data.json"]) {

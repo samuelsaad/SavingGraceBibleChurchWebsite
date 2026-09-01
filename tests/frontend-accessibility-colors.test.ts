@@ -21,12 +21,12 @@ function contrast(foreground: string, background: string): number {
 }
 
 describe("Bible picker accessible colour states", () => {
-  it("keeps all ten pastel categories above AA normal-text contrast", () => {
+  it("keeps all nine visual-reference categories above AA normal-text contrast", () => {
     const palette = [
-      "#eadcc9", "#d9e8d7", "#f2e1ad", "#ded9ec", "#ead6de",
-      "#d0e8e2", "#cedff0", "#e4dccd", "#d9e3ee", "#ead1c9"
+      "#eadcc9", "#dbe7e7", "#ecdfd4", "#dce7d8", "#ead6d8",
+      "#eeeacb", "#e8dbd2", "#dce7d8", "#ead6d8"
     ];
-    expect(palette).toHaveLength(10);
+    expect(palette).toHaveLength(9);
     for (const background of palette) expect(contrast("#1d2721", background)).toBeGreaterThanOrEqual(4.5);
   });
 

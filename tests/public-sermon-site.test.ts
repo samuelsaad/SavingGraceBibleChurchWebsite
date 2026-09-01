@@ -108,6 +108,13 @@ describe("public sermon site routes", () => {
     expect(html).toContain("Active filters");
     expect(html).toContain("Clear all filters");
     expect(html).toContain("@media (max-width:38rem)");
+    const publicDesktopNavigation = html.slice(
+      html.indexOf('<nav class="desktop-nav"'),
+      html.indexOf('<details class="mobile-nav"')
+    );
+    expect(publicDesktopNavigation).toContain('<a href="/">Home</a><a href="/sermons/" aria-current="page">Sermons</a>');
+    expect(publicDesktopNavigation).not.toContain("data-nav-disclosure");
+    expect(publicDesktopNavigation).not.toContain("/speakers/");
     expect(html).toContain(encodeURIComponent(summary.slug));
     expect(html).not.toContain('id="transcript-heading"');
     expect(html).not.toContain('id="topical-sermons-heading"');
@@ -197,9 +204,13 @@ describe("public sermon site routes", () => {
     expect(html).toContain('aria-label="Genesis, Law / Pentateuch"');
     expect(html).toContain('aria-pressed="false" data-applied="false"');
     expect(html).toContain('data-category="law"');
+    expect(html).toContain('data-category="gospels-acts"');
     expect(html).toContain('data-category="revelation"');
+    expect(html).toContain('<span aria-hidden="true">Ge</span>');
+    expect(html).toContain('<span aria-hidden="true">Re</span>');
     expect(html).toContain('data-chapters-panel hidden');
     expect(html).toContain('data-verses-panel hidden');
+    expect(html).toContain('<details class="bible-category-key"><summary>Book colour key</summary>');
     expect(html).toContain("double-click it or use the explicit button");
     expect(html).toContain('data-search-whole-book disabled');
     expect(html).toContain('data-search-whole-chapter disabled');
@@ -209,7 +220,11 @@ describe("public sermon site routes", () => {
     expect(html).toContain("event.key!=='Enter'&&event.key!==' '");
     expect(html).toContain("['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End']");
     expect(html).toContain("event.key==='Escape'||event.key==='Backspace'");
-    expect(html).toContain("min-width:2.75rem;min-height:2.75rem");
+    expect(html).toContain("grid-template-columns:repeat(5,minmax(0,1fr));gap:.125rem");
+    expect(html).toContain("min-width:0;min-height:2.75rem;aspect-ratio:1");
+    expect(html).toContain(".bible-picker-panel{min-width:0;padding:0;background:transparent}");
+    expect(html.indexOf('data-tile-grid="chapter"')).toBeLessThan(html.indexOf('data-search-whole-book'));
+    expect(html.indexOf('data-tile-grid="verse"')).toBeLessThan(html.indexOf('data-search-whole-chapter'));
     expect(html).toContain('data-mobile-panel="chapter"');
   });
 

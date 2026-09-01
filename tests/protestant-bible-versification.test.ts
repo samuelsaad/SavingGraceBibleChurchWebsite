@@ -26,9 +26,9 @@ describe("checked-in Protestant Bible versification", () => {
     }
   });
 
-  it("retains canonical order, ten named categories and known boundary counts", () => {
+  it("retains canonical order, nine visual-reference categories and known boundary counts", () => {
     expect(bibleBooks.map((book) => book.id)).toEqual(Array.from({ length: 66 }, (_, index) => index + 1));
-    expect(bibleBookCategories).toHaveLength(10);
+    expect(bibleBookCategories).toHaveLength(9);
     expect(new Set(bibleBooks.map((book) => book.category))).toEqual(
       new Set(bibleBookCategories.map((category) => category.key))
     );
@@ -37,6 +37,8 @@ describe("checked-in Protestant Bible versification", () => {
     expect(verseCountForChapter("obadiah", 1)).toBe(21);
     expect(verseCountForChapter("revelation", 22)).toBe(21);
     expect(verseCountForChapter("genesis", 51)).toBeNull();
+    expect(bibleBooks.slice(0, 5).map((book) => book.abbreviation)).toEqual(["Ge", "Ex", "Le", "Nu", "Dt"]);
+    expect(bibleBooks.at(-1)?.abbreviation).toBe("Re");
   });
 
   it("rejects a verse outside its actual canonical chapter", () => {

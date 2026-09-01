@@ -6,15 +6,24 @@ type Testament = "old" | "new";
 
 export const bibleBookCategories = [
   { key: "law", label: "Law / Pentateuch", firstBookId: 1, lastBookId: 5 },
-  { key: "history", label: "Historical books", firstBookId: 6, lastBookId: 17 },
-  { key: "wisdom", label: "Wisdom and Poetry", firstBookId: 18, lastBookId: 22 },
+  { key: "history", label: "History", firstBookId: 6, lastBookId: 17 },
+  { key: "wisdom", label: "Wisdom / Poetry", firstBookId: 18, lastBookId: 22 },
   { key: "major-prophets", label: "Major Prophets", firstBookId: 23, lastBookId: 27 },
   { key: "minor-prophets", label: "Minor Prophets", firstBookId: 28, lastBookId: 39 },
-  { key: "gospels", label: "Gospels", firstBookId: 40, lastBookId: 43 },
-  { key: "acts", label: "Acts", firstBookId: 44, lastBookId: 44 },
+  { key: "gospels-acts", label: "Gospels and Acts", firstBookId: 40, lastBookId: 44 },
   { key: "pauline", label: "Pauline Epistles", firstBookId: 45, lastBookId: 57 },
   { key: "general", label: "General Epistles", firstBookId: 58, lastBookId: 65 },
   { key: "revelation", label: "Revelation", firstBookId: 66, lastBookId: 66 }
+] as const;
+
+const compactBibleBookAbbreviations = [
+  "Ge", "Ex", "Le", "Nu", "Dt", "Jos", "Jdg", "Ru", "1Sa", "2Sa",
+  "1Ki", "2Ki", "1Ch", "2Ch", "Ezr", "Ne", "Es", "Job", "Ps", "Pr",
+  "Ec", "So", "Is", "Je", "La", "Eze", "Da", "Ho", "Joe", "Am",
+  "Ob", "Jon", "Mic", "Na", "Hab", "Zep", "Hag", "Zec", "Mal", "Mt",
+  "Mk", "Lk", "Jn", "Ac", "Ro", "1Co", "2Co", "Ga", "Eph", "Php",
+  "Col", "1Th", "2Th", "1Ti", "2Ti", "Tt", "Phm", "Heb", "Jas", "1Pe",
+  "2Pe", "1Jn", "2Jn", "3Jn", "Jud", "Re"
 ] as const;
 
 export type BibleBookCategory = typeof bibleBookCategories[number]["key"];
@@ -105,10 +114,11 @@ export const bibleBooks: readonly BibleBookDefinition[] = source.map(
   ([canonicalName, slug, chapterCount, aliases], index) => {
     const id = index + 1;
     const verseCounts = verseCountsForBook(slug);
+    const abbreviation = compactBibleBookAbbreviations[index];
     const category = bibleBookCategories.find(
       (item) => id >= item.firstBookId && id <= item.lastBookId
     );
-    if (!verseCounts || verseCounts.length !== chapterCount || !category) {
+    if (!verseCounts || verseCounts.length !== chapterCount || !abbreviation || !category) {
       throw new Error(`Canonical Bible metadata is incomplete for ${canonicalName}`);
     }
     return {
@@ -119,7 +129,7 @@ export const bibleBooks: readonly BibleBookDefinition[] = source.map(
       canonicalOrder: id,
       chapterCount,
       verseCounts,
-      abbreviation: aliases[0] ?? canonicalName,
+      abbreviation,
       category: category.key,
       aliases: [canonicalName, slug, ...aliases]
     };
