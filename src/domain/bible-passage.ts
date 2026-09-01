@@ -1,6 +1,23 @@
+import { verseCountsForBook } from "./protestant-bible-versification";
+
 export const biblePassageParserVersion = "saving-grace-primary-passage-v1" as const;
 
 type Testament = "old" | "new";
+
+export const bibleBookCategories = [
+  { key: "law", label: "Law / Pentateuch", firstBookId: 1, lastBookId: 5 },
+  { key: "history", label: "Historical books", firstBookId: 6, lastBookId: 17 },
+  { key: "wisdom", label: "Wisdom and Poetry", firstBookId: 18, lastBookId: 22 },
+  { key: "major-prophets", label: "Major Prophets", firstBookId: 23, lastBookId: 27 },
+  { key: "minor-prophets", label: "Minor Prophets", firstBookId: 28, lastBookId: 39 },
+  { key: "gospels", label: "Gospels", firstBookId: 40, lastBookId: 43 },
+  { key: "acts", label: "Acts", firstBookId: 44, lastBookId: 44 },
+  { key: "pauline", label: "Pauline Epistles", firstBookId: 45, lastBookId: 57 },
+  { key: "general", label: "General Epistles", firstBookId: 58, lastBookId: 65 },
+  { key: "revelation", label: "Revelation", firstBookId: 66, lastBookId: 66 }
+] as const;
+
+export type BibleBookCategory = typeof bibleBookCategories[number]["key"];
 
 export interface BibleBookDefinition {
   id: number;
@@ -9,6 +26,9 @@ export interface BibleBookDefinition {
   testament: Testament;
   canonicalOrder: number;
   chapterCount: number;
+  verseCounts: readonly number[];
+  abbreviation: string;
+  category: BibleBookCategory;
   aliases: readonly string[];
 }
 
@@ -82,19 +102,31 @@ const source = [
 ] as const;
 
 export const bibleBooks: readonly BibleBookDefinition[] = source.map(
-  ([canonicalName, slug, chapterCount, aliases], index) => ({
-    id: index + 1,
-    canonicalName,
-    slug,
-    testament: index < 39 ? "old" : "new",
-    canonicalOrder: index + 1,
-    chapterCount,
-    aliases: [canonicalName, slug, ...aliases]
-  })
+  ([canonicalName, slug, chapterCount, aliases], index) => {
+    const id = index + 1;
+    const verseCounts = verseCountsForBook(slug);
+    const category = bibleBookCategories.find(
+      (item) => id >= item.firstBookId && id <= item.lastBookId
+    );
+    if (!verseCounts || verseCounts.length !== chapterCount || !category) {
+      throw new Error(`Canonical Bible metadata is incomplete for ${canonicalName}`);
+    }
+    return {
+      id,
+      canonicalName,
+      slug,
+      testament: index < 39 ? "old" : "new",
+      canonicalOrder: id,
+      chapterCount,
+      verseCounts,
+      abbreviation: aliases[0] ?? canonicalName,
+      category: category.key,
+      aliases: [canonicalName, slug, ...aliases]
+    };
+  }
 );
 
 const singleChapterBookIds = new Set([31, 57, 63, 64, 65]);
-const maximumProtestantVerseNumber = 176;
 
 export function normalizeBibleBookName(value: string): string {
   return value.normalize("NFKC").trim().toLowerCase().replace(/[^a-z0-9]+/gu, "");
@@ -162,9 +194,15 @@ export function validateBiblePassage(
   if (value.endChapter !== null && (!Number.isInteger(value.endChapter) || value.endChapter < 1 || (book && value.endChapter > book.chapterCount))) {
     issues.push("Ending chapter is outside the canonical book");
   }
-  for (const [label, verse] of [["Starting", value.startVerse], ["Ending", value.endVerse]] as const) {
-    if (verse !== null && (!Number.isInteger(verse) || verse < 1 || verse > maximumProtestantVerseNumber)) {
-      issues.push(`${label} verse is outside standard Protestant verse numbering`);
+  for (const [label, verse, chapter] of [
+    ["Starting", value.startVerse, value.startChapter],
+    ["Ending", value.endVerse, value.endChapter]
+  ] as const) {
+    const chapterVerseCount = book && chapter !== null ? book.verseCounts[chapter - 1] : undefined;
+    if (verse !== null && (
+      !Number.isInteger(verse) || verse < 1 || chapterVerseCount === undefined || verse > chapterVerseCount
+    )) {
+      issues.push(`${label} verse is outside the canonical chapter`);
     }
   }
   if ((value.startVerse !== null || value.endVerse !== null) && value.startChapter === null) {

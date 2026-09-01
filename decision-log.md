@@ -1,6 +1,6 @@
 # Project Decision Log
 
-**Status:** Approved decisions through D-144; public frontend preview remains private and local
+**Status:** Approved decisions through D-145; public frontend preview remains private and local
 **Authority:** `church-website-architecture-plan.md` plus Yang’s confirmed migration decisions and Samuel Saad’s recorded project-owner decisions
 
 ## Evidence classifications
@@ -343,6 +343,14 @@ The 15 completed pilot/Wave-1 sermons remain private drafts. Their design previe
 The sermon archive uses one compact primary row containing exactly Search, Speaker, Bible book and Series. Advanced filters remain a native disclosure with server-rendered state and browser-history restoration. Precise passage selection cascades Book → Chapter → Verse and remains separate from both keyword/structured Scripture search and metadata recommendations. Canonical chapter counts are checked in; because complete per-chapter verse counts are not, the UI exposes only verse values verified from eligible confirmed single-chapter primary-passage ranges while the server retains inclusive structured overlap semantics.
 
 The unfiltered discovery view shows exactly three most recent full-description landscape cards. A URL-addressable expanded mode provides nine-item numbered pagination and hides discovery carousels, as does every search/filter result. Series discovery selects one latest eligible sermon per series deterministically. Topical discovery fails closed until an explicit administrator-approved topic lifecycle exists; neither absent primary passage nor unreviewed metadata is treated as topical. The public detail retains privacy-enhanced click-to-load YouTube but removes the separate website-owned outbound YouTube link; administrator source access is unchanged. All 15 preview records remain private drafts, and this revision creates no publication, semantic, staging, production or deployment authority. (`explicit bounded frontend revision; authenticated local-preview verification only`)
+
+### D-145 - Compact recent cards and an explicit-scope canonical Bible picker
+
+The three default **Most Recent Sermons** cards retain title, date, speaker, series, reviewed passage and detail access but use a five-line desktop/tablet description preview and adaptive compact sizing. The target is approximately half the prior desktop/tablet height, not a brittle fixed height: narrow layouts may expand, expose up to six description lines and must never clip metadata, the link or content. Expanded recent mode and ordinary result cards remain unaffected.
+
+The precise-passage control is a progressive Books → Chapters → Verses tile picker backed by a checked-in count-only Protestant/KJV versification revision. It contains all 66 books in canonical order, 1,189 chapters and 31,102 verses, plus stable abbreviations and ten labelled colour categories. A single book/chapter activation reveals the next level without submitting; double activation and explicit controls search the whole book/chapter; a verse activation searches the exact verse. URL state records `book`, `chapter` or `verse` scope explicitly. Keyboard, touch, Back/Escape navigation, live announcements, focus movement, minimum target size and non-colour selected/applied markers are required behavior.
+
+Passage results continue to use confirmed-primary inclusive interval overlap only. Keyword/structured Scripture search, the broad Bible-book filter, metadata-based **Related sermons**, and the publicly disabled description-only **Related themes** foundation remain separate. Scripture-shaped keyword searches such as `Romans 8` are not diverted to the picker. All current preview data remains private; this decision creates no content change, publication, semantic, staging, production or deployment authority. (`explicit bounded frontend revision; local canonical count data and authenticated private-preview verification only`)
 
 ## Decisions still required
 

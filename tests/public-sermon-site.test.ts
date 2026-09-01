@@ -126,8 +126,9 @@ describe("public sermon site routes", () => {
     expect(html).toContain('<option value="ASC" selected>Oldest first</option>');
     expect(html).toContain("window.addEventListener('pageshow'");
     expect(html).toContain("advanced.open=true");
-    expect(html).toContain("resetChapterAndVerse");
-    expect(html).toContain("resetVerse");
+    expect(html).toContain("selectBook");
+    expect(html).toContain("selectChapter");
+    expect(html).toContain("requestSubmit");
     expect(html).toContain("dateFrom=2026-08-01&amp;order=ASC");
   });
 
@@ -149,7 +150,7 @@ describe("public sermon site routes", () => {
     const repository = new SiteRepository();
     const route = createPublicSermonSiteHandler(repository);
     const response = await route(new Request(
-      "http://localhost/sermons/?s=faith&sermon_topics=legacy-topic&passageBook=romans&passageChapter=8&passageVerse=1&passageEndVerse=4"
+      "http://localhost/sermons/?s=faith&sermon_topics=legacy-topic&passageBook=romans&passageChapter=8&passageVerse=1&passageScope=verse"
     ));
     const html = await response!.text();
     expect(response?.status).toBe(200);
@@ -159,25 +160,57 @@ describe("public sermon site routes", () => {
       passageBook: "romans",
       passageChapter: 8,
       passageVerse: 1,
-      passageEndVerse: 4
+      passageScope: "verse"
     });
     expect(html).toContain("Browse by Bible passage");
-    expect(html).toContain('id="passage-book"');
-    expect(html).toContain('<optgroup label="Old Testament">');
-    expect(html).toContain('<optgroup label="New Testament">');
-    expect(html).toContain('id="passage-chapter"');
-    expect(html).toContain('id="passage-verse"');
-    expect(html).not.toContain('id="passage-end-verse"');
-    expect(html).toContain('<option value="">Choose a chapter</option>');
-    expect(html).toContain('<option value="">Choose a verse</option>');
-    expect(html).toContain('data-verses="1,2,3,4"');
-    expect(html).toContain("Primary passage: Romans 8:1–4");
+    expect(html).toContain('id="passage-book" name="passageBook" type="hidden" value="romans"');
+    expect(html).toContain('id="passage-chapter" name="passageChapter" type="hidden" value="8"');
+    expect(html).toContain('id="passage-verse" name="passageVerse" type="hidden" value="1"');
+    expect(html).toContain('id="passage-scope" name="passageScope" type="hidden" value="verse"');
+    expect(html).toContain('data-bible-picker data-depth="verse"');
+    expect(html.match(/data-book-tile data-book=/gu)).toHaveLength(66);
+    expect(html).toContain('data-book="romans"');
+    expect(html).toContain('data-verse-counts="32,29,31,25,21,23,25,39,33,21,36,21,14,23,33,27"');
+    expect(html).toContain('aria-label="Romans, Pauline Epistles, current search"');
+    expect(html).toContain('data-category="pauline"');
+    expect(html).toContain("Search all of Romans");
+    expect(html).toContain("Search all of Romans 8");
+    expect(html).toContain("Current passage search:");
+    expect(html).toContain("Exact verse — Romans 8:1");
+    expect(html).toContain("Primary passage: Romans 8:1");
     expect(html).toContain("Preached from");
     expect(html).toContain("Clear passage");
     expect(html).toContain("sermon_topics=legacy-topic");
     expect(html).toContain("passageBook=romans");
+    expect(html).toContain("passageScope=verse");
     expect(response?.headers.get("content-security-policy")).toContain("script-src 'sha256-");
     expect(html).toContain("@media (max-width:38rem)");
+  });
+
+  it("renders only the Books panel initially with accessible category and interaction alternatives", async () => {
+    const route = createPublicSermonSiteHandler(new SiteRepository());
+    const response = await route(new Request("http://localhost/sermons/"));
+    const html = await response!.text();
+
+    expect(html).toContain('data-bible-picker data-depth="book" data-mobile-panel="book"');
+    expect(html.match(/data-book-tile data-book=/gu)).toHaveLength(66);
+    expect(html).toContain('aria-label="Genesis, Law / Pentateuch"');
+    expect(html).toContain('aria-pressed="false" data-applied="false"');
+    expect(html).toContain('data-category="law"');
+    expect(html).toContain('data-category="revelation"');
+    expect(html).toContain('data-chapters-panel hidden');
+    expect(html).toContain('data-verses-panel hidden');
+    expect(html).toContain("double-click it or use the explicit button");
+    expect(html).toContain('data-search-whole-book disabled');
+    expect(html).toContain('data-search-whole-chapter disabled');
+    expect(html).toContain('role="status" aria-live="polite"');
+    expect(html).toContain("event.detail===0");
+    expect(html).toContain("addEventListener('dblclick'");
+    expect(html).toContain("event.key!=='Enter'&&event.key!==' '");
+    expect(html).toContain("['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End']");
+    expect(html).toContain("event.key==='Escape'||event.key==='Backspace'");
+    expect(html).toContain("min-width:2.75rem;min-height:2.75rem");
+    expect(html).toContain('data-mobile-panel="chapter"');
   });
 
   it("renders three landscape recent sermons and fail-closed discovery carousels by default", async () => {
@@ -194,7 +227,8 @@ describe("public sermon site routes", () => {
     const html = await response!.text();
 
     expect(html).toContain("Most Recent Sermons");
-    expect(html.match(/class="landscape-card"/gu)).toHaveLength(3);
+    expect(html.match(/class="landscape-card landscape-card--compact"/gu)).toHaveLength(3);
+    expect(html.match(/class="landscape-description--clamped"/gu)).toHaveLength(3);
     expect(html).toContain("recent-one");
     expect(html).toContain("recent-three");
     expect(html).not.toContain("older-four");
@@ -205,6 +239,11 @@ describe("public sermon site routes", () => {
     expect(html).toContain('aria-label="Previous Series"');
     expect(html).toContain('aria-label="Next Series"');
     expect(html).toContain("scroll-snap-type:x proximity");
+    expect(html).toContain("-webkit-line-clamp:5");
+    expect(html).toContain("-webkit-line-clamp:6");
+    expect(html).toContain(".landscape-card--compact{min-height:18rem}");
+    expect(html).toContain(".landscape-card--compact{min-height:23rem}");
+    expect(html).toContain(".landscape-card--compact{min-height:0}");
     expect(html).not.toContain("autoplay");
     const primaryRow = html.slice(
       html.indexOf('<div class="filter-primary">'),

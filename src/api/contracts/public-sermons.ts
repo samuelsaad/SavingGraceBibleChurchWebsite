@@ -20,6 +20,7 @@ export const publicSermonListQuerySchema = z
     passageChapter: z.coerce.number().int().positive().optional(),
     passageVerse: z.coerce.number().int().positive().optional(),
     passageEndVerse: z.coerce.number().int().positive().optional(),
+    passageScope: z.enum(["book", "chapter", "verse"]).optional(),
     dateFrom: isoDateSchema.optional(),
     dateTo: isoDateSchema.optional(),
     order: z.enum(["ASC", "DESC"]).default("DESC"),
@@ -44,6 +45,7 @@ export const publicSermonListQuerySchema = z
     }
     if (!value.passageBook && (
       value.passageChapter !== undefined || value.passageVerse !== undefined || value.passageEndVerse !== undefined
+      || value.passageScope !== undefined
     )) {
       context.addIssue({ code: "custom", path: ["passageBook"], message: "Choose a Bible book first" });
       return;
@@ -71,6 +73,22 @@ export const publicSermonListQuerySchema = z
         for (const message of validateBiblePassage(passage).issues) {
           context.addIssue({ code: "custom", path: ["passageChapter"], message });
         }
+      }
+      if (value.passageScope === "book" && (
+        value.passageChapter !== undefined || value.passageVerse !== undefined || value.passageEndVerse !== undefined
+      )) {
+        context.addIssue({ code: "custom", path: ["passageScope"], message: "A whole-book search cannot include a chapter or verse" });
+      }
+      if (value.passageScope === "chapter" && (
+        value.passageChapter === undefined || value.passageVerse !== undefined || value.passageEndVerse !== undefined
+      )) {
+        context.addIssue({ code: "custom", path: ["passageScope"], message: "A whole-chapter search requires one chapter and no verse" });
+      }
+      if (value.passageScope === "verse" && (
+        value.passageChapter === undefined || value.passageVerse === undefined
+        || (value.passageEndVerse !== undefined && value.passageEndVerse !== value.passageVerse)
+      )) {
+        context.addIssue({ code: "custom", path: ["passageScope"], message: "An exact-verse search requires one book, chapter and verse" });
       }
     }
   });

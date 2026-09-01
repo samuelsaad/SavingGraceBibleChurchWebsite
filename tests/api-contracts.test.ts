@@ -130,10 +130,17 @@ describe("public sermon API contract", () => {
 
   it("validates passage-selector dependencies and canonical chapter ranges", () => {
     expect(publicSermonListQuerySchema.parse({ passageBook: "romans" })).toMatchObject({ passageBook: "romans" });
+    expect(publicSermonListQuerySchema.parse({ passageBook: "romans", passageScope: "book" })).toMatchObject({ passageScope: "book" });
+    expect(publicSermonListQuerySchema.parse({ passageBook: "romans", passageChapter: 8, passageScope: "chapter" })).toMatchObject({ passageScope: "chapter" });
+    expect(publicSermonListQuerySchema.parse({ passageBook: "romans", passageChapter: 8, passageVerse: 1, passageScope: "verse" })).toMatchObject({ passageScope: "verse" });
     expect(() => publicSermonListQuerySchema.parse({ passageChapter: 8 })).toThrow("Choose a Bible book first");
     expect(() => publicSermonListQuerySchema.parse({ passageBook: "romans", passageChapter: 17 })).toThrow("outside the canonical book");
     expect(() => publicSermonListQuerySchema.parse({ passageBook: "romans", passageVerse: 1 })).toThrow("Choose a chapter before a verse");
     expect(() => publicSermonListQuerySchema.parse({ passageBook: "romans", passageChapter: 8, passageVerse: 4, passageEndVerse: 1 })).toThrow("reversed");
+    expect(() => publicSermonListQuerySchema.parse({ passageBook: "romans", passageChapter: 8, passageScope: "book" })).toThrow("whole-book");
+    expect(() => publicSermonListQuerySchema.parse({ passageBook: "romans", passageScope: "chapter" })).toThrow("whole-chapter");
+    expect(() => publicSermonListQuerySchema.parse({ passageBook: "romans", passageChapter: 8, passageScope: "verse" })).toThrow("exact-verse");
+    expect(() => publicSermonListQuerySchema.parse({ passageBook: "genesis", passageChapter: 3, passageVerse: 25 })).toThrow("canonical chapter");
   });
 
   it("keeps the detail body while gating description and SEO override together", () => {

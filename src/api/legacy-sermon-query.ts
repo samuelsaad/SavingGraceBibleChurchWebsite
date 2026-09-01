@@ -44,6 +44,7 @@ export function translateLegacySermonQuery(parameters: URLSearchParams): Record<
     ["passageChapter", "passageChapter"],
     ["passageVerse", "passageVerse"],
     ["passageEndVerse", "passageEndVerse"],
+    ["passageScope", "passageScope"],
     ["dateFrom", "dateFrom"],
     ["dateTo", "dateTo"],
     ["order", "order"],
