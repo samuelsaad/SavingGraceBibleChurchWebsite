@@ -29,12 +29,21 @@ describe("authoritative frontend sermon selector", () => {
     const sql = buildPublishedSermonListQuery(query, "completed_preview").text;
     expect(sql).toContain("status = 'draft'");
     expect(sql).toContain("published_at IS NULL");
+    expect(sql).toContain("source_status = 'public-development-dataset-v1'");
+    expect(sql).toContain(" OR (");
     expect(sql).toContain("preview_review.current_stage = 6");
     expect(sql).toContain("preview_review.completed_at IS NOT NULL");
     expect(sql).toContain("frontend_readiness.has_required_passage_decision");
     expect(sql).toContain("phase3b2-caption-v1");
     expect(sql).toContain("phase3b2b-punctuation-v2");
     expect(sql).toContain("phase3b2c-wave1-extractive-drafts-v2");
+  });
+
+  it("does not add the tracked development-seed marker to public selectors", () => {
+    const list = buildPublishedSermonListQuery(query, "public").text;
+    const sitemap = buildPublishedSermonSitemapQuery().text;
+    expect(list).not.toContain("public-development-dataset-v1");
+    expect(sitemap).not.toContain("public-development-dataset-v1");
   });
 
   it("keeps sitemap generation on the strict public selector", () => {

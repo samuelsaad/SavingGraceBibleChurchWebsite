@@ -20,6 +20,24 @@ export function assertReadOnlyLocalDatabase(connectionString: string): void {
   }
 }
 
+export function authorisedReadOnlyPreviewDatabaseName(
+  connectionString: string,
+  environment: NodeJS.ProcessEnv = process.env
+): string {
+  if (environment.RUN_POSTGRES_INTEGRATION !== "1") {
+    assertReadOnlyLocalDatabase(connectionString);
+    return "savinggrace_sermons_test";
+  }
+  if (environment.TEST_DATABASE_URL !== connectionString) {
+    throw new Error("The read-only preview connection must match the exact disposable test target");
+  }
+  return assertDisposableIntegrationTestDatabase(
+    connectionString,
+    environment.DISPOSABLE_TEST_DATABASE_TOKEN,
+    environment.ALLOW_LOCAL_DB_WRITE
+  );
+}
+
 function assertWriteOptIn(writeOptIn: string | undefined): void {
   if (writeOptIn !== "1") {
     throw new Error("Set ALLOW_LOCAL_DB_WRITE=1 to opt in to disposable local fixture writes");

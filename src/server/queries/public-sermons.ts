@@ -1,5 +1,6 @@
 import type { PublicSermonListQuery } from "../../api/contracts/public-sermons";
 import { bibleBookBySlug } from "../../domain/bible-passage";
+import { previewDatasetSourceStatus } from "../../development-data/preview-sermon-dataset";
 
 export interface ParameterizedQuery {
   text: string;
@@ -67,18 +68,23 @@ export function frontendSermonEligibilitySql(
     ? `${sermonAlias}.status = 'published'`
     : `${sermonAlias}.status = 'draft'
       AND ${sermonAlias}.published_at IS NULL
-      AND EXISTS (
-        SELECT 1
-        FROM sermon_enrichment_reviews preview_review
-        WHERE preview_review.sermon_id = ${sermonAlias}.id
-          AND preview_review.current_stage = 6
-          AND preview_review.completed_at IS NOT NULL
-      )
-      AND EXISTS (
-        SELECT 1
-        FROM sermon_enrichment_sources preview_source
-        WHERE preview_source.sermon_id = ${sermonAlias}.id
-          AND preview_source.processing_version IN (${previewProcessingVersions.map((value) => `'${value}'`).join(", ")})
+      AND (
+        ${sermonAlias}.source_status = '${previewDatasetSourceStatus}'
+        OR (
+          EXISTS (
+            SELECT 1
+            FROM sermon_enrichment_reviews preview_review
+            WHERE preview_review.sermon_id = ${sermonAlias}.id
+              AND preview_review.current_stage = 6
+              AND preview_review.completed_at IS NOT NULL
+          )
+          AND EXISTS (
+            SELECT 1
+            FROM sermon_enrichment_sources preview_source
+            WHERE preview_source.sermon_id = ${sermonAlias}.id
+              AND preview_source.processing_version IN (${previewProcessingVersions.map((value) => `'${value}'`).join(", ")})
+          )
+        )
       )`;
 
   return `(

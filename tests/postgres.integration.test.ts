@@ -64,6 +64,13 @@ import {
   remainingAuthorisedPilotVideoId,
   restoreRemainingPhase3b2Pilot
 } from "../src/enrichment/phase3b2-pilot";
+import { importTrackedPreviewDataset } from "../src/development-data/import-preview-sermon-dataset";
+import {
+  loadTrackedPreviewDataset,
+  previewDatasetAllowedSlugs,
+  previewDatasetSourceStatus
+} from "../src/development-data/preview-sermon-dataset";
+import { deterministicSourceUuid } from "../src/migration/identity";
 import {
   buildPunctuationPack,
   createPunctuationWorkspaceTemplate,
@@ -452,6 +459,101 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       .toMatchObject({ administratorSermonCount: 0, publicSermonCount: 0 });
     expect((await repository.listTaxonomies("books")).find((book) => book.id === protestantBibleBooks[0]!.classificationId))
       .toMatchObject({ administratorSermonCount: 0, publicSermonCount: 0 });
+  });
+
+  it("imports the exact tracked 15-sermon dataset idempotently for preview only", async () => {
+    const tracked = await loadTrackedPreviewDataset();
+    const options = {
+      connectionString: disposableConnectionString(),
+      writeOptIn: process.env.ALLOW_LOCAL_DB_WRITE,
+      testRunToken: testRunToken()
+    };
+    try {
+      await expect(importTrackedPreviewDataset(pool, options)).resolves.toMatchObject({
+        outcome: "imported",
+        sermons: 15,
+        questionAnswers: 103,
+        publicEligible: 0,
+        previewEligible: 15,
+        semanticEligible: 0,
+        contentSha256: tracked.contentSha256,
+        manifestSha256: tracked.manifestSha256
+      });
+      await expect(importTrackedPreviewDataset(pool, options)).resolves.toMatchObject({
+        outcome: "unchanged",
+        sermons: 15,
+        questionAnswers: 103,
+        publicEligible: 0,
+        previewEligible: 15,
+        semanticEligible: 0
+      });
+
+      const stored = await pool.query<{
+        sermons: number;
+        drafts: number;
+        unpublished: number;
+        transcripts: number;
+        question_answers: number;
+        enrichment_sources: number;
+        guided_reviews: number;
+        audit_events: number;
+      }>(`SELECT
+        count(*)::integer AS sermons,
+        count(*) FILTER (WHERE status = 'draft')::integer AS drafts,
+        count(*) FILTER (WHERE published_at IS NULL)::integer AS unpublished,
+        (SELECT count(*)::integer FROM sermon_transcripts transcript
+          JOIN sermons item ON item.id = transcript.sermon_id
+          WHERE item.source_status = $1) AS transcripts,
+        (SELECT count(*)::integer FROM sermon_question_answers qa
+          JOIN sermons item ON item.id = qa.sermon_id
+          WHERE item.source_status = $1) AS question_answers,
+        (SELECT count(*)::integer FROM sermon_enrichment_sources source
+          JOIN sermons item ON item.id = source.sermon_id
+          WHERE item.source_status = $1) AS enrichment_sources,
+        (SELECT count(*)::integer FROM sermon_enrichment_reviews review
+          JOIN sermons item ON item.id = review.sermon_id
+          WHERE item.source_status = $1) AS guided_reviews,
+        (SELECT count(*)::integer FROM audit_events audit
+          JOIN sermons item ON item.id = audit.entity_id
+          WHERE item.source_status = $1) AS audit_events
+        FROM sermons WHERE source_status = $1`, [previewDatasetSourceStatus]);
+      expect(stored.rows[0]).toEqual({
+        sermons: 15,
+        drafts: 15,
+        unpublished: 15,
+        transcripts: 15,
+        question_answers: 103,
+        enrichment_sources: 0,
+        guided_reviews: 0,
+        audit_events: 0
+      });
+
+      const publicRepository = new PostgresSermonRepository(pool, "public");
+      const previewRepository = new PostgresSermonRepository(pool, "completed_preview");
+      const previewList = await previewRepository.listPublished(
+        publicSermonListQuerySchema.parse({ page: 1, pageSize: 50 })
+      );
+      expect(previewList.data.map((sermon) => sermon.slug).sort())
+        .toEqual([...previewDatasetAllowedSlugs].sort());
+      for (const slug of previewDatasetAllowedSlugs) {
+        expect(await publicRepository.findPublishedBySlug(slug)).toBeNull();
+        const detail = await previewRepository.findPublishedBySlug(slug);
+        expect(detail?.slug).toBe(slug);
+        expect(detail?.transcript?.bodyText.length).toBeGreaterThan(0);
+        expect(detail?.questionAnswers.length).toBeGreaterThanOrEqual(5);
+      }
+      const sitemap = await publicRepository.listPublishedSitemapEntries();
+      expect(sitemap.some((entry) => previewDatasetAllowedSlugs.includes(
+        entry.slug as typeof previewDatasetAllowedSlugs[number]
+      ))).toBe(false);
+    } finally {
+      await pool.query("DELETE FROM sermons WHERE source_status = $1", [previewDatasetSourceStatus]);
+      const seriesIds = [...new Set(tracked.dataset.sermons.flatMap((sermon) =>
+        sermon.series.map((item) => deterministicSourceUuid("public-development-series", item.slug))
+      ))];
+      if (seriesIds.length > 0) await pool.query("DELETE FROM series WHERE id = ANY($1::uuid[])", [seriesIds]);
+      await pool.query("DELETE FROM source_taxonomy_terms WHERE source_system = $1", [previewDatasetSourceStatus]);
+    }
   });
 
   it("aborts the one-speaker migration with affected IDs and cleanly reapplies", async () => {

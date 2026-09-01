@@ -13,6 +13,7 @@ For current repository status and safe continuation rules, read the tracked publ
 - Framework-independent `/api/v1/sermons` list/detail HTTP router
 - Cohesive responsive sermon frontend components for the homepage, archive, detail, taxonomy, empty/error/private states, compact discovery filters and recent cards, stable recent-sermon pagination, deterministic series discovery, metadata-related sermons, controlled media, mapped `301`/`410` handling, and a strictly eligible public sermon sitemap
 - Authenticated, loopback-only `/frontend-preview/` pages that reuse the real frontend components for the 15 completed private pilot/Wave-1 records while remaining absent from static production output, public routes, sitemaps and structured data
+- Public repository-tracked `development-data/preview-sermons-v1/` seed for exactly those 15 records, with a fixed integrity manifest, curated allowed fields and a deterministic no-clobber importer that retains draft/unpublished state
 - Separate server-rendered **Browse by Bible passage** controls with accessible Books → Chapters → Verses panels, the checked-in 66-book Protestant/KJV versification and explicit whole-book, whole-chapter or exact-verse URL scope; results remain backed only by administrator-confirmed structured primary preaching passages, so pending proposals, supporting references and private sermons are excluded
 - Offline description-only semantic foundation with a verified external BAAI ONNX model, locked local-only Transformers.js adapter, exact float32 scoring, shared eligibility/stale-removal guards, pending quality status, no model files in Git and no public **Related themes** output
 - Provider-independent protected admin handlers with allowlisted local test identities
@@ -46,7 +47,7 @@ For current repository status and safe continuation rules, read the tracked publ
 
 This milestone does not include deployment, cloud infrastructure, Cognito configuration, production loading, audio/video processing, new transcription, or any WordPress/YouTube mutation. The completed official YouTube reads were separately bounded: first to the three accepted pilots, then to metadata inspection of the deterministic 36-primary/12-alternate set and exact-byte retrieval of only the resolved 12-record Wave 1. No continuing provider authority is implied. The current local checkpoint contains 15 completed pilot/Wave-1 guided reviews with approved current transcripts, descriptions and required Q&A, resolved passage outcomes and controlled media. Every one remains a private draft. This frontend milestone authorises local authenticated preview only; it does not publish a sermon, accept semantic recommendation quality, enable public **Related themes**, access production, deploy, push or begin Phase 3C. The AWS runtime and Astro production adapter remain intentionally undecided.
 
-Samuel has separately authorised a future public, repository-tracked development seed containing the real church-owned display content for exactly those 15 preview sermons. This governance decision does not itself export or commit that dataset. A later bounded implementation must derive it only from approved local sources, use an exact scope manifest and idempotent importer, exclude raw captions and all credentials/authentication/audit material, and prove that imported records remain draft/unpublished and absent from public routes, search, feeds, sitemaps, semantic processing and production builds. GitHub visibility of a development seed is not application publication.
+Samuel has authorised and the repository now contains a public development seed with the real church-owned display content for exactly those 15 preview sermons. It was derived from the approved local records, uses an exact scope/integrity manifest and idempotent no-clobber importer, and excludes raw captions plus credential, authentication and administrator-audit material. Imported records remain draft/unpublished and absent from public routes, search, feeds, sitemaps, semantic processing and production builds. GitHub visibility of the seed is not application publication.
 
 The approved direction is a complete WordPress replacement, with WordPress remaining live until authorised cutover. Continue Astro/API/PostgreSQL, preferably a statically generated public site separated from protected administration/API/PostgreSQL. Production administration will use individually attributable MFA identities for Samuel and Yang or another authorised church administrator. Exact AWS services/pricing are undecided; target ongoing hosting below A$70/month where practical and avoid unnecessary NAT, Fargate, RDS Proxy or Multi-AZ infrastructure. There is no fixed launch month. The five pending sermons remain unpublished and do not block the 448-candidate public launch gate; the three WordPress drafts remain excluded.
 
@@ -98,7 +99,25 @@ npm run db:rollback-primary-passage-local
 npm run reference:apply-local
 npm run reference:rollback-local
 npm run launch-readiness:local
+npm run development-data:verify-current15
+npm run development-data:import-current15-local
 ```
+
+For a fresh Windows development database, create the exact PostgreSQL 16 loopback database `savinggrace_sermons_test`, configure a local role without committing its password, and run:
+
+```powershell
+npm install
+$env:DATABASE_URL="postgresql://YOUR_LOCAL_ROLE@127.0.0.1:5432/savinggrace_sermons_test"
+$env:ALLOW_LOCAL_DB_WRITE="1"
+npm run db:apply-local
+npm run reference:apply-local
+npm run development-data:verify-current15
+npm run development-data:import-current15-local
+npm run development-data:import-current15-local
+npm run frontend-preview:local
+```
+
+The second import must be `unchanged`. The authenticated preview begins at `http://127.0.0.1:4322/admin`; the static production build does not copy the tracked dataset into `dist` and ordinary public selectors still require published application state.
 
 The dry-run command accepts an approved local JSON input and prints only the safe migration report. It does not connect to MariaDB or PostgreSQL and never writes records. Original media/embed values remain internal migration provenance and are deliberately omitted from stdout.
 
@@ -171,6 +190,8 @@ Operational loaders refuse every target except `savinggrace_sermons_test` on loo
 - `src/enrichment`: strict queue/draft contracts, provider interfaces, and local idempotent PostgreSQL draft workflow
 - `src/youtube`: bounded server-only official API pilot-caption proof; it has no application or public-site integration
 - `src/readiness`: derived inventory/readiness reporting; the approved public-launch gate applies to the 448 published candidates
+- `src/development-data`: exact-scope tracked-dataset validation, read-only export and idempotent draft-only PostgreSQL import
+- `development-data/preview-sermons-v1`: authorised public 15-sermon content plus scope/integrity manifest
 - `historical-enrichment-plan.md`: three-output Phase 3B.2 contract, review boundary and exact launch gate
 - `youtube-pilot-caption-proof.md`: owner OAuth, track-selection, private persistence/comparison and stop-boundary contract
 - `db/migrations`: ordered PostgreSQL SQL migrations

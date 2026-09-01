@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "saving-grace-public-preview-sermons-v1",
+  "contentFile": "sermons.json",
+  "contentSha256": "26a85b7e600c21941450b3b1671953586e79154c2fba50e6a40d7ccf11fc9aba",
+  "expectedSermonCount": 15,
+  "expectedQuestionAnswerCount": 103,
+  "allowedSlugs": [
+    "phase3b2-ramfoaowwma",
+    "christ-our-hope-in-suffering",
+    "testing-god-at-rephidim",
+    "joy-before-the-grave",
+    "strangers-with-heavenly-hope",
+    "your-calling-to-radical-thinking",
+    "christian-liberty",
+    "managing-the-tongue",
+    "loving-god",
+    "gods-will-for-the-local-church",
+    "phase3b2-u52zfbc48",
+    "what-is-genuine-faith",
+    "the-perseverance-of-a-saint",
+    "impossible-to-believe",
+    "phase3b2-h2-rh-w8dfg"
+  ]
+}

@@ -58,6 +58,9 @@
     "launch-readiness:local": "tsx src/readiness/cli.ts",
     "api:local": "tsx src/server/local-api.ts",
     "frontend-preview:local": "cross-env API_HOST=127.0.0.1 ENABLE_LOCAL_TEST_IDENTITIES=1 tsx src/server/local-frontend-preview-server.ts",
+    "development-data:export-current15-local": "tsx src/development-data/export-preview-sermon-dataset.ts",
+    "development-data:verify-current15": "tsx src/development-data/preview-sermon-dataset-cli.ts verify",
+    "development-data:import-current15-local": "tsx src/development-data/preview-sermon-dataset-cli.ts import",
     "dashboard:local": "cross-env API_HOST=127.0.0.1 ENABLE_LOCAL_TEST_IDENTITIES=1 ENABLE_LOCAL_DASHBOARD=1 tsx src/server/local-api.ts"
   },
   "dependencies": {

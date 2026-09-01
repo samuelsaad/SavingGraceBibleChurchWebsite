@@ -26,19 +26,36 @@ Use `git status`, `git log` and `git remote` to verify current facts; do not tre
 
 ## Exact 15-sermon public development-dataset decision
 
-Samuel Saad has authorised a future public, repository-tracked curated development seed for exactly the three accepted pilots and 12 Wave 1 sermons already used by the authenticated preview. The permitted fields are limited to the church-owned frontend display data described in D-148 and `AGENTS.md`.
+The authorised public development seed is now implemented at `development-data/preview-sermons-v1/`. It contains exactly the three accepted pilots and 12 Wave 1 sermons used by the authenticated preview, and only the church-owned frontend display fields permitted by D-148 and `AGENTS.md`.
 
-This governance checkpoint does not contain or export that dataset. A later separately authorised implementation must:
+- `manifest.json` is the exact ordered 15-slug scope and integrity manifest.
+- `sermons.json` is the curated JSON seed, not a PostgreSQL dump.
+- The content SHA-256 is `26a85b7e600c21941450b3b1671953586e79154c2fba50e6a40d7ccf11fc9aba`.
+- The manifest SHA-256 is `132b7be1ee8e0f544acc2677d86d0c14830de24bbb84d9589bbb2ddb6dab2903`.
+- The importer creates deterministic local identities, refuses partial/conflicting scope, creates no audit or guided-review rows and is unchanged on an identical rerun.
+- Imported sermons are `draft` with no publication timestamp. A dedicated seed marker permits only the authenticated preview scope; ordinary public selectors, search, sitemap and semantic eligibility still require `published` state.
 
-1. Derive the data only from the approved local PostgreSQL test database and approved project sources.
-2. Freeze an exact 15-record identity/scope manifest.
-3. Export only the fields and relationships needed to reproduce the frontend preview.
-4. Provide an idempotent, no-clobber importer rather than a raw database dump.
-5. Keep all imported sermons draft/unpublished.
-6. Prove public-route, search, feed, sitemap, semantic and production-build exclusion.
-7. Add fresh-computer PowerShell setup commands only after those commands have been implemented and verified.
+The seed carries current descriptions, cleaned transcripts and 103 ordered Q&A pairs plus the permitted display metadata and relationships. Where lifecycle constraints require attribution, the importer uses the explicit synthetic local subject `public-development-dataset-seed`; it does not copy or impersonate an administrator identity and is not production approval evidence.
 
 Raw caption exports, credentials, secret-bearing environment files, OAuth material, cookies/sessions, administrator audit evidence, private keys, account credentials, unrelated records, production content, proprietary source and model files remain excluded.
+
+## Portable Windows setup and preview
+
+Install PostgreSQL 16 and Node.js 24 or newer. Create an empty local database named exactly `savinggrace_sermons_test` using pgAdmin or an equivalent local PostgreSQL tool. Configure a local role through the normal `pgpass.conf`, `PGPASSWORD` or interactive PostgreSQL mechanism; never place its password in this repository. Then run from PowerShell:
+
+```powershell
+npm install
+$env:DATABASE_URL="postgresql://YOUR_LOCAL_ROLE@127.0.0.1:5432/savinggrace_sermons_test"
+$env:ALLOW_LOCAL_DB_WRITE="1"
+npm run db:apply-local
+npm run reference:apply-local
+npm run development-data:verify-current15
+npm run development-data:import-current15-local
+npm run development-data:import-current15-local
+npm run frontend-preview:local
+```
+
+The first import must report `imported`; the identical second import must report `unchanged`. Open `http://127.0.0.1:4322/admin`, use the local **Frontend preview** action, and stop the server with `Ctrl+C`. GitHub visibility of the seed is separate from application publication: no seeded record is available through an ordinary public route or included in production static output.
 
 ## Handover maintenance and privacy
 
@@ -48,4 +65,4 @@ Update this file after a completed milestone materially changes the current chec
 
 ## Immediate next bounded task
 
-The next task may inspect the existing migrations, importer contracts, private preview architecture and exact local 15-record scope, then implement the portable development dataset under D-148. It requires fresh current-task authority for read-only PostgreSQL access and any local test-database writes or disposable PostgreSQL verification. It must not access production or external services, export another sermon, publish content, deploy, push or begin Phase 3C.
+The next bounded task may perform final public-repository publication readiness and, only with fresh explicit authority, configure the intended Git remote and push this history. It must not export another sermon, change application publication state, access production or external providers, deploy, enable Related themes, process another wave or begin Phase 3C.

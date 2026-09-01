@@ -1,5 +1,5 @@
 import { createServer } from "node:http";
-import { assertReadOnlyLocalDatabase } from "../migration/local-database-safety";
+import { authorisedReadOnlyPreviewDatabaseName } from "../migration/local-database-safety";
 import { LocalFrontendPreviewSession } from "./auth/local-frontend-preview-session";
 import { LocalTestIdentityProvider } from "./auth/local-test-identity-provider";
 import { createPostgresPool } from "./database";
@@ -11,7 +11,7 @@ import { PostgresSermonRepository } from "./repositories/postgres-sermon-reposit
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) throw new Error("DATABASE_URL is required");
-assertReadOnlyLocalDatabase(connectionString);
+const expectedDatabaseName = authorisedReadOnlyPreviewDatabaseName(connectionString);
 
 const hostname = process.env.API_HOST ?? "127.0.0.1";
 assertLoopbackApiHost(hostname);
@@ -28,11 +28,11 @@ const identity = await pool.query<{
   postgres_16: boolean;
   read_only: boolean;
 }>(`SELECT
-  current_database() = 'savinggrace_sermons_test' AS database_ok,
+  current_database() = $1 AS database_ok,
   inet_server_addr() IN ('127.0.0.1'::inet, '::1'::inet) AS loopback_ok,
   inet_server_port() = 5432 AS port_ok,
   current_setting('server_version_num')::integer BETWEEN 160000 AND 169999 AS postgres_16,
-  current_setting('transaction_read_only') = 'on' AS read_only`);
+  current_setting('transaction_read_only') = 'on' AS read_only`, [expectedDatabaseName]);
 if (!Object.values(identity.rows[0] ?? {}).every(Boolean)) {
   await pool.end();
   throw new Error("The local frontend preview database identity or read-only guard did not match");
