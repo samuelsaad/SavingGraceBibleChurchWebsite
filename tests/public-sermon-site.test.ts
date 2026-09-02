@@ -1,7 +1,8 @@
+import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import type { PublicSermonListQuery } from "../src/api/contracts/public-sermons";
 import type { SermonDetail, SermonSummary } from "../src/domain/sermon";
-import { createPublicSermonSiteHandler } from "../src/server/http/public-sermon-page";
+import { createPublicSermonSiteHandler, renderFrontendHomePage } from "../src/server/http/public-sermon-page";
 import type {
   PaginatedSermons,
   PublicSermonFilterOptions,
@@ -74,6 +75,14 @@ class SiteRepository implements PublicSermonRepository {
   }
 }
 
+function hash(source: string): string {
+  return `'sha256-${createHash("sha256").update(source).digest("base64")}'`;
+}
+
+function section(html: string, start: string, end: string): string {
+  return html.slice(html.indexOf(start), html.indexOf(end));
+}
+
 describe("public sermon site routes", () => {
   it("renders stable paginated search and combined filters with accessible controls", async () => {
     const repository = new SiteRepository();
@@ -98,27 +107,39 @@ describe("public sermon site routes", () => {
     });
     expect(html).toContain('<meta name="robots" content="noindex, follow"');
     expect(html).toContain('rel="canonical" href="https://www.savinggrace.org.au/sermons/page/2/"');
-    expect(html).toContain('<label for="sermon-search">Search</label>');
-    expect(html).toContain('<label for="speaker-filter">Speaker</label>');
-    expect(html).toContain('<label for="book-filter">Bible book</label>');
-    expect(html).toContain('<label for="series-filter">Series</label>');
-    expect(html).toContain('<summary>Advanced search</summary>');
-    expect(html).toContain('data-active="true" open');
-    expect(html).toContain('role="status" aria-live="polite"');
-    expect(html).toContain("Active filters");
+    expect(html).toContain('<label class="field__label" for="sermon-search">Search</label>');
+    expect(html).toContain('<label class="field__label" for="speaker-filter">Speaker</label>');
+    expect(html).toContain('<label class="field__label" for="book-filter">Bible book</label>');
+    expect(html).toContain('<label class="field__label" for="series-filter">Series</label>');
+    expect(html).toContain('<span class="disclosure__label">Advanced search</span>');
+    expect(html).toContain('data-advanced-search data-active="true" open');
+    expect(html).toContain('<span class="disclosure__badge">4 filters active</span>');
+    expect(html).toContain('id="sermon-results" tabindex="-1" aria-labelledby="sermon-results-heading sermon-results-status"');
+    expect(html).toContain('aria-label="Active filters"');
     expect(html).toContain("Clear all filters");
-    expect(html).toContain("@media (max-width:38rem)");
-    const publicDesktopNavigation = html.slice(
-      html.indexOf('<nav class="desktop-nav"'),
-      html.indexOf('<details class="mobile-nav"')
-    );
-    expect(publicDesktopNavigation).toContain('<a href="/">Home</a><a href="/sermons/" aria-current="page">Sermons</a>');
-    expect(publicDesktopNavigation).not.toContain("data-nav-disclosure");
-    expect(publicDesktopNavigation).not.toContain("/speakers/");
+    expect(html).toContain('<h2 id="sermon-results-heading">Filtered sermons</h2>');
+    const desktopNavigation = section(html, '<nav class="site-nav"', '<details class="site-menu"');
+    expect(desktopNavigation).toContain('<li><a href="/">Home</a></li><li><a href="/sermons/" aria-current="page">Sermons</a></li>');
+    expect(desktopNavigation).not.toContain("data-nav-disclosure");
+    expect(desktopNavigation).not.toContain("/speakers/");
+    expect(html).not.toContain('data-enhancement="navigation"');
     expect(html).toContain(encodeURIComponent(summary.slug));
     expect(html).not.toContain('id="transcript-heading"');
     expect(html).not.toContain('id="topical-sermons-heading"');
     expect(html).not.toContain('id="series-sermons-heading"');
+  });
+
+  it("offers one removable token per active filter that drops only that parameter", async () => {
+    const route = createPublicSermonSiteHandler(new SiteRepository());
+    const response = await route(new Request(
+      "http://localhost/sermons/?sermon_speaker=example-speaker&sermon_series=example-series&order=ASC"
+    ));
+    const html = await response!.text();
+    expect(html).toContain('href="/sermons/?sermon_series=example-series&amp;order=ASC#sermon-results">Speaker: Example Speaker');
+    expect(html).toContain('href="/sermons/?sermon_speaker=example-speaker&amp;order=ASC#sermon-results">Series: Example Series');
+    expect(html).toContain('href="/sermons/?sermon_speaker=example-speaker&amp;sermon_series=example-series#sermon-results">Oldest first');
+    expect(html).toContain('<span class="sr-only">, remove this filter</span>');
+    expect(html).toContain('<a class="filter-tokens__clear" href="/sermons/">Clear all filters</a>');
   });
 
   it("reopens advanced search for active values and preserves them through server URLs", async () => {
@@ -131,12 +152,9 @@ describe("public sermon site routes", () => {
     expect(html).toContain('data-active="true" open');
     expect(html).toContain('name="dateFrom" type="date" value="2026-08-01"');
     expect(html).toContain('<option value="ASC" selected>Oldest first</option>');
-    expect(html).toContain("window.addEventListener('pageshow'");
-    expect(html).toContain("advanced.open=true");
-    expect(html).toContain("selectBook");
-    expect(html).toContain("selectChapter");
-    expect(html).toContain("requestSubmit");
+    expect(html).toContain('data-enhancement="archive"');
     expect(html).toContain("dateFrom=2026-08-01&amp;order=ASC");
+    expect(html).toContain('action="/sermons/#sermon-results"');
   });
 
   it("treats punctuation-only search as a safe browse and rejects invalid dates", async () => {
@@ -153,7 +171,7 @@ describe("public sermon site routes", () => {
     expect(await invalid!.text()).toContain("Check the sermon filters");
   });
 
-  it("renders a shareable mobile-friendly primary-passage browser independently of legacy Scripture filters", async () => {
+  it("renders a shareable primary-passage browser independently of legacy Scripture filters", async () => {
     const repository = new SiteRepository();
     const route = createPublicSermonSiteHandler(repository);
     const response = await route(new Request(
@@ -170,6 +188,8 @@ describe("public sermon site routes", () => {
       passageScope: "verse"
     });
     expect(html).toContain("Browse by Bible passage");
+    expect(html).toContain('data-passage-disclosure data-active="true" open');
+    expect(html).toContain('<span class="disclosure__badge">Romans 8:1</span>');
     expect(html).toContain('id="passage-book" name="passageBook" type="hidden" value="romans"');
     expect(html).toContain('id="passage-chapter" name="passageChapter" type="hidden" value="8"');
     expect(html).toContain('id="passage-verse" name="passageVerse" type="hidden" value="1"');
@@ -178,57 +198,50 @@ describe("public sermon site routes", () => {
     expect(html.match(/data-book-tile data-book=/gu)).toHaveLength(66);
     expect(html).toContain('data-book="romans"');
     expect(html).toContain('data-verse-counts="32,29,31,25,21,23,25,39,33,21,36,21,14,23,33,27"');
-    expect(html).toContain('aria-label="Romans, Pauline Epistles, current search"');
-    expect(html).toContain('data-category="pauline"');
-    expect(html).toContain("Search all of Romans");
-    expect(html).toContain("Search all of Romans 8");
+    expect(html).toContain('data-book="romans" data-book-name="Romans" data-chapters="16"');
+    expect(html).toContain(', Romans, Pauline Epistles, current search</span>');
+    expect(html).toContain('aria-current="true"');
+    expect(html.match(/data-chapter-tile data-chapter=/gu)).toHaveLength(16);
+    expect(html.match(/data-verse-tile data-verse=/gu)).toHaveLength(39);
+    expect(html).toContain("Search all of Romans<");
+    expect(html).toContain("Search all of Romans 8<");
     expect(html).toContain("Current passage search:");
-    expect(html).toContain("Exact verse — Romans 8:1");
-    expect(html).toContain("Primary passage: Romans 8:1");
-    expect(html).toContain("Preached from");
+    expect(html).toContain("(exact verse)");
+    expect(html).toContain("Passage: Romans 8:1");
     expect(html).toContain("Clear passage");
     expect(html).toContain("sermon_topics=legacy-topic");
-    expect(html).toContain("passageBook=romans");
     expect(html).toContain("passageScope=verse");
+    expect(html).toContain('<h2 id="sermon-results-heading">Filtered sermons</h2>');
     expect(response?.headers.get("content-security-policy")).toContain("script-src 'sha256-");
-    expect(html).toContain("@media (max-width:38rem)");
   });
 
-  it("renders only the Books panel initially with accessible category and interaction alternatives", async () => {
+  it("renders every picker control as a working link with no server-side tab-index trap", async () => {
     const route = createPublicSermonSiteHandler(new SiteRepository());
-    const response = await route(new Request("http://localhost/sermons/"));
+    const response = await route(new Request("http://localhost/sermons/?sermon_speaker=example-speaker"));
     const html = await response!.text();
+    const picker = section(html, '<div class="passage-picker"', 'data-passage-announcement');
 
     expect(html).toContain('data-bible-picker data-depth="book" data-mobile-panel="book"');
     expect(html.match(/data-book-tile data-book=/gu)).toHaveLength(66);
-    expect(html).toContain('aria-label="Genesis, Law / Pentateuch"');
-    expect(html).toContain('aria-pressed="false" data-applied="false"');
-    expect(html).toContain('data-category="law"');
-    expect(html).toContain('data-category="gospels-acts"');
-    expect(html).toContain('data-category="revelation"');
-    expect(html).toContain('<span aria-hidden="true">Ge</span>');
-    expect(html).toContain('<span aria-hidden="true">Re</span>');
-    expect(html).toContain('data-chapters-panel hidden');
-    expect(html).toContain('data-verses-panel hidden');
-    expect(html).toContain('<details class="bible-category-key"><summary>Book colour key</summary>');
-    expect(html).toContain("double-click it or use the explicit button");
-    expect(html).toContain('data-search-whole-book disabled');
-    expect(html).toContain('data-search-whole-chapter disabled');
-    expect(html).toContain('role="status" aria-live="polite"');
-    expect(html).toContain("event.detail===0");
-    expect(html).toContain("addEventListener('dblclick'");
-    expect(html).toContain("event.key!=='Enter'&&event.key!==' '");
-    expect(html).toContain("['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End']");
-    expect(html).toContain("event.key==='Escape'||event.key==='Backspace'");
-    expect(html).toContain("grid-template-columns:repeat(5,minmax(0,1fr));gap:.125rem");
-    expect(html).toContain("min-width:0;min-height:2.75rem;aspect-ratio:1");
-    expect(html).toContain(".bible-picker-panel{min-width:0;padding:0;background:transparent}");
-    expect(html.indexOf('data-tile-grid="chapter"')).toBeLessThan(html.indexOf('data-search-whole-book'));
-    expect(html.indexOf('data-tile-grid="verse"')).toBeLessThan(html.indexOf('data-search-whole-chapter'));
-    expect(html).toContain('data-mobile-panel="chapter"');
+    expect(picker).toContain('href="/sermons/?sermon_speaker=example-speaker&amp;passageBook=genesis&amp;passageScope=book#sermon-results"');
+    expect(picker).toContain('<span class="bible-tile__label">Ge</span><span class="sr-only">, Genesis, Law / Pentateuch</span>');
+    expect(picker).toContain('<span class="bible-tile__label">Re</span><span class="sr-only">, Revelation, Revelation</span>');
+    expect(picker).not.toContain("tabindex");
+    expect(picker).not.toContain("aria-pressed");
+    expect(picker).toContain('class="bible-tile bible-tile--law"');
+    expect(picker).toContain('class="bible-tile bible-tile--gospels-acts"');
+    expect(picker).toContain('data-chapters-panel hidden');
+    expect(picker).toContain('data-verses-panel hidden');
+    expect(picker).toContain('aria-disabled="true" data-search-whole-book>Search a whole book</a>');
+    expect(picker).toContain('aria-disabled="true" data-search-whole-chapter>Search a whole chapter</a>');
+    expect(picker).toContain('<summary aria-expanded="false">Book colour key</summary>');
+    expect(picker).toContain('role="group" aria-labelledby="bible-books-heading" aria-describedby="passage-picker-hint"');
+    expect(html).toContain('role="status" aria-live="polite" aria-atomic="true" data-passage-announcement');
+    expect(html).toContain('data-passage-disclosure data-active="false"');
+    expect(html).not.toContain('data-passage-disclosure data-active="false" open');
   });
 
-  it("renders three landscape recent sermons and fail-closed discovery carousels by default", async () => {
+  it("renders exactly three recent sermons newest first and fail-closed discovery sections by default", async () => {
     const repository = new SiteRepository();
     repository.totalItems = 4;
     repository.data = [
@@ -242,47 +255,42 @@ describe("public sermon site routes", () => {
     const html = await response!.text();
 
     expect(html).toContain("Most Recent Sermons");
-    expect(html.match(/class="landscape-card landscape-card--compact"/gu)).toHaveLength(3);
-    expect(html.match(/class="landscape-description--clamped"/gu)).toHaveLength(3);
-    expect(html).toContain("recent-one");
-    expect(html).toContain("recent-three");
+    expect(html.match(/class="sermon-item sermon-item--recent"/gu)).toHaveLength(3);
+    expect(html.indexOf("recent-one")).toBeLessThan(html.indexOf("recent-two"));
+    expect(html.indexOf("recent-two")).toBeLessThan(html.indexOf("recent-three"));
     expect(html).not.toContain("older-four");
-    expect(html).toContain("Show more recent sermons");
-    expect(html).toContain("Topical sermons");
-    expect(html).toContain("No sermons have an approved topical classification yet.");
-    expect(html).toContain('id="series-sermons-track"');
-    expect(html).toContain('aria-label="Previous Series"');
-    expect(html).toContain('aria-label="Next Series"');
-    expect(html).toContain("scroll-snap-type:x proximity");
-    expect(html).toContain("-webkit-line-clamp:5");
-    expect(html).toContain("-webkit-line-clamp:6");
-    expect(html).toContain(".landscape-card--compact{min-height:18rem}");
-    expect(html).toContain(".landscape-card--compact{min-height:23rem}");
-    expect(html).toContain(".landscape-card--compact{min-height:0}");
+    expect(html).toContain('href="/sermons/?view=recent#sermon-results">Show more recent sermons</a>');
+    expect(html).toContain("4 sermons · 1 speaker · 1 series");
+    expect(html).toContain('id="topical-sermons-heading">Topical Sermons</h2>');
+    expect(html).toContain("Topical sermons will appear here once an approved topical classification exists");
+    expect(html).not.toContain('id="topical-sermons-track"');
+    expect(html).toContain('id="series-sermons-track" role="list" aria-label="Series"');
+    expect(html).toContain("Show previous series");
+    expect(html).toContain("Show more series");
+    expect(html).toContain('<h3 class="series-card__name"><a href="/sermons/?sermon_series=example-series">Example Series</a></h3>');
     expect(html).not.toContain("autoplay");
-    const primaryRow = html.slice(
-      html.indexOf('<div class="filter-primary">'),
-      html.indexOf('<details class="advanced-search"')
-    );
-    expect(primaryRow.match(/<label for=/gu)).toHaveLength(4);
-    expect(html).toContain('data-active="false"');
+    const primaryRow = section(html, '<div class="find-sermons__row">', '<div class="find-sermons__disclosures">');
+    expect(primaryRow.match(/<label /gu)).toHaveLength(4);
+    expect(primaryRow).toContain('<button class="button" type="submit">Search</button>');
+    expect(html).toContain('data-advanced-search data-active="false"');
     expect(html).not.toContain('data-active="false" open');
+    expect(html).toContain('<meta name="robots" content="index, follow"');
   });
 
   it("shows only repository-declared topical sermons and never infers them from no-primary state", async () => {
     const repository = new SiteRepository();
     const route = createPublicSermonSiteHandler(repository);
     const empty = await route(new Request("http://localhost/sermons/"));
-    expect(await empty!.text()).toContain("No sermons have an approved topical classification yet.");
+    expect(await empty!.text()).not.toContain('id="topical-sermons-track"');
 
     repository.topicalSermons = [summary];
     const explicit = await route(new Request("http://localhost/sermons/"));
     const html = await explicit!.text();
     expect(html).toContain('id="topical-sermons-track"');
-    expect(html).toContain('aria-label="Previous Topical sermons"');
+    expect(html).toContain("Show previous topical sermons");
   });
 
-  it("preserves expanded recent pagination in URLs and hides discovery carousels", async () => {
+  it("preserves expanded recent pagination in URLs, numbers the archive continuously and hides discovery", async () => {
     const repository = new SiteRepository();
     repository.totalItems = 19;
     const route = createPublicSermonSiteHandler(repository);
@@ -291,11 +299,21 @@ describe("public sermon site routes", () => {
 
     expect(repository.lastQuery).toMatchObject({ view: "recent", page: 1, pageSize: 9, order: "DESC" });
     expect(html).toContain("Show fewer recent sermons");
-    expect(html).toContain("Recent sermons");
+    expect(html).toContain('<h2 id="sermon-results-heading">All sermons</h2>');
+    expect(html).toContain("19 sermons · Page 1 of 3");
     expect(html).toContain('/sermons/page/2/#sermon-results');
+    expect(html).toContain('<ol class="sermon-list" role="list" start="1">');
     expect(html).not.toContain('id="topical-sermons-heading"');
     expect(html).not.toContain('id="series-sermons-heading"');
     expect(html).toContain('aria-current="page"');
+    expect(html).toContain('rel="next"');
+    expect(html).not.toContain('rel="prev"');
+
+    const second = await route(new Request("http://localhost/sermons/page/2/"));
+    const secondHtml = await second!.text();
+    expect(secondHtml).toContain('<ol class="sermon-list" role="list" start="10">');
+    expect(secondHtml).toContain('rel="prev"');
+    expect(secondHtml).toContain("Show fewer recent sermons");
   });
 
   it("rejects contradictory broad-book and exact-passage filters", async () => {
@@ -318,12 +336,37 @@ describe("public sermon site routes", () => {
     expect(empty?.status).toBe(200);
     expect(await empty!.text()).toContain("No published sermons matched");
 
+    const landing = await route(new Request("http://localhost/sermons/"));
+    const landingHtml = await landing!.text();
+    expect(landingHtml).toContain("No sermons are available yet.");
+    expect(landingHtml).not.toContain("Show more recent sermons");
+
     const missingPage = await route(new Request("http://localhost/sermons/page/2/"));
     expect(missingPage?.status).toBe(404);
     const missingHtml = await missingPage!.text();
     expect(missingHtml).toContain("That sermon archive page does not exist");
     expect(missingHtml).not.toContain("Private Draft Transcript");
     expect(missingHtml).not.toContain("Pending Sermon Title");
+  });
+
+  it("derives the Content-Security-Policy from exactly the scripts and styles it embeds", async () => {
+    const route = createPublicSermonSiteHandler(new SiteRepository());
+    const archive = await route(new Request("http://localhost/sermons/"));
+    const archiveHtml = await archive!.text();
+    const csp = archive!.headers.get("content-security-policy")!;
+    expect(csp).not.toContain("unsafe-inline");
+    expect(csp).not.toContain("frame-src");
+    for (const match of archiveHtml.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gu)) {
+      expect(csp).toContain(hash(match[1]!));
+      expect(() => new Function(match[1]!)).not.toThrow();
+    }
+    for (const match of archiveHtml.matchAll(/<style>([\s\S]*?)<\/style>/gu)) expect(csp).toContain(hash(match[1]!));
+
+    const boundary = await route(new Request("http://localhost/sermons/not-a-real-sermon/"));
+    const boundaryCsp = boundary!.headers.get("content-security-policy")!;
+    expect(boundary?.status).toBe(404);
+    expect(boundaryCsp).not.toContain("script-src");
+    expect(boundaryCsp).toContain("style-src 'sha256-");
   });
 
   it("serves only repository-approved sermon sitemap entries", async () => {
@@ -376,5 +419,17 @@ describe("public sermon site routes", () => {
     expect(response?.status).toBe(301);
     expect(response?.headers.get("location")).toBe("/sermons/?order=ASC");
     expect(repository.lastQuery).toBeNull();
+  });
+
+  it("renders an honest static home without invented branding", () => {
+    const html = renderFrontendHomePage({ sermons: [], series: [] });
+    expect(html).toContain("<h1>Sermon library</h1>");
+    expect(html).toContain("Sermons are being prepared");
+    expect(html).toContain('<a class="wordmark" href="/">Saving Grace Bible Church</a>');
+    expect(html).not.toContain("brand-mark");
+    expect(html).not.toContain("Scripture for faith and life");
+    expect(html).not.toContain("Built around the sermon");
+    expect(html.match(/<h1/gu)).toHaveLength(1);
+    expect(html).toContain('<meta name="robots" content="index, follow"');
   });
 });

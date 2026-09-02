@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { SermonDetail } from "../src/domain/sermon";
-import { renderPublicSermonPage } from "../src/server/http/public-sermon-page";
+import { previewRenderContext, renderPublicSermonPage } from "../src/server/http/public-sermon-page";
 
 const sermon: SermonDetail = {
   id: "75df2144-b557-50f6-98bd-011cd696bfb9",
@@ -41,28 +41,56 @@ const sermon: SermonDetail = {
   ]
 };
 
+const youtube = {
+  provider: "youtube" as const,
+  mediaType: "video" as const,
+  externalId: "abcdefghijk",
+  canonicalUrl: "https://www.youtube.com/watch?v=abcdefghijk",
+  title: "An anonymised sermon video"
+};
+
 describe("server-rendered public sermon page", () => {
-  it("contains the collapsed transcript and Q&A in initial safe HTML", () => {
+  it("keeps the approved description first, the transcript collapsed and Q&A open, all safely escaped", () => {
     const html = renderPublicSermonPage(sermon);
-    expect(html).toContain("<details class=\"transcript-disclosure\">");
+    expect(html).toContain('<details class="transcript" data-open-for-print>');
     expect(html).not.toContain("<details open");
-    expect(html).toContain("Read full transcript");
-    expect(html).toContain('<section class="content-section sermon-description"');
-    expect(html.indexOf("sermon-description")).toBeLessThan(html.indexOf("transcript-heading"));
-    expect(html).not.toContain('class="sermon-description" hidden');
+    expect(html).toContain("Read the full transcript");
+    expect(html.indexOf('id="description-heading"')).toBeLessThan(html.indexOf('id="transcript-heading"'));
     expect(html).toContain("First paragraph");
     expect(html).toContain("Second &lt;strong&gt;plain&lt;/strong&gt;");
     expect(html).toContain("Why &lt;img src=x&gt;?");
-    expect(html).not.toContain("<script>");
-    expect(html).not.toContain("data-navigation-enhancement");
+    expect(html).toContain("Because &lt;script&gt;bad()&lt;/script&gt;.");
+    expect(html).toContain("Grace &lt;script&gt;alert(1)&lt;/script&gt;");
+    expect(html).not.toContain("<script>alert");
+    expect(html.match(/<script /gu)).toHaveLength(1);
+    expect(html).not.toContain('data-enhancement="navigation"');
     expect(html).not.toContain("application/ld+json");
     expect(html).toContain('rel="canonical" href="https://www.savinggrace.org.au/sermons/grace-alone/"');
-    expect(html).not.toMatch(/fetch\(|XMLHttpRequest/);
+    expect(html).not.toMatch(/fetch\(|XMLHttpRequest/u);
     expect(html).toContain(`meta name="description" content="${sermon.summary}"`);
     expect(html).toContain("Related sermons");
-    expect(html).toContain("Preached from:");
     expect(html).toContain("Related by same speaker");
+    expect(html).toContain("Preached from </span>Romans 8:1");
     expect(html).not.toContain("Related themes");
+    expect(html).not.toContain("Other Scripture metadata");
+  });
+
+  it("renders every question and answer open in the initial HTML, not inside a disclosure", () => {
+    const html = renderPublicSermonPage(sermon);
+    expect(html).toContain('<ol class="qa-list" role="list">');
+    expect(html.match(/class="qa-item"/gu)).toHaveLength(1);
+    expect(html).toContain('<span class="sr-only">Question 1: </span>');
+    expect(html).not.toMatch(/<details[^>]*>\s*<summary[^>]*>[^<]*Question/u);
+  });
+
+  it("keeps the required content order and offers in-page navigation", () => {
+    const html = renderPublicSermonPage({ ...sermon, media: [youtube] });
+    const order = ["sermon__head", 'id="description-heading"', 'id="media-heading"', 'id="transcript-heading"', 'id="questions-heading"', 'id="related-heading"'];
+    const positions = order.map((marker) => html.indexOf(marker));
+    expect(positions.every((position) => position >= 0)).toBe(true);
+    expect([...positions].sort((left, right) => left - right)).toEqual(positions);
+    expect(html).toContain('aria-label="On this page"');
+    expect(html).toContain('href="#questions-heading"');
   });
 
   it("uses the controlled SEO override for metadata without changing visible description", () => {
@@ -83,29 +111,39 @@ describe("server-rendered public sermon page", () => {
     });
 
     expect(html).not.toContain("About this sermon");
-    expect(html).not.toContain("Full transcript");
+    expect(html).not.toContain('id="transcript-heading"');
     expect(html).not.toContain("Questions for reflection");
-    expect(html).not.toContain("Watch or listen");
+    expect(html).not.toContain('id="media-heading"');
     expect(html).not.toContain("Related sermons");
     expect(html).not.toContain("Related themes");
+    expect(html).not.toContain('aria-label="On this page"');
   });
 
-  it("keeps click-to-load YouTube media without a website-owned outbound link", () => {
-    const html = renderPublicSermonPage({
-      ...sermon,
-      media: [{
-        provider: "youtube",
-        mediaType: "video",
-        externalId: "abcdefghijk",
-        canonicalUrl: "https://www.youtube.com/watch?v=abcdefghijk",
-        title: "An anonymised sermon video"
-      }]
-    });
+  it("keeps click-to-load YouTube media without an iframe or a website-owned outbound link", () => {
+    const html = renderPublicSermonPage({ ...sermon, media: [youtube] });
 
-    expect(html).toContain('data-load-youtube');
+    expect(html).toContain("data-load-youtube");
     expect(html).toContain('data-video-id="abcdefghijk"');
     expect(html).toContain("youtube-nocookie.com/embed/");
+    expect(html).not.toContain("<iframe");
+    expect(html).not.toContain("autoplay");
     expect(html).not.toContain('href="https://www.youtube.com/watch?v=abcdefghijk"');
     expect(html).not.toContain("Open video");
+    expect(html).toContain("connects to YouTube (youtube-nocookie.com)");
+    expect(html).toContain("<noscript>");
+  });
+
+  it("does not repeat a passage already stated in the title", () => {
+    const kicker = 'class="sermon__kicker"';
+    expect(renderPublicSermonPage(sermon)).toContain(kicker);
+    expect(renderPublicSermonPage({ ...sermon, title: "Jesus is Calling You — Romans 8:1" })).not.toContain(kicker);
+    expect(renderPublicSermonPage({ ...sermon, title: "Hope — Romans 8:1-4", primaryPassages: [{ displayText: "Romans 8:1–4", isLead: true }] })).not.toContain(kicker);
+  });
+
+  it("explains a reviewed no-primary outcome only in the authenticated preview", () => {
+    const none: SermonDetail = { ...sermon, primaryPassages: [], primaryPassageState: "none" };
+    expect(renderPublicSermonPage(none)).not.toContain("No single primary passage");
+    expect(renderPublicSermonPage(none)).not.toContain("Topical or multi-passage");
+    expect(renderPublicSermonPage(none, previewRenderContext)).toContain("No single primary passage (reviewed outcome)");
   });
 });

@@ -1,20 +1,11 @@
 ---
-import { publicSiteStyles } from "../server/http/public-sermon-page";
+import { renderFrontendBoundaryPage } from "../frontend";
+
+const html = renderFrontendBoundaryPage({
+  title: "Page not found",
+  message: "The page you requested could not be found.",
+  kind: "not-found"
+});
 ---
 
-<!doctype html>
-<html lang="en-AU">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="robots" content="noindex, nofollow" />
-    <title>Page not found — Saving Grace Bible Church</title>
-    <style is:global set:html={publicSiteStyles()} />
-  </head>
-  <body>
-    <a class="skip-link" href="#main-content">Skip to main content</a>
-    <header class="site-header-wrap"><div class="site-header"><a class="brand" href="/"><span class="brand-mark" aria-hidden="true">SG</span><span>Saving Grace<br />Bible Church</span></a></div></header>
-    <main id="main-content"><div class="empty-state"><p class="eyebrow">Not found</p><h1>Page not found</h1><p>The page you requested could not be found.</p><p><a class="button" href="/">Return home</a></p></div></main>
-    <footer class="site-footer"><div class="footer-inner"><strong>Saving Grace Bible Church</strong></div></footer>
-  </body>
-</html>
+<Fragment set:html={html} />

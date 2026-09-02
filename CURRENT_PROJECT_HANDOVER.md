@@ -19,6 +19,7 @@ Use `git status`, `git log` and `git remote` to verify current facts; do not tre
 ## Current application position
 
 - The repository implements the Astro/TypeScript/PostgreSQL sermon foundation, protected administration workflow, authenticated loopback frontend preview, keyword/structured Scripture search, metadata-based related sermons and a publicly disabled description-only Related themes foundation.
+- The sermon frontend was redesigned on the `frontend-redesign` branch from baseline `0759302b76eacde250cefa6f50d3cfdcfe1d1f60` (D-149): an editorial, Scripture-first presentation built as the framework-independent `src/frontend` package with typed tokens, an escaping template, page-scoped styles, three readable CSP-hashed enhancement scripts and shared page composers. Routes, query contracts, selectors, privacy headers and the database are unchanged.
 - The authenticated preview uses exactly 15 completed pilot/Wave-1 sermon records from the protected local PostgreSQL test database.
 - Those sermons remain application-level drafts. Git or future GitHub visibility does not make them public in the website.
 - Ordinary public routes, public search, feeds, sitemaps, semantic processing and production builds must continue excluding them unless a separate administrator/publication decision changes their application state.
