@@ -3,9 +3,9 @@
 // as the server-rendered site. The static build has no published sermon data,
 // so it shows the honest "being prepared" state until a production runtime is
 // selected.
-import { renderFrontendHomePage } from "../frontend";
+import { emptyFilterOptions, renderFrontendHomePage } from "../frontend";
 
-const html = renderFrontendHomePage({ sermons: [], series: [] });
+const html = renderFrontendHomePage({ sermons: [], options: emptyFilterOptions, totalItems: 0 });
 ---
 
 <Fragment set:html={html} />

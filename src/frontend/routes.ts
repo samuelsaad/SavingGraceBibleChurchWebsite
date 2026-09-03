@@ -132,10 +132,10 @@ export function paginationUrl(
     else parameters.delete("view");
   }
   const suffix = parameters.size ? `?${parameters.toString()}` : "";
-  return `${archivePagePath(page, context)}${suffix}#sermon-results`;
+  return `${archivePagePath(page, context)}${suffix}#${resultsAnchor}`;
 }
 
-export const resultsAnchor = "sermon-results";
+export const resultsAnchor = "results";
 export const recentAnchor = "most-recent-sermons";
 
 /** Every link a page may need, resolved once per render for the active mode. */
@@ -165,4 +165,32 @@ export function siteLinks(context: FrontendRenderContext): SiteLinks {
     taxonomy: (kind, slug) => taxonomyLink(context, kind, slug),
     path: (path) => contextualPath(context, path)
   };
+}
+
+/**
+ * The archive URL with parameters merged into the current filter state.
+ * Pagination and the expanded-recent view are dropped so the link always
+ * starts a fresh result set; the legacy query names are preserved.
+ */
+export function withFilter(
+  query: PublicSermonListQuery,
+  changes: Record<string, string | null>,
+  context: FrontendRenderContext,
+  fragment = "results"
+): string {
+  const parameters = standardizedFilterParameters(query);
+  parameters.delete("view");
+  for (const [name, value] of Object.entries(changes)) {
+    if (value === null) parameters.delete(name);
+    else parameters.set(name, value);
+  }
+  const base = contextualPath(context, archivePath);
+  return `${base}${parameters.size ? `?${parameters.toString()}` : ""}#${fragment}`;
+}
+
+/** Removes every precise-passage parameter and the broad book filter. */
+export function withoutPassage(query: PublicSermonListQuery, context: FrontendRenderContext, fragment = "results"): string {
+  return withFilter(query, {
+    passageBook: null, passageChapter: null, passageVerse: null, passageEndVerse: null, passageScope: null, sermon_book: null
+  }, context, fragment);
 }

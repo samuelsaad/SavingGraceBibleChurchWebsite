@@ -66,7 +66,8 @@ type SeriesRepresentativeRow = PublicSermonRow & {
 
 const filterOptionSchema = z.object({
   name: z.string().min(1),
-  slug: z.string().min(1).max(200).regex(/^[a-z0-9-]+$/)
+  slug: z.string().min(1).max(200).regex(/^[a-z0-9-]+$/),
+  sermonCount: z.number().int().nonnegative().optional()
 });
 
 const filterOptionsSchema = z.object({

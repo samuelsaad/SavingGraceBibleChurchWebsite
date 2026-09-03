@@ -1,16 +1,19 @@
 /**
- * The sermon archive: Find Sermons controls, then either the landing
- * discovery view (Most Recent Sermons, Topical Sermons, Series) or a
- * paginated results list. Search and filter state lives entirely in the URL.
+ * The sermon archive: the finder, then either the discovery view (shelf,
+ * latest three, speakers and series, browse-all) or a results view (tokens,
+ * the open book when a book is in scope, a continuously numbered list and
+ * pagination). Search and filter state lives entirely in the URL.
  */
 import type { PublicSermonListQuery } from "../../api/contracts/public-sermons";
-import { passageQueryLabel } from "../../domain/bible-passage";
+import { bibleBookBySlug, passageQueryLabel } from "../../domain/bible-passage";
 import type { SermonSummary } from "../../domain/sermon";
 import type { PublicSermonFilterOptions, PublicSeriesRepresentative } from "../../server/repositories/sermon-repository";
-import { findSermonsForm } from "../components/find-sermons";
-import { carousel, pagination, sectionHead, sectionNote } from "../components/sections";
-import { seriesCard, sermonItem, sermonList } from "../components/sermon-list";
-import { countLabel, html, when, type Html } from "../html";
+import { formatCount, librarySummary } from "../canon";
+import { catalogue, chips } from "../components/catalogue";
+import { finder } from "../components/search";
+import { pagination, sectionHead, sectionNote, titlePage } from "../components/sections";
+import { canonStrip, openBook, shelf, shelfDetails } from "../components/shelf";
+import { html, when, type Html } from "../html";
 import {
   archivePagePath,
   archivePath,
@@ -18,9 +21,8 @@ import {
   hasActiveSermonFilters,
   isExpandedRecentView,
   publicRenderContext,
-  recentAnchor,
-  resultsAnchor,
   siteLinks,
+  withFilter,
   type FrontendRenderContext
 } from "../routes";
 import { pageShell } from "../shell";
@@ -44,63 +46,102 @@ function optionName(items: Array<{ name: string; slug: string }>, slug: string):
 /** A heading that names what the visitor asked for. */
 export function resultsTitle(query: PublicSermonListQuery, options: PublicSermonFilterOptions): string {
   const dimensions = [
-    query.query ? `Results for “${query.query}”` : null,
-    query.speaker ? `Sermons by ${optionName(options.speakers, query.speaker)}` : null,
-    query.series ? `Sermons in ${optionName(options.series, query.series)}` : null,
-    query.book && !query.passageBook ? `Sermons from ${optionName(options.books, query.book)}` : null,
-    passageQueryLabel(query) ? `Sermons preached from ${passageQueryLabel(query)}` : null,
-    query.passage ? `Sermons on ${optionName(options.passages, query.passage)}` : null
+    query.query ? `“${query.query}”` : null,
+    query.speaker ? optionName(options.speakers, query.speaker) : null,
+    query.series ? optionName(options.series, query.series) : null,
+    query.book && !query.passageBook ? optionName(options.books, query.book) : null,
+    passageQueryLabel(query),
+    query.passage ? optionName(options.passages, query.passage) : null
   ].filter((item): item is string => item !== null);
   if (dimensions.length === 1) return dimensions[0]!;
-  if (dimensions.length > 1) return "Filtered sermons";
+  if (dimensions.length > 1) return dimensions.join(" · ");
   if (query.dateFrom || query.dateTo) return "Sermons by service date";
   return query.order === "ASC" ? "All sermons, oldest first" : "All sermons";
 }
 
+function resultsEyebrow(query: PublicSermonListQuery): string {
+  const dimensions = [query.query, query.speaker, query.series, query.book && !query.passageBook, query.passageBook, query.passage].filter(Boolean).length;
+  if (dimensions !== 1) return "Search results";
+  if (query.passageBook) return "Preached from";
+  if (query.book) return "Sermons filed under";
+  if (query.speaker) return "Sermons by";
+  if (query.series) return "Sermons in the series";
+  if (query.query) return "Results for";
+  return "Search results";
+}
+
 function discoveryView(input: SermonArchivePageInput, context: FrontendRenderContext): Html {
   const links = siteLinks(context);
-  const recent = input.sermons.slice(0, 3);
-  const hasTopicalSeries = input.seriesRepresentatives.some((item) => item.series.slug === "topical");
-  const topicalMessage = `Topical sermons will appear here once an approved topical classification exists for the collection.${hasTopicalSeries ? " Sermons in the series named “Topical” are listed under Series below." : ""}`;
-  return html`<section class="discovery discovery--recent" id="${recentAnchor}" aria-labelledby="most-recent-sermons-heading">
-    ${sectionHead("most-recent-sermons-heading", "Most Recent Sermons")}
-    ${recent.length
-      ? html`${sermonList(recent, { variant: "recent", headingLevel: 3, links }, "sermon-list sermon-list--recent")}
-        <p class="section-more"><a class="button button--secondary" href="${contextualPath(context, archivePath)}?view=recent#${resultsAnchor}">Show more recent sermons</a></p>`
+  const latest = input.sermons.slice(0, 3);
+  const bookCounts = new Map(input.options.books.filter((book) => book.sermonCount !== undefined).map((book) => [book.slug, book.sermonCount!]));
+  return html`<section class="section" aria-labelledby="shelf-heading">
+    ${sectionHead("shelf-heading", "By Bible book", html`<span>Take a book off the shelf to see its sermons.</span>`)}
+    ${shelf(input.options, { href: (book) => withFilter(input.query, { sermon_book: book.slug }, context, "canon"), settle: true, skipTo: "after-shelf", headingId: "shelf-heading" })}
+    <span id="after-shelf" tabindex="-1"></span>
+  </section>
+  <section class="section" aria-labelledby="latest-heading">
+    ${sectionHead("latest-heading", "Latest sermons", when(input.totalItems > 0, () => html`<a href="${contextualPath(context, archivePath)}?view=recent#results">Browse all ${formatCount(input.totalItems, "sermon")}, newest first</a>`))}
+    ${latest.length
+      ? catalogue(latest, { variant: "card", headingLevel: 3, links, bookCounts, className: "catalogue catalogue--cards" })
       : sectionNote("No sermons are available yet.")}
   </section>
-  ${carousel({
-    id: "topical-sermons",
-    heading: "Topical Sermons",
-    itemsLabel: "topical sermons",
-    items: input.topicalSermons.map((sermon) => sermonItem(sermon, { variant: "card", headingLevel: 3, links })),
-    emptyMessage: topicalMessage
-  })}
-  ${carousel({
-    id: "series-sermons",
-    heading: "Series",
-    itemsLabel: "series",
-    items: input.seriesRepresentatives.map((item) => seriesCard(item, links)),
-    emptyMessage: "No sermon series are available yet.",
-    aside: links.hasTaxonomyRoutes ? html`<a class="carousel__all" href="${links.taxonomyIndex("series")}">All series</a>` : null
-  })}`;
+  ${when(input.options.speakers.length, () => html`<section class="section" aria-labelledby="speakers-heading">
+    ${sectionHead("speakers-heading", "By speaker")}
+    ${chips(input.options.speakers, (slug) => withFilter(input.query, { sermon_speaker: slug }, context))}
+  </section>`)}
+  ${when(input.options.series.length, () => html`<section class="section" aria-labelledby="series-heading">
+    ${sectionHead("series-heading", "By series")}
+    ${chips(input.options.series, (slug) => withFilter(input.query, { sermon_series: slug }, context))}
+  </section>`)}
+  ${when(input.topicalSermons.length, () => html`<section class="section" aria-labelledby="topical-heading">
+    ${sectionHead("topical-heading", "Topical sermons")}
+    ${catalogue(input.topicalSermons, { variant: "row", headingLevel: 3, links })}
+  </section>`)}`;
+}
+
+function bookPanel(input: SermonArchivePageInput, context: FrontendRenderContext): Html | null {
+  const slug = input.query.passageBook ?? input.query.book;
+  const book = slug ? bibleBookBySlug(slug) : null;
+  if (!book) return null;
+  const count = input.options.books.find((item) => item.slug === book.slug)?.sermonCount ?? null;
+  return openBook({
+    book,
+    query: input.query,
+    options: input.options,
+    context,
+    count,
+    chapter: input.query.passageChapter,
+    verse: input.query.passageVerse,
+    headingLevel: 2,
+    broad: !input.query.passageBook
+  });
 }
 
 function resultsView(input: SermonArchivePageInput, context: FrontendRenderContext, totalPages: number): Html {
   const links = siteLinks(context);
   const filtered = hasActiveSermonFilters(input.query);
   const expandedRecent = isExpandedRecentView(input.query);
-  const status = `${countLabel(input.totalItems, "sermon")}${totalPages > 1 ? ` · Page ${input.query.page} of ${totalPages}` : ""}`;
-  const aside = html`<p class="results__status" id="sermon-results-status">${status}</p>${when(expandedRecent && !filtered, () => html`<a class="results__fewer" href="${contextualPath(context, archivePath)}#${recentAnchor}">Show fewer recent sermons</a>`)}`;
+  const status = `${formatCount(input.totalItems, "sermon")}${totalPages > 1 ? ` · Page ${input.query.page} of ${totalPages}` : ""}`;
+  const panel = bookPanel(input, context);
   const list = input.sermons.length
-    ? sermonList(input.sermons, { variant: "row", headingLevel: 3, links }, "sermon-list", (input.query.page - 1) * input.query.pageSize + 1)
-    : html`<div class="empty-state">
-        <p class="empty-state__title">${context.mode === "public" ? "No published sermons matched" : "No sermons matched"}</p>
-        <p>Try removing a filter or searching for something else.</p>
-        <p><a class="button button--secondary" href="${contextualPath(context, archivePath)}">Show all sermons</a></p>
+    ? catalogue(input.sermons, { variant: "row", headingLevel: 3, links, className: "catalogue results__list", ordinalStart: (input.query.page - 1) * input.query.pageSize + 1 })
+    : html`<div class="empty">
+        <p class="empty__title">${context.mode === "public" ? "No published sermons matched" : "No sermons on this shelf yet"}</p>
+        <p>Try removing a filter, or take a different book off the shelf.</p>
+        <p><a class="button button--outline" href="${contextualPath(context, archivePath)}">Show all sermons</a></p>
+        ${canonStrip(input.options, { label: "Where sermons have been preached from" })}
       </div>`;
-  return html`<section class="results" id="${resultsAnchor}" tabindex="-1" aria-labelledby="sermon-results-heading sermon-results-status">
-    ${sectionHead("sermon-results-heading", resultsTitle(input.query, input.options), aside)}
+  const shelfFallback = html`<div class="section">${shelfDetails(shelf(input.options, {
+    href: (book) => withFilter(input.query, { sermon_book: book.slug, passageBook: null, passageChapter: null, passageVerse: null, passageEndVerse: null, passageScope: null }, context, "canon"),
+    skipTo: "results",
+    headingId: "book-details-heading"
+  }))}</div>`;
+  return html`${panel ?? shelfFallback}
+  <section class="results" id="results" tabindex="-1" aria-labelledby="results-heading results-status">
+    <div class="section__head">
+      <h2 id="results-heading" class="section__title">${filtered ? "Sermons" : "All sermons, newest first"}</h2>
+      <div class="section__aside"><span class="results__status" id="results-status">${status}</span>${when(expandedRecent && !filtered, () => html` <a class="results__fewer" href="${contextualPath(context, archivePath)}">Back to the shelf</a>`)}</div>
+    </div>
     ${list}
     ${pagination(input.query, totalPages, context, expandedRecent)}
   </section>`;
@@ -113,23 +154,30 @@ export function renderPublicSermonArchivePage(
   const totalPages = Math.ceil(input.totalItems / input.query.pageSize);
   const filtered = hasActiveSermonFilters(input.query);
   const discovery = !filtered && !isExpandedRecentView(input.query) && input.query.page === 1;
-  const title = filtered ? resultsTitle(input.query, input.options) : "Sermons";
-  const libraryCount = discovery && input.totalItems > 0
-    ? [countLabel(input.totalItems, "sermon"), countLabel(input.options.speakers.length, "speaker"), countLabel(input.options.series.length, "series", "series")].join(" · ")
-    : null;
+  const links = siteLinks(context);
+  const head = discovery
+    ? titlePage({
+      eyebrow: "Sermon archive",
+      title: "Sermons",
+      meta: input.totalItems > 0
+        ? html`<ul class="stats" role="list">${librarySummary(input.totalItems, input.options).map((item) => html`<li>${item}</li>`)}</ul>`
+        : html`<span>No sermons are available yet.</span>`
+    })
+    : titlePage({
+      eyebrow: filtered ? resultsEyebrow(input.query) : "Sermon archive",
+      title: filtered ? resultsTitle(input.query, input.options) : "All sermons",
+      trail: [{ href: links.archive, label: "Sermons" }],
+      longThreshold: 34
+    });
   return pageShell({
-    title,
+    title: filtered ? resultsTitle(input.query, input.options) : "Sermons",
     description: archiveDescription,
     canonicalPath: archivePagePath(input.query.page, publicRenderContext),
     robots: input.hasQueryParameters ? "noindex, follow" : "index, follow",
-    styles: ["archive"],
-    scripts: ["archive"],
-    body: html`<header class="page-head">
-      <h1>Sermons</h1>
-      <p class="page-head__lede">Recorded sermons from Saving Grace Bible Church. Search by keyword, or browse by speaker, series, Bible book or the passage a sermon was preached from.</p>
-      ${when(libraryCount, () => html`<p class="page-head__count">${libraryCount}</p>`)}
-    </header>
-    ${findSermonsForm({ query: input.query, options: input.options, context })}
-    ${discovery ? discoveryView(input, context) : resultsView(input, context, totalPages)}`
+    styles: ["shelf"],
+    scripts: ["canon"],
+    books: input.options.books,
+    mastheadSearch: false,
+    body: html`${head}${finder({ query: input.query, options: input.options, context })}${discovery ? discoveryView(input, context) : resultsView(input, context, totalPages)}`
   }, context);
 }

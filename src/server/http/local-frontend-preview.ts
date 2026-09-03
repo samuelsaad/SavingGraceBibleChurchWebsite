@@ -87,7 +87,7 @@ export function createLocalFrontendPreviewHandler(
           repository.listPublished(publicSermonListQuerySchema.parse({ page: 1, pageSize: 50, order: "DESC" })),
           repository.listPublishedFilterOptions()
         ]);
-        return response(renderFrontendHomePage({ sermons: sermons.data, series: options.series }, previewRenderContext));
+        return response(renderFrontendHomePage({ sermons: sermons.data, options, totalItems: sermons.totalItems }, previewRenderContext));
       }
 
       const archivePageMatch = /^\/frontend-preview\/sermons\/page\/(\d+)\/$/u.exec(url.pathname);
@@ -105,18 +105,21 @@ export function createLocalFrontendPreviewHandler(
 
       const detailMatch = /^\/frontend-preview\/sermons\/([a-z0-9]+(?:-[a-z0-9]+)*)\/$/u.exec(url.pathname);
       if (detailMatch) {
-        const sermon = await repository.findPublishedBySlug(detailMatch[1]!);
+        const [sermon, options] = await Promise.all([
+          repository.findPublishedBySlug(detailMatch[1]!),
+          repository.listPublishedFilterOptions()
+        ]);
         if (!sermon) {
           return boundary(404, "Sermon not available", "This sermon is not eligible for the private frontend preview.", "private");
         }
-        return response(renderPublicSermonPage(sermon, previewRenderContext));
+        return response(renderPublicSermonPage(sermon, previewRenderContext, { options }));
       }
 
       const taxonomyIndexMatch = /^\/frontend-preview\/(speakers|series|books)\/$/u.exec(url.pathname);
       if (taxonomyIndexMatch) {
         const kind = taxonomyIndexMatch[1] as FrontendTaxonomyKind;
         const options = await repository.listPublishedFilterOptions();
-        return response(renderFrontendTaxonomyIndex(kind, taxonomyOptions(options, kind), previewRenderContext));
+        return response(renderFrontendTaxonomyIndex(kind, taxonomyOptions(options, kind), previewRenderContext, options));
       }
 
       const taxonomyDetailMatch = /^\/frontend-preview\/(speakers|series|books)\/([a-z0-9]+(?:-[a-z0-9]+)*)\/$/u.exec(url.pathname);
@@ -127,7 +130,7 @@ export function createLocalFrontendPreviewHandler(
         const option = taxonomyOptions(options, kind).find((candidate) => candidate.slug === slug);
         if (!option) return boundary(404, "Page not found", "That sermon classification is not available.", "not-found");
         const sermons = await repository.listPublished(taxonomyQuery(kind, slug));
-        return response(renderFrontendTaxonomyDetail({ kind, option, sermons: sermons.data, totalItems: sermons.totalItems }, previewRenderContext));
+        return response(renderFrontendTaxonomyDetail({ kind, option, sermons: sermons.data, totalItems: sermons.totalItems, options }, previewRenderContext));
       }
 
       return boundary(404, "Page not found", "The requested frontend preview page does not exist.", "not-found");

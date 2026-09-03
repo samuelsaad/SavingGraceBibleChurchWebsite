@@ -8,6 +8,7 @@ import { InvalidLegacySermonQueryError } from "../../api/legacy-sermon-query";
 import {
   archivePath,
   canonicalOrigin,
+  publicRenderContext,
   renderFrontendBoundaryPage,
   renderPublicSermonArchivePage,
   renderPublicSermonPage
@@ -90,8 +91,11 @@ export function createPublicSermonSiteHandler(repository: PublicSermonRepository
       }
 
       if (detailMatch) {
-        const sermon = await repository.findPublishedBySlug(detailMatch[1]!);
-        if (sermon) return frontendResponse(renderPublicSermonPage(sermon));
+        const [sermon, options] = await Promise.all([
+          repository.findPublishedBySlug(detailMatch[1]!),
+          repository.listPublishedFilterOptions()
+        ]);
+        if (sermon) return frontendResponse(renderPublicSermonPage(sermon, publicRenderContext, { options }));
         const disposition = await repository.findPublicPathDisposition(url.pathname);
         if (disposition?.kind === "redirect") return redirect(301, disposition.location);
         if (disposition?.kind === "gone") {

@@ -1,93 +1,84 @@
 /**
- * Design tokens for the sermon frontend.
+ * Design tokens for "The Canon", the sermon frontend's visual system.
  *
- * Every colour, type, spacing, radius, elevation and motion value used by the
- * stylesheet comes from here and is emitted once as custom properties on
- * `:root`. The stylesheet partials reference tokens only, so the palette and
- * rhythm can be retuned in one place and the contrast test in
- * tests/frontend-design-tokens.test.ts checks every text/surface pairing.
+ * Cool plaster ground, black-steel shelf boards, cloth-coloured book spines
+ * and one gilt accent. Every colour, type, spacing, radius, elevation and
+ * motion value in the stylesheet comes from here and is emitted once as
+ * custom properties on `:root`; tests/frontend-design-tokens.test.ts checks
+ * every text/surface and control pairing computed from these values.
  *
- * The site is light-only on purpose: the church's reading experience should
- * be identical for every visitor, and the palette is tuned for print-like
- * warmth rather than a dark theme.
+ * The site is light-only on purpose. Fonts are system stacks only: no font
+ * file is downloaded or shipped.
  */
 
 export const colour = {
-  /** Page ground: warm, slightly off-white paper. */
-  paper: "#faf7f1",
-  /** Raised surfaces: inputs, carousel cards, the video frame surround. */
-  paperRaised: "#fffdf9",
-  /** Recessed surfaces: the passage picker and quiet notes. */
-  paperDeep: "#f1ece2",
-  /** Primary text. */
-  ink: "#1c211d",
+  /** Page ground: cool plaster. */
+  ground: "#f5f5f2",
+  /** Raised surfaces: inputs, catalogue cards, count stickers. */
+  raised: "#ffffff",
+  /** Recessed surfaces: the hero band, quiet notes, chips. */
+  recessed: "#e8e8e3",
+  /** Ruler cells without sermons and disabled controls. */
+  tile: "#e3e4df",
+  /** Primary text, shelf boards, bookends, primary buttons, footer, video plate. */
+  ink: "#15181c",
   /** Secondary text: metadata, ledes, helper copy. */
-  inkSoft: "#4f5852",
-  /** Tertiary text: small labels that still need AA. */
-  inkMuted: "#5c665f",
-  /** The single accent: links, primary buttons, selected states. */
-  accent: "#1f4d3a",
-  /** Accent hover/active. */
-  accentStrong: "#163a2b",
-  /** Soft accent tint for selected rows and active tokens. */
-  accentSoft: "#e3ece6",
-  /** Warm secondary accent for eyebrows and the applied-search marker. */
-  ember: "#7d5119",
-  /** Hairline rules. */
-  rule: "#d8d2c6",
-  /** Borders that must meet the 3:1 UI-component ratio on paper. */
-  ruleStrong: "#7a746a",
-  /** Keyboard focus ring. */
-  focus: "#1a5fb4",
-  /** Footer and video-frame ground. */
-  inkSurface: "#1c211d",
-  /** Text on ink surfaces. */
-  onInk: "#f3efe7",
+  inkSoft: "#444a53",
+  /** Tertiary text: ghost-spine labels, ordinals, disabled text. */
+  inkMuted: "#596069",
+  /** Decorative hairlines only; never a control boundary. */
+  rule: "#d3d4cf",
+  /** Borders of inputs, ghost spines, tokens and pagination (3:1 non-text). */
+  ruleStrong: "#767b83",
+  /** The single accent: eyebrows, section rules, current markers, applied filters. */
+  gilt: "#7d5800",
+  /** Accent tint: active tokens, current chips, the preview banner. */
+  giltSoft: "#f5ecd2",
+  /** Gilt lettering on dark surfaces. */
+  giltBright: "#e8c170",
+  /** Text on ink and on every spine hue. */
+  onInk: "#f5f5f2",
   /** Muted text on ink surfaces. */
-  onInkSoft: "#c9d3cc",
-  /** Neutral blue-grey chapter and verse tiles; no book group uses this hue. */
-  tileNumber: "#d9e1e8",
-  /** Book tiles by literary group: nine distinct hues at matched lightness. */
-  tileLaw: "#e8dcc2",
-  tileHistory: "#dae6d5",
-  tileWisdom: "#ebe6c2",
-  tileMajorProphets: "#e5d8e8",
-  tileMinorProphets: "#dcdcee",
-  tileGospelsActs: "#efd7cb",
-  tilePauline: "#eed3d8",
-  tileGeneral: "#e4e2da",
-  tileRevelation: "#cfe3de",
-  /** Disabled control surface and text. */
-  disabledSurface: "#e6e3dc",
-  disabledText: "#5a5a54",
-  /** Tile outlines: definition only; the label identifies the control. */
-  tileBorder: "#b9b2a6",
+  onInkSoft: "#b9bec7",
+  /** Cloth spine fills by literary group. */
+  spineLaw: "#7d2a3a",
+  spineHistory: "#7a4a1c",
+  spineWisdom: "#56611f",
+  spineMajorProphets: "#1f5f4e",
+  spineMinorProphets: "#1e5468",
+  spineGospelsActs: "#2f4f8f",
+  spinePauline: "#4d3a8a",
+  spineGeneral: "#7d2f6b",
+  spineRevelation: "#1f2430",
   /** Print ground and ink. */
-  paperPrint: "#ffffff",
+  groundPrint: "#ffffff",
   inkPrint: "#000000"
 } as const;
 
 export const font = {
-  /** Headings and reading text: a literary serif from each platform. */
-  serif: '"Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Charter, Georgia, "Times New Roman", serif',
-  /** Interface text: labels, controls, metadata. */
-  sans: '"Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif',
-  /** Tabular numerals for chapter and verse tiles. */
-  numeric: '"Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif'
+  /** Display voice: large titles. */
+  display: '"Sitka Banner", "Sitka Display", "Big Caslon", Baskerville, "Hoefler Text", "Iowan Old Style", "Book Antiqua", Georgia, ui-serif, serif',
+  /** Reading voice: descriptions, transcripts, answers, ledes. */
+  reading: '"Sitka Text", "Sitka Small", Charter, "Iowan Old Style", Georgia, "Noto Serif", ui-serif, serif',
+  /** Signage voice: condensed caps for labels, spines, counts and navigation. */
+  signage: 'Bahnschrift, "Avenir Next Condensed", "Roboto Condensed", "Arial Narrow", "Helvetica Neue", system-ui, sans-serif',
+  /** Interface voice: controls, metadata lines, helper copy. */
+  ui: '"Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif'
 } as const;
 
 export const size = {
-  xs: "0.8125rem",
-  sm: "0.875rem",
-  md: "1rem",
-  base: "1.0625rem",
-  lg: "1.25rem",
-  xl: "1.5rem",
-  "2xl": "clamp(1.75rem, 1.3rem + 1.6vw, 2.25rem)",
-  "3xl": "clamp(2.1rem, 1.5rem + 2.4vw, 3.25rem)",
-  lineTight: "1.15",
+  small: "0.8125rem",
+  ui: "0.9375rem",
+  reading: "1.0625rem",
+  lede: "1.25rem",
+  h3: "1.375rem",
+  cardTitle: "clamp(1.5rem, 1.2rem + 1vw, 2rem)",
+  title: "clamp(2rem, 1.5rem + 2.2vw, 3.25rem)",
+  display: "clamp(2.75rem, 1.9rem + 3.6vw, 5rem)",
+  lineTight: "0.98",
+  lineTitle: "1.05",
   lineUi: "1.45",
-  lineReading: "1.7"
+  lineReading: "1.72"
 } as const;
 
 export const space = {
@@ -103,38 +94,38 @@ export const space = {
 } as const;
 
 export const radius = {
-  tile: "0.125rem",
-  control: "0.375rem",
-  frame: "0.625rem",
+  cell: "0.125rem",
+  control: "0.25rem",
+  card: "0.375rem",
   pill: "999px"
 } as const;
 
 export const shadow = {
-  floating: "0 0.6rem 1.6rem rgba(28, 33, 29, 0.14)",
-  frame: "0 0.4rem 1.2rem rgba(28, 33, 29, 0.10)"
+  card: "0 1px 0 rgba(21, 24, 28, 0.06), 0 0.75rem 1.75rem rgba(21, 24, 28, 0.08)",
+  lift: "0 0.5rem 1rem rgba(21, 24, 28, 0.18)"
 } as const;
 
 export const motion = {
   duration: "160ms",
+  settle: "480ms",
   easing: "cubic-bezier(0.2, 0, 0, 1)"
 } as const;
 
 export const measure = {
-  page: "72rem",
+  page: "76rem",
   prose: "68ch",
-  transcript: "64ch"
+  transcript: "64ch",
+  results: "56rem"
 } as const;
 
 export const breakpoint = {
-  /** Below this the header switches to the mobile menu. */
+  narrow: "38rem",
   mobile: "44rem",
-  /** Below this multi-column layouts collapse. */
   tablet: "60rem",
-  /** Below this remaining grids become single column. */
-  narrow: "38rem"
+  wide: "76rem"
 } as const;
 
-/** Minimum interactive target size (WCAG 2.5.8 comfortable target). */
+/** Minimum standalone interactive target. */
 export const targetSize = "2.75rem";
 
 const kebab = (value: string): string => value.replace(/[A-Z]/gu, (letter) => `-${letter.toLowerCase()}`);

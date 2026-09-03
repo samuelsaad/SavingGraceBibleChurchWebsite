@@ -1,15 +1,20 @@
 /**
  * The document shell shared by every server-rendered page and by the static
- * Astro pages: head metadata, the skip link, the preview banner, the masthead
- * with its navigation disclosures, the main landmark, the footer, and the
- * page-scoped style and script blocks.
+ * Astro pages: head metadata, the skip link, the preview band, the masthead
+ * with plain navigation links and the compact search, the main landmark, the
+ * footer with the canon strip, and the page-scoped style and script blocks.
  *
  * This module has no Node-only imports so the static build can consume it.
  */
-import { attribute, documentTitle, html, raw, siteName, type Html, when } from "./html";
+import type { PublicSermonFilterOptions } from "../server/repositories/sermon-repository";
+import { shelfMark } from "./components/marks";
+import { mastheadSearch } from "./components/search";
+import { canonStrip } from "./components/shelf";
+import { attribute, documentTitle, html, raw, type Html, when } from "./html";
 import { canonicalOrigin, siteLinks, type FrontendRenderContext, type FrontendTaxonomyKind, publicRenderContext } from "./routes";
 import { enhancementScripts, type EnhancementScriptName } from "./scripts";
 import { siteStyles, type StyleBlockName } from "./styles";
+import { colour } from "./tokens";
 
 export type RobotsDirective = "index, follow" | "noindex, follow" | "noindex, nofollow";
 
@@ -27,49 +32,40 @@ export interface PageShellInput {
   scripts?: EnhancementScriptName[];
   /** Adds "— Saving Grace Bible Church"; the home page keeps the bare name. */
   suffixTitle?: boolean;
+  /** Books with sermons, for the footer's canon strip. */
+  books?: PublicSermonFilterOptions["books"];
+  /** Hides the masthead search on pages that carry the full finder. */
+  mastheadSearch?: boolean;
 }
 
-const sermonSections: ReadonlyArray<readonly [FrontendTaxonomyKind | "sermons", string]> = [
+/** The shelf mark as a favicon: five spines on a board, drawn in ink on the ground, no external asset. */
+const faviconDataUri = "data:image/svg+xml," + encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28"><rect width="28" height="28" fill="${colour.ground}"/><rect x="2" y="8" width="4" height="18" fill="none" stroke="${colour.ink}" stroke-width="1.5"/><rect x="8" y="4" width="6" height="22" fill="${colour.ink}"/><rect x="16" y="10" width="3" height="16" fill="none" stroke="${colour.ink}" stroke-width="1.5"/><rect x="21" y="6" width="5" height="20" fill="${colour.ink}" opacity="0.55"/><rect x="0" y="26" width="28" height="2" fill="${colour.ink}"/></svg>`
+);
+
+const sections: ReadonlyArray<readonly [FrontendTaxonomyKind | "sermons", string]> = [
   ["sermons", "Sermons"],
   ["speakers", "Speakers"],
   ["series", "Series"],
-  ["books", "Bible books"]
+  ["books", "Books"]
 ];
 
 function activeSection(canonicalPath: string): string | null {
-  return sermonSections.find(([section]) => (
+  return sections.find(([section]) => (
     canonicalPath === `/${section}/` || canonicalPath.startsWith(`/${section}/`)
   ))?.[0] ?? null;
 }
 
-function sectionLinks(context: FrontendRenderContext, active: string | null): Html {
-  const links = siteLinks(context);
-  return html`${sermonSections.map(([section, label]) => html`<li><a href="${section === "sermons" ? links.archive : links.taxonomyIndex(section)}"${attribute("aria-current", active === section ? "page" : null)}>${label}</a></li>`)}`;
-}
-
-function sermonsDisclosure(context: FrontendRenderContext, active: string | null, variant: "desktop" | "mobile"): Html {
-  const current = active ? html`<span class="sr-only">, current section</span>` : null;
-  return html`<details class="nav-disclosure nav-disclosure--${variant}" data-nav-disclosure>
-    <summary class="nav-disclosure__summary${active ? " is-current" : ""}" aria-expanded="false">Sermons${current}</summary>
-    <ul class="nav-disclosure__panel">${sectionLinks(context, active)}</ul>
-  </details>`;
-}
-
-function primaryNavigation(context: FrontendRenderContext, canonicalPath: string, variant: "desktop" | "mobile"): Html {
+function navigationLinks(context: FrontendRenderContext, canonicalPath: string): Html {
   const links = siteLinks(context);
   const active = activeSection(canonicalPath);
-  const home = html`<li><a href="${links.home}"${attribute("aria-current", canonicalPath === "/" ? "page" : null)}>Home</a></li>`;
-  const sermons = links.hasTaxonomyRoutes
-    ? html`<li class="site-nav__disclosure">${sermonsDisclosure(context, active, variant)}</li>`
-    : html`<li><a href="${links.archive}"${attribute("aria-current", active === "sermons" ? "page" : null)}>Sermons</a></li>`;
-  return html`<ul class="site-nav__list">${home}${sermons}</ul>`;
+  const items = links.hasTaxonomyRoutes ? sections : sections.slice(0, 1);
+  return html`<ul class="masthead__links">${items.map(([section, label]) => html`<li><a href="${section === "sermons" ? links.archive : links.taxonomyIndex(section)}"${attribute("aria-current", active === section ? "page" : null)}>${label}</a></li>`)}</ul>`;
 }
 
-function footerNavigation(context: FrontendRenderContext): Html {
+function brand(context: FrontendRenderContext): Html {
   const links = siteLinks(context);
-  return links.hasTaxonomyRoutes
-    ? html`<li><a href="${links.home}">Home</a></li>${sectionLinks(context, null)}`
-    : html`<li><a href="${links.home}">Home</a></li><li><a href="${links.archive}">Sermons</a></li>`;
+  return html`<a class="brand" href="${links.home}">${shelfMark()}<span class="wordmark"><span class="wordmark__line">Saving Grace</span><span class="wordmark__line">Bible Church</span></span></a>`;
 }
 
 function headMetadata(input: PageShellInput, context: FrontendRenderContext): Html {
@@ -92,7 +88,7 @@ export function pageShell(input: PageShellInput, context: FrontendRenderContext 
   const links = siteLinks(context);
   const preview = context.mode === "preview";
   const title = input.suffixTitle === false ? input.title : documentTitle(input.title);
-  const scripts = [...(preview ? ["navigation" as const] : []), ...(input.scripts ?? [])];
+  const scripts = input.scripts ?? [];
   const document = html`<!doctype html>
 <html lang="en-AU">
   <head>
@@ -100,28 +96,30 @@ export function pageShell(input: PageShellInput, context: FrontendRenderContext 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="${preview ? "noindex, nofollow, noarchive" : input.robots}" />
     <meta name="color-scheme" content="light" />
+    <link rel="icon" href="${faviconDataUri}" />
     <title>${title}</title>
     ${headMetadata(input, context)}
     <style>${raw(siteStyles([...(input.styles ?? []), ...(preview ? ["preview" as const] : [])]))}</style>
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
-    ${when(preview, html`<div class="preview-banner" role="status">Private local frontend preview · Draft content · Not public or indexable</div>`)}
-    <header class="site-header">
-      <div class="site-header__inner">
-        <a class="wordmark" href="${links.home}">${siteName}</a>
-        <nav class="site-nav" aria-label="Primary">${primaryNavigation(context, input.canonicalPath, "desktop")}</nav>
-        <details class="site-menu" data-mobile-nav>
-          <summary class="site-menu__summary" aria-expanded="false">Menu</summary>
-          <nav class="site-menu__nav" aria-label="Mobile primary">${primaryNavigation(context, input.canonicalPath, "mobile")}</nav>
-        </details>
+    ${when(preview, () => html`<div class="preview-band" role="status">${shelfMark()}<span>Private local frontend preview · Draft content · Not public or indexable</span></div>`)}
+    <header class="masthead">
+      <div class="masthead__inner">
+        ${brand(context)}
+        <nav class="masthead__nav" aria-label="Primary">${navigationLinks(context, input.canonicalPath)}</nav>
+        ${when(input.mastheadSearch !== false, () => mastheadSearch(context))}
       </div>
     </header>
     <main id="main-content" class="site-main">${input.body}</main>
     <footer class="site-footer">
-      <div class="site-footer__inner">
-        <p class="site-footer__name">${siteName}</p>
-        <nav aria-label="Footer"><ul class="site-footer__links">${footerNavigation(context)}</ul></nav>
+      ${canonStrip({ books: input.books ?? [] })}
+      <div class="site-footer__band">
+        <div class="site-footer__inner">
+          ${brand(context)}
+          <nav aria-label="Footer"><ul class="site-footer__links">${(links.hasTaxonomyRoutes ? sections : sections.slice(0, 1)).map(([section, label]) => html`<li><a href="${section === "sermons" ? links.archive : links.taxonomyIndex(section)}">${label}</a></li>`)}</ul></nav>
+          <p class="site-footer__note">Every sermon is shelved under the Bible book it was preached from. The bookshelf mark is this website's own device.</p>
+        </div>
       </div>
     </footer>
     ${scripts.map((name) => html`<script data-enhancement="${name}">${raw(enhancementScripts[name])}</script>`)}

@@ -1,44 +1,38 @@
 /**
- * Section furniture shared by pages: headings with an optional aside, quiet
- * notes for empty states, carousels and pagination.
+ * Section furniture shared by pages: signage headings with an optional
+ * aside, title pages, quiet notes and pagination.
  */
 import type { PublicSermonListQuery } from "../../api/contracts/public-sermons";
-import { attribute, html, when, type Html, type Renderable } from "../html";
+import { html, when, type Html, type Renderable } from "../html";
 import { paginationUrl, type FrontendRenderContext } from "../routes";
 
 export function sectionHead(id: string, heading: string, aside?: Renderable): Html {
-  return html`<div class="section-head"><h2 id="${id}">${heading}</h2>${when(aside, () => html`<div class="section-head__aside">${aside}</div>`)}</div>`;
+  return html`<div class="section__head"><h2 id="${id}" class="section__title">${heading}</h2>${when(aside, () => html`<div class="section__aside">${aside}</div>`)}</div>`;
 }
 
 /** A calm one-paragraph state for an empty section. */
 export function sectionNote(message: string): Html {
-  return html`<p class="section-note">${message}</p>`;
+  return html`<p class="note">${message}</p>`;
 }
 
-export interface CarouselInput {
-  id: string;
-  heading: string;
-  /** Accessible label for the previous/next controls, e.g. "series". */
-  itemsLabel: string;
-  items: Html[];
-  emptyMessage: string;
-  /** Optional link rendered beside the controls, e.g. "All series". */
-  aside?: Html | null;
+export interface TitlePageInput {
+  eyebrow: string;
+  title: string;
+  trail?: Array<{ href: string; label: string }>;
+  meta?: Renderable;
+  /** Long titles step down one size. */
+  longThreshold?: number;
 }
 
-/** A horizontally scrolling list with Previous/Next controls. Never autoplays. */
-export function carousel(input: CarouselInput): Html {
-  if (!input.items.length) {
-    return html`<section class="discovery" aria-labelledby="${input.id}-heading">${sectionHead(`${input.id}-heading`, input.heading)}${sectionNote(input.emptyMessage)}</section>`;
-  }
-  const controls = html`${input.aside}<div class="carousel__controls">
-    <button class="icon-button" type="button" data-carousel-previous aria-controls="${input.id}-track" aria-disabled="true" hidden><span aria-hidden="true">‹</span><span class="sr-only">Show previous ${input.itemsLabel}</span></button>
-    <button class="icon-button" type="button" data-carousel-next aria-controls="${input.id}-track" aria-disabled="false" hidden><span aria-hidden="true">›</span><span class="sr-only">Show more ${input.itemsLabel}</span></button>
-  </div>`;
-  return html`<section class="discovery carousel" aria-labelledby="${input.id}-heading" data-carousel>
-    ${sectionHead(`${input.id}-heading`, input.heading, controls)}
-    <ul class="carousel__track" id="${input.id}-track" role="list" aria-label="${input.heading}" data-carousel-track>${input.items.map((item) => html`<li class="carousel__item">${item}</li>`)}</ul>
-  </section>`;
+/** A page-opening composition: trail, eyebrow, display title, meta line. */
+export function titlePage(input: TitlePageInput): Html {
+  const isLong = input.title.length > (input.longThreshold ?? 40);
+  return html`<header class="title-page">
+    ${when(input.trail?.length, () => html`<ol class="trail" role="list">${input.trail!.map((item) => html`<li><a href="${item.href}">${item.label}</a></li>`)}</ol>`)}
+    <p class="eyebrow">${input.eyebrow}</p>
+    <h1 class="title-page__title${isLong ? " is-long" : ""}">${input.title}</h1>
+    ${when(input.meta, () => html`<div class="title-page__meta">${input.meta}</div>`)}
+  </header>`;
 }
 
 /** Numbered pagination with Previous and Next, preserving filters in URLs. */
@@ -59,9 +53,4 @@ export function pagination(
       : html`<a class="pagination__page" href="${paginationUrl(candidate, query, context, expandedRecent)}"><span class="sr-only">Page </span>${candidate}</a>`}</li>`)}
     ${when(page < totalPages, () => html`<li><a class="pagination__step" href="${paginationUrl(page + 1, query, context, expandedRecent)}" rel="next">Next</a></li>`)}
   </ul></nav>`;
-}
-
-/** A visually hidden or visible heading depending on the design need. */
-export function heading(level: 2 | 3, id: string, text: string, visuallyHidden = false): Html {
-  return html`<h${level} id="${id}"${attribute("class", visuallyHidden ? "sr-only" : null)}>${text}</h${level}>`;
 }

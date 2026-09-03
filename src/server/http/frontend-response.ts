@@ -44,7 +44,8 @@ export function embeddedStyleHashes(html: string): string[] {
 export function contentSecurityPolicy(html: string): string {
   const scriptHashes = embeddedScriptHashes(html);
   const styleHashes = embeddedStyleHashes(html);
-  const frame = html.includes("data-video-frame") ? " frame-src https://www.youtube-nocookie.com;" : "";
+  // Only real plate markup (not the enhancement script's selector text) opens the frame source.
+  const frame = /<[a-z][^>]*\sdata-video-frame[\s>]/u.test(html) ? " frame-src https://www.youtube-nocookie.com;" : "";
   return `default-src 'none'; style-src ${styleHashes.length ? styleHashes.join(" ") : "'none'"};${scriptHashes.length ? ` script-src ${scriptHashes.join(" ")};` : ""} img-src 'self' data:;${frame} base-uri 'none'; frame-ancestors 'none'; form-action 'self'`;
 }
 

@@ -15,52 +15,50 @@ export function contrast(foreground: string, background: string): number {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-const textOnPaper: Array<[keyof typeof colour, keyof typeof colour]> = [
-  ["ink", "paper"], ["ink", "paperRaised"], ["ink", "paperDeep"], ["ink", "accentSoft"], ["ink", "tileNumber"],
-  ["inkSoft", "paper"], ["inkSoft", "paperRaised"], ["inkSoft", "paperDeep"],
-  ["inkMuted", "paper"], ["inkMuted", "paperRaised"], ["inkMuted", "paperDeep"],
-  ["accent", "paper"], ["accent", "paperRaised"], ["accent", "paperDeep"], ["accent", "accentSoft"],
-  ["accentStrong", "paper"], ["ember", "paper"], ["ember", "paperRaised"], ["ember", "paperDeep"],
-  ["onInk", "accent"], ["onInk", "accentStrong"], ["onInk", "inkSurface"], ["onInk", "ember"],
-  ["onInkSoft", "inkSurface"], ["disabledText", "disabledSurface"]
+type Token = keyof typeof colour;
+
+const textPairs: Array<[Token, Token]> = [
+  ["ink", "ground"], ["ink", "raised"], ["ink", "recessed"], ["ink", "tile"], ["ink", "giltSoft"],
+  ["inkSoft", "ground"], ["inkSoft", "raised"], ["inkSoft", "recessed"],
+  ["inkMuted", "ground"], ["inkMuted", "raised"], ["inkMuted", "recessed"], ["inkMuted", "tile"],
+  ["gilt", "ground"], ["gilt", "raised"], ["gilt", "recessed"], ["gilt", "giltSoft"],
+  ["onInk", "ink"], ["onInkSoft", "ink"], ["giltBright", "ink"], ["giltBright", "spineRevelation"]
 ];
 
-const tileTokens: Array<keyof typeof colour> = [
-  "tileLaw", "tileHistory", "tileWisdom", "tileMajorProphets", "tileMinorProphets",
-  "tileGospelsActs", "tilePauline", "tileGeneral", "tileRevelation"
+const spineTokens: Token[] = [
+  "spineLaw", "spineHistory", "spineWisdom", "spineMajorProphets", "spineMinorProphets",
+  "spineGospelsActs", "spinePauline", "spineGeneral", "spineRevelation"
 ];
 
-const uiOnSurfaces: Array<[keyof typeof colour, keyof typeof colour]> = [
-  ["focus", "paper"], ["focus", "paperRaised"], ["focus", "paperDeep"],
-  ["ruleStrong", "paper"], ["ruleStrong", "paperRaised"], ["ruleStrong", "paperDeep"],
-  ["accent", "paper"], ["ember", "tileNumber"]
+const componentPairs: Array<[Token, Token]> = [
+  ["ruleStrong", "ground"], ["ruleStrong", "raised"], ["ruleStrong", "recessed"],
+  ["gilt", "ground"], ["gilt", "tile"], ["ink", "ground"]
 ];
 
 describe("frontend design tokens", () => {
   it("keeps every text pairing at or above WCAG AA 4.5:1", () => {
-    for (const [foreground, background] of textOnPaper) {
+    for (const [foreground, background] of textPairs) {
       expect(contrast(colour[foreground], colour[background]), `${foreground} on ${background}`).toBeGreaterThanOrEqual(4.5);
     }
   });
 
-  it("keeps ink and the applied-search marker legible on all nine distinct book tints and the number tiles", () => {
-    const tints = tileTokens.map((token) => colour[token]);
-    expect(new Set(tints).size).toBe(9);
-    expect(tints).not.toContain(colour.tileNumber);
-    for (const token of [...tileTokens, "tileNumber" as const]) {
-      expect(contrast(colour.ink, colour[token]), `ink on ${token}`).toBeGreaterThanOrEqual(4.5);
-      expect(contrast(colour.ember, colour[token]), `ember marker on ${token}`).toBeGreaterThanOrEqual(3);
-      expect(contrast(colour.onInk, colour.accent), "selected tile label").toBeGreaterThanOrEqual(4.5);
+  it("keeps on-ink lettering legible on all nine distinct cloth spine hues and every hue distinct from the ground", () => {
+    const hues = spineTokens.map((token) => colour[token]);
+    expect(new Set(hues).size).toBe(9);
+    for (const token of spineTokens) {
+      expect(contrast(colour.onInk, colour[token]), `lettering on ${token}`).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(colour[token], colour.ground), `${token} against the ground`).toBeGreaterThanOrEqual(3);
+      expect(contrast(colour[token], colour.raised), `${token} against raised surfaces`).toBeGreaterThanOrEqual(3);
     }
   });
 
-  it("keeps focus rings and component borders at or above the 3:1 non-text ratio", () => {
-    for (const [foreground, background] of uiOnSurfaces) {
+  it("keeps component boundaries and the focus ring at or above the 3:1 non-text ratio", () => {
+    for (const [foreground, background] of componentPairs) {
       expect(contrast(colour[foreground], colour[background]), `${foreground} on ${background}`).toBeGreaterThanOrEqual(3);
     }
-    // The focus ring on a selected accent tile is drawn as an inset two-tone ring
-    // whose inner band is paper-raised, so the visible ring contrasts with that band.
-    expect(contrast(colour.focus, colour.paperRaised)).toBeGreaterThanOrEqual(3);
+    // The focus ring is ink with a ground halo, so it is visible on every spine hue and on ink itself.
+    for (const token of spineTokens) expect(contrast(colour.ground, colour[token])).toBeGreaterThanOrEqual(3);
+    expect(contrast(colour.ground, colour.ink)).toBeGreaterThanOrEqual(3);
   });
 
   it("emits every token as a custom property and keeps the smallest text size at 13px or above", () => {
@@ -68,9 +66,11 @@ describe("frontend design tokens", () => {
     for (const token of Object.keys(colour)) {
       expect(css).toContain(`--colour-${token.replace(/[A-Z]/gu, (letter) => `-${letter.toLowerCase()}`)}:`);
     }
-    expect(css).toContain("--size-2xl:");
+    expect(css).toContain("--size-display:");
     expect(css).toContain("--space-1:0.25rem");
-    expect(Number.parseFloat(size.xs) * 16).toBeGreaterThanOrEqual(13);
+    expect(css).toContain("--font-signage:Bahnschrift");
+    expect(css).not.toMatch(/@font-face|url\(/u);
+    expect(Number.parseFloat(size.small) * 16).toBeGreaterThanOrEqual(13);
   });
 
   it("uses tokens rather than colour literals in the stylesheet partials", () => {
@@ -81,6 +81,10 @@ describe("frontend design tokens", () => {
     const compiled = publicSiteStyles();
     expect(compiled).toContain(":root{");
     expect(compiled).not.toContain("/*");
-    expect(compiled).toContain('grid-template-areas:"meta series"');
+    expect(compiled).toContain(".spine--psalms{--sqrt:12.25;--i:18;");
+    expect(compiled).toContain(".spine--obadiah{--sqrt:1;--i:30;");
+    expect(compiled).toContain("@media (forced-colors:active)");
+    expect(compiled).toContain("@media (prefers-reduced-motion:reduce)");
+    expect(compiled).toContain("@media print{");
   });
 });

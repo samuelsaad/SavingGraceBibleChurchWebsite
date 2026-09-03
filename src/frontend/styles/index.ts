@@ -1,18 +1,18 @@
 /**
  * Stylesheet composition. The core block is always emitted; pages add the
- * blocks they use so boundary and taxonomy pages carry no picker or player
- * CSS. Partials are authored readably and compacted at module load; the
- * result is inlined once per page and hashed into the Content-Security-
+ * blocks they use so boundary and taxonomy pages carry no shelf, ruler or
+ * player CSS. Partials are authored readably and compacted at module load;
+ * the result is inlined once per page and hashed into the Content-Security-
  * Policy by the server response builder.
  */
-import { archiveStyles } from "./archive";
 import { coreStyles } from "./core";
 import { previewStyles } from "./preview";
 import { sermonStyles } from "./sermon";
+import { shelfStyles } from "./shelf";
 
 const blocks = {
   core: coreStyles,
-  archive: archiveStyles,
+  shelf: shelfStyles,
   sermon: sermonStyles,
   preview: previewStyles
 } as const;
@@ -42,7 +42,7 @@ export function siteStyles(extra: StyleBlockName[] = []): string {
 
 /** The complete stylesheet, for the static build and for tests. */
 export function publicSiteStyles(): string {
-  return siteStyles(["archive", "sermon"]);
+  return siteStyles(["shelf", "sermon"]);
 }
 
 /** Readable sources, for the stylesheet hygiene test. */

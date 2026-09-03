@@ -5,8 +5,8 @@
  * this package touches a database or a Node-only API.
  */
 export { renderPublicSermonArchivePage, resultsTitle, type SermonArchivePageInput } from "./pages/archive";
-export { renderPublicSermonPage } from "./pages/sermon";
-export { renderFrontendHomePage, type FrontendHomePageInput } from "./pages/home";
+export { renderPublicSermonPage, type SermonPageOptions } from "./pages/sermon";
+export { emptyFilterOptions, renderFrontendHomePage, type FrontendHomePageInput } from "./pages/home";
 export {
   renderFrontendTaxonomyDetail,
   renderFrontendTaxonomyIndex,
@@ -26,7 +26,9 @@ export {
   previewRenderContext,
   publicRenderContext,
   siteLinks,
+  withFilter,
   type FrontendRenderContext,
   type FrontendTaxonomyKind
 } from "./routes";
 export * as tokens from "./tokens";
+export * as canon from "./canon";
