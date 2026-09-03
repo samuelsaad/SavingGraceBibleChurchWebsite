@@ -1,6 +1,6 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
-**Handover date:** 1 September 2026
+**Handover date:** 3 September 2026
 **Purpose:** Public-safe orientation for continuing work from this repository. This file contains no sermon body, credential, token, session, raw caption export or private local path.
 
 ## Authority and current checkpoint
@@ -63,6 +63,12 @@ This repository-root file is the canonical tracked handover. Keep it concise and
 
 Update this file after a completed milestone materially changes the current checkpoint or operating boundary. Historical external handovers may be retained as prior-run evidence, but they do not supersede current repository bytes, Git history or this tracked handover.
 
-## Immediate next bounded task
+## One-time private 36-sermon evaluation exception
 
-The next bounded task may perform final public-repository publication readiness and, only with fresh explicit authority, configure the intended Git remote and push this history. It must not export another sermon, change application publication state, access production or external providers, deploy, enable Related themes, process another wave or begin Phase 3C.
+Decision D-151 retains the approved-transcript gate as the normal rule and adds one non-reusable exception for the 36 previously inspected, uniquely mapped and unprocessed evaluation records. After this governance commit, those identities must be frozen in one exact Git-ignored manifest with a fixed order and SHA-256. The authenticated interactive OpenAI Codex run may prepare each official caption as a still-unapproved transcript and immediately use it to create private unapproved description and Q&A drafts. Failed attempts count and cannot be replaced; the exception expires after all 36 manifest positions are attempted.
+
+Every dependent draft must retain the source transcript hash and unapproved state, D-151 and manifest binding, generator/runtime provenance, generation and output hashes, mandatory human review and the limited-reproducibility warning when the runtime does not expose immutable identity. Transcript approval is still required before dependent drafts may be approved. Any later transcript-body or source-identity change makes those drafts stale or requires explicit re-review. This narrow exception creates no content approval, public eligibility, semantic work, provider use outside the authorised official-caption and interactive-Codex paths, production access, deployment, remote use or Phase 3C authority.
+
+## Immediate bounded task
+
+After the D-151 governance amendment passes its tests and is committed, the same authorised run freezes and attempts the exact private 36-record manifest, then stops for real administrator review. No thirty-seventh record, approval, publication, semantic generation, production/deployment, remote use, push or Phase 3C work is permitted.

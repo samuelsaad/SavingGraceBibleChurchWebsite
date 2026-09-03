@@ -1,6 +1,6 @@
 ---
 name: sermon-enrichment
-description: Create, regenerate, review, or validate private sermon descriptions and Q&A drafts from a complete approved transcript. Use for transcript-grounded enrichment, replacement drafts, grounding evidence, coherence and readability review, or any request involving sermon description or question-and-answer quality.
+description: Create, regenerate, review, or validate private sermon descriptions and Q&A drafts from a complete approved transcript, plus the exact one-time D-151 private pre-approval batch when its manifest contract is satisfied. Use for transcript-grounded enrichment, replacement drafts, grounding evidence, coherence and readability review, or any request involving sermon description or question-and-answer quality.
 ---
 
 # Sermon Enrichment
@@ -21,10 +21,23 @@ Produce coherent, transcript-grounded private drafts for later human review. Tre
 - Never create embeddings or semantic relationships as part of this workflow.
 - Never use the description-only Related-themes embedding model as a text generator, and never fall back to ranked excerpts, fixed wrappers or deterministic transcript extraction.
 
+### One-time D-151 exception
+
+The approved-transcript rule above remains the default. Use an unapproved transcript only when all of these conditions hold:
+
+- The request is the 3 September 2026 Samuel-authorised D-151 evaluation run and the target is in its Git-ignored, integrity-verified manifest of exactly 36 fixed, unique, previously inspected and unprocessed source/video identities.
+- The manifest SHA-256, fixed order and D-151 governance commit are bound before reading or generating from the transcript. A failed record counts as attempted; no substitute or thirty-seventh record is allowed.
+- The complete newly prepared transcript has valid official-caption provenance and remains explicitly unapproved. It is the sole authority for description and Q&A claims.
+- The transcript, description and Q&A all stay private and unapproved. Transcript approval remains a prerequisite to approving either dependent content area.
+- Every generated result records `source_transcript_sha256`, `source_transcript_approval_state_at_generation: unapproved`, `requires_administrator_review: true`, D-151, the manifest hash, generator provenance and timestamp, output hash and retry count.
+- Runtime model, immutable revision or session identity is recorded only when exposed. Otherwise store null with `not_exposed_by_runtime`. Store `not_exposed_to_runtime` for unavailable workspace privacy/retention detail and attach `MODEL_REVISION_UNAVAILABLE_LIMITED_REPRODUCIBILITY` to every result.
+- A changed transcript body hash or source identity makes every dependent result stale and requires regeneration or explicit re-review against the changed transcript.
+- The exception expires once all 36 manifest records have been attempted, regardless of success count. It cannot authorise later use.
+
 ## Workflow
 
 1. Verify the exact private target by stable source identity and application identity, never by title alone.
-2. Verify that the transcript is current and approved. Capture its immutable grounding revision, UTF-8 SHA-256, character count, lexical word count, current administrative row version, and approval evidence before reading it for generation. Administrative row version and approval timestamps are audit/concurrency evidence; they are not grounding identity.
+2. Verify that the transcript is current and approved, unless the exact target is bound to the one-time D-151 exception above. Capture its immutable grounding revision, UTF-8 SHA-256, character count, lexical word count, current administrative row version, and approval state/evidence before reading it for generation. Administrative row version and approval timestamps are audit/concurrency evidence; they are not grounding identity.
 3. Read the complete transcript. Identify the actual controlling subject, the sermon’s reasoning or development, its use of Scripture as stated in the transcript, and its concrete application.
 4. Draft the description and Q&A set from the sermon as a whole. Do not rank, concatenate, or wrap transcript excerpts.
 5. Attach bounded transcript support to every description paragraph and every Q&A pair using the private contract in `references/grounding-contract.md`.
@@ -40,7 +53,7 @@ Produce coherent, transcript-grounded private drafts for later human review. Tre
 - Be accurate, clear, coherent, readable, and welcoming to a visitor unfamiliar with the sermon.
 - Use complete sentences and connected paragraphs. Each paragraph must have a clear role in the summary.
 - Paraphrase faithfully. Use a direct quotation only when the transcript is clear, the wording matters, and exact support is recorded.
-- Mention Scripture only when the approved transcript clearly supports the reference and its use. Record uncertainty instead of resolving ambiguity.
+- Mention Scripture only when the authorised source transcript clearly supports the reference and its use. Record uncertainty instead of resolving ambiguity.
 - Avoid generic introductions or conclusions, stock invitations, repeated scaffolding, disconnected excerpts, raw caption fragments, and obvious ASR errors.
 - Do not invent claims, motivations, applications, quotations, speaker identity, Scripture references, or theological conclusions.
 
@@ -50,14 +63,14 @@ Produce coherent, transcript-grounded private drafts for later human review. Tre
 - Make every question specific to the actual sermon and useful to a listener who wants to understand or apply it.
 - Give a complete, concise, transcript-grounded answer. Paraphrase the preacher’s reasoning instead of pasting an excerpt.
 - Cover distinct aspects of the message such as subject, reasoning, Scripture use, implications, cautions, encouragement, and application only when those aspects are present.
-- Avoid a fixed question set, generic prompts, repeated answers, unrelated transcript passages, and claims unsupported by the approved transcript.
+- Avoid a fixed question set, generic prompts, repeated answers, unrelated transcript passages, and claims unsupported by the authorised source transcript.
 - Keep uncertainty visible when a name, reference, or wording is unclear.
 
 ## Fail-closed validation
 
 Reject the result when any of these conditions is true:
 
-- The immutable transcript grounding revision, content SHA-256, source identity, or approval state differs from the request. A row-version or approval-timestamp change alone is not staleness.
+- The immutable transcript grounding revision, content SHA-256, source identity, or required approval state differs from the request. The sole permitted requested state other than approved is `unapproved` under the exact D-151 manifest binding. A row-version or approval-timestamp change alone is not staleness.
 - A support range is missing, outside transcript bounds, reversed, empty, or hash-mismatched.
 - Any description paragraph or Q&A pair lacks support.
 - The description is outside 180–220 words, lacks the central subject or application, contains incomplete sentences, or matches known generic wrappers.
@@ -87,15 +100,15 @@ This mechanical pass is separate from the administrator's semantic, theological,
 
 Record privately:
 
-- Immutable transcript grounding revision, transcript SHA-256 and source identity, plus current administrative row version, approval evidence, and generation request hash.
+- Immutable transcript grounding revision, transcript SHA-256 and source identity, plus current administrative row version, approval state/evidence, and generation request hash.
 - Skill name and version, generation method, generation time, warnings, and uncertainties.
-- Actual generator provider, model, immutable revision and approval reference; prompt-policy version and hashes of the complete skill and grounding instructions supplied; and the approved transcript source hash.
+- Actual generator provider, exposed model/revision/session identity or the required runtime-unavailable markers, approval/exception reference, execution surface/mode, prompt-policy version and hashes of the complete skill and grounding instructions supplied, manifest and governance commit hashes when D-151 applies, and the source transcript hash.
 - Support locations and hashes for each description paragraph and every Q&A pair.
 - Original superseded bundle path and integrity hash plus original description and Q&A hashes.
 - Replacement result hash, validation result, import time, and idempotency evidence.
 - Completed `generated-text-mechanical-qa-v1` result and any unresolved context-dependent review flags.
 
-Mark a result stale whenever the approved transcript’s immutable grounding revision, source identity, or body hash changes, or its grounding evidence is missing or invalid. Do not mark it stale for a generic sermon/transcript row-version change, approval timestamp, passage decision, administrator-review timestamp, or a save in another generated content area. Preserve superseded draft bodies and audit evidence; never delete or silently overwrite them.
+Mark a result stale whenever the source transcript’s immutable grounding revision, source identity, or body hash changes, or its grounding evidence is missing or invalid. An approval-only transition with identical transcript bytes does not itself invalidate grounding, but a D-151 dependent draft cannot be approved until the transcript is approved and the draft is explicitly re-reviewed against that approved transcript. Do not mark it stale for a generic sermon/transcript row-version change, approval timestamp, passage decision, administrator-review timestamp, or a save in another generated content area. Preserve superseded draft bodies and audit evidence; never delete or silently overwrite them.
 
 ## Human authority
 
