@@ -26,7 +26,17 @@ const manifestWithoutIntegrity = {
     selectedCaption: {
       captionId: `anonymised-caption-${index + 1}`,
       language: "en" as const,
-      trackKind: index % 2 === 0 ? "standard" as const : "ASR" as const
+      trackKind: index % 2 === 0 ? "standard" as const : "asr" as const
+    },
+    sourceSnapshot: {
+      publicationStatus: index % 7 === 0 ? "pending" as const : "publish" as const,
+      serviceDate: "2025-01-05",
+      serviceDateAnomaly: "none",
+      speakerTermIds: [100 + index],
+      seriesTermIds: [],
+      bibleBookTermIds: [],
+      passageMetadataPresent: false,
+      metadataAnomalyFlags: []
     }
   }))
 };

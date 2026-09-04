@@ -26,7 +26,17 @@ export const oneTimePreapprovalBatchRecordSchema = z.object({
   selectedCaption: z.object({
     captionId: z.string().trim().min(1).max(500),
     language: z.literal("en"),
-    trackKind: z.enum(["standard", "ASR"])
+    trackKind: z.enum(["standard", "asr"])
+  }).strict(),
+  sourceSnapshot: z.object({
+    publicationStatus: z.enum(["publish", "pending"]),
+    serviceDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/u),
+    serviceDateAnomaly: z.string().trim().min(1).max(100),
+    speakerTermIds: z.array(z.number().int().positive()),
+    seriesTermIds: z.array(z.number().int().positive()),
+    bibleBookTermIds: z.array(z.number().int().positive()),
+    passageMetadataPresent: z.boolean(),
+    metadataAnomalyFlags: z.array(z.string().trim().min(1).max(100))
   }).strict()
 }).strict();
 

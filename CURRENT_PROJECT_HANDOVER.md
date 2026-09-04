@@ -1,6 +1,6 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
-**Handover date:** 3 September 2026
+**Handover date:** 4 September 2026
 **Purpose:** Public-safe orientation for continuing work from this repository. This file contains no sermon body, credential, token, session, raw caption export or private local path.
 
 ## Authority and current checkpoint
@@ -69,6 +69,8 @@ Decision D-151 retains the approved-transcript gate as the normal rule and adds 
 
 Every dependent draft must retain the source transcript hash and unapproved state, D-151 and manifest binding, generator/runtime provenance, generation and output hashes, mandatory human review and the limited-reproducibility warning when the runtime does not expose immutable identity. Transcript approval is still required before dependent drafts may be approved. Any later transcript-body or source-identity change makes those drafts stale or requires explicit re-review. This narrow exception creates no content approval, public eligibility, semantic work, provider use outside the authorised official-caption and interactive-Codex paths, production access, deployment, remote use or Phase 3C authority.
 
+The exact 36-record manifest was frozen privately with SHA-256 `7e513f03cab908f30223753832211d2593ce4ffab15706ee851760385d9acb30`. After a fresh owner OAuth flow verified the church channel and the three accepted pilot ownership anchors, every manifest position was attempted independently. The official API returned no candidate with confirmed primary-audio association: all 36 stopped as `caption_primary_audio_unconfirmed` before download. No caption file, transcript, description, Q&A, database row, approval, public state or semantic output was created. The one-time D-151 exception is therefore consumed and cannot be reused.
+
 ## Immediate bounded task
 
-After the D-151 governance amendment passes its tests and is committed, the same authorised run freezes and attempts the exact private 36-record manifest, then stops for real administrator review. No thirty-seventh record, approval, publication, semantic generation, production/deployment, remote use, push or Phase 3C work is permitted.
+No D-151 content awaits administrator review because no caption passed the confirmed-primary-audio gate. Any attempt to use an unconfirmed audio association or to process these or other sermons now requires a new explicit bounded decision and authority; D-151 cannot be resumed. No thirty-seventh record, approval, publication, semantic generation, production/deployment, remote use, push or Phase 3C work is permitted by the completed run.
