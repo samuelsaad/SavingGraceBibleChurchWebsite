@@ -330,7 +330,7 @@ export interface DescriptionQualityInspection {
 
 export function inspectDescriptionQuality(
   description: SermonEnrichmentResult["description"],
-  current: CurrentApprovedTranscript
+  current: Pick<CurrentApprovedTranscript, "bodyText">
 ): DescriptionQualityInspection {
   const issues: EnrichmentValidationIssue[] = [];
   const descriptionWords = lexicalWordOffsets(description.bodyText).length;
@@ -343,7 +343,7 @@ export function inspectDescriptionQuality(
     add(issues, "description_paragraph_count", "description.bodyText", "The description must use two to four coherent paragraphs");
   }
   const fragments = sentenceFragments(description.bodyText);
-  if (fragments.some((sentence) => !/[.!?]["'’)]*$/u.test(sentence) || lexicalWordOffsets(sentence).length < 5)) {
+  if (fragments.some((sentence) => !/[.!?]["'’”)]*$/u.test(sentence) || lexicalWordOffsets(sentence).length < 5)) {
     add(issues, "description_incomplete_sentence", "description.bodyText", "The description contains an incomplete sentence or caption fragment");
   }
   const lowerDescription = description.bodyText.toLocaleLowerCase("en-AU");
@@ -473,7 +473,7 @@ export function validateSermonEnrichmentResult(
     if (!/[?]$/u.test(item.question) || lexicalWordOffsets(item.question).length < 6) {
       add(issues, "question_not_substantive", `${path}.question`, "The question must be a complete, substantive question");
     }
-    if (!/[.!?]["'’)]*$/u.test(item.answer) || lexicalWordOffsets(item.answer).length < 12) {
+    if (!/[.!?]["'’”)]*$/u.test(item.answer) || lexicalWordOffsets(item.answer).length < 12) {
       add(issues, "answer_not_substantive", `${path}.answer`, "The answer must be a complete, substantive response");
     }
     validateSupports(item.supports, current.bodyText, "question_answer", item.displayOrder, `${path}.supports`, issues);

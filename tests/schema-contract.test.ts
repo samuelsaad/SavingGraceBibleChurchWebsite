@@ -93,7 +93,7 @@ describe("PostgreSQL schema contract", () => {
     expect(up).toContain("decided_by_subject text");
     expect(up).toContain("sermon_enrichment_sources_seed_review");
     expect(up).toContain("sermon_transcripts_seed_enrichment_review");
-    expect(up).toContain("IF NOT EXISTS (\n    SELECT 1 FROM sermon_enrichment_sources");
+    expect(up).toMatch(/IF NOT EXISTS \(\r?\n    SELECT 1 FROM sermon_enrichment_sources/u);
     expect(up).toContain("caption_item_count + 1");
     expect(up).toContain("caption_item_count + 2");
     expect(up).not.toMatch(/DEFAULT\s+'accepted'/i);

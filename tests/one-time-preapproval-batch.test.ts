@@ -2,15 +2,25 @@ import { describe, expect, it } from "vitest";
 import { sermonEnrichmentRequestSchema } from "../src/enrichment/sermon-enrichment-contracts";
 import {
   bindOneTimePreapprovalBatch,
+  inspectOneTimePreapprovalValidationRetry,
   limitedReproducibilityWarning,
   nextOneTimePreapprovalBatchRecord,
   oneTimePreapprovalBatchExceptionId,
   oneTimePreapprovalBatchManifestSha256,
   oneTimePreapprovalBatchProcessingVersion,
+  oneTimePreapprovalDraftArtifactSchema,
+  oneTimePreapprovalDraftArtifactSha256,
+  oneTimePreapprovalOutputSha256,
   recordOneTimePreapprovalBatchAttempt,
+  validateOneTimePreapprovalDraftArtifact,
   validateOneTimePreapprovalDraftEnvelope,
   type OneTimePreapprovalBatchState
 } from "../src/enrichment/one-time-preapproval-batch";
+import {
+  deterministicOneTimePreapprovalSermonId,
+  oneTimePreapprovalGroundedSourceReference
+} from "../src/enrichment/one-time-preapproval-batch-import";
+import { parseGroundedSermonEnrichmentSourceReference } from "../src/enrichment/sermon-enrichment-policy";
 
 const manifestWithoutIntegrity = {
   schemaVersion: 1 as const,
@@ -99,6 +109,54 @@ function envelope() {
       warnings: [limitedReproducibilityWarning]
     }
   };
+}
+
+function artifactFixture() {
+  const { bound, value } = envelope();
+  const support = {
+    outputPart: "description_paragraph" as const,
+    outputIndex: 1,
+    paragraphNumber: 1,
+    characterStart: 0,
+    characterEnd: 11,
+    wordStart: 1,
+    wordEnd: 2,
+    supportSha256: "1".repeat(64),
+    purpose: "subject" as const
+  };
+  const content = {
+    description: {
+      bodyText: "An anonymised private draft remains deliberately unavailable to public visitors while a real administrator reviews it.",
+      centralSubject: "An anonymised private review subject.",
+      application: "An administrator must review the private material.",
+      supports: [support]
+    },
+    questionAnswers: Array.from({ length: 7 }, (_, index) => ({
+      displayOrder: index + 1,
+      question: `Which anonymised review concern is represented by item ${index + 1}?`,
+      answer: "The fixture represents a private draft that still requires a real administrator decision before any later use.",
+      supports: [{ ...support, outputPart: "question_answer" as const, outputIndex: index + 1, purpose: "answer_support" as const }]
+    }))
+  };
+  const withoutIntegrity = {
+    ...value,
+    generator: { ...value.generator, outputSha256: oneTimePreapprovalOutputSha256(content) },
+    content
+  };
+  return {
+    bound,
+    value: oneTimePreapprovalDraftArtifactSchema.parse({
+      ...withoutIntegrity,
+      integrity: { canonicalSha256: oneTimePreapprovalDraftArtifactSha256(withoutIntegrity) }
+    })
+  };
+}
+
+function rehashArtifact(value: ReturnType<typeof artifactFixture>["value"]) {
+  const withoutIntegrity = structuredClone(value);
+  withoutIntegrity.generator.outputSha256 = oneTimePreapprovalOutputSha256(withoutIntegrity.content);
+  withoutIntegrity.integrity.canonicalSha256 = oneTimePreapprovalDraftArtifactSha256(withoutIntegrity);
+  return withoutIntegrity;
 }
 
 describe("D-151 one-time pre-approval batch exception", () => {
@@ -192,5 +250,98 @@ describe("D-151 one-time pre-approval batch exception", () => {
     expect(nextOneTimePreapprovalBatchRecord(bound, state)).toBeNull();
     expect(() => recordOneTimePreapprovalBatchAttempt(bound, state, bound.orderedRecords[0]!.sourceWordPressId, "completed"))
       .toThrow("one_time_batch_exception_expired");
+  });
+
+  it("binds private draft provenance to a deterministic sermon and immutable transcript identity", () => {
+    const { value } = artifactFixture();
+    const sermonId = deterministicOneTimePreapprovalSermonId(value.target.videoId);
+    expect(deterministicOneTimePreapprovalSermonId(value.target.videoId)).toBe(sermonId);
+    const reference = oneTimePreapprovalGroundedSourceReference(value);
+    expect(parseGroundedSermonEnrichmentSourceReference(reference)).toEqual({
+      version: 2,
+      transcriptGroundingRevisionId: value.transcript.groundingRevisionId,
+      transcriptSha256: value.transcript.sourceTranscriptSha256,
+      resultSha256: value.generator.outputSha256
+    });
+  });
+
+  it("rejects public or approved artifact shapes and detects stale or altered hashes", () => {
+    const { bound, value } = artifactFixture();
+    expect(oneTimePreapprovalDraftArtifactSchema.safeParse({ ...value, publicVisibility: "public" }).success).toBe(false);
+    expect(oneTimePreapprovalDraftArtifactSchema.safeParse({ ...value, approvalState: "approved" }).success).toBe(false);
+    const changedOutput = structuredClone(value);
+    changedOutput.generator.outputSha256 = "e".repeat(64);
+    const outputResult = validateOneTimePreapprovalDraftArtifact(
+      changedOutput,
+      bound,
+      { bodyText: "Anonymised transcript evidence.", sha256: transcriptSha256 }
+    );
+    expect(outputResult.issues).toContain("one_time_batch_output_hash_mismatch");
+    const stale = validateOneTimePreapprovalDraftArtifact(
+      value,
+      bound,
+      { bodyText: "Changed anonymised transcript evidence.", sha256: "f".repeat(64) }
+    );
+    expect(stale.stale).toBe(true);
+    expect(stale.issues).toContain("one_time_batch_dependent_draft_stale");
+  });
+
+  it("permits only the seven authorised generic-opening corrections while preserving answers", () => {
+    const cases: Array<[number, number[]]> = [[3, [1]], [16, [6]], [19, [3]], [21, [2]], [24, [3, 6]], [26, [6]]];
+    for (const [sequence, orders] of cases) {
+      const previous = structuredClone(artifactFixture().value);
+      previous.target.sequence = sequence;
+      for (const order of orders) {
+        previous.content.questionAnswers[order - 1]!.question = `How does the sermon explain anonymised concern ${order}?`;
+      }
+      const previousHashed = rehashArtifact(previous);
+      const current = structuredClone(previousHashed);
+      for (const order of orders) {
+        current.content.questionAnswers[order - 1]!.question = `Why does anonymised concern ${order} matter to the listener?`;
+      }
+      current.generator.retryCount = 1;
+      current.generator.generatedAt = "2026-09-03T00:02:00.000Z";
+      const currentHashed = rehashArtifact(current);
+      expect(inspectOneTimePreapprovalValidationRetry(previousHashed, currentHashed)).toEqual({
+        valid: true,
+        issues: [],
+        changedQuestionOrders: orders
+      });
+    }
+
+    const previous = structuredClone(artifactFixture().value);
+    previous.target.sequence = 3;
+    previous.content.questionAnswers[0]!.question = "How does the sermon explain this anonymised concern?";
+    const previousHashed = rehashArtifact(previous);
+    const current = structuredClone(previousHashed);
+    current.content.questionAnswers[0]!.question = "Why does this anonymised concern matter to the listener?";
+    current.generator.retryCount = 1;
+    current.generator.generatedAt = "2026-09-03T00:02:00.000Z";
+    const changedAnswer = structuredClone(rehashArtifact(current));
+    changedAnswer.content.questionAnswers[0]!.answer = "A changed answer must never pass this tightly bounded retry.";
+    const changedAnswerHashed = rehashArtifact(changedAnswer);
+    expect(inspectOneTimePreapprovalValidationRetry(previousHashed, changedAnswerHashed).issues)
+      .toContain("one_time_batch_validation_retry_answer_changed");
+  });
+
+  it("refuses another sequence, question order, or prose change during the validation retry", () => {
+    const previous = structuredClone(artifactFixture().value);
+    previous.target.sequence = 16;
+    previous.content.questionAnswers[5 - 1]!.question = "How does the sermon explain a fifth anonymised concern?";
+    previous.content.questionAnswers[5 - 1]!.displayOrder = 5;
+    const previousHashed = rehashArtifact(previous);
+    const wrongOrder = structuredClone(previousHashed);
+    wrongOrder.content.questionAnswers[5 - 1]!.question = "Why does a fifth anonymised concern matter?";
+    wrongOrder.generator.retryCount = 1;
+    wrongOrder.generator.generatedAt = "2026-09-03T00:02:00.000Z";
+    const wrongOrderHashed = rehashArtifact(wrongOrder);
+    expect(inspectOneTimePreapprovalValidationRetry(previousHashed, wrongOrderHashed).issues)
+      .toContain("one_time_batch_validation_retry_question_scope_mismatch");
+
+    const proseChange = structuredClone(wrongOrderHashed);
+    proseChange.content.description.bodyText += " This prose change is outside the authorisation.";
+    const proseChangeHashed = rehashArtifact(proseChange);
+    expect(inspectOneTimePreapprovalValidationRetry(previousHashed, proseChangeHashed).issues)
+      .toContain("one_time_batch_validation_retry_description_prose_changed");
   });
 });
