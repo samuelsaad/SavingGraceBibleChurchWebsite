@@ -1,6 +1,6 @@
 export const supersededWave1GenerationVersion = "phase3b2c-wave1-extractive-drafts-v2" as const;
 export const sermonEnrichmentSkillName = "sermon-enrichment" as const;
-export const sermonEnrichmentSkillVersion = "1.5.0" as const;
+export const sermonEnrichmentSkillVersion = "1.6.0" as const;
 export const supportedSermonEnrichmentSkillVersions = ["1.0.0", "1.1.0", "1.2.0", "1.3.0", "1.4.0", sermonEnrichmentSkillVersion] as const;
 export const sermonEnrichmentGenerationMethod = "codex_skill_grounded_synthesis" as const;
 

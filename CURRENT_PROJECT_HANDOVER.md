@@ -79,6 +79,12 @@ Final validation found seven generic question openings across six otherwise-vali
 
 All 32 records remain application-level drafts in the local test database. Their transcripts, descriptions and Q&A remain unapproved; guided review remains at its initial pending stage; public/search documents, public eligibility, semantic eligibility and semantic relationships remain zero for this scope. The existing authenticated completed-sermon preview remains exactly 15 records. No real caption, transcript, description, Q&A or private manifest entered Git. D-151/D-152 are now consumed and do not authorise another retry, replacement, additional sermon, approval, publication, semantic processing, deployment, push or Phase 3C.
 
+## Second fixed private evaluation batch
+
+Decision D-153 authorises one separately frozen private batch bound only to manifest SHA-256 `f25979b57aae574dcd4616509d7678f7f0b8e08b28ef6911ab322762c6fd69ab`. It contains 36 fixed, unique, previously unattempted source/video identities in canonical inventory order. Each position may be attempted once and a failure consumes its place; there is no substitution or thirty-seventh record.
+
+For D-153 only, a serving, non-draft English standard or ASR caption may have primary or unknown audio association under the recorded four-level priority. Unknown remains explicitly unconfirmed. A usable exact VTT may become a private unapproved transcript and immediately ground private unapproved description and Q&A drafts through the current interactive Codex runtime. Every result remains subject to automated validation and later real administrator review, binds the exact transcript and manifest provenance, and stays outside public/search/feed/sitemap/metadata/build/semantic eligibility. D-153 expires after all 36 positions are terminal and creates no authority for approval, publication, production, deployment, a later batch, public Related themes or Phase 3C.
+
 ## Immediate bounded task
 
-The 32 newly imported evaluation records require real administrator transcript, description and Q&A review. That review has not been performed or authorised by this handover. The normal approved-transcript rule applies again to every future enrichment batch. No further caption retrieval, provider use, generation, replacement record, additional sermon, approval, publication, semantic processing, deployment, remote use, push or Phase 3C work is authorised.
+Execute only the D-153 manifest under its checkpoint, then stop. The existing 32 D-151/D-152 records remain untouched and still require real administrator review. No review decision, approval, publication, semantic operation, production access, deployment, merge or push is authorised.
