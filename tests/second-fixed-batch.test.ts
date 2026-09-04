@@ -13,6 +13,12 @@ import {
   type SecondFixedBatchAuthorization,
   type SecondFixedBatchRecord
 } from "../src/enrichment/second-fixed-batch";
+import {
+  deterministicOneTimePreapprovalSermonId,
+  deterministicSecondFixedBatchSermonId,
+  secondFixedBatchImportActor,
+  secondFixedBatchImportProfile
+} from "../src/enrichment/one-time-preapproval-batch-import";
 
 const records: SecondFixedBatchRecord[] = Array.from({ length: 36 }, (_, index) => ({
   sequence: index + 1,
@@ -138,6 +144,28 @@ function envelope(audioTrackType: "primary" | "unknown" = "unknown") {
 }
 
 describe("D-153 second fixed private batch", () => {
+  it("uses a distinct deterministic identity namespace and truthful private import provenance", () => {
+    const videoId = records[0]!.videoId;
+    expect(deterministicSecondFixedBatchSermonId(videoId)).not.toBe(deterministicOneTimePreapprovalSermonId(videoId));
+    expect(deterministicSecondFixedBatchSermonId(videoId)).toBe(deterministicSecondFixedBatchSermonId(videoId));
+    expect(secondFixedBatchImportProfile).toMatchObject({
+      exceptionId: secondFixedBatchDecisionId,
+      actor: secondFixedBatchImportActor,
+      processingVersion: "phase3b2c-evaluation-36-d153-v1",
+      sourceStatus: "phase3b2c_evaluation_36_batch_2_private",
+      migrationReasonCode: "authorised_d153_private_batch",
+      audioWarningCode: secondFixedBatchAudioWarning,
+      sourceRecordKeyPrefix: "authorised-record"
+    });
+    expect(secondFixedBatchImportProfile.warnings.map((warning) => warning.code)).toEqual(expect.arrayContaining([
+      secondFixedBatchAudioWarning,
+      "source_transcript_unapproved",
+      "automated_punctuation_and_paragraphing_requires_review",
+      "administrator_accuracy_review_required",
+      "model_revision_unavailable_limited_reproducibility"
+    ]));
+  });
+
   it("uses the exact manifest hash and consumes all 36 positions without substitution", () => {
     let state = createSecondFixedBatchState();
     expect(nextSecondFixedBatchRecord(authorization, state)).toEqual(records[0]);
