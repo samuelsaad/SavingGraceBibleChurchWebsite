@@ -436,10 +436,10 @@ export function validateSermonEnrichmentResult(
   if (value.skillVersion !== "1.0.0" && value.mechanicalProofread === undefined) {
     add(issues, "mechanical_proofread_missing", "mechanicalProofread", "Current skill results must record the completed mechanical proofread");
   }
-  if (["1.2.0", "1.3.0", "1.4.0"].includes(value.skillVersion) && (!value.generator || !value.promptPolicy)) {
+  if (["1.2.0", "1.3.0", "1.4.0", "1.5.0"].includes(value.skillVersion) && (!value.generator || !value.promptPolicy)) {
     add(issues, "generator_provenance_missing", "generator", "Current results must identify the approved generator and prompt policy");
   }
-  if ((value.skillVersion === "1.3.0" || value.skillVersion === "1.4.0") && value.transcript.groundingRevisionId === undefined) {
+  if (["1.3.0", "1.4.0", "1.5.0"].includes(value.skillVersion) && value.transcript.groundingRevisionId === undefined) {
     add(issues, "transcript_binding_stale", "transcript.groundingRevisionId", "The immutable transcript grounding revision is required");
   }
   if (value.mechanicalProofread && (
