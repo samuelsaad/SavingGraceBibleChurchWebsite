@@ -74,6 +74,14 @@ The bounded current-15 mechanical audit corrected 13 indisputable Jesus/Christ c
 - Pilot migration records use the isolated `phase3b2_pilot` source-system discriminator and therefore cannot inflate WordPress inventory or launch-readiness counts.
 - No audio/video downloader, speech-to-text path, billable provider, or approval action exists in the pilot implementation.
 
+## D-154 completed private batch
+
+The fixed D-154 manifest is consumed: 36 previously retrieved/prepared sources produced 36 validated private unapproved descriptions and 252 ordered private unapproved Q&A pairs. Description lengths are 203–220 words. All 36 atomic imports succeeded; every identical second import was unchanged. The original 83 records remain unchanged, and there are now 119 local sermons with 104 pending Stage-1 reviews and 15 completed private-preview records.
+
+The resumed run retained 25 Sol-origin candidates and generated the 11 missing candidates with Astra. Original candidates, model evidence, rejected versions and checkpoint history were preserved. Astra corrected sequence 25's description length within its remaining allowance and one question opening in sequence 36; answers and unrelated prose were unchanged. Automated acceptance does not establish transcription accuracy, theological correctness or human acceptance. Transcript review and approval must precede dependent-content approval; none of this material is public or semantically eligible.
+
+The 233,051 transcript words alone imply roughly 18–22 hours of uninterrupted reading at 180–220 words per minute. Allowing 15–25 additional minutes per record for descriptions, Q&A, identity and passage checks gives a provisional 27–37-hour review range for this batch, before difficult corrections or source verification. Across all 104 pending records, a coarse 78–113-hour planning range assumes 45–65 minutes each. These are estimates, not measured administrator workload or permission to conduct review.
+
 ## Remaining workload
 
 The superseded Wave 1 processor's 777-minute estimate is retained only as prior-run evidence and cannot validate defective content or forecast the grounded workflow. Actual canary review time, corrections and acceptance outcome must be recorded by the administrator before quality or workload is extrapolated. Semantic evaluation cannot use any description until it is individually approved, and no embedding or relationship generation is authorised by Wave 1 or the canary.

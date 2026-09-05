@@ -237,6 +237,45 @@ describe("D-154 third fixed private batch", () => {
     expect(thirdFixedBatchDraftArtifactSchema.safeParse(envelope("primary")).success).toBe(true);
   });
 
+  it("retains truthful per-candidate runtime labels without widening the private exception", () => {
+    for (const model of ["gpt-5.6-sol", "gpt-6-astra"]) {
+      const candidate = envelope();
+      const input = { ...candidate, generator: {
+        ...candidate.generator, model: { value: model, unavailableReason: null }
+      }};
+      const parsed = thirdFixedBatchDraftArtifactSchema.parse(input);
+      expect(parsed.generator.model.value).toBe(model);
+      expect(parsed.generator.immutableRevision).toEqual({ value: null, unavailableReason: "not_exposed_by_runtime" });
+      expect(parsed.requiresAdministratorReview).toBe(true);
+      expect(parsed.transcriptApprovalRequiredBeforeDependentApproval).toBe(true);
+      expect(parsed.approvalState).toBe("draft");
+      expect(parsed.searchEligible).toBe(false);
+      expect(parsed.semanticEligible).toBe(false);
+      expect(thirdFixedBatchDraftArtifactSchema.safeParse({ ...input, batchManifestSha256: "a".repeat(64) }).success).toBe(false);
+      expect(thirdFixedBatchDraftArtifactSchema.safeParse({ ...input, generator: { ...input.generator, retryCount: 2 }}).success).toBe(false);
+    }
+  });
+
+  it("keeps an original runtime label when a separately recorded correction uses another model", () => {
+    const candidate = envelope();
+    const parsed = thirdFixedBatchDraftArtifactSchema.parse({ ...candidate, generator: {
+      ...candidate.generator,
+      model: { value: "gpt-5.6-sol", unavailableReason: null },
+      retryCount: 1,
+      availableGenerationSettings: [
+        "maximum_one_pre_import_validation_regeneration",
+        `original_candidate_sha256:${"a".repeat(64)}`,
+        "correction_model:gpt-6-astra",
+        `correction_lineage_sha256:${"b".repeat(64)}`
+      ]
+    }});
+    expect(parsed.generator.model.value).toBe("gpt-5.6-sol");
+    expect(parsed.generator.availableGenerationSettings).toContain("correction_model:gpt-6-astra");
+    expect(parsed.warnings).toContain(limitedReproducibilityWarning);
+    expect(parsed.approvalState).toBe("draft");
+    expect(parsed.publicVisibility).toBe("private");
+  });
+
   it("refuses out-of-scope and cross-video caption resources", () => {
     expect(() => selectCaptionTrackForThirdFixedBatch(authorization, "ZZZZZZZZZZZ", [])).toThrow("d154_video_out_of_scope");
     expect(() => selectCaptionTrackForThirdFixedBatch(authorization, records[0]!.videoId, [
