@@ -17,10 +17,20 @@ import {
   validateSecondFixedBatchDraftArtifact,
   type SecondFixedBatchAuthorization
 } from "./second-fixed-batch";
+import {
+  thirdFixedBatchAudioWarning,
+  thirdFixedBatchDecisionId,
+  thirdFixedBatchDraftArtifactSchema,
+  thirdFixedBatchProcessingVersion,
+  toD151ValidationCompatibilityArtifact as toD154ValidationCompatibilityArtifact,
+  validateThirdFixedBatchDraftArtifact,
+  type ThirdFixedBatchAuthorization
+} from "./third-fixed-batch";
 
 export const oneTimePreapprovalImportActor = "local-d151-private-batch-importer" as const;
 export const oneTimePreapprovalImportProcessingVersion = "phase3b2c-evaluation-36-d151-d152-v1" as const;
 export const secondFixedBatchImportActor = "local-d153-private-batch-importer" as const;
+export const thirdFixedBatchImportActor = "local-d154-private-batch-importer" as const;
 
 interface PrivateBatchImportProfile {
   exceptionId: string;
@@ -83,6 +93,29 @@ export const secondFixedBatchImportProfile = Object.freeze({
   ]
 } satisfies PrivateBatchImportProfile);
 
+export const thirdFixedBatchImportProfile = Object.freeze({
+  exceptionId: thirdFixedBatchDecisionId,
+  actor: thirdFixedBatchImportActor,
+  processingVersion: thirdFixedBatchProcessingVersion,
+  sourceStatus: "phase3b2c_evaluation_36_batch_3_private",
+  migrationSourceSystem: "phase3b2c_evaluation_36_batch_3",
+  migrationReasonCode: "authorised_d154_private_batch",
+  auditAction: "sermon.d154_private_draft_imported",
+  correlationPrefix: "d154",
+  slugPrefix: "evaluation-36-batch-3",
+  sermonIdNamespace: "saving-grace-d154-private-sermon",
+  sourceRecordKeyPrefix: "authorised-record",
+  audioWarningCode: thirdFixedBatchAudioWarning,
+  warnings: [
+    { code: thirdFixedBatchAudioWarning, safeDetail: "D-154 accepted an otherwise eligible caption whose audio-track association was reported as unknown; primary audio was not confirmed." },
+    { code: "primary_audio_association_unconfirmed", safeDetail: "YouTube did not confirm primary-audio association; administrator verification remains required." },
+    { code: "source_transcript_unapproved", safeDetail: "D-154 permits private draft generation before transcript approval for this exact fixed manifest only." },
+    { code: "automated_punctuation_and_paragraphing_requires_review", safeDetail: "Automated punctuation and paragraphing require administrator accuracy review." },
+    { code: "administrator_accuracy_review_required", safeDetail: "The transcript and all dependent generated content require administrator review." },
+    { code: "model_revision_unavailable_limited_reproducibility", safeDetail: "The interactive runtime did not expose an immutable model revision." }
+  ]
+} satisfies PrivateBatchImportProfile);
+
 export interface OneTimePreapprovalImportMetadata {
   title: string;
   serviceDate: string;
@@ -134,6 +167,10 @@ export function deterministicOneTimePreapprovalSermonId(videoId: string): string
 
 export function deterministicSecondFixedBatchSermonId(videoId: string): string {
   return deterministicPrivateBatchSermonId(videoId, secondFixedBatchImportProfile.sermonIdNamespace);
+}
+
+export function deterministicThirdFixedBatchSermonId(videoId: string): string {
+  return deterministicPrivateBatchSermonId(videoId, thirdFixedBatchImportProfile.sermonIdNamespace);
 }
 
 export function oneTimePreapprovalGroundedSourceReference(artifact: OneTimePreapprovalDraftArtifact): string {
@@ -406,7 +443,7 @@ async function verifyPrivateBatchExisting(
   if (await verifyExisting(client, artifact, sermonId, transcript, groundedReference, metadata, profile, contentChecksum)) {
     return true;
   }
-  if (profile.exceptionId !== secondFixedBatchDecisionId) return false;
+  if (profile.exceptionId !== secondFixedBatchDecisionId && profile.exceptionId !== thirdFixedBatchDecisionId) return false;
   return (await diagnosePrivateBatchPostcondition(
     client, artifact, sermonId, transcript, groundedReference, metadata, profile, contentChecksum
   )).length === 0;
@@ -669,7 +706,7 @@ export async function importOneTimePreapprovalPrivateDraft(
     );
     const complete = await verifyPrivateBatchExisting(client, artifact, sermonId, transcript, groundedReference, metadata, profile, contentChecksum);
     if (!complete) {
-      const detail = profile.exceptionId === secondFixedBatchDecisionId
+      const detail = profile.exceptionId === secondFixedBatchDecisionId || profile.exceptionId === thirdFixedBatchDecisionId
         ? await diagnosePrivateBatchPostcondition(client, artifact, sermonId, transcript, groundedReference, metadata, profile, contentChecksum)
         : [];
       throw new Error(`one_time_batch_import_postcondition_failed${detail.length > 0 ? `:${detail.join(",")}` : ""}`);
@@ -736,5 +773,60 @@ export async function importSecondFixedBatchPrivateDraft(
     metadata,
     undefined,
     { profile: secondFixedBatchImportProfile, contentChecksum: artifact.integrity.canonicalSha256 }
+  );
+}
+
+export async function importThirdFixedBatchPrivateDraft(
+  pool: Pool,
+  input: unknown,
+  authorization: ThirdFixedBatchAuthorization,
+  transcript: string,
+  metadata: OneTimePreapprovalImportMetadata
+): Promise<OneTimePreapprovalImportResult> {
+  const artifact = thirdFixedBatchDraftArtifactSchema.parse(input);
+  const record = authorization.orderedRecords[artifact.target.sequence - 1];
+  if (!record || record.sourceWordPressId !== artifact.target.sourceWordPressId ||
+    record.videoId !== artifact.target.videoId || metadata.serviceDate !== record.serviceDate) {
+    throw new Error("d154_import_target_or_metadata_out_of_scope");
+  }
+  const validation = validateThirdFixedBatchDraftArtifact(
+    artifact,
+    authorization,
+    { bodyText: transcript, sha256: artifact.transcript.sourceTranscriptSha256 }
+  );
+  if (!validation.valid || validation.stale) {
+    throw new Error(`d154_import_validation_failed:${validation.issues.join(",")}`);
+  }
+  const compatibilityArtifact = toD154ValidationCompatibilityArtifact(artifact);
+  const compatibilityAuthorization: OneTimePreapprovalBatchAuthorization = {
+    exceptionId: "D-151",
+    manifestSha256: authorization.manifestSha256,
+    governanceCommitHash: authorization.governanceCommitHash,
+    orderedRecords: authorization.orderedRecords.map((item) => ({
+      sequence: item.sequence,
+      sourceWordPressId: item.sourceWordPressId,
+      videoId: item.videoId,
+      priorInspectionSha256: item.inventoryRowSha256,
+      selectedCaption: { captionId: `d154-${item.sequence}`, language: "en", trackKind: "standard" },
+      sourceSnapshot: {
+        publicationStatus: item.publicationStatus,
+        serviceDate: item.serviceDate,
+        serviceDateAnomaly: "not_applicable",
+        speakerTermIds: [],
+        seriesTermIds: [],
+        bibleBookTermIds: [],
+        passageMetadataPresent: false,
+        metadataAnomalyFlags: []
+      }
+    }))
+  };
+  return importOneTimePreapprovalPrivateDraft(
+    pool,
+    compatibilityArtifact,
+    compatibilityAuthorization,
+    transcript,
+    metadata,
+    undefined,
+    { profile: thirdFixedBatchImportProfile, contentChecksum: artifact.integrity.canonicalSha256 }
   );
 }

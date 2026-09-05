@@ -1,6 +1,6 @@
 ---
 name: sermon-enrichment
-description: Create, regenerate, review, or validate private sermon descriptions and Q&A drafts from a complete approved transcript, plus the exact D-151/D-152/D-153 private pre-approval batch attempts when their manifest contracts are satisfied. Use for transcript-grounded enrichment, replacement drafts, grounding evidence, coherence and readability review, or any request involving sermon description or question-and-answer quality.
+description: Create, regenerate, review, or validate private sermon descriptions and Q&A drafts from a complete approved transcript, plus the exact D-151 through D-154 private pre-approval batch attempts when their manifest contracts are satisfied. Use for transcript-grounded enrichment, replacement drafts, grounding evidence, coherence and readability review, or any request involving sermon description or question-and-answer quality.
 ---
 
 # Sermon Enrichment
@@ -55,10 +55,22 @@ D-151 and D-152 remain complete and immutable. D-153 creates a separate exceptio
 - Bounded correction applies only before the first successful import of a newly generated D-153 candidate. Preserve rejected candidates and answers when only a prohibited generic question opening is rephrased. After a receipt exists, only a byte-identical idempotency import is allowed.
 - The exception expires when all 36 positions are terminal and cannot authorise another manifest, retry, approval, publication, semantic operation or provider call.
 
+### One-time D-154 third batch
+
+D-151 through D-153 remain complete and immutable. D-154 creates a separate exception only for the 36 exact ordered identities in the Git-ignored manifest whose canonical SHA-256 is `d0255234eaab92efafaf0859f061f4bfa6a889e7eb085fb9d951eeafa0ff8244` and only after its D-154 governance commit is bound.
+
+- Attempt each fixed position at most once through its separate resumable checkpoint. A failure consumes its position; do not substitute another record or process a thirty-seventh sermon.
+- Select only a serving, non-draft English standard or ASR caption from the exact requested church-owned video. Use priority standard-primary, standard-unknown, ASR-primary, ASR-unknown and fail that position on equal highest priority.
+- An accepted `audioTrackType: unknown` is not confirmed primary audio. Retain `CAPTION_AUDIO_ASSOCIATION_UNKNOWN_ACCEPTED_BY_BOUNDED_DECISION`, `primary_audio_confirmed: false`, and `accepted_under_bounded_exception: true`. Reject descriptive, commentary, forced, wrong-language, draft, failed and unexpected track types.
+- The complete newly prepared transcript may remain unapproved and immediately ground private unapproved description and Q&A drafts. Apply the normal whole-sermon synthesis, support-evidence, editorial-validation, privacy and stale-result requirements.
+- Bind every result to D-154, the manifest and governance hashes, exact unapproved transcript grounding revision and SHA-256, runtime-exposed generator identity or required unavailable markers, generation/output hashes, retry count and mandatory administrator review.
+- Bounded correction applies only before the first successful import of a newly generated D-154 candidate. Preserve rejected candidates and preserve answers when only a prohibited generic question opening is rephrased. After a receipt exists, only a byte-identical idempotency import is allowed.
+- The exception expires when all 36 positions are terminal and cannot authorise another manifest, retry, replacement, approval, publication, semantic operation or provider call.
+
 ## Workflow
 
 1. Verify the exact private target by stable source identity and application identity, never by title alone.
-2. Verify that the transcript is current and approved, unless the exact target is bound to the one-time D-151 exception, its exact D-152 retry, or the exact D-153 second-batch exception above. Capture its immutable grounding revision, UTF-8 SHA-256, character count, lexical word count, current administrative row version, and approval state/evidence before reading it for generation. Administrative row version and approval timestamps are audit/concurrency evidence; they are not grounding identity.
+2. Verify that the transcript is current and approved, unless the exact target is bound to the one-time D-151 exception, its exact D-152 retry, the exact D-153 second-batch exception, or the exact D-154 third-batch exception above. Capture its immutable grounding revision, UTF-8 SHA-256, character count, lexical word count, current administrative row version, and approval state/evidence before reading it for generation. Administrative row version and approval timestamps are audit/concurrency evidence; they are not grounding identity.
 3. Read the complete transcript. Identify the actual controlling subject, the sermon’s reasoning or development, its use of Scripture as stated in the transcript, and its concrete application.
 4. Draft the description and Q&A set from the sermon as a whole. Do not rank, concatenate, or wrap transcript excerpts.
 5. Attach bounded transcript support to every description paragraph and every Q&A pair using the private contract in `references/grounding-contract.md`.
@@ -91,7 +103,7 @@ D-151 and D-152 remain complete and immutable. D-153 creates a separate exceptio
 
 Reject the result when any of these conditions is true:
 
-- The immutable transcript grounding revision, content SHA-256, source identity, or required approval state differs from the request. The sole permitted requested state other than approved is `unapproved` under the exact D-151 manifest binding, its integrity-proven D-152 retry, or the exact D-153 manifest binding. A row-version or approval-timestamp change alone is not staleness.
+- The immutable transcript grounding revision, content SHA-256, source identity, or required approval state differs from the request. The sole permitted requested state other than approved is `unapproved` under the exact D-151 manifest binding, its integrity-proven D-152 retry, the exact D-153 manifest binding, or the exact D-154 manifest binding. A row-version or approval-timestamp change alone is not staleness.
 - A support range is missing, outside transcript bounds, reversed, empty, or hash-mismatched.
 - Any description paragraph or Q&A pair lacks support.
 - The description is outside 180–220 words, lacks the central subject or application, contains incomplete sentences, or matches known generic wrappers.
@@ -123,13 +135,13 @@ Record privately:
 
 - Immutable transcript grounding revision, transcript SHA-256 and source identity, plus current administrative row version, approval state/evidence, and generation request hash.
 - Skill name and version, generation method, generation time, warnings, and uncertainties.
-- Actual generator provider, exposed model/revision/session identity or the required runtime-unavailable markers, approval/exception reference, execution surface/mode, prompt-policy version and hashes of the complete skill and grounding instructions supplied, manifest and governance commit hashes when D-151, D-152 or D-153 applies, D-152 prior-checkpoint binding when applicable, caption audio-association provenance and the source transcript hash.
+- Actual generator provider, exposed model/revision/session identity or the required runtime-unavailable markers, approval/exception reference, execution surface/mode, prompt-policy version and hashes of the complete skill and grounding instructions supplied, manifest and governance commit hashes when D-151, D-152, D-153 or D-154 applies, D-152 prior-checkpoint binding when applicable, caption audio-association provenance and the source transcript hash.
 - Support locations and hashes for each description paragraph and every Q&A pair.
 - Original superseded bundle path and integrity hash plus original description and Q&A hashes.
 - Replacement result hash, validation result, import time, and idempotency evidence.
 - Completed `generated-text-mechanical-qa-v1` result and any unresolved context-dependent review flags.
 
-Mark a result stale whenever the source transcript’s immutable grounding revision, source identity, or body hash changes, or its grounding evidence is missing or invalid. An approval-only transition with identical transcript bytes does not itself invalidate grounding, but a D-151, D-152 or D-153 dependent draft cannot be approved until the transcript is approved and the draft is explicitly re-reviewed against that approved transcript. Do not mark it stale for a generic sermon/transcript row-version change, approval timestamp, passage decision, administrator-review timestamp, or a save in another generated content area. Preserve superseded draft bodies and audit evidence; never delete or silently overwrite them.
+Mark a result stale whenever the source transcript’s immutable grounding revision, source identity, or body hash changes, or its grounding evidence is missing or invalid. An approval-only transition with identical transcript bytes does not itself invalidate grounding, but a D-151, D-152, D-153 or D-154 dependent draft cannot be approved until the transcript is approved and the draft is explicitly re-reviewed against that approved transcript. Do not mark it stale for a generic sermon/transcript row-version change, approval timestamp, passage decision, administrator-review timestamp, or a save in another generated content area. Preserve superseded draft bodies and audit evidence; never delete or silently overwrite them.
 
 ## Human authority
 

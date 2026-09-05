@@ -89,6 +89,12 @@ D-153 is complete and expired. All 36 fixed positions retrieved exact English AS
 
 The local test database now contains 83 sermon records. Exactly 68 guided-review sets are pending at Stage 1 and the authenticated completed-sermon preview remains 15. Independent before/after hashing confirms that the prior 47 records—including the 32 D-151/D-152 drafts—are unchanged. The D-153 scope has zero administrator decisions, approvals, public/search eligibility, semantic eligibility or semantic relationships. All private sources, generated bodies, receipts, manifests and checkpoints remain ignored and untracked.
 
+## Third fixed private evaluation batch
+
+Decision D-154 authorises one separately frozen private batch bound only to manifest SHA-256 `d0255234eaab92efafaf0859f061f4bfa6a889e7eb085fb9d951eeafa0ff8244`. It contains 36 fixed, unique and previously unattempted source/video identities in authoritative source-ID order, covering sermon dates from 24 April 2022 through 15 January 2023. Every position may be attempted once; failures consume their positions and there is no substitution or thirty-seventh record.
+
+For D-154 only, a serving, non-draft English standard or ASR caption may have primary or truthfully unconfirmed unknown audio association under the four-level priority. A usable exact VTT may become a word-preserving private unapproved transcript and immediately ground private unapproved description and Q&A drafts through the current interactive Codex runtime. Every result remains subject to automated validation and later real administrator review, binds the exact D-154 manifest, governance, transcript and output provenance, and stays outside public/search/feed/sitemap/metadata/build/semantic eligibility. The normal approved-transcript gate remains unchanged elsewhere.
+
 ## Immediate bounded task
 
-Stop after the completed D-153 checkpoint. The 68 pending private drafts require real administrator review; no further batch, retry, content change, review decision, approval, publication, semantic operation, production access, deployment, merge or push is authorised.
+Process only the exact D-154 manifest under its committed governance and checkpoint. No review decision, approval, publication, semantic operation, production access, deployment, merge or push is authorised. D-154 expires after all 36 positions are terminal and grants no replacement, retry or later batch.
