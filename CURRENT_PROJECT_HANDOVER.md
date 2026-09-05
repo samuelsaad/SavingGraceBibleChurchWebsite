@@ -105,4 +105,8 @@ The guarded importer created 36 private unapproved sermon/transcript/description
 
 ## Immediate bounded task
 
+D-155 is the currently authorised fourth fixed private batch, isolated from the completed D-154 work. Its frozen manifest SHA-256 is `eb6000c8ec11be8a7f55482fd84658a377953427e1dc18309dbb90f6ab00407a`. Integrity-verified local evidence reconciled 123 prior attempts, 195 clean candidates before selection, 36 new unique pairs in strictly ascending source-ID order, and 159 remaining. Dates span 14 February 2021 through 17 April 2022. The read-only baseline is 119 sermons, 104 pending Stage-1 reviews and 15 completed private previews. The runtime reports `gpt-6-astra`.
+
+Samuel authorised the exact manifest's official caption retrieval, truthful unknown-audio fallback, sequential primary-Codex transcript/candidate context, private pre-approval generation, one preserved pre-import correction, atomic local import and identical rerun. Governance must be committed and focused tests pass before captions are read. All permanent privacy, human-review, public/semantic exclusion and frontend-preservation controls remain. D-155 expires after its 36 terminal positions; no substitution or later batch is authorised. The following older post-D-154 stop remains historical, superseded only by this exact D-155 task.
+
 Await real administrator review and fresh authority for any later processing. Do not resume the consumed D-154 manifest, introduce a replacement or process another batch. No review decision, approval, publication, semantic operation, production access, deployment, merge or push is authorised by this completed milestone.

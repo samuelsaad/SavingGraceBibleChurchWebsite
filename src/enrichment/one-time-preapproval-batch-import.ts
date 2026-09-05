@@ -443,7 +443,8 @@ async function verifyPrivateBatchExisting(
   if (await verifyExisting(client, artifact, sermonId, transcript, groundedReference, metadata, profile, contentChecksum)) {
     return true;
   }
-  if (profile.exceptionId !== secondFixedBatchDecisionId && profile.exceptionId !== thirdFixedBatchDecisionId) return false;
+  if (profile.exceptionId !== secondFixedBatchDecisionId && profile.exceptionId !== thirdFixedBatchDecisionId &&
+    profile.exceptionId !== "D-155") return false;
   return (await diagnosePrivateBatchPostcondition(
     client, artifact, sermonId, transcript, groundedReference, metadata, profile, contentChecksum
   )).length === 0;
@@ -706,7 +707,7 @@ export async function importOneTimePreapprovalPrivateDraft(
     );
     const complete = await verifyPrivateBatchExisting(client, artifact, sermonId, transcript, groundedReference, metadata, profile, contentChecksum);
     if (!complete) {
-      const detail = profile.exceptionId === secondFixedBatchDecisionId || profile.exceptionId === thirdFixedBatchDecisionId
+      const detail = profile.exceptionId === secondFixedBatchDecisionId || profile.exceptionId === thirdFixedBatchDecisionId || profile.exceptionId === "D-155"
         ? await diagnosePrivateBatchPostcondition(client, artifact, sermonId, transcript, groundedReference, metadata, profile, contentChecksum)
         : [];
       throw new Error(`one_time_batch_import_postcondition_failed${detail.length > 0 ? `:${detail.join(",")}` : ""}`);

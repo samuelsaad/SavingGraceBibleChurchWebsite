@@ -84,6 +84,8 @@ The 233,051 transcript words alone imply roughly 18–22 hours of uninterrupted 
 
 ## Remaining workload
 
+D-155 adds only the fourth separately frozen manifest `eb6000c8ec11be8a7f55482fd84658a377953427e1dc18309dbb90f6ab00407a`: 36 fixed attempts selected from 195 verified clean mappings after all 123 prior attempts were excluded. Current interactive Astra alone may read one complete prepared transcript at a time and synthesize a private unapproved 180–220-word description and five to ten grounded ordered Q&A pairs. Original candidates precede validation; at most one pre-import correction retains rejected evidence and lineage. Normal approved-transcript rules remain outside that hash, transcript changes invalidate dependent grounding, and transcript approval plus separate human review remain mandatory. Existing 119 records and all earlier batches are preserved; no approval/public/semantic eligibility is created.
+
 The superseded Wave 1 processor's 777-minute estimate is retained only as prior-run evidence and cannot validate defective content or forecast the grounded workflow. Actual canary review time, corrections and acceptance outcome must be recorded by the administrator before quality or workload is extrapolated. Semantic evaluation cannot use any description until it is individually approved, and no embedding or relationship generation is authorised by Wave 1 or the canary.
 
 ## Launch gate

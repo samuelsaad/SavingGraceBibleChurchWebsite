@@ -1,12 +1,14 @@
 # Private grounding contract
 
+For the exact D-155 fourth manifest `eb6000c8ec11be8a7f55482fd84658a377953427e1dc18309dbb90f6ab00407a` only, `unapproved` is also a permitted source-transcript state. Bind the D-155 governance commit, exact immutable grounding revision and transcript SHA-256, fixed sequence/source identity, original candidate/output SHA-256, and current interactive Codex `gpt-6-astra` generation/validation/correction evidence. Keep the complete normal support-range contract below. Record separately billed API use as false and cost as AUD 0, unavailable runtime fields as `not_exposed_by_runtime`, and retain the limited-reproducibility warning. An original candidate has retry count zero and no correction; the sole permitted pre-import correction has count one, preserved original hash, validator-failure codes, correction kind, timestamp and Astra attribution. Candidate text may enter only this manifest's minimum primary Codex tool/session context and approved ignored persistence, never ordinary logs, user-facing prose, Git or another context. Successful import forbids later content changes; only an identical rerun is allowed. All results remain private/unapproved and require transcript approval and separate administrator review before dependent approval; changed transcript identity/hash makes them stale. No terminal retry, substitution or thirty-seventh record is allowed. Every other manifest retains its existing gate, and all 36 terminal positions consume D-155.
+
 Use a versioned private JSON result. Keep real values in approved Git-ignored storage.
 
 Required top-level fields:
 
 - `schemaVersion`, `privateContent`, `skillName`, `skillVersion`, `generationMethod`, `generatedAt`
 - `target`: stable private source identifier and application sermon identifier
-- `transcript`: application transcript identifier, immutable grounding revision, approval state, SHA-256, character count, and word count; retain the current row version only as concurrency/audit evidence. The normal state is `approved`; only a result bound to the exact D-151 36-record manifest, its integrity-proven D-152 retry, the exact D-153 second-batch manifest, or the exact D-154 third-batch manifest may record `unapproved`.
+- `transcript`: application transcript identifier, immutable grounding revision, approval state, SHA-256, character count, and word count; retain the current row version only as concurrency/audit evidence. The normal state is `approved`; only a result bound to the exact D-151 36-record manifest, its integrity-proven D-152 retry, the exact D-153 second-batch manifest, the exact D-154 third-batch manifest, or the exact D-155 fourth-batch manifest may record `unapproved`.
 - `original`: superseded private bundle path and SHA-256 plus original description and Q&A body hashes
 - `description`: body, central subject statement, application statement, and one support record per paragraph
 - `questionAnswers`: 5–10 ordered pairs, each with support records
