@@ -93,6 +93,8 @@ import {
   legacyPassageCarryForwardAuthorization
 } from "../src/scripture/legacy-completed-passage-carry-forward";
 import { anonymisedAtomicManifest } from "./fixtures/atomic-review";
+import { fourthBatchReviewFindings, insertFourthBatchReviewFindings, providerRedactionWarning,
+  verifyFourthBatchReviewFindings } from "../src/enrichment/fourth-fixed-batch-review-findings";
 
 const enabled = process.env.RUN_POSTGRES_INTEGRATION === "1";
 const integration = enabled ? describe : describe.skip;
@@ -282,6 +284,46 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     if (!pool) return;
     await runSchema("rollback");
     await pool.end();
+  });
+
+  it("preserves D-155 redactions as pending atomic findings with idempotent read verification", async () => {
+    const client = await pool.connect();
+    const id="99999999-9999-4999-8999-999999999999";
+    try {
+      await client.query("BEGIN");
+      const text="An anonymised [ __ ] sentence.\n\nA second [ __ ] example.";
+      const digest=createHash("sha256").update(text).digest("hex");
+      const findings=fourthBatchReviewFindings(text,id,"authorised-record-90001",digest);
+      await client.query(`INSERT INTO sermons (id,title,slug,status,service_date,created_by_subject,updated_by_subject)
+        VALUES ($1,'Anonymised source review','anonymised-source-review','draft','2025-01-05','fixture','fixture')`,[id]);
+      await client.query(`INSERT INTO sermon_transcripts (sermon_id,body_text,status,source_kind)
+        VALUES ($1,$2,'draft','caption')`,[id,text]);
+      await client.query(`INSERT INTO sermon_enrichment_sources (sermon_id,provider,video_id,canonical_url,
+        caption_language,caption_track_type,original_filename,source_content_sha256,retrieval_attribution,
+        source_character_count,cleaned_character_count,apparent_completeness,uncertainty_marker_count,warnings,
+        unresolved_passages,processing_version,imported_at,processed_at,processing_duration_ms,estimated_review_minutes)
+        VALUES ($1,'youtube','Z0000000001','https://www.youtube.com/watch?v=Z0000000001','en','automatic','fixture.vtt',
+        $2,'authorised_youtube_data_api',100,100,'requires_manual_review',2,$3::jsonb,$4::jsonb,'anonymised-d155',now(),now(),0,35)`,
+        [id,digest,JSON.stringify([providerRedactionWarning]),JSON.stringify(findings.unresolvedPassages)]);
+      await client.query("SELECT refresh_sermon_enrichment($1)",[id]);
+      await client.query(`UPDATE sermon_enrichment_reviews SET source_record_key='authorised-record-90001',
+        expected_item_count=0,expected_item_set_sha256=$2,expected_transcript_sha256=$3,
+        expected_transcript_row_version=1,atomic_schema_version=1 WHERE sermon_id=$1`,
+        [id,createHash("sha256").update("").digest("hex"),digest]);
+      await insertFourthBatchReviewFindings(client,id,findings);
+      expect(await verifyFourthBatchReviewFindings(client,id,findings)).toBe(true);
+      const snapshot=await client.query("SELECT to_jsonb(i) row FROM sermon_enrichment_review_items i WHERE sermon_id=$1 ORDER BY display_order",[id]);
+      expect(await verifyFourthBatchReviewFindings(client,id,findings)).toBe(true);
+      expect((await client.query("SELECT to_jsonb(i) row FROM sermon_enrichment_review_items i WHERE sermon_id=$1 ORDER BY display_order",[id])).rows).toEqual(snapshot.rows);
+      expect((await client.query("SELECT body_text,status FROM sermon_transcripts WHERE sermon_id=$1",[id])).rows[0]).toEqual({body_text:text,status:"draft"});
+      expect((await client.query("SELECT current_stage,identity_status,completed_at,empty_item_set_acknowledged_at FROM sermon_enrichment_reviews WHERE sermon_id=$1",[id])).rows[0])
+        .toEqual({current_stage:1,identity_status:"pending",completed_at:null,empty_item_set_acknowledged_at:null});
+      // Existing human decisions are detected, never reset by verification or an idempotency check.
+      await client.query("UPDATE sermon_enrichment_review_items SET decision_status='left_unresolved',decided_by_subject='anonymised-admin',decided_at=now() WHERE sermon_id=$1 AND display_order=1",[id]);
+      expect(await verifyFourthBatchReviewFindings(client,id,findings)).toBe(false);
+      expect((await client.query("SELECT decided_by_subject FROM sermon_enrichment_review_items WHERE sermon_id=$1 AND display_order=1",[id])).rows[0]?.decided_by_subject).toBe("anonymised-admin");
+    } finally { await client.query("ROLLBACK");client.release(); }
+    expect((await pool.query("SELECT count(*)::int count FROM sermons WHERE id=$1",[id])).rows[0]?.count).toBe(0);
   });
 
   it("applies 0001-0013 and loads anonymised fixtures idempotently", async () => {

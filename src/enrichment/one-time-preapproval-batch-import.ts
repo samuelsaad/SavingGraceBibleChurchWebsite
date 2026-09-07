@@ -1,6 +1,10 @@
 import { createHash } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
 import {
+  fourthBatchReviewFindings, insertFourthBatchReviewFindings,
+  providerRedactionWarning, verifyFourthBatchReviewFindings
+} from "./fourth-fixed-batch-review-findings";
+import {
   inspectOneTimePreapprovalValidationRetry,
   oneTimePreapprovalDraftArtifactSchema,
   validateOneTimePreapprovalDraftArtifact,
@@ -375,10 +379,10 @@ async function diagnosePrivateBatchPostcondition(
        EXISTS (SELECT 1 FROM jsonb_array_elements(source.warnings) warning WHERE warning->>'code' = $15) AS source_warning,
        receipt.content_checksum = $16 AS import_receipt,
        review.identity_status = 'pending' AND review.current_stage = 1 AND review.completed_at IS NULL
-         AND review.expected_item_count = 0 AND review.expected_transcript_sha256 = $6
+         AND review.expected_item_count = $19 AND review.expected_transcript_sha256 = $6
          AND review.expected_transcript_row_version = transcript.row_version
          AND review.empty_item_set_acknowledged_at IS NULL AS review_gate,
-       NOT EXISTS (SELECT 1 FROM sermon_enrichment_review_items item WHERE item.sermon_id = sermon.id) AS no_review_items,
+       (SELECT count(*) FROM sermon_enrichment_review_items item WHERE item.sermon_id = sermon.id) = $19 AS review_item_count,
        EXISTS (SELECT 1 FROM sermon_media media WHERE media.sermon_id = sermon.id AND media.provider = 'youtube'
          AND media.external_id = $7 AND media.canonical_url = 'https://www.youtube.com/watch?v=' || $7
          AND media.is_primary AND media.availability_status = 'available') AS media,
@@ -409,7 +413,9 @@ async function diagnosePrivateBatchPostcondition(
       profile.audioWarningCode,
       contentChecksum,
       artifact.content.questionAnswers.length,
-      artifact.target.sourceWordPressId
+      artifact.target.sourceWordPressId,
+      profile.exceptionId === "D-155" ? fourthBatchReviewFindings(transcript, sermonId,
+        `${profile.sourceRecordKeyPrefix}-${artifact.target.sourceWordPressId}`, artifact.transcript.sourceTranscriptSha256).items.length : 0
     ]
   );
   const row = result.rows[0];
@@ -440,6 +446,12 @@ async function verifyPrivateBatchExisting(
   profile: PrivateBatchImportProfile,
   contentChecksum: string
 ): Promise<boolean> {
+  if (profile.exceptionId === "D-155") {
+    const findings = fourthBatchReviewFindings(transcript, sermonId,
+      `${profile.sourceRecordKeyPrefix}-${artifact.target.sourceWordPressId}`, artifact.transcript.sourceTranscriptSha256);
+    return (await diagnosePrivateBatchPostcondition(client, artifact, sermonId, transcript, groundedReference,
+      metadata, profile, contentChecksum)).length === 0 && await verifyFourthBatchReviewFindings(client, sermonId, findings);
+  }
   if (await verifyExisting(client, artifact, sermonId, transcript, groundedReference, metadata, profile, contentChecksum)) {
     return true;
   }
@@ -570,6 +582,8 @@ export async function importOneTimePreapprovalPrivateDraft(
   const sermonId = deterministicPrivateBatchSermonId(artifact.target.videoId, profile.sermonIdNamespace);
   const groundedReference = oneTimePreapprovalGroundedSourceReference(artifact);
   const captionReference = transcriptSourceReference(artifact, metadata, profile);
+  const findings = profile.exceptionId === "D-155" ? fourthBatchReviewFindings(transcript, sermonId,
+    `${profile.sourceRecordKeyPrefix}-${artifact.target.sourceWordPressId}`, artifact.transcript.sourceTranscriptSha256) : null;
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
@@ -644,7 +658,7 @@ export async function importOneTimePreapprovalPrivateDraft(
         [sermonId, item.question, item.answer, item.displayOrder, groundedReference]
       );
     }
-    const warnings = profile.warnings;
+    const warnings = findings?.items.length ? [...profile.warnings, providerRedactionWarning] : profile.warnings;
     await client.query(
       `INSERT INTO sermon_enrichment_sources (
          sermon_id, provider, video_id, canonical_url, caption_language, caption_track_type,
@@ -653,7 +667,7 @@ export async function importOneTimePreapprovalPrivateDraft(
          unresolved_passages, processing_version, imported_at, processed_at, processing_duration_ms,
          estimated_review_minutes, manual_attention_required, accuracy_review_status
        ) VALUES ($1, 'youtube', $2, $3, $4, $5, $6, $7, 'authorised_youtube_data_api', $8,
-         $9, $10, 0, $11::jsonb, '[]'::jsonb, $12, $13, $14, 0, $15, true, 'required')`,
+         $9, $10, $16, $11::jsonb, $17::jsonb, $12, $13, $14, 0, $15, true, 'required')`,
       [
         sermonId,
         artifact.target.videoId,
@@ -669,7 +683,9 @@ export async function importOneTimePreapprovalPrivateDraft(
         profile.processingVersion,
         metadata.importedAt,
         metadata.processedAt,
-        Math.max(35, Math.ceil(metadata.transcriptWordCount / 180) + 25)
+        Math.max(35, Math.ceil(metadata.transcriptWordCount / 180) + 25),
+        findings?.items.length ?? 0,
+        JSON.stringify(findings?.unresolvedPassages ?? [])
       ]
     );
     await ensureMigrationReceipt(client, authorization, artifact, sermonId, metadata, profile);
@@ -697,6 +713,7 @@ export async function importOneTimePreapprovalPrivateDraft(
          AND review.completed_at IS NULL`,
       [sermonId, `${profile.sourceRecordKeyPrefix}-${artifact.target.sourceWordPressId}`, artifact.transcript.sourceTranscriptSha256, profile.actor]
     );
+    if (findings) await insertFourthBatchReviewFindings(client, sermonId, findings);
     await client.query(
       `INSERT INTO audit_events (
          actor_subject, actor_role, action, entity_type, entity_id,
