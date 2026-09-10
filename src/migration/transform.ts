@@ -4,6 +4,7 @@ import { normalizeSermonAudio, normalizeYouTube } from "../domain/media";
 import { transformScripture, type ScriptureSource } from "../domain/scripture";
 import { validateLegacySlug } from "../domain/slug";
 import { deterministicSourceUuid } from "./identity";
+import { assessSermonTitle } from "../domain/sermon-title";
 import {
   legacySermonRecordSchema,
   type LegacySermonRecord,
@@ -202,11 +203,18 @@ export function transformLegacySermon(input: unknown): TransformedMigrationRecor
   }
 
   const targetId = deterministicSourceUuid("wordpress-sermon", record.sourceId);
+  const titleAssessment = assessSermonTitle(record.title!, {
+    sourceTitles: [record.title!], passageTexts: scripture.references.map((item) => item.displayText)
+  });
+  if (titleAssessment.outcome === "manual_review") warnings.push({
+    code: "title_reference_requires_manual_review", severity: "warning", field: "title",
+    safeDetail: "A possible passage in the source title has no safe unambiguous boundary; the original title was preserved."
+  });
   const sermon = {
     id: targetId,
     sourceWordPressId: record.sourceId,
     sourceStatus: record.postStatus,
-    title: record.title!,
+    title: titleAssessment.title,
     slug,
     status: record.postStatus === "publish" ? ("published" as const) : ("pending" as const),
     serviceDate: dateResult.serviceDate,

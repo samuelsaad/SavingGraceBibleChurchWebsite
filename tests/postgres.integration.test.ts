@@ -95,6 +95,8 @@ import {
 import { anonymisedAtomicManifest } from "./fixtures/atomic-review";
 import { fourthBatchReviewFindings, insertFourthBatchReviewFindings, providerRedactionWarning,
   verifyFourthBatchReviewFindings } from "../src/enrichment/fourth-fixed-batch-review-findings";
+import { createTitlePlan, applyTitlePlan, preservationSnapshot, titleCorrectionAction,
+  titleCorrectionActor, titleHash } from "../src/metadata/sermon-title-correction";
 
 const enabled = process.env.RUN_POSTGRES_INTEGRATION === "1";
 const integration = enabled ? describe : describe.skip;
@@ -284,6 +286,106 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     if (!pool) return;
     await runSchema("rollback");
     await pool.end();
+  });
+
+  it("corrects only corroborated titles with audit, review invalidation, concurrency and exact idempotency", async () => {
+    const client = await pool.connect();
+    const id = "88888888-8888-4888-8888-888888888888";
+    try {
+      await client.query("BEGIN");
+      await client.query(`INSERT INTO sermons(id,title,slug,status,service_date)
+        VALUES($1,'A Living Hope — 1 Peter 1:3–9','title-policy-fixture','draft','2025-01-05')`, [id]);
+      const sourceHash = "a".repeat(64);
+      await client.query(`INSERT INTO sermon_enrichment_sources(sermon_id,provider,video_id,canonical_url,
+        caption_language,caption_track_type,original_filename,source_content_sha256,retrieval_attribution,
+        source_character_count,cleaned_character_count,apparent_completeness,uncertainty_marker_count,
+        processing_version,imported_at,processed_at,processing_duration_ms,estimated_review_minutes)
+        VALUES($1,'youtube','Z0000000099','https://www.youtube.com/watch?v=Z0000000099','en','automatic',
+        'fixture.vtt',$2,'authorised_youtube_data_api',100,100,'apparently_complete',0,'anonymised-title-policy',now(),now(),0,35)`, [id, sourceHash]);
+      await client.query(`INSERT INTO scripture_references(sermon_id,display_text,parse_status)
+        VALUES($1,'1 Peter 1:3–9','unparsed')`, [id]);
+      await client.query(`INSERT INTO sermon_transcripts(sermon_id,body_text,status,source_kind,
+        reviewed_by_subject,approved_by_subject,reviewed_at,approved_at)
+        VALUES($1,'An anonymised approved transcript.','approved','manual','fixture-admin','fixture-admin',now(),now())`, [id]);
+      await client.query("SELECT refresh_sermon_enrichment($1)", [id]);
+      await client.query(`UPDATE sermon_enrichment_reviews SET identity_status='confirmed',current_stage=6,
+        completed_at=now(),completed_by_subject='fixture-admin',
+        empty_item_set_acknowledged_at=now(),empty_item_set_acknowledged_by_subject='fixture-admin' WHERE sermon_id=$1`, [id]);
+      const plan = await createTitlePlan(client);
+      plan.records = plan.records.filter((row) => row.id === id);
+      expect(plan.records[0]?.assessment).toMatchObject({ outcome: "correctable", title: "A Living Hope" });
+      const hash = titleHash(JSON.stringify(plan));
+      const before = await preservationSnapshot(client, [id]);
+      await client.query("SAVEPOINT title_concurrency");
+      await client.query("UPDATE sermons SET title='Samuel revised this title',row_version=row_version+1 WHERE id=$1", [id]);
+      await expect(applyTitlePlan(client, plan, hash)).rejects.toThrow("title_plan_concurrent_edit");
+      expect((await client.query("SELECT title FROM sermons WHERE id=$1", [id])).rows[0]?.title).toBe("Samuel revised this title");
+      await client.query("ROLLBACK TO SAVEPOINT title_concurrency");
+      expect(await applyTitlePlan(client, plan, hash)).toEqual({ corrected: 1, unchanged: 0 });
+      expect(await preservationSnapshot(client, [id])).toEqual(before);
+      expect((await client.query("SELECT title,slug,status FROM sermons WHERE id=$1", [id])).rows[0])
+        .toEqual({ title: "A Living Hope", slug: "title-policy-fixture", status: "draft" });
+      expect((await client.query(`SELECT identity_status,current_stage,completed_at,
+        empty_item_set_acknowledged_by_subject FROM sermon_enrichment_reviews WHERE sermon_id=$1`, [id])).rows[0])
+        .toEqual({ identity_status: "pending", current_stage: 1, completed_at: null, empty_item_set_acknowledged_by_subject: "fixture-admin" });
+      const audit = (await client.query(`SELECT actor_role,actor_subject,action,changed_fields
+        FROM audit_events WHERE entity_id=$1`, [id])).rows;
+      expect(audit).toEqual([{ actor_role: "system", actor_subject: titleCorrectionActor,
+        action: titleCorrectionAction, changed_fields: ["title"] }]);
+      const after = await preservationSnapshot(client, []);
+      expect(await applyTitlePlan(client, plan, hash)).toEqual({ corrected: 0, unchanged: 1 });
+      expect(await preservationSnapshot(client, [])).toEqual(after);
+      expect((await client.query("SELECT actor_role,actor_subject,action,changed_fields FROM audit_events WHERE entity_id=$1", [id])).rows).toEqual(audit);
+      expect((await createTitlePlan(client)).records.find((row) => row.id === id)?.assessment.outcome).toBe("clean");
+    } finally { await client.query("ROLLBACK"); client.release(); }
+  });
+
+  it("normalizes metadata through the administrator service without changing passages or slugs", async () => {
+    const service = new AdminSermonService(new PostgresAdminSermonRepository(pool));
+    const identity: ApplicationIdentity = { subject: "anonymised-title-admin", role: "admin" };
+    let id: string | undefined;
+    try {
+      const created = await service.create(createSermonInputSchema.parse({
+        title: "A Living Hope — 1 Peter 1:3–9", slug: "admin-title-policy-fixture", serviceDate: "2025-01-05",
+        scriptureReferences: [{ displayText: "1 Peter 1:3–9" }]
+      }), identity, "anonymised-title-create");
+      id = created.id;
+      expect(created.title).toBe("A Living Hope");
+      const changed = await service.update(id, updateSermonInputSchema.parse({
+        rowVersion: created.rowVersion, title: "Another Hope — 1 Peter 1:3–9"
+      }), identity, "anonymised-title-edit");
+      expect(changed.title).toBe("Another Hope");
+      expect(changed.slug).toBe(created.slug);
+      expect(changed.scriptureReferences).toEqual(created.scriptureReferences);
+      await expect(service.update(id, updateSermonInputSchema.parse({rowVersion:created.rowVersion,title:"Stale title"}),identity,"stale-title"))
+        .rejects.toMatchObject({ code: "stale_write" });
+    } finally {
+      if (id) { await pool.query("DELETE FROM sermons WHERE id=$1", [id]); await pool.query("DELETE FROM audit_events WHERE entity_id=$1", [id]); }
+    }
+  });
+
+  it("prevents old source imports from restoring corrected or human-owned titles atomically", async () => {
+    const fixtures = legacySermonRecordSchema.array().parse(JSON.parse(await readFile("tests/fixtures/dry-run.json", "utf8")));
+    const source = { ...fixtures[0]!, sourceId: 999951, title: "A Living Hope — 1 Peter 1:3–9", slug: "migration-title-policy-fixture" };
+    const result = runMigrationDryRun([source]);
+    expect(result.candidates[0]?.title).toBe("A Living Hope");
+    expect(source.title).toBe("A Living Hope — 1 Peter 1:3–9");
+    const id = result.candidates[0]!.id;
+    const snapshotName = "anonymised-title-policy-import";
+    try {
+      await loadMigrationResult(pool, result, snapshotName, { forcePrivateDraft: true });
+      await loadMigrationResult(pool, result, snapshotName, { forcePrivateDraft: true });
+      expect((await pool.query("SELECT title,slug FROM sermons WHERE id=$1", [id])).rows[0])
+        .toEqual({ title: "A Living Hope", slug: source.slug });
+      await pool.query("UPDATE sermons SET title='A personally revised title',updated_by_subject='fixture-admin',row_version=row_version+1 WHERE id=$1", [id]);
+      const before = (await pool.query("SELECT to_jsonb(s) AS row FROM sermons s WHERE id=$1", [id])).rows;
+      await expect(loadMigrationResult(pool, result, snapshotName, { forcePrivateDraft: true }))
+        .rejects.toThrow("A source import cannot overwrite an editorially owned sermon title.");
+      expect((await pool.query("SELECT to_jsonb(s) AS row FROM sermons s WHERE id=$1", [id])).rows).toEqual(before);
+    } finally {
+      await pool.query("DELETE FROM sermons WHERE id=$1", [id]);
+      await pool.query("DELETE FROM migration_runs WHERE id=$1", [deterministicSourceUuid("migration-run", snapshotName)]);
+    }
   });
 
   it("preserves D-155 redactions as pending atomic findings with idempotent read verification", async () => {
@@ -596,7 +698,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       if (seriesIds.length > 0) await pool.query("DELETE FROM series WHERE id = ANY($1::uuid[])", [seriesIds]);
       await pool.query("DELETE FROM source_taxonomy_terms WHERE source_system = $1", [previewDatasetSourceStatus]);
     }
-  });
+  }, 30_000);
 
   it("aborts the one-speaker migration with affected IDs and cleanly reapplies", async () => {
     await runSchema("rollback", "0016_legacy_completed_passage_reviews");

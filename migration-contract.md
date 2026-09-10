@@ -1,5 +1,17 @@
 # Advanced Sermons Migration Contract
 
+## Current title-only projection addendum
+
+Apply [the conservative title policy](sermon-title-policy.md) during source mapping.
+Preserve original source checksums, receipt hashes, slugs and passage metadata.
+The loader locks an existing source target and rejects a conflicting editorially
+owned title before related writes; transaction rollback preserves human edits.
+Fixed-batch unchanged verification permits the original or deterministic title
+projection, not arbitrary title drift. Development-seed verification uses its
+documented title-only projection without changing tracked seed bytes or hashes.
+All non-title verification remains strict. Historical scope statements below do
+not reopen completed enrichment decisions or authorize additional imports.
+
 **Version:** 1.5
 **Status:** Exact-two private Phase 3B.2b drafts imported; guided administrator review implemented; production execution and the remaining 450 sermons are not approved
 

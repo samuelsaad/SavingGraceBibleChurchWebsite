@@ -1,4 +1,5 @@
 import type { Pool, PoolClient } from "pg";
+import { assessSermonTitle } from "../domain/sermon-title";
 import {
   assertDisposableIntegrationTestDatabase,
   assertDisposableLocalDatabase
@@ -160,7 +161,7 @@ async function insertSermon(client: PoolClient, sermon: PreviewSermonDatasetReco
       'draft', $7::date, NULL, $8, $9, false
     )`, [
     sermonId,
-    sermon.title,
+    assessSermonTitle(sermon.title, { passageTexts: sermon.scriptureReferences.map((item) => item.displayText) }).title,
     sermon.slug,
     sermon.description,
     lifecycleTimestamp,
@@ -287,7 +288,14 @@ async function verifyImportedState(client: PoolClient, dataset: PreviewSermonDat
     client,
     { requireCompletedSourceReview: false }
   );
-  if (serializePublicDataset(stored) !== serializePublicDataset(dataset)) {
+  // Keep the seed and its hashes immutable. Only the local application-title
+  // projection differs; changed prose or subsequent human edits still fail closed.
+  const titleProjection = (input: PreviewSermonDataset): PreviewSermonDataset => ({ ...input,
+    sermons: input.sermons.map((sermon) => ({ ...sermon,
+      title: assessSermonTitle(sermon.title, { passageTexts: sermon.scriptureReferences.map((item) => item.displayText) }).title
+    }))
+  });
+  if (serializePublicDataset(titleProjection(stored)) !== serializePublicDataset(titleProjection(dataset))) {
     throw new Error("The stored development dataset does not match the tracked content byte-for-byte");
   }
   if ([...sourceStatuses.values()].some((value) => value !== previewDatasetSourceStatus)) {

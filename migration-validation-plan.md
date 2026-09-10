@@ -1,5 +1,64 @@
 # Migration Validation Plan
 
+## Local title-correction verification — 10 September 2026
+
+Samuel explicitly approved the five importer/administrator title-policy changes
+after execution-safety review, the saved 130-record correction and the three
+identity-review reopenings. No production, schema or enrichment work was included.
+
+- Shared conservative-title tests: 20 anonymized cases covering valid boundaries,
+  abbreviations/ranges, retained punctuation, missing corroboration and ambiguity.
+- `npm test`: 359 passed; the 29 PostgreSQL integration cases are intentionally
+  skipped by this standard invocation, not counted as database verification.
+- `npm run test:postgres`: 388 passed, zero skipped. New integration coverage
+  proves concurrent-title rejection, transactional audit and preservation,
+  identity/final-review invalidation without lost content decisions, identical
+  reruns, normal administrator editing and rejection of editorial-title overwrite
+  by an old source import. The guarded runner removed its disposable database.
+- The initial PostgreSQL run hit the existing development-dataset test's
+  five-second timeout and subsequent dependent failures. Increasing only that
+  test's timeout to 30 seconds produced a clean full run. Assertions and migration
+  meaning were not weakened or changed.
+- `npm run check`: 178 files, zero errors, warnings or hints. `npm run build`
+  passed. The anonymized migration dry run inspected five fixtures: three
+  included, two excluded, zero rejected. `npm audit --offline --json` reported
+  zero vulnerabilities; this is cached/offline evidence, not a fresh online audit.
+- Before mutation the saved comparison's hash, identities, versions, source
+  evidence and preservation fingerprints were revalidated. One guarded
+  serializable transaction corrected 130 titles with zero conflicts. The 22
+  original clean titles and three ambiguous titles were preserved. All protected
+  sermon/source/content/passage/decision tables and historical audit evidence
+  matched their preservation fingerprints.
+- The identical second run returned zero corrected and 130 unchanged. Independent
+  full-table and full-audit hashing before/after this rerun found no content,
+  version, timestamp, review-state or audit churn.
+- Read-only final counts: 155 sermons, 143 pending Stage-1 reviews, 12 completed
+  private previews and zero public eligibility. The three explicitly authorized
+  completed-identity reopenings do not revoke any content approval.
+- Browser checks used the unchanged local administrator UI with the title-fix
+  backend: queue rendering (155 results), guided Stage-1 controls with later
+  stages locked, private archive, eligible detail and Scripture-search submission.
+  No save, confirmation, approval or playback control was activated; no private
+  screenshot was taken. Existing user tabs were left untouched.
+- Final file scans covered 244 tracked/new paths: zero secret/key/token/AWS,
+  prohibited-file, symlink or introduced protected-identity/title findings.
+  Production output had zero protected-identity/title or secret matches. Private
+  comparison, integrity sidecar and receipt were confirmed ignored and untracked.
+- A bounded read-only windowed hash comparison found zero matching 20-word private
+  sermon sequences in added source/documentation or production output. An earlier
+  unbounded scan was too slow; execution safety rejected inspecting process
+  activity/cancelling its backend, and that rejection was not bypassed. Two
+  interim array-based bounded scans timed out and are not passing evidence. The
+  completed windowed scan avoids their repeated array slicing. The original
+  slow scan was not cancelled and its result was not relied upon.
+- Local public API results and sermon sitemap entries were zero. Unauthenticated
+  administrator and private-preview data requests returned 401; an unsupported
+  feed returned 404. Keyword and confirmed-primary passage count queries ran
+  successfully, with all 27 existing Scripture relationships preserved.
+
+See [sermon-title-policy.md](sermon-title-policy.md) for the title-only projection,
+strict remaining import checks and private artifact rules. D-155 remains closed.
+
 **Status:** Local PostgreSQL integration verified; description generation fails closed without an explicitly approved generative model
 **No production extraction, migration, database write, deployment, or infrastructure change has run. Database writes are limited to explicitly authorised reconciliation in local `savinggrace_sermons_test` and uniquely named disposable loopback test databases.**
 

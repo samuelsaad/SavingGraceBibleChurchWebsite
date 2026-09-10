@@ -1,9 +1,37 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
-**Handover date:** 7 September 2026
+**Handover date:** 10 September 2026
 **Purpose:** Public-safe orientation for continuing work from this repository. This file contains no sermon body, credential, token, session, raw caption export or private local path.
 
 ## Authority and current checkpoint
+
+The latest local milestone is the separately authorized title-only correction,
+not another enrichment batch. Starting from D-155 completion at
+`f7a9546d68547250776cfcb618b90ad8478c027b`, the isolated
+`codex/sermon-title-passage-fix` branch preserves all existing source and generated
+content. The frozen comparison was revalidated in one guarded serializable
+transaction: exactly 130 corroborated title corrections (three original-preview,
+127 later records), zero conflicts, 22 already-clean titles and three ambiguous
+titles left unchanged. No schema change or provider access occurred.
+
+The three changed completed identities returned to Stage 1 and lost current
+overall completion markers, as explicitly approved by Samuel. Other content
+approvals, finding and passage decisions, historical audits, sermon bodies,
+slugs/URLs and source/candidate/receipt evidence remain preserved. Current counts
+are 155 sermons, 143 pending Stage-1 reviews, 12 completed private previews and zero
+publicly eligible sermons. Samuel must decide the three ambiguous titles and
+personally reconfirm the three reopened identities. No human decision was made
+by automation.
+
+The identical second correction returned zero changes and 130 unchanged records;
+independent complete-table and audit hashes showed no version, timestamp,
+review-state or audit churn. Recurrence prevention covers source and fixed-batch
+imports, immutable development-seed verification, and normal administrator title
+editing. See [sermon-title-policy.md](sermon-title-policy.md) and the validation
+plan for the exact projection, preservation and verification evidence. The private
+comparison and receipt remain ignored and unstaged. D-155 remains closed; Claude's
+frontend and previous worktrees remain unchanged. Older counts below are
+historical checkpoints, not the current administrator queue.
 
 Treat current repository bytes and Git history as authoritative, followed by this handover, approved project documentation and clearly labelled prior-run evidence. Read `AGENTS.md` before state-dependent or repository-changing work.
 

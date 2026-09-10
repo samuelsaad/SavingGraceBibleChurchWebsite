@@ -1,5 +1,11 @@
 # Advanced Sermons Field Map
 
+The [application-title policy](sermon-title-policy.md) is a deliberate title-only
+projection: one corroborated passage prefix/suffix may be separated while the
+original source value and checksum remain unchanged. Ambiguous titles remain
+unchanged with a manual-review warning. This does not confirm or create a passage
+relationship, change a slug, or authorize a new source extraction.
+
 **Status:** Migration mappings approved for local dry-run implementation  
 **Rule:** Preserve source identity, original value, and provenance. Do not merge, parse, normalise, or discard ambiguous values silently.
 

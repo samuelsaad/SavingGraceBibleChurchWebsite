@@ -148,6 +148,18 @@ async function upsertSermon(
   privateAudit: PrivateMigrationSourceAudit | undefined,
   forcePrivateDraft = false
 ): Promise<void> {
+  // Editorial ownership wins over old source snapshots. Fail the entire import
+  // before replacing any relationships, rather than silently restoring a title.
+  const currentTitle = await client.query<{ title: string; protected: boolean }>(
+    `SELECT s.title, (s.updated_by_subject IS NOT NULL OR EXISTS (
+       SELECT 1 FROM audit_events a WHERE a.entity_id=s.id AND a.entity_type='sermon'
+       AND a.outcome='succeeded' AND a.changed_fields ? 'title'
+     )) AS protected FROM sermons s WHERE s.source_wordpress_id=$1 FOR UPDATE`,
+    [sermon.sourceWordPressId]
+  );
+  if (currentTitle.rows.some((row) => row.protected && row.title !== sermon.title)) {
+    throw new Error("A source import cannot overwrite an editorially owned sermon title.");
+  }
   const speakerId = sermon.speaker ? await upsertSpeaker(client, sermon.speaker) : null;
   await client.query(
     `INSERT INTO sermons (

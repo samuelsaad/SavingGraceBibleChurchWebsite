@@ -1,5 +1,19 @@
 # Saving Grace Bible Church Website
 
+## Current local title-correction checkpoint
+
+The authorized local correction removed corroborated passage references from
+130 application titles (three original-preview records and 127 later records).
+There were no conflicts; 22 clean titles and three ambiguous titles were preserved.
+The three changed completed identities require Samuel's reconfirmation. The local
+database contains 155 sermons, 143 pending Stage-1 reviews and 12 completed private
+previews; none is publicly eligible. Content, source evidence and passage decisions
+were preserved. D-155 remains complete and expired.
+
+See [the title policy](sermon-title-policy.md) for the conservative import/edit
+projection, human-edit protection and separately authorized local correction
+workflow. Existing historical milestone counts below describe earlier checkpoints.
+
 Local Phase 3B.2 caption/enrichment rehearsal, Phase 3B.2b punctuation hardening, and a guided private administrator-review workflow for the Astro/TypeScript/PostgreSQL replacement described in `church-website-architecture-plan.md`.
 
 For current repository status and safe continuation rules, read the tracked public-safe [`CURRENT_PROJECT_HANDOVER.md`](CURRENT_PROJECT_HANDOVER.md) before acting. Repository bytes and Git history remain authoritative when an older external handover differs.

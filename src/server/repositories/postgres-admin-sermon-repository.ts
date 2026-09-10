@@ -532,7 +532,7 @@ function taxonomyFromRow(kind: TaxonomyKind, row: QueryResultRow): TaxonomyDto {
   };
 }
 
-class PostgresAdminSermonTransaction implements AdminSermonTransaction {
+export class PostgresAdminSermonTransaction implements AdminSermonTransaction {
   constructor(private readonly client: PoolClient) {}
 
   async findSermonForUpdate(id: string): Promise<StoredSermonDetail | null> {

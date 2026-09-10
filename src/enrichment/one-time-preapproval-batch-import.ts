@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
+import { assessSermonTitle } from "../domain/sermon-title";
 import {
   fourthBatchReviewFindings, insertFourthBatchReviewFindings,
   providerRedactionWarning, verifyFourthBatchReviewFindings
@@ -284,7 +285,7 @@ async function verifyExisting(
        WHERE sermon.id = $1 AND sermon.source_wordpress_id = $2
          AND sermon.status = 'draft' AND sermon.published_at IS NULL
          AND sermon.source_status = $17
-         AND sermon.title = $12 AND sermon.service_date = $13::date
+         AND sermon.title = ANY($12::text[]) AND sermon.service_date = $13::date
          AND sermon.summary = $3 AND sermon.summary_status = 'draft'
          AND sermon.summary_source_kind = 'generated_draft'
          AND sermon.summary_source_reference = $4
@@ -329,7 +330,7 @@ async function verifyExisting(
       profile.processingVersion,
       contentChecksum,
       artifact.content.questionAnswers.length,
-      metadata.title,
+      [metadata.title, assessSermonTitle(metadata.title, { sourceTitles: [metadata.title] }).title],
       metadata.serviceDate,
       transcriptSourceReference(artifact, metadata),
       metadata.captionSourceSha256,
@@ -366,7 +367,7 @@ async function diagnosePrivateBatchPostcondition(
     `SELECT
        sermon.status = 'draft' AND sermon.published_at IS NULL AND sermon.source_status = $13 AS sermon_private,
        sermon.source_wordpress_id = $18 AS sermon_source_identity,
-       sermon.title = $8 AND sermon.service_date = $9::date AS sermon_identity,
+       sermon.title = ANY($8::text[]) AND sermon.service_date = $9::date AS sermon_identity,
        sermon.summary = $2 AND sermon.summary_status = 'draft' AND sermon.summary_source_kind = 'generated_draft'
          AND sermon.summary_source_reference = $3 AS description,
        transcript.body_text = $4 AND transcript.status = 'draft' AND transcript.source_kind = 'caption'
@@ -403,7 +404,7 @@ async function diagnosePrivateBatchPostcondition(
       artifact.transcript.groundingRevisionId,
       artifact.transcript.sourceTranscriptSha256,
       artifact.target.videoId,
-      metadata.title,
+      [metadata.title, assessSermonTitle(metadata.title, { sourceTitles: [metadata.title] }).title],
       metadata.serviceDate,
       transcriptSourceReference(artifact, metadata, profile),
       profile.processingVersion,
@@ -627,7 +628,7 @@ export async function importOneTimePreapprovalPrivateDraft(
          true, 'draft', 'generated_draft', $7, now(), now(), $8, $8)`,
       [
         sermonId,
-        metadata.title,
+        assessSermonTitle(metadata.title, { sourceTitles: [metadata.title] }).title,
         `${profile.slugPrefix}-${artifact.target.sourceWordPressId}`,
         artifact.content.description.bodyText,
         metadata.serviceDate,

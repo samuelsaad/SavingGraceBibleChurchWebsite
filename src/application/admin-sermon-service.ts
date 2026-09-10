@@ -56,6 +56,7 @@ import {
   parseGroundedSermonEnrichmentSourceReference
 } from "../enrichment/sermon-enrichment-policy";
 import { inspectGeneratedText } from "../enrichment/generated-text-mechanical-qa";
+import { assessSermonTitle } from "../domain/sermon-title";
 
 function transcriptSha256(value: string): string {
   return createHash("sha256").update(value, "utf8").digest("hex");
@@ -708,6 +709,9 @@ export class AdminSermonService {
     requestCorrelationId: string
   ): Promise<AdminSermonDetail> {
     assertAdminAccess(identity);
+    input = { ...input, title: assessSermonTitle(input.title, {
+      passageTexts: input.scriptureReferences.map((item) => item.displayText)
+    }).title };
     return this.repository.transaction(async (transaction) => {
       if (input.summarySourceKind === "generated_draft" &&
         input.summaryStatus !== "draft" && input.summaryStatus !== "missing") {
@@ -768,6 +772,9 @@ export class AdminSermonService {
       if (!sermon) notFound("Sermon was not found");
       if (sermon.rowVersion !== input.rowVersion) conflict();
       assertMayEditSermon(identity, sermon);
+      if (input.title !== undefined) input = { ...input, title: assessSermonTitle(input.title, {
+        passageTexts: (input.scriptureReferences ?? sermon.scriptureReferences).map((item) => item.displayText)
+      }).title };
       if (input.summary !== undefined && input.summaryStatus === undefined) {
         invalid("summaryStatus", "Choose the sermon description review status when editing its text");
       }

@@ -1,5 +1,16 @@
 # Phase 3B Administration and Dashboard Contract
 
+## Corroborated passage references in titles
+
+Normal metadata creation and title editing apply the shared
+[conservative title policy](sermon-title-policy.md) only with corroborating passage
+metadata. Uncertain boundaries remain unchanged. Existing role checks, optimistic
+concurrency, audit and review rules are preserved. A changed confirmed identity
+must be reconfirmed at Stage 1; its current overall completion markers are cleared
+without removing finding decisions, transcript/description/Q&A approvals, passage
+decisions or historical audit events. Neither a title correction nor a reopened
+review is an approval or publication decision.
+
 **Status:** Yang's final Phase 3B.1 decisions are approved and implemented locally; Cognito/AWS and production remain excluded.
 **Scope:** Sermons, approved sermon descriptions, one-speaker relationship, speaker/series/book definitions, scripture, controlled media, full transcript, ordered Q&A, content readiness, audit history, permanent deletion, enrichment progress, and the local administration dashboard.
 **Excluded:** Production identities, role management, WordPress-style metadata, production data, deployment, and every remote service.
