@@ -2,6 +2,8 @@ import { createHash } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
 import { assessSermonTitle } from "../domain/sermon-title";
 import { inspectPrimaryBooks, prepareAutomaticPrimaryBook } from "../scripture/automatic-primary-book";
+import { inspectSpeakerMetadata, applySpeakerPlan, speakerPlanHash } from "../metadata/automatic-review-metadata";
+import type { SourceSpeakerEvidence } from "../domain/review-metadata";
 import {
   fourthBatchReviewFindings, insertFourthBatchReviewFindings,
   providerRedactionWarning, verifyFourthBatchReviewFindings
@@ -123,6 +125,8 @@ export const thirdFixedBatchImportProfile = Object.freeze({
 } satisfies PrivateBatchImportProfile);
 
 export interface OneTimePreapprovalImportMetadata {
+  /** Explicit trusted source evidence only; never infer the preacher from channel ownership. */
+  sourceSpeaker?: SourceSpeakerEvidence;
   title: string;
   serviceDate: string;
   captionId: string;
@@ -718,6 +722,11 @@ export async function importOneTimePreapprovalPrivateDraft(
     if (findings) await insertFourthBatchReviewFindings(client, sermonId, findings);
     const primaryBook = (await inspectPrimaryBooks(client, [sermonId]))[0]!;
     await prepareAutomaticPrimaryBook(client, primaryBook, `${profile.correlationPrefix}:primary-book:${contentChecksum}`, false);
+    if (metadata.sourceSpeaker) {
+      if (metadata.sourceSpeaker.sourceWordPressId !== artifact.target.sourceWordPressId) throw Error("one_time_batch_speaker_source_mismatch");
+      const speakerPlan=await inspectSpeakerMetadata(client,[metadata.sourceSpeaker],[sermonId]);
+      await applySpeakerPlan(client,speakerPlan,speakerPlanHash(speakerPlan));
+    }
     await client.query(
       `INSERT INTO audit_events (
          actor_subject, actor_role, action, entity_type, entity_id,

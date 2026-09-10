@@ -9,6 +9,7 @@ import {
 } from "./dashboard-model";
 import type { SermonStatus } from "../domain/sermon";
 import { bibleBooks } from "../domain/bible-passage";
+import { selectedReviewBook, changedReviewBookSelection, reviewBookOptions } from "../domain/review-metadata";
 import {
   isSupersededWave1SourceReference,
   parseGroundedSermonEnrichmentSourceReference
@@ -662,17 +663,17 @@ function renderIdentityReviewStage(
   const source = sermon.enrichmentSource!;
   const unresolvedDate = sermon.serviceDate === "1970-01-01";
   const completed = review.review.completedAt !== null;
-  const canonicalBooks = books.filter((book) => book.canonicalBookId !== null);
-  const selectedBookId = sermon.books[0]?.id ?? "";
+  const canonicalBooks = reviewBookOptions(sermon.books, books);
+  const selectedBookId = selectedReviewBook(sermon.books, sermon.scriptureReferences, canonicalBooks);
   return `<form id="review-identity-form" class="review-stage-panel stack" novalidate>
     <header class="review-stage-heading"><p>Stage 1 of 6</p><h2>Identity and provenance</h2><p>Confirm that this draft belongs to the correct sermon before reviewing its words. Nothing here publishes content.</p></header>
     <div id="review-stage-feedback"></div>
     <div class="review-form-grid">
       <label><span>Sermon title</span><input name="title" required maxlength="240" value="${escapeHtml(sermon.title)}"${completed ? " readonly" : ""} /></label>
-      <label><span>Speaker</span><select name="speakerId" required${completed ? " disabled" : ""}>${filterOption(speakers, sermon.speaker?.id ?? "", "Select the verified speaker")}</select><small class="field-hint">No speaker is selected automatically.</small></label>
+      <label><span>Speaker</span><select name="speakerId" required${completed ? " disabled" : ""}>${filterOption(speakers, sermon.speaker?.id ?? "", "Select the verified speaker")}</select><small class="field-hint">${sermon.speaker ? "Saved speaker prefilled. Check and confirm; preselection is not approval." : "Speaker unresolved. Check the source evidence before selecting."}</small></label>
       <label><span>Service date</span><input name="serviceDate" type="date" value="${unresolvedDate ? "" : escapeHtml(sermon.serviceDate)}"${completed ? " readonly" : ""} /><small class="field-hint">${unresolvedDate ? "Date unresolved — verify and enter the preached date." : "Confirm this is the date preached."}</small></label>
       <div class="review-readonly-field"><span>Draft status</span><strong>Draft • Private</strong><small>Review and approval do not publish this sermon.</small></div>
-      <label><span>Primary Bible book</span><select name="bookClassificationId">${filterOption(canonicalBooks, selectedBookId, "No Bible book assigned")}</select><small class="field-hint">Choose the canonical book only after personal verification. There is no automatic or default assignment.</small></label>
+      <label><span>Primary Bible book</span><select name="bookClassificationId" data-initial-book="${escapeHtml(selectedBookId)}">${filterOption(canonicalBooks, selectedBookId, "No Bible book assigned")}</select><small class="field-hint">${selectedBookId ? "Prefilled from saved book or primary-passage metadata. Check and confirm; preselection is not approval." : "No unambiguous saved book. Review the primary-passage evidence below."} Saving an unchanged selection preserves existing classifications and secondary passages.</small></label>
     </div>
     <section class="source-summary" aria-labelledby="source-summary-heading">
       <div><p class="eyebrow">Private source</p><h3 id="source-summary-heading">Authorised YouTube Studio export</h3></div>
@@ -1371,7 +1372,7 @@ async function renderGuidedSermonReview(id: string, readOnlyStage?: number): Pro
           speakerId: review.review.completedAt !== null
             ? review.sermon.speaker?.id ?? null
             : String(data.get("speakerId") ?? "") || null,
-          bookClassificationIds: bookClassificationId ? [bookClassificationId] : [],
+          ...changedReviewBookSelection(identityForm.querySelector<HTMLSelectElement>('[name="bookClassificationId"]')?.dataset.initialBook ?? "", bookClassificationId),
           ...(serviceDate ? { serviceDate } : {})
         })
       });

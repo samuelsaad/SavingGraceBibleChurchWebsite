@@ -98,6 +98,8 @@ import { fourthBatchReviewFindings, insertFourthBatchReviewFindings, providerRed
 import { createTitlePlan, applyTitlePlan, preservationSnapshot, titleCorrectionAction,
   titleCorrectionActor, titleHash } from "../src/metadata/sermon-title-correction";
 import { inspectPrimaryBooks,applyBookPlan,automaticBookAction } from "../src/scripture/automatic-primary-book";
+import {inspectSpeakerMetadata,applySpeakerPlan,reviewMetadataAction} from "../src/metadata/automatic-review-metadata";
+import {changedReviewBookSelection} from "../src/domain/review-metadata";
 
 const enabled = process.env.RUN_POSTGRES_INTEGRATION === "1";
 const integration = enabled ? describe : describe.skip;
@@ -287,6 +289,62 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     if (!pool) return;
     await runSchema("rollback");
     await pool.end();
+  });
+
+  it("prefills an exact source speaker without approval, preserves concurrent edits and reruns without audit churn",async()=>{
+    const c=await pool.connect();const id="66666666-6666-4666-8666-666666666666";
+    try {
+      await c.query("BEGIN");
+      const speaker=(await c.query("SELECT id,source_term_id FROM speakers WHERE source_term_id IS NOT NULL ORDER BY id LIMIT 1")).rows[0];
+      expect(speaker).toBeDefined();
+      await c.query("INSERT INTO sermons(id,title,slug,status,service_date,source_wordpress_id) VALUES($1,'Speaker fixture','speaker-prefill-fixture','draft','2025-01-05',909090)",[id]);
+      const evidence={sourceWordPressId:909090,relationshipCount:1,termIds:[Number(speaker.source_term_id)],evidenceSha256:"d".repeat(64)};
+      const plan=await inspectSpeakerMetadata(c,[evidence],[id]);const hash=titleHash(JSON.stringify(plan));
+      await c.query("SAVEPOINT speaker_conflict");
+      await c.query("UPDATE sermons SET row_version=row_version+1,title='Human correction' WHERE id=$1",[id]);
+      expect((await applySpeakerPlan(c,plan,hash)).results).toEqual([{id,outcome:"conflict_preserved"}]);
+      await c.query("ROLLBACK TO SAVEPOINT speaker_conflict");
+      expect((await applySpeakerPlan(c,plan,hash)).results).toEqual([{id,outcome:"assigned"}]);
+      expect((await c.query("SELECT speaker_id,status,summary_status,title FROM sermons WHERE id=$1",[id])).rows[0])
+        .toEqual({speaker_id:speaker.id,status:"draft",summary_status:"missing",title:"Speaker fixture"});
+      const snapshot=await preservationSnapshot(c,[]);
+      expect((await applySpeakerPlan(c,plan,hash)).results).toEqual([{id,outcome:"unchanged"}]);
+      expect(await preservationSnapshot(c,[])).toEqual(snapshot);
+      expect((await c.query("SELECT actor_role,count(*)::int n FROM audit_events WHERE entity_id=$1 AND action=$2 GROUP BY actor_role",[id,reviewMetadataAction])).rows)
+        .toEqual([{actor_role:"system",n:1}]);
+      await c.query("UPDATE sermons SET speaker_id=NULL,row_version=row_version+1 WHERE id=$1",[id]);
+      await c.query("INSERT INTO audit_events(actor_subject,actor_role,action,entity_type,entity_id,changed_fields,outcome,request_correlation_id) VALUES('fixture-admin','admin','sermon.speaker_assignment_updated','sermon',$1,'[\"speakerId\"]','succeeded','fixture-speaker-clear')",[id]);
+      expect((await inspectSpeakerMetadata(c,[evidence],[id]))[0]?.assessment.reason).toBe("human_clearing_preserved");
+    }finally{await c.query("ROLLBACK");c.release();}
+  });
+
+  it("an unchanged identity-form save preserves every book relationship and passage decision", async () => {
+    const service=new AdminSermonService(new PostgresAdminSermonRepository(pool));
+    const identity:ApplicationIdentity={subject:"fixture-metadata-admin",role:"admin"};
+    let id:string|undefined;
+    try {
+      const books=(await pool.query("SELECT id FROM book_classifications WHERE canonical_book_id IS NOT NULL ORDER BY canonical_book_id LIMIT 2")).rows.map(r=>r.id);
+      const speaker=(await pool.query("SELECT id FROM speakers ORDER BY id LIMIT 1")).rows[0].id;
+      const created=await service.create(createSermonInputSchema.parse({title:"Metadata preservation fixture",slug:"metadata-save-fixture",serviceDate:"2025-01-05",
+        speakerId:speaker,bookClassificationIds:books,scriptureReferences:[{displayText:"Genesis 1:1",relationshipRole:"primary",isLead:true},{displayText:"Exodus 1:1",relationshipRole:"supporting"}]}),identity,"fixture-metadata-create");
+      id=created.id;
+      const reviewed=await service.decidePrimaryPassage(id,primaryPassageDecisionInputSchema.parse({
+        sermonRowVersion:created.rowVersion,reviewRowVersion:created.primaryPassageReview!.rowVersion,action:"confirm_passages",
+        passages:[{canonicalBookId:1,startChapter:1,startVerse:1,endChapter:1,endVerse:1,relationshipRole:"primary",isLead:true},
+          {canonicalBookId:2,startChapter:1,startVerse:1,endChapter:1,endVerse:1,relationshipRole:"supporting",isLead:false}]
+      }),identity,"fixture-metadata-passage-decision");
+      const snapshot=async()=>({
+        books:(await pool.query("SELECT to_jsonb(b) value FROM sermon_book_classifications b WHERE sermon_id=$1 ORDER BY book_classification_id",[id])).rows,
+        references:(await pool.query("SELECT to_jsonb(r) value FROM scripture_references r WHERE sermon_id=$1 ORDER BY id",[id])).rows,
+        decision:(await pool.query("SELECT to_jsonb(p) value FROM sermon_primary_passage_reviews p WHERE sermon_id=$1",[id])).rows
+      });
+      const before=await snapshot();
+      const saved=await service.update(id,updateSermonInputSchema.parse({rowVersion:reviewed.rowVersion,title:created.title,serviceDate:created.serviceDate,speakerId:speaker,
+        ...changedReviewBookSelection(books[0],books[0])}),identity,"fixture-metadata-unchanged");
+      expect(saved.speaker?.id).toBe(speaker);
+      expect(await snapshot()).toEqual(before);
+      expect((await pool.query("SELECT count(*)::int n FROM audit_events WHERE entity_id=$1 AND request_correlation_id='fixture-metadata-unchanged' AND action IN ('sermon.speaker_assignment_updated','sermon.bible_book_assignment_updated')",[id])).rows[0].n).toBe(0);
+    } finally {if(id)await pool.query("DELETE FROM sermons WHERE id=$1",[id]);}
   });
 
   it("assigns title-backed primary metadata atomically, protects concurrent edits, and makes an identical run a strict no-op", async () => {

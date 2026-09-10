@@ -5,6 +5,23 @@
 
 ## Authority and current checkpoint
 
+Following explicit post-rejection authorization, the source-backed metadata repair
+persisted 132 speaker assignments with zero conflicts; its identical second run
+changed nothing. There are now 147 saved speakers and eight unresolved cases among
+155 sermons. All 15 human passage decisions, 130 private proposals, ten unresolved
+passage cases, completed title corrections and sermon content remain unchanged.
+The 155 rendered forms retain their saved speaker/book selections after refresh,
+including a preserved legacy classification. Review counts remain 143 pending
+Stage-1 and 12 completed private previews. See
+[review-metadata-population-plan.md](review-metadata-population-plan.md) for current
+verification and clearly labelled prior rejection evidence. D-155 stays closed.
+
+An updated loopback backend is available for expressly authorized temporary
+development-identity inspection with read-only database sessions. This is not
+personal sign-in; no review decision was submitted. Normal personal authentication
+remains unimplemented/unconfigured. No authentication implementation or safeguards
+were changed, and no temporary configuration is tracked.
+
 The latest local milestone adds explicit primary-book metadata after the completed
 title repair at `b40ef6e7f821cf49878d7fb7f7f8b3d9035ea0f6`, not another enrichment
 batch. The saved 155-record plan was revalidated without conflicts. Exactly 130
@@ -16,11 +33,10 @@ evidence, guided progress and historical audits. See
 [primary-book-assignment-plan.md](primary-book-assignment-plan.md) for the exact
 scope and verification. No schema change or provider access occurred.
 
-The existing administrator queue remains running and populated-form reload checks
-passed there. A fresh updated-backend server launch was separately rejected over
-the local test-identity setting; it was not retried or bypassed. Updated backend
-create/edit/import behavior is suite-verified, but loading it into a fresh live
-server awaits resolution of that authentication objection.
+At the earlier primary-book checkpoint, a fresh server launch was rejected over
+the local test identity. That rejection was preserved and was subsequently resolved
+by Samuel's explicit temporary-inspection authorization above. Updated backend
+and form behaviour are now verified; personal sign-in is not claimed.
 
 The preceding title repair started from D-155 completion at
 `f7a9546d68547250776cfcb618b90ad8478c027b`; the isolated

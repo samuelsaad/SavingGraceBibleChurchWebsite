@@ -915,6 +915,12 @@ export class AdminSermonService {
           )
         );
       }
+      // A saved placeholder is not a deliberate speaker choice. Record only an
+      // actual human change, including an explicit clearing of a previous value.
+      if (input.speakerId !== undefined && input.speakerId !== (sermon.speaker?.id ?? null)) {
+        await transaction.appendAudit(successfulAudit(identity, "sermon.speaker_assignment_updated",
+          "sermon", id, ["speakerId"], requestCorrelationId));
+      }
       const updated = await transaction.findSermonForUpdate(id);
       if (!updated) notFound("Updated sermon could not be read");
       return sermonDetailDto(updated);

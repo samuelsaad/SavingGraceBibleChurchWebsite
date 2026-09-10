@@ -168,6 +168,11 @@ async function upsertSermon(
       AND (a.changed_fields ? 'bookClassificationIds' OR a.changed_fields ? 'primaryPassageReview')))`, [sermon.sourceWordPressId]);
   if (protectedPassage.rowCount) throw new Error("A source import cannot replace editorially owned passage relationships.");
   const speakerId = sermon.speaker ? await upsertSpeaker(client, sermon.speaker) : null;
+  const protectedSpeaker = await client.query(`SELECT 1 FROM sermons s WHERE s.source_wordpress_id=$1
+    AND s.speaker_id IS DISTINCT FROM $2::uuid AND (s.speaker_id IS NOT NULL OR EXISTS(
+      SELECT 1 FROM audit_events a WHERE a.entity_id=s.id AND a.actor_role='admin'
+      AND a.action='sermon.speaker_assignment_updated' AND a.outcome='succeeded'))`,[sermon.sourceWordPressId,speakerId]);
+  if (protectedSpeaker.rowCount) throw new Error("A source import cannot overwrite an existing speaker choice.");
   await client.query(
     `INSERT INTO sermons (
        id, title, slug, summary, summary_status, summary_source_kind,

@@ -1,5 +1,49 @@
 # Migration Validation Plan
 
+## Source-backed review metadata continuation — 10 September 2026
+
+- Starting backend: `cb5d6b1fde952823b9ce1e83e4aa9516cf63833d`; title repair
+  `b40ef6e7f821cf49878d7fb7f7f8b3d9035ea0f6` is preserved. The frozen comparison
+  revalidated all 132 speaker targets with no conflicts before guarded application.
+- Actual database results: 132 assignments/system audit events; 147 saved speakers,
+  eight unresolved; 155 sermons, 143 pending Stage-1, 12 completed previews. The
+  identical second run changed zero rows/versions/reviews/audits. Independent full
+  fingerprints match the receipt. The 15 human passage decisions, 130 private
+  proposals, ten unresolved passages, title corrections and content are unchanged.
+- Read-only live browser: all 155 forms checked before/after refresh, 147 speakers
+  and 145 book selections present, no mismatch. One legacy-option omission was
+  corrected with anonymized regression coverage. Existing human decisions remain
+  pending or completed as before; no live form submission was performed.
+- `npm run test:postgres`: 416 passed, zero skipped; guarded disposable database
+  removed. The unchanged-form regression preserves multiple book classifications,
+  supporting passages and the existing passage decision. Initial fixture errors
+  were corrected without changing constraints or migration meaning.
+- Final `npm test`: 383 passed, 33 database-gated tests skipped; those skips are
+  separately covered by the zero-skip PostgreSQL run above. `npm run check`: 188
+  files, zero errors/warnings/hints. `npm run build`: three static pages, six files.
+  `npm audit --offline --audit-level=high`: zero vulnerabilities. The documented
+  anonymized dry run with `--input tests/fixtures/dry-run.json`: five input, three
+  included, two excluded, zero rejected. An initial invocation without the required
+  fixture argument was corrected. No production source was used.
+- Privacy HTTP checks: all 155 public pages and details 404; anonymous admin API
+  and preview 401; public keyword/structured search empty; private admin filtering
+  works; sitemap excludes private records. Admin HTML retains no-store/noindex/CSP,
+  admin JSON its existing no-store/authentication contract. The temporary local
+  identity is explicitly authorized, not personal authentication; database sessions
+  are read-only. No real review decision or authentication event was manufactured.
+- The previously blocked scan is now bounded hash-only comparison of 1,089,358
+  transcript/description/Q&A windows against repository and production files.
+  Real prose does not leave PostgreSQL. Final staged/security results are recorded
+  with the completed metadata milestone. No external evidence refresh or production
+  access occurred. See `review-metadata-population-plan.md` for limitations and
+  preserved earlier rejection evidence.
+- Repository/production scans passed across 254 repository files and six build
+  files: zero content, protected-identity, credential/key/token/AWS, symlink or
+  prohibited-file findings. Private comparison, receipt and unresolved-case report
+  are ignored and unstaged. The protected frontend tree is unchanged. The exact
+  twelve staged files also passed the same scans, with zero findings. No real
+  metadata or sermon prose is included in the safe local completion commit.
+
 ## Local primary-book application — 10 September 2026
 
 This follows title-repair commit `b40ef6e7f821cf49878d7fb7f7f8b3d9035ea0f6`.
