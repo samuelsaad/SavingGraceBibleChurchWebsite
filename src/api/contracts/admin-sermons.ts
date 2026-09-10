@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { fillExplicitPrimaryBook } from "../../domain/primary-book-resolution";
 import { isoDateSchema, sermonStatusSchema } from "../../domain/sermon";
 import { containsHtmlTag } from "../../domain/content-readiness";
 import { formatBiblePassage, validateBiblePassage } from "../../domain/bible-passage";
@@ -131,6 +132,7 @@ export const scriptureReferenceInputSchema = z
     isLead: z.boolean().default(false)
   })
   .strict()
+  .overwrite(fillExplicitPrimaryBook)
   .refine((value) => value.endChapter === null || value.startChapter !== null, {
     path: ["endChapter"],
     message: "endChapter requires startChapter"

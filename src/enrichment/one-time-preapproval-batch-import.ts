@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
 import { assessSermonTitle } from "../domain/sermon-title";
+import { inspectPrimaryBooks, prepareAutomaticPrimaryBook } from "../scripture/automatic-primary-book";
 import {
   fourthBatchReviewFindings, insertFourthBatchReviewFindings,
   providerRedactionWarning, verifyFourthBatchReviewFindings
@@ -715,6 +716,8 @@ export async function importOneTimePreapprovalPrivateDraft(
       [sermonId, `${profile.sourceRecordKeyPrefix}-${artifact.target.sourceWordPressId}`, artifact.transcript.sourceTranscriptSha256, profile.actor]
     );
     if (findings) await insertFourthBatchReviewFindings(client, sermonId, findings);
+    const primaryBook = (await inspectPrimaryBooks(client, [sermonId]))[0]!;
+    await prepareAutomaticPrimaryBook(client, primaryBook, `${profile.correlationPrefix}:primary-book:${contentChecksum}`, false);
     await client.query(
       `INSERT INTO audit_events (
          actor_subject, actor_role, action, entity_type, entity_id,

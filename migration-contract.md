@@ -2,6 +2,14 @@
 
 ## Current title-only projection addendum
 
+The separately authorized [primary-book policy](primary-book-assignment-plan.md)
+also resolves exact explicit passage fields and prepares pending title-backed
+primary metadata during new authorized batch imports. It preserves original
+source values, existing human decisions and normal approval requirements. An
+unchanged old batch import does not replay preparation. Legacy loading refuses
+to replace editorially owned passage relationships. No consumed batch, new source
+extraction or schema change is authorized by this contract.
+
 Apply [the conservative title policy](sermon-title-policy.md) during source mapping.
 Preserve original source checksums, receipt hashes, slugs and passage metadata.
 The loader locks an existing source target and rejects a conflicting editorially

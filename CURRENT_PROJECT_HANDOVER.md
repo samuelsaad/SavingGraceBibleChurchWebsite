@@ -5,9 +5,25 @@
 
 ## Authority and current checkpoint
 
-The latest local milestone is the separately authorized title-only correction,
-not another enrichment batch. Starting from D-155 completion at
-`f7a9546d68547250776cfcb618b90ad8478c027b`, the isolated
+The latest local milestone adds explicit primary-book metadata after the completed
+title repair at `b40ef6e7f821cf49878d7fb7f7f8b3d9035ea0f6`, not another enrichment
+batch. The saved 155-record plan was revalidated without conflicts. Exactly 130
+evidence-supported primary passages were stored as unapproved proposals and ten
+missing-evidence cases received pending unresolved reviews. All 15 existing human
+passage decisions remain unchanged. The identical second application changed
+nothing; independent hashes verified preservation of content, titles, source
+evidence, guided progress and historical audits. See
+[primary-book-assignment-plan.md](primary-book-assignment-plan.md) for the exact
+scope and verification. No schema change or provider access occurred.
+
+The existing administrator queue remains running and populated-form reload checks
+passed there. A fresh updated-backend server launch was separately rejected over
+the local test-identity setting; it was not retried or bypassed. Updated backend
+create/edit/import behavior is suite-verified, but loading it into a fresh live
+server awaits resolution of that authentication objection.
+
+The preceding title repair started from D-155 completion at
+`f7a9546d68547250776cfcb618b90ad8478c027b`; the isolated
 `codex/sermon-title-passage-fix` branch preserves all existing source and generated
 content. The frozen comparison was revalidated in one guarded serializable
 transaction: exactly 130 corroborated title corrections (three original-preview,

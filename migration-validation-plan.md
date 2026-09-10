@@ -1,5 +1,68 @@
 # Migration Validation Plan
 
+## Local primary-book application — 10 September 2026
+
+This follows title-repair commit `b40ef6e7f821cf49878d7fb7f7f8b3d9035ea0f6`.
+Execution safety first refused passage/review writes outside the earlier title-only
+scope. Following that refusal, Samuel explicitly approved the saved assignments,
+unresolved-review entries and their audited version effects; the newly authorized
+operation passed the control without bypass. No title correction was replayed.
+
+- Before writing, all 155 saved identity/evidence/version fingerprints matched;
+  zero conflicts, zero previous assignment events and no prior application receipt.
+- Actual application: 130 exact source-title-backed primary proposals, ten pending
+  missing-evidence records, 140 system audit events; all 15 human passage decisions
+  unchanged. No automated assignment is human-approved. No schema change.
+- Identical second operation: zero changes, 155 unchanged. Independent complete
+  table/audit fingerprints still match the application receipt, including versions,
+  timestamps, relationship rows and guided-review progress. Every protected table
+  outside the authorized metadata changes matched before/after application.
+- All 130 assigned book/chapter/verse values match the frozen proposal; existing
+  passage text, secondary references and original source evidence are unchanged.
+  The 130 corrected titles, 22 clean titles and three ambiguous titles remain intact.
+- Current counts: 155 sermons, 143 pending Stage-1 reviews, 12 completed private
+  previews, 140 pending passage reviews, 15 preserved human decisions and zero
+  public eligibility. No additional review stage was reopened by this application.
+- Fresh post-application suites: standard 377 passed with 31 database tests gated;
+  guarded real PostgreSQL 408 passed with zero skips, disposable database removed.
+  Type/Astro: 182 files, zero errors/warnings/hints. Production build: three static
+  pages. Anonymized importer dry run: 5 input / 3 included / 2 excluded / 0 rejected.
+  Cached offline dependency audit: zero vulnerabilities.
+- Browser: separate authenticated read-only tab, populated ordinary and numbered
+  Bible-book proposals persisted after reload, unresolved proposal stayed blank
+  and pending after reload; filtered lists contain 130 proposed and ten unresolved
+  records. No save, finding, review or approval decision was submitted. Existing
+  user tabs were not refreshed or changed. The review queue remains running.
+- Route checks: all 140 affected public API details 404; public listing, keyword,
+  broad-book and structured-passage queries 200 with zero results; unauthenticated
+  admin API/preview 401; admin shell 200 with no-store/noindex. Feed and sitemap
+  remain absent (404). Completed-preview eligibility is 12, not a publication.
+- Verification invocation corrections only: use the documented canonical slug in
+  public passage queries (numeric IDs belong to admin queries), and supply the
+  required anonymized fixture to the dry-run command. No code or validator change
+  was needed after application. Initial sandbox access to protected local database
+  authentication was unavailable; authorized escalation completed the read-only
+  revalidation without exposing credential values.
+
+See [primary-book-assignment-plan.md](primary-book-assignment-plan.md) for the shared
+resolver, future-import/edit protections and remaining human review. D-155 is closed.
+
+Final scans covered 249 repository files, changed/new text, production output and
+server-side private-content shingles: zero credential/token/private-key/AWS,
+protected-identity, prohibited-file, private twenty-word sequence or symlink
+findings. Private comparison, sidecar and application receipt remain ignored and
+untracked. The protected creative frontend tree is unchanged.
+
+A separate post-verification attempt to start a fresh loopback server with the
+updated backend was rejected before process creation: execution safety considered
+enabling local test identities an authentication bypass despite local-server
+authority. No workaround or retry was attempted. Existing verified administrator
+servers and user tabs remain untouched and running. Populated-form checks above
+used the existing server; the updated backend's create/edit/import behavior is
+verified by the full automated suites, not by a newly launched live process.
+Restarting with that development identity mechanism requires separate resolution
+of the authentication objection. No authentication implementation was changed.
+
 ## Local title-correction verification — 10 September 2026
 
 Samuel explicitly approved the five importer/administrator title-policy changes

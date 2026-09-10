@@ -114,6 +114,14 @@ Public `/api/v1/sermons` selects only non-deleted `published` records. List resp
 
 ## Dashboard contract
 
+Explicit primary-reference metadata with a missing canonical book uses the shared
+conservative resolver before normal creation/editing. It fills only that book;
+existing coordinates and human choices are retained. New primary metadata has a
+pending passage-review record and remains unapproved. The Primary preaching
+passage form displays persisted proposed, confirmed and unreviewed primary or
+supporting references. This is separate from the optional broad book-classification
+taxonomy control. See [primary-book-assignment-plan.md](primary-book-assignment-plan.md).
+
 The static Astro dashboard is served by the local Node harness at `/admin` only when `ENABLE_LOCAL_DASHBOARD=1`. It opens with a visible anonymised-demonstration notice and aggregate completion progress. The general sermon editor retains the existing lifecycle and relationship controls for sermons without imported enrichment.
 
 Imported enrichment drafts use `/admin/sermons/:id/review`, not the all-in-one lifecycle form. That route renders one of six stages at a time: identity/provenance, flagged items, transcript, description, ordered Q&A and final summary. Stage 2 normally shows unresolved items only and places the exact associated transcript paragraphs in a large editable field. Accepting leaves the transcript unchanged; correcting transactionally stores original/corrected wording and attribution, updates only the exact versioned association, preserves sibling decisions and advances to the next unresolved item. Resolved items are read-only history. The route stores progress for pause/resume, renders epoch dates blank/unresolved, collapses technical provenance by default, provides large responsive transcript/Q&A controls, and requires explicit actions. An unsaved-change warning precedes navigation. The route contains no submit, schedule, publish, archive or deletion action.

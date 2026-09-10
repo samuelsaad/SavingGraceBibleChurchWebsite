@@ -97,6 +97,7 @@ import { fourthBatchReviewFindings, insertFourthBatchReviewFindings, providerRed
   verifyFourthBatchReviewFindings } from "../src/enrichment/fourth-fixed-batch-review-findings";
 import { createTitlePlan, applyTitlePlan, preservationSnapshot, titleCorrectionAction,
   titleCorrectionActor, titleHash } from "../src/metadata/sermon-title-correction";
+import { inspectPrimaryBooks,applyBookPlan,automaticBookAction } from "../src/scripture/automatic-primary-book";
 
 const enabled = process.env.RUN_POSTGRES_INTEGRATION === "1";
 const integration = enabled ? describe : describe.skip;
@@ -288,6 +289,69 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     await pool.end();
   });
 
+  it("assigns title-backed primary metadata atomically, protects concurrent edits, and makes an identical run a strict no-op", async () => {
+    const client=await pool.connect();
+    const id="77777777-7777-4777-8777-777777777777";
+    try {
+      await client.query("BEGIN");
+      await client.query(`INSERT INTO sermons(id,title,slug,status,service_date)
+        VALUES($1,'Anonymised Hope','automatic-book-fixture','draft','2025-01-05')`,[id]);
+      await client.query(`INSERT INTO sermon_enrichment_sources(sermon_id,provider,video_id,canonical_url,
+        caption_language,caption_track_type,original_filename,source_content_sha256,retrieval_attribution,
+        source_character_count,cleaned_character_count,apparent_completeness,uncertainty_marker_count,
+        processing_version,imported_at,processed_at,processing_duration_ms,estimated_review_minutes)
+        VALUES($1,'youtube','Z0000000098','https://www.youtube.com/watch?v=Z0000000098','en','automatic',
+        'fixture.vtt',$2,'authorised_youtube_data_api',100,100,'apparently_complete',0,'anonymised-book-policy',now(),now(),0,35)`,[id,"b".repeat(64)]);
+      await client.query(`INSERT INTO sermon_media(sermon_id,media_type,provider,external_id,canonical_url,title,is_primary,display_order)
+        VALUES($1,'video','youtube','Z0000000098','https://www.youtube.com/watch?v=Z0000000098',
+          'Anonymised Hope — 1 John 2:1–6 — private evaluation source',true,0)`,[id]);
+      await client.query("SELECT refresh_sermon_enrichment($1)",[id]);
+      await client.query("INSERT INTO sermon_enrichment_reviews(sermon_id) VALUES($1)",[id]);
+      const plan=await inspectPrimaryBooks(client,[id]);
+      expect(plan[0]?.assessment).toMatchObject({outcome:"newly_assigned",passage:{canonicalBookId:62}});
+      const hash=titleHash(JSON.stringify(plan));
+      await client.query("SAVEPOINT book_concurrency");
+      await client.query("UPDATE sermons SET row_version=row_version+1,title='Human revision' WHERE id=$1",[id]);
+      expect(await applyBookPlan(client,plan,hash)).toEqual([{id,result:"concurrent_metadata_edit_preserved"}]);
+      expect((await client.query("SELECT count(*)::int n FROM sermon_primary_passage_reviews WHERE sermon_id=$1",[id])).rows[0].n).toBe(0);
+      await client.query("ROLLBACK TO SAVEPOINT book_concurrency");
+      expect(await applyBookPlan(client,plan,hash)).toEqual([{id,result:"changed"}]);
+      expect((await client.query(`SELECT canonical_book_id,start_chapter,start_verse,end_chapter,end_verse,
+        relationship_role,review_status,reviewer_subject FROM scripture_references WHERE sermon_id=$1`,[id])).rows).toEqual([
+        {canonical_book_id:62,start_chapter:2,start_verse:1,end_chapter:2,end_verse:6,relationship_role:"primary",review_status:"proposed",reviewer_subject:null}]);
+      expect((await client.query("SELECT review_status,reviewed_by_subject FROM sermon_primary_passage_reviews WHERE sermon_id=$1",[id])).rows[0])
+        .toEqual({review_status:"pending",reviewed_by_subject:null});
+      expect((await client.query("SELECT identity_status,current_stage,completed_at FROM sermon_enrichment_reviews WHERE sermon_id=$1",[id])).rows[0])
+        .toEqual({identity_status:"pending",current_stage:1,completed_at:null});
+      const after=await preservationSnapshot(client,[]);
+      expect(await applyBookPlan(client,plan,hash)).toEqual([{id,result:"unchanged"}]);
+      expect(await preservationSnapshot(client,[])).toEqual(after);
+      expect((await client.query("SELECT actor_role,count(*)::int n FROM audit_events WHERE entity_id=$1 AND action=$2 GROUP BY 1",[id,automaticBookAction])).rows)
+        .toEqual([{actor_role:"system",n:1}]);
+      expect((await client.query("SELECT title,slug,status,summary_status FROM sermons WHERE id=$1",[id])).rows[0])
+        .toEqual({title:"Anonymised Hope",slug:"automatic-book-fixture",status:"draft",summary_status:"missing"});
+    } finally {await client.query("ROLLBACK");client.release();}
+  });
+
+  it("persists the inferred book through normal primary metadata create/edit without confirming it", async()=>{
+    const service=new AdminSermonService(new PostgresAdminSermonRepository(pool));
+    const identity:ApplicationIdentity={subject:"anonymised-book-admin",role:"admin"};
+    let id:string|undefined;
+    try {
+      const created=await service.create(createSermonInputSchema.parse({title:"Book mapping fixture",slug:"book-mapping-fixture",serviceDate:"2025-01-05",
+        scriptureReferences:[{displayText:"1 John 2:1–6",relationshipRole:"primary",isLead:true}]}),identity,"anonymised-book-create");
+      id=created.id;
+      expect(created.scriptureReferences[0]).toMatchObject({canonicalBookId:62,reviewStatus:"unreviewed",startChapter:null});
+      expect(created.primaryPassageReview).toMatchObject({reviewStatus:"pending",reviewedBySubject:null,evidenceSource:"administrator"});
+      const edited=await service.update(id,updateSermonInputSchema.parse({rowVersion:created.rowVersion,
+        scriptureReferences:[{displayText:"Romans",relationshipRole:"primary",isLead:true}]}),identity,"anonymised-book-edit");
+      expect(edited.scriptureReferences[0]).toMatchObject({canonicalBookId:45,startChapter:null,endChapter:null,reviewStatus:"unreviewed"});
+      expect(edited.primaryPassageReview?.reviewStatus).toBe("pending");
+      await expect(service.update(id,updateSermonInputSchema.parse({rowVersion:created.rowVersion,title:"Stale edit"}),identity,"anonymised-book-stale"))
+        .rejects.toMatchObject({status:409});
+    } finally {if(id)await pool.query("DELETE FROM sermons WHERE id=$1",[id]);}
+  });
+
   it("corrects only corroborated titles with audit, review invalidation, concurrency and exact idempotency", async () => {
     const client = await pool.connect();
     const id = "88888888-8888-4888-8888-888888888888";
@@ -377,6 +441,12 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       await loadMigrationResult(pool, result, snapshotName, { forcePrivateDraft: true });
       expect((await pool.query("SELECT title,slug FROM sermons WHERE id=$1", [id])).rows[0])
         .toEqual({ title: "A Living Hope", slug: source.slug });
+      await pool.query(`INSERT INTO sermon_primary_passage_reviews(sermon_id,proposal_outcome,evidence_source,evidence_sha256,parser_version)
+        VALUES($1,'administrator_entered','administrator',$2,'anonymised-human-metadata')`,[id,"c".repeat(64)]);
+      const passageBefore=(await pool.query("SELECT to_jsonb(r) row FROM scripture_references r WHERE sermon_id=$1 ORDER BY id",[id])).rows;
+      await expect(loadMigrationResult(pool,result,snapshotName,{forcePrivateDraft:true})).rejects.toThrow("editorially owned passage relationships");
+      expect((await pool.query("SELECT to_jsonb(r) row FROM scripture_references r WHERE sermon_id=$1 ORDER BY id",[id])).rows).toEqual(passageBefore);
+      await pool.query("DELETE FROM sermon_primary_passage_reviews WHERE sermon_id=$1",[id]);
       await pool.query("UPDATE sermons SET title='A personally revised title',updated_by_subject='fixture-admin',row_version=row_version+1 WHERE id=$1", [id]);
       const before = (await pool.query("SELECT to_jsonb(s) AS row FROM sermons s WHERE id=$1", [id])).rows;
       await expect(loadMigrationResult(pool, result, snapshotName, { forcePrivateDraft: true }))
@@ -703,6 +773,13 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   it("aborts the one-speaker migration with affected IDs and cleanly reapplies", async () => {
     await runSchema("rollback", "0016_legacy_completed_passage_reviews");
     await runSchema("rollback", "0015_optional_passage_and_grounding_identity");
+    // Canonical import metadata now carries an unreviewed primary designation.
+    // Prove the unchanged rollback guard protects it, then reset only these
+    // anonymised source fixtures to their pre-0014 relationship shape for this migration test.
+    await expect(runSchema("rollback", "0014_primary_preaching_passages")).rejects.toMatchObject({code:"migration_transaction_failure"});
+    const migrationFixtures=runMigrationDryRun(legacySermonRecordSchema.array().parse(JSON.parse(await readFile("tests/fixtures/dry-run.json","utf8"))));
+    await pool.query(`UPDATE scripture_references SET relationship_role='unclassified',is_lead=false
+      WHERE sermon_id=ANY($1::uuid[]) AND provenance='legacy_import' AND review_status='unreviewed'`,[migrationFixtures.candidates.map(r=>r.id)]);
     await runSchema("rollback", "0014_primary_preaching_passages");
     await runSchema("rollback", "0013_official_youtube_caption_provenance");
     await runSchema("rollback", "0012_description_semantic_runtime_provenance");

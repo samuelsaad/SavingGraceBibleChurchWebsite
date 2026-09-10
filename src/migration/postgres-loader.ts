@@ -1,4 +1,5 @@
 import type { Pool, PoolClient } from "pg";
+import { resolveExplicitPassage } from "../domain/primary-book-resolution";
 import { deterministicSourceUuid } from "./identity";
 import { resolveCanonicalBibleBook } from "./reference-catalogue";
 import type {
@@ -160,6 +161,12 @@ async function upsertSermon(
   if (currentTitle.rows.some((row) => row.protected && row.title !== sermon.title)) {
     throw new Error("A source import cannot overwrite an editorially owned sermon title.");
   }
+  const protectedPassage = await client.query(`SELECT 1 FROM sermons s WHERE s.source_wordpress_id=$1 AND (
+    EXISTS(SELECT 1 FROM sermon_primary_passage_reviews p WHERE p.sermon_id=s.id) OR
+    EXISTS(SELECT 1 FROM scripture_references r WHERE r.sermon_id=s.id AND (r.provenance<>'legacy_import' OR r.review_status<>'unreviewed')) OR
+    EXISTS(SELECT 1 FROM audit_events a WHERE a.entity_id=s.id AND a.outcome='succeeded'
+      AND (a.changed_fields ? 'bookClassificationIds' OR a.changed_fields ? 'primaryPassageReview')))`, [sermon.sourceWordPressId]);
+  if (protectedPassage.rowCount) throw new Error("A source import cannot replace editorially owned passage relationships.");
   const speakerId = sermon.speaker ? await upsertSpeaker(client, sermon.speaker) : null;
   await client.query(
     `INSERT INTO sermons (
@@ -319,6 +326,9 @@ async function upsertSermon(
     );
   }
 
+  const parsedReferences = sermon.scriptureReferences.map(reference => resolveExplicitPassage(reference.displayText));
+  const unambiguousPrimary = parsedReferences.length > 0 && parsedReferences.every(reference => reference !== null &&
+    JSON.stringify(reference.passage) === JSON.stringify(parsedReferences[0]!.passage));
   for (const [referenceIndex, reference] of sermon.scriptureReferences.entries()) {
     const referenceId = deterministicSourceUuid(
       "wordpress-scripture-reference",
@@ -326,12 +336,19 @@ async function upsertSermon(
     );
     await client.query(
       `INSERT INTO scripture_references (
-         id, sermon_id, display_text, display_order, parse_status
-       ) VALUES ($1, $2, $3, $4, $5)
+         id, sermon_id, display_text, display_order, parse_status, canonical_book_id,
+         start_chapter,start_verse,end_chapter,end_verse,relationship_role,is_lead
+       ) VALUES ($1, $2, $3, $4, $5,$6,$7,$8,$9,$10,$11,$12)
        ON CONFLICT (sermon_id, display_order) DO UPDATE
          SET display_text = EXCLUDED.display_text,
              parse_status = EXCLUDED.parse_status, updated_at = now()`,
-      [referenceId, sermon.id, reference.displayText, referenceIndex, reference.parseStatus]
+      [referenceId, sermon.id, reference.displayText, referenceIndex, reference.parseStatus,
+        parsedReferences[referenceIndex]?.passage.canonicalBookId ?? null,
+        parsedReferences[referenceIndex]?.passage.startChapter ?? null,
+        parsedReferences[referenceIndex]?.passage.startVerse ?? null,
+        parsedReferences[referenceIndex]?.passage.endChapter ?? null,
+        parsedReferences[referenceIndex]?.passage.endVerse ?? null,
+        unambiguousPrimary && referenceIndex===0 ? 'primary' : 'unclassified', unambiguousPrimary && referenceIndex===0]
     );
 
     for (const [sourceIndex, source] of reference.sources.entries()) {

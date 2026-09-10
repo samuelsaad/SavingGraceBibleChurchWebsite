@@ -11,6 +11,7 @@ import { ApplicationError } from "../../application/errors";
 import type { ContentReadinessIssue, ContentReadinessResult } from "../../domain/content-readiness";
 import type { SermonStatus } from "../../domain/sermon";
 import { biblePassageParserVersion, formatBiblePassage } from "../../domain/bible-passage";
+import { primaryBookResolutionVersion } from "../../domain/primary-book-resolution";
 import { resolveYouTubeIdentity, type YouTubeIdentityCandidate } from "../../domain/youtube";
 import type {
   AdminSermonRepository,
@@ -890,6 +891,14 @@ export class PostgresAdminSermonTransaction implements AdminSermonTransaction {
            ) VALUES ($1, $2, 'curated', $3)`,
           [inserted.rows[0]!.id, id, reference.displayText]
         );
+      }
+      // Entered metadata is not a passage approval; retain the existing review gate.
+      if (input.scriptureReferences.some(reference => reference.relationshipRole === "primary")) {
+        await this.client.query(`INSERT INTO sermon_primary_passage_reviews
+          (sermon_id,proposal_outcome,evidence_source,evidence_sha256,parser_version)
+          VALUES($1,'administrator_entered','administrator',encode(digest($2,'sha256'),'hex'),$3)
+          ON CONFLICT (sermon_id) DO NOTHING`,
+        [id, JSON.stringify(input.scriptureReferences), primaryBookResolutionVersion]);
       }
     }
     if (input.media !== undefined) {

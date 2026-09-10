@@ -2,6 +2,13 @@
 
 ## Current local title-correction checkpoint
 
+The subsequent [primary-book assignment](primary-book-assignment-plan.md) is now
+persisted: 130 unapproved primary-passage proposals, ten pending missing-evidence
+reviews, zero conflicts and all 15 human passage decisions preserved. An identical
+second application changed nothing. The Primary preaching passage form displays
+these stored assignments; it does not automatically confirm them. No title,
+content, publication or schema change was made by that operation.
+
 The authorized local correction removed corroborated passage references from
 130 application titles (three original-preview records and 127 later records).
 There were no conflicts; 22 clean titles and three ambiguous titles were preserved.

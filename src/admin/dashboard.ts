@@ -610,7 +610,7 @@ function primaryPassageReviewPanel(sermon: SermonDetail): string {
   const review = sermon.primaryPassageReview;
   if (!review) return "";
   const candidates = sermon.scriptureReferences.filter((reference) =>
-    (reference.reviewStatus === "proposed" || reference.reviewStatus === "confirmed") &&
+    (reference.reviewStatus === "proposed" || reference.reviewStatus === "confirmed" || reference.reviewStatus === "unreviewed") &&
     (reference.relationshipRole === "primary" || reference.relationshipRole === "supporting")
   );
   const values: PrimaryPassageEditorValue[] = candidates.length
