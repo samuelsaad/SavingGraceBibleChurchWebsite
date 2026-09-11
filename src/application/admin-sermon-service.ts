@@ -339,6 +339,11 @@ export class AdminSermonService {
     private readonly now: () => Date = () => new Date()
   ) {}
 
+  async delegatedAiReviews(identity: ApplicationIdentity) {
+    assertAdminAccess(identity);
+    return { data: await this.repository.listDelegatedAiReviews?.() ?? [] };
+  }
+
   async list(
     query: AdminSermonListQuery,
     identity: ApplicationIdentity

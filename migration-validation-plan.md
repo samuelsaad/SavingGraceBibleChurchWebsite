@@ -1,5 +1,30 @@
 # Migration Validation Plan
 
+## D-156 applied infrastructure checkpoint — 11 September 2026
+
+- Samuel's post-rejection authority permits only sermon-linked review removal
+  within a future separately authorised guarded permanent deletion; no real
+  deletion occurred. Fixture tests retain tombstones, audit and sibling records
+  and reject direct history deletion and unguarded parent deletion.
+- The ledger through 0016 and 155-sermon baseline were independently checked.
+  Only 0017 was applied; identical migration rerun was a no-op. A reversed local
+  journal-validator argument order failed before writes and was corrected.
+  One exact 155-member D-156 scope was bound and independently verified.
+- Complete `npm run test:postgres`: 528 passed, zero skips, exact disposable
+  database removed. `npm run check`: 199 files, zero diagnostics. Production
+  build: three pages/six files. Offline dependency audit: zero vulnerabilities.
+  Anonymized dry run: five inputs, three included, two excluded, zero rejected;
+  required fixture argument was supplied after an initial failed-closed omission.
+- Evidence-reader fixtures cover exact scope/policy/content hashes, missing
+  judgments, explicit contextual coverage, truthful retrospective attestations,
+  private rejected artifacts, one correction limit and identical assembly.
+  Actual private reviews and identical application passes are in progress;
+  no collection-wide completion claim is made at this checkpoint.
+- Whole-file source checks: 152 exact normalized sequences and valid source
+  hashes/VTT parses, zero cue-order regressions; three preserved human-approved
+  source limitations. Provider-redacted wording and existing findings remain
+  unresolved. These checks do not verify audio.
+
 ## Source-backed review metadata continuation — 10 September 2026
 
 - Starting backend: `cb5d6b1fde952823b9ce1e83e4aa9516cf63833d`; title repair
@@ -941,3 +966,26 @@ Focused anonymised checks passed 23 tests. The complete guarded PostgreSQL suite
 - Read-only HTTP checks: all 36 public pages, public API details and authenticated completed-preview details return 404; public listing, keyword search and structured Scripture search return 200 without new identities. The archive returns 200; absent feed and sitemap endpoints return 404 without content (not a claim of production SEO readiness). Unauthenticated preview returns 401; authenticated preview returns 200 with noindex and exactly 15 completed sermons. Authenticated admin queue contains 155 records. Browser inspection independently observed the authentication boundary and the 15-sermon authenticated preview using suppressed content output, without screenshots or review actions. Temporary browser tab and loopback server were closed.
 - Final scans checked 239 tracked files, all staged changes, six production files, private identity/prose shingles, credentials/tokens/keys/AWS patterns, prohibited source artifacts, tracked links and symlinks: no findings. The designated existing 15-record development dataset remains the sole allowed tracked content path; no new identity entered it. Private artifacts are ignored/unstaged, original candidates and 37 progress-history snapshots remain intact, and the terminal checkpoint preserves its original frozen predecessor. Claude's frontend tree remains `5d00d0b638c3f3f483b7a9e519454d1dab95426b` with no frontend diff from the batch base.
 - Verification-helper issues were resolved locally before their checks passed: a repository-relative caption locator, two unused imports, an anonymised fixture date, the read-only administrator DTO projection, and the existing local-server startup opt-in requirement. None changed sermon content or authority. No caption retrieval or valid generation was repeated. D-155 is complete and expired; all generated material awaits real administrator review. Nothing was approved, published, pushed, merged or deployed.
+
+### D-156 delegated review preparation — 10 September 2026
+
+The protected-policy amendment and additive review implementation are prepared
+but uncommitted. The application database was accessed only read-only. Its 155
+record fingerprints remain unchanged, with 142 pending Stage-1 reviews, 12
+completed private previews, 15 human-approved descriptions and 103 human-approved
+Q&A pairs. No AI decision, correction or migration was applied.
+
+The standard suite passed 467 tests; its 43 database cases were gated. The separate
+guarded PostgreSQL run passed all 510 tests with zero skips and removed its exact
+disposable database. A status-projection expectation and historical fixture's
+migration-16 setup were fixed before the successful rerun; migration meaning was
+not changed. Type/Astro checks, build, offline audit, anonymized dry run, skill
+validation and new-content/security scans passed. Detailed limitations and
+read-only source integrity results are in [delegated-ai-review-plan.md](delegated-ai-review-plan.md).
+
+An execution-safety rejection prevented the proposed future permanent-deletion
+cascade of private AI-review evidence. The rejected patch was not applied, and
+the current restrictive migration must not be applied to the application database
+until compatibility is resolved. This is not a completed substantive review or
+an authorization to delete data. D-155 remains closed; no frontend or publication
+gate was changed.

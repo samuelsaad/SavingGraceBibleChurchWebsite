@@ -360,6 +360,7 @@ export interface AdminSermonTransaction {
 }
 
 export interface AdminSermonRepository {
+  listDelegatedAiReviews?(): Promise<unknown[]>;
   transaction<T>(work: (transaction: AdminSermonTransaction) => Promise<T>): Promise<T>;
   listSermons(query: AdminSermonListQuery): Promise<StoredSermonPage>;
   findSermon(id: string): Promise<StoredSermonDetail | null>;

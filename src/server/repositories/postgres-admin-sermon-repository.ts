@@ -1,4 +1,5 @@
 import type { Pool, PoolClient, QueryResultRow } from "pg";
+import { listDelegatedReviews } from "../../application/delegated-ai-review-service";
 import type {
   AdminSermonListQuery,
   CreateSermonInput,
@@ -1564,6 +1565,10 @@ export class PostgresAdminSermonTransaction implements AdminSermonTransaction {
 
 export class PostgresAdminSermonRepository implements AdminSermonRepository {
   constructor(private readonly pool: Pool) {}
+
+  listDelegatedAiReviews(): Promise<unknown[]> {
+    return listDelegatedReviews(this.pool);
+  }
 
   async transaction<T>(work: (transaction: AdminSermonTransaction) => Promise<T>): Promise<T> {
     const client = await this.pool.connect();

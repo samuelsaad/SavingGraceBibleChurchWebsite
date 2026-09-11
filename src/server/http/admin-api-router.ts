@@ -90,6 +90,11 @@ export function createAdminApiRouter(
       const path = url.pathname;
       const requestCorrelationId = correlationId(request);
 
+      if (path === "/api/v1/admin/ai-reviews") {
+        if (request.method !== "GET") return json(405, { error: { code: "method_not_allowed" } }, { Allow: "GET" });
+        return json(200, await service.delegatedAiReviews(identity), { "X-Robots-Tag": "noindex, nofollow, noarchive" });
+      }
+
       if (path === "/api/v1/admin/sermons" || path === "/api/v1/admin/sermons/") {
         if (request.method === "GET") {
           const query = adminSermonListQuerySchema.parse(Object.fromEntries(url.searchParams));

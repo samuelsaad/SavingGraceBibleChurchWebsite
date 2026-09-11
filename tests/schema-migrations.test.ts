@@ -33,7 +33,7 @@ describe("journalled PostgreSQL schema migrations", () => {
     expect(schemaMigrationChecksum(upLf, downLf)).toMatch(/^[0-9a-f]{64}$/);
   });
 
-  it("loads the sixteen canonical paired migrations in stable order", async () => {
+  it("loads the seventeen canonical paired migrations in stable order", async () => {
     const migrations = await loadSchemaMigrations();
     expect(migrations.map((migration) => migration.id)).toEqual([
       "0001_initial",
@@ -51,9 +51,10 @@ describe("journalled PostgreSQL schema migrations", () => {
       "0013_official_youtube_caption_provenance",
       "0014_primary_preaching_passages",
       "0015_optional_passage_and_grounding_identity",
-      "0016_legacy_completed_passage_reviews"
+      "0016_legacy_completed_passage_reviews",
+      "0017_delegated_private_ai_review"
     ]);
-    expect(migrations.map((migration) => migration.order)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
+    expect(migrations.map((migration) => migration.order)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]);
     expect(migrations.every((migration) => !/^\s*BEGIN;/i.test(migration.upBody))).toBe(true);
     expect(migrations.every((migration) => !/COMMIT;\s*$/i.test(migration.downBody))).toBe(true);
   });
@@ -83,7 +84,7 @@ describe("journalled PostgreSQL schema migrations", () => {
     const migrations = await loadSchemaMigrations();
     expect(validateSchemaMigrationJournal(migrations, [])).toBe(0);
     expect(validateSchemaMigrationJournal(migrations, receipts(migrations, 3))).toBe(3);
-    expect(validateSchemaMigrationJournal(migrations, receipts(migrations))).toBe(16);
+    expect(validateSchemaMigrationJournal(migrations, receipts(migrations))).toBe(17);
   });
 
   it("fails closed on duplicate, unknown, missing, reordered and changed receipts", async () => {

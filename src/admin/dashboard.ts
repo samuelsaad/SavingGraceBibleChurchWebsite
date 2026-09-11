@@ -1977,6 +1977,30 @@ async function renderAuditHistory(): Promise<void> {
     <section class="panel" style="margin-top:1.25rem"><h2>Permanent deletion tombstones</h2><p class="subtle">These records contain only the former identifier and slug, actor, action, timestamp, reason, and SEO disposition. Deleted content and media are not retained.</p><div class="table-wrap"><table><thead><tr><th>Time</th><th>Former slug</th><th>Reason</th><th>SEO disposition</th><th>Actor</th></tr></thead><tbody>${history.deletionTombstones.length ? history.deletionTombstones.map((item) => `<tr><td>${escapeHtml(humanDate(item.createdAt))}</td><td><code>${escapeHtml(item.formerSlug)}</code><div class="subtle">${escapeHtml(item.formerSermonId)}</div></td><td>${escapeHtml(item.reason)}</td><td>${escapeHtml(item.seoDisposition ?? "not previously public")}${item.redirectTargetPath ? `<div class="subtle">${escapeHtml(item.redirectTargetPath)}</div>` : ""}</td><td>${escapeHtml(item.actorSubject)}</td></tr>`).join("") : '<tr><td colspan="5" class="empty-state">No permanent deletions recorded.</td></tr>'}</tbody></table></div></section>`;
 }
 
+interface AiReviewRow {
+  sequence: number; sermonId: string; title: string; artifactKey: string | null;
+  displayOrder: number | null; outcome: string; reviewedAt: string | null;
+  exceptionCode: string | null; informationNeeded: string | null;
+  standingWarnings: string[]; model: string | null; humanApprovalPreserved: boolean;
+}
+
+async function renderDelegatedAiReviews(): Promise<void> {
+  const { data } = await api<{data: AiReviewRow[]}>("/api/v1/admin/ai-reviews");
+  const selected = new URLSearchParams(location.search).get("sermon");
+  const all = new URLSearchParams(location.search).get("all") === "1";
+  const rows = data.filter(r => (!selected || r.sermonId === selected) && (all || (!r.humanApprovalPreserved && ["needs_human","stale","incomplete"].includes(r.outcome))));
+  const accepted = data.filter(r => r.outcome === "accepted").length;
+  const corrected = data.filter(r => r.outcome === "corrected_accepted").length;
+  const unresolved = data.filter(r => ["needs_human","stale"].includes(r.outcome)).length;
+  main.innerHTML = `${pageHeading("Delegated AI content review", "Private D-156 review by Codex Astra under Samuel’s delegation—not human approval or audio verification.", '<a class="button" href="/admin/sermons" data-route>Administrator queue</a>')}
+    <section class="panel"><h2>Separate review outcomes</h2><p>${accepted} accepted · ${corrected} corrected and accepted · ${unresolved} material exceptions.</p>
+    <p>Current AI-accepted descriptions and Q&A do not require repeated substantive human review. Existing human approvals remain intact. Identity, transcript accuracy, unresolved findings and passage decisions remain separate. Human-completed review counts and publication gates are unchanged.</p>
+    <p>Caption fidelity does not verify audio. ASR and unconfirmed audio-association warnings remain source limitations, not automatic rejection of every supported answer.</p>
+    <a class="button" href="/admin/ai-reviews${all ? "" : "?all=1"}" data-route>${all ? "Show exceptions and unfinished work" : "Show all AI review outcomes"}</a></section>
+    <section class="panel"><h2>${all ? "All AI review outcomes" : "Exceptions and unfinished work"}</h2>
+    <div class="table-wrap"><table><thead><tr><th>Sermon</th><th>Item</th><th>Outcome</th><th>Information or decision needed</th></tr></thead><tbody>${rows.map(r => `<tr><td><a href="/admin/sermons/${escapeHtml(r.sermonId)}/review" data-route>${escapeHtml(r.title)}</a></td><td>${r.artifactKey === "description" ? "Description" : r.displayOrder ? `Q&A ${r.displayOrder}` : "Review not completed"}</td><td>${escapeHtml(r.outcome.replaceAll("_"," "))}${r.humanApprovalPreserved ? " · existing human approval preserved" : ""}<div class="subtle">${escapeHtml(r.model ?? "No AI decision")}</div></td><td>${escapeHtml(r.informationNeeded ?? (r.outcome === "stale" ? "Content or source changed; prior AI acceptance no longer applies." : r.outcome === "incomplete" ? "Execution has not completed this review. No human decision is requested merely because it is unfinished." : "No repeated substantive review required."))}</td></tr>`).join("") || '<tr><td colspan="4">No material exceptions in the selected completed work. Unattempted work is not accepted.</td></tr>'}</tbody></table></div></section>`;
+}
+
 async function renderRoute(): Promise<void> {
   updateNavigation();
   setBusy(true);
@@ -1984,6 +2008,7 @@ async function renderRoute(): Promise<void> {
   try {
     const path = location.pathname.replace(/\/$/, "") || "/admin";
     if (path === "/admin") await renderDashboard();
+    else if (path === "/admin/ai-reviews") await renderDelegatedAiReviews();
     else if (path === "/admin/sermons") await renderSermonList();
     else if (path === "/admin/sermons/new") await renderSermonForm();
     else if (/^\/admin\/sermons\/[0-9a-f-]+\/review$/i.test(path)) await renderGuidedSermonReview(path.split("/").at(-2)!);

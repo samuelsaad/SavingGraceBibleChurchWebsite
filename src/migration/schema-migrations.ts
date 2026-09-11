@@ -25,7 +25,8 @@ export type SchemaMigrationScope =
   | "0013_official_youtube_caption_provenance"
   | "0014_primary_preaching_passages"
   | "0015_optional_passage_and_grounding_identity"
-  | "0016_legacy_completed_passage_reviews";
+  | "0016_legacy_completed_passage_reviews"
+  | "0017_delegated_private_ai_review";
 
 interface SchemaMigrationDefinition {
   id: string;
@@ -258,6 +259,14 @@ export const schemaMigrationDefinitions: readonly SchemaMigrationDefinition[] = 
     addedRelations: [],
     addedFunctions: ["enforce_completed_enrichment_review_passage_decision()"],
     addedTriggers: ["sermon_enrichment_reviews_passage_decision_consistency"]
+  },
+  {
+    id: "0017_delegated_private_ai_review", order: 17,
+    upPath: "db/migrations/0017_delegated_private_ai_review.sql",
+    downPath: "db/migrations/0017_delegated_private_ai_review.down.sql",
+    addedRelations: ["delegated_ai_review_scopes", "delegated_ai_review_members", "sermon_ai_content_reviews"],
+    addedFunctions: ["protect_delegated_ai_review_history()", "protect_ai_reviewed_content_from_import()"],
+    addedTriggers: ["delegated_ai_review_scopes_immutable", "delegated_ai_review_members_immutable", "sermon_ai_content_reviews_immutable", "sermons_protect_ai_content", "qa_protect_ai_content"]
   }
 ] as const;
 

@@ -68,6 +68,20 @@ Historic slug changes for previously published sermons automatically upsert a di
 
 ## Routes
 
+D-156 adds the protected read-only `GET /api/v1/admin/ai-reviews` projection and
+its private `/admin/ai-reviews` status screen. It distinguishes exact-current
+AI acceptance, corrected acceptance, material exceptions, stale or incomplete
+work, and preserved human approvals. It creates no HTTP decision-write endpoint,
+human approval, guided-stage completion or publication eligibility. Accepted
+artifacts do not require another substantive human content review. Unrelated
+identity, finding, transcript and passage responsibilities remain separate.
+
+Following Samuel's explicit post-rejection authority, a future separately
+authorised guarded permanent deletion also removes only that sermon's private
+D-156 membership/review content. Direct history deletion remains refused. The
+minimal non-content tombstone and audit history remain; no current deletion is
+authorised by implementing this compatibility rule.
+
 ```text
 GET    /api/v1/admin/sermons
 POST   /api/v1/admin/sermons

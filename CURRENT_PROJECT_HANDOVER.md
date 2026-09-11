@@ -1,9 +1,30 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
-**Handover date:** 10 September 2026
+**Handover date:** 11 September 2026
 **Purpose:** Public-safe orientation for continuing work from this repository. This file contains no sermon body, credential, token, session, raw caption export or private local path.
 
 ## Authority and current checkpoint
+
+D-156 delegated private AI review is implementation work in progress, not a
+completed review milestone. Samuel separately authorised the protected policy and
+skill amendments. The read-only baseline is 155 sermons, 142 pending Stage-1
+reviews and 12 completed private previews; the difference from the prior 143
+Stage-1 count is intervening administrator progress, which must be preserved.
+Existing human approvals cover 15 descriptions and 103 Q&A pairs. The pending
+substantive scope is 140 descriptions and 981 individual Q&A pairs.
+
+Private evidence packets and the exact 155-member scope have been frozen.
+Migration `0017_delegated_private_ai_review` alone was applied after verifying
+the ledger through 0016; its identical rerun was a no-op. Separately attributed
+AI reviews are now being recorded with per-sermon checkpoints and identical
+idempotency passes. The collection-wide substantive review is not complete.
+The explicit 11 September post-rejection authority permits narrowly guarded removal of
+sermon-linked D-156 private review records only during a future separately
+authorised permanent deletion, retaining its minimal tombstone and audit. No
+sermon deletion is authorised now. The compatibility patch passed all 512 guarded
+PostgreSQL tests before application migration; the complete implementation plus
+evidence-reader suite subsequently passed 528 tests with zero skips. See
+[delegated-ai-review-plan.md](delegated-ai-review-plan.md). D-155 remains closed.
 
 Following explicit post-rejection authorization, the source-backed metadata repair
 persisted 132 speaker assignments with zero conflicts; its identical second run

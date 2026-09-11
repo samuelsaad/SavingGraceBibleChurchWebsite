@@ -9,6 +9,10 @@ description: Create, regenerate, review, or validate private sermon descriptions
 
 Produce coherent, transcript-grounded private drafts for later human review. Treat the approved transcript as the sole content authority and keep theological, editorial, and publication decisions with the administrator.
 
+## Explicit D-156 delegated-review mode
+
+For Samuel's separately authorised review of the frozen existing local collection only, read [the delegated-review contract](references/delegated-review-contract.md) completely and use it instead of the default human-only acceptance and complete-approved-transcript-reading requirements below. Assess every pending description and Q&A in full against sufficient contextual source evidence; record separately scoped AI acceptance, not human approval. The mode permits one focused, preserved correction round and exact-version revalidation. It never permits transcript edits, audio verification claims, publication or automatic completion of unrelated review stages. Existing human approvals and all consumed batch histories remain intact. Outside this mode, every normal rule below still applies.
+
 ## Non-negotiable boundaries
 
 - Use only the complete current administrator-approved transcript for content claims.

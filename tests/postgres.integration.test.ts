@@ -100,6 +100,7 @@ import { createTitlePlan, applyTitlePlan, preservationSnapshot, titleCorrectionA
 import { inspectPrimaryBooks,applyBookPlan,automaticBookAction } from "../src/scripture/automatic-primary-book";
 import {inspectSpeakerMetadata,applySpeakerPlan,reviewMetadataAction} from "../src/metadata/automatic-review-metadata";
 import {changedReviewBookSelection} from "../src/domain/review-metadata";
+import { registerDelegatedAiReviewPostgresTests } from "./delegated-ai-review-postgres";
 
 const enabled = process.env.RUN_POSTGRES_INTEGRATION === "1";
 const integration = enabled ? describe : describe.skip;
@@ -290,6 +291,8 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     await runSchema("rollback");
     await pool.end();
   });
+
+  registerDelegatedAiReviewPostgresTests(() => pool, runSchema);
 
   it("prefills an exact source speaker without approval, preserves concurrent edits and reruns without audit churn",async()=>{
     const c=await pool.connect();const id="66666666-6666-4666-8666-666666666666";
@@ -829,6 +832,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   }, 30_000);
 
   it("aborts the one-speaker migration with affected IDs and cleanly reapplies", async () => {
+    await runSchema("rollback", "0017_delegated_private_ai_review");
     await runSchema("rollback", "0016_legacy_completed_passage_reviews");
     await runSchema("rollback", "0015_optional_passage_and_grounding_identity");
     // Canonical import metadata now carries an unreviewed primary designation.
@@ -891,6 +895,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     await runSchema("apply", "0014_primary_preaching_passages");
     await runSchema("apply", "0015_optional_passage_and_grounding_identity");
     await runSchema("apply", "0016_legacy_completed_passage_reviews");
+    await runSchema("apply", "0017_delegated_private_ai_review");
     expect(
       (await pool.query("SELECT to_regclass('public.sermon_speakers') IS NULL AS removed")).rows[0]
     ).toEqual({ removed: true });
@@ -3295,6 +3300,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       [sermonIds]
     )).rows;
     try {
+      await runSchema("rollback", "0017_delegated_private_ai_review");
       await runSchema("rollback", "0016_legacy_completed_passage_reviews");
       const migration0015AppliedAt = (await pool.query<{ applied_at: Date }>(
         "SELECT applied_at FROM schema_migrations WHERE migration_id = '0015_optional_passage_and_grounding_identity'"
@@ -3408,6 +3414,8 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       }
 
       await runSchema("apply", "0016_legacy_completed_passage_reviews");
+      // This historical carry-forward requires the exact migration-16 checkpoint.
+      // Restore migration 17 only after the independently scoped fixture is removed.
       const beforeProtected = await protectedSnapshot();
       const first = await carryForwardLegacyCompletedPassageReviews(pool);
       const second = await carryForwardLegacyCompletedPassageReviews(pool);
@@ -3488,6 +3496,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         "SELECT EXISTS (SELECT 1 FROM schema_migrations WHERE migration_id = '0016_legacy_completed_passage_reviews') AS present"
       )).rows[0]!.present;
       if (!migrationPresent) await runSchema("apply", "0016_legacy_completed_passage_reviews");
+      await runSchema("apply", "0017_delegated_private_ai_review");
     }
   });
 
@@ -3982,7 +3991,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
          (SELECT count(*)::integer FROM migration_records) AS content_records,
          (SELECT count(*)::integer FROM sermon_enrichment_draft_imports) AS draft_import_receipts`
     );
-    expect(before.rows[0]?.schema_receipts).toBe(16);
+    expect(before.rows[0]?.schema_receipts).toBe(17);
     expect(before.rows[0]?.content_records).toBe(5);
     expect(before.rows[0]?.draft_import_receipts).toBeGreaterThanOrEqual(0);
     await expect(runSchema("apply")).resolves.toEqual({
@@ -3990,7 +3999,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       outcome: "no_op",
       appliedMigrationIds: [],
       rolledBackMigrationIds: [],
-      journalReceiptCount: 16
+      journalReceiptCount: 17
     });
     expect((await pool.query<{
       schema_receipts: number;
@@ -4005,6 +4014,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   });
 
   it("applies only the pending canonical suffix from a valid partial journal", async () => {
+    await runSchema("rollback", "0017_delegated_private_ai_review");
     await runSchema("rollback", "0016_legacy_completed_passage_reviews");
     await runSchema("rollback", "0015_optional_passage_and_grounding_identity");
     await runSchema("rollback", "0014_primary_preaching_passages");
@@ -4037,10 +4047,11 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         "0013_official_youtube_caption_provenance",
         "0014_primary_preaching_passages",
         "0015_optional_passage_and_grounding_identity",
-        "0016_legacy_completed_passage_reviews"
+        "0016_legacy_completed_passage_reviews",
+        "0017_delegated_private_ai_review"
       ],
       rolledBackMigrationIds: [],
-      journalReceiptCount: 16
+      journalReceiptCount: 17
     });
   });
 
@@ -4064,6 +4075,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       "UPDATE schema_migrations SET checksum_sha256 = $1 WHERE migration_order = 8",
       [eighth.checksumSha256]
     );
+    await runSchema("rollback", "0017_delegated_private_ai_review");
     await runSchema("rollback", "0016_legacy_completed_passage_reviews");
     await runSchema("rollback", "0015_optional_passage_and_grounding_identity");
     await runSchema("rollback", "0014_primary_preaching_passages");
@@ -4131,6 +4143,8 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 15 });
     await expect(runSchema("apply", "0016_legacy_completed_passage_reviews"))
       .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 16 });
+    await expect(runSchema("apply", "0017_delegated_private_ai_review"))
+      .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 17 });
   });
 
   it("refuses unjournalled objects and serialises concurrent fresh application", async () => {
@@ -4150,12 +4164,12 @@ integration("disposable PostgreSQL Phase 3B application", () => {
 
     const results = await Promise.all([runSchema("apply"), runSchema("apply")]);
     expect(results.map((result) => result.outcome).sort()).toEqual(["applied", "no_op"]);
-    expect(results.reduce((count, result) => count + result.appliedMigrationIds.length, 0)).toBe(16);
+    expect(results.reduce((count, result) => count + result.appliedMigrationIds.length, 0)).toBe(17);
     expect((await pool.query<{ receipts: number; distinct_receipts: number }>(
       `SELECT count(*)::integer AS receipts,
               count(DISTINCT migration_id)::integer AS distinct_receipts
        FROM schema_migrations`
-    )).rows[0]).toEqual({ receipts: 16, distinct_receipts: 16 });
+    )).rows[0]).toEqual({ receipts: 17, distinct_receipts: 17 });
 
     await expect(runSchema("rollback")).resolves.toMatchObject({
       outcome: "rolled_back",
@@ -4163,7 +4177,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     });
     await expect(runSchema("apply")).resolves.toMatchObject({
       outcome: "applied",
-      journalReceiptCount: 16
+      journalReceiptCount: 17
     });
   });
 });
