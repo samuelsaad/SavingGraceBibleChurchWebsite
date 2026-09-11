@@ -989,3 +989,50 @@ the current restrictive migration must not be applied to the application databas
 until compatibility is resolved. This is not a completed substantive review or
 an authorization to delete data. D-155 remains closed; no frontend or publication
 gate was changed.
+
+### D-156 completed delegated review — 11 September 2026
+
+The separately authorised deletion-compatibility amendment and additive migration
+were verified and committed in `4d49d6afb51c44ba4c9b12fdda597a1cc63fa90e`.
+Only migration 0017 was applied; its second run was a no-op. Real sermon deletion
+was neither requested nor performed. Future removal of linked private review
+history still requires separately authorised guarded parent deletion, tombstone
+and audit; direct history deletion remains refused.
+
+All 140 pending descriptions and 981 individual Q&A are now substantively
+reviewed: 139/980 accepted unchanged, one description and one answer corrected
+once and accepted, zero unresolved. Existing 15/103 human approvals remain exact.
+All 1,121 AI decisions and audits retain truthful separate Astra attribution and
+exact source/version/policy evidence. Complete identical replay returned 1,121
+unchanged, with eleven full-table hashes proving zero content, version, timestamp,
+audit or review-state churn. Independent comparison verified all 155 original
+packets except the two expressly authorised correction/version effects.
+
+Mechanical checks verify 152 retained sources; three human-approved source
+limitations remain. All pending artifact text was read. Actual semantic coverage
+is 139 full transcripts and one targeted transcript, not audio verification.
+Nine redaction tokens and 90 findings remain. Final counts are 155 sermons,
+142 pending Stage-1 reviews, 12 completed private previews, zero public/semantic
+eligibility and zero semantic builds/relationships.
+
+Final unchanged implementation passed 483 standard tests (45 gated), separately
+all 528 guarded PostgreSQL tests with zero skips, type/Astro checks with zero
+diagnostics, production build, offline dependency audit, skill validation and
+anonymized importer dry run. Disposable test database removal was verified.
+Browser verification shows a clear empty exceptions queue and all 1,239 artifact
+outcomes, including preserved human approvals, without review submissions or
+screenshots. All 155 public pages/API details are unavailable; anonymous private
+access is denied; valid public searches and sitemap contain no sermon records.
+Cache, anti-indexing and CSP guards remain intact. A private HTTP verifier first
+used a top-level pagination count; its assertion was corrected to the actual
+response contract and the complete check then passed. Application behavior and
+protection tests were not weakened.
+
+Final tracked/staged and six-file production scans show no introduced private
+content, protected identity, credential/key/token/cloud material or symlink.
+Existing baseline matches remain classified separately. Original source/import
+evidence and all private review artifacts are ignored and unstaged. Claude's
+frontend is unchanged; no production service, external generation, actual
+deletion, approval, publication, push, merge or deployment occurred. Detailed
+outcomes, reading coverage and limitations are in
+[delegated-ai-review-plan.md](delegated-ai-review-plan.md).

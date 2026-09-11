@@ -1,6 +1,28 @@
 # Saving Grace Bible Church Website
 
-## Current local title-correction checkpoint
+## Current delegated private review checkpoint
+
+D-156 is complete for the existing 155-sermon collection. Of the pending content,
+139 descriptions and 980 individual Q&A were AI accepted unchanged; one
+description and one answer received a focused correction and acceptance. There
+are no new unresolved content exceptions. All 15 human-approved descriptions and
+103 human-approved Q&A were preserved. AI decisions are not human approvals.
+
+Use the existing loopback administrator route `/admin/ai-reviews` for exceptions
+and the **Show all AI review outcomes** control for optional inspection of clean
+results. Current AI-accepted descriptions/Q&A do not require repeated substantive
+human review. Identity, transcript accuracy, remaining findings, passage decisions
+and publication stay separate. Development identity mode is not personal sign-in.
+The verified review-server configuration is temporary and untracked.
+
+The current counts are 155 sermons, 142 pending Stage-1 reviews and 12 completed
+private previews, with zero public or semantic eligibility. Eight unresolved
+speakers and ten unresolved passage cases remain. Caption-source fidelity was
+verified for 152 records; three human-approved source limitations remain, and no
+audio accuracy is claimed. See [the delegated review plan](delegated-ai-review-plan.md)
+for coverage, preservation, idempotency and test evidence. D-155 remains closed.
+
+## Prior local title-correction checkpoint
 
 The subsequent [primary-book assignment](primary-book-assignment-plan.md) is now
 persisted: 130 unapproved primary-passage proposals, ten pending missing-evidence
@@ -13,7 +35,7 @@ The authorized local correction removed corroborated passage references from
 130 application titles (three original-preview records and 127 later records).
 There were no conflicts; 22 clean titles and three ambiguous titles were preserved.
 The three changed completed identities require Samuel's reconfirmation. The local
-database contains 155 sermons, 143 pending Stage-1 reviews and 12 completed private
+database then contained 155 sermons, 143 pending Stage-1 reviews and 12 completed private
 previews; none is publicly eligible. Content, source evidence and passage decisions
 were preserved. D-155 remains complete and expired.
 

@@ -5,26 +5,48 @@
 
 ## Authority and current checkpoint
 
-D-156 delegated private AI review is implementation work in progress, not a
-completed review milestone. Samuel separately authorised the protected policy and
-skill amendments. The read-only baseline is 155 sermons, 142 pending Stage-1
-reviews and 12 completed private previews; the difference from the prior 143
-Stage-1 count is intervening administrator progress, which must be preserved.
-Existing human approvals cover 15 descriptions and 103 Q&A pairs. The pending
-substantive scope is 140 descriptions and 981 individual Q&A pairs.
+D-156 delegated private description/Q&A review is complete. Implementation commit
+`4d49d6afb51c44ba4c9b12fdda597a1cc63fa90e` records the separately authorised
+policy, additive migration, backend, administrator display and anonymized tests.
+All 140 pending descriptions and 981 individual pending Q&A were read and reviewed:
+139 descriptions and 980 Q&A accepted unchanged, one description and one answer
+corrected once and accepted, zero unresolved content exceptions. Their exact
+versions have 1,121 separately attributed Astra decisions and audit events.
+The 15 human-approved descriptions and 103 human-approved Q&A remain unchanged.
 
-Private evidence packets and the exact 155-member scope have been frozen.
-Migration `0017_delegated_private_ai_review` alone was applied after verifying
-the ledger through 0016; its identical rerun was a no-op. Separately attributed
-AI reviews are now being recorded with per-sermon checkpoints and identical
-idempotency passes. The collection-wide substantive review is not complete.
-The explicit 11 September post-rejection authority permits narrowly guarded removal of
-sermon-linked D-156 private review records only during a future separately
-authorised permanent deletion, retaining its minimal tombstone and audit. No
-sermon deletion is authorised now. The compatibility patch passed all 512 guarded
-PostgreSQL tests before application migration; the complete implementation plus
-evidence-reader suite subsequently passed 528 tests with zero skips. See
+The current database remains 155 sermons, 142 pending Stage-1 reviews and 12
+completed private previews. The earlier 143 Stage-1 snapshot predates intervening
+administrator progress. All frozen transcript/source, metadata, finding and guided
+review fingerprints match, allowing only the two authorised content/version
+corrections. Eight unresolved speakers, ten unresolved passage cases, 90 existing
+findings and nine provider-redaction tokens remain; AI acceptance clears none of
+them. Nothing is published or semantically eligible.
+
+All 1,121 identical decisions were replayed without change. Whole-table hashes
+across eleven content, review and audit tables prove no replay churn. Retained
+source hashes, VTT parsing and exact normalized transcript word order verify for
+152 records; three human-approved transcripts lack a located matching source.
+Semantic reading covered 139 complete pending transcripts and one explicitly
+targeted transcript, separately from mechanical checks. Audio was not verified.
+
+The read-only exceptions display is `/admin/ai-reviews`; its all-outcomes control
+shows AI decisions separately from existing human approvals. Accepted current
+description/Q&A versions require no repeated substantive human review. Other
+administrator stages and publication gates remain in force. The verified local
+review server uses the explicitly authorised development identity, not personal
+sign-in; temporary settings are untracked. Normal personal sign-in is not claimed.
+
+Migration `0017_delegated_private_ai_review` alone was applied after verifying the
+ledger through 0016; its identical rerun was a no-op. The explicit post-rejection
+authority permits narrowly guarded removal of sermon-linked D-156 private review
+records only during a future separately authorised permanent deletion, retaining
+the minimal tombstone and audit. No real sermon or review history was deleted.
+All 528 guarded PostgreSQL tests passed with zero skips; standard checks, build,
+offline audit, browser and private/public exclusion scans passed. Detailed counts,
+limitations and historical checkpoints are in
 [delegated-ai-review-plan.md](delegated-ai-review-plan.md). D-155 remains closed.
+
+### Prior metadata and server checkpoints
 
 Following explicit post-rejection authorization, the source-backed metadata repair
 persisted 132 speaker assignments with zero conflicts; its identical second run
@@ -32,18 +54,18 @@ changed nothing. There are now 147 saved speakers and eight unresolved cases amo
 155 sermons. All 15 human passage decisions, 130 private proposals, ten unresolved
 passage cases, completed title corrections and sermon content remain unchanged.
 The 155 rendered forms retain their saved speaker/book selections after refresh,
-including a preserved legacy classification. Review counts remain 143 pending
+including a preserved legacy classification. At that checkpoint counts were 143 pending
 Stage-1 and 12 completed private previews. See
 [review-metadata-population-plan.md](review-metadata-population-plan.md) for current
 verification and clearly labelled prior rejection evidence. D-155 stays closed.
 
-An updated loopback backend is available for expressly authorized temporary
+At that earlier checkpoint an updated loopback backend was available for temporary
 development-identity inspection with read-only database sessions. This is not
 personal sign-in; no review decision was submitted. Normal personal authentication
 remains unimplemented/unconfigured. No authentication implementation or safeguards
 were changed, and no temporary configuration is tracked.
 
-The latest local milestone adds explicit primary-book metadata after the completed
+The earlier local milestone added explicit primary-book metadata after the completed
 title repair at `b40ef6e7f821cf49878d7fb7f7f8b3d9035ea0f6`, not another enrichment
 batch. The saved 155-record plan was revalidated without conflicts. Exactly 130
 evidence-supported primary passages were stored as unapproved proposals and ten
@@ -70,8 +92,8 @@ titles left unchanged. No schema change or provider access occurred.
 The three changed completed identities returned to Stage 1 and lost current
 overall completion markers, as explicitly approved by Samuel. Other content
 approvals, finding and passage decisions, historical audits, sermon bodies,
-slugs/URLs and source/candidate/receipt evidence remain preserved. Current counts
-are 155 sermons, 143 pending Stage-1 reviews, 12 completed private previews and zero
+slugs/URLs and source/candidate/receipt evidence remain preserved. That checkpoint's counts
+were 155 sermons, 143 pending Stage-1 reviews, 12 completed private previews and zero
 publicly eligible sermons. Samuel must decide the three ambiguous titles and
 personally reconfirm the three reopened identities. No human decision was made
 by automation.
