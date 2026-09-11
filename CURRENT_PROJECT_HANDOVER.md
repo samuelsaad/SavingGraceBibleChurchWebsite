@@ -1,9 +1,25 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
-**Handover date:** 11 September 2026
+**Handover date:** 12 September 2026
 **Purpose:** Public-safe orientation for continuing work from this repository. This file contains no sermon body, credential, token, session, raw caption export or private local path.
 
 ## Authority and current checkpoint
+
+The D-156 status-display repair connects current version-bound AI acceptance to
+administrator lists, details and guided private previews. The former "Needs work"
+label was the human-only publication checklist, not missing AI decisions. All
+155 current description/Q&A sets satisfy substantive review. Publication remains
+separate and unchanged.
+
+**Partial delivery:** execution safety twice rejected the proposed change to
+legacy private progress/completion write handlers over human/publication-gate
+concerns. Those handlers remain unchanged. The preview recognizes accepted
+stages but disables unsupported completion transitions and explains the blocker.
+Do not repeat accepted reviews as a workaround. Fresh approval following that
+rejection is needed before the handler change. No real review or content record
+was modified. The updated local queue is `http://127.0.0.1:4359/admin/sermons`,
+using the existing loopback development identity, not personal sign-in. See
+`delegated-ai-review-plan.md` for evidence and independent remaining requirements.
 
 D-156 delegated private description/Q&A review is complete. Implementation commit
 `4d49d6afb51c44ba4c9b12fdda597a1cc63fa90e` records the separately authorised

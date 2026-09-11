@@ -1,5 +1,44 @@
 # D-156 delegated private content review
 
+## Status-display follow-up — 12 September 2026
+
+The main dashboard displayed the human-only publication-readiness result as
+"Needs work" without consuming D-156 decisions. Guided description/Q&A counters
+also read only lifecycle approvals; the separate AI queue alone showed the
+decisions. The old browser reproduced the label. No decision was lost or stale.
+
+The read-only repair adds a separate current-artifact projection to list, detail
+and guided previews. Q&A completion requires five to ten unique, consecutive
+current individual decisions. Human approvals remain distinct. Changed content,
+version, transcript/grounding, source/provenance, policy or order makes prior AI
+acceptance stale. Identity/source findings remain independent. Publication,
+public selectors, semantic gates and review write handlers are unchanged.
+
+Execution safety rejected the private navigation/completion-handler amendment
+twice. Its final reason was: "This repeats the previously rejected admin-service
+completion change and could let delegated AI acceptance satisfy review completion
+unless the omitted status guard is verified, creating a material risk of
+bypassing human review or publication gates." The rejected changes were not
+applied or bypassed. A read-only `delegatedCompletionBlocked` signal disables
+unsupported legacy transitions and tells the administrator not to repeat
+accepted content reviews as a workaround. Fresh approval following the rejection
+is required. This is partial delivery, not a completed legacy-workflow repair.
+
+All 155 current description/Q&A sets satisfy substantive review: 1,121 current
+AI decisions and 118 preserved human artifact approvals. Independent remaining
+work: 142 identity/source verifications, eight speakers, 139 finding-set/empty-set
+acknowledgements, 139 transcript approvals, 139 passage decisions (129 proposals,
+ten unresolved cases), and 143 final private-review completions. Counts overlap.
+The database remains 155 private drafts, 142 at Stage 1, 12 completed previews.
+No content, decision, approval, provenance, correction or audit was rewritten.
+
+Tests cover current individual decisions, mixed attribution, stale bindings,
+missing/duplicate/reordered pairs and unchanged publication denial. All 535
+PostgreSQL tests pass without skips; the exact disposable database is removed.
+The standard suite passes 489 tests, with its 46 database tests run separately
+in that full PostgreSQL suite. Further verification is recorded in the validation
+plan. No schema or protected policy-file changes were made.
+
 ## Scope and distinction
 
 Samuel delegates review of the existing local collection, not another enrichment

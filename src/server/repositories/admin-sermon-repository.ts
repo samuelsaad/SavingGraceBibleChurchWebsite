@@ -17,6 +17,7 @@ import type {
 } from "../../api/contracts/admin-sermons";
 import type { SermonStatus } from "../../domain/sermon";
 import type { ContentReadinessResult } from "../../domain/content-readiness";
+import type { DelegatedContentStatus, CurrentDelegatedDecision } from "../../domain/delegated-review-status";
 import type { z } from "zod";
 
 export type ControlledMediaInput = z.infer<typeof controlledMediaInputSchema>;
@@ -27,6 +28,7 @@ export type TaxonomyDto = z.infer<typeof taxonomyResponseSchema>;
 export type AuditActorRole = z.infer<typeof applicationRoleSchema> | "system";
 
 export interface StoredSermonSummary {
+  delegatedReview?: DelegatedContentStatus;
   id: string;
   title: string;
   slug: string;
@@ -360,7 +362,7 @@ export interface AdminSermonTransaction {
 }
 
 export interface AdminSermonRepository {
-  listDelegatedAiReviews?(): Promise<unknown[]>;
+  listDelegatedAiReviews?(sermonIds?: readonly string[]): Promise<CurrentDelegatedDecision[]>;
   transaction<T>(work: (transaction: AdminSermonTransaction) => Promise<T>): Promise<T>;
   listSermons(query: AdminSermonListQuery): Promise<StoredSermonPage>;
   findSermon(id: string): Promise<StoredSermonDetail | null>;

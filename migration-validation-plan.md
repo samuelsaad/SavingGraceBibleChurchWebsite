@@ -1,5 +1,49 @@
 # Migration Validation Plan
 
+## D-156 status-display reconciliation — 12 September 2026 (partial delivery)
+
+Starting commit: `81f3d924f5add7991efdcb4cf701e4326a5036d2`. The generic
+"Needs work" label came from publication readiness, not missing AI decisions.
+The old browser reproduced it. Current individual AI/human decisions now feed
+separate list/detail/guided-preview status, with stale-binding checks and honest
+attribution. No migration, real content write or review decision was performed.
+
+The private completion-handler amendment was rejected twice by execution safety
+over human/publication-gate concerns. It was not applied or bypassed. Its original
+guards remain unchanged; the preview explicitly reports unsupported transitions
+instead of asking for repeated accepted reviews. Fresh approval after rejection
+is still needed. See `delegated-ai-review-plan.md` for the precise limitation.
+
+Verification: full PostgreSQL suite 535 passed, zero skips; exact disposable
+database removed. Standard suite 489 passed (46 database-gated tests separately
+executed above). Type/Astro checks: zero errors/warnings/hints. Production build:
+three static pages, six files. Offline dependency audit: zero reported
+vulnerabilities. Anonymized dry run: five inputs, three included, two excluded,
+zero rejected. No dependencies or protected policy hashes changed.
+
+Read-only reconciliation verifies matching list/detail/guided status for all 155
+records, 1,121 current AI decisions and 118 preserved human approvals. All 37
+application-table fingerprints remain identical, including versions, review
+progress, provenance and audit history. Database totals remain 155 private
+drafts, 142 Stage-1 records and 12 completed previews. Live HTTP checks independently
+match all 155 views, deny 155 anonymous admin details and all 310 public page/API
+details, and return zero public/search/sitemap sermon results. Private preview
+still denies anonymous access. Existing no-store, noindex and CSP contracts are
+preserved. The private verifier initially assumed an unsupported page size and
+noindex on every JSON response; it was corrected to the actual contracts rather
+than changing or weakening application guards.
+
+Refreshed browser checks show current acceptance on the list and guided preview,
+separate outstanding stages/publication state and the explicit legacy-handler
+blocker. The full outcomes table renders 1,121 AI acceptances and 118 human
+approvals without stale outcomes. Existing enriched detail routes intentionally
+redirect to guided review; no route bypass or review submission was used.
+No screenshots or sermon prose were captured in the report. Sensitive-content,
+protected-identity, credential/key/token/cloud, symlink and production scans show
+zero new findings; six pre-existing matched files remain classified separately.
+Private diagnostics remain ignored and unstaged. Claude's frontend tree is
+unchanged; no push, merge, deployment, publication, approval or external access.
+
 ## D-156 applied infrastructure checkpoint — 11 September 2026
 
 - Samuel's post-rejection authority permits only sermon-linked review removal

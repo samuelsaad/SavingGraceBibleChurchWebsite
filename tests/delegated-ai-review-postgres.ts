@@ -171,6 +171,36 @@ export function registerDelegatedAiReviewPostgresTests(getPool: () => Pool, runS
     }
   }
 
+  it("projects current AI acceptance consistently into list, detail and guided preview without publication or stage mutations", async()=>{
+    await withFixture(async(pool,ids)=>{
+      const {scopeSha256}=await bindDelegatedReviewScope(pool,ids,policySha256);
+      const service=new AdminSermonService(new PostgresAdminSermonRepository(pool));
+      const admin={subject:"anonymised-status-reader",role:"admin"} as const;
+      for(const order of [null,1,2,3,4,5]) await applyDelegatedReview(pool,await fixtureRequest(pool,scopeSha256,order));
+      const before=await snapshot(pool);
+      const detail=await service.detail(fixtureId,admin);
+      expect(detail.delegatedReview).toMatchObject({substantiveComplete:true,descriptionComplete:true,questionsComplete:true,aiAcceptedQuestions:5,identityConfirmed:false,findingsComplete:false});
+      expect(detail.readiness).toMatchObject({hasApprovedDescription:false,hasRequiredQuestionAnswers:false,isComplete:false});
+      const page=await service.list({page:1,pageSize:100},admin) as {data:typeof detail[]};
+      expect(page.data.find(s=>s.id===fixtureId)?.delegatedReview).toEqual(detail.delegatedReview);
+      const guided=await service.enrichmentReviewDetail(fixtureId,admin);
+      expect(guided.progress.stageCompletion).toEqual({identity:false,findings:false,transcript:false,description:true,questionAnswers:true,final:false});
+      expect(guided.progress.canFinish).toBe(false);
+      await expect(service.transition(fixtureId,"publish",{rowVersion:detail.rowVersion},admin,"fixture-publish-denied")).rejects.toThrow("Complete the sermon checklist before scheduling or publishing");
+      await expect(service.transition(fixtureId,"schedule",{rowVersion:detail.rowVersion,scheduledFor:"2099-01-01T00:00:00.000Z"},admin,"fixture-schedule-denied")).rejects.toThrow("Complete the sermon checklist before scheduling or publishing");
+      expect(await snapshot(pool)).toEqual(before);
+      await service.update(fixtureId,updateSermonInputSchema.parse({rowVersion:detail.rowVersion,
+        questionAnswers:detail.questionAnswers.map((q,i)=>({question:q.question,answer:i===2?q.answer+" A changed fixture sentence.":q.answer,status:"draft",sourceKind:q.sourceKind,sourceReference:q.sourceReference}))
+      }),admin,"anonymised-status-human-edit");
+      const changed=await service.detail(fixtureId,admin);
+      // The existing ordinary metadata editor versions the submitted collection;
+      // none of its new row versions may inherit old AI acceptance.
+      expect(changed.delegatedReview).toMatchObject({descriptionComplete:true,questionsComplete:false,aiAcceptedQuestions:0});
+      expect(changed.delegatedReview?.questions[2]?.state).toBe("stale");
+      expect((await service.enrichmentReviewDetail(fixtureId,admin)).progress.stageCompletion.questionAnswers).toBe(false);
+    });
+  });
+
   it("freezes the exact existing delegated scope, refuses changed membership or policy, and binds identically without churn", async () => {
     await withFixture(async (pool, ids) => {
       const before = await snapshot(pool);

@@ -1,7 +1,7 @@
 import type { Pool, PoolClient } from "pg";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { applyDelegatedReview, bindDelegatedReviewScope, listDelegatedReviews } from "../src/application/delegated-ai-review-service";
-import { reviewHash, sourceProvenanceHash, type DelegatedReviewResult } from "../src/domain/delegated-ai-review";
+import { contentHash, delegatedReviewerSubject, reviewHash, sourceProvenanceHash, type DelegatedReviewResult } from "../src/domain/delegated-ai-review";
 
 const ids = Array.from({ length: 155 }, (_, index) => `10000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`);
 const policySha256 = reviewHash("fictional service policy");
@@ -101,7 +101,9 @@ describe("private review status projection", () => {
       transcript_sha256: reviewHash(body), grounding_revision_id: "grounding-fixture", source_sha256: sourceRow.source_content_sha256,
       policy_sha256: policySha256, current_content: { description: "A fictional private description." },
       assessment: { artifactDisplayOrder: null },
-      provenance: { source_provenance_sha256: sourceProvenanceHash(sourceRow), model: "gpt-6-astra" },
+      provenance: { source_provenance_sha256: sourceProvenanceHash(sourceRow), model: "gpt-6-astra", reviewer_kind:"ai" },
+      reviewer_subject:delegatedReviewerSubject,output_sha256:contentHash({description:"A fictional private description."}),
+      workflow:null,review_items:[],stored_item_count:0,transcript_version:1,speaker_id:null,service_date:"2025-01-01",
       reviewed_at: "2026-09-10T00:00:00Z", body_text: body, current_grounding: "grounding-fixture",
       source_content_sha256: sourceRow.source_content_sha256, current_source_provenance: sourceRow, current_policy_sha256: policySha256,
       summary: "A fictional private description.", summary_row_version: 3, summary_status: "draft",
@@ -144,7 +146,7 @@ describe("private review status projection", () => {
     const content = { question: "A fictional question?", answer: "A fictional answer." };
     const row = {
       ...reviewedRow(), artifact_key: "qa:20000000-0000-4000-8000-000000000001",
-      current_content: content, question_text: content.question, answer_text: content.answer, qa_version: 3,
+      current_content: content, output_sha256:contentHash(content), question_text: content.question, answer_text: content.answer, qa_version: 3,
       qa_status: "draft", display_order: 2, assessment: { artifactDisplayOrder: 1 }
     };
     expect(await project(row)).toMatchObject({ outcome: "stale", displayOrder: 2 });

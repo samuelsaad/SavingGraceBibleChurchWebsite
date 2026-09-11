@@ -1,5 +1,12 @@
 # Saving Grace Bible Church Website
 
+The updated private review queue is `http://127.0.0.1:4359/admin/sermons` when the
+authorized loopback server is running. Current D-156 acceptance now displays as
+"AI reviewed and accepted", separate from human approvals and publication gates.
+The legacy completion-handler amendment remains blocked by execution safety;
+the preview states that limitation instead of requiring repeated substantive
+review. See `CURRENT_PROJECT_HANDOVER.md` for this partial-delivery checkpoint.
+
 ## Current delegated private review checkpoint
 
 D-156 is complete for the existing 155-sermon collection. Of the pending content,

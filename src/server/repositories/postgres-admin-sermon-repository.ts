@@ -1,5 +1,6 @@
 import type { Pool, PoolClient, QueryResultRow } from "pg";
 import { listDelegatedReviews } from "../../application/delegated-ai-review-service";
+import { aggregateDelegatedReview } from "../../domain/delegated-review-status";
 import type {
   AdminSermonListQuery,
   CreateSermonInput,
@@ -488,6 +489,16 @@ function detailFromRow(row: SermonRow): StoredSermonDetail {
   };
 }
 
+// The legacy readiness view remains the publication gate. AI acceptance is an
+// independent, live private-review projection; never write it into approval fields.
+async function withDelegatedReview<T extends StoredSermonSummary>(db: Pool | PoolClient, sermons: T[]): Promise<T[]> {
+  if (!sermons.length) return sermons;
+  const installed=(await db.query("SELECT to_regclass('delegated_ai_review_scopes') IS NOT NULL AS installed")).rows[0]?.installed;
+  if (!installed) return sermons;
+  const statuses=aggregateDelegatedReview(await listDelegatedReviews(db,sermons.map(s=>s.id)));
+  return sermons.map(s=>({...s,...(statuses.has(s.id)?{delegatedReview:statuses.get(s.id)!}:{})}));
+}
+
 interface DatabaseError {
   code?: string;
 }
@@ -546,7 +557,7 @@ export class PostgresAdminSermonTransaction implements AdminSermonTransaction {
       [id]
     );
     const row = result.rows[0] as SermonRow | undefined;
-    return row ? detailFromRow(row) : null;
+    return row ? (await withDelegatedReview(this.client,[detailFromRow(row)]))[0]! : null;
   }
 
   async insertSermon(input: CreateSermonInput, actorSubject: string): Promise<string> {
@@ -1566,8 +1577,8 @@ export class PostgresAdminSermonTransaction implements AdminSermonTransaction {
 export class PostgresAdminSermonRepository implements AdminSermonRepository {
   constructor(private readonly pool: Pool) {}
 
-  listDelegatedAiReviews(): Promise<unknown[]> {
-    return listDelegatedReviews(this.pool);
+  listDelegatedAiReviews(sermonIds?: readonly string[]) {
+    return listDelegatedReviews(this.pool,sermonIds);
   }
 
   async transaction<T>(work: (transaction: AdminSermonTransaction) => Promise<T>): Promise<T> {
@@ -1762,7 +1773,7 @@ export class PostgresAdminSermonRepository implements AdminSermonRepository {
     for (const row of statusCounts.rows) countsByStatus[row.status] = row.total;
     const progress = readinessProgressResult.rows[0]!;
     return {
-      data: (rows.rows as SermonRow[]).map(summaryFromRow),
+      data: await withDelegatedReview(this.pool,(rows.rows as SermonRow[]).map(summaryFromRow)),
       totalItems: count.rows[0]!.total,
       countsByStatus,
       readinessProgress: {
@@ -1789,7 +1800,7 @@ export class PostgresAdminSermonRepository implements AdminSermonRepository {
       [id]
     );
     const row = result.rows[0] as SermonRow | undefined;
-    return row ? detailFromRow(row) : null;
+    return row ? (await withDelegatedReview(this.pool,[detailFromRow(row)]))[0]! : null;
   }
 
   async findEnrichmentReview(sermonId: string): Promise<EnrichmentReviewWorkflowDto | null> {

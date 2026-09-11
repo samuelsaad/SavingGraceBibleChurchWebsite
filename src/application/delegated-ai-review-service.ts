@@ -1,4 +1,5 @@
 import type { Pool, PoolClient } from "pg";
+import { evaluateReviewSetIntegrity } from "../enrichment/review-set-integrity";
 import { authorisedLocalDatabaseName, assertDisposableLocalDatabase } from "../migration/local-database-safety";
 import { canonicalReviewJson, contentHash, delegatedReviewerSubject, delegatedReviewResultSchema, reviewHash, sourceProvenanceHash, validateDelegatedReview, type AiContent, type DelegatedReviewResult } from "../domain/delegated-ai-review";
 
@@ -99,27 +100,45 @@ export async function applyDelegatedReview(pool:Pool,raw:DelegatedReviewResult):
   } catch {discardClient=await rollbackFailedReview(c);throw new Error("delegated_review_validation_or_concurrency_conflict");} finally {c.release(discardClient);}
 }
 
-export async function listDelegatedReviews(pool:Pool) {
+export async function listDelegatedReviews(pool:Pool | PoolClient, sermonIds?: readonly string[]) {
   const rows=(await pool.query(`SELECT m.sequence,s.id AS sermon_id,s.title,a.artifact_key,r.id AS review_id,r.outcome,r.input_version,r.output_version,r.transcript_sha256,r.grounding_revision_id,r.source_sha256,r.policy_sha256,r.current_content,r.assessment,r.provenance,r.reviewed_at,
     t.body_text,t.grounding_revision_id AS current_grounding,es.source_content_sha256,to_jsonb(es) AS current_source_provenance,sc.policy_sha256 AS current_policy_sha256,
-    s.summary,s.summary_row_version,s.summary_status,q.question_text,q.answer_text,q.row_version AS qa_version,q.status AS qa_status,q.display_order
+    s.summary,s.summary_row_version,s.summary_status,s.summary_approved_at,q.question_text,q.answer_text,q.row_version AS qa_version,q.status AS qa_status,q.approved_at AS qa_approved_at,q.display_order,
+    r.output_sha256,r.reviewer_subject,s.speaker_id,to_char(s.service_date,'YYYY-MM-DD') AS service_date,to_jsonb(workflow) AS workflow,
+    t.row_version AS transcript_version,
+    (SELECT count(*)::int FROM sermon_enrichment_review_items i WHERE i.sermon_id=s.id) AS stored_item_count,
+    COALESCE((SELECT jsonb_agg(jsonb_build_object('identitySha256',i.item_identity_sha256,'sourceRecordKey',i.source_record_key,'displayOrder',i.display_order,'transcriptRowVersion',i.transcript_row_version,'decisionStatus',i.decision_status) ORDER BY i.display_order,i.id)
+      FROM sermon_enrichment_review_items i WHERE i.sermon_id=s.id AND i.item_identity_sha256 IS NOT NULL),'[]') AS review_items
     FROM delegated_ai_review_members m JOIN delegated_ai_review_scopes sc ON sc.id=m.scope_id JOIN sermons s ON s.id=m.sermon_id
     LEFT JOIN sermon_transcripts t ON t.sermon_id=s.id LEFT JOIN sermon_enrichment_sources es ON es.sermon_id=s.id
+    LEFT JOIN sermon_enrichment_reviews workflow ON workflow.sermon_id=s.id
     CROSS JOIN LATERAL (
       SELECT 'description'::text AS artifact_key,NULL::uuid AS qa_id
       UNION ALL SELECT 'qa:' || qa.id::text,qa.id FROM sermon_question_answers qa WHERE qa.sermon_id=s.id
     ) a
     LEFT JOIN LATERAL (SELECT * FROM sermon_ai_content_reviews WHERE sermon_id=s.id AND scope_id=m.scope_id AND artifact_key=a.artifact_key ORDER BY created_at DESC,id DESC LIMIT 1) r ON true
     LEFT JOIN sermon_question_answers q ON q.sermon_id=s.id AND q.id=a.qa_id
-    WHERE m.scope_id='D-156' AND s.deleted_at IS NULL ORDER BY m.sequence,q.display_order NULLS FIRST,a.artifact_key`)).rows;
+    WHERE m.scope_id='D-156' AND s.deleted_at IS NULL AND ($1::uuid[] IS NULL OR s.id=ANY($1::uuid[])) ORDER BY m.sequence,q.display_order NULLS FIRST,a.artifact_key`,[sermonIds ?? null])).rows;
   return rows.map(r=>{
     const description=r.artifact_key==="description";
     const current=description?{description:r.summary}:{question:r.question_text,answer:r.answer_text};
-    const stale=!!r.review_id && (canonicalReviewJson(current)!==canonicalReviewJson(r.current_content) || (description?r.summary_row_version:r.qa_version)!==r.output_version || reviewHash(r.body_text??"")!==r.transcript_sha256 || r.current_grounding!==r.grounding_revision_id || r.source_content_sha256!==r.source_sha256 || sourceProvenanceHash(r.current_source_provenance)!==r.provenance?.source_provenance_sha256 || r.current_policy_sha256!==r.policy_sha256 || (description?null:r.display_order)!==r.assessment?.artifactDisplayOrder);
+    const stale=!!r.review_id && (canonicalReviewJson(current)!==canonicalReviewJson(r.current_content) || contentHash(current)!==r.output_sha256 || r.reviewer_subject!==delegatedReviewerSubject || r.provenance?.reviewer_kind!=="ai" || (description?r.summary_row_version:r.qa_version)!==r.output_version || reviewHash(r.body_text??"")!==r.transcript_sha256 || r.current_grounding!==r.grounding_revision_id || r.source_content_sha256!==r.source_sha256 || sourceProvenanceHash(r.current_source_provenance)!==r.provenance?.source_provenance_sha256 || r.current_policy_sha256!==r.policy_sha256 || (description?null:r.display_order)!==r.assessment?.artifactDisplayOrder);
+    const w=r.workflow;
+    const integrity=evaluateReviewSetIntegrity({
+      sourceRecordKey:w?.source_record_key??null,expectedItemCount:w?.expected_item_count??null,
+      expectedItemSetSha256:w?.expected_item_set_sha256??null,
+      databaseItemSetSha256:reviewHash(r.review_items.map((i:{identitySha256:string})=>i.identitySha256).join("\n")),
+      expectedTranscriptSha256:w?.expected_transcript_sha256??null,expectedTranscriptRowVersion:w?.expected_transcript_row_version??null,
+      storedItemCount:r.stored_item_count,atomicItemCount:r.review_items.length,items:r.review_items,
+      transcriptBody:r.body_text??"",transcriptRowVersion:r.transcript_version??null,
+      emptyItemSetAcknowledged:!!w?.empty_item_set_acknowledged_by_subject&&!!w?.empty_item_set_acknowledged_at
+    });
     return {sequence:r.sequence,sermonId:r.sermon_id,title:r.title,artifactKey:r.artifact_key,displayOrder:r.display_order,
       outcome:stale?"stale":r.outcome??"incomplete",reviewedAt:r.reviewed_at,
       exceptionCode:r.assessment?.exceptionCode??null,informationNeeded:r.assessment?.informationNeeded??null,
       standingWarnings:r.assessment?.standingWarnings??[],reviewerKind:"ai",model:r.provenance?.model??null,
-      humanApprovalPreserved:(description?r.summary_status:r.qa_status)==="approved"};
+      identityConfirmed:w?.identity_status==="confirmed"&&r.speaker_id!==null&&String(r.service_date).slice(0,10)!=="1970-01-01",
+      findingsComplete:integrity.findingsComplete,
+      humanApprovalPreserved:(description?r.summary_status:r.qa_status)==="approved"&&!!(description?r.summary_approved_at:r.qa_approved_at)};
   });
 }

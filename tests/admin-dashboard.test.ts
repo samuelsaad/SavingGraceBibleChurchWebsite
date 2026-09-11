@@ -106,8 +106,8 @@ describe("Phase 3B administration dashboard", () => {
     expect(client).toContain("Permanently delete sermon");
     expect(client).toContain("This action cannot be undone");
     expect(client).toContain("Unsaved changes");
-    expect(client).toContain("Private local pilot only");
-    expect(client).toContain("Phase 3B.2 pilot work queue");
+    expect(client).toContain("Private local review only");
+    expect(client).toContain("Private administrator work queue");
     expect(client).toContain("passage decision required");
     expect(client).toContain("Primary Bible book");
     expect(client).toContain("Primary preaching passage");
@@ -121,7 +121,11 @@ describe("Phase 3B administration dashboard", () => {
     expect(client).toContain("isBibleBookControl");
     expect(client).toContain("1. Sermon basics");
     expect(client).toContain("6. Review and publish");
-    expect(client).toContain("Completion checklist");
+    expect(client).toContain("Publication checklist — separate human approval gates");
+    expect(client).toContain("AI reviewed and accepted");
+    expect(client).toContain("remainingPrivateReviewRequirements");
+    expect(client).toContain("hasGroundedReplacement && !review.sermon.delegatedReview?.substantiveComplete");
+    expect(client).not.toContain('"Needs work"');
     expect(client).toContain("Sermon description");
     expect(client).toContain("sermon-description-count");
     expect(client).toContain('data-description-status="in_review"');

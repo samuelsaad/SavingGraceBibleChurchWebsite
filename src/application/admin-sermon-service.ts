@@ -114,7 +114,8 @@ function sermonSummaryDto(sermon: StoredSermonSummary) {
     enrichmentReview: sermon.enrichmentReview,
     primaryPassage: sermon.primaryPassage,
     youtubeSource: sermon.youtubeSource,
-    readiness: sermon.readiness
+    readiness: sermon.readiness,
+    delegatedReview: sermon.delegatedReview
   };
 }
 
@@ -257,10 +258,10 @@ function enrichmentReviewDto(
     transcript: workflow.state.completedAt !== null || (
       sermon.transcript?.status === "approved" && sermon.transcript.approvedAt !== null
     ),
-    description: workflow.state.completedAt !== null || (
+    description: sermon.delegatedReview?.descriptionComplete ?? (
       sermon.summaryStatus === "approved" && sermon.summaryApprovedAt !== null
     ),
-    questionAnswers: workflow.state.completedAt !== null || (
+    questionAnswers: sermon.delegatedReview?.questionsComplete ?? (
       sermon.questionAnswers.length >= 5 &&
       sermon.questionAnswers.length <= 10 &&
       sermon.questionAnswers.every((item) => item.status === "approved" && item.approvedAt !== null)
@@ -276,8 +277,14 @@ function enrichmentReviewDto(
     stageCompletion.final
   ];
   const completedStageCount = stageComplete.filter(Boolean).length;
+  // Display current delegated acceptance, but do not promise a transition that
+  // the unchanged legacy write handler still refuses. Its amendment is blocked.
+  const delegatedCompletionBlocked = !!sermon.delegatedReview?.substantiveComplete &&
+    (!sermon.readiness.hasApprovedDescription || !sermon.readiness.hasRequiredQuestionAnswers);
   const canFinish =
     stageComplete.slice(0, 5).every(Boolean) &&
+    sermon.readiness.hasRequiredPassageDecision &&
+    !delegatedCompletionBlocked &&
     sermon.readiness.hasValidControlledMedia &&
     sermon.status === "draft";
   return enrichmentReviewResponseSchema.parse({
@@ -311,6 +318,7 @@ function enrichmentReviewDto(
       reviewSetVerified: integrity.reviewSetVerified,
       requiresEmptyItemSetAcknowledgement: integrity.requiresEmptyItemSetAcknowledgement,
       stageCompletion,
+      delegatedCompletionBlocked,
       completedStageCount,
       percentReviewed: Math.round((completedStageCount / 6) * 100),
       canFinish

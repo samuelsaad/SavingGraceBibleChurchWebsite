@@ -2,6 +2,7 @@ import { z } from "zod";
 import { fillExplicitPrimaryBook } from "../../domain/primary-book-resolution";
 import { isoDateSchema, sermonStatusSchema } from "../../domain/sermon";
 import { containsHtmlTag } from "../../domain/content-readiness";
+import { delegatedContentStatusSchema } from "../../domain/delegated-review-status";
 import { formatBiblePassage, validateBiblePassage } from "../../domain/bible-passage";
 import { youtubeVideoIdFromUrl, youtubeVideoIdPattern } from "../../domain/youtube";
 
@@ -430,6 +431,7 @@ export const contentReadinessResponseSchema = z.object({
 });
 
 export const adminSermonSummarySchema = z.object({
+  delegatedReview: delegatedContentStatusSchema.optional(),
   id: z.uuid(),
   title: z.string(),
   slug: z.string(),
@@ -683,7 +685,8 @@ export const enrichmentReviewResponseSchema = z.object({
     }),
     completedStageCount: z.number().int().min(0).max(6),
     percentReviewed: z.number().int().min(0).max(100),
-    canFinish: z.boolean()
+    canFinish: z.boolean(),
+    delegatedCompletionBlocked: z.boolean().optional()
   })
 });
 export type EnrichmentReviewResponse = z.infer<typeof enrichmentReviewResponseSchema>;
