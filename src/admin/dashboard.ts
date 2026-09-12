@@ -9,6 +9,8 @@ import {
 } from "./dashboard-model";
 import type { SermonStatus } from "../domain/sermon";
 import { aggregateDelegatedReview, remainingPrivateReviewRequirements, substantiveDecisionLabel, type CurrentDelegatedDecision, type DelegatedContentStatus } from "../domain/delegated-review-status";
+import type { RemainingReviewStatus } from "../domain/remaining-ai-review";
+import { privateComponentAccepted, privateCompletionAttribution, privateCompletionIsCurrent, remainingComponentLabel } from "../domain/remaining-review-display";
 import { bibleBooks } from "../domain/bible-passage";
 import { selectedReviewBook, changedReviewBookSelection, reviewBookOptions } from "../domain/review-metadata";
 import {
@@ -34,6 +36,7 @@ type Readiness = {
 };
 type SermonSummary = {
   delegatedReview?: DelegatedContentStatus;
+  remainingReview?: RemainingReviewStatus;
   id: string;
   title: string;
   slug: string;
@@ -410,7 +413,7 @@ function sermonRows(sermons: SermonSummary[]): string {
     <td data-label="Service date">${escapeHtml(humanDate(sermon.serviceDate))}</td>
     <td data-label="Speaker">${escapeHtml(sermon.speaker?.name ?? "—")}</td>
     <td data-label="Series">${escapeHtml(sermon.series.map((item) => item.name).join(", ") || "—")}</td>
-    <td data-label="Primary passage">${passage.displayText ? `<strong>${escapeHtml(passage.displayText)}</strong><div class="subtle">${escapeHtml(stateLabels[passage.state])}</div>` : escapeHtml(stateLabels[passage.state])}</td>
+    <td data-label="Primary passage">${passage.displayText ? `<strong>${escapeHtml(passage.displayText)}</strong><div class="subtle">${escapeHtml(stateLabels[passage.state])}</div>` : escapeHtml(stateLabels[passage.state])}${sermon.remainingReview?.components.passage.accepted ? `<div class="subtle">${escapeHtml(remainingComponentLabel(sermon.remainingReview,"passage"))}</div>` : ""}</td>
     <td data-label="YouTube">${youtubeSourceLink(sermon.youtubeSource, "Open video")}</td>
     <td data-label="Scheduled">${sermon.scheduledFor ? `<strong>${escapeHtml(humanDate(sermon.scheduledFor))}</strong>` : "—"}</td>
     <td data-label="Checklist">${privateReviewStatus(sermon)}</td>
@@ -424,10 +427,12 @@ async function renderDashboard(): Promise<void> {
   const progress = sermons.readinessProgress;
   const decisions=await api<{data:CurrentDelegatedDecision[]}>("/api/v1/admin/ai-reviews");
   const delegated=[...aggregateDelegatedReview(decisions.data).values()];
+  const remaining=await api<{data:RemainingReviewQueueRow[]}>("/api/v1/admin/remaining-reviews");
   const pilotQueue = sermons.data.filter((sermon) => sermon.enrichmentReview !== null);
   main.innerHTML = `${pageHeading("Dashboard", "Follow the guided checklist until each sermon is ready for review and publication.", '<a class="button primary" href="/admin/sermons/new" data-route>Create sermon</a>')}
     <div class="callout"><strong>Private local review only.</strong><p>AI acceptance is separately attributed, does not approve transcript accuracy, and does not publish any record.</p></div>
     <section class="panel"><h2>Delegated substantive review</h2><p><strong>${delegated.filter(d=>d.substantiveComplete).length} of ${delegated.length} scoped sermons have current accepted descriptions and Q&A.</strong> ${decisions.data.filter(d=>!d.humanApprovalPreserved && (d.outcome==="accepted" || d.outcome==="corrected_accepted")).length} current AI decisions; existing human approvals are separate.</p><a href="/admin/ai-reviews?all=1" data-route>Show all AI review outcomes</a></section>
+    <section class="panel"><h2>Remaining private review</h2><p>${remaining.data.filter(r=>r.review.privateComplete).length} of ${remaining.data.length} scoped records have current private completion. This includes preserved human decisions and separately attributed AI source review, not recording-accuracy or publication approval.</p><a href="/admin/remaining-reviews" data-route>Open remaining evidence exceptions</a></section>
     <section class="panel progress-panel" aria-labelledby="enrichment-progress-heading">
       <h2 id="enrichment-progress-heading">Publication checklist — separate from delegated review</h2>
       <p><strong>${progress.complete} of ${progress.total} records satisfy the existing publication checklist</strong> · ${progress.remaining} do not. This is not the AI-review count and creates no publication permission.</p>
@@ -446,8 +451,10 @@ async function renderDashboard(): Promise<void> {
       <h2 id="pilot-work-queue-heading">Private administrator work queue</h2>
       <p class="subtle">Content review completion and replacement-launch metadata are shown separately.</p>
       <ol class="review-queue">${pilotQueue.map((sermon) => {
-        const completed = sermon.enrichmentReview?.completedAt !== null;
-        const status = completed && !sermon.readiness.hasRequiredPassageDecision
+        const completed = privateCompletionIsCurrent(sermon);
+        const status = completed && sermon.remainingReview
+          ? "Private review complete · human and AI attribution preserved"
+          : completed && !sermon.readiness.hasRequiredPassageDecision
           ? "Content reviewed · passage decision required"
           : completed
             ? "Content reviewed"
@@ -544,7 +551,7 @@ function reviewStageNavigation(review: EnrichmentReviewResponse): string {
       const stage = index + 1;
       const complete = reviewStageComplete(review, stage);
       const current = review.review.currentStage === stage;
-      const blocked = review.review.completedAt === null && stage > firstIncompleteReviewStage(review);
+      const blocked = !review.progress.stageCompletion.final && stage > firstIncompleteReviewStage(review);
       return `<li><button type="button" class="review-stage-button${current ? " current" : ""}" data-review-stage="${stage}"${current ? ' aria-current="step"' : ""}${blocked ? ' disabled aria-disabled="true"' : ""}>
         <span class="review-stage-number">${stage}</span>
         <span><strong>${escapeHtml(label)}</strong><small>${complete ? "Complete" : current ? "Current stage" : blocked ? "Complete earlier stage first" : "Not complete"}</small></span>
@@ -630,14 +637,20 @@ function primaryPassageReviewPanel(sermon: SermonDetail): string {
         isLead: reference.isLead
       }))
     : [{ canonicalBookId: null, startChapter: null, startVerse: null, endChapter: null, endVerse: null, relationshipRole: "primary", isLead: true }];
-  const status = review.reviewStatus === "pending"
+  const humanStatus = review.reviewStatus === "pending"
     ? "Awaiting administrator decision"
     : review.reviewStatus === "confirmed_passage"
       ? "Reviewed passage"
       : review.reviewStatus === "confirmed_none"
         ? "No single primary passage confirmed"
         : "Title proposal rejected";
-  const proposal = review.reviewStatus === "confirmed_passage"
+  const aiPassageAccepted = Boolean(sermon.remainingReview?.components.passage.accepted && sermon.remainingReview.components.passage.state !== "human_approved");
+  const status = aiPassageAccepted ? remainingComponentLabel(sermon.remainingReview,"passage") : humanStatus;
+  const proposal = aiPassageAccepted
+    ? sermon.remainingReview?.passageBasis === "no_single_primary"
+      ? "The delegated source review found a topical or multi-passage sermon, not one primary passage. No book or passage was invented and no human confirmation was recorded."
+      : "The delegated source review accepts the current primary-passage evidence. This is separately attributed AI acceptance, not a human passage confirmation."
+    : review.reviewStatus === "confirmed_passage"
     ? "This reviewed passage was carried forward or confirmed through an attributed administrator decision."
     : review.proposalOutcome === "proposed"
     ? "One structured reference was proposed from the locally stored YouTube title. Verify it personally before confirming."
@@ -647,7 +660,7 @@ function primaryPassageReviewPanel(sermon: SermonDetail): string {
         ? "The title could not support a single safe proposal. Enter verified passages manually or reject the proposal."
         : "This passage was entered through administrator controls.";
   return `<section class="source-summary" aria-labelledby="primary-passage-heading" data-primary-passage-panel>
-    <div><p class="eyebrow">Structured Scripture metadata</p><h3 id="primary-passage-heading">Primary preaching passage</h3><p><strong>${escapeHtml(status)}</strong></p><p>${escapeHtml(proposal)}</p><p>${youtubeSourceLink(sermon.youtubeSource)}</p><p class="field-hint">This decision does not change transcript, description, Q&amp;A, guided-review completion or publication state.</p></div>
+    <div><p class="eyebrow">Structured Scripture metadata</p><h3 id="primary-passage-heading">Primary preaching passage</h3><p><strong>${escapeHtml(status)}</strong></p><p>${escapeHtml(proposal)}</p>${aiPassageAccepted ? `<p>Stored human passage field: ${escapeHtml(humanStatus)} (unchanged). No repeated human decision is required for this delegated private-review requirement. Publication requirements remain separate and unchanged.</p>` : ""}<p>${youtubeSourceLink(sermon.youtubeSource)}</p><p class="field-hint">This decision does not change transcript, description, Q&amp;A, guided-review completion or publication state.</p></div>
     <div id="primary-passage-feedback"></div>
     <div class="stack" id="primary-passage-rows">${values.map(primaryPassageEditorRow).join("")}</div>
     <div class="action-row">
@@ -667,7 +680,7 @@ function renderIdentityReviewStage(
   const sermon = review.sermon;
   const source = sermon.enrichmentSource!;
   const unresolvedDate = sermon.serviceDate === "1970-01-01";
-  const completed = review.review.completedAt !== null;
+  const completed = review.progress.stageCompletion.final;
   const canonicalBooks = reviewBookOptions(sermon.books, books);
   const selectedBookId = selectedReviewBook(sermon.books, sermon.scriptureReferences, canonicalBooks);
   return `<form id="review-identity-form" class="review-stage-panel stack" novalidate>
@@ -681,13 +694,13 @@ function renderIdentityReviewStage(
       <label><span>Primary Bible book</span><select name="bookClassificationId" data-initial-book="${escapeHtml(selectedBookId)}">${filterOption(canonicalBooks, selectedBookId, "No Bible book assigned")}</select><small class="field-hint">${selectedBookId ? "Prefilled from saved book or primary-passage metadata. Check and confirm; preselection is not approval." : "No unambiguous saved book. Review the primary-passage evidence below."} Saving an unchanged selection preserves existing classifications and secondary passages.</small></label>
     </div>
     <section class="source-summary" aria-labelledby="source-summary-heading">
-      <div><p class="eyebrow">Private source</p><h3 id="source-summary-heading">Authorised YouTube Studio export</h3></div>
+      <div><p class="eyebrow">Private source</p><h3 id="source-summary-heading">${source.retrievalAttribution === "authorised_youtube_data_api" ? "Authorised official YouTube API captions" : "Authorised YouTube Studio export"}</h3></div>
       <p>${youtubeSourceLink(sermon.youtubeSource)}</p>
       <dl class="source-facts">
         <div><dt>Video identity</dt><dd><code>${escapeHtml(source.videoId)}</code></dd></div>
         <div><dt>Caption language</dt><dd>${escapeHtml(source.captionLanguage)}</dd></div>
         <div><dt>Caption track</dt><dd>${source.captionTrackType === "unknown" ? "Not identified by the export" : escapeHtml(source.captionTrackType)}</dd></div>
-        <div><dt>Accuracy</dt><dd>Administrator verification required</dd></div>
+        <div><dt>Source review</dt><dd>${sermon.remainingReview ? escapeHtml(remainingComponentLabel(sermon.remainingReview,"transcript")) : "Administrator verification required"}</dd></div>
       </dl>
       ${technicalProvenance(source)}
     </section>
@@ -863,22 +876,22 @@ function renderFinalReviewStage(review: EnrichmentReviewResponse): string {
     <header class="review-stage-heading"><p>Stage 6 of 6</p><h2 id="final-review-heading">Final review summary</h2><p>Finishing records that the editorial review is complete. It does not submit, schedule or publish this draft.</p></header>
     <div id="review-stage-feedback"></div>
     <ul class="checklist review-final-checklist">
-      ${finalChecklistItem("One speaker confirmed", review.review.identityStatus === "confirmed" && Boolean(sermon.speaker), sermon.speaker ? "A verified speaker is selected." : "Return to Identity and choose the speaker.")}
-      ${finalChecklistItem("Primary-passage decision reviewed", sermon.readiness.hasRequiredPassageDecision, sermon.readiness.hasRequiredPassageDecision ? (sermon.primaryPassage?.state === "no_primary_passage" ? "No single primary passage was explicitly confirmed." : "A structurally valid primary passage was confirmed.") : "Confirm a valid primary passage or explicitly record that the sermon has no single primary passage.")}
+      ${finalChecklistItem("One speaker verified", privateComponentAccepted(sermon.remainingReview,"speaker",review.review.identityStatus === "confirmed" && Boolean(sermon.speaker)), sermon.remainingReview ? remainingComponentLabel(sermon.remainingReview,"speaker") : sermon.speaker ? "A verified speaker is selected." : "Return to Identity and choose the speaker.")}
+      ${finalChecklistItem("Primary-passage evidence reviewed", privateComponentAccepted(sermon.remainingReview,"passage",sermon.readiness.hasRequiredPassageDecision), sermon.remainingReview ? remainingComponentLabel(sermon.remainingReview,"passage") : sermon.readiness.hasRequiredPassageDecision ? (sermon.primaryPassage?.state === "no_primary_passage" ? "No single primary passage was explicitly confirmed." : "A structurally valid primary passage was confirmed.") : "Confirm a valid primary passage or explicitly record that the sermon has no single primary passage.")}
       ${finalChecklistItem("Service date confirmed", dateConfirmed, dateConfirmed ? "The preached date was verified." : "The service date is unresolved.")}
-      ${finalChecklistItem("Provenance reviewed", review.review.identityStatus === "confirmed", "Source identity, language, track and attribution were presented in Stage 1.")}
-      ${finalChecklistItem("Flagged items resolved", review.progress.stageCompletion.findings, review.progress.totalItemCount === 0 ? review.progress.stageCompletion.findings ? "The verified empty set was explicitly acknowledged." : "The verified empty set requires an explicit acknowledgement." : `${review.progress.resolvedItemCount} of ${review.progress.totalItemCount} items resolved.`)}
-      ${finalChecklistItem("Transcript approved", review.progress.stageCompletion.transcript, plainReviewStatus(sermon.transcript?.status ?? "missing"))}
+      ${finalChecklistItem("Provenance reviewed", review.progress.stageCompletion.identity, sermon.remainingReview ? remainingComponentLabel(sermon.remainingReview,"identity") : "Source identity, language, track and attribution were presented in Stage 1.")}
+      ${finalChecklistItem("Finding set reviewed", review.progress.stageCompletion.findings, sermon.remainingReview ? `${remainingComponentLabel(sermon.remainingReview,"findings")}. Original findings and human decisions remain preserved.` : review.progress.totalItemCount === 0 ? review.progress.stageCompletion.findings ? "The verified empty set was explicitly acknowledged." : "The verified empty set requires an explicit acknowledgement." : `${review.progress.resolvedItemCount} of ${review.progress.totalItemCount} items resolved.`)}
+      ${finalChecklistItem("Transcript source review", review.progress.stageCompletion.transcript, sermon.remainingReview ? remainingComponentLabel(sermon.remainingReview,"transcript") : plainReviewStatus(sermon.transcript?.status ?? "missing"))}
       ${finalChecklistItem("Description substantive review", review.progress.stageCompletion.description, sermon.delegatedReview ? substantiveDecisionLabel(sermon.delegatedReview.description) : plainReviewStatus(sermon.summaryStatus))}
       ${finalChecklistItem("Five to ten current Q&A pairs reviewed", review.progress.stageCompletion.questionAnswers, `${sermon.questionAnswers.filter((item) => item.status === "approved").length} human approved; ${sermon.delegatedReview?.aiAcceptedQuestions ?? 0} AI reviewed and accepted; ${sermon.questionAnswers.length} current pairs.`)}
-      ${finalChecklistItem("Controlled media valid", sermon.readiness.hasValidControlledMedia, sermon.readiness.hasValidControlledMedia ? "Controlled media passed validation." : "Controlled media still requires attention.")}
+      ${finalChecklistItem("Controlled media valid", privateComponentAccepted(sermon.remainingReview,"media",sermon.readiness.hasValidControlledMedia), sermon.remainingReview ? remainingComponentLabel(sermon.remainingReview,"media") : sermon.readiness.hasValidControlledMedia ? "Controlled media passed validation." : "Controlled media still requires attention.")}
       ${finalChecklistItem("Sermon remains draft and unpublished", sermon.status === "draft" && sermon.publishedAt === null, `Current sermon state: ${sermon.status}.${sermon.publishedAt !== null ? " Previously published records cannot finish this private-only workflow." : ""}`)}
     </ul>
     <div class="review-decision-bar">
       <button class="button" type="button" data-review-pause>Save and pause</button>
       <button class="button primary" type="button" id="finish-enrichment-review"${review.progress.canFinish ? "" : " disabled"}>Finish review</button>
     </div>
-    ${review.review.completedAt ? `<p class="feedback">Review finished ${escapeHtml(humanDate(review.review.completedAt))}. The sermon remains draft and private.</p>` : ""}
+    ${review.progress.stageCompletion.final ? `<p class="feedback">${sermon.remainingReview ? escapeHtml(privateCompletionAttribution(sermon.remainingReview)) : "Existing human private completion preserved"}. The sermon remains draft and private.</p>` : sermon.remainingReview?.canComplete ? '<p class="feedback">Evidence requirements are satisfied. Separate audited AI private-completion persistence remains outstanding; no human approval is implied.</p>' : ""}
   </section>`;
 }
 
@@ -1262,7 +1275,7 @@ async function renderGuidedSermonReview(id: string, readOnlyStage?: number): Pro
     api<EnrichmentReviewResponse>(`/api/v1/admin/sermons/${id}/review`),
     loadTaxonomies()
   ]);
-  if (review.review.completedAt !== null && readOnlyStage !== undefined) {
+  if (review.progress.stageCompletion.final && readOnlyStage !== undefined) {
     review.review.currentStage = Math.max(1, Math.min(6, readOnlyStage));
   }
   dirty = false;
@@ -1276,7 +1289,7 @@ async function renderGuidedSermonReview(id: string, readOnlyStage?: number): Pro
   );
   main.innerHTML = `<header class="review-record-header">
     <div><a href="/admin/sermons" data-route>Back to sermons</a><p class="eyebrow">Guided private review</p><h1>${escapeHtml(review.sermon.title)}</h1><p>Record ${review.recordPosition} of ${review.recordCount}</p></div>
-    <div class="review-record-status"><span class="status-pill">Draft • Private</span><strong>${review.review.completedAt ? "Content review complete" : `${review.progress.percentReviewed}% reviewed`}</strong>${youtubeSourceLink(review.sermon.youtubeSource)}${review.review.completedAt ? "<small>Completed editorial stages are read-only. Bible-book metadata remains available in Stage 1.</small>" : ""}</div>
+    <div class="review-record-status"><span class="status-pill">Draft • Private</span><strong>${review.progress.stageCompletion.final ? "Private review complete" : `${review.progress.percentReviewed}% reviewed`}</strong>${youtubeSourceLink(review.sermon.youtubeSource)}${review.progress.stageCompletion.final ? "<small>Completed editorial stages are read-only; AI source review is not human approval or audio verification.</small>" : ""}</div>
     <progress max="100" value="${review.progress.percentReviewed}">${review.progress.percentReviewed}%</progress>
   </header>
   ${hasQuarantinedDescription || hasQuarantinedQuestions
@@ -1290,13 +1303,13 @@ async function renderGuidedSermonReview(id: string, readOnlyStage?: number): Pro
     <div class="review-stage-workspace">${reviewStageMarkup(review, taxonomies.speakers, taxonomies.books)}</div>
   </div>`;
 
-  if (review.review.completedAt !== null) {
+  if (review.progress.stageCompletion.final) {
     for (const control of document.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | HTMLButtonElement>(
       ".review-stage-workspace input, .review-stage-workspace select, .review-stage-workspace textarea, .review-stage-workspace button"
     )) {
       const isBibleBookControl = control.matches('[name="bookClassificationId"], [data-identity-action="save"], [data-primary-passage-control]');
       const isReadOnlyNavigation = control.matches("[data-review-stage]");
-      if (!isBibleBookControl && !isReadOnlyNavigation) {
+      if ((!isBibleBookControl || review.sermon.remainingReview?.privateComplete) && !isReadOnlyNavigation) {
         control.disabled = true;
         control.setAttribute("aria-disabled", "true");
       }
@@ -1314,7 +1327,7 @@ async function renderGuidedSermonReview(id: string, readOnlyStage?: number): Pro
 
   const persistStage = async (stage: number, identityStatus?: "pending" | "confirmed") => {
     if (dirty && !confirmDiscard()) return;
-    if (review.review.completedAt !== null && identityStatus === undefined) {
+    if (review.progress.stageCompletion.final && identityStatus === undefined) {
       dirty = false;
       await renderGuidedSermonReview(id, stage);
       return;
@@ -1628,7 +1641,7 @@ function privateReviewStatus(sermon: SermonSummary): string {
     ? (d?.description?.state==="ai_accepted" || (d?.aiAcceptedQuestions ?? 0)>0 ? "AI reviewed and accepted" : "Human approved")
     : "Substantive review pending";
   const remaining=remainingPrivateReviewRequirements(sermon);
-  return `<div class="private-review-status"><strong>${escapeHtml(label)}</strong><small>Current description and individual Q&A only.</small>${d ? `<p>Description: ${escapeHtml(substantiveDecisionLabel(d.description))}. Q&A: ${d.humanApprovedQuestions} human approved; ${d.aiAcceptedQuestions} AI accepted / ${d.questions.length} current pairs.</p>` : ""}<p>${remaining.length ? `Remaining: ${escapeHtml(remaining.join("; "))}.` : "Private review complete."}</p><small>Publication state: ${escapeHtml(sermon.status)}. AI acceptance is not publication approval.</small></div>`;
+  return `<div class="private-review-status"><strong>${escapeHtml(label)}</strong><small>Current description and individual Q&A only.</small>${d ? `<p>Description: ${escapeHtml(substantiveDecisionLabel(d.description))}. Q&A: ${d.humanApprovedQuestions} human approved; ${d.aiAcceptedQuestions} AI accepted / ${d.questions.length} current pairs.</p>` : ""}${sermon.remainingReview ? `<p>D-157 source review: ${escapeHtml(remainingComponentLabel(sermon.remainingReview,"transcript"))}. ${sermon.remainingReview.privateComplete ? "Private completion is current; human and AI attribution remain separate." : "See the evidence exceptions before completing review."}</p><a href="/admin/remaining-reviews?sermon=${encodeURIComponent(sermon.id)}" data-route>Source-review evidence and exceptions</a>` : ""}<p>${remaining.length ? `Remaining: ${escapeHtml(remaining.join("; "))}.` : "Private review complete."}</p><small>Publication state: ${escapeHtml(sermon.status)}. AI acceptance is not publication approval.</small></div>`;
 }
 
 function readinessChecklist(readiness: Readiness | null): string {
@@ -2002,6 +2015,21 @@ interface AiReviewRow {
   standingWarnings: string[]; model: string | null; humanApprovalPreserved: boolean;
 }
 
+interface RemainingReviewQueueRow { sermonId: string; title: string; review: RemainingReviewStatus }
+
+async function renderRemainingAiReviews(): Promise<void> {
+  const {data}=await api<{data:RemainingReviewQueueRow[]}>("/api/v1/admin/remaining-reviews");
+  const selected=new URLSearchParams(location.search).get("sermon");
+  const all=new URLSearchParams(location.search).get("all")==="1";
+  const exceptions=data.flatMap(row=>Object.entries(row.review.components).map(([component,item])=>({row,component,item})))
+    .filter(({row,item})=>(!selected || row.sermonId===selected) && (all || !item.accepted || item.sourceLimitation));
+  const incomplete=data.filter(row=>!row.review.privateComplete && (!selected || row.sermonId===selected));
+  main.innerHTML=`${pageHeading("Remaining private-review evidence", "D-157 source assessment by Codex Astra. AI acceptance is separate from human approval and does not verify the recording.", '<a class="button" href="/admin/sermons" data-route>Administrator queue</a>')}
+    <section class="panel"><h2>Current private completion</h2><p>${data.filter(row=>row.review.privateComplete).length} of ${data.length} records have current private completion. ${data.filter(row=>!row.review.privateComplete).length} remain incomplete. Existing human decisions and D-156 content acceptance are preserved.</p><p>Unknown audio association, caption redactions and source limitations remain visible. No review outcome permits publication.</p><a class="button" href="/admin/remaining-reviews${all ? "" : "?all=1"}" data-route>${all ? "Show exceptions and unfinished work" : "Show all component outcomes"}</a></section>
+    <section class="panel"><h2>${all ? "All component outcomes" : "Evidence exceptions and unfinished checks"}</h2><div class="table-wrap"><table><thead><tr><th>Sermon</th><th>Requirement</th><th>Current outcome and attribution</th><th>Specific evidence or decision needed</th></tr></thead><tbody>${exceptions.map(({row,component,item})=>`<tr><td><a href="/admin/sermons/${escapeHtml(row.sermonId)}/review" data-route>${escapeHtml(row.title)}</a></td><td>${escapeHtml(component)}</td><td>${escapeHtml(remainingComponentLabel(row.review,component as keyof RemainingReviewStatus["components"]))}<div class="subtle">${escapeHtml(item.reviewerSubject ?? "No current decision")} · ${escapeHtml(item.model ?? "No AI model attributed")}${item.reviewedAt ? ` · ${escapeHtml(humanDate(item.reviewedAt))}` : ""}</div></td><td>${item.exceptionCode ? `<code>${escapeHtml(item.exceptionCode)}</code><br>` : ""}${escapeHtml(item.informationNeeded ?? (item.state==="pending" ? "This check has not been completed. It is not an evidence exception or a request for repeated human review." : item.state==="stale" ? "Relevant evidence changed. Previous acceptance no longer applies." : "No repeated decision required; retained source limitations are not erased."))}</td></tr>`).join("") || '<tr><td colspan="4">No outstanding component exception in this selection.</td></tr>'}</tbody></table></div></section>
+    ${incomplete.length ? `<section class="panel"><h2>Private completion still outstanding</h2><ul>${incomplete.map(row=>`<li><a href="/admin/sermons/${escapeHtml(row.sermonId)}/review" data-route>${escapeHtml(row.title)}</a>: ${escapeHtml(row.review.remaining.join("; ") || "Current components are satisfied; separate audited private-completion persistence remains pending.")}</li>`).join("")}</ul></section>` : ""}`;
+}
+
 async function renderDelegatedAiReviews(): Promise<void> {
   const { data } = await api<{data: AiReviewRow[]}>("/api/v1/admin/ai-reviews");
   const selected = new URLSearchParams(location.search).get("sermon");
@@ -2030,6 +2058,7 @@ async function renderRoute(): Promise<void> {
     const path = location.pathname.replace(/\/$/, "") || "/admin";
     if (path === "/admin") await renderDashboard();
     else if (path === "/admin/ai-reviews") await renderDelegatedAiReviews();
+    else if (path === "/admin/remaining-reviews") await renderRemainingAiReviews();
     else if (path === "/admin/sermons") await renderSermonList();
     else if (path === "/admin/sermons/new") await renderSermonForm();
     else if (/^\/admin\/sermons\/[0-9a-f-]+\/review$/i.test(path)) await renderGuidedSermonReview(path.split("/").at(-2)!);

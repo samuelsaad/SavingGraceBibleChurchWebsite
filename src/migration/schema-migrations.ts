@@ -26,7 +26,8 @@ export type SchemaMigrationScope =
   | "0014_primary_preaching_passages"
   | "0015_optional_passage_and_grounding_identity"
   | "0016_legacy_completed_passage_reviews"
-  | "0017_delegated_private_ai_review";
+  | "0017_delegated_private_ai_review"
+  | "0018_remaining_private_ai_review";
 
 interface SchemaMigrationDefinition {
   id: string;
@@ -267,6 +268,14 @@ export const schemaMigrationDefinitions: readonly SchemaMigrationDefinition[] = 
     addedRelations: ["delegated_ai_review_scopes", "delegated_ai_review_members", "sermon_ai_content_reviews"],
     addedFunctions: ["protect_delegated_ai_review_history()", "protect_ai_reviewed_content_from_import()"],
     addedTriggers: ["delegated_ai_review_scopes_immutable", "delegated_ai_review_members_immutable", "sermon_ai_content_reviews_immutable", "sermons_protect_ai_content", "qa_protect_ai_content"]
+  },
+  {
+    id: "0018_remaining_private_ai_review", order: 18,
+    upPath: "db/migrations/0018_remaining_private_ai_review.sql",
+    downPath: "db/migrations/0018_remaining_private_ai_review.down.sql",
+    addedRelations: ["remaining_ai_review_scopes", "remaining_ai_review_members", "sermon_ai_component_reviews", "sermon_ai_metadata_assignments"],
+    addedFunctions: ["protect_remaining_ai_review_history()"],
+    addedTriggers: ["remaining_ai_review_scopes_immutable", "remaining_ai_review_members_immutable", "sermon_ai_component_reviews_immutable", "sermon_ai_metadata_assignments_immutable"]
   }
 ] as const;
 

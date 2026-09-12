@@ -18,6 +18,7 @@ import type {
 import type { SermonStatus } from "../../domain/sermon";
 import type { ContentReadinessResult } from "../../domain/content-readiness";
 import type { DelegatedContentStatus, CurrentDelegatedDecision } from "../../domain/delegated-review-status";
+import type { RemainingReviewStatus } from "../../domain/remaining-ai-review";
 import type { z } from "zod";
 
 export type ControlledMediaInput = z.infer<typeof controlledMediaInputSchema>;
@@ -29,6 +30,7 @@ export type AuditActorRole = z.infer<typeof applicationRoleSchema> | "system";
 
 export interface StoredSermonSummary {
   delegatedReview?: DelegatedContentStatus;
+  remainingReview?: RemainingReviewStatus;
   id: string;
   title: string;
   slug: string;
@@ -363,6 +365,7 @@ export interface AdminSermonTransaction {
 
 export interface AdminSermonRepository {
   listDelegatedAiReviews?(sermonIds?: readonly string[]): Promise<CurrentDelegatedDecision[]>;
+  listRemainingAiReviews?(): Promise<Array<{ sermonId: string; title: string; review: RemainingReviewStatus }>>;
   transaction<T>(work: (transaction: AdminSermonTransaction) => Promise<T>): Promise<T>;
   listSermons(query: AdminSermonListQuery): Promise<StoredSermonPage>;
   findSermon(id: string): Promise<StoredSermonDetail | null>;

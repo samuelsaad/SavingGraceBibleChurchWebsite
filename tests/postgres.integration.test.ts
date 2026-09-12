@@ -101,6 +101,7 @@ import { inspectPrimaryBooks,applyBookPlan,automaticBookAction } from "../src/sc
 import {inspectSpeakerMetadata,applySpeakerPlan,reviewMetadataAction} from "../src/metadata/automatic-review-metadata";
 import {changedReviewBookSelection} from "../src/domain/review-metadata";
 import { registerDelegatedAiReviewPostgresTests } from "./delegated-ai-review-postgres";
+import { registerRemainingAiReviewPostgresTests } from "./remaining-ai-review-postgres";
 
 const enabled = process.env.RUN_POSTGRES_INTEGRATION === "1";
 const integration = enabled ? describe : describe.skip;
@@ -227,14 +228,18 @@ async function makeAnonymisedPublishedFixturesFrontendEligible(
 integration("disposable PostgreSQL Phase 3B application", () => {
   let pool: Pool;
 
-  function runSchema(direction: "apply" | "rollback", scope: SchemaMigrationScope = "all") {
-    return runSchemaMigrations(pool, {
+  async function runSchema(direction: "apply" | "rollback", scope: SchemaMigrationScope = "all") {
+    // Historic tests intentionally exercise exact earlier migration boundaries.
+    if(scope==="0017_delegated_private_ai_review"&&direction==="rollback")await runSchema("rollback","0018_remaining_private_ai_review");
+    const result=await runSchemaMigrations(pool, {
       direction,
       scope,
       connectionString: disposableConnectionString(),
       writeOptIn: process.env.ALLOW_LOCAL_DB_WRITE,
       testRunToken: testRunToken()
     });
+    if(scope==="0017_delegated_private_ai_review"&&direction==="apply")await runSchema("apply","0018_remaining_private_ai_review");
+    return result;
   }
 
   beforeAll(async () => {
@@ -293,6 +298,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   });
 
   registerDelegatedAiReviewPostgresTests(() => pool, runSchema);
+  registerRemainingAiReviewPostgresTests(() => pool, runSchema);
 
   it("prefills an exact source speaker without approval, preserves concurrent edits and reruns without audit churn",async()=>{
     const c=await pool.connect();const id="66666666-6666-4666-8666-666666666666";
@@ -3991,7 +3997,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
          (SELECT count(*)::integer FROM migration_records) AS content_records,
          (SELECT count(*)::integer FROM sermon_enrichment_draft_imports) AS draft_import_receipts`
     );
-    expect(before.rows[0]?.schema_receipts).toBe(17);
+    expect(before.rows[0]?.schema_receipts).toBe(18);
     expect(before.rows[0]?.content_records).toBe(5);
     expect(before.rows[0]?.draft_import_receipts).toBeGreaterThanOrEqual(0);
     await expect(runSchema("apply")).resolves.toEqual({
@@ -3999,7 +4005,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       outcome: "no_op",
       appliedMigrationIds: [],
       rolledBackMigrationIds: [],
-      journalReceiptCount: 17
+      journalReceiptCount: 18
     });
     expect((await pool.query<{
       schema_receipts: number;
@@ -4048,10 +4054,11 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         "0014_primary_preaching_passages",
         "0015_optional_passage_and_grounding_identity",
         "0016_legacy_completed_passage_reviews",
-        "0017_delegated_private_ai_review"
+        "0017_delegated_private_ai_review",
+        "0018_remaining_private_ai_review"
       ],
       rolledBackMigrationIds: [],
-      journalReceiptCount: 17
+      journalReceiptCount: 18
     });
   });
 
@@ -4164,12 +4171,12 @@ integration("disposable PostgreSQL Phase 3B application", () => {
 
     const results = await Promise.all([runSchema("apply"), runSchema("apply")]);
     expect(results.map((result) => result.outcome).sort()).toEqual(["applied", "no_op"]);
-    expect(results.reduce((count, result) => count + result.appliedMigrationIds.length, 0)).toBe(17);
+    expect(results.reduce((count, result) => count + result.appliedMigrationIds.length, 0)).toBe(18);
     expect((await pool.query<{ receipts: number; distinct_receipts: number }>(
       `SELECT count(*)::integer AS receipts,
               count(DISTINCT migration_id)::integer AS distinct_receipts
        FROM schema_migrations`
-    )).rows[0]).toEqual({ receipts: 17, distinct_receipts: 17 });
+    )).rows[0]).toEqual({ receipts: 18, distinct_receipts: 18 });
 
     await expect(runSchema("rollback")).resolves.toMatchObject({
       outcome: "rolled_back",
@@ -4177,7 +4184,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     });
     await expect(runSchema("apply")).resolves.toMatchObject({
       outcome: "applied",
-      journalReceiptCount: 17
+      journalReceiptCount: 18
     });
   });
 });

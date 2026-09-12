@@ -11,6 +11,15 @@ Produce coherent, transcript-grounded private drafts for later human review. Tre
 
 ## Explicit D-156 delegated-review mode
 
+For the separately authorised D-157 remaining-review task, read
+[remaining-review-contract.md](references/remaining-review-contract.md) completely.
+Only its frozen 155-record scope may use separately attributed AI identity,
+speaker, finding, retained-caption-fidelity transcript, passage and media
+acceptance plus guarded private final completion. This does not create human
+approval or publication readiness. Preserve D-156's original policy and decisions;
+its already-accepted content needs no repeated substantive review. D-157 takes
+precedence over the human-only private-stage rules below only within that scope.
+
 For Samuel's separately authorised review of the frozen existing local collection only, read [the delegated-review contract](references/delegated-review-contract.md) completely and use it instead of the default human-only acceptance and complete-approved-transcript-reading requirements below. Assess every pending description and Q&A in full against sufficient contextual source evidence; record separately scoped AI acceptance, not human approval. The mode permits one focused, preserved correction round and exact-version revalidation. It never permits transcript edits, audio verification claims, publication or automatic completion of unrelated review stages. Existing human approvals and all consumed batch histories remain intact. Outside this mode, every normal rule below still applies.
 
 ## Non-negotiable boundaries

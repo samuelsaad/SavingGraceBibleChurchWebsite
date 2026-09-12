@@ -5,6 +5,37 @@
 
 ## Authority and current checkpoint
 
+**D-157 is applied to the frozen existing 155 records.** The current private
+administrator workflow has 144 completed reviews: 132 new separately attributed
+Astra completions and 12 preserved human completions. Eleven records have specific
+evidence exceptions, not unattempted reviews. See `remaining-private-review-plan.md`
+for category totals and the distinction between private completion and publication.
+
+Only additive migration `0018_remaining_private_ai_review` was applied after the
+verified 0017 ledger. All 1,121 D-156 decisions, 118 human artifact approvals,
+original content, source evidence and historical audit rows remain intact.
+Five missing speaker relationships were resolved by exact retained source-term
+evidence (one canonical reference added; all seven prior references preserved).
+Two pending passage proposals were added and one machine-only pending range was
+refined from explicit context, without changing a human passage decision.
+
+The strict marker-aware full-source comparison gives 149 exact matches, three
+human-approved transcripts with unavailable retained captions, and three genuine
+redaction-loss exceptions missed by the older word-only comparison. Transcript
+acceptance means retained-caption fidelity, never audio accuracy. Current reading
+and reusable D-156 semantic coverage are recorded separately. No content was
+regenerated or rewritten. All 155 review packets and eight metadata packets have
+byte-identical idempotency verification across all database tables.
+
+The updated private exceptions route is `/admin/remaining-reviews` on the authorised
+loopback review server at `http://127.0.0.1:4360`. It distinguishes AI acceptance,
+preserved human approval, source limitations and unresolved evidence. Normal
+personal sign-in is not claimed: this uses the existing explicitly authorised
+development identity. Private completion does not satisfy publication, scheduling,
+public/search/feed/sitemap/SEO/build or semantic eligibility. D-155 stays closed.
+
+## Prior D-156 checkpoint and preserved evidence
+
 The D-156 status-display repair connects current version-bound AI acceptance to
 administrator lists, details and guided private previews. The former "Needs work"
 label was the human-only publication checklist, not missing AI decisions. All

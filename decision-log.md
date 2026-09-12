@@ -1,6 +1,6 @@
 # Project Decision Log
 
-**Status:** Approved decisions through D-156; public frontend preview remains private and local
+**Status:** Approved decisions through D-157; public frontend preview remains private and local
 **Authority:** `church-website-architecture-plan.md` plus Yang’s confirmed migration decisions and Samuel Saad’s recorded project-owner decisions
 
 ## Evidence classifications
@@ -427,6 +427,64 @@ Samuel explicitly delegates substantive review of the existing local collection 
 Use a separate immutable, version/source/policy-bound AI review record, explicit AI/system attribution and per-artifact accepted/corrected-accepted/needs-human outcomes. These outcomes discharge repeated substantive description/Q&A review but never claim human approval or complete unrelated identity, finding, transcript or passage stages. One focused correction round is permitted only for defective unapproved artifacts, preserving original and corrected bytes, source/import receipts, ordering and history. Concurrency conflicts fail closed; identical writes are no-ops; changed inputs make prior acceptance stale. Existing publication/public-search/SEO/feed/sitemap/build/semantic gates remain unchanged. The additive private review schema, audited service, administrator status display, guarded fixture tests and safe local commits are authorised. All real evidence remains private. See the repository-scoped delegated-review contract for the complete requirements.
 
 **D-156 post-rejection compatibility authority (11 September 2026):** Samuel separately authorises removal of sermon-linked private D-156 membership and review records only when a future separately authorised permanent deletion passes the existing archived-state, exact-confirmation, concurrency, reason, tombstone, audit and SEO safeguards. The new history remains immutable to direct updates/deletes; its narrow cascade requires the guarded application transaction, absence of the deleted parent, and its preserved minimal tombstone. Scope hashes and non-content historical audit events remain retained. This authorises no sermon deletion now, no broad history purge, and no change to the substantive-review or publication boundaries.
+
+### D-157 — Evidence-based remaining private review of the existing collection
+
+Samuel delegates the remaining identity, explicit-source speaker, individual
+finding/set acknowledgement, retained-caption-fidelity transcript, primary-passage
+and existing-media-reference checks for only the existing 155 records frozen by
+canonical manifest SHA-256 `c46c9125291f2d73d73162d1e0a2be42a7ce7a27c3166579e6b60fd0c7b9fa68`.
+He separately authorised the protected AGENTS/skill/grounding amendments after
+execution review rejected their initial application, then explicitly authorised
+the decision log, contracts, backend/admin implementation, necessary additive
+schema, guarded database application and safe local commits after a second rejection.
+Both rejections remain historical; no workaround or new sermon is authorised.
+
+Use current interactive Codex Astra and immutable dependency-bound AI decisions,
+never Samuel's human identity or lifecycle approval fields. Preserve D-156's
+frozen policy and 1,121 decisions, all 118 human artifact approvals and every
+human transcript/passage/finding/identity decision. Read retained local evidence
+first; only when insufficient, read official church public sermon pages/metadata
+for these records. No production database, YouTube API, new captions, audio/video
+processing, other generative provider, content regeneration or deletion is allowed.
+
+Transcript acceptance verifies fidelity and completeness relative to retained
+captions, not the recording. Record full deterministic comparison separately from
+actual/reused contextual semantic-reading coverage. Never normalize away missing
+words, numbers, negation, redaction or uncertainty. Preserve human-approved
+transcripts with missing retained sources and record that limitation honestly.
+Each finding needs its own evidence-supported disposition; warnings are retained,
+not erased by acknowledgement. Missing/conflicting evidence remains a precise
+exception. Supported passage granularity and explicit canonical speaker mappings
+may be persisted without inventing absent metadata or overriding human decisions.
+
+The guarded local application may atomically record supported components and
+private final completion with explicit AI attribution only when every current
+requirement is satisfied, `status = draft`, and no prior publication timestamp
+exists. A separate AI-completion record is not human approval. Preserve dependency
+staleness, concurrency, idempotency, audit, original content/provenance, guarded
+deletion/tombstone behavior, authentication and all public/search/feed/sitemap/SEO/
+build/semantic exclusion. Additive schema and narrowly scoped admin status changes
+are permitted only to implement these distinctions. The public publication and
+scheduling checklists remain human-controlled and unchanged. D-151–D-155 stay closed.
+See the repository-scoped remaining-review contract for complete evidence,
+preservation, private-context, test and exceptions-only completion requirements.
+
+**D-157 database application (12 September 2026):** All 155 fixed records were
+assessed. The guarded workflow persisted 847 component decisions/limitations and
+132 private-completion decisions, with 12 earlier human completions preserved.
+The 11 records with 16 overlapping component exceptions remain incomplete. Five
+missing speaker assignments, two new pending passage proposals and one exact-bound
+machine-only proposal refinement were audited separately. One explicitly sourced
+canonical speaker reference was added; the seven original references were not
+relabeled or changed. Human approvals and D-156 decisions remain unchanged.
+All 155 identical review packets and eight identical metadata packets replayed
+without any database-table fingerprint change. Full marker-aware source comparison
+identifies three actual missing-redaction exceptions, unlike the prior word-only
+test; no source or transcript was edited to conceal them. The bounded official
+public-page metadata lookup could not connect and supplied no missing speaker
+evidence. No production database or provider API was accessed. Detailed evidence,
+remaining requirements and verification are in `remaining-private-review-plan.md`.
 
 ## Decisions still required
 

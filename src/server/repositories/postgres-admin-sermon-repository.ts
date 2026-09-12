@@ -1,5 +1,6 @@
 import type { Pool, PoolClient, QueryResultRow } from "pg";
 import { listDelegatedReviews } from "../../application/delegated-ai-review-service";
+import { listRemainingReviews } from "../../application/remaining-ai-review-service";
 import { aggregateDelegatedReview } from "../../domain/delegated-review-status";
 import type {
   AdminSermonListQuery,
@@ -494,9 +495,12 @@ function detailFromRow(row: SermonRow): StoredSermonDetail {
 async function withDelegatedReview<T extends StoredSermonSummary>(db: Pool | PoolClient, sermons: T[]): Promise<T[]> {
   if (!sermons.length) return sermons;
   const installed=(await db.query("SELECT to_regclass('delegated_ai_review_scopes') IS NOT NULL AS installed")).rows[0]?.installed;
-  if (!installed) return sermons;
-  const statuses=aggregateDelegatedReview(await listDelegatedReviews(db,sermons.map(s=>s.id)));
-  return sermons.map(s=>({...s,...(statuses.has(s.id)?{delegatedReview:statuses.get(s.id)!}:{})}));
+  const statuses=installed ? aggregateDelegatedReview(await listDelegatedReviews(db,sermons.map(s=>s.id))) : new Map();
+  const remaining=await listRemainingReviews(db,sermons.map(s=>s.id));
+  return sermons.map(s=>({...s,
+    ...(statuses.has(s.id)?{delegatedReview:statuses.get(s.id)!}:{}),
+    ...(remaining.has(s.id)?{remainingReview:remaining.get(s.id)!}:{})
+  }));
 }
 
 interface DatabaseError {
@@ -1579,6 +1583,16 @@ export class PostgresAdminSermonRepository implements AdminSermonRepository {
 
   listDelegatedAiReviews(sermonIds?: readonly string[]) {
     return listDelegatedReviews(this.pool,sermonIds);
+  }
+
+  async listRemainingAiReviews() {
+    const statuses=await listRemainingReviews(this.pool);
+    if (!statuses.size) return [];
+    const rows=await this.pool.query<{id:string;title:string}>(
+      "SELECT id,title FROM sermons WHERE id=ANY($1::uuid[]) AND deleted_at IS NULL ORDER BY service_date DESC,id",
+      [[...statuses.keys()]]
+    );
+    return rows.rows.map(row=>({sermonId:row.id,title:row.title,review:statuses.get(row.id)!}));
   }
 
   async transaction<T>(work: (transaction: AdminSermonTransaction) => Promise<T>): Promise<T> {

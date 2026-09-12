@@ -1,6 +1,18 @@
 # Saving Grace Bible Church Website
 
-The updated private review queue is `http://127.0.0.1:4359/admin/sermons` when the
+The current D-157 private exceptions queue is
+`http://127.0.0.1:4360/admin/remaining-reviews` when the authorised loopback review
+server is running. All 155 existing records were assessed: 144 private reviews
+are complete (132 AI, 12 preserved human) and 11 have specific evidence exceptions.
+AI acceptance is explicit and version-bound, never a manufactured human approval.
+All content remains private; publication and semantic eligibility are unchanged.
+Use [the remaining review plan](remaining-private-review-plan.md) for outcomes,
+source limitations, preservation and verification. This is the existing authorised
+development identity, not personal sign-in. D-155 remains closed.
+
+## Prior D-156 status-display checkpoint
+
+The former private review queue was `http://127.0.0.1:4359/admin/sermons` when the
 authorized loopback server is running. Current D-156 acceptance now displays as
 "AI reviewed and accepted", separate from human approvals and publication gates.
 Following explicit post-rejection authorisation, private navigation/completion
@@ -9,7 +21,7 @@ independent human-review prerequisite remain enforced; publishing still uses
 its unchanged human-approved checklist. No real review was completed by this
 repair. See `CURRENT_PROJECT_HANDOVER.md` for the verified checkpoint.
 
-## Current delegated private review checkpoint
+## Prior delegated description/Q&A review checkpoint
 
 D-156 is complete for the existing 155-sermon collection. Of the pending content,
 139 descriptions and 980 individual Q&A were AI accepted unchanged; one

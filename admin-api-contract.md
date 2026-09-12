@@ -180,3 +180,30 @@ description/Q&A substantive portion of that private final checklist. It does not
 replace human transcript approval, identity, findings, passage or publication.
 
 Viewing, navigation and saving never change approval. Each approval and review-item decision is a separate server-authorised action with optimistic concurrency and audit. The local pilot importer has no approval capability and never impersonates the administrator. Review source/items never appear in public APIs, public search or readiness content.
+
+## Bounded D-157 private remaining-review projection
+
+For the frozen 155-record D-157 scope only, authenticated
+`GET /api/v1/admin/remaining-reviews` and the admin list/detail/review projections
+report current, separately attributed AI evidence for identity, speaker, finding
+set, transcript-caption fidelity, primary passage and existing media references.
+The private queue is `/admin/remaining-reviews`. Human approval fields are preserved;
+AI acceptance is never displayed or stored as human approval. Missing-source
+limitations on preserved human transcript approvals remain visible. A supported
+topical/no-single-primary assessment is distinct from absent passage evidence.
+
+The guarded application service persists immutable, scope- and dependency-bound
+decisions and automatically records private final completion only when every
+applicable component and current description/individual Q&A requirement is met.
+Draft status, no previous publication timestamp, authorization, exact versions,
+fresh evidence and optimistic concurrency remain required. Stale, incomplete or
+exceptional evidence cannot complete its component. Identical replay is a no-op;
+existing AI completion does not manufacture a human completion event.
+
+This exception does not alter the normal human workflow outside D-157, permit a
+source-fidelity claim about audio, or expand publication, search, sitemap, SEO,
+semantic or creative-frontend eligibility. All private projections retain default
+denial, no-store, anti-indexing and escaped rendering. See
+[remaining-private-review-plan.md](remaining-private-review-plan.md) for persisted
+outcomes and limitations; the detailed evidence contract is the repository skill's
+`remaining-review-contract.md`.

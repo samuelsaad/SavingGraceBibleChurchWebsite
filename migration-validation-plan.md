@@ -1120,3 +1120,69 @@ frontend is unchanged; no production service, external generation, actual
 deletion, approval, publication, push, merge or deployment occurred. Detailed
 outcomes, reading coverage and limitations are in
 [delegated-ai-review-plan.md](delegated-ai-review-plan.md).
+
+### D-157 persisted remaining private review — 12 September 2026
+
+- The frozen scope is 155 existing records, canonical SHA-256
+  `c46c9125291f2d73d73162d1e0a2be42a7ce7a27c3166579e6b60fd0c7b9fa68`.
+  Only additive migration `0018_remaining_private_ai_review` was applied to the
+  authorised application database after guarded disposable migration tests.
+  The previous 17 migration records and all existing content remain unchanged.
+  Scope binding replay returned unchanged. No actual deletion occurred; future
+  private-history removal still requires the guarded parent deletion/tombstone.
+- Actual application persisted 847 component decisions/limitations and 132 AI
+  private completions. With 12 preserved human completions, 144 are complete and
+  11 have genuine overlapping exceptions. Five supported speaker assignments,
+  one canonical speaker reference, two pending passage proposals and one pending
+  proposal refinement were applied. No human approval or source wording was changed.
+- Identical replay of every one of the 155 decision packets and eight metadata
+  operations preserved all 41 table fingerprints: no content, relationship,
+  version, timestamp, audit or progress churn. All 1,121 D-156 decisions, 118 human
+  artifact approvals and the original 2,094 audit rows remain byte-identical.
+  Every sermon remains draft with no publication timestamp or new public/semantic
+  eligibility. The original sources, rejected evidence and checkpoint history remain
+  private, ignored and unstaged.
+- Strict source comparison passed 149 exact word/number/negation/marker matches,
+  recorded three unavailable retained sources under preserved human approval, and
+  identified three actual missing redaction markers. Those omissions remain
+  unresolved; the comparator does not normalize them away. Deterministic comparison,
+  fresh contextual reading and reused hash-bound semantic ranges are separately
+  recorded. No audio verification is claimed. One bounded official public-page
+  metadata attempt could not connect; no response content was obtained or access
+  restriction bypassed.
+- `npm test`: 562 passed and 101 database-gated cases. Separately,
+  `npm run test:postgres`: 663/663 passed in 62 files, zero skips; its uniquely
+  named disposable database was removed. Coverage includes exact scope/dependencies,
+  stale or missing decisions, preserved human outcomes, draft/prior-publication
+  guards, authorization, concurrent writes, source-term/name conflicts, human
+  speaker clears, private completion, replay and guarded deletion compatibility.
+- TypeScript passed with the existing TypeScript 6 deprecation compatibility flag;
+  `npm run check` checked 227 files with zero errors, warnings or hints. Production
+  build passed; offline dependency audit reported zero vulnerabilities. The
+  anonymized migration dry run processed five fixtures: three included, two
+  excluded, zero rejected. The official skill validator passed. Replacing a
+  deprecated safe-integer alias retained equivalent behavior on 26 boundary cases
+  and was followed by the complete zero-skip PostgreSQL run.
+- Read-only HTTP verification matched list/detail/queue/final-stage status across
+  all 155 records, excluded all 155 public details, returned an empty public list,
+  and retained absent-identity/nonloopback denial, no-store and noindex. Real browser
+  verification passed exception-queue, human-source-warning, topical attribution,
+  completed-control and refresh checks without real mutations or screenshots.
+  A private harness network-idle timeout was corrected to DOM readiness plus strict
+  rendered assertions; no application authentication or privacy test was weakened.
+- A separate identities-disabled loopback server refused private requests even
+  with the development header and was then stopped. Four API search variants
+  (including keyword and structured Scripture) returned zero sermons, four archive
+  variants exposed no private links, and all 155 public HTML details returned 404
+  without private title or structured metadata. Sitemap output contained only the
+  archive location. Unsupported feed/semantic routes returned 404; this is not a
+  claim that those endpoints are implemented. Existing review servers stayed up.
+- Safe-file and production scans examined 281 tracked/nonignored files and six
+  build files: zero introduced findings, six separately classified pre-existing
+  flagged files, and zero symlinks/build findings. The exact 31-file staged allowlist
+  passed independent index-byte, sensitive-content, protected-identity and
+  prohibited-path checks; private evidence remains ignored and unstaged.
+  Claude's recorded tree hash is unchanged. No
+  new sermon, external generation, publication, push, merge or deployment is part
+  of this milestone. Full outcomes are in
+  [remaining-private-review-plan.md](remaining-private-review-plan.md).

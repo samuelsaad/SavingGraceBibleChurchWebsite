@@ -3,6 +3,7 @@ import { fillExplicitPrimaryBook } from "../../domain/primary-book-resolution";
 import { isoDateSchema, sermonStatusSchema } from "../../domain/sermon";
 import { containsHtmlTag } from "../../domain/content-readiness";
 import { delegatedContentStatusSchema } from "../../domain/delegated-review-status";
+import { remainingReviewStatusSchema } from "../../domain/remaining-ai-review";
 import { formatBiblePassage, validateBiblePassage } from "../../domain/bible-passage";
 import { youtubeVideoIdFromUrl, youtubeVideoIdPattern } from "../../domain/youtube";
 
@@ -432,6 +433,7 @@ export const contentReadinessResponseSchema = z.object({
 
 export const adminSermonSummarySchema = z.object({
   delegatedReview: delegatedContentStatusSchema.optional(),
+  remainingReview: remainingReviewStatusSchema.optional(),
   id: z.uuid(),
   title: z.string(),
   slug: z.string(),

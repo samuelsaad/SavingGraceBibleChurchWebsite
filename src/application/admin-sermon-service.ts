@@ -57,6 +57,7 @@ import {
 } from "../enrichment/sermon-enrichment-policy";
 import { inspectGeneratedText } from "../enrichment/generated-text-mechanical-qa";
 import { assessSermonTitle } from "../domain/sermon-title";
+import { privateComponentAccepted } from "../domain/remaining-review-display";
 
 function transcriptSha256(value: string): string {
   return createHash("sha256").update(value, "utf8").digest("hex");
@@ -115,7 +116,8 @@ function sermonSummaryDto(sermon: StoredSermonSummary) {
     primaryPassage: sermon.primaryPassage,
     youtubeSource: sermon.youtubeSource,
     readiness: sermon.readiness,
-    delegatedReview: sermon.delegatedReview
+    delegatedReview: sermon.delegatedReview,
+    remainingReview: sermon.remainingReview
   };
 }
 
@@ -267,18 +269,16 @@ function enrichmentReviewDto(
     items: workflow.items
   });
   const stageCompletion = {
-    identity: (
-      workflow.state.identityStatus === "confirmed" &&
-      sermon.speaker !== null &&
-      sermon.serviceDate !== "1970-01-01"
-    ),
-    findings: integrity.findingsComplete,
-    transcript: (
+    identity: privateComponentAccepted(sermon.remainingReview,"identity",workflow.state.identityStatus === "confirmed") &&
+      privateComponentAccepted(sermon.remainingReview,"speaker",sermon.speaker !== null) &&
+      sermon.speaker !== null && sermon.serviceDate !== "1970-01-01",
+    findings: integrity.reviewSetVerified && privateComponentAccepted(sermon.remainingReview,"findings",integrity.findingsComplete),
+    transcript: privateComponentAccepted(sermon.remainingReview,"transcript",
       sermon.readiness.hasApprovedTranscript &&
       sermon.transcript?.status === "approved" && sermon.transcript.approvedAt !== null
     ),
     ...privateSubstantiveReview(sermon),
-    final: workflow.state.completedAt !== null
+    final: sermon.remainingReview?.privateComplete ?? workflow.state.completedAt !== null
   };
   const stageComplete = [
     stageCompletion.identity,
@@ -291,16 +291,22 @@ function enrichmentReviewDto(
   const completedStageCount = stageComplete.filter(Boolean).length;
   const canFinish =
     stageComplete.slice(0, 5).every(Boolean) &&
-    sermon.readiness.hasRequiredPassageDecision &&
-    sermon.readiness.hasValidControlledMedia &&
-    sermon.status === "draft" && sermon.publishedAt === null;
+    privateComponentAccepted(sermon.remainingReview,"passage",sermon.readiness.hasRequiredPassageDecision) &&
+    privateComponentAccepted(sermon.remainingReview,"media",sermon.readiness.hasValidControlledMedia) &&
+    sermon.status === "draft" && sermon.publishedAt === null &&
+    // D-157 completion is persisted only by its separately attributed workflow.
+    // Do not invite a legacy human-completion write against human-only DB gates.
+    (sermon.remainingReview?.privateComplete || (
+      workflow.state.identityStatus === "confirmed" && integrity.findingsComplete &&
+      sermon.readiness.hasApprovedTranscript && sermon.readiness.hasRequiredPassageDecision
+    ));
   return enrichmentReviewResponseSchema.parse({
     sermon: sermonDetailDto(sermon),
     recordPosition: workflow.recordPosition,
     recordCount: workflow.recordCount,
     review: {
       identityStatus: workflow.state.identityStatus,
-      currentStage: workflow.state.currentStage,
+      currentStage: sermon.remainingReview?.privateComplete ? 6 : workflow.state.currentStage,
       emptyItemSetAcknowledgedBySubject: workflow.state.emptyItemSetAcknowledgedBySubject,
       emptyItemSetAcknowledgedAt: workflow.state.emptyItemSetAcknowledgedAt,
       completedAt: workflow.state.completedAt,
@@ -356,6 +362,11 @@ export class AdminSermonService {
   async delegatedAiReviews(identity: ApplicationIdentity) {
     assertAdminAccess(identity);
     return { data: await this.repository.listDelegatedAiReviews?.() ?? [] };
+  }
+
+  async remainingAiReviews(identity: ApplicationIdentity) {
+    assertAdminAccess(identity);
+    return { data: await this.repository.listRemainingAiReviews?.() ?? [] };
   }
 
   async list(
@@ -421,7 +432,7 @@ export class AdminSermonService {
       const review = await transaction.findEnrichmentReviewForUpdate(id);
       if (!review) notFound("A guided enrichment review is not available for this sermon");
       if (review.rowVersion !== input.reviewRowVersion) conflict();
-      if (review.completedAt !== null && input.identityStatus !== "pending") {
+      if ((sermon.remainingReview?.privateComplete ?? review.completedAt !== null) && input.identityStatus === undefined) {
         return;
       }
       if (input.identityStatus === "confirmed") {
@@ -432,17 +443,18 @@ export class AdminSermonService {
           invalid("serviceDate", "Enter the verified service date before confirming identity");
         }
       }
-      const identityComplete =
-        (input.identityStatus ?? review.identityStatus) === "confirmed" &&
-        sermon.speaker !== null &&
-        sermon.serviceDate !== "1970-01-01";
-      const findingsComplete = identityComplete && !await transaction.hasBlockingEnrichmentReviewItems(
+      const identityComplete = (input.identityStatus === "pending" ? false : input.identityStatus === "confirmed" ||
+        privateComponentAccepted(sermon.remainingReview,"identity",review.identityStatus === "confirmed")) &&
+        (input.identityStatus === "confirmed" || privateComponentAccepted(sermon.remainingReview,"speaker",sermon.speaker !== null)) &&
+        sermon.speaker !== null && sermon.serviceDate !== "1970-01-01";
+      const legacyFindingsComplete = !await transaction.hasBlockingEnrichmentReviewItems(
         id,
         sermon.transcript?.rowVersion ?? null
       );
-      const transcriptComplete =
+      const findingsComplete = identityComplete && privateComponentAccepted(sermon.remainingReview,"findings",legacyFindingsComplete);
+      const transcriptComplete = privateComponentAccepted(sermon.remainingReview,"transcript",
         sermon.readiness.hasApprovedTranscript &&
-        sermon.transcript?.status === "approved" && sermon.transcript.approvedAt !== null;
+        sermon.transcript?.status === "approved" && sermon.transcript.approvedAt !== null);
       const substantive = privateSubstantiveReview(sermon);
       const firstIncompleteStage = !identityComplete
         ? 1
@@ -687,6 +699,18 @@ export class AdminSermonService {
       // cannot finish a pending, scheduled, published, unpublished or archived sermon.
       if (sermon.status !== "draft" || sermon.publishedAt !== null) {
         issues.push({ path: "status", message: "The pilot review can finish only while the sermon remains draft and private." });
+      }
+      if (sermon.remainingReview?.privateComplete) {
+        // The immutable AI completion is separate from legacy human completed_at.
+        // Revalidate every current projection, including each D-156 Q&A, before
+        // returning a no-op. Never manufacture a human completion or approval.
+        const substantive=privateSubstantiveReview(sermon);
+        if (!sermon.remainingReview.canComplete || !Object.values(sermon.remainingReview.components).every(c=>c.accepted) ||
+          !sermon.speaker || sermon.serviceDate === "1970-01-01" || !substantive.description || !substantive.questionAnswers) {
+          issues.push({path:"remainingReview",message:"Current delegated private-review requirements are incomplete."});
+        }
+        if (issues.length) invalidMany("Complete the guided review checklist",issues);
+        return;
       }
       if (review.identityStatus !== "confirmed" || !sermon.speaker || sermon.serviceDate === "1970-01-01") {
         issues.push({ path: "identity", message: "Confirm identity, speaker, date and provenance." });

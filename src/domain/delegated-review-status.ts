@@ -1,4 +1,6 @@
 import { z } from "zod";
+import type { RemainingReviewStatus } from "./remaining-ai-review";
+import { privateComponentAccepted, privateCompletionIsCurrent } from "./remaining-review-display";
 
 export const substantiveDecisionSchema = z.object({
   artifactKey: z.string(),
@@ -75,20 +77,21 @@ export function substantiveDecisionLabel(item: SubstantiveDecision | null | unde
 }
 
 export function remainingPrivateReviewRequirements(sermon: {
-  delegatedReview?: DelegatedContentStatus;
+  delegatedReview?: DelegatedContentStatus | undefined;
+  remainingReview?: RemainingReviewStatus | undefined;
   readiness: { hasOneSpeaker: boolean; hasApprovedTranscript: boolean; hasRequiredPassageDecision: boolean; hasValidControlledMedia: boolean; hasApprovedDescription: boolean; hasRequiredQuestionAnswers: boolean };
   enrichmentReview: { completedAt: string | null } | null;
 }): string[] {
   const d=sermon.delegatedReview, r=sermon.readiness;
   return [
-    !(d?.identityConfirmed ?? !!sermon.enrichmentReview?.completedAt) && "Identity, service date and source verification",
-    !r.hasOneSpeaker && "Speaker selection",
-    !(d?.findingsComplete ?? !!sermon.enrichmentReview?.completedAt) && "Source findings / zero-finding acknowledgement",
-    !r.hasApprovedTranscript && "Human transcript accuracy approval",
-    !r.hasRequiredPassageDecision && "Primary-passage decision",
+    !privateComponentAccepted(sermon.remainingReview,"identity",d?.identityConfirmed ?? !!sermon.enrichmentReview?.completedAt) && "Identity, service date and source verification",
+    !privateComponentAccepted(sermon.remainingReview,"speaker",r.hasOneSpeaker) && "Speaker selection",
+    !privateComponentAccepted(sermon.remainingReview,"findings",d?.findingsComplete ?? !!sermon.enrichmentReview?.completedAt) && "Source findings / zero-finding acknowledgement",
+    !privateComponentAccepted(sermon.remainingReview,"transcript",r.hasApprovedTranscript) && (sermon.remainingReview ? "Transcript retained-source fidelity review" : "Human transcript accuracy approval"),
+    !privateComponentAccepted(sermon.remainingReview,"passage",r.hasRequiredPassageDecision) && "Primary-passage decision",
     !(d?.descriptionComplete ?? r.hasApprovedDescription) && "Current description substantive review",
     !(d?.questionsComplete ?? r.hasRequiredQuestionAnswers) && "Current individual Q&A substantive review",
-    !r.hasValidControlledMedia && "Controlled media verification",
-    !sermon.enrichmentReview?.completedAt && "Final private-review completion"
+    !privateComponentAccepted(sermon.remainingReview,"media",r.hasValidControlledMedia) && "Controlled media verification",
+    !privateCompletionIsCurrent(sermon) && "Final private-review completion"
   ].filter((item): item is string => typeof item === "string");
 }

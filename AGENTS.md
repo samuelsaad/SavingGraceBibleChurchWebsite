@@ -70,6 +70,33 @@ For milestone evidence, record safe commands/results/defects/regressions in the 
 
 ## 10. Sermon and administration invariants
 
+### D-157 — bounded remaining private review
+
+For Samuel's separately delegated existing 155-record collection only, bound to
+private manifest SHA-256 `c46c9125291f2d73d73162d1e0a2be42a7ce7a27c3166579e6b60fd0c7b9fa68`,
+interactive Codex Astra may independently assess identity, explicit-source
+speaker mappings, each finding and its exact set, transcript fidelity to retained
+captions, supported primary-passage granularity and existing media references.
+Record immutable, dependency-bound AI decisions under D-157, never human approvals
+or personal authentication. Preserve D-156 decisions and their frozen policy,
+human decisions, all content/source bytes, uncertainty and correction history.
+Private transcript acceptance verifies retained-caption fidelity, not recording
+accuracy; record complete deterministic comparison separately from actual
+semantic-reading coverage and preserve supported prior evidence without claiming
+new reading. Missing, conflicting, stale or insufficient evidence is an exception,
+not a guessed assignment, cleared warning or automatic acknowledgement.
+Only independently supported components may count as privately reviewed. The
+guarded workflow may persist final private completion only when every current
+requirement is satisfied, the sermon is draft and no publication timestamp exists.
+Publication/scheduling, public/search/feed/sitemap/SEO/build/semantic eligibility
+and authentication remain unchanged; D-157 is not a human publication approval.
+Use retained local evidence first; the current task permits read-only official
+church public pages only when needed for these records, never production databases,
+YouTube APIs, new captions, media processing or another generative provider.
+Read `.agents/skills/sermon-enrichment/references/remaining-review-contract.md`
+before this mode. Normal human-authority and approved-transcript requirements
+remain unchanged outside this exact scope.
+
 ### D-156 — delegated private AI review
 
 Samuel explicitly authorises the new delegated-review policy for only the existing local collection frozen by the D-156 scope receipt. This is not a reopening of D-151–D-155. Read `.agents/skills/sermon-enrichment/references/delegated-review-contract.md` for this mode. Full-file source-integrity checks plus sufficient contextual transcript reading may ground private description/Q&A review and one focused correction round per artifact without transcript approval. Record semantic-reading coverage honestly; this is neither complete transcript review nor audio verification. Accepted outcomes are explicitly AI decisions under Samuel's delegation, never human approvals or personal authentication. They discharge repeated substantive description/Q&A review only for the exact content/source/policy versions accepted. Preserve human decisions, source limitations, original content, correction lineage, stale-result protection, and unrelated review stages. AI acceptance never changes publication, public-search, feed, sitemap, SEO, build or semantic eligibility. Transcript accuracy, unresolved identity/passages/findings and publication remain independent human responsibilities. Normal approved-transcript and human-authority requirements remain unchanged outside this exact delegated mode. Only current interactive Codex Astra is authorised; no separate generative API or new source retrieval. Private evidence may enter the authorised Codex review context (including bounded Astra workers), never ordinary logs, reports, screenshots, tracked files or another provider.

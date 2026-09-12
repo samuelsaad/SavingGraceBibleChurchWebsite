@@ -41,7 +41,7 @@ const reviewError = "delegated_review_validation_or_concurrency_conflict";
 type RunSchema = (direction: "apply" | "rollback", scope?: SchemaMigrationScope) => Promise<unknown>;
 
 /** Hash every complete application table, including timestamps, versions and audit rows. */
-async function snapshot(pool: Pool, excluded: string[] = []): Promise<Record<string, string>> {
+export async function snapshot(pool: Pool, excluded: string[] = []): Promise<Record<string, string>> {
   const tables = (await pool.query<{ tablename: string }>(
     "SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = 'public' ORDER BY tablename"
   )).rows;
@@ -57,7 +57,7 @@ async function snapshot(pool: Pool, excluded: string[] = []): Promise<Record<str
   return result;
 }
 
-async function seedFixture(pool: Pool, id = fixtureId): Promise<void> {
+export async function seedFixture(pool: Pool, id = fixtureId): Promise<void> {
   const sibling = id === outsideId;
   const videoId = sibling ? "AiReview002" : "AiReview001";
   await pool.query(
@@ -103,7 +103,7 @@ async function seedFixture(pool: Pool, id = fixtureId): Promise<void> {
   );
 }
 
-async function fixtureRequest(pool: Pool, scopeSha256: string, order: number | null = 1, id = fixtureId): Promise<DelegatedReviewResult> {
+export async function fixtureRequest(pool: Pool, scopeSha256: string, order: number | null = 1, id = fixtureId): Promise<DelegatedReviewResult> {
   const sermon = (await pool.query("SELECT * FROM sermons WHERE id=$1", [id])).rows[0]!;
   const source = (await pool.query("SELECT to_jsonb(es) AS value FROM sermon_enrichment_sources es WHERE sermon_id=$1", [id])).rows[0]!.value;
   const sourceTranscript = (await pool.query("SELECT * FROM sermon_transcripts WHERE sermon_id=$1", [id])).rows[0]!;
@@ -156,7 +156,7 @@ function correction(request: DelegatedReviewResult): DelegatedReviewResult {
 
 // Only disposable, invented fixtures: simulate prior independent human decisions.
 // No review of the real collection is performed by these handler tests.
-async function readyPrivateFixture(pool: Pool): Promise<void> {
+export async function readyPrivateFixture(pool: Pool): Promise<void> {
   await pool.query(`UPDATE sermons SET speaker_id=(SELECT id FROM speakers ORDER BY id LIMIT 1) WHERE id=$1`, [fixtureId]);
   await pool.query(`INSERT INTO sermon_media(sermon_id,media_type,provider,external_id,canonical_url,title)
     VALUES ($1,'video','youtube','AiReview001','https://www.youtube.com/watch?v=AiReview001','Anonymised controlled video')`, [fixtureId]);
@@ -174,6 +174,15 @@ async function readyPrivateFixture(pool: Pool): Promise<void> {
 }
 
 export function registerDelegatedAiReviewPostgresTests(getPool: () => Pool, runSchema: RunSchema): void {
+  // The original D-156 migration tests still exercise its exact 16/17 boundary;
+  // remove and restore only the new dependent suffix around those operations.
+  const originalRunSchema=runSchema;
+  runSchema=async(direction,scope)=>{
+    if(scope==="0017_delegated_private_ai_review"&&direction==="rollback")await originalRunSchema("rollback","0018_remaining_private_ai_review");
+    const result=await originalRunSchema(direction,scope);
+    if(scope==="0017_delegated_private_ai_review"&&direction==="apply")await originalRunSchema("apply","0018_remaining_private_ai_review");
+    return result;
+  };
   async function withFixture(work: (pool: Pool, ids: string[]) => Promise<void>): Promise<void> {
     // This helper must never independently select or fall back to the persistent local collection.
     assertDisposableIntegrationTestDatabase(process.env.TEST_DATABASE_URL ?? "", process.env.DISPOSABLE_TEST_DATABASE_TOKEN);
@@ -811,7 +820,7 @@ export function registerDelegatedAiReviewPostgresTests(getPool: () => Pool, runS
     await expect(runSchema("apply", migrationId)).resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 17 });
     expect(await objects()).toEqual(original);
     const reapplied = await snapshot(pool);
-    await expect(runSchema("apply", migrationId)).resolves.toMatchObject({ outcome: "no_op", journalReceiptCount: 17 });
+    await expect(runSchema("apply", migrationId)).resolves.toMatchObject({ outcome: "no_op", journalReceiptCount: 18 });
     expect(await snapshot(pool)).toEqual(reapplied);
   });
 }
