@@ -20,6 +20,8 @@ import { assertDisposableIntegrationTestDatabase } from "../src/migration/local-
 import type { SchemaMigrationScope } from "../src/migration/schema-migrations";
 import { PostgresAdminSermonRepository } from "../src/server/repositories/postgres-admin-sermon-repository";
 import { PostgresSermonRepository } from "../src/server/repositories/postgres-sermon-repository";
+import { createAdminApiRouter } from "../src/server/http/admin-api-router";
+import { LocalTestIdentityProvider } from "../src/server/auth/local-test-identity-provider";
 
 // Entirely invented fixture prose: no retained church source, caption or review data.
 const description = `The speaker uses an imagined village to explain how patient attention supports a community through an ordinary difficulty. A damaged bridge creates inconvenience for every household, yet the villagers disagree about who should begin repairing it. The opening distinguishes listening from making quick promises. Each neighbour has information that the others lack, and their first useful action is to hear those different accounts before deciding which work can safely proceed.
@@ -152,6 +154,25 @@ function correction(request: DelegatedReviewResult): DelegatedReviewResult {
   return { ...request, output, outputSha256: contentHash(output), outcome: "corrected_accepted", correctionRound: 1 };
 }
 
+// Only disposable, invented fixtures: simulate prior independent human decisions.
+// No review of the real collection is performed by these handler tests.
+async function readyPrivateFixture(pool: Pool): Promise<void> {
+  await pool.query(`UPDATE sermons SET speaker_id=(SELECT id FROM speakers ORDER BY id LIMIT 1) WHERE id=$1`, [fixtureId]);
+  await pool.query(`INSERT INTO sermon_media(sermon_id,media_type,provider,external_id,canonical_url,title)
+    VALUES ($1,'video','youtube','AiReview001','https://www.youtube.com/watch?v=AiReview001','Anonymised controlled video')`, [fixtureId]);
+  await pool.query(`UPDATE sermon_transcripts SET status='approved', reviewed_at=now(),approved_at=now(),
+    reviewed_by_subject='anonymised-human-reviewer',approved_by_subject='anonymised-human-reviewer'
+    WHERE sermon_id=$1`, [fixtureId]);
+  await pool.query(`UPDATE sermon_primary_passage_reviews SET review_status='confirmed_none',
+    reviewed_by_subject='anonymised-human-reviewer',reviewed_at=now() WHERE sermon_id=$1`, [fixtureId]);
+  await pool.query(`UPDATE sermon_enrichment_reviews SET identity_status='confirmed',current_stage=4,
+    source_record_key='authorised-record-9999156',expected_item_count=0,atomic_schema_version=1,
+    expected_item_set_sha256=$2,expected_transcript_sha256=$3,
+    expected_transcript_row_version=(SELECT row_version FROM sermon_transcripts WHERE sermon_id=$1),
+    empty_item_set_acknowledged_by_subject='anonymised-human-reviewer',empty_item_set_acknowledged_at=now()
+    WHERE sermon_id=$1`, [fixtureId,reviewHash(""),reviewHash(transcript)]);
+}
+
 export function registerDelegatedAiReviewPostgresTests(getPool: () => Pool, runSchema: RunSchema): void {
   async function withFixture(work: (pool: Pool, ids: string[]) => Promise<void>): Promise<void> {
     // This helper must never independently select or fall back to the persistent local collection.
@@ -170,6 +191,197 @@ export function registerDelegatedAiReviewPostgresTests(getPool: () => Pool, runS
       await runSchema("apply", migrationId);
     }
   }
+
+  it.each([false, true])("allows only explicit private handler progress and idempotent completion with current AI/mixed acceptance (mixed=%s)", async (mixed) => {
+    await withFixture(async(pool,ids)=>{
+      await readyPrivateFixture(pool);
+      if(mixed) await pool.query(`UPDATE sermon_question_answers SET status='approved',reviewed_at=now(),approved_at=now(),
+        reviewed_by_subject='anonymised-human-reviewer',approved_by_subject='anonymised-human-reviewer'
+        WHERE sermon_id=$1 AND display_order=5`,[fixtureId]);
+      const {scopeSha256}=await bindDelegatedReviewScope(pool,ids,policySha256);
+      for(const order of [null,1,2,3,4,...(mixed?[]:[5])]) await applyDelegatedReview(pool,await fixtureRequest(pool,scopeSha256,order));
+      const service=new AdminSermonService(new PostgresAdminSermonRepository(pool));
+      const admin={subject:"anonymised-human-reviewer",role:"admin"} as const;
+      const router=createAdminApiRouter(service,new LocalTestIdentityProvider(true));
+      const call=async(operation:"progress"|"finish",body:unknown)=>router(new Request(`http://127.0.0.1/api/v1/admin/sermons/${fixtureId}/review/${operation}`,{
+        method:operation==="progress"?"PATCH":"POST",headers:{"content-type":"application/json","x-local-identity":"admin"},body:JSON.stringify(body)
+      }));
+      const protectedBefore=await snapshot(pool,["sermon_enrichment_reviews","audit_events"]);
+      let review=await service.enrichmentReviewDetail(fixtureId,admin);
+      expect(review.progress.canFinish).toBe(true);
+      expect(review.sermon.delegatedReview).toMatchObject({humanApprovedQuestions:mixed?1:0,aiAcceptedQuestions:mixed?4:5});
+      const input={sermonRowVersion:review.sermon.rowVersion,reviewRowVersion:review.review.rowVersion,currentStage:6};
+      expect((await call("progress",input)).status).toBe(200);
+      review=await service.enrichmentReviewDetail(fixtureId,admin);
+      expect(review.review).toMatchObject({currentStage:6,completedAt:null});
+      const progressSnapshot=await snapshot(pool);
+      expect((await call("progress",{...input,reviewRowVersion:review.review.rowVersion})).status).toBe(200);
+      expect(await snapshot(pool)).toEqual(progressSnapshot);
+      expect((await call("progress",input)).status).toBe(409);
+      expect(await snapshot(pool)).toEqual(progressSnapshot);
+      const finishInput={sermonRowVersion:review.sermon.rowVersion,reviewRowVersion:review.review.rowVersion};
+      expect((await call("finish",finishInput)).status).toBe(200);
+      review=await service.enrichmentReviewDetail(fixtureId,admin);
+      expect(review.review.completedAt).not.toBeNull();
+      expect(review.sermon).toMatchObject({status:"draft",publishedAt:null,summaryStatus:"draft",readiness:{isComplete:false}});
+      const completeSnapshot=await snapshot(pool);
+      expect((await call("finish",{...finishInput,reviewRowVersion:review.review.rowVersion})).status).toBe(200);
+      expect((await call("progress",{...input,reviewRowVersion:review.review.rowVersion})).status).toBe(200);
+      expect(await snapshot(pool)).toEqual(completeSnapshot);
+      expect((await call("finish",finishInput)).status).toBe(409);
+      expect(await snapshot(pool)).toEqual(completeSnapshot);
+      expect(await snapshot(pool,["sermon_enrichment_reviews","audit_events"])).toEqual(protectedBefore);
+      expect((await pool.query(`SELECT count(*)::int AS count FROM audit_events WHERE entity_id=$1 AND action='sermon.enrichment_review_finished'`,[fixtureId])).rows[0]?.count).toBe(1);
+      expect((await pool.query(`SELECT actor_subject,actor_role FROM audit_events WHERE entity_id=$1 AND action='sermon.enrichment_review_finished'`,[fixtureId])).rows[0])
+        .toEqual({actor_subject:"local-admin-0001",actor_role:"admin"});
+      for(const action of ["publish","schedule"] as const) await expect(service.transition(fixtureId,action,{
+        rowVersion:review.sermon.rowVersion,...(action==="schedule"?{scheduledFor:"2099-01-01T00:00:00.000Z"}:{})
+      },admin,"fixture-private-is-not-public")).rejects.toThrow("Complete the sermon checklist before scheduling or publishing");
+      expect(await new PostgresSermonRepository(pool).findPublishedBySlug(fixtureSlug)).toBeNull();
+      expect(await snapshot(pool)).toEqual(completeSnapshot);
+    });
+  });
+
+  it.each([
+    ["identity","UPDATE sermon_enrichment_reviews SET identity_status='pending' WHERE sermon_id=$1",1],
+    ["identity","UPDATE sermons SET speaker_id=NULL WHERE id=$1",1],
+    ["identity","UPDATE sermons SET service_date='1970-01-01' WHERE id=$1",1],
+    ["reviewItems","UPDATE sermon_enrichment_reviews SET empty_item_set_acknowledged_at=NULL,empty_item_set_acknowledged_by_subject=NULL WHERE sermon_id=$1",2],
+    ["reviewItems","UPDATE sermon_enrichment_reviews SET expected_item_count=1,empty_item_set_acknowledged_at=NULL,empty_item_set_acknowledged_by_subject=NULL WHERE sermon_id=$1",2],
+    ["transcript","UPDATE sermon_transcripts SET status='draft',approved_at=NULL,approved_by_subject=NULL WHERE sermon_id=$1",3],
+    ["primaryPassageReview","UPDATE sermon_primary_passage_reviews SET review_status='pending',reviewed_at=NULL,reviewed_by_subject=NULL WHERE sermon_id=$1",null],
+    ["media","DELETE FROM sermon_media WHERE sermon_id=$1",null]
+  ] as const)("preserves independent %s requirement in actual private handlers (%s)",async(path,sql,firstIncomplete)=>{
+    await withFixture(async(pool,ids)=>{
+      await readyPrivateFixture(pool);
+      const {scopeSha256}=await bindDelegatedReviewScope(pool,ids,policySha256);
+      for(const order of [null,1,2,3,4,5]) await applyDelegatedReview(pool,await fixtureRequest(pool,scopeSha256,order));
+      await pool.query(sql,[fixtureId]);
+      const service=new AdminSermonService(new PostgresAdminSermonRepository(pool)),admin={subject:"anonymised-human-reviewer",role:"admin"} as const;
+      const review=await service.enrichmentReviewDetail(fixtureId,admin),before=await snapshot(pool);
+      expect(review.progress.canFinish).toBe(false);
+      expect(review.sermon.delegatedReview?.substantiveComplete).toBe(true);
+      const input={sermonRowVersion:review.sermon.rowVersion,reviewRowVersion:review.review.rowVersion};
+      await expect(service.finishEnrichmentReview(fixtureId,input,admin,"fixture-unmet-requirement"))
+        .rejects.toMatchObject({status:400,issues:expect.arrayContaining([expect.objectContaining({path})])});
+      if(firstIncomplete!==null) await expect(service.updateEnrichmentReviewProgress(fixtureId,{...input,currentStage:6},admin,"fixture-stage-gate"))
+        .rejects.toMatchObject({status:400,issues:[expect.objectContaining({path:"currentStage"})]});
+      expect(await snapshot(pool)).toEqual(before);
+    });
+  });
+
+  it.each(["missing","needs_human","stale_question","stale_transcript","stale_source","changed_order"] as const)("refuses %s current acceptance through both private handlers",async(kind)=>{
+    await withFixture(async(pool,ids)=>{
+      await readyPrivateFixture(pool);
+      const {scopeSha256}=await bindDelegatedReviewScope(pool,ids,policySha256);
+      for(const order of [null,1,2,3,4,5]) {
+        if(kind==="missing"&&order===5) continue;
+        let request=await fixtureRequest(pool,scopeSha256,order);
+        if(kind==="needs_human"&&order===5) request={...request,outcome:"needs_human",assessment:{...request.assessment,exceptionCode:"unsupported_claim",informationNeeded:"An anonymised source clarification is required."}};
+        await applyDelegatedReview(pool,request);
+      }
+      const service=new AdminSermonService(new PostgresAdminSermonRepository(pool)),admin={subject:"anonymised-human-reviewer",role:"admin"} as const;
+      if(kind==="stale_question" || kind==="changed_order") {
+        const current=await service.detail(fixtureId,admin);
+        const items=kind==="changed_order"?[...current.questionAnswers].reverse():current.questionAnswers;
+        // Use the supported editor; direct writes correctly fail the accepted-content import guard.
+        await service.update(fixtureId,updateSermonInputSchema.parse({rowVersion:current.rowVersion,
+          questionAnswers:items.map((q,i)=>({question:q.question,answer:kind==="stale_question"&&i===4?q.answer+" A changed fixture statement.":q.answer,
+            status:"draft",sourceKind:q.sourceKind,sourceReference:q.sourceReference}))
+        }),admin,"fixture-current-content-change");
+      }
+      if(kind==="stale_transcript") {
+        await pool.query("UPDATE sermon_transcripts SET body_text=body_text || ' An amended fixture sentence.' WHERE sermon_id=$1",[fixtureId]);
+        // Keep independent finding integrity satisfied, so stale substantive evidence itself is tested.
+        await pool.query("UPDATE sermon_enrichment_reviews SET expected_transcript_sha256=(SELECT encode(digest(body_text,'sha256'),'hex') FROM sermon_transcripts WHERE sermon_id=$1) WHERE sermon_id=$1",[fixtureId]);
+      }
+      if(kind==="stale_source") await pool.query("UPDATE sermon_enrichment_sources SET source_content_sha256=$2 WHERE sermon_id=$1",[fixtureId,reviewHash("different anonymous source")]);
+      const review=await service.enrichmentReviewDetail(fixtureId,admin),before=await snapshot(pool);
+      expect(review.progress.stageCompletion.questionAnswers).toBe(false);
+      expect(review.progress.canFinish).toBe(false);
+      const input={sermonRowVersion:review.sermon.rowVersion,reviewRowVersion:review.review.rowVersion};
+      await expect(service.finishEnrichmentReview(fixtureId,input,admin,"fixture-invalid-acceptance"))
+        .rejects.toMatchObject({status:400,issues:expect.arrayContaining([expect.objectContaining({path:"questionAnswers"})])});
+      await expect(service.updateEnrichmentReviewProgress(fixtureId,{...input,currentStage:6},admin,"fixture-invalid-stage"))
+        .rejects.toMatchObject({status:400,issues:[expect.objectContaining({path:"currentStage"})]});
+      expect(await snapshot(pool)).toEqual(before);
+    });
+  });
+
+  it("keeps status, authorization and concurrent-write guards in actual HTTP handlers",async()=>{
+    await withFixture(async(pool,ids)=>{
+      await readyPrivateFixture(pool);
+      const {scopeSha256}=await bindDelegatedReviewScope(pool,ids,policySha256);
+      for(const order of [null,1,2,3,4,5]) await applyDelegatedReview(pool,await fixtureRequest(pool,scopeSha256,order));
+      const service=new AdminSermonService(new PostgresAdminSermonRepository(pool));
+      const router=createAdminApiRouter(service,new LocalTestIdentityProvider(true));
+      const admin={subject:"anonymised-human-reviewer",role:"admin"} as const;
+      const review=await service.enrichmentReviewDetail(fixtureId,admin);
+      const input={sermonRowVersion:review.sermon.rowVersion,reviewRowVersion:review.review.rowVersion};
+      const call=(operation:"progress"|"finish",identity:string|null,body:unknown)=>router(new Request(`http://127.0.0.1/api/v1/admin/sermons/${fixtureId}/review/${operation}`,{
+        method:operation==="progress"?"PATCH":"POST",headers:{"content-type":"application/json",...(identity?{"x-local-identity":identity==="local-admin-0001"?"admin":identity}:{})},body:JSON.stringify(body)
+      }));
+      let before=await snapshot(pool);
+      for(const operation of ["progress","finish"] as const){
+        const body=operation==="progress"?{...input,currentStage:6}:input;
+        for(const identity of [null,"invented-administrator"]) expect((await call(operation,identity,body)).status).toBe(401);
+        const unauthorized={subject:"anonymised-unapproved",role:"viewer"} as never;
+        if(operation==="progress") await expect(service.updateEnrichmentReviewProgress(fixtureId,{...input,currentStage:6},unauthorized,"fixture-denied")).rejects.toMatchObject({status:403});
+        else await expect(service.finishEnrichmentReview(fixtureId,input,unauthorized,"fixture-denied")).rejects.toMatchObject({status:403});
+        expect((await call(operation,"local-admin-0001",{...body,sermonRowVersion:input.sermonRowVersion+1})).status).toBe(409);
+        expect((await call(operation,"local-admin-0001",{...body,reviewRowVersion:input.reviewRowVersion+1})).status).toBe(409);
+      }
+      expect(await snapshot(pool)).toEqual(before);
+      // These states need no publication approval: every current AI decision remains valid.
+      for(const status of ["pending","unpublished","archived"]){
+        await pool.query("UPDATE sermons SET status=$2 WHERE id=$1",[fixtureId,status]);
+        before=await snapshot(pool);
+        for(const operation of ["progress","finish"] as const){
+          const response=await call(operation,"local-admin-0001",operation==="progress"?{...input,currentStage:6}:input);
+          expect(response.status).toBe(400);
+          expect((await response.json()).error.issues).toContainEqual(expect.objectContaining({path:"status"}));
+        }
+        expect(await snapshot(pool)).toEqual(before);
+      }
+      // A restored draft keeps historical publishedAt and must not enter this private-only workflow.
+      await pool.query("UPDATE sermons SET status='draft',published_at=now() WHERE id=$1",[fixtureId]);
+      before=await snapshot(pool);
+      for(const operation of ["progress","finish"] as const) expect((await call(operation,"local-admin-0001",operation==="progress"?{...input,currentStage:6}:input)).status).toBe(400);
+      expect(await snapshot(pool)).toEqual(before);
+    });
+  });
+
+  it("serializes simultaneous private completion and still refuses published or scheduled fixture states",async()=>{
+    await withFixture(async(pool,ids)=>{
+      await readyPrivateFixture(pool);
+      const {scopeSha256}=await bindDelegatedReviewScope(pool,ids,policySha256);
+      for(const order of [null,1,2,3,4,5]) await applyDelegatedReview(pool,await fixtureRequest(pool,scopeSha256,order));
+      const service=new AdminSermonService(new PostgresAdminSermonRepository(pool)),admin={subject:"anonymised-human-reviewer",role:"admin"} as const;
+      const current=await service.enrichmentReviewDetail(fixtureId,admin);
+      const input={sermonRowVersion:current.sermon.rowVersion,reviewRowVersion:current.review.rowVersion};
+      const results=await Promise.allSettled([1,2].map(i=>service.finishEnrichmentReview(fixtureId,input,admin,`fixture-concurrent-${i}`)));
+      expect(results.filter(r=>r.status==="fulfilled")).toHaveLength(1);
+      const rejected=results.find(r=>r.status==="rejected");
+      expect(rejected?.status==="rejected"?rejected.reason:null).toMatchObject({status:409,code:"stale_write"});
+      expect((await pool.query("SELECT count(*)::int AS count FROM audit_events WHERE entity_id=$1 AND action='sermon.enrichment_review_finished'",[fixtureId])).rows[0]?.count).toBe(1);
+      // Make the invented fixture lifecycle-ready through the normal editor, not a trigger bypass.
+      let detail=await service.detail(fixtureId,admin);
+      detail=await service.update(fixtureId,updateSermonInputSchema.parse({rowVersion:detail.rowVersion,
+        summaryStatus:"approved",questionAnswers:detail.questionAnswers.map(q=>({question:q.question,answer:q.answer,status:"approved",sourceKind:"manual",sourceReference:null}))
+      }),admin,"fixture-human-lifecycle-ready");
+      for(const action of ["schedule","publish"] as const){
+        detail=await service.transition(fixtureId,action,{rowVersion:detail.rowVersion,...(action==="schedule"?{scheduledFor:"2099-01-01T00:00:00.000Z"}:{})},admin,`fixture-${action}`);
+        const review=await service.enrichmentReviewDetail(fixtureId,admin),before=await snapshot(pool);
+        expect(review.progress.canFinish).toBe(false);
+        const versions={sermonRowVersion:detail.rowVersion,reviewRowVersion:review.review.rowVersion};
+        await expect(service.finishEnrichmentReview(fixtureId,versions,admin,"fixture-status-guard"))
+          .rejects.toMatchObject({status:400,issues:expect.arrayContaining([expect.objectContaining({path:"status"})])});
+        await expect(service.updateEnrichmentReviewProgress(fixtureId,{...versions,currentStage:6},admin,"fixture-progress-status"))
+          .rejects.toMatchObject({status:400,issues:[expect.objectContaining({path:"status"})]});
+        expect(await snapshot(pool)).toEqual(before);
+      }
+    });
+  });
 
   it("projects current AI acceptance consistently into list, detail and guided preview without publication or stage mutations", async()=>{
     await withFixture(async(pool,ids)=>{

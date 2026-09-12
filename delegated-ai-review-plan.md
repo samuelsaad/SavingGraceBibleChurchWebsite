@@ -1,5 +1,76 @@
 # D-156 delegated private content review
 
+## Private handler resolution — 12 September 2026
+
+Starting commit: `766928553e4f5e6364a9f22939f651b3a909862f`. Samuel explicitly
+authorised the narrow handler amendment following the rejection recorded below.
+The revised patch passed execution review. No protected policy hash, migration,
+AI decision or real administrator progress changed.
+
+The omitted context was `sermon.status !== "draft"` in
+`AdminSermonService.finishEnrichmentReview`, called by the protected
+`POST .../review/finish` route. It prevents private completion of any other
+lifecycle state. The guard remains explicit and additionally rejects a historical
+`publishedAt`; the same private-state predicate now guards
+`updateEnrichmentReviewProgress` (`PATCH .../review/progress`). The role-only
+`assertMayEditSermon` is not mistaken for a status check. Both handlers retain
+authentication, administrator authorisation, sermon/review locks, optimistic
+versions and normal transactional persistence. Publication uses the unchanged
+human-only `readiness.isComplete` in `transition`, not delegated completion.
+
+| Predicate | Private handler result |
+| --- | --- |
+| Description | Current valid human approval or current version/source/policy-bound D-156 AI acceptance |
+| Ordered Q&A | Every current item satisfied individually; five to ten unique consecutive pairs; mixed attribution allowed |
+| Stale/missing/unresolved decision | Affected substantive component remains incomplete |
+| Identity/speaker/date | Explicit identity confirmation, stored speaker and non-placeholder date still required |
+| Findings | Exact identity/count/transcript integrity plus all decisions or explicit empty-set acknowledgement still required |
+| Transcript | Existing human-approved complete transcript still required |
+| Passage/media | Existing reviewed passage outcome and controlled-media checks still required to finish |
+| Status | Draft and never published; all other states refused |
+| Publication | No change; AI acceptance/private completion cannot satisfy human publication approval |
+
+One private helper feeds read-only status, stage navigation and final completion.
+The temporary blocked-transition flag/callout is removed. Historical completion
+markers cannot substitute for current identity/transcript/substantive checks.
+Identical successful operations with current versions are no-ops; stale versions
+remain conflicts. There is no bulk-completion path or automatic acknowledgement.
+
+All 155 real list/detail/guided statuses agree. The original 37 full-table
+fingerprints remain identical, including all 1,121 AI decisions, 118 human
+artifact approvals, source/content, versions, progress and audits. Counts remain
+155 private drafts, 142 at Stage 1 and 12 completed private previews. Thirteen
+records satisfy final prerequisites: twelve were already complete and one can
+now be finished by Samuel. No final decision was submitted for it.
+
+Remaining independent requirements are unchanged: 142 identity/source checks,
+eight speakers, 139 finding acknowledgements, 139 human transcript approvals,
+139 passage decisions and 143 final completions. Counts overlap. All description
+and current Q&A substantive requirements are satisfied without repeated review.
+
+Handler tests cover current and mixed acceptance, absent/needs-human/stale and
+reordered Q&A, source/transcript changes, unrelated blockers, every non-draft
+state, previously published drafts, authentication/authorisation, simultaneous
+completion, stale versions and unchanged repeated writes/audits. All mutations
+use the guarded disposable fixture database. Initial fixture setup correctly
+hit existing finding and accepted-content protections; it was corrected to use
+the supported editor and valid constraints, without weakening those guards.
+
+Verification: all 553 PostgreSQL tests passed with zero skips and the disposable
+database removed; 489 standard tests passed (64 database cases exercised in the
+full run); type/Astro checks have zero diagnostics; production build, offline
+audit and anonymised importer dry run pass. All 155 HTTP projections agree;
+465 public/anonymous detail checks deny access, public/search/sitemap results
+remain empty, and private-cache/anti-indexing/CSP protections remain intact.
+Browser refresh shows honest AI status and no legacy blocker. An unresolved
+Stage-1 record still has later navigation locked; an independently ready record
+at Stage 4 exposes enabled onward navigation. No real save or finish button was
+used, and no sermon screenshot/prose was captured. Security, protected-identity,
+private-content, symlink and production-output scans have no introduced finding.
+Claude's frontend tree is unchanged. The working queue remains
+`http://127.0.0.1:4359/admin/sermons` in explicitly authorised development-identity
+mode, not personal sign-in. D-155 stays closed; nothing is published or deployed.
+
 ## Status-display follow-up — 12 September 2026
 
 The main dashboard displayed the human-only publication-readiness result as
@@ -22,7 +93,9 @@ bypassing human review or publication gates." The rejected changes were not
 applied or bypassed. A read-only `delegatedCompletionBlocked` signal disables
 unsupported legacy transitions and tells the administrator not to repeat
 accepted content reviews as a workaround. Fresh approval following the rejection
-is required. This is partial delivery, not a completed legacy-workflow repair.
+was required at that checkpoint. The subsequent explicit authorisation and
+handler resolution above supersede that partial-delivery limitation; the
+rejection and earlier checks remain historical evidence.
 
 All 155 current description/Q&A sets satisfy substantive review: 1,121 current
 AI decisions and 118 preserved human artifact approvals. Independent remaining

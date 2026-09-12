@@ -686,7 +686,6 @@ export const enrichmentReviewResponseSchema = z.object({
     completedStageCount: z.number().int().min(0).max(6),
     percentReviewed: z.number().int().min(0).max(100),
     canFinish: z.boolean(),
-    delegatedCompletionBlocked: z.boolean().optional()
   })
 });
 export type EnrichmentReviewResponse = z.infer<typeof enrichmentReviewResponseSchema>;

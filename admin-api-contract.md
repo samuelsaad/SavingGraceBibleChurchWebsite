@@ -76,6 +76,19 @@ human approval, guided-stage completion or publication eligibility. Accepted
 artifacts do not require another substantive human content review. Unrelated
 identity, finding, transcript and passage responsibilities remain separate.
 
+The existing `PATCH .../review/progress` and `POST .../review/finish` handlers
+consume that current-artifact projection only for private description/Q&A
+substantive completion. They require an authorised administrator, locked current
+sermon/review versions, `status = draft` and no historical publication timestamp.
+Navigation still cannot pass the earliest incomplete identity, finding or
+approved-transcript stage. Final completion additionally requires the reviewed
+passage outcome and controlled media. Every current Q&A must be satisfied;
+missing, stale or unresolved AI decisions cannot inherit collection completion.
+An identical operation with current versions is a no-op; obsolete versions remain
+409 conflicts. Completion records the requesting administrator's explicit action,
+not new human description/Q&A approvals. `schedule`/`publish`, public selectors,
+completed-only frontend-preview scope and semantic eligibility remain unchanged.
+
 Following Samuel's explicit post-rejection authority, a future separately
 authorised guarded permanent deletion also removes only that sermon's private
 D-156 membership/review content. Direct history deletion remains refused. The
@@ -161,5 +174,9 @@ Migration `0005` persists only the controlled optional `seoDescription` override
 Admin sermon detail may include a private `enrichmentSource` object when a draft came from the controlled caption pilot. It exposes only canonical video identity, caption language/track type, original filename, SHA-256, authorised-export attribution, aggregate source/cleaned counts, processing version/timestamps/duration, safe warning codes, unresolved marker identifiers, review estimate, and the fixed `required` human-accuracy state. It never appears in public API responses or search documents and never includes source caption text, credentials, cookies or tokens.
 
 Migration `0007` provides private review progress and the now-superseded aggregate prompts. Migration `0008` adds the authoritative atomic item shape: deterministic identity, source record/category ordinal, private detail, supporting paragraph references, transcript hash/version expectation and individual decision concurrency. The exact expected count and ordered identity-set hash must match the stored rows; missing, extra, duplicate, reordered, pending or stale items block completion. Only the truthful `caption_error` and `name_or_scripture_reference` categories are used, and aggregate warnings never become decisions. Accepted or corrected resolves only that item; left-unresolved and rejected remain blockers. A full-transcript edit resets prior transcript-bound decisions to pending. The exact per-finding correction action instead advances all associations to the new transcript version without altering sibling decisions. Review completion still requires confirmed identity/date/provenance, resolved items, approved transcript/description/5–10 ordered Q&A, controlled media and a sermon that remains draft.
+
+Within the frozen D-156 scope, valid current AI acceptance also satisfies the
+description/Q&A substantive portion of that private final checklist. It does not
+replace human transcript approval, identity, findings, passage or publication.
 
 Viewing, navigation and saving never change approval. Each approval and review-item decision is a separate server-authorised action with optimistic concurrency and audit. The local pilot importer has no approval capability and never impersonates the administrator. Review source/items never appear in public APIs, public search or readiness content.

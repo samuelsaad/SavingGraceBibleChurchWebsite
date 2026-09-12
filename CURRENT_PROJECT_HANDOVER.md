@@ -11,15 +11,19 @@ label was the human-only publication checklist, not missing AI decisions. All
 155 current description/Q&A sets satisfy substantive review. Publication remains
 separate and unchanged.
 
-**Partial delivery:** execution safety twice rejected the proposed change to
-legacy private progress/completion write handlers over human/publication-gate
-concerns. Those handlers remain unchanged. The preview recognizes accepted
-stages but disables unsupported completion transitions and explains the blocker.
-Do not repeat accepted reviews as a workaround. Fresh approval following that
-rejection is needed before the handler change. No real review or content record
-was modified. The updated local queue is `http://127.0.0.1:4359/admin/sermons`,
-using the existing loopback development identity, not personal sign-in. See
-`delegated-ai-review-plan.md` for evidence and independent remaining requirements.
+**Private handler follow-up:** Samuel explicitly authorised the scoped amendment
+after the recorded execution-safety rejection. The verified draft-only guard is
+retained in final completion and now explicit in navigation too; a historical
+publication timestamp also blocks both. Current human or D-156 AI acceptance
+satisfies only description and individual Q&A substantive review. Identity,
+speaker/date, exact finding-set acknowledgement, human transcript approval,
+passage and media requirements remain independently enforced. Publication
+readiness is unchanged. Identical successful progress/completion requests with
+current versions cause no version, timestamp or audit churn; stale writes fail.
+No real review or content record was modified. The updated local queue is
+`http://127.0.0.1:4359/admin/sermons`, using the existing loopback development
+identity, not personal sign-in. See `delegated-ai-review-plan.md` for the preserved
+rejection history, handler tests and independent remaining requirements.
 
 D-156 delegated private description/Q&A review is complete. Implementation commit
 `4d49d6afb51c44ba4c9b12fdda597a1cc63fa90e` records the separately authorised

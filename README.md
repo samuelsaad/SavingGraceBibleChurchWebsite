@@ -3,9 +3,11 @@
 The updated private review queue is `http://127.0.0.1:4359/admin/sermons` when the
 authorized loopback server is running. Current D-156 acceptance now displays as
 "AI reviewed and accepted", separate from human approvals and publication gates.
-The legacy completion-handler amendment remains blocked by execution safety;
-the preview states that limitation instead of requiring repeated substantive
-review. See `CURRENT_PROJECT_HANDOVER.md` for this partial-delivery checkpoint.
+Following explicit post-rejection authorisation, private navigation/completion
+now uses those exact-current substantive decisions. Draft-only status and every
+independent human-review prerequisite remain enforced; publishing still uses
+its unchanged human-approved checklist. No real review was completed by this
+repair. See `CURRENT_PROJECT_HANDOVER.md` for the verified checkpoint.
 
 ## Current delegated private review checkpoint
 

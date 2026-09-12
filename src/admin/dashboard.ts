@@ -253,7 +253,6 @@ type EnrichmentReviewResponse = {
     completedStageCount: number;
     percentReviewed: number;
     canFinish: boolean;
-    delegatedCompletionBlocked?: boolean;
   };
 };
 
@@ -571,11 +570,10 @@ function technicalProvenance(source: NonNullable<SermonDetail["enrichmentSource"
 
 function reviewStageActions(review: EnrichmentReviewResponse, stage: number): string {
   const currentComplete = reviewStageComplete(review, stage);
-  const transitionBlocked = !!review.progress.delegatedCompletionBlocked && stage >= 4;
   return `<div class="review-stage-actions">
     ${stage > 1 ? `<button class="button" type="button" data-review-stage="${stage - 1}">Back: ${escapeHtml(enrichmentReviewStages[stage - 2])}</button>` : ""}
     <button class="button quiet" type="button" data-review-pause>Save and pause</button>
-    ${stage < 6 ? `<button class="button primary" type="button" data-review-stage="${stage + 1}"${currentComplete && !transitionBlocked ? "" : ' disabled aria-disabled="true"'}>Next: ${escapeHtml(enrichmentReviewStages[stage])}</button>` : ""}
+    ${stage < 6 ? `<button class="button primary" type="button" data-review-stage="${stage + 1}"${currentComplete ? "" : ' disabled aria-disabled="true"'}>Next: ${escapeHtml(enrichmentReviewStages[stage])}</button>` : ""}
   </div>`;
 }
 
@@ -874,7 +872,7 @@ function renderFinalReviewStage(review: EnrichmentReviewResponse): string {
       ${finalChecklistItem("Description substantive review", review.progress.stageCompletion.description, sermon.delegatedReview ? substantiveDecisionLabel(sermon.delegatedReview.description) : plainReviewStatus(sermon.summaryStatus))}
       ${finalChecklistItem("Five to ten current Q&A pairs reviewed", review.progress.stageCompletion.questionAnswers, `${sermon.questionAnswers.filter((item) => item.status === "approved").length} human approved; ${sermon.delegatedReview?.aiAcceptedQuestions ?? 0} AI reviewed and accepted; ${sermon.questionAnswers.length} current pairs.`)}
       ${finalChecklistItem("Controlled media valid", sermon.readiness.hasValidControlledMedia, sermon.readiness.hasValidControlledMedia ? "Controlled media passed validation." : "Controlled media still requires attention.")}
-      ${finalChecklistItem("Sermon remains draft and unpublished", sermon.status === "draft", `Current sermon state: ${sermon.status}.`)}
+      ${finalChecklistItem("Sermon remains draft and unpublished", sermon.status === "draft" && sermon.publishedAt === null, `Current sermon state: ${sermon.status}.${sermon.publishedAt !== null ? " Previously published records cannot finish this private-only workflow." : ""}`)}
     </ul>
     <div class="review-decision-bar">
       <button class="button" type="button" data-review-pause>Save and pause</button>
@@ -1288,7 +1286,6 @@ async function renderGuidedSermonReview(id: string, readOnlyStage?: number): Pro
       : ""}
   <div class="review-workflow-layout">
     <section class="panel" aria-label="Private substantive review status">${privateReviewStatus(review.sermon)}</section>
-    ${review.progress.delegatedCompletionBlocked ? '<div class="callout"><strong>AI substantive review is satisfied; legacy completion transition unavailable.</strong><p>The completion-handler amendment was blocked by execution safety. Do not repeat accepted description or Q&A reviews to work around it. Identity, source findings, transcript and passage review remain separate.</p></div>' : ""}
     ${reviewStageNavigation(review)}
     <div class="review-stage-workspace">${reviewStageMarkup(review, taxonomies.speakers, taxonomies.books)}</div>
   </div>`;

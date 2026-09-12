@@ -1,6 +1,45 @@
 # Migration Validation Plan
 
-## D-156 status-display reconciliation — 12 September 2026 (partial delivery)
+## D-156 private handler resolution — 12 September 2026
+
+Starting commit `766928553e4f5e6364a9f22939f651b3a909862f`; Samuel explicitly
+authorised this amendment after the preserved rejection below. The revised
+patch passed execution review. The exact final-completion `status !== draft`
+guard is retained, with an additional historical-publication exclusion, and
+private navigation now shares that state boundary. Only current description/Q&A
+substantive predicates accept delegated AI decisions. All independent identity,
+speaker/date, exact findings/acknowledgement, human transcript, passage, media,
+role, concurrency and publication checks remain required. No policy hash or
+schema changed. The complete predicate table is in `delegated-ai-review-plan.md`.
+
+- Full guarded PostgreSQL run: 553 passed, zero skipped; exact disposable test
+  database removed. Direct HTTP/service tests include valid/mixed acceptance,
+  stale/missing/needs-human/reordered items, source/transcript changes, independent
+  blockers, every non-draft state, historical publication, authentication and
+  authorisation, simultaneous completion, stale writes and repeated no-op saves.
+  Private completion still cannot satisfy schedule/publish readiness. Initial
+  fixture setup hit existing integrity/import guards; fixtures were corrected
+  through supported editor operations, without changing those protections.
+- Standard suite: 489 passed; all 64 database cases ran separately above.
+- Type/Astro: zero errors, warnings or hints; production build passes (three
+  static pages/six files); offline audit reports zero vulnerabilities. Anonymised
+  dry run: five records, three included, two excluded, zero rejected.
+- Real database read-only: all 37 table fingerprints unchanged; 155 current
+  list/detail/guided projections agree, preserving 1,121 AI and 118 human artifact
+  decisions. Counts remain 155 drafts, 142 Stage-1 records, 12 completed previews.
+  One additional record now meets final prerequisites; no real completion ran.
+- HTTP: 465 public/anonymous detail denials; no public/search/sitemap sermon
+  results; anonymous frontend preview 401; private no-store/noindex/CSP retained.
+- Refreshed browser: AI status visible, obsolete blocker absent, pending Stage-1
+  navigation still locked, independently ready Stage-4 onward navigation enabled.
+  No real review mutation, sermon screenshot or prose output was used.
+- Protected-identity/private-content, credential/key/token/cloud, symlink,
+  tracked/staged and production-output scans: no introduced findings. Existing
+  baseline matches remain separately classified. Private evidence remains ignored.
+  Claude's frontend tree remains unchanged; no external service, approval,
+  publication, push, merge or deployment.
+
+## Historical D-156 status-display reconciliation — 12 September 2026 (partial delivery)
 
 Starting commit: `81f3d924f5add7991efdcb4cf701e4326a5036d2`. The generic
 "Needs work" label came from publication readiness, not missing AI decisions.
@@ -12,7 +51,8 @@ The private completion-handler amendment was rejected twice by execution safety
 over human/publication-gate concerns. It was not applied or bypassed. Its original
 guards remain unchanged; the preview explicitly reports unsupported transitions
 instead of asking for repeated accepted reviews. Fresh approval after rejection
-is still needed. See `delegated-ai-review-plan.md` for the precise limitation.
+was still needed at that checkpoint. The separately authorised handler resolution
+above supersedes this limitation; this earlier rejection evidence is preserved.
 
 Verification: full PostgreSQL suite 535 passed, zero skips; exact disposable
 database removed. Standard suite 489 passed (46 database-gated tests separately

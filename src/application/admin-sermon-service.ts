@@ -226,6 +226,24 @@ function sha256(value: string): string {
   return createHash("sha256").update(value, "utf8").digest("hex");
 }
 
+/** Private substantive review only. Never use this in lifecycle/public readiness.
+ * The repository projects D-156 decisions from the current individual artifacts
+ * and their source/policy dependencies, inside the mutation's locked transaction.
+ */
+function privateSubstantiveReview(sermon: StoredSermonDetail) {
+  return {
+    description: sermon.delegatedReview?.descriptionComplete ?? (
+      sermon.readiness.hasApprovedDescription &&
+      sermon.summaryStatus === "approved" && sermon.summaryApprovedAt !== null
+    ),
+    questionAnswers: sermon.delegatedReview?.questionsComplete ?? (
+      sermon.readiness.hasRequiredQuestionAnswers &&
+      sermon.questionAnswers.length >= 5 && sermon.questionAnswers.length <= 10 &&
+      sermon.questionAnswers.every((item) => item.status === "approved" && item.approvedAt !== null)
+    )
+  };
+}
+
 function enrichmentReviewDto(
   sermon: StoredSermonDetail,
   workflow: EnrichmentReviewWorkflowDto
@@ -249,23 +267,17 @@ function enrichmentReviewDto(
     items: workflow.items
   });
   const stageCompletion = {
-    identity: workflow.state.completedAt !== null || (
+    identity: (
       workflow.state.identityStatus === "confirmed" &&
       sermon.speaker !== null &&
       sermon.serviceDate !== "1970-01-01"
     ),
     findings: integrity.findingsComplete,
-    transcript: workflow.state.completedAt !== null || (
+    transcript: (
+      sermon.readiness.hasApprovedTranscript &&
       sermon.transcript?.status === "approved" && sermon.transcript.approvedAt !== null
     ),
-    description: sermon.delegatedReview?.descriptionComplete ?? (
-      sermon.summaryStatus === "approved" && sermon.summaryApprovedAt !== null
-    ),
-    questionAnswers: sermon.delegatedReview?.questionsComplete ?? (
-      sermon.questionAnswers.length >= 5 &&
-      sermon.questionAnswers.length <= 10 &&
-      sermon.questionAnswers.every((item) => item.status === "approved" && item.approvedAt !== null)
-    ),
+    ...privateSubstantiveReview(sermon),
     final: workflow.state.completedAt !== null
   };
   const stageComplete = [
@@ -277,16 +289,11 @@ function enrichmentReviewDto(
     stageCompletion.final
   ];
   const completedStageCount = stageComplete.filter(Boolean).length;
-  // Display current delegated acceptance, but do not promise a transition that
-  // the unchanged legacy write handler still refuses. Its amendment is blocked.
-  const delegatedCompletionBlocked = !!sermon.delegatedReview?.substantiveComplete &&
-    (!sermon.readiness.hasApprovedDescription || !sermon.readiness.hasRequiredQuestionAnswers);
   const canFinish =
     stageComplete.slice(0, 5).every(Boolean) &&
     sermon.readiness.hasRequiredPassageDecision &&
-    !delegatedCompletionBlocked &&
     sermon.readiness.hasValidControlledMedia &&
-    sermon.status === "draft";
+    sermon.status === "draft" && sermon.publishedAt === null;
   return enrichmentReviewResponseSchema.parse({
     sermon: sermonDetailDto(sermon),
     recordPosition: workflow.recordPosition,
@@ -318,7 +325,6 @@ function enrichmentReviewDto(
       reviewSetVerified: integrity.reviewSetVerified,
       requiresEmptyItemSetAcknowledgement: integrity.requiresEmptyItemSetAcknowledgement,
       stageCompletion,
-      delegatedCompletionBlocked,
       completedStageCount,
       percentReviewed: Math.round((completedStageCount / 6) * 100),
       canFinish
@@ -408,6 +414,10 @@ export class AdminSermonService {
       if (!sermon) notFound("Sermon was not found");
       if (sermon.rowVersion !== input.sermonRowVersion) conflict();
       assertMayEditSermon(identity, sermon);
+      // Private navigation is not a lifecycle transition, even with D-156 acceptance.
+      if (sermon.status !== "draft" || sermon.publishedAt !== null) {
+        invalid("status", "Guided review progress requires a draft that remains private and never published.");
+      }
       const review = await transaction.findEnrichmentReviewForUpdate(id);
       if (!review) notFound("A guided enrichment review is not available for this sermon");
       if (review.rowVersion !== input.reviewRowVersion) conflict();
@@ -431,27 +441,27 @@ export class AdminSermonService {
         sermon.transcript?.rowVersion ?? null
       );
       const transcriptComplete =
+        sermon.readiness.hasApprovedTranscript &&
         sermon.transcript?.status === "approved" && sermon.transcript.approvedAt !== null;
-      const descriptionComplete =
-        sermon.summaryStatus === "approved" && sermon.summaryApprovedAt !== null;
-      const questionAnswersComplete =
-        sermon.questionAnswers.length >= 5 &&
-        sermon.questionAnswers.length <= 10 &&
-        sermon.questionAnswers.every((item) => item.status === "approved" && item.approvedAt !== null);
+      const substantive = privateSubstantiveReview(sermon);
       const firstIncompleteStage = !identityComplete
         ? 1
         : !findingsComplete
           ? 2
           : !transcriptComplete
             ? 3
-            : !descriptionComplete
+            : !substantive.description
               ? 4
-              : !questionAnswersComplete
+              : !substantive.questionAnswers
                 ? 5
                 : 6;
       if (input.currentStage > firstIncompleteStage) {
         invalid("currentStage", "Complete the earliest incomplete review stage before moving forward");
       }
+      // Retain concurrency checks and all gates even for an identical save.
+      if (input.currentStage === review.currentStage &&
+        (input.identityStatus ?? review.identityStatus) === review.identityStatus &&
+        !(input.identityStatus === "pending" && review.completedAt !== null)) return;
       await transaction.updateEnrichmentReviewProgress(id, input, identity.subject);
       if (input.identityStatus && input.identityStatus !== review.identityStatus) {
         await transaction.appendAudit(
@@ -673,20 +683,27 @@ export class AdminSermonService {
         sermon.transcript?.rowVersion ?? null
       );
       const issues: Array<{ path: string; message: string }> = [];
-      if (review.identityStatus !== "confirmed") {
+      // Retain the formerly omitted draft-status guard explicitly. AI acceptance
+      // cannot finish a pending, scheduled, published, unpublished or archived sermon.
+      if (sermon.status !== "draft" || sermon.publishedAt !== null) {
+        issues.push({ path: "status", message: "The pilot review can finish only while the sermon remains draft and private." });
+      }
+      if (review.identityStatus !== "confirmed" || !sermon.speaker || sermon.serviceDate === "1970-01-01") {
         issues.push({ path: "identity", message: "Confirm identity, speaker, date and provenance." });
       }
       if (blockingItems) {
         issues.push({ path: "reviewItems", message: "Resolve every required flagged review item." });
       }
-      if (!sermon.readiness.hasApprovedTranscript) {
+      if (!sermon.readiness.hasApprovedTranscript ||
+        sermon.transcript?.status !== "approved" || sermon.transcript.approvedAt === null) {
         issues.push({ path: "transcript", message: "Approve the complete transcript." });
       }
-      if (!sermon.readiness.hasApprovedDescription) {
-        issues.push({ path: "summary", message: "Approve the sermon description." });
+      const substantive = privateSubstantiveReview(sermon);
+      if (!substantive.description) {
+        issues.push({ path: "summary", message: "Complete current description substantive review through human approval or valid delegated AI acceptance." });
       }
-      if (!sermon.readiness.hasRequiredQuestionAnswers) {
-        issues.push({ path: "questionAnswers", message: "Approve five to ten ordered Q&A pairs." });
+      if (!substantive.questionAnswers) {
+        issues.push({ path: "questionAnswers", message: "Complete current substantive review of every ordered Q&A pair through human approval or valid delegated AI acceptance." });
       }
       if (!sermon.readiness.hasRequiredPassageDecision) {
         issues.push({
@@ -697,10 +714,10 @@ export class AdminSermonService {
       if (!sermon.readiness.hasValidControlledMedia) {
         issues.push({ path: "media", message: "Confirm valid controlled media." });
       }
-      if (sermon.status !== "draft") {
-        issues.push({ path: "status", message: "The pilot review can finish only while the sermon remains draft and private." });
-      }
       if (issues.length) invalidMany("Complete the guided review checklist", issues);
+      // Recheck requirements first; a historical marker cannot bypass stale input.
+      // Repeating a successful completion with current versions is a true no-op.
+      if (review.completedAt !== null) return;
       await transaction.completeEnrichmentReview(id, identity.subject);
       await transaction.appendAudit(
         successfulAudit(
