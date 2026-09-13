@@ -1,9 +1,36 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
-**Handover date:** 12 September 2026
+**Handover date:** 13 September 2026
 **Purpose:** Public-safe orientation for continuing work from this repository. This file contains no sermon body, credential, token, session, raw caption export or private local path.
 
 ## Authority and current checkpoint
+
+### Isolated sealed-staging integration
+
+`staging-release-candidate` integrates the completed D-157 backend, Claude's
+creative frontend and both worktrees' preserved administrator/navigation/book-tab
+refinements. Original branches and worktrees are not changed. See
+`deployment/README.md` for the explicitly authorized sealed EC2 Compose design,
+logical restore, target checks and rollback procedure. The remotely hosted entry
+point has no development authenticator: admin and private-preview routes remain
+disabled until real authentication and HTTPS receive a separate implementation.
+Private review completion remains distinct from publication and the unchanged
+frontend selector. Current local reconciliation is 155 sermons, 144 private
+completions, 11 genuine exceptions, 12 stricter frontend-preview results and zero
+public results. Deployment completion must be established by recorded container,
+restore, integrity, network and rollback verification, not inferred from this plan.
+
+The administrator presentation has been repaired on top of `ae8755a`, without
+changing backend review rules or persisted decisions. `/admin` now presents current
+private-review totals and evidence exceptions first, with publication readiness in
+a separate disclosure. Sermon rows combine identifying metadata, expose remaining
+requirements and retain expandable decision attribution. The guided form occupies
+the full workspace: the extra status panel no longer displaces it into a narrow
+grid column. Mobile navigation supports Escape, contained keyboard focus and an
+inert closed sidebar. See the 13 September UI entry in `migration-validation-plan.md`.
+The existing loopback review server serves the updated build at `/admin`; this
+remains development-identity access, not personal sign-in. No database decision,
+governance policy, publication gate or visitor-facing frontend was changed.
 
 **D-157 is applied to the frozen existing 155 records.** The current private
 administrator workflow has 144 completed reviews: 132 new separately attributed
@@ -173,10 +200,16 @@ Use `git status`, `git log` and `git remote` to verify current facts; do not tre
 ## Current application position
 
 - The repository implements the Astro/TypeScript/PostgreSQL sermon foundation, protected administration workflow, authenticated loopback frontend preview, keyword/structured Scripture search, metadata-based related sermons and a publicly disabled description-only Related themes foundation.
+- The sermon frontend was redesigned on the `frontend-redesign` branch from baseline `0759302b76eacde250cefa6f50d3cfdcfe1d1f60` (D-149): an editorial, Scripture-first presentation built as the framework-independent `src/frontend` package with typed tokens, an escaping template, page-scoped styles, three readable CSP-hashed enhancement scripts and shared page composers. Routes, query contracts, selectors, privacy headers and the database are unchanged.
+- A creative candidate, "the Canon" (D-150), was built on `frontend-redesign-creative-v2` from `fb513b22ed31de874feb78e3084bc76d059d4d65`: every sermon is shelved under the Bible book it was preached from, with a 66-book shelf, a to-scale canon strip, a book tab and an open book of chapter/verse rulers, all ordinary server links. It keeps the `src/frontend` construction, routes, query contracts, selectors and privacy headers, and adds one optional `sermonCount` per filter option to the published filter-options projection. It was committed as `WIP: creative frontend redesign pending PostgreSQL verification` because PostgreSQL was unavailable on the implementing machine; the database gates in `migration-validation-plan.md` must be completed on a PostgreSQL-equipped computer before acceptance, and nothing from either branch is merged, deployed or published.
 - The authenticated preview uses exactly 15 completed pilot/Wave-1 sermon records from the protected local PostgreSQL test database.
 - Those sermons remain application-level drafts. Git or future GitHub visibility does not make them public in the website.
 - Ordinary public routes, public search, feeds, sitemaps, semantic processing and production builds must continue excluding them unless a separate administrator/publication decision changes their application state.
 - No deployment, production cutover, Phase 3C or public Related themes integration is authorised by this handover.
+
+## Current creative frontend refinement
+
+The creative frontend's current local refinement uses labelled, category-coloured Bible-book side tabs for latest, recent, archive, taxonomy and related entries, without per-entry count badges. The slimmer catalogue tabs are 2.75rem wide on desktop/tablet and 2.25rem on mobile; unclassified entries retain a neutral placeholder rather than an inferred book. In the authenticated preview masthead, one click opens the Sermons disclosure and double-clicking its heading still opens the sermon archive. The dropdown now offers SermonsV1 (the unchanged landing page), SermonsV2 (the unchanged archive), Speakers, Series and Books, all navigating on one click. These are menu labels, not new routes or replacement page designs. Native disclosure and ordinary links preserve keyboard, touch and no-JavaScript alternatives. Footer links, search contracts, selectors and privacy gates are unchanged. See the 13 September 2026 verification entries in `migration-validation-plan.md`; these local refinements do not imply deployment or database changes.
 
 ## Exact 15-sermon public development-dataset decision
 

@@ -1,6 +1,6 @@
 import type { PublicSermonListQuery } from "../../api/contracts/public-sermons";
 import { bibleBookBySlug } from "../../domain/bible-passage";
-import { previewDatasetSourceStatus } from "../../development-data/preview-sermon-dataset";
+import { previewDatasetSourceStatus } from "../../domain/development-seed-source";
 
 export interface ParameterizedQuery {
   text: string;
@@ -558,24 +558,26 @@ export function buildPublishedSermonFilterOptionsQuery(
     text: `
       SELECT
         COALESCE((
-          SELECT jsonb_agg(jsonb_build_object('name', options.name, 'slug', options.slug)
+          SELECT jsonb_agg(jsonb_build_object('name', options.name, 'slug', options.slug, 'sermonCount', options.sermon_count)
                            ORDER BY lower(options.name), options.slug)
           FROM (
-            SELECT DISTINCT speaker.name, speaker.slug
+            SELECT speaker.name, speaker.slug, count(DISTINCT sermon.id)::integer AS sermon_count
             FROM speakers speaker
             JOIN sermons sermon ON sermon.speaker_id = speaker.id
             WHERE ${frontendSermonEligibilitySql("sermon", scope)}
+            GROUP BY speaker.name, speaker.slug
           ) options
         ), '[]'::jsonb) AS speakers,
         COALESCE((
-          SELECT jsonb_agg(jsonb_build_object('name', options.name, 'slug', options.slug)
+          SELECT jsonb_agg(jsonb_build_object('name', options.name, 'slug', options.slug, 'sermonCount', options.sermon_count)
                            ORDER BY lower(options.name), options.slug)
           FROM (
-            SELECT DISTINCT sermon_series.name, sermon_series.slug
+            SELECT sermon_series.name, sermon_series.slug, count(DISTINCT sermon.id)::integer AS sermon_count
             FROM series sermon_series
             JOIN sermon_series_map series_map ON series_map.series_id = sermon_series.id
             JOIN sermons sermon ON sermon.id = series_map.sermon_id
             WHERE ${frontendSermonEligibilitySql("sermon", scope)}
+            GROUP BY sermon_series.name, sermon_series.slug
           ) options
         ), '[]'::jsonb) AS series,
         COALESCE((
@@ -592,16 +594,17 @@ export function buildPublishedSermonFilterOptionsQuery(
           ) options
         ), '[]'::jsonb) AS passages,
         COALESCE((
-          SELECT jsonb_agg(jsonb_build_object('name', options.name, 'slug', options.slug)
+          SELECT jsonb_agg(jsonb_build_object('name', options.name, 'slug', options.slug, 'sermonCount', options.sermon_count)
                            ORDER BY lower(options.name), options.slug)
           FROM (
-            SELECT DISTINCT classification.name, classification.slug
+            SELECT classification.name, classification.slug, count(DISTINCT sermon.id)::integer AS sermon_count
             FROM book_classifications classification
             JOIN sermon_book_classifications book_map
               ON book_map.book_classification_id = classification.id
             JOIN sermons sermon ON sermon.id = book_map.sermon_id
             WHERE classification.review_status = 'approved'
               AND ${frontendSermonEligibilitySql("sermon", scope)}
+            GROUP BY classification.name, classification.slug
           ) options
         ), '[]'::jsonb) AS books,
         COALESCE((

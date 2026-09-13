@@ -4,7 +4,8 @@ import { resolve } from "node:path";
 import { z } from "zod";
 
 export const previewDatasetVersion = "saving-grace-public-preview-sermons-v1" as const;
-export const previewDatasetSourceStatus = "public-development-dataset-v1" as const;
+import { previewDatasetSourceStatus } from "../domain/development-seed-source";
+export { previewDatasetSourceStatus };
 export const previewDatasetSyntheticSubject = "public-development-dataset-seed" as const;
 export const previewDatasetDirectory = resolve("development-data/preview-sermons-v1");
 export const previewDatasetContentPath = resolve(previewDatasetDirectory, "sermons.json");

@@ -9,6 +9,8 @@ export interface PaginatedSermons {
 export interface PublicSermonFilterOption {
   name: string;
   slug: string;
+  /** Number of eligible sermons carrying this relationship, when the projection provides it. */
+  sermonCount?: number | undefined;
 }
 
 export interface PublicPassageVerseAvailability {

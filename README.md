@@ -1,5 +1,14 @@
 # Saving Grace Bible Church Website
 
+## Sealed staging candidate
+
+The isolated staging integration preserves the D-157 backend and the creative
+frontend refinements. See [deployment/README.md](deployment/README.md) for the
+container, target-guard, logical-backup and rollback contracts. Until a real
+authentication provider and HTTPS are configured, remotely hosted admin and
+private-preview routes are disabled; SSH tunneling is not application login.
+No publication or production cutover is implied by preparing this release.
+
 The current D-157 private exceptions queue is
 `http://127.0.0.1:4360/admin/remaining-reviews` when the authorised loopback review
 server is running. All 155 existing records were assessed: 144 private reviews
@@ -75,10 +84,10 @@ For current repository status and safe continuation rules, read the tracked publ
 - Runtime input validation
 - Parameterized PostgreSQL public sermon repository
 - Framework-independent `/api/v1/sermons` list/detail HTTP router
-- Cohesive responsive sermon frontend components for the homepage, archive, detail, taxonomy, empty/error/private states, compact discovery filters and recent cards, stable recent-sermon pagination, deterministic series discovery, metadata-related sermons, controlled media, mapped `301`/`410` handling, and a strictly eligible public sermon sitemap
+- A creative sermon frontend, "the Canon", built as the framework-independent `src/frontend` package: every sermon is shelved under the Bible book it was preached from, on a 66-book shelf whose preached spines are links, with a to-scale canon strip, a book tab and an open book of chapter/verse rulers that are ordinary server links; typed design tokens, an escaping `html` template, page-scoped stylesheet partials, two readable CSP-hashed enhancement scripts, one catalogue entry with card/row/related variants, and page composers for the landing page, archive, detail, taxonomy and empty/error/private states, with stable recent-sermon pagination, metadata-related sermons, controlled media, mapped `301`/`410` handling and a strictly eligible public sermon sitemap
 - Authenticated, loopback-only `/frontend-preview/` pages that reuse the real frontend components for the 15 completed private pilot/Wave-1 records while remaining absent from static production output, public routes, sitemaps and structured data
 - Public repository-tracked `development-data/preview-sermons-v1/` seed for exactly those 15 records, with a fixed integrity manifest, curated allowed fields and a deterministic no-clobber importer that retains draft/unpublished state
-- Separate server-rendered **Browse by Bible passage** controls with accessible Books → Chapters → Verses panels, the checked-in 66-book Protestant/KJV versification and explicit whole-book, whole-chapter or exact-verse URL scope; results remain backed only by administrator-confirmed structured primary preaching passages, so pending proposals, supporting references and private sermons are excluded
+- A server-rendered Bible passage flow (the shelf and the open book) whose spines and chapter/verse cells are ordinary links that work without JavaScript, using the checked-in 66-book Protestant/KJV versification and explicit whole-book, whole-chapter or exact-verse URL scope; results remain backed only by administrator-confirmed structured primary preaching passages, so pending proposals, supporting references and private sermons are excluded
 - Offline description-only semantic foundation with a verified external BAAI ONNX model, locked local-only Transformers.js adapter, exact float32 scoring, shared eligibility/stale-removal guards, pending quality status, no model files in Git and no public **Related themes** output
 - Provider-independent protected admin handlers with allowlisted local test identities
 - Final default-deny single-`admin` policy with no editor/contributor or ownership-based behaviour
@@ -231,7 +240,7 @@ npm run dashboard:local
 
 Open `http://127.0.0.1:4322/admin`. The harness refuses non-loopback database and listener targets. Stop it with `Ctrl+C` after local review.
 
-The local dashboard adds a **Frontend preview** action only at runtime. It issues a short-lived `HttpOnly`, `SameSite=Strict` session through the existing local administrator identity and opens `http://127.0.0.1:4322/frontend-preview/`. A copied preview URL, query parameter or identity header alone cannot expose sermon data. Preview responses are private/no-store and `noindex`; they emit no canonical, Open Graph, sitemap, feed or structured-data entry. The preview selector is limited to completed private records with approved current content, a reviewed primary-passage outcome, controlled media and the exact pilot/Wave-1 source scope. A reviewed no-primary outcome remains valid without inventing a Bible-book classification. The authenticated preview header groups the existing Sermons, Speakers, Series and Bible books destinations under one accessible **Sermons** disclosure on desktop and an in-flow accordion inside the mobile menu; routes and footer links remain unchanged. The revised archive starts with exactly three compact landscape cards whose descriptions are line-clamped while their metadata and detail links remain available; it provides a URL-addressable nine-item recent mode, keeps search results separate from discovery, and shows one latest eligible sermon per series. Its separate Bible picker renders the canonical 66 books as nine restrained colour groups in flat, aligned five-column Books, Chapters and Verses grids without conflating passage scope with the broad Bible-book filter. Topical discovery fails closed with a clear empty state because the current schema has no administrator-approved topical-classification lifecycle. The production `dist` build contains neither preview wiring nor real sermon content.
+The local dashboard adds a **Frontend preview** action only at runtime. It issues a short-lived `HttpOnly`, `SameSite=Strict` session through the existing local administrator identity and opens `http://127.0.0.1:4322/frontend-preview/`. A copied preview URL, query parameter or identity header alone cannot expose sermon data. Preview responses are private/no-store and `noindex`; they emit no canonical, Open Graph, sitemap, feed or structured-data entry. The preview selector is limited to completed private records with approved current content, a reviewed primary-passage outcome, controlled media and the exact pilot/Wave-1 source scope. A reviewed no-primary outcome remains valid without inventing a Bible-book classification. The authenticated preview header groups the existing Sermons, Speakers, Series and Bible books destinations under one native **Sermons** disclosure on desktop and an in-flow accordion inside the mobile menu; routes and footer links remain unchanged. The archive opens with one compact Find sermons line, a **Browse by Bible passage** disclosure and an **Advanced search** disclosure that shows its active-filter count, then exactly three compact **Most Recent Sermons** items led by their reviewed passage; **Show more recent sermons** enters a URL-addressable, continuously numbered nine-item archive, search results stay separate from discovery, and the **Series** section shows one latest eligible sermon per series. The picker renders the canonical 66 books as nine distinct restrained colour groups in Books, Chapters and Verses grids of ordinary links without conflating passage scope with the broad Bible-book filter. **Topical Sermons** renders an honest note because the current schema has no administrator-approved topical-classification lifecycle. The production `dist` build contains neither preview wiring nor real sermon content.
 
 For a design review that must not expose any write-capable application route, use the dedicated read-only launcher instead. It verifies the exact PostgreSQL 16 loopback database, sets `default_transaction_read_only=on` for every pool connection, and serves only the preview session, preview pages and static dashboard shell:
 
@@ -252,6 +261,7 @@ Operational loaders refuse every target except `savinggrace_sermons_test` on loo
 - `src/api/contracts`: stable `/api/v1` public/admin validation contracts
 - `src/application`: lifecycle and permission rules
 - `src/server/auth`: provider-independent identity boundary and local-only allowlisted adapter
+- `src/frontend`: framework-independent presentation package (tokens, escaping template, styles, enhancement scripts, components, pages) consumed by both the server handlers and the static Astro pages
 - `src/server`: server-only PostgreSQL repository, query, and portable HTTP boundaries
 - `src/migration`: journalled schema runner, importer, audit output, identity, and CLI
 - `src/enrichment`: strict queue/draft contracts, provider interfaces, and local idempotent PostgreSQL draft workflow

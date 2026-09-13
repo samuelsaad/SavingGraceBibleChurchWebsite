@@ -47,10 +47,10 @@ const detail: SermonDetail = {
 };
 
 const options: PublicSermonFilterOptions = {
-  speakers: [{ name: "Example Speaker", slug: "example-speaker" }],
-  series: [{ name: "Example Series", slug: "example-series" }],
+  speakers: [{ name: "Example Speaker", slug: "example-speaker", sermonCount: 1 }],
+  series: [{ name: "Example Series", slug: "example-series", sermonCount: 1 }],
   passages: [],
-  books: [{ name: "Romans", slug: "romans" }],
+  books: [{ name: "Romans", slug: "romans", sermonCount: 1 }],
   passageVerseAvailability: [{ bookSlug: "romans", chapter: 8, verses: [1, 2, 3, 4] }]
 };
 
@@ -92,6 +92,10 @@ async function authorisedRoute() {
   return { repository, route: createLocalFrontendPreviewHandler(repository, session), cookie };
 }
 
+function masthead(html: string): string {
+  return html.slice(html.indexOf('<header class="masthead">'), html.indexOf("</header>"));
+}
+
 describe("authenticated local frontend preview", () => {
   it("requires an issued administrator session and does not query on denial", async () => {
     const repository = new PreviewRepository();
@@ -129,21 +133,37 @@ describe("authenticated local frontend preview", () => {
     const homeHtml = await home!.text();
     expect(home?.status).toBe(200);
     expect(homeHtml).toContain(summary.title);
-    expect(homeHtml).toContain("Private local frontend preview");
+    expect(homeHtml).toContain('<div class="preview-band" role="status">');
+    expect(homeHtml).toContain("Private local frontend preview · Draft content · Not public or indexable");
     expect(homeHtml).not.toContain('rel="canonical"');
+    expect(homeHtml).not.toContain('property="og:');
     expect(homeHtml).not.toContain("application/ld+json");
+    expect(homeHtml).toContain('<meta name="robots" content="noindex, nofollow, noarchive"');
+    expect(home?.headers.get("cache-control")).toBe("private, no-store, max-age=0, must-revalidate");
+    expect(homeHtml).toContain('<ul class="stats hero__stats" role="list"><li>1 sermon</li><li>1 of 66 books</li><li>1 speaker</li><li>1 series</li></ul>');
+    expect(homeHtml).toContain('<a class="spine__link" href="/frontend-preview/books/romans/">');
+    expect(homeHtml).toContain('<span class="spine__count" aria-hidden="true">1</span>');
+    expect(homeHtml).toContain('<h2 id="latest-heading" class="section__title">Latest sermon</h2>');
+    expect(homeHtml).toContain('<h3 class="entry__title"><a href="/frontend-preview/sermons/an-anonymised-reviewed-draft/">An anonymised reviewed draft</a></h3>');
 
     const sermon = await route(new Request(`http://127.0.0.1/frontend-preview/sermons/${summary.slug}/`, { headers: { cookie } }));
     const sermonHtml = await sermon!.text();
     expect(sermon?.status).toBe(200);
-    expect(sermonHtml).toContain("Topical or multi-passage sermon");
+    expect(sermonHtml).toContain("No single primary passage (reviewed outcome)");
+    expect(sermonHtml).not.toContain("Topical or multi-passage");
     expect(sermonHtml).toContain("An approved anonymised transcript");
-    expect(sermonHtml.match(/class="qa-item"/gu)).toHaveLength(7);
+    expect(sermonHtml).toContain('<details class="transcript" open data-open-for-print>');
+    expect(sermonHtml.match(/<li class="question">/gu)).toHaveLength(7);
     expect(sermonHtml).toContain('data-video-id="abcdefghijk"');
+    expect(sermonHtml).not.toContain("<iframe");
     expect(sermonHtml).not.toContain("autoplay");
     expect(sermonHtml).not.toContain('href="https://www.youtube.com/watch?v=abcdefghijk"');
     expect(sermonHtml).not.toContain("Open video");
     expect(sermonHtml).not.toContain("Related themes");
+    expect(sermonHtml).toContain('<a class="tab hue--pauline" href="/frontend-preview/sermons/?passageBook=romans&amp;passageScope=book#canon">');
+    expect(sermonHtml).toContain('<dt>Shelved under</dt><dd><a href="/frontend-preview/books/romans/">Romans</a></dd>');
+    expect(sermon?.headers.get("content-security-policy")).toContain("frame-src https://www.youtube-nocookie.com");
+    expect(home?.headers.get("content-security-policy")).not.toContain("frame-src");
   });
 
   it("preserves keyword filters and provides preview-only taxonomy pages", async () => {
@@ -151,65 +171,85 @@ describe("authenticated local frontend preview", () => {
     const archive = await route(new Request("http://127.0.0.1/frontend-preview/sermons/?s=grace&sermon_speaker=example-speaker", { headers: { cookie } }));
     expect(archive?.status).toBe(200);
     expect(repository.lastQuery).toMatchObject({ query: "grace", speaker: "example-speaker", pageSize: 9 });
+    expect(await archive!.text()).toContain('action="/frontend-preview/sermons/#results"');
 
     const index = await route(new Request("http://127.0.0.1/frontend-preview/speakers/", { headers: { cookie } }));
-    expect(await index!.text()).toContain("Example Speaker");
+    const indexHtml = await index!.text();
+    expect(indexHtml).toContain('<ul class="index" role="list"><li><a href="/frontend-preview/speakers/example-speaker/"><span>Example Speaker</span><span class="index__count">1 sermon</span></a></li></ul>');
     const speaker = await route(new Request("http://127.0.0.1/frontend-preview/speakers/example-speaker/", { headers: { cookie } }));
+    const speakerHtml = await speaker!.text();
     expect(speaker?.status).toBe(200);
-    expect(repository.lastQuery).toMatchObject({ speaker: "example-speaker" });
+    expect(repository.lastQuery).toMatchObject({ speaker: "example-speaker", pageSize: 50 });
+    expect(speakerHtml).toContain('<p class="eyebrow">Speaker</p>');
+    expect(speakerHtml).toContain('<h1 class="title-page__title">Example Speaker</h1>');
+    expect(speakerHtml).toContain("1 sermon");
+    expect(speakerHtml).toContain('<p class="strip__label">The book preached from in this sermon</p>');
+    expect(speakerHtml).toContain('<ol class="catalogue" role="list" start="1">');
+    expect(speakerHtml).toContain('<h2 class="entry__title"><a href="/frontend-preview/sermons/an-anonymised-reviewed-draft/">');
+
+    const books = await route(new Request("http://127.0.0.1/frontend-preview/books/", { headers: { cookie } }));
+    const booksHtml = await books!.text();
+    expect(books?.status).toBe(200);
+    expect(booksHtml).toContain('<h1 class="title-page__title">Bible books</h1>');
+    expect(booksHtml.match(/<li class="spine /gu)).toHaveLength(66);
+    expect(booksHtml).toContain('<table class="canon-table">');
+    expect(booksHtml.match(/<tr><td>/gu)).toHaveLength(66);
+    expect(booksHtml).toContain('<td><a href="/frontend-preview/books/romans/">Romans</a></td><td>Pauline Epistles</td><td class="num">16</td><td class="num">1</td>');
+    expect(booksHtml).toContain("<td>Genesis</td><td>Law / Pentateuch</td><td class=\"num\">50</td><td class=\"num\">—</td>");
+
+    const book = await route(new Request("http://127.0.0.1/frontend-preview/books/romans/", { headers: { cookie } }));
+    const bookHtml = await book!.text();
+    expect(book?.status).toBe(200);
+    expect(repository.lastQuery).toMatchObject({ book: "romans", pageSize: 50 });
+    expect(bookHtml).toContain('<ol class="trail" role="list"><li><a href="/frontend-preview/books/">Bible books</a></li></ol>');
+    expect(bookHtml).toContain('<h1 class="open-book__title" id="open-book-heading">Romans</h1>');
+    expect(bookHtml).toContain('<h2 id="list-heading" class="section__title">Sermons in Romans</h2>');
+    expect(bookHtml.match(/<span class="sr-only">Chapter \d+/gu)).toHaveLength(16);
+    expect(bookHtml).toContain('href="/frontend-preview/sermons/?passageBook=romans&amp;passageChapter=8&amp;passageScope=chapter#canon"');
+    expect(bookHtml).toContain('<span class="sr-only">Chapter 8, has sermons</span>');
+    expect(bookHtml.match(/<h1/gu)).toHaveLength(1);
   });
 
-  it("groups sermon discovery routes in accessible desktop and mobile disclosures", async () => {
+  it("offers single-click discovery links inside a closed native Sermons menu and marks only the current section", async () => {
     const { route, cookie } = await authorisedRoute();
     const home = await route(new Request("http://127.0.0.1/frontend-preview/", { headers: { cookie } }));
     const html = await home!.text();
-    const desktop = html.slice(html.indexOf('<nav class="desktop-nav"'), html.indexOf('<details class="mobile-nav"'));
-    const mobile = html.slice(html.indexOf('<details class="mobile-nav"'), html.indexOf('</header>'));
+    const navigation = masthead(html);
     const expectedRoutes = [
+      "/frontend-preview/",
       "/frontend-preview/sermons/",
       "/frontend-preview/speakers/",
       "/frontend-preview/series/",
       "/frontend-preview/books/"
     ];
 
-    expect(desktop).toContain('<a href="/frontend-preview/" aria-current="page">Home</a><div class="sermon-nav"');
-    expect(desktop.match(/id="sermon-nav-toggle"/gu)).toHaveLength(1);
-    expect(desktop).toContain('type="button" aria-expanded="false" aria-controls="sermon-nav-submenu"');
-    expect(desktop).not.toContain('Home</a><a href="/frontend-preview/speakers/"');
-    expect(mobile.match(/id="mobile-sermon-nav-toggle"/gu)).toHaveLength(1);
-    expect(mobile).toContain('aria-controls="mobile-sermon-nav-submenu"');
-    expect(mobile).toContain('class="mobile-sermon-submenu" data-nav-disclosure-panel hidden');
-    for (const routePath of expectedRoutes) {
-      expect(desktop).toContain(`href="${routePath}"`);
-      expect(mobile).toContain(`href="${routePath}"`);
-    }
-    expect(desktop.indexOf(expectedRoutes[0]!)).toBeLessThan(desktop.indexOf(expectedRoutes[1]!));
-    expect(desktop.indexOf(expectedRoutes[1]!)).toBeLessThan(desktop.indexOf(expectedRoutes[2]!));
-    expect(desktop.indexOf(expectedRoutes[2]!)).toBeLessThan(desktop.indexOf(expectedRoutes[3]!));
-    expect(html).toContain("button.addEventListener('click'");
-    expect(html).toContain("['pointerdown','click']");
-    expect(html).toContain("root.addEventListener('focusout'");
-    expect(html).toContain("event.key==='Tab'");
-    expect(html).toContain("event.shiftKey?-1:1");
-    expect(html).toContain("event.key!=='Escape'");
-    expect(html).toContain("button.focus()");
-    expect(html).toContain("if(event.target.closest?.('a'))");
-    expect(html).toContain(".sermon-nav-submenu{position:absolute;z-index:30;top:calc(100% + .12rem)");
-    expect(html).toContain(".mobile-sermon-submenu{display:grid;margin:.08rem 0 .3rem .58rem");
-    expect(html).toContain("min-height:2.75rem");
+    expect(navigation).toContain('<details class="masthead__menu" data-sermon-menu>');
+    expect(navigation).toContain('<ul class="masthead__dropdown" id="sermon-navigation"><li><a href="/frontend-preview/" aria-current="page">SermonsV1</a></li><li><a href="/frontend-preview/sermons/" data-sermon-archive>SermonsV2</a></li><li><a href="/frontend-preview/speakers/">Speakers</a></li><li><a href="/frontend-preview/series/">Series</a></li><li><a href="/frontend-preview/books/">Books</a></li></ul>');
+    expect(navigation).not.toContain('data-sermon-menu open');
+    expect(navigation).toContain('aria-controls="sermon-navigation"');
+    expect(html).toContain('<script data-enhancement="navigation">');
+    expect(navigation.match(/aria-current="page"/gu)).toHaveLength(1);
+    expect(navigation).toContain('<form class="masthead__search" method="get" action="/frontend-preview/sermons/#results" role="search" aria-label="Search sermons">');
+    expect(navigation).toContain('<a class="masthead__search-link" href="/frontend-preview/sermons/#sermon-search">');
+    for (const routePath of expectedRoutes) expect(navigation).toContain(`href="${routePath}"`);
+    expect(html).toContain('<script data-enhancement="canon">');
+    const script = html.slice(html.indexOf('<script data-enhancement="canon">'), html.indexOf("</script>"));
+    for (const key of ["'ArrowRight'", "'ArrowLeft'", "'Home'", "'End'", "'Escape'", "'pageshow'"]) expect(script).toContain(key);
+    expect(script).not.toContain("innerHTML");
     expect(home?.headers.get("content-security-policy")).toContain("script-src 'sha256-");
-  });
+    expect(html.match(/<h1/gu)).toHaveLength(1);
 
-  it("marks the sermon parent and the current child section independently", async () => {
-    const { route, cookie } = await authorisedRoute();
     const speakers = await route(new Request("http://127.0.0.1/frontend-preview/speakers/", { headers: { cookie } }));
-    const html = await speakers!.text();
-    const desktop = html.slice(html.indexOf('<nav class="desktop-nav"'), html.indexOf('<details class="mobile-nav"'));
+    const speakersNavigation = masthead(await speakers!.text());
+    expect(speakersNavigation).toContain('<a href="/frontend-preview/speakers/" aria-current="page">Speakers</a>');
+    expect(speakersNavigation).not.toContain('<a href="/frontend-preview/sermons/" aria-current="page">');
+    expect(speakersNavigation.match(/aria-current="page"/gu)).toHaveLength(1);
 
-    expect(desktop).toContain('class="sermon-nav-toggle is-active-section"');
-    expect(desktop).toContain('Sermons<span class="sr-only">, current section</span>');
-    expect(desktop).toContain('<a href="/frontend-preview/speakers/" aria-current="page">Speakers</a>');
-    expect(desktop).not.toContain('<a href="/frontend-preview/sermons/" aria-current="page">Sermons</a>');
+    const archive = await route(new Request("http://127.0.0.1/frontend-preview/sermons/", { headers: { cookie } }));
+    const archiveNavigation = masthead(await archive!.text());
+    expect(archiveNavigation).toContain('<a href="/frontend-preview/sermons/" data-sermon-archive aria-current="page">SermonsV2</a>');
+    expect(archiveNavigation).toContain('<a href="/frontend-preview/">SermonsV1</a>');
+    expect(archiveNavigation.match(/aria-current="page"/gu)).toHaveLength(1);
   });
 
   it("has no preview sitemap, feed, or structured-data endpoint", async () => {
@@ -223,12 +263,12 @@ describe("authenticated local frontend preview", () => {
 
   it("redirects slashless preview detail and taxonomy URLs before querying content", async () => {
     const { route, cookie, repository } = await authorisedRoute();
-    const detail = await route(new Request(
+    const detailResponse = await route(new Request(
       `http://127.0.0.1/frontend-preview/sermons/${summary.slug}`,
       { headers: { cookie } }
     ));
-    expect(detail?.status).toBe(307);
-    expect(detail?.headers.get("location")).toBe(`/frontend-preview/sermons/${summary.slug}/`);
+    expect(detailResponse?.status).toBe(307);
+    expect(detailResponse?.headers.get("location")).toBe(`/frontend-preview/sermons/${summary.slug}/`);
 
     const taxonomy = await route(new Request(
       "http://127.0.0.1/frontend-preview/speakers/example-speaker",

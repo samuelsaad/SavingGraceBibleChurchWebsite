@@ -108,7 +108,7 @@ describe("Phase 3B administration dashboard", () => {
     expect(client).toContain("Unsaved changes");
     expect(client).toContain("Private local review only");
     expect(client).toContain("Private administrator work queue");
-    expect(client).toContain("passage decision required");
+    expect(client).toContain("remainingPrivateReviewRequirements(sermon)");
     expect(client).toContain("Primary Bible book");
     expect(client).toContain("Primary preaching passage");
     expect(client).toContain("Confirm entered passages");
@@ -180,7 +180,7 @@ describe("Phase 3B administration dashboard", () => {
     expect(guidedRouteSource).not.toContain("data-transition");
     expect(guidedRouteSource).not.toContain("open-delete");
     expect(guidedRouteSource).not.toContain("permanent-delete");
-    expect(page).toContain("Phase 3B.2 private review rehearsal");
+    expect(page).toContain("Sermon review workspace");
     expect(client).toContain('name="speakerId"');
     expect(client).not.toContain('name="speakerIds"');
     expect(client).toContain("x-local-identity\", \"admin");

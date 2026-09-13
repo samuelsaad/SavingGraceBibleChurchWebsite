@@ -1,0 +1,78 @@
+name: savinggrace-staging
+services:
+  db:
+    image: ${POSTGRES_IMAGE:?immutable PostgreSQL 16 image required}
+    environment:
+      POSTGRES_DB: savinggrace_staging
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_owner_password
+      POSTGRES_INITDB_ARGS: --data-checksums --auth-host=scram-sha-256
+    secrets: [db_owner_password]
+    volumes: [postgres-data:/var/lib/postgresql/data]
+    networks: [private]
+    restart: unless-stopped
+    shm_size: 128mb
+    cpus: 1.0
+    mem_limit: 1536m
+    logging: &logging
+      driver: json-file
+      options: {max-size: 10m, max-file: '3'}
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U postgres -d savinggrace_staging']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+  app:
+    image: ${APP_IMAGE:?exact release image required}
+    environment: &environment
+      NODE_ENV: production
+      STAGING_SEALED: '1'
+      DB_HOST: db
+      DB_PORT: '5432'
+      DB_NAME: savinggrace_staging
+      RELEASE_COMMIT: ${RELEASE_COMMIT:?exact commit required}
+    secrets: [db_reader_password]
+    ports: ['127.0.0.1:8080:8080']
+    networks: [private]
+    depends_on:
+      db: {condition: service_healthy}
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs: ['/tmp:size=16m,noexec,nosuid']
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    cpus: 1.0
+    mem_limit: 768m
+    pids_limit: 128
+    logging: *logging
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:8080/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 8s
+      retries: 4
+      start_period: 20s
+  maintenance:
+    image: ${APP_IMAGE:?exact release image required}
+    profiles: [maintenance]
+    environment: *environment
+    secrets: [db_owner_password]
+    networks: [private]
+    entrypoint: [node, database.cjs]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 512m
+    volumes: ['${VERIFICATION_DIRECTORY:?protected verification path required}/snapshot.json:/verification/snapshot.json:ro']
+    logging: *logging
+networks:
+  private:
+    internal: true
+volumes:
+  postgres-data:
+    name: ${DATABASE_VOLUME:?explicit versioned volume required}
+secrets:
+  db_owner_password:
+    file: ${SECRET_DIRECTORY:?protected secret path required}/db-owner-password
+  db_reader_password:
+    file: ${SECRET_DIRECTORY:?protected secret path required}/db-reader-password

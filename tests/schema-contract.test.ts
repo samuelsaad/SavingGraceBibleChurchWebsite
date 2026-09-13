@@ -1,9 +1,14 @@
 import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 
+/** Migration SQL is compared as LF text so Windows checkouts with autocrlf behave like Linux ones. */
+async function readSql(path: string, encoding: "utf8" = "utf8"): Promise<string> {
+  return (await readFile(path, encoding)).replace(/\r\n/gu, "\n");
+}
+
 describe("PostgreSQL schema contract", () => {
   it("contains the required normalized and audit structures", async () => {
-    const sql = await readFile("db/migrations/0001_initial.sql", "utf8");
+    const sql = await readSql("db/migrations/0001_initial.sql", "utf8");
 
     for (const table of [
       "sermons",
@@ -32,8 +37,8 @@ describe("PostgreSQL schema contract", () => {
 
   it("reversibly replaces multi-speaker joins with one speaker and enrichment records", async () => {
     const [up, down] = await Promise.all([
-      readFile("db/migrations/0004_sermon_enrichment_readiness.sql", "utf8"),
-      readFile("db/migrations/0004_sermon_enrichment_readiness.down.sql", "utf8")
+      readSql("db/migrations/0004_sermon_enrichment_readiness.sql", "utf8"),
+      readSql("db/migrations/0004_sermon_enrichment_readiness.down.sql", "utf8")
     ]);
     expect(up).toContain("HAVING count(*) > 1");
     expect(up).toContain("Migration 0004 refused multiple speaker relationships for sermon IDs");
@@ -51,8 +56,8 @@ describe("PostgreSQL schema contract", () => {
 
   it("reuses summary with a reversible approved-description lifecycle and approved-only search", async () => {
     const [up, down] = await Promise.all([
-      readFile("db/migrations/0005_approved_sermon_descriptions.sql", "utf8"),
-      readFile("db/migrations/0005_approved_sermon_descriptions.down.sql", "utf8")
+      readSql("db/migrations/0005_approved_sermon_descriptions.sql", "utf8"),
+      readSql("db/migrations/0005_approved_sermon_descriptions.down.sql", "utf8")
     ]);
     expect(up).toContain("ADD COLUMN summary_status");
     expect(up).toContain("ADD COLUMN seo_description");
@@ -68,8 +73,8 @@ describe("PostgreSQL schema contract", () => {
 
   it("stores reversible private Phase 3B.2 source provenance without sermon bodies", async () => {
     const [up, down] = await Promise.all([
-      readFile("db/migrations/0006_phase3b2_pilot_provenance.sql", "utf8"),
-      readFile("db/migrations/0006_phase3b2_pilot_provenance.down.sql", "utf8")
+      readSql("db/migrations/0006_phase3b2_pilot_provenance.sql", "utf8"),
+      readSql("db/migrations/0006_phase3b2_pilot_provenance.down.sql", "utf8")
     ]);
     expect(up).toContain("CREATE TABLE sermon_enrichment_sources");
     expect(up).toContain("authorised_youtube_studio_export");
@@ -82,8 +87,8 @@ describe("PostgreSQL schema contract", () => {
 
   it("stores reversible typed guided-review state with fail-closed pending decisions", async () => {
     const [up, down] = await Promise.all([
-      readFile("db/migrations/0007_guided_sermon_review.sql", "utf8"),
-      readFile("db/migrations/0007_guided_sermon_review.down.sql", "utf8")
+      readSql("db/migrations/0007_guided_sermon_review.sql", "utf8"),
+      readSql("db/migrations/0007_guided_sermon_review.down.sql", "utf8")
     ]);
     expect(up).toContain("CREATE TABLE sermon_enrichment_reviews");
     expect(up).toContain("CREATE TABLE sermon_enrichment_review_items");
@@ -103,8 +108,8 @@ describe("PostgreSQL schema contract", () => {
 
   it("separates content completion from Bible-book metadata and protects linked audit evidence", async () => {
     const [up, down] = await Promise.all([
-      readFile("db/migrations/0009_pilot_completion_safeguards.sql", "utf8"),
-      readFile("db/migrations/0009_pilot_completion_safeguards.down.sql", "utf8")
+      readSql("db/migrations/0009_pilot_completion_safeguards.sql", "utf8"),
+      readSql("db/migrations/0009_pilot_completion_safeguards.down.sql", "utf8")
     ]);
     expect(up).toContain("has_required_bible_book");
     expect(up).toContain("is_content_complete");
@@ -117,8 +122,8 @@ describe("PostgreSQL schema contract", () => {
 
   it("stores a reversible, explicit acknowledgement for verified empty finding sets", async () => {
     const [up, down] = await Promise.all([
-      readFile("db/migrations/0010_zero_finding_guided_review.sql", "utf8"),
-      readFile("db/migrations/0010_zero_finding_guided_review.down.sql", "utf8")
+      readSql("db/migrations/0010_zero_finding_guided_review.sql", "utf8"),
+      readSql("db/migrations/0010_zero_finding_guided_review.down.sql", "utf8")
     ]);
     expect(up).toContain("empty_item_set_acknowledged_by_subject");
     expect(up).toContain("empty_item_set_acknowledged_at");
@@ -130,8 +135,8 @@ describe("PostgreSQL schema contract", () => {
 
   it("stores only precomputed description-semantic provenance with shared eligibility and stale removal", async () => {
     const [up, down] = await Promise.all([
-      readFile("db/migrations/0011_description_semantic_relationships.sql", "utf8"),
-      readFile("db/migrations/0011_description_semantic_relationships.down.sql", "utf8")
+      readSql("db/migrations/0011_description_semantic_relationships.sql", "utf8"),
+      readSql("db/migrations/0011_description_semantic_relationships.down.sql", "utf8")
     ]);
     expect(up).toContain("CREATE VIEW sermon_description_semantic_eligibility");
     expect(up).toContain("status = 'published'");
@@ -152,8 +157,8 @@ describe("PostgreSQL schema contract", () => {
 
   it("extends semantic provenance with immutable model and runtime evidence", async () => {
     const [up, down] = await Promise.all([
-      readFile("db/migrations/0012_description_semantic_runtime_provenance.sql", "utf8"),
-      readFile("db/migrations/0012_description_semantic_runtime_provenance.down.sql", "utf8")
+      readSql("db/migrations/0012_description_semantic_runtime_provenance.sql", "utf8"),
+      readSql("db/migrations/0012_description_semantic_runtime_provenance.down.sql", "utf8")
     ]);
     expect(up).toContain("ADD COLUMN model_revision");
     expect(up).toContain("ADD COLUMN runtime_identifier");
@@ -166,8 +171,8 @@ describe("PostgreSQL schema contract", () => {
 
   it("adds only the official YouTube API provenance value and preserves a guarded rollback", async () => {
     const [up, down] = await Promise.all([
-      readFile("db/migrations/0013_official_youtube_caption_provenance.sql", "utf8"),
-      readFile("db/migrations/0013_official_youtube_caption_provenance.down.sql", "utf8")
+      readSql("db/migrations/0013_official_youtube_caption_provenance.sql", "utf8"),
+      readSql("db/migrations/0013_official_youtube_caption_provenance.down.sql", "utf8")
     ]);
     expect(up).toContain("ALTER TABLE sermon_enrichment_sources");
     expect(up).toContain("'authorised_youtube_studio_export'");
@@ -181,8 +186,8 @@ describe("PostgreSQL schema contract", () => {
 
   it("adds reversible reviewed primary-passage roles without storing source titles", async () => {
     const [up, down] = await Promise.all([
-      readFile("db/migrations/0014_primary_preaching_passages.sql", "utf8"),
-      readFile("db/migrations/0014_primary_preaching_passages.down.sql", "utf8")
+      readSql("db/migrations/0014_primary_preaching_passages.sql", "utf8"),
+      readSql("db/migrations/0014_primary_preaching_passages.down.sql", "utf8")
     ]);
     expect(up).toContain("ADD COLUMN relationship_role");
     expect(up).toContain("ADD COLUMN is_lead");
@@ -198,8 +203,8 @@ describe("PostgreSQL schema contract", () => {
 
   it("adds reversible atomic review identities without changing migration 0007", async () => {
     const [up, down] = await Promise.all([
-      readFile("db/migrations/0008_atomic_sermon_review_items.sql", "utf8"),
-      readFile("db/migrations/0008_atomic_sermon_review_items.down.sql", "utf8")
+      readSql("db/migrations/0008_atomic_sermon_review_items.sql", "utf8"),
+      readSql("db/migrations/0008_atomic_sermon_review_items.down.sql", "utf8")
     ]);
     expect(up).toContain("item_identity_sha256");
     expect(up).toContain("expected_item_set_sha256");
@@ -212,7 +217,7 @@ describe("PostgreSQL schema contract", () => {
   });
 
   it("has an explicit reversible local rollback", async () => {
-    const down = await readFile("db/migrations/0001_initial.down.sql", "utf8");
+    const down = await readSql("db/migrations/0001_initial.down.sql", "utf8");
     expect(down).toContain("DROP TABLE IF EXISTS sermons");
     expect(down).toContain("DROP TABLE IF EXISTS sermon_legacy_metrics");
     expect(down).not.toContain("DROP EXTENSION");
@@ -220,8 +225,8 @@ describe("PostgreSQL schema contract", () => {
 
   it("adds reversible ownership, taxonomy concurrency, and safe audit outcomes", async () => {
     const [up, down] = await Promise.all([
-      readFile("db/migrations/0002_admin_foundation.sql", "utf8"),
-      readFile("db/migrations/0002_admin_foundation.down.sql", "utf8")
+      readSql("db/migrations/0002_admin_foundation.sql", "utf8"),
+      readSql("db/migrations/0002_admin_foundation.down.sql", "utf8")
     ]);
     expect(up).toContain("created_by_subject");
     expect(up).toContain("updated_by_subject");
@@ -234,8 +239,8 @@ describe("PostgreSQL schema contract", () => {
 
   it("adds reversible permanent-deletion tombstones and redirect/gone dispositions", async () => {
     const [up, down] = await Promise.all([
-      readFile("db/migrations/0003_single_admin_deletion_seo.sql", "utf8"),
-      readFile("db/migrations/0003_single_admin_deletion_seo.down.sql", "utf8")
+      readSql("db/migrations/0003_single_admin_deletion_seo.sql", "utf8"),
+      readSql("db/migrations/0003_single_admin_deletion_seo.down.sql", "utf8")
     ]);
     expect(up).toContain("CREATE TABLE sermon_deletion_tombstones");
     expect(up).toContain("status_code IN (301, 302, 307, 308, 410)");

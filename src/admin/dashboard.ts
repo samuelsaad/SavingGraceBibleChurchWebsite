@@ -361,6 +361,8 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
 function routeKey(pathname: string): string {
   if (pathname === "/admin" || pathname === "/admin/") return "dashboard";
   if (pathname === "/admin/sermons/new") return "new";
+  if (pathname === "/admin/remaining-reviews") return "remaining-reviews";
+  if (pathname === "/admin/ai-reviews") return "ai-reviews";
   if (pathname.startsWith("/admin/sermons")) return "sermons";
   if (pathname.includes("/taxonomies/speakers")) return "speakers";
   if (pathname.includes("/taxonomies/series")) return "series";
@@ -386,8 +388,7 @@ async function navigate(path: string, replace = false): Promise<void> {
   dirty = false;
   if (replace) history.replaceState({}, "", path);
   else history.pushState({}, "", path);
-  document.body.classList.remove("nav-open");
-  menuButton.setAttribute("aria-expanded", "false");
+  setNavigationOpen(false);
   await renderRoute();
 }
 
@@ -396,7 +397,7 @@ function pageHeading(title: string, description: string, action = ""): string {
 }
 
 function sermonRows(sermons: SermonSummary[]): string {
-  if (!sermons.length) return `<tr><td colspan="9" class="empty-state"><strong>No sermons match these filters.</strong><br />Try clearing a filter or choosing another content task.</td></tr>`;
+  if (!sermons.length) return `<tr><td colspan="6" class="empty-state"><strong>No sermons match these filters.</strong><br />Try clearing a filter or choosing another content task.</td></tr>`;
   return sermons.map((sermon) => {
     const passage = sermon.primaryPassage ?? { state: "no_proposal_detected" as const, displayText: null };
     const stateLabels = {
@@ -408,15 +409,12 @@ function sermonRows(sermons: SermonSummary[]): string {
       proposal_rejected: "Proposal rejected"
     } as const;
     return `<tr>
-    <td data-label="Sermon"><a href="/admin/sermons/${sermon.id}" data-route>${escapeHtml(sermon.title)}</a><div class="subtle">/${escapeHtml(sermon.slug)}/</div></td>
-    <td data-label="State"><span class="status-pill ${escapeHtml(sermon.status)}">${escapeHtml(sermon.status)}</span></td>
-    <td data-label="Service date">${escapeHtml(humanDate(sermon.serviceDate))}</td>
-    <td data-label="Speaker">${escapeHtml(sermon.speaker?.name ?? "—")}</td>
-    <td data-label="Series">${escapeHtml(sermon.series.map((item) => item.name).join(", ") || "—")}</td>
-    <td data-label="Primary passage">${passage.displayText ? `<strong>${escapeHtml(passage.displayText)}</strong><div class="subtle">${escapeHtml(stateLabels[passage.state])}</div>` : escapeHtml(stateLabels[passage.state])}${sermon.remainingReview?.components.passage.accepted ? `<div class="subtle">${escapeHtml(remainingComponentLabel(sermon.remainingReview,"passage"))}</div>` : ""}</td>
+    <td data-label="Sermon" class="sermon-identity"><a href="/admin/sermons/${sermon.id}${sermon.enrichmentReview ? "/review" : ""}" data-route>${escapeHtml(sermon.title)}</a><div class="subtle">${escapeHtml(humanDate(sermon.serviceDate))} · ${escapeHtml(sermon.speaker?.name ?? "Speaker unresolved")}</div>${sermon.series.length ? `<div class="subtle">Series: ${escapeHtml(sermon.series.map((item) => item.name).join(", "))}</div>` : ""}</td>
+    <td data-label="Primary passage"><div>${passage.displayText ? `<strong>${escapeHtml(passage.displayText)}</strong><div class="subtle">${escapeHtml(stateLabels[passage.state])}</div>` : escapeHtml(stateLabels[passage.state])}${sermon.remainingReview?.components.passage.accepted ? `<div class="subtle">${escapeHtml(remainingComponentLabel(sermon.remainingReview,"passage"))}</div>` : ""}</div></td>
+    <td data-label="Private review">${compactPrivateReviewStatus(sermon)}</td>
+    <td data-label="Publication"><div><span class="status-pill ${escapeHtml(sermon.status)}">${escapeHtml(sermon.status)}</span>${sermon.scheduledFor ? `<div class="subtle">Scheduled: ${escapeHtml(humanDate(sermon.scheduledFor))}</div>` : ""}</div></td>
     <td data-label="YouTube">${youtubeSourceLink(sermon.youtubeSource, "Open video")}</td>
-    <td data-label="Scheduled">${sermon.scheduledFor ? `<strong>${escapeHtml(humanDate(sermon.scheduledFor))}</strong>` : "—"}</td>
-    <td data-label="Checklist">${privateReviewStatus(sermon)}</td>
+    <td data-label="Open"><div><a class="button quiet" href="/admin/sermons/${sermon.id}${sermon.enrichmentReview ? "/review" : ""}" data-route>${sermon.enrichmentReview ? "Review" : "Open"}</a><a class="metadata-link" href="/admin/sermons/${sermon.id}" data-route>Metadata</a></div></td>
   </tr>`;
   }).join("");
 }
@@ -428,15 +426,27 @@ async function renderDashboard(): Promise<void> {
   const decisions=await api<{data:CurrentDelegatedDecision[]}>("/api/v1/admin/ai-reviews");
   const delegated=[...aggregateDelegatedReview(decisions.data).values()];
   const remaining=await api<{data:RemainingReviewQueueRow[]}>("/api/v1/admin/remaining-reviews");
-  const pilotQueue = sermons.data.filter((sermon) => sermon.enrichmentReview !== null);
-  main.innerHTML = `${pageHeading("Dashboard", "Follow the guided checklist until each sermon is ready for review and publication.", '<a class="button primary" href="/admin/sermons/new" data-route>Create sermon</a>')}
-    <div class="callout"><strong>Private local review only.</strong><p>AI acceptance is separately attributed, does not approve transcript accuracy, and does not publish any record.</p></div>
-    <section class="panel"><h2>Delegated substantive review</h2><p><strong>${delegated.filter(d=>d.substantiveComplete).length} of ${delegated.length} scoped sermons have current accepted descriptions and Q&A.</strong> ${decisions.data.filter(d=>!d.humanApprovalPreserved && (d.outcome==="accepted" || d.outcome==="corrected_accepted")).length} current AI decisions; existing human approvals are separate.</p><a href="/admin/ai-reviews?all=1" data-route>Show all AI review outcomes</a></section>
-    <section class="panel"><h2>Remaining private review</h2><p>${remaining.data.filter(r=>r.review.privateComplete).length} of ${remaining.data.length} scoped records have current private completion. This includes preserved human decisions and separately attributed AI source review, not recording-accuracy or publication approval.</p><a href="/admin/remaining-reviews" data-route>Open remaining evidence exceptions</a></section>
-    <section class="panel progress-panel" aria-labelledby="enrichment-progress-heading">
-      <h2 id="enrichment-progress-heading">Publication checklist — separate from delegated review</h2>
-      <p><strong>${progress.complete} of ${progress.total} records satisfy the existing publication checklist</strong> · ${progress.remaining} do not. This is not the AI-review count and creates no publication permission.</p>
-      <progress max="${Math.max(progress.total, 1)}" value="${progress.complete}">${progress.complete} of ${progress.total}</progress>
+  const completed = remaining.data.filter(row => row.review.privateComplete).length;
+  const outstanding = remaining.data.filter(row => !row.review.privateComplete);
+  main.innerHTML = `${pageHeading("Review overview", "Your sermon library, saved reviews and the evidence that still needs attention.", '<a class="button primary" href="/admin/sermons" data-route>Open sermon library</a>')}
+    <section class="stats-grid overview-stats" aria-label="Current library and private review counts">
+      <article class="stat-card"><span>Sermons in library</span><strong>${sermons.pagination.totalItems}</strong><small>All editorial states</small></article>
+      <article class="stat-card success"><span>Private reviews complete</span><strong>${completed}</strong><small>Of ${remaining.data.length} delegated-scope records</small></article>
+      <article class="stat-card attention"><span>Still to resolve</span><strong>${outstanding.length}</strong><small>Evidence or completion requirements</small></article>
+      <article class="stat-card"><span>Description &amp; Q&A accepted</span><strong>${delegated.filter(item => item.substantiveComplete).length}<em> / ${delegated.length}</em></strong><small>Human and AI decisions kept distinct</small></article>
+    </section>
+    <div class="overview-grid">
+      <section class="panel attention-panel" aria-labelledby="exceptions-heading">
+        <div class="section-heading"><div><p class="eyebrow">Next steps</p><h2 id="exceptions-heading">Evidence that needs attention</h2></div><span class="count-badge">${outstanding.length}</span></div>
+        <p class="muted">Accepted work stays accepted. Resolve only the specific remaining requirements.</p>
+        <ol class="review-queue">${outstanding.slice(0, 4).map(row => `<li><div><strong>${escapeHtml(row.title)}</strong><span>${escapeHtml(row.review.remaining.join("; ") || "Private completion still pending")}</span></div><a class="button quiet" href="/admin/remaining-reviews?sermon=${encodeURIComponent(row.sermonId)}" data-route>View evidence</a></li>`).join("") || '<li><div><strong>No outstanding private reviews.</strong><span>Retained source limitations are still available in the evidence history.</span></div></li>'}</ol>
+        <a class="text-link" href="/admin/remaining-reviews" data-route>Open remaining evidence exceptions →</a>
+      </section>
+      <aside class="panel review-guide"><p class="eyebrow">Your review workspace</p><h2>Pick up where you left off</h2><p>Open a sermon to see its current stage, saved content and review history.</p><a class="button" href="/admin/sermons" data-route>Private administrator work queue</a><a class="text-link" href="/admin/ai-reviews?all=1" data-route>Show all AI review outcomes →</a><div class="privacy-note"><strong>Private local review only.</strong><p>AI acceptance is honestly attributed. Caption fidelity is not audio verification. Review completion never publishes a sermon.</p></div></aside>
+    </div>
+    <section class="panel library-panel"><div class="section-heading"><div><p class="eyebrow">Library</p><h2>Recently updated sermons</h2></div><a class="text-link" href="/admin/sermons" data-route>View all sermons →</a></div>${sermonTable(sermons.data)}</section>
+    <details class="panel publication-details"><summary>Publication checklist — separate from delegated review</summary><div class="disclosure-body">
+      <p>${progress.complete} of ${progress.total} records satisfy the existing publication checklist; ${progress.remaining} do not. This is not the private-review count and grants no publication permission.</p>
       <div class="stats-grid compact">
         <article class="stat-card"><span>One speaker</span><strong>${progress.withOneSpeaker}/${progress.total}</strong></article>
         <article class="stat-card"><span>Passage decision reviewed</span><strong>${progress.withRequiredPassageDecision}/${progress.total}</strong></article>
@@ -444,31 +454,9 @@ async function renderDashboard(): Promise<void> {
         <article class="stat-card"><span>Approved transcript</span><strong>${progress.withApprovedTranscript}/${progress.total}</strong></article>
         <article class="stat-card"><span>Approved questions</span><strong>${progress.withRequiredQuestionAnswers}/${progress.total}</strong></article>
         <article class="stat-card"><span>Controlled media</span><strong>${progress.withValidControlledMedia}/${progress.total}</strong></article>
-      </div>
-      <div class="action-row"><a class="button" href="/admin/sermons?contentIssue=missing_speaker" data-route>Find missing speakers</a><a class="button" href="/admin/sermons?contentIssue=missing_description" data-route>Find missing descriptions</a><a class="button" href="/admin/sermons?contentIssue=description_awaiting_review" data-route>Review descriptions</a><a class="button" href="/admin/sermons?contentIssue=missing_transcript" data-route>Find missing transcripts</a><a class="button" href="/admin/sermons?contentIssue=insufficient_questions" data-route>Find missing questions</a></div>
-    </section>
-    <section class="panel" aria-labelledby="pilot-work-queue-heading">
-      <h2 id="pilot-work-queue-heading">Private administrator work queue</h2>
-      <p class="subtle">Content review completion and replacement-launch metadata are shown separately.</p>
-      <ol class="review-queue">${pilotQueue.map((sermon) => {
-        const completed = privateCompletionIsCurrent(sermon);
-        const status = completed && sermon.remainingReview
-          ? "Private review complete · human and AI attribution preserved"
-          : completed && !sermon.readiness.hasRequiredPassageDecision
-          ? "Content reviewed · passage decision required"
-          : completed
-            ? "Content reviewed"
-            : "Administrator review required";
-        return `<li><div><strong>${escapeHtml(sermon.title)}</strong><span>${escapeHtml(status)}</span>${privateReviewStatus(sermon)}</div><a class="button" href="/admin/sermons/${sermon.id}/review" data-route>Open guided review</a></li>`;
-      }).join("")}</ol>
-    </section>
-    <section class="stats-grid" aria-label="Sermon counts by state">
-      ${statuses.map((status) => `<article class="stat-card"><span>${escapeHtml(status)}</span><strong>${sermons.countsByStatus[status]}</strong></article>`).join("")}
-    </section>
-    <div class="grid-two">
-      <section class="panel"><h2>Recently updated</h2><div class="table-wrap"><table class="sermon-table"><thead><tr><th>Sermon</th><th>State</th><th>Service date</th><th>Speaker</th><th>Series</th><th>Primary passage</th><th>YouTube</th><th>Scheduled</th><th>Checklist</th></tr></thead><tbody>${sermonRows(sermons.data)}</tbody></table></div></section>
-      <aside class="panel"><h2>What the states mean</h2><dl>${statuses.map((status) => `<dt><span class="status-pill ${status}">${status}</span></dt><dd>${escapeHtml(stateDescriptions[status])}</dd>`).join("")}</dl><div class="callout"><strong>SEO non-regression is a launch gate.</strong><p>Published slugs retain their paths. Unapproved descriptions, transcripts and questions are never public.</p></div></aside>
-    </div>`;
+      </div><dl class="state-legend">${statuses.map(status => `<dt><span class="status-pill ${status}">${status} · ${sermons.countsByStatus[status]}</span></dt><dd>${escapeHtml(stateDescriptions[status])}</dd>`).join("")}</dl>
+      <p class="subtle">SEO non-regression remains a launch gate. Existing publication controls are unchanged.</p>
+    </div></details>`;
 }
 
 async function loadTaxonomies(): Promise<Record<"speakers" | "series" | "books", Taxonomy[]>> {
@@ -1297,8 +1285,8 @@ async function renderGuidedSermonReview(id: string, readOnlyStage?: number): Pro
     : hasGroundedReplacement && !review.sermon.delegatedReview?.substantiveComplete
       ? '<div class="callout"><strong>Transcript-grounded replacement draft.</strong><p>This private replacement passed automated structure, transcript-binding and grounding checks. It remains unapproved and still requires Samuel’s full editorial, Scripture and theological review.</p></div>'
       : ""}
+  <details class="panel review-evidence-summary"><summary>Saved decisions, attribution &amp; remaining requirements</summary><section class="disclosure-body" aria-label="Private substantive review status">${privateReviewStatus(review.sermon)}</section></details>
   <div class="review-workflow-layout">
-    <section class="panel" aria-label="Private substantive review status">${privateReviewStatus(review.sermon)}</section>
     ${reviewStageNavigation(review)}
     <div class="review-stage-workspace">${reviewStageMarkup(review, taxonomies.speakers, taxonomies.books)}</div>
   </div>`;
@@ -1535,10 +1523,13 @@ async function renderSermonList(): Promise<void> {
   };
   main.innerHTML = `${pageHeading("Sermons", "Search and filter every editorial state. Public endpoints remain published-only.", '<a class="button primary" href="/admin/sermons/new" data-route>New sermon</a>')}
     <section class="panel">
-      <form class="filters" id="sermon-filters" role="search">
+      <form id="sermon-filters" role="search">
+        <div class="filter-primary">
         <label><span>Title or slug</span><input name="query" type="search" value="${escapeHtml(query.get("query") ?? "")}" autocomplete="off" /></label>
         <label><span>State</span><select name="status"><option value="">All states</option>${(["draft","pending","scheduled","published","unpublished","archived"] as SermonStatus[]).map((status) => `<option value="${status}"${query.get("status") === status ? " selected" : ""}>${status}</option>`).join("")}</select></label>
         <label><span>Speaker</span><select name="speakerId">${filterOption(taxonomies.speakers, query.get("speakerId") ?? "", "All speakers")}</select></label>
+        <button class="button primary" type="submit">Search sermons</button></div>
+        <details class="filter-more"${["seriesId", "serviceDateFrom", "serviceDateTo", "contentIssue", "passageBook", "passageReviewState", "passageChapter", "passageVerse", "passageEndVerse"].some(name => query.has(name)) ? " open" : ""}><summary>More filters <span>Series, dates, content and Scripture</span></summary><div class="filters">
         <label><span>Series</span><select name="seriesId">${filterOption(taxonomies.series, query.get("seriesId") ?? "", "All series")}</select></label>
         <label><span>Service date from</span><input name="serviceDateFrom" type="date" value="${escapeHtml(query.get("serviceDateFrom") ?? "")}" /></label>
         <label><span>Service date to</span><input name="serviceDateTo" type="date" value="${escapeHtml(query.get("serviceDateTo") ?? "")}" /></label>
@@ -1573,9 +1564,11 @@ async function renderSermonList(): Promise<void> {
             ].map(([value, label]) => `<option value="${value}"${query.get("passageReviewState") === value ? " selected" : ""}>${label}</option>`).join("")}
           </select></label>
         </div></fieldset>
-        <div class="action-row"><button class="button" type="submit">Apply filters</button><a class="button quiet" href="/admin/sermons?${clearPassageQuery.toString()}" data-route>Clear passage filters</a></div>
+        <div class="action-row wide"><button class="button" type="submit">Apply filters</button><a class="button quiet" href="/admin/sermons?${clearPassageQuery.toString()}" data-route>Clear passage filters</a><a class="button quiet" href="/admin/sermons" data-route>Reset all filters</a></div>
+        </div></details>
       </form>
-      <div class="table-wrap"><table class="sermon-table"><caption class="sr-only">Filtered sermons</caption><thead><tr><th>Sermon</th><th>State</th><th>Service date</th><th>Speaker</th><th>Series</th><th>Primary passage</th><th>YouTube</th><th>Scheduled</th><th>Checklist</th></tr></thead><tbody>${sermonRows(sermons.data)}</tbody></table></div>
+      <div class="section-heading list-heading"><h2>${sermons.pagination.totalItems} matching sermons</h2><span class="subtle">Private review and publication are separate</span></div>
+      ${sermonTable(sermons.data)}
       <div class="pagination"><span class="subtle">${sermons.pagination.totalItems} result${sermons.pagination.totalItems === 1 ? "" : "s"} · Page ${currentPage} of ${Math.max(sermons.pagination.totalPages, 1)}</span><div class="action-row">${currentPage > 1 ? `<a class="button" href="${pageQuery(currentPage - 1)}" data-route>Previous</a>` : ""}${currentPage < sermons.pagination.totalPages ? `<a class="button" href="${pageQuery(currentPage + 1)}" data-route>Next</a>` : ""}</div></div>
     </section>`;
   document.querySelector<HTMLFormElement>("#sermon-filters")?.addEventListener("submit", (event) => {
@@ -1634,6 +1627,12 @@ function questionAnswerRow(item: Partial<EditableQuestionAnswer>, index: number)
   </article>`;
 }
 
+function compactPrivateReviewStatus(sermon: SermonSummary): string {
+  const complete = privateCompletionIsCurrent(sermon);
+  const remaining = remainingPrivateReviewRequirements(sermon);
+  return `<div class="review-summary"><span class="review-badge ${complete ? "accepted" : "attention"}">${complete ? "✓ Private review complete" : "Review outstanding"}</span>${remaining.length ? `<p class="remaining-requirements">${escapeHtml(remaining.join("; "))}</p>` : ""}<details class="review-status-details"><summary>Decisions &amp; attribution</summary>${privateReviewStatus(sermon)}</details></div>`;
+}
+
 function privateReviewStatus(sermon: SermonSummary): string {
   const d=sermon.delegatedReview;
   const complete=d?.substantiveComplete ?? (sermon.readiness.hasApprovedDescription && sermon.readiness.hasRequiredQuestionAnswers);
@@ -1642,6 +1641,10 @@ function privateReviewStatus(sermon: SermonSummary): string {
     : "Substantive review pending";
   const remaining=remainingPrivateReviewRequirements(sermon);
   return `<div class="private-review-status"><strong>${escapeHtml(label)}</strong><small>Current description and individual Q&A only.</small>${d ? `<p>Description: ${escapeHtml(substantiveDecisionLabel(d.description))}. Q&A: ${d.humanApprovedQuestions} human approved; ${d.aiAcceptedQuestions} AI accepted / ${d.questions.length} current pairs.</p>` : ""}${sermon.remainingReview ? `<p>D-157 source review: ${escapeHtml(remainingComponentLabel(sermon.remainingReview,"transcript"))}. ${sermon.remainingReview.privateComplete ? "Private completion is current; human and AI attribution remain separate." : "See the evidence exceptions before completing review."}</p><a href="/admin/remaining-reviews?sermon=${encodeURIComponent(sermon.id)}" data-route>Source-review evidence and exceptions</a>` : ""}<p>${remaining.length ? `Remaining: ${escapeHtml(remaining.join("; "))}.` : "Private review complete."}</p><small>Publication state: ${escapeHtml(sermon.status)}. AI acceptance is not publication approval.</small></div>`;
+}
+
+function sermonTable(sermons: SermonSummary[]): string {
+  return `<div class="table-wrap"><table class="sermon-table"><caption class="sr-only">Sermons and current private review status</caption><thead><tr><th>Sermon</th><th>Primary passage</th><th>Private review</th><th>Publication</th><th>YouTube</th><th>Open</th></tr></thead><tbody>${sermonRows(sermons)}</tbody></table></div>`;
 }
 
 function readinessChecklist(readiness: Readiness | null): string {
@@ -2080,16 +2083,42 @@ async function renderRoute(): Promise<void> {
 
 document.addEventListener("click", (event) => {
   const link = (event.target as Element).closest<HTMLAnchorElement>("a[data-route], nav a");
-  if (!link || link.origin !== location.origin) return;
+  if (!link || link.origin !== location.origin || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
   event.preventDefault();
   void navigate(`${link.pathname}${link.search}`);
 });
 window.addEventListener("popstate", () => { if (confirmDiscard()) { dirty = false; void renderRoute(); } else history.forward(); });
 window.addEventListener("beforeunload", (event) => { if (dirty) event.preventDefault(); });
-menuButton.addEventListener("click", () => {
-  const open = !document.body.classList.contains("nav-open");
+const mobileNavigation = window.matchMedia("(max-width: 800px)");
+const sidebar = document.querySelector<HTMLElement>("#admin-sidebar")!;
+const workspace = document.querySelector<HTMLElement>(".workspace")!;
+const navBackdrop = document.querySelector<HTMLButtonElement>(".nav-backdrop")!;
+
+function setNavigationOpen(requested: boolean, returnFocus = false): void {
+  const open = mobileNavigation.matches && requested;
   document.body.classList.toggle("nav-open", open);
   menuButton.setAttribute("aria-expanded", String(open));
+  navBackdrop.hidden = !open;
+  sidebar.inert = mobileNavigation.matches && !open;
+  workspace.inert = open;
+  if (open) sidebar.querySelector<HTMLAnchorElement>("[aria-current=page], a")?.focus();
+  else if (returnFocus) menuButton.focus();
+}
+
+menuButton.addEventListener("click", () => setNavigationOpen(!document.body.classList.contains("nav-open")));
+navBackdrop.addEventListener("click", () => setNavigationOpen(false, true));
+mobileNavigation.addEventListener("change", () => setNavigationOpen(false));
+document.addEventListener("keydown", event => {
+  if (!document.body.classList.contains("nav-open")) return;
+  if (event.key === "Escape") { event.preventDefault(); setNavigationOpen(false, true); }
+  if (event.key === "Tab") {
+    const links = [...sidebar.querySelectorAll<HTMLAnchorElement>("a[href]")];
+    const first = links[0];
+    const last = links.at(-1);
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+  }
 });
+setNavigationOpen(false);
 
 void renderRoute();
