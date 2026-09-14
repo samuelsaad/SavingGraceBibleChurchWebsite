@@ -29,8 +29,12 @@ run on the sealed EC2 before any real dump is restored; do not claim a local Doc
 
 ## Network, authentication and secrets
 
-Compose exposes only `127.0.0.1:8080` on EC2. PostgreSQL has no host port. Both use an
-internal network; nothing is routed to the public internet. No AWS firewall, DNS,
+The existing OS socket proxy exposes only `127.0.0.1:8080` on EC2. Neither container
+has a published host port. Both use only an internal network. Docker does not
+publish ports for an internal-only container, so the exact root-owned systemd unit
+templates bridge host loopback to a verified fixed internal application address.
+The proxy uses a dynamic unprivileged OS identity, not an application authenticator.
+This also avoids relying on pre-28 Docker's localhost NAT isolation. No AWS firewall, DNS,
 80/443 exposure or authentication-provider configuration is performed here.
 
 The dedicated production-mode entry point rejects development identity settings,
@@ -51,7 +55,13 @@ Secret files are readable only by root and the intended container UID; do not pu
 passwords into Compose environment values, command arguments or image layers.
 
 The environment file contains only these names: `APP_IMAGE`, `POSTGRES_IMAGE`,
-`RELEASE_COMMIT`, `DATABASE_VOLUME`, `SECRET_DIRECTORY`, `VERIFICATION_DIRECTORY`.
+`RELEASE_COMMIT`, `DATABASE_VOLUME`, `SECRET_DIRECTORY`, `VERIFICATION_DIRECTORY`,
+`PRIVATE_SUBNET`, `APP_PRIVATE_ADDRESS`. Select the latter two only from the verified
+existing Docker-private subnet with a collision-free reserved address; do not log them.
+Install the exact `savinggrace-staging.socket` template and the service template
+with only `@APP_PRIVATE_ADDRESS@` substituted into `/etc/systemd/system/`. Verify
+the proxy binary exists, unit ownership/modes and `systemd-analyze verify` before
+enabling the socket. The restore guard compares both units against release bytes.
 Pin image digests/IDs and the exact source commit. The reader role receives SELECT
 and schema usage only; it has no ownership, DML, DDL, publication or review authority.
 App limit: one CPU/768 MiB; DB: one CPU/1536 MiB. Logs rotate, both restart unless
@@ -78,6 +88,7 @@ docker compose --env-file "$ENV" -f deployment/compose.yaml up -d db
 python3 deployment/restore.py --environment "$ENV" --dump "$DUMP" --snapshot "$SNAPSHOT"
 # Grant the separately generated staging_reader role SELECT-only privileges.
 docker compose --env-file "$ENV" -f deployment/compose.yaml up -d app
+systemctl enable --now savinggrace-staging.socket
 docker compose --env-file "$ENV" -f deployment/compose.yaml ps
 curl --fail http://127.0.0.1:8080/health/ready
 ```
@@ -92,10 +103,12 @@ no pending migration; any future mismatch fails closed for a matching-release pl
 ## Rollback rehearsal and recovery
 
 Preserve the verified original named volume, dump, snapshot, environment and exact
-application image. Stop only this Compose candidate (`stop app`, then `stop db`).
+application image. Stop its socket/proxy units, then only this Compose candidate
+(`stop app`, then `stop db`).
 Create a separate environment file selecting a new, empty versioned recovery
 volume; preserve all other release coordinates. Run `up -d db`, the guarded restore,
-SELECT-only reader grants and `up -d app` against that recovery volume. Reconcile
+SELECT-only reader grants and `up -d app` against that recovery volume. Restart the
+exact loopback socket unit and reconcile
 the same fingerprints/counts, restart both containers and repeat readiness and
 anonymous denial tests. Never run `down -v` or delete the only valid backup/volume.
 For the first deployment there is no older application release; this rehearses
@@ -110,3 +123,9 @@ Sources: [AWS Docker on AL2023](https://docs.aws.amazon.com/AmazonECS/latest/dev
 [official Compose installation](https://docs.docker.com/compose/install/linux/),
 [PostgreSQL 16 pg_dump](https://www.postgresql.org/docs/16/app-pgdump.html),
 [PostgreSQL 16 pg_restore](https://www.postgresql.org/docs/16/app-pgrestore.html).
+
+The internal-only publishing behavior is documented in the
+[Docker Engine project](https://github.com/moby/moby/issues/44986); the historical
+localhost NAT limitation is described in [Docker port publishing](https://docs.docker.com/engine/network/port-publishing/).
+Run `python -B tests/staging_network_test.py` for the anonymized fail-closed proxy
+and private-network contract tests.

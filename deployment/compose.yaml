@@ -32,8 +32,11 @@ services:
       DB_NAME: savinggrace_staging
       RELEASE_COMMIT: ${RELEASE_COMMIT:?exact commit required}
     secrets: [db_reader_password]
-    ports: ['127.0.0.1:8080:8080']
-    networks: [private]
+    # Internal-only Docker networks do not implement published host ports.
+    # The separately guarded systemd socket proxy binds host loopback only.
+    networks:
+      private:
+        ipv4_address: ${APP_PRIVATE_ADDRESS:?verified internal application address required}
     depends_on:
       db: {condition: service_healthy}
     restart: unless-stopped
@@ -68,6 +71,9 @@ services:
 networks:
   private:
     internal: true
+    ipam:
+      config:
+        - subnet: ${PRIVATE_SUBNET:?verified private Docker subnet required}
 volumes:
   postgres-data:
     name: ${DATABASE_VOLUME:?explicit versioned volume required}

@@ -1,0 +1,9 @@
+[Unit]
+Description=Sealed staging loopback socket
+
+[Socket]
+ListenStream=127.0.0.1:8080
+NoDelay=true
+
+[Install]
+WantedBy=sockets.target

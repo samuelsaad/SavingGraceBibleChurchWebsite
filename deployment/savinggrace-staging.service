@@ -1,0 +1,15 @@
+[Unit]
+Description=Sealed staging internal socket proxy
+Requires=savinggrace-staging.socket
+After=docker.service
+
+[Service]
+ExecStart=/usr/lib/systemd/systemd-socket-proxyd @APP_PRIVATE_ADDRESS@:8080
+DynamicUser=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+RestrictAddressFamilies=AF_INET
+CapabilityBoundingSet=
+Restart=on-failure

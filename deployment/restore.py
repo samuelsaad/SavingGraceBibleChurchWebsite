@@ -5,6 +5,7 @@ Run from the exact release directory as root, with absolute --environment,
 """
 import argparse
 import hashlib
+import ipaddress
 import json
 import os
 import pathlib
@@ -18,6 +19,26 @@ def run(command, *, data=None):
     if result.returncode:
         raise RuntimeError("guarded_restore_command_failed")
     return result.stdout
+
+
+def verify_network(config, socket_text, service_text, release):
+    if config["services"]["db"].get("ports"):
+        raise RuntimeError("database_port_exposure_refused")
+    if not config["networks"]["private"].get("internal"):
+        raise RuntimeError("nonprivate_network_refused")
+    for name in ("app", "db", "maintenance"):
+        if set(config["services"][name]["networks"]) != {"private"}:
+            raise RuntimeError("nonprivate_network_refused")
+    if config["services"]["app"].get("ports"):
+        raise RuntimeError("application_port_exposure_refused")
+    address = ipaddress.IPv4Address(config["services"]["app"]["networks"]["private"]["ipv4_address"])
+    subnet = ipaddress.IPv4Network(config["networks"]["private"]["ipam"]["config"][0]["subnet"])
+    if not address.is_private or address.is_loopback or address not in subnet:
+        raise RuntimeError("application_port_exposure_refused")
+    expected_socket = (release / "deployment/savinggrace-staging.socket").read_text()
+    expected_service = (release / "deployment/savinggrace-staging.service").read_text().replace("@APP_PRIVATE_ADDRESS@", str(address))
+    if socket_text != expected_socket or service_text != expected_service:
+        raise RuntimeError("loopback_proxy_configuration_refused")
 
 
 def main():
@@ -42,13 +63,11 @@ def main():
         raise RuntimeError("restore_dump_hash_mismatch")
     compose = ["docker", "compose", "--env-file", str(environment), "-f", "deployment/compose.yaml"]
     config = json.loads(run(compose + ["config", "--format", "json"]))
-    if config["services"]["db"].get("ports"):
-        raise RuntimeError("database_port_exposure_refused")
-    if not config["networks"]["private"].get("internal"):
-        raise RuntimeError("nonprivate_network_refused")
-    ports = config["services"]["app"].get("ports", [])
-    if len(ports) != 1 or ports[0].get("host_ip") != "127.0.0.1" or str(ports[0].get("published")) != "8080":
-        raise RuntimeError("application_port_exposure_refused")
+    units = [pathlib.Path("/etc/systemd/system/savinggrace-staging." + suffix) for suffix in ("socket", "service")]
+    for unit in units:
+        if unit.is_symlink() or not unit.is_file() or unit.stat().st_uid != 0 or stat.S_IMODE(unit.stat().st_mode) & 0o022:
+            raise RuntimeError("loopback_proxy_configuration_refused")
+    verify_network(config, *(unit.read_text() for unit in units), release)
     running = run(compose + ["ps", "--status", "running", "--services"]).decode().splitlines()
     if "app" in running:
         raise RuntimeError("stop_candidate_before_restore")
@@ -75,7 +94,7 @@ if __name__ == "__main__":
         if known not in {"guarded_restore_command_failed", "restore_private_path_refused",
             "restore_private_permissions_refused", "restore_dump_hash_mismatch", "database_port_exposure_refused",
             "nonprivate_network_refused", "application_port_exposure_refused", "stop_candidate_before_restore",
-            "atomic_restore_failed", "restore_fingerprint_mismatch"}:
+            "atomic_restore_failed", "restore_fingerprint_mismatch", "loopback_proxy_configuration_refused"}:
             known = "guarded_restore_failed"
         print(json.dumps({"status": "failed", "code": known}), file=sys.stderr)
         sys.exit(1)
