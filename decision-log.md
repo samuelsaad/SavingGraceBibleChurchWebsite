@@ -469,6 +469,15 @@ Authentication implementation remains a separate task. The implementation and
 delivery evidence are recorded in `restricted-acceptance-plan.md` and the validation
 plan; authorization alone is not evidence of application or successful verification.
 
+Application evidence (14 September 2026): safe implementation commit
+`e2b13990042ec5808b3265e825f1b6f6069daa6f`, followed by packaging correction
+`c08b044b1f1ba14344ad05a068c4ed32ca8b99ca`, was applied to both authorized
+environments after independent protected backups. Both accepted 144 and excluded
+11; identical replays returned 144 unchanged. Original evidence/content preservation
+passed independently. Actual fail-closed application recovery retained the complete
+database fingerprint and history. There is no new production, internet, sign-in,
+substantive-review or semantic authority. Final verification is recorded separately.
+
 ### D-157 — Evidence-based remaining private review of the existing collection
 
 Samuel delegates the remaining identity, explicit-source speaker, individual

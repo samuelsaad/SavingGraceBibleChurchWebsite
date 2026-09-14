@@ -5,19 +5,35 @@
 
 ## Authority and current checkpoint
 
-### D-158 acceptance implementation in progress
+### D-158 acceptance and ordinary frontend delivery complete
 
-Samuel's post-rejection authority explicitly permits migration 0019 and separate
-manifest-bound bulk acceptance of the reconciled 144 completed records in local
-loopback and the existing sealed staging deployment. Eleven unresolved records
-remain excluded. Original human/AI reviews and content must not be rewritten.
-See `restricted-acceptance-plan.md` and D-158 for the exact scope, fresh-backup
-gate, UTC-versus-legacy timestamp fix, append-only withdrawal and history-preserving
-application recovery. Implementation is not yet delivery evidence: real migration,
-acceptance and ordinary frontend verification are pending at this checkpoint.
-Normal authentication and internet exposure remain unauthorized.
+Migration `0019_restricted_bulk_acceptance` and the exact manifest-bound operation
+have been applied independently to local loopback PostgreSQL and sealed staging.
+Both contain 144 separately recorded Samuel bulk acceptances; identical reruns
+returned 144 unchanged and made no further writes. Eleven unresolved sermons
+remain draft, excluded and byte-for-byte unchanged. Independent preservation
+fingerprints passed for original content, metadata, human/AI reviews and audit
+history. The known local navigation-only difference was retained, not synchronized.
 
-### Isolated sealed-staging integration
+Implementation commit: `e2b13990042ec5808b3265e825f1b6f6069daa6f`.
+Packaging correction and running application: `c08b044b1f1ba14344ad05a068c4ed32ca8b99ca`.
+The ordinary accepted frontend is `http://127.0.0.1:4381/` locally and
+`http://127.0.0.1:4380/` through the strictly pinned staging SSH tunnel. Neither
+requires administrator sign-in; administrator/private-preview routes remain
+disabled in these servers. Existing local review/creative servers are preserved.
+Staging still has no public application/database port. Sign-in is a separate task.
+
+See `restricted-acceptance-plan.md` and `deployment/STATUS.md` for exact hashes,
+protected independent backups, deterministic UTC versus legacy Sydney validation,
+append-only withdrawal and the completed history-preserving app recovery rehearsal.
+The full PostgreSQL suite passed 736 tests with zero skips. All acceptance and
+publication-state changes are confined to D-158's restricted environments; this
+does not authorize production or public-internet publication. Actual browsers
+verified all 144 detail pages and all 11 exclusions independently in each environment,
+including ordered content, discovery/search, pagination, refresh and responsive
+layouts. No screenshots, external requests or browser mutations occurred.
+
+### Prior isolated sealed-staging integration (before D-158 acceptance)
 
 **Sealed staging is running:** following Samuel's direct post-rejection
 authorization, integrated commit `c36202ddbf14eb5376edc97472c22e0d396dc941` was

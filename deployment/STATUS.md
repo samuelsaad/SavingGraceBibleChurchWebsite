@@ -1,6 +1,109 @@
 # Sealed staging release: deployed and recovery verified
 
-## Current completion — 14 September 2026
+## D-158 restricted acceptance — 14 September 2026
+
+The following supersedes the initial deployment's zero-publication totals below.
+Samuel separately authorized migration 0019 and bulk acceptance/publication-state
+changes for 144 completed sermons in local loopback and sealed staging only.
+Eleven unresolved sermons remain unchanged and unavailable. This is not production
+publication, public-internet exposure or implementation of administrator sign-in.
+
+### Running release and protected artifacts
+
+- Safe implementation: `e2b13990042ec5808b3265e825f1b6f6069daa6f`.
+- Packaging correction/running code: `c08b044b1f1ba14344ad05a068c4ed32ca8b99ca`.
+- Image ID: `sha256:21d2f747dd2f382a2b4cd157361cecf9f79ef9e695317c18d64fc07545ac47f8`.
+- Image size: 231,922,055 bytes.
+- Preserved image archive: 237,320,192 bytes;
+  SHA-256 `b2b0acaaa862f17a3007d27e8e314bd214182c58429969b51115d8c3959ba0ca`.
+- Verified release package: 119 safe paths;
+  SHA-256 `dbe3d5c959bcdec8b27eb376a62c0a5a7552c11e74d7a55e5ec4a2ef03ba0089`.
+- Server bundle SHA-256: `67c0ee84517f1242a32c98d2c55e9cceb826e4b90a1ee79172ad06374f808a7e`.
+- Database bundle SHA-256: `3bf8d2e547626dde0a9fc5dba9e75446d598c75862573dc67930d51a6da1cdce`.
+- Exact manifest SHA-256: `4759449bbbaed97238968d2fd4621d4137b8b4e41b73a20aeda319dc1212617c`.
+- Fresh local logical backup: 3,631,563 bytes;
+  SHA-256 `35a3c8f8a3afad1b0076ea633b7257343d97b905e8a2d63bcb60b927a9cfa8ff`.
+- Fresh staging logical backup: 3,631,321 bytes;
+  SHA-256 `d950f4b6e184fae281ee0a49033ab201359e9cda0d065dd47e47d7fac39c642c`.
+
+Both protected custom-format backups were created and independently list/hash
+verified before mutation. Existing dumps, volumes, images, failed-build package
+and verification history were retained. Neither database was replaced wholesale.
+The two previously excluded pure validator modules were the only Docker-context
+change needed after the first build failed; the corrected package built successfully.
+The running application does not mount a backup, manifest or verification directory.
+
+### Independent database reconciliation
+
+Both databases applied only `0019_restricted_bulk_acceptance`, accepted exactly
+144 records and returned 144 unchanged on the identical second operation. Both
+contain 155 sermons/transcripts/descriptions, 1,084 Q&A, 1,121 D-156 decisions,
+847 D-157 components, 132 AI completions, 12 human completions, 144 publication
+timestamps and 11 unchanged draft/unpublished records. Historical human approvals
+were not manufactured or replaced. Separate bulk authority and system execution
+are recorded with `manual_review_claimed=false`.
+
+| Integrity check | Local | Sealed staging |
+|---|---|---|
+| Post-acceptance full fingerprint | `384c17e7c787391ffd6ef2d45c31d56df9db68d40d4de8c4fe4832e219044601` | `9a6bd12d804fde25e4597c6b9dc64d4b52f68b61a94e1f1be91178271934226f` |
+| Unchanged-content/history projection | `e1c2a7b46dcc4caa87e50af14ed19a80482c12691ea1b3b7575a05e95f387475` | `1b66cab838f4557558327c68c1ab520d618ebe8ca2772ff2493d27152c714754` |
+
+Each preservation projection exactly matches its own pre-change evidence, including
+all 11 excluded rows. The pre-existing local navigation-only difference remains;
+these two databases are deliberately not claimed to be byte-identical.
+
+### Recovery, security and verification
+
+Actual app-only recovery temporarily enabled the fail-closed switch: ordinary
+routes returned 503 and private routes stayed 401. Restoring the same compatible
+image/configuration returned ordinary routes to 200. The complete staging database
+fingerprint stayed identical throughout. No real acceptance was withdrawn and no
+history, trigger or current volume was removed. Disposable tests separately prove
+audited withdrawal/replay and intentional refusal of destructive schema down after
+receipts. A refused down migration is not described as a successful rollback.
+
+Standard tests passed 623 with 113 database-gated skips. The complete guarded real
+PostgreSQL suite passed all 736 tests with zero skips; its disposable database was
+removed. Production build, type/Astro checks (zero errors/warnings), anonymized dry
+run, offline dependency audit and seven network tests passed. Actual browser
+verification passed independently in both environments: all 144 detail pages with
+rendered descriptions, complete transcripts and Q&A order matched the database;
+all 16 archive pages reconciled to the exact manifest. Landing/recent discovery,
+keyword search, speaker/series/book filters, structured passage search, refresh,
+three responsive widths and all 11 direct/API/search exclusions passed. There
+were zero page errors, external requests, mutations or screenshots. Browser
+processes were closed after verification; the requested servers/tunnel remain up.
+Feed routes remain 404, robots disallows indexing, and the existing restricted
+sitemap policy returns only the archive entry and no sermon entries. It was not
+weakened to advertise restricted records. Both exposed local listeners are exactly
+loopback; external probes could reach neither staging application nor PostgreSQL.
+
+Two healthy containers retain `unless-stopped` restart policies. The network is
+internal, Docker publishes zero ports, and the only app proxy listens on host
+loopback. PostgreSQL has no host listener. The application remains non-root with
+read-only filesystem and exactly one protected reader-secret bind mount; the
+allowed temporary filesystem is separate. The database reader has zero table-write
+privileges, is not superuser and cannot create schema objects. Forged development
+identity requests remain denied on all three private route families. No AWS,
+firewall, domain, HTTPS or public-network configuration was changed.
+
+Image scanning traversed nine layers, 5,809 regular files and 40 application files.
+No project credential or prohibited application artifact was found. Nine known
+GnuTLS fixture patterns retain the previously verified official-base hash. Six
+additional broad-pattern matches were individually reconciled to byte-identical
+pinned official Node base files: two binary string-pattern collisions and four npm
+documentation/definition placeholder headers with no complete key. No matched bytes
+were exposed. The read-only comparison container had no network and was removed.
+Source/build scanning found zero new private identities/prose/credential findings
+against all 155 records and 1,092,303 protected eight-word shingles.
+
+Ordinary accepted frontend URLs: `http://127.0.0.1:4381/` locally and
+`http://127.0.0.1:4380/` through the pinned SSH tunnel. No administrator sign-in is
+needed for these restricted visitor routes. Remote admin and private-preview
+routes intentionally remain disabled. Existing local review/creative servers and
+their original worktree diffs are preserved. Sign-in remains the next separate task.
+
+## Prior initial deployment completion — 14 September 2026
 
 Samuel's direct post-rejection authorization permitted the deployment. The remote
 blocks recorded below are historical, not outstanding. The sealed application and

@@ -2,12 +2,14 @@
 
 ## D-158 restricted acceptance
 
-The bounded local/sealed-staging acceptance implementation is described in
-`restricted-acceptance-plan.md`. It records Samuel's bulk authority separately
-from preserved human/AI evidence, retains unresolved sermons outside the frontend,
-and adds history-preserving withdrawal and application recovery. It does not
-implement sign-in or authorize production/public-network exposure. Real delivery
-and verification status must be read from the handover and validation plan.
+Both authorized databases now contain 144 D-158 bulk acceptances and 11 unchanged,
+excluded drafts. Original human/AI evidence remains separate. Read
+`restricted-acceptance-plan.md` for freshness, audited withdrawal and
+history-preserving recovery, and the handover/validation plan for delivery checks.
+The ordinary frontend is `http://127.0.0.1:4381/` locally and
+`http://127.0.0.1:4380/` through the sealed staging SSH tunnel. It does not require
+administrator sign-in. Remote admin/private-preview access stays disabled; real
+sign-in and production/public-network exposure remain separately scoped work.
 
 ## Sealed staging candidate
 
@@ -23,7 +25,9 @@ The current D-157 private exceptions queue is
 server is running. All 155 existing records were assessed: 144 private reviews
 are complete (132 AI, 12 preserved human) and 11 have specific evidence exceptions.
 AI acceptance is explicit and version-bound, never a manufactured human approval.
-All content remains private; publication and semantic eligibility are unchanged.
+All content remains restricted to the authorized environments. D-158 separately
+records bulk acceptance and publication-state changes for the 144 completed records;
+it does not rewrite these D-157 review decisions or authorize semantic processing.
 Use [the remaining review plan](remaining-private-review-plan.md) for outcomes,
 source limitations, preservation and verification. This is the existing authorised
 development identity, not personal sign-in. D-155 remains closed.

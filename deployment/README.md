@@ -1,8 +1,10 @@
 # Sealed staging release
 
 This deployment is authorized only for the separately identified staging EC2
-instance. It is not production, publication, a replacement authenticator or a
-permission to change AWS networking. Existing local review servers are unchanged.
+instance. It is not production, public-internet publication, a replacement
+authenticator or permission to change AWS networking. D-158 separately permits
+restricted frontend acceptance of exactly 144 completed sermons. Existing local
+review servers are unchanged.
 
 ## Integrated release and verification
 
@@ -13,9 +15,9 @@ navigation and Bible-book-tab refinements. Both original worktrees are preserved
 Normal human publication requirements remain separate from D-157 private completion.
 
 The verified deployed application is commit
-`f9615104e80b03f46bfff758e9669003a3a0c5cf`, including narrow packaging corrections
-after the integration commit. See `STATUS.md` for exact image/archive/dump hashes,
-the completed real restore and recovery rehearsal, and the final test evidence.
+`c08b044b1f1ba14344ad05a068c4ed32ca8b99ca`, including D-158 and its narrow
+packaging correction. See `STATUS.md` for exact image/archive/dump hashes,
+the initial restore, history-preserving D-158 recovery and final test evidence.
 Later documentation-only commits do not change the deployed image. The verified
 snapshot does not include one subsequent local review-navigation update; never
 overwrite that later local progress or describe this as live replication.
@@ -50,8 +52,9 @@ uses a non-superuser read-only database role, and permanently denies admin/priva
 preview endpoints for this sealed release. An SSH tunnel is transport protection,
 not an authenticated administrator session. Those routes remain disabled until
 a separately approved real authentication provider and HTTPS design are implemented.
-Readiness checks the actual target, read-only role, all 18 migration checksums and
-absence of any publication timestamp. Responses are no-store/noindex. Local
+Readiness checks the actual target, read-only role, all 19 migration checksums and
+the D-158 manifest-bound publication boundary. The 11 excluded records must remain
+unpublished. Responses are no-store/noindex. Local
 development authentication is neither packaged nor enabled in this runtime.
 
 Use Amazon Linux's supported Docker package installation, not a third-party shell
@@ -107,8 +110,12 @@ The restore entry point checks empty target, fixed database identity, private
 network/ports, secret-file permissions and dump hash before streaming the dump to
 `pg_restore --single-transaction --exit-on-error --no-owner --no-acl`. It verifies
 all table/sequence fingerprints and migration checksums afterward. Do not replay
-0001–0018: the dump already contains their schema and ledger. This release has
-no pending migration; any future mismatch fails closed for a matching-release plan.
+migrations already present in the verified dump's schema and ledger. The initial
+deployment restored 0001–0018; D-158 then applied only authorized migration 0019
+against protected current backups, without replacing the database. The running
+release requires 0001–0019 and has no pending migration. Any future mismatch fails
+closed for a matching-release plan. After acceptance history exists, use the
+history-preserving recovery below rather than restoring an older dump over it.
 
 ## Rollback rehearsal and recovery
 

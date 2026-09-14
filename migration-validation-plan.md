@@ -1,6 +1,37 @@
 # Migration Validation Plan
 
-## D-158 restricted acceptance — pre-application verification
+## D-158 restricted acceptance — actual application and verification
+
+Migration 0019 and the exact manifest-bound acceptance were applied independently
+to both authorized databases after fresh protected logical backups. Each accepted
+144; each identical replay returned 144 unchanged with no content, version,
+timestamp or audit churn. Eleven excluded rows and the independent original-content/
+history fingerprints remain unchanged. Exact release/image/backup and database
+hashes are in `deployment/STATUS.md`.
+
+The compatible application recovery rehearsal returned ordinary routes to 503,
+then 200, while private routes stayed 401 and the full staging database fingerprint
+never changed. No real withdrawal or destructive rollback was performed.
+Latest standard suite: 623 passed and 113 gated skips. Separate complete real
+PostgreSQL suite: 736 passed, zero skips, disposable database removed. Type/Astro
+checks have zero errors/warnings (one style hint in an ignored browser helper),
+production build and cached offline dependency audit passed. Each completed local
+and staging browser pass inspected all 144 detail pages and ordered content, all 16 archive
+pages, three discovery filters, keyword/passage search, refresh, all 11 exclusions,
+three responsive widths and private-route denial with zero external requests,
+mutations, screenshots or page errors. Both environments passed independently.
+Feed routes remain unavailable and the restricted sitemap intentionally omits all
+sermon entries; ordinary visitor visibility does not authorize indexing. Actual
+external probes could reach neither staging application nor database. Final
+image-layer findings were reconciled to exact official-base files; no project
+secret or private artifact was included. All original worktree hashes remain intact.
+
+The exhaustive browser harness initially treated the discovery landing as the
+first full results page. Inspection confirmed its intended three-recent-sermon
+view; the corrected check follows the existing `view=recent` Browse-all route.
+No frontend design or sermon was changed to satisfy that test.
+
+### Preserved pre-application evidence
 
 Exact manifest and authority: see `restricted-acceptance-plan.md` and decision
 D-158. Migration 0019 is additive; original migrations retain their bytes and
