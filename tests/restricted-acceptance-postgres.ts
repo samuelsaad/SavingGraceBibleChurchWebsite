@@ -17,6 +17,9 @@ import { PostgresAdminSermonRepository } from "../src/server/repositories/postgr
 import { publicSermonListQuerySchema } from "../src/api/contracts/public-sermons";
 import { withLegacyReviewTimezone } from "../src/application/legacy-review-timezone";
 import { applyRestrictedAcceptanceSchema } from "../src/application/restricted-acceptance-schema";
+import { applyTopicalClassification } from "../src/application/topical-classification-service";
+import { topicalAuthorization, topicalManifestHash, topicalNamespace } from "../src/domain/topical-classification";
+import { topicalPreservationFingerprint } from "../src/application/topical-classification-command";
 const id="99999999-9999-4999-8999-999999999156",migration="0019_restricted_bulk_acceptance",slug="delegated-review-anonymised-fixture";
 type RunSchema=(direction:"apply"|"rollback",scope?:SchemaMigrationScope)=>Promise<unknown>;
 export function registerRestrictedAcceptancePostgresTests(getPool:()=>Pool,runSchema:RunSchema) {
@@ -58,6 +61,45 @@ export function registerRestrictedAcceptancePostgresTests(getPool:()=>Pool,runSc
   // Test-only SQL literal projection. Production has no configurable manifest
   // override and never admits this invented fixture's different canonical hash.
   const fixtureRepository=(p:Pool,hash:string)=>new PostgresSermonRepository({query:(sql:string,args:unknown[])=>p.query(sql.replaceAll(restrictedAcceptanceManifest,hash),args)} as unknown as Pool,"restricted_accepted");
+  const topicalManifest = () => ({version:1,authorization:topicalAuthorization,sourceAcceptanceManifest:restrictedAcceptanceManifest,sermonIds:[id]});
+  const topicalRepository = (p:Pool,hash:string) => new PostgresSermonRepository({query:(sql:string,args:unknown[])=>p.query(
+    sql.replaceAll(restrictedAcceptanceManifest,hash).replaceAll(topicalManifestHash,remainingDependencyHash(topicalManifest())),args)} as unknown as Pool,"restricted_accepted");
+  it("persists only Samuel's explicit topical extension/audit, preserving all content and immutable acceptance, with idempotent discovery",async()=>fixture(async(p,m)=>{
+    await applyRestrictedAcceptance(p,m,"local_loopback");
+    const before=await snapshot(p,["sermon_extensions","audit_events"]);
+    const c=await p.connect();let preserved;
+    try {await c.query("BEGIN READ ONLY");preserved=(await topicalPreservationFingerprint(c,[id])).sha256;}finally{await c.query("ROLLBACK");c.release();}
+    const protect=async(client:typeof c)=>{expect((await topicalPreservationFingerprint(client,[id])).sha256).toBe(preserved);};
+    expect((await applyTopicalClassification(p,topicalManifest(),"local_loopback",protect)).inserted).toBe(1);
+    expect(await snapshot(p,["sermon_extensions","audit_events"])).toEqual(before);
+    const after=await snapshot(p);expect((await applyTopicalClassification(p,topicalManifest(),"local_loopback",protect)).outcome).toBe("unchanged");expect(await snapshot(p)).toEqual(after);
+    const repo=topicalRepository(p,remainingDependencyHash(m));
+    expect((await repo.listPublishedTopicalSermons()).map(s=>s.id)).toEqual([id]);
+    expect((await repo.listPublished(publicSermonListQuerySchema.parse({}))).data[0]!.isTopical).toBe(true);
+    expect((await repo.findPublishedBySlug(slug))!.isTopical).toBe(true);
+    expect((await repo.findPublishedBySlug(slug))!.books).toEqual([]);
+    expect(await new PostgresSermonRepository(p).listPublishedTopicalSermons()).toEqual([]);
+    const payload=(await p.query("SELECT payload FROM sermon_extensions WHERE sermon_id=$1 AND namespace=$2",[id,topicalNamespace])).rows[0].payload;
+    expect(payload.authorizedBy).toBe("samuel-saad-editorial-authorization");expect(payload.source).toBe("samuel_editorial_decision");expect(payload.manualContentReviewClaimed).toBe(false);
+  }));
+  it("does not infer topical from absence of a book or accept a primary-book sermon",async()=>fixture(async(p,m)=>{
+    await applyRestrictedAcceptance(p,m,"local_loopback");const repo=topicalRepository(p,remainingDependencyHash(m));
+    expect(await repo.listPublishedTopicalSermons()).toEqual([]);const before=await snapshot(p);
+    await expect(applyTopicalClassification(p,topicalManifest(),"local_loopback")).rejects.toThrow("topical_scope_conflict");expect(await snapshot(p)).toEqual(before);
+  },true));
+  it.each(["changed_dependency","missing_audit","modified_payload"])("rejects stale or unaudited topical evidence: %s",async(kind)=>fixture(async(p,m)=>{
+    await applyRestrictedAcceptance(p,m,"local_loopback");await applyTopicalClassification(p,topicalManifest(),"local_loopback");
+    if(kind==="changed_dependency")await p.query("UPDATE sermons SET row_version=row_version+1 WHERE id=$1",[id]);
+    if(kind==="missing_audit")await p.query("DELETE FROM audit_events WHERE entity_id=$1 AND action='sermon.website.topical_classification'",[id]);
+    if(kind==="modified_payload")await p.query("UPDATE sermon_extensions SET payload=payload||'{\"source\":\"invented\"}'::jsonb WHERE sermon_id=$1 AND namespace=$2",[id,topicalNamespace]);
+    expect(await topicalRepository(p,remainingDependencyHash(m)).listPublishedTopicalSermons()).toEqual([]);
+    const before=await snapshot(p);await expect(applyTopicalClassification(p,topicalManifest(),"local_loopback")).rejects.toThrow();expect(await snapshot(p)).toEqual(before);
+  }));
+  it("rolls back the complete classification transaction if preservation fails after insert",async()=>fixture(async(p,m)=>{
+    await applyRestrictedAcceptance(p,m,"local_loopback");const before=await snapshot(p);let calls=0;
+    await expect(applyTopicalClassification(p,topicalManifest(),"local_loopback",async()=>{if(++calls===2)throw new Error("topical_original_record_conflict");})).rejects.toThrow();
+    expect(calls).toBe(2);expect(await snapshot(p)).toEqual(before);
+  }));
   it("projects accepted primary books without legacy mappings and reconciles counts, alias filters, pagination and stale exclusion",async()=>fixture(async(p,m)=>{
     await applyRestrictedAcceptance(p,m,"local_loopback");
     const repo=fixtureRepository(p,remainingDependencyHash(m));

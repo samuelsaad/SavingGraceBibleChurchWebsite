@@ -2,6 +2,7 @@ import type { PublicSermonListQuery } from "../../api/contracts/public-sermons";
 import { bibleBookBySlug, resolveBibleBook } from "../../domain/bible-passage";
 import { previewDatasetSourceStatus } from "../../domain/development-seed-source";
 import { restrictedEligibilitySql } from "../../domain/restricted-acceptance";
+import { topicalClassificationSql } from "../../domain/topical-classification";
 
 export interface ParameterizedQuery {
   text: string;
@@ -242,6 +243,7 @@ function buildPublishedConditions(
 
 export function publicRelationshipProjection(alias = "s", scope: FrontendSermonScope = "public"): string {
   return `
+  ${scope === "restricted_accepted" ? topicalClassificationSql(alias) : "false"} AS is_topical,
   (
     SELECT jsonb_build_object('name', sp.name, 'slug', sp.slug)
     FROM speakers sp
@@ -389,6 +391,14 @@ export function buildPublishedSermonCountQuery(
     `.trim(),
     values: state.values
   };
+}
+
+export function buildPublishedTopicalSermonsQuery(scope: FrontendSermonScope): ParameterizedQuery {
+  return { text: `SELECT s.id,s.title,s.slug,to_char(s.service_date,'YYYY-MM-DD') AS service_date,
+    s.summary,${publicRelationshipProjection("s", scope)} FROM sermons s
+    WHERE ${frontendSermonEligibilitySql("s", scope)}
+      AND ${scope === "restricted_accepted" ? topicalClassificationSql("s") : "false"}
+    ORDER BY s.service_date DESC,s.id`, values: [] };
 }
 
 export function buildPublishedSeriesRepresentativesQuery(

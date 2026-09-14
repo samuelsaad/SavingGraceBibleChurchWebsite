@@ -430,6 +430,16 @@ Use a separate immutable, version/source/policy-bound AI review record, explicit
 
 ### D-158 — Manifest-bound bulk acceptance in local and sealed staging only
 
+**Editorial follow-up, 14 September 2026:** Samuel separately classifies exactly
+nine accepted no-single-primary sermons as Topical, bound to private manifest
+`b1016476118bb3029a42658c78cc38e97897970b6adc553511f7cae06c7f8b56`.
+Use the existing versioned, allowlisted extension relation and audited system
+execution of Samuel's written decision, not fabricated source facts or a new
+substantive review. Preserve all original D-158 receipts and freshness predicates;
+bind the classification to their current dependency hash. No migration or change
+to the ordinary publication gate is required. See `topical-classification-plan.md`
+for exact transactional, backup, preservation and verification requirements.
+
 Samuel explicitly authorizes the already reconciled 144 completed sermons, bound
 only to canonical manifest SHA-256
 `4759449bbbaed97238968d2fd4621d4137b8b4e41b73a20aeda319dc1212617c`,

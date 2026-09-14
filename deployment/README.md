@@ -137,6 +137,13 @@ manifest read-only into the maintenance container, never an entire protected
 directory and never into the running application. The original snapshot-file
 mount remains unchanged. A rejected broad-directory proposal was not applied.
 
+The separately authorized nine-record editorial classification uses
+`deployment/topical-compose.yaml` and the `classify-topical` maintenance command.
+It mounts only its own verified pre-change dump, integrity receipt and frozen
+manifest. It reuses the existing versioned extension relation (no migration),
+preserves all original acceptance receipts and makes an identical rerun a no-op.
+See `topical-classification-plan.md`; never reuse the operation for other records.
+
 Preserve the verified original named volume, dump, snapshot, environment and exact
 application image. Stop its socket/proxy units, then only this Compose candidate
 (`stop app`, then `stop db`).

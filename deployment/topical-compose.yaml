@@ -1,0 +1,22 @@
+# One exact editorial operation. Mount three protected files on maintenance only.
+services:
+  maintenance:
+    environment:
+      ALLOW_LOCAL_DB_WRITE: '1'
+      TOPICAL_OPERATION_AUTHORIZATION: SAMUEL-NINE-TOPICAL-2026-09-14:b1016476118bb3029a42658c78cc38e97897970b6adc553511f7cae06c7f8b56
+    volumes:
+      - type: bind
+        source: ${TOPICAL_DIRECTORY:?protected topical evidence path required}/before.dump
+        target: /verification/before.dump
+        read_only: true
+        bind: {create_host_path: false}
+      - type: bind
+        source: ${TOPICAL_DIRECTORY:?protected topical evidence path required}/backup-integrity.private.json
+        target: /verification/backup-integrity.private.json
+        read_only: true
+        bind: {create_host_path: false}
+      - type: bind
+        source: ${TOPICAL_DIRECTORY:?protected topical evidence path required}/manifest.private.json
+        target: /verification/manifest.private.json
+        read_only: true
+        bind: {create_host_path: false}

@@ -1,5 +1,21 @@
 # Migration Validation Plan
 
+## Nine explicit Topical classifications — pre-application verification
+
+The exact nine-record editorial manifest reconciled in both environments. The
+implementation reuses a versioned allowlisted `sermon_extensions` namespace;
+no migration or D-158 receipt supersession is needed. Original acceptance
+dependencies remain checked. The complete guarded PostgreSQL run passed 753 tests
+with zero skips and removed its disposable database; the standard run passed 633
+tests, with its 120 database gates covered by that separate run. New regressions
+cover persisted classification/discovery, truthful attribution, unchanged content/
+receipts, replay, stale dependencies, missing audit, tampered payload, non-topical
+primary-book records and complete rollback on failed preservation. Type/Astro
+reported zero errors/warnings and one existing private-helper hint. Production
+and staging builds, anonymized importer dry run and cached offline dependency
+audit (zero reported vulnerabilities) passed. Private-content/security scans had
+zero findings. These are pre-application results, not database/browser completion.
+
 ## Restricted frontend discovery follow-up — 14 September 2026
 
 Application-only commit `903e386f10f34001a04f3355ec096518c68e0ab8` connects current
