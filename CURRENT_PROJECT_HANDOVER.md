@@ -5,6 +5,14 @@
 
 ## Authority and current checkpoint
 
+Frontend correction follow-up: the release worktree now connects reviewed primary
+books to cards and full-collection discovery and restores the existing menu in the
+restricted visitor runtime. See `frontend-discovery-corrections.md` for the exact
+scope and the distinction between nine reviewed no-primary outcomes and an actual
+topical classification. Database records and D-158 acceptance are unchanged.
+Deployment/browser verification for the updated image is recorded separately in
+`deployment/STATUS.md`; this note alone is not evidence of deployment.
+
 ### D-158 acceptance and ordinary frontend delivery complete
 
 Migration `0019_restricted_bulk_acceptance` and the exact manifest-bound operation

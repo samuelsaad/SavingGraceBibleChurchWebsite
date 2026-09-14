@@ -20,17 +20,25 @@ import { applyRestrictedAcceptanceSchema } from "../src/application/restricted-a
 const id="99999999-9999-4999-8999-999999999156",migration="0019_restricted_bulk_acceptance",slug="delegated-review-anonymised-fixture";
 type RunSchema=(direction:"apply"|"rollback",scope?:SchemaMigrationScope)=>Promise<unknown>;
 export function registerRestrictedAcceptancePostgresTests(getPool:()=>Pool,runSchema:RunSchema) {
-  async function fixture(work:(p:Pool,m:Awaited<ReturnType<typeof inspectRestrictedAcceptance>>)=>Promise<void>) {
+  async function fixture(work:(p:Pool,m:Awaited<ReturnType<typeof inspectRestrictedAcceptance>>)=>Promise<void>, primary=false) {
     assertDisposableIntegrationTestDatabase(process.env.TEST_DATABASE_URL??"",process.env.DISPOSABLE_TEST_DATABASE_TOKEN);
     const p=getPool();
     try {
       await seedFixture(p);await readyPrivateFixture(p);
+      if(primary){
+        await p.query("INSERT INTO bible_books(id,canonical_name,slug,testament,canonical_order) VALUES(60,'1 Peter','1-peter','new',60) ON CONFLICT DO NOTHING");
+        await p.query("UPDATE sermon_primary_passage_reviews SET review_status='pending',reviewed_at=NULL,reviewed_by_subject=NULL WHERE sermon_id=$1",[id]);
+        await p.query(`INSERT INTO scripture_references(sermon_id,display_text,canonical_book_id,start_chapter,end_chapter,start_verse,end_verse,parse_status,relationship_role,review_status,is_lead,provenance,parser_version,original_reference_text)
+          VALUES($1,'1 Peter 2:1-3',60,2,2,1,3,'exact','primary','proposed',true,'title_proposal','invented-v1','1 Peter 2:1-3')`,[id]);
+      }
       const ids=(await p.query("SELECT id FROM sermons WHERE deleted_at IS NULL ORDER BY id")).rows.map(r=>r.id);
       const scope=await bindDelegatedReviewScope(p,ids,reviewHash("anonymised-delegated-review-policy-v1"));
       for(const order of [null,1,2,3,4,5]) await applyDelegatedReview(p,await fixtureRequest(p,scope.scopeSha256,order));
       const manifest={schemaVersion:1,decision:"D-157",memberCount:ids.length,members:ids.map((sermonId,sequence)=>({sequence:sequence+1,sermonId}))};
       await bindRemainingReviewScope(p,ids,reviewHash("invented remaining-review policy"),manifest);
-      await applyRemainingReview(p,packet((await readRemainingReviewSnapshot(p,id))!));
+      const review=packet((await readRemainingReviewSnapshot(p,id))!);
+      if(primary) for(const component of review.components){component.checks.primaryPassageSupported=true;component.checks.noSinglePrimarySupported=false;}
+      await applyRemainingReview(p,review);
       const c=await p.connect();let m;
       try{await c.query("BEGIN READ ONLY");m=await inspectRestrictedAcceptance(c);}finally{await c.query("ROLLBACK");c.release();}
       expect(m.members).toHaveLength(1);expect(m.members[0]!.sermonId).toBe(id);
@@ -50,6 +58,26 @@ export function registerRestrictedAcceptancePostgresTests(getPool:()=>Pool,runSc
   // Test-only SQL literal projection. Production has no configurable manifest
   // override and never admits this invented fixture's different canonical hash.
   const fixtureRepository=(p:Pool,hash:string)=>new PostgresSermonRepository({query:(sql:string,args:unknown[])=>p.query(sql.replaceAll(restrictedAcceptanceManifest,hash),args)} as unknown as Pool,"restricted_accepted");
+  it("projects accepted primary books without legacy mappings and reconciles counts, alias filters, pagination and stale exclusion",async()=>fixture(async(p,m)=>{
+    await applyRestrictedAcceptance(p,m,"local_loopback");
+    const repo=fixtureRepository(p,remainingDependencyHash(m));
+    const all=publicSermonListQuerySchema.parse({pageSize:1});
+    expect((await repo.listPublished(all)).data[0]!.books).toEqual([{name:"1 Peter",slug:"1-peter"}]);
+    expect((await repo.findPublishedBySlug(slug))!.books).toEqual([{name:"1 Peter",slug:"1-peter"}]);
+    expect((await repo.listPublishedFilterOptions()).books).toEqual([{name:"1 Peter",slug:"1-peter",sermonCount:1}]);
+    for(const book of ["1-peter","first-peter"]){
+      const q=publicSermonListQuerySchema.parse({book,pageSize:1});
+      expect((await repo.listPublished(q)).totalItems).toBe(1);
+      expect((await repo.listPublished({...q,page:2}))).toEqual({data:[],totalItems:1});
+      expect((await repo.listPublishedFilterOptions(q)).books[0]!.sermonCount).toBe(1);
+      expect((await repo.listPublishedFilterOptions({...q,query:"unmatchedfixtureword"})).books).toEqual([]);
+    }
+    const q=publicSermonListQuerySchema.parse({passageBook:"1-peter",passageChapter:2,passageVerse:2});
+    expect((await repo.listPublished(q)).totalItems).toBe(1);
+    await p.query("UPDATE sermons SET row_version=row_version+1 WHERE id=$1",[id]);
+    expect((await repo.listPublishedFilterOptions()).books).toEqual([]);
+    expect((await repo.listPublished(all)).totalItems).toBe(0);
+  },true));
   it("accepts current mixed human/AI evidence once, preserves content/history and exposes only the accepted fixture",async()=>fixture(async(p,m)=>{
     const before=await snapshot(p,["sermons","audit_events","sermon_restricted_acceptances"]);
     const hash=remainingDependencyHash(m),r=await applyRestrictedAcceptance(p,m,"local_loopback");expect(r.accepted).toBe(1);

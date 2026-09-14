@@ -95,13 +95,13 @@ export function pageShell(input: PageShellInput, context: FrontendRenderContext 
   const links = siteLinks(context);
   const preview = context.mode === "preview";
   const title = input.suffixTitle === false ? input.title : documentTitle(input.title);
-  const scripts = [...new Set<EnhancementScriptName>([...(input.scripts ?? []), ...(preview ? ["navigation" as const] : [])])];
+  const scripts = [...new Set<EnhancementScriptName>([...(input.scripts ?? []), ...(links.hasTaxonomyRoutes ? ["navigation" as const] : [])])];
   const document = html`<!doctype html>
 <html lang="en-AU">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="robots" content="${preview ? "noindex, nofollow, noarchive" : input.robots}" />
+    <meta name="robots" content="${context.mode !== "public" ? "noindex, nofollow, noarchive" : input.robots}" />
     <meta name="color-scheme" content="light" />
     <link rel="icon" href="${faviconDataUri}" />
     <title>${title}</title>

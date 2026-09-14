@@ -99,7 +99,9 @@ describe("public sermon API contract", () => {
     expect(query.text).toContain("sp_filter.id = s.speaker_id");
     expect(query.text).toContain("sm_filter.sermon_id = s.id");
     expect(query.text).toContain("sst_filter.sermon_id = s.id");
-    expect(query.text).toContain("sbc_filter.sermon_id = s.id");
+    expect(query.text).toContain("m.sermon_id=s.id AND bc.review_status='approved'");
+    expect(query.text).toContain("r.sermon_id=s.id AND r.relationship_role='primary' AND r.review_status = 'confirmed'");
+    expect(query.text).toContain("lower(book_filter.slug) = lower($4)");
     expect(query.text).not.toMatch(/relation\s*=>?\s*['"]OR/i);
     expect(query.values.slice(0, 4)).toEqual([
       "example-speaker",
@@ -173,9 +175,10 @@ describe("public sermon API contract", () => {
 
   it("keeps filter options and legacy dispositions public-only and mapped", () => {
     const options = buildPublishedSermonFilterOptionsQuery();
-    expect(options.text.match(/sermon.status = 'published'/g)).toHaveLength(5);
-    expect(options.text.match(/sermon.deleted_at IS NULL/g)).toHaveLength(5);
-    expect(options.text).toContain("classification.review_status = 'approved'");
+    expect(options.text.match(/(?:sermon|s)\.status = 'published'/g)).toHaveLength(5);
+    expect(options.text.match(/(?:sermon|s)\.deleted_at IS NULL/g)).toHaveLength(5);
+    expect(options.text).toContain("bc.review_status='approved'");
+    expect(options.text).toContain("FROM matching_sermons sermon");
     expect(options.text).not.toMatch(/sermon\.status = '(?:pending|draft)'/);
 
     const disposition = buildPublicSermonPathDispositionQuery("/sermons/old-slug/");

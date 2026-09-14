@@ -17,6 +17,7 @@ import { escapeXml } from "../../frontend/xml";
 import type { PublicSermonRepository } from "../repositories/sermon-repository";
 import { loadArchivePage } from "./frontend-archive-loader";
 import { frontendResponse, plainResponseHeaders } from "./frontend-response";
+import type { FrontendRenderContext } from "../../frontend/routes";
 
 export {
   hasActiveSermonFilters,
@@ -35,10 +36,6 @@ export {
 } from "../../frontend";
 export { frontendResponse, frontendResponseHeaders } from "./frontend-response";
 
-function errorPage(status: 400 | 404 | 410 | 500, title: string, message: string): Response {
-  return frontendResponse(renderFrontendBoundaryPage({ title, message }), { status });
-}
-
 function redirect(status: 301, location: string): Response {
   return new Response(null, { status, headers: { ...plainResponseHeaders, Location: location } });
 }
@@ -51,7 +48,10 @@ function renderSermonSitemap(entries: Array<{ slug: string; lastModified: string
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.join("")}</urlset>`;
 }
 
-export function createPublicSermonSiteHandler(repository: PublicSermonRepository) {
+export function createPublicSermonSiteHandler(repository: PublicSermonRepository, context: FrontendRenderContext = publicRenderContext) {
+  function errorPage(status: 400 | 404 | 410 | 500, title: string, message: string): Response {
+    return frontendResponse(renderFrontendBoundaryPage({ title, message }, context), { status });
+  }
   return async (request: Request): Promise<Response | null> => {
     const url = new URL(request.url);
     const isArchiveRoot = url.pathname === archivePath;
@@ -87,7 +87,7 @@ export function createPublicSermonSiteHandler(repository: PublicSermonRepository
         if (loaded.kind === "not-found") {
           return errorPage(404, "Page not found", "That sermon archive page does not exist.");
         }
-        return frontendResponse(renderPublicSermonArchivePage(loaded.input));
+        return frontendResponse(renderPublicSermonArchivePage(loaded.input, context));
       }
 
       if (detailMatch) {
@@ -95,7 +95,7 @@ export function createPublicSermonSiteHandler(repository: PublicSermonRepository
           repository.findPublishedBySlug(detailMatch[1]!),
           repository.listPublishedFilterOptions()
         ]);
-        if (sermon) return frontendResponse(renderPublicSermonPage(sermon, publicRenderContext, { options }));
+        if (sermon) return frontendResponse(renderPublicSermonPage(sermon, context, { options }));
         const disposition = await repository.findPublicPathDisposition(url.pathname);
         if (disposition?.kind === "redirect") return redirect(301, disposition.location);
         if (disposition?.kind === "gone") {

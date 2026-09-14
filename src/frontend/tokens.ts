@@ -12,6 +12,8 @@
  */
 
 export const colour = {
+  /** Explicit topical sermons: plum cloth, separate from the canonical book palette. */
+  spineTopical: "#563650",
   /** Page ground: cool plaster. */
   ground: "#f5f5f2",
   /** Raised surfaces: inputs, catalogue cards, count stickers. */

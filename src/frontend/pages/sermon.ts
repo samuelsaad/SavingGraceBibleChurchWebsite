@@ -11,7 +11,7 @@ import type { PublicSermonFilterOptions } from "../../server/repositories/sermon
 import { formatCount, readingStats } from "../canon";
 import { entry, passageStamp, primaryBook } from "../components/catalogue";
 import { mediaSection } from "../components/media";
-import { bookTab, canonStrip } from "../components/shelf";
+import { bookTab, canonStrip, topicalTab } from "../components/shelf";
 import { formattedDate, html, plainTextParagraphs, timeElement, when, type Html } from "../html";
 import { archivePath, contextualPath, publicRenderContext, siteLinks, withFilter, type FrontendRenderContext } from "../routes";
 import { pageShell } from "../shell";
@@ -111,7 +111,7 @@ export function renderPublicSermonPage(
       </dl>
     </div>
   </aside>`;
-  const tab = html`<div class="sermon__tab">${bookTab(book, { href: book ? withFilter({ ...emptyQuery }, { passageBook: book.slug, passageScope: "book" }, context, "canon") : null, count: bookCount, ghost: !book })}</div>`;
+  const tab = html`<div class="sermon__tab">${sermon.isTopical ? topicalTab() : bookTab(book, { href: book ? withFilter({ ...emptyQuery }, { passageBook: book.slug, passageScope: "book" }, context, "canon") : null, count: bookCount, ghost: !book })}</div>`;
   return pageShell({
     title: sermon.title,
     ...(metadataDescription ? { description: metadataDescription } : {}),

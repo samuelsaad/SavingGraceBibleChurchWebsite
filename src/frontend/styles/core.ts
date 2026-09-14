@@ -44,6 +44,7 @@ button, input, select { font: inherit; color: inherit; }
 .hue--pauline{--hue:var(--colour-spine-pauline)}
 .hue--general{--hue:var(--colour-spine-general)}
 .hue--revelation{--hue:var(--colour-spine-revelation)}
+.hue--topical{--hue:var(--colour-spine-topical)}
 .strip .strip__seg { fill: var(--colour-rule); }
 .strip .strip__seg--preached { fill: var(--hue); }
 .strip .strip__seg--current { fill: var(--colour-gilt); }

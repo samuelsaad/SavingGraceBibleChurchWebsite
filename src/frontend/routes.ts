@@ -10,12 +10,14 @@ export const archivePath = "/sermons/";
 export const archivePageSize = 9;
 
 export interface FrontendRenderContext {
-  mode: "public" | "preview";
+  mode: "public" | "preview" | "restricted";
   basePath: "" | "/frontend-preview";
 }
 
 export const publicRenderContext: FrontendRenderContext = Object.freeze({ mode: "public", basePath: "" });
 export const previewRenderContext: FrontendRenderContext = Object.freeze({ mode: "preview", basePath: "/frontend-preview" });
+/** Visitor presentation inside the sealed runtime, not an authenticated admin preview. */
+export const restrictedRenderContext: FrontendRenderContext = Object.freeze({ mode: "restricted", basePath: "" });
 
 export type FrontendTaxonomyKind = "speakers" | "series" | "books";
 
@@ -157,7 +159,7 @@ export function siteLinks(context: FrontendRenderContext): SiteLinks {
     context,
     home: contextualPath(context, "/"),
     archive: contextualPath(context, archivePath),
-    hasTaxonomyRoutes: context.mode === "preview",
+    hasTaxonomyRoutes: context.mode !== "public",
     archivePage: (page) => archivePagePath(page, context),
     sermon: (slug) => sermonPath(context, slug),
     filter: (name, value) => filterUrl(name, value, context),

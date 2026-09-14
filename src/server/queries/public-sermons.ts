@@ -1,5 +1,5 @@
 import type { PublicSermonListQuery } from "../../api/contracts/public-sermons";
-import { bibleBookBySlug } from "../../domain/bible-passage";
+import { bibleBookBySlug, resolveBibleBook } from "../../domain/bible-passage";
 import { previewDatasetSourceStatus } from "../../domain/development-seed-source";
 import { restrictedEligibilitySql } from "../../domain/restricted-acceptance";
 
@@ -35,6 +35,21 @@ const previewProcessingVersions = [
   "phase3b2b-punctuation-v2",
   "phase3b2c-wave1-extractive-drafts-v2"
 ] as const;
+
+/** Reviewed primary coordinates and approved legacy classifications are distinct
+ * sources. Project their union without changing either stored relationship. */
+function discoveryBooks(sermonId: string, scope: FrontendSermonScope): string {
+  return `SELECT b.canonical_name AS name, b.slug, CASE WHEN r.is_lead THEN 0 ELSE 1 END AS priority,
+      r.display_order AS position
+    FROM scripture_references r JOIN bible_books b ON b.id=r.canonical_book_id
+    WHERE r.sermon_id=${sermonId} AND r.relationship_role='primary' AND ${acceptedPrimary("r", scope)}
+    UNION ALL
+    SELECT COALESCE(b.canonical_name,bc.name), COALESCE(b.slug,bc.slug), 2, m.display_order
+    FROM sermon_book_classifications m
+    JOIN book_classifications bc ON bc.id=m.book_classification_id
+    LEFT JOIN bible_books b ON b.id=bc.canonical_book_id
+    WHERE m.sermon_id=${sermonId} AND bc.review_status='approved'`;
+}
 
 function groundedReferenceIsCurrentSql(
   sermonAlias: string,
@@ -188,13 +203,10 @@ function buildPublishedConditions(
     )`);
   }
   if (input.book) {
-    const book = parameter(input.book);
+    const book = parameter(resolveBibleBook(input.book)?.slug ?? input.book);
     conditions.push(`EXISTS (
-      SELECT 1 FROM sermon_book_classifications sbc_filter
-      JOIN book_classifications bc_filter ON bc_filter.id = sbc_filter.book_classification_id
-      WHERE sbc_filter.sermon_id = s.id
-        AND bc_filter.review_status = 'approved'
-        AND lower(bc_filter.slug) = lower(${book})
+      SELECT 1 FROM (${discoveryBooks("s.id", scope)}) book_filter
+      WHERE lower(book_filter.slug) = lower(${book})
     )`);
   }
   if (input.passageBook) {
@@ -279,14 +291,11 @@ export function publicRelationshipProjection(alias = "s", scope: FrontendSermonS
     ELSE 'unresolved'
   END AS primary_passage_state,
   COALESCE((
-    SELECT jsonb_agg(
-      jsonb_build_object('name', bc.name, 'slug', bc.slug)
-      ORDER BY sbc.display_order, bc.id
-    )
-    FROM sermon_book_classifications sbc
-    JOIN book_classifications bc ON bc.id = sbc.book_classification_id
-    WHERE sbc.sermon_id = ${alias}.id
-      AND bc.review_status = 'approved'
+    SELECT jsonb_agg(jsonb_build_object('name', b.name, 'slug', b.slug)
+      ORDER BY b.priority,b.position,b.slug)
+    FROM (SELECT DISTINCT ON (slug) name,slug,priority,position
+      FROM (${discoveryBooks(`${alias}.id`, scope)}) source_books
+      ORDER BY slug,priority,position) b
   ), '[]'::jsonb) AS books,
   (
     SELECT jsonb_build_object(
@@ -569,10 +578,15 @@ export function buildRelatedPublishedSermonsQuery(
 }
 
 export function buildPublishedSermonFilterOptionsQuery(
-  scope: FrontendSermonScope = "public"
+  scope: FrontendSermonScope = "public",
+  input: PublicSermonListQuery = {page:1,pageSize:9,order:"DESC"}
 ): ParameterizedQuery {
+  const state = buildPublishedConditions(input, scope);
   return {
     text: `
+      WITH matching_sermons AS (
+        SELECT s.* FROM sermons s WHERE ${state.conditions.join(" AND ")}
+      )
       SELECT
         COALESCE((
           SELECT jsonb_agg(jsonb_build_object('name', options.name, 'slug', options.slug, 'sermonCount', options.sermon_count)
@@ -580,7 +594,7 @@ export function buildPublishedSermonFilterOptionsQuery(
           FROM (
             SELECT speaker.name, speaker.slug, count(DISTINCT sermon.id)::integer AS sermon_count
             FROM speakers speaker
-            JOIN sermons sermon ON sermon.speaker_id = speaker.id
+            JOIN matching_sermons sermon ON sermon.speaker_id = speaker.id
             WHERE ${frontendSermonEligibilitySql("sermon", scope)}
             GROUP BY speaker.name, speaker.slug
           ) options
@@ -592,7 +606,7 @@ export function buildPublishedSermonFilterOptionsQuery(
             SELECT sermon_series.name, sermon_series.slug, count(DISTINCT sermon.id)::integer AS sermon_count
             FROM series sermon_series
             JOIN sermon_series_map series_map ON series_map.series_id = sermon_series.id
-            JOIN sermons sermon ON sermon.id = series_map.sermon_id
+            JOIN matching_sermons sermon ON sermon.id = series_map.sermon_id
             WHERE ${frontendSermonEligibilitySql("sermon", scope)}
             GROUP BY sermon_series.name, sermon_series.slug
           ) options
@@ -605,7 +619,7 @@ export function buildPublishedSermonFilterOptionsQuery(
             FROM source_taxonomy_terms source_term
             JOIN sermon_source_terms source_map
               ON source_map.source_taxonomy_term_id = source_term.id
-            JOIN sermons sermon ON sermon.id = source_map.sermon_id
+            JOIN matching_sermons sermon ON sermon.id = source_map.sermon_id
             WHERE source_term.taxonomy = 'sermon_topics'
               AND ${frontendSermonEligibilitySql("sermon", scope)}
           ) options
@@ -615,12 +629,8 @@ export function buildPublishedSermonFilterOptionsQuery(
                            ORDER BY lower(options.name), options.slug)
           FROM (
             SELECT classification.name, classification.slug, count(DISTINCT sermon.id)::integer AS sermon_count
-            FROM book_classifications classification
-            JOIN sermon_book_classifications book_map
-              ON book_map.book_classification_id = classification.id
-            JOIN sermons sermon ON sermon.id = book_map.sermon_id
-            WHERE classification.review_status = 'approved'
-              AND ${frontendSermonEligibilitySql("sermon", scope)}
+            FROM matching_sermons sermon
+            CROSS JOIN LATERAL (${discoveryBooks("sermon.id", scope)}) classification
             GROUP BY classification.name, classification.slug
           ) options
         ), '[]'::jsonb) AS books,
@@ -639,7 +649,7 @@ export function buildPublishedSermonFilterOptionsQuery(
                    jsonb_agg(DISTINCT covered_verse.verse ORDER BY covered_verse.verse) AS verses
             FROM scripture_references primary_passage
             JOIN bible_books canonical_book ON canonical_book.id = primary_passage.canonical_book_id
-            JOIN sermons sermon ON sermon.id = primary_passage.sermon_id
+            JOIN matching_sermons sermon ON sermon.id = primary_passage.sermon_id
             CROSS JOIN LATERAL generate_series(
               primary_passage.start_verse,
               primary_passage.end_verse
@@ -655,7 +665,7 @@ export function buildPublishedSermonFilterOptionsQuery(
           ) availability
         ), '[]'::jsonb) AS passage_verse_availability
     `.trim(),
-    values: []
+    values: state.values
   };
 }
 

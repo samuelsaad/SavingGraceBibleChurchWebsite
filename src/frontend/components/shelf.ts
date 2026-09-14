@@ -100,6 +100,11 @@ export function bookTab(book: BibleBookDefinition | null, tab: TabOptions): Html
     : html`<span class="tab hue--${book.category}${tab.className ? ` ${tab.className}` : ""}">${inner}</span>`;
 }
 
+/** Explicit topical classification only; Scripture remains elsewhere in the card. */
+export function topicalTab(): Html {
+  return html`<span class="tab hue--topical"><span class="tab__name" aria-hidden="true">Topical</span><span class="sr-only">Topical</span></span>`;
+}
+
 export interface OpenBookInput {
   book: BibleBookDefinition;
   query: PublicSermonListQuery;

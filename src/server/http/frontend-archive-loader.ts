@@ -36,7 +36,7 @@ export async function loadArchivePage(
     && !hasActiveSermonFilters(query);
   const [result, options, topicalSermons, seriesRepresentatives] = await Promise.all([
     repository.listPublished(query),
-    repository.listPublishedFilterOptions(),
+    repository.listPublishedFilterOptions(query),
     discoveryRequested ? repository.listPublishedTopicalSermons() : Promise.resolve([]),
     discoveryRequested ? repository.listPublishedSeriesRepresentatives() : Promise.resolve([])
   ]);

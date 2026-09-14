@@ -6,13 +6,13 @@
  * once. The title is the only link to the sermon; CSS extends its hit area
  * over the whole entry, and the speaker/series links are lifted above it.
  */
-import { bibleBookBySlug } from "../../domain/bible-passage";
+import { resolveBibleBook } from "../../domain/bible-passage";
 import type { RelatedSermonSummary, SermonSummary } from "../../domain/sermon";
 import type { PublicSermonFilterOption } from "../../server/repositories/sermon-repository";
 import { formatCount } from "../canon";
 import { attribute, html, singleLine, timeElement, when, type Html } from "../html";
 import type { SiteLinks } from "../routes";
-import { bookTab } from "./shelf";
+import { bookTab, topicalTab } from "./shelf";
 
 export type EntryVariant = "card" | "row" | "related";
 
@@ -54,8 +54,13 @@ export function passageStamp(sermon: SermonSummary, className: string): Html | n
 
 /** The first classified book, which labels and colours every entry's side tab. */
 export function primaryBook(sermon: SermonSummary) {
-  const first = sermon.books[0];
-  return first ? bibleBookBySlug(first.slug) : null;
+  return sermon.books.map(item => resolveBibleBook(item.slug) ?? resolveBibleBook(item.name)).find(Boolean) ?? null;
+}
+
+export function sermonTab(sermon: SermonSummary, links: SiteLinks): Html {
+  if (sermon.isTopical === true) return topicalTab();
+  const book = primaryBook(sermon);
+  return bookTab(book, { href: book ? links.taxonomy("books", book.slug) : null, count: null, ghost: !book });
 }
 
 function metaLine(sermon: SermonSummary, links: SiteLinks): Html {
@@ -72,12 +77,8 @@ export function entry(sermon: SermonSummary, options: EntryOptions): Html {
   const heading = `h${options.headingLevel}`;
   const book = primaryBook(sermon);
   const description = sermon.summary ? singleLine(sermon.summary) : null;
-  const lead = html`<div class="entry__tab">${bookTab(book, {
-    href: book ? links.taxonomy("books", book.slug) : null,
-    count: null,
-    ghost: !book
-  })}</div>`;
-  return html`<article class="entry entry--${variant}${book ? ` hue--${book.category}` : ""}">
+  const lead = html`<div class="entry__tab">${sermonTab(sermon, links)}</div>`;
+  return html`<article class="entry entry--${variant}${sermon.isTopical ? " hue--topical" : book ? ` hue--${book.category}` : ""}">
     ${lead}
     ${when(options.ordinal !== undefined, () => html`<span class="sr-only">Result ${options.ordinal}.</span>`)}
     ${passageStamp(sermon, "entry__stamp")}

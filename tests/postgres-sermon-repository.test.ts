@@ -116,7 +116,7 @@ describe("PostgreSQL sermon repository", () => {
       location: "/sermons/an-anonymised-sermon/"
     });
 
-    expect(calls[0]?.text.match(/sermon.status = 'published'/g)).toHaveLength(5);
+    expect(calls[0]?.text.match(/(?:sermon|s)\.status = 'published'/g)).toHaveLength(5);
     expect(calls[1]?.text).toContain("status = 'published'");
     expect(calls[2]?.values).toEqual(["/sermons/old-sermon/"]);
   });

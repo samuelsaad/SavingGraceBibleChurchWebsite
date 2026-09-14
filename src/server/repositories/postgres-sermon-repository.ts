@@ -172,8 +172,8 @@ export class PostgresSermonRepository implements PublicSermonRepository {
     );
   }
 
-  async listPublishedFilterOptions(): Promise<PublicSermonFilterOptions> {
-    const statement = buildPublishedSermonFilterOptionsQuery(this.scope);
+  async listPublishedFilterOptions(query?: PublicSermonListQuery): Promise<PublicSermonFilterOptions> {
+    const statement = buildPublishedSermonFilterOptionsQuery(this.scope, query);
     const result = await this.database.query(statement.text, statement.values);
     const row = result.rows[0] as
       | {

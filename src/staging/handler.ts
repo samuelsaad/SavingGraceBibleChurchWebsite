@@ -2,6 +2,8 @@ import type { PublicSermonRepository } from "../server/repositories/sermon-repos
 import { createPublicApiRouter } from "../server/http/public-api-router";
 import { createPublicSermonSiteHandler, frontendResponse, renderFrontendHomePage } from "../server/http/public-sermon-page";
 import { publicSermonListQuerySchema } from "../api/contracts/public-sermons";
+import { restrictedRenderContext } from "../frontend/routes";
+import { renderFrontendTaxonomyIndex, type FrontendTaxonomyKind } from "../frontend";
 
 export const sealedHeaders = {
   "Cache-Control": "private, no-store, max-age=0", "X-Robots-Tag": "noindex, nofollow, noarchive",
@@ -14,7 +16,7 @@ function plain(code: string, status: number) {
 }
 export function createSealedStagingHandler(repository: PublicSermonRepository, ready: () => Promise<void>, commit: string, frontendDisabled = false) {
   const publicApi = createPublicApiRouter(repository);
-  const publicPages = createPublicSermonSiteHandler(repository);
+  const publicPages = createPublicSermonSiteHandler(repository, restrictedRenderContext);
   return async (request: Request): Promise<Response> => {
     try {
       const url = new URL(request.url);
@@ -37,7 +39,13 @@ export function createSealedStagingHandler(repository: PublicSermonRepository, r
           repository.listPublished(publicSermonListQuerySchema.parse({ page: 1, pageSize: 6 })),
           repository.listPublishedFilterOptions()
         ]);
-        response = frontendResponse(renderFrontendHomePage({ sermons: result.data, totalItems: result.totalItems, options }));
+        response = frontendResponse(renderFrontendHomePage({ sermons: result.data, totalItems: result.totalItems, options }, restrictedRenderContext));
+      } else if (/^\/(speakers|series|books)\/$/.test(path)) {
+        const kind = path.split('/')[1] as FrontendTaxonomyKind;
+        const options = await repository.listPublishedFilterOptions();
+        response = frontendResponse(renderFrontendTaxonomyIndex(kind, options[kind], restrictedRenderContext, options));
+      } else if (/^\/(speakers|series|books)$/.test(path)) {
+        response = new Response(null, {status:307, headers:{Location:`${path}/${url.search}`}});
       } else response = path.startsWith("/api/") ? await publicApi(request) : await publicPages(request);
       if (!response) return plain("not_found", 404);
       const headers = new Headers(response.headers);
