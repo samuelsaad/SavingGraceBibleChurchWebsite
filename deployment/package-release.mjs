@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import { readFile, realpath, lstat } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { resolve, relative, isAbsolute } from "node:path";
+import { permittedPackagePath } from "./package-policy.mjs";
 
 const directory = process.env.STAGING_PACKAGE_DIRECTORY;
 if (!directory || !isAbsolute(directory)) throw new Error("external_package_directory_required");
@@ -18,7 +19,7 @@ for (const name of ["server", "database"]) {
 const migrations = execFileSync("git", ["ls-files", "db/migrations"], { encoding: "utf8" }).trim().split(/\r?\n/);
 for (const path of migrations) paths.add(path);
 for (const path of paths) {
-  if (/(?:private|\.pem$|\.key$|\.env|development-data|youtube\/|local-test-identity|local-dashboard-static)/i.test(path)) throw new Error("prohibited_package_path");
+  if (!permittedPackagePath(path)) throw new Error("prohibited_package_path");
   if (!(await lstat(path)).isFile()) throw new Error("package_symlink_or_nonfile");
   const expected = execFileSync("git", ["show", `${commit}:${path}`]);
   const actual = Buffer.from((await readFile(path, "utf8")).replace(/\r\n/g, "\n"));

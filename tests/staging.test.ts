@@ -3,10 +3,20 @@ import type { PublicSermonRepository } from "../src/server/repositories/sermon-r
 import { stagingConfiguration, verifyStagingIdentity } from "../src/staging/guard";
 import { createSealedStagingHandler } from "../src/staging/handler";
 import { readOnlyVerificationHandler } from "../deployment/read-only-handler";
+import { permittedPackagePath } from "../deployment/package-policy.mjs";
 
 const environment = { NODE_ENV: "production", STAGING_SEALED: "1", DB_HOST: "db", DB_PORT: "5432",
   DB_NAME: "savinggrace_staging", RELEASE_COMMIT: "a".repeat(40) };
 describe("sealed staging target and authentication boundary", () => {
+  it("packages private-review schema code without admitting private artifact directories or filenames", () => {
+    for (const path of ["db/migrations/0017_delegated_private_ai_review.sql", "db/migrations/0018_remaining_private_ai_review.down.sql", "src/staging/guard.ts"]) {
+      expect(permittedPackagePath(path)).toBe(true);
+    }
+    for (const path of ["private/example.json", "src/private/example.ts", "src/example.private.ts", "development-data/seed.json",
+      "src/youtube/example.ts", "src/server/auth/local-test-identity.ts", "key.pem", ".env", "src/../private/file.ts", "/src/test.ts", "src\\test.ts"]) {
+      expect(permittedPackagePath(path)).toBe(false);
+    }
+  });
   it("refuses every review write before reaching the temporary verification router", async () => {
     const read = vi.fn().mockResolvedValue(new Response("fixture"));
     const issue = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
