@@ -75,3 +75,11 @@ Minimum rendered book-tab contrast was 6.15:1; the invented topical fixture was
 9.43:1. No external request, mutation request, console error or screenshot occurred.
 The existing local and sealed-staging full database fingerprints were unchanged.
 These are pre-deployment checks, not a claim that the corrected image was deployed.
+
+Deployment subsequently passed: running code is
+`903e386f10f34001a04f3355ec096518c68e0ab8` on both working URLs. The complete real
+browser pass succeeded independently in both environments, with the same counts,
+labels, contrast and exclusions. `deployment/STATUS.md` records the immutable image,
+package and archive hashes, exact unchanged database fingerprints, security checks
+and the distinction between the implemented topical display and missing real
+topical classifications. No database records were altered by these corrections.

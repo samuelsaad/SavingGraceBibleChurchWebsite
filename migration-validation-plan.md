@@ -1,5 +1,22 @@
 # Migration Validation Plan
 
+## Restricted frontend discovery follow-up — 14 September 2026
+
+Application-only commit `903e386f10f34001a04f3355ec096518c68e0ab8` connects current
+reviewed primary books to shared rendering, broad discovery and matching counts,
+and restores the existing restricted menu. No migration or real database write
+was performed. The full suite passed 629 standard tests and, separately, 743 real
+PostgreSQL tests with zero skips; the disposable database was removed. Initial
+failures were obsolete SQL-alias assertions and an invented fixture missing required
+proposal provenance; those were corrected without weakening the required guards.
+Type/Astro, build, staging bundle, offline audit, anonymized dry run and privacy/
+security scans passed. Both real frontends verified 144 eligible identities, 135
+book-associated sermons across 16 books, nine no-primary outcomes and 11 exclusions.
+Shared card labels/contrast, all pagination, menu keyboard/touch behavior and
+exact database preservation were verified. Real topical classifications remain
+absent, so only anonymized topical rendering was tested. Deployment/image and
+full browser evidence are recorded in `deployment/STATUS.md`.
+
 ## D-158 restricted acceptance — actual application and verification
 
 Migration 0019 and the exact manifest-bound acceptance were applied independently

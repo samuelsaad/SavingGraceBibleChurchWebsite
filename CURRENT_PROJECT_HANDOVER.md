@@ -5,13 +5,15 @@
 
 ## Authority and current checkpoint
 
-Frontend correction follow-up: the release worktree now connects reviewed primary
-books to cards and full-collection discovery and restores the existing menu in the
-restricted visitor runtime. See `frontend-discovery-corrections.md` for the exact
-scope and the distinction between nine reviewed no-primary outcomes and an actual
-topical classification. Database records and D-158 acceptance are unchanged.
-Deployment/browser verification for the updated image is recorded separately in
-`deployment/STATUS.md`; this note alone is not evidence of deployment.
+Frontend correction follow-up: code `903e386f10f34001a04f3355ec096518c68e0ab8`
+is running locally and on sealed Docker staging. Reviewed primary books now reach
+cards and full-collection discovery, and the existing Sermons menu is restored.
+The 144 eligible sermons reconcile to 135 book-associated sermons across 16 books
+and nine reviewed no-primary outcomes, not automatic topical classifications.
+All 11 unresolved records remain excluded; database and D-158 evidence are unchanged.
+See `frontend-discovery-corrections.md` and `deployment/STATUS.md` for verified
+browser/count/security results, immutable image identity and the topical-data gap.
+Local: `http://127.0.0.1:4381/`; sealed SSH-tunnel staging: `http://127.0.0.1:4380/`.
 
 ### D-158 acceptance and ordinary frontend delivery complete
 

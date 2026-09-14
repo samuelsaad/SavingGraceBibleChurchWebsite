@@ -1,5 +1,91 @@
 # Sealed staging release: deployed and recovery verified
 
+## Frontend discovery and menu correction — 14 September 2026
+
+This application-only release supersedes the running-code entry in the historical
+D-158 report below. It does not change D-158 acceptance, data or migration state.
+
+- Starting checkpoint: `ac11d2f3a8374b2ac778f0034731d238bf27f2c0`.
+- Running local and staging code: `903e386f10f34001a04f3355ec096518c68e0ab8`.
+- Immutable image: `sha256:87cbe1e092f68cc5713935fb8bb51744fb1d196f92bd53aa362623939cdb60ac`.
+- Image size: 231,926,940 bytes; preserved image archive: 237,325,824 bytes.
+- Image archive SHA-256: `2d33ca8772151e12cd577709918d83340c91e17f09f5844bb977ad544d473b39`.
+- Independently transferred/verified package: 119 safe paths;
+  SHA-256 `f8635349355c28385857cb4d942ccea4a0ec83b81ad96af7676225ae0d18f443`.
+- Server bundle SHA-256: `d5f6e031ead1a8e9a172c990b898e84e93da85a487f0eb50d85b4a465c46265c`.
+- Database bundle SHA-256: `18fea25c9d28ba10835c04db863c142538e034effc65e7e861d0bc393fa44542`.
+
+Reviewed primary-book evidence now reaches all shared card/detail projections,
+broad book filtering and matching-collection counts. The previous legacy-only
+join accounted for just 14 sermons/nine books. The current 144 eligible records
+reconcile to 135 distinct book-associated sermons across 16 books and nine reviewed
+no-single-primary outcomes. There are 135 associations (no duplicate inflation).
+All 11 unresolved records remain absent from rendered pages and the restricted API.
+
+The sealed renderer now delivers the existing SermonsV1/SermonsV2/Speakers/Series/
+Books menu and its existing CSP-hashed enhancement. Taxonomy indexes link to the
+complete paginated archive. The ordinary public context remains unchanged.
+An explicit topical display classification has a distinct accessible plum tab;
+the real cohort has zero authoritative topical assignments. Neither missing
+metadata, the nine no-primary decisions nor two series memberships named Topical
+are treated as topical classifications. See `frontend-discovery-corrections.md`.
+
+The complete standard suite passed 629 tests; its 114 database-gated skips are
+covered by the separate complete PostgreSQL run: 743 passed, zero skips, disposable
+database removed. Type/Astro checks reported zero errors/warnings and one existing
+private-helper hint. Production and staging builds, the fixture importer dry run
+(five input, three included, two excluded), and cached offline dependency audit
+(zero known cached vulnerabilities) passed. This is not a live advisory audit.
+Credential, key, token, AWS, prohibited-path, symlink and private-content scans
+passed against all 155 records and 1,092,303 protected eight-word sequences.
+Staged bytes matched the scanned working files; no private artifacts were staged.
+
+Real read-only browser verification passed separately on local port 4381 and the
+staging tunnel on port 4380. Each checked all 144 identities across 16 archive
+pages, all 16 books through their complete pagination, shared colours/labels and
+vertical geometry, direct links and reload, speaker/series combinations, taxonomy
+indexes, and all 11 exclusions. The exact existing menu passed mouse, double-click,
+Enter/Space, ArrowDown/Tab, Escape/focus restoration, click-away dismissal and touch
+checks at desktop, tablet and mobile widths. Minimum book-tab contrast was 6.15:1;
+the invented topical fixture was 9.43:1. There were zero browser errors, external
+requests, mutation requests or screenshots. No real topical specimen exists to
+inspect; the fixture check is not represented as a real classification decision.
+
+Additional real browser/API parity checks passed on both environments: the same
+keyword query returned 138 results, a combined keyword/book/chapter/speaker/series
+filter returned two, and an invented unmatched query returned zero. Full pagination,
+filtered book counts and reload agreed throughout. A real numbered-book detail
+strip was verified with no canonical, Open Graph, structured-data or autoplay iframe
+output. Both extra browser runs reported zero errors.
+
+The corrected image's two bundles match the scanned local build exactly. All 38
+migration files remain byte-identical to the previous image and match Git after
+line-ending normalization. An initial strict blob comparison flagged the existing
+packaged CRLF representation; no migration bytes or meaning were changed to pass
+that check. All six unchanged image layers retain the previously verified base;
+all three changed layers contain only the 40 expected runtime files.
+
+Only the application container was replaced. PostgreSQL's container identity,
+start time, mounts and complete fingerprint remained unchanged. Both databases
+still have 19 applied migrations with none pending; no migration, dump, restore,
+acceptance operation or data transfer occurred. The full local fingerprint remains
+`384c17e7c787391ffd6ef2d45c31d56df9db68d40d4de8c4fe4832e219044601`;
+the staging fingerprint remains
+`9a6bd12d804fde25e4597c6b9dc64d4b52f68b61a94e1f1be91178271934226f`.
+
+The app and database are healthy. The app is non-root/read-only, has only its
+read-only database-reader secret mount and retains its restart policy. Docker's
+network remains internal, neither container publishes a host port, and the host
+proxy still binds only loopback. No non-loopback TCP listener other than SSH was
+found. Private routes return 401; noindex/no-store/CSP and disabled development
+authentication remain enforced. Previous images, configuration, database volumes
+and verified backups are preserved for app-only recovery. The temporary local
+verification server was stopped; the working frontends and tunnel remain running.
+
+Working URLs: `http://127.0.0.1:4381/` (local) and `http://127.0.0.1:4380/`
+(sealed staging through the existing SSH tunnel). No sign-in implementation,
+public-internet exposure, AWS change, Git push or merge was performed.
+
 ## D-158 restricted acceptance — 14 September 2026
 
 The following supersedes the initial deployment's zero-publication totals below.
