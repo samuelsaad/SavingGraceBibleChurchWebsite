@@ -1,0 +1,119 @@
+import type { Pool } from "pg";
+import { expect,it } from "vitest";
+import { seedFixture,readyPrivateFixture,fixtureRequest,snapshot } from "./delegated-ai-review-postgres";
+import { packet } from "./remaining-ai-review-postgres";
+import { applyDelegatedReview,bindDelegatedReviewScope } from "../src/application/delegated-ai-review-service";
+import { applyRemainingReview,bindRemainingReviewScope,readRemainingReviewSnapshot } from "../src/application/remaining-ai-review-service";
+import { applyRestrictedAcceptance,withdrawRestrictedAcceptance } from "../src/application/restricted-acceptance-service";
+import { inspectRestrictedAcceptance } from "../src/application/restricted-acceptance-evidence";
+import { restrictedAcceptanceManifest } from "../src/domain/restricted-acceptance";
+import { remainingDependencyHash } from "../src/domain/remaining-ai-review";
+import { reviewHash } from "../src/domain/delegated-ai-review";
+import { assertDisposableIntegrationTestDatabase } from "../src/migration/local-database-safety";
+import type { SchemaMigrationScope } from "../src/migration/schema-migrations";
+import { PostgresSermonRepository } from "../src/server/repositories/postgres-sermon-repository";
+import { AdminSermonService } from "../src/application/admin-sermon-service";
+import { PostgresAdminSermonRepository } from "../src/server/repositories/postgres-admin-sermon-repository";
+import { publicSermonListQuerySchema } from "../src/api/contracts/public-sermons";
+import { withLegacyReviewTimezone } from "../src/application/legacy-review-timezone";
+import { applyRestrictedAcceptanceSchema } from "../src/application/restricted-acceptance-schema";
+const id="99999999-9999-4999-8999-999999999156",migration="0019_restricted_bulk_acceptance",slug="delegated-review-anonymised-fixture";
+type RunSchema=(direction:"apply"|"rollback",scope?:SchemaMigrationScope)=>Promise<unknown>;
+export function registerRestrictedAcceptancePostgresTests(getPool:()=>Pool,runSchema:RunSchema) {
+  async function fixture(work:(p:Pool,m:Awaited<ReturnType<typeof inspectRestrictedAcceptance>>)=>Promise<void>) {
+    assertDisposableIntegrationTestDatabase(process.env.TEST_DATABASE_URL??"",process.env.DISPOSABLE_TEST_DATABASE_TOKEN);
+    const p=getPool();
+    try {
+      await seedFixture(p);await readyPrivateFixture(p);
+      const ids=(await p.query("SELECT id FROM sermons WHERE deleted_at IS NULL ORDER BY id")).rows.map(r=>r.id);
+      const scope=await bindDelegatedReviewScope(p,ids,reviewHash("anonymised-delegated-review-policy-v1"));
+      for(const order of [null,1,2,3,4,5]) await applyDelegatedReview(p,await fixtureRequest(p,scope.scopeSha256,order));
+      const manifest={schemaVersion:1,decision:"D-157",memberCount:ids.length,members:ids.map((sermonId,sequence)=>({sequence:sequence+1,sermonId}))};
+      await bindRemainingReviewScope(p,ids,reviewHash("invented remaining-review policy"),manifest);
+      await applyRemainingReview(p,packet((await readRemainingReviewSnapshot(p,id))!));
+      const c=await p.connect();let m;
+      try{await c.query("BEGIN READ ONLY");m=await inspectRestrictedAcceptance(c);}finally{await c.query("ROLLBACK");c.release();}
+      expect(m.members).toHaveLength(1);expect(m.members[0]!.sermonId).toBe(id);
+      await work(p,m);
+    } finally {
+      // Cleanup exercises the real archived/tombstone lifecycle; never disables
+      // immutable-history triggers or performs a destructive down after acceptance.
+      const s=(await p.query("SELECT id,title,slug,row_version,published_at FROM sermons WHERE id=$1",[id])).rows[0];
+      if(s){await p.query("UPDATE sermons SET status='archived',row_version=row_version+1 WHERE id=$1",[id]);
+        await new AdminSermonService(new PostgresAdminSermonRepository(p)).permanentlyDelete(id,{rowVersion:s.row_version+1,confirmation:s.slug,
+          reason:"Remove only the invented D158 disposable fixture",seoDisposition:s.published_at?{kind:"gone"}:null},{subject:"anonymised-human-reviewer",role:"admin"},"invented-d158-cleanup");}
+      await runSchema("rollback","0018_remaining_private_ai_review");await runSchema("rollback","0017_delegated_private_ai_review");
+      await p.query("DELETE FROM audit_events WHERE entity_id=$1",[id]);await p.query("DELETE FROM sermon_deletion_tombstones WHERE former_sermon_id=$1",[id]);
+      await runSchema("apply","0017_delegated_private_ai_review");
+    }
+  }
+  // Test-only SQL literal projection. Production has no configurable manifest
+  // override and never admits this invented fixture's different canonical hash.
+  const fixtureRepository=(p:Pool,hash:string)=>new PostgresSermonRepository({query:(sql:string,args:unknown[])=>p.query(sql.replaceAll(restrictedAcceptanceManifest,hash),args)} as unknown as Pool,"restricted_accepted");
+  it("accepts current mixed human/AI evidence once, preserves content/history and exposes only the accepted fixture",async()=>fixture(async(p,m)=>{
+    const before=await snapshot(p,["sermons","audit_events","sermon_restricted_acceptances"]);
+    const hash=remainingDependencyHash(m),r=await applyRestrictedAcceptance(p,m,"local_loopback");expect(r.accepted).toBe(1);
+    expect(await snapshot(p,["sermons","audit_events","sermon_restricted_acceptances"])).toEqual(before);
+    const after=await snapshot(p);expect((await applyRestrictedAcceptance(p,m,"local_loopback")).outcome).toBe("unchanged");expect(await snapshot(p)).toEqual(after);
+    const row=(await p.query("SELECT authorized_by,executed_by,manual_review_claimed FROM sermon_restricted_acceptances WHERE sermon_id=$1",[id])).rows[0];
+    expect(row).toEqual({authorized_by:"samuel-saad-bulk-authorization",executed_by:"codex-d158-restricted-acceptance",manual_review_claimed:false});
+    expect(await new PostgresSermonRepository(p).findPublishedBySlug(slug)).toBeNull();
+    expect(await new PostgresSermonRepository(p,"restricted_accepted").findPublishedBySlug(slug)).toBeNull();
+    const repo=fixtureRepository(p,hash),detail=await repo.findPublishedBySlug(slug);expect(detail).not.toBeNull();expect(detail!.questionAnswers).toHaveLength(5);
+    expect((await repo.listPublished(publicSermonListQuerySchema.parse({page:1,pageSize:50}))).totalItems).toBe(1);
+    expect((await repo.listPublished(publicSermonListQuerySchema.parse({query:"carpenter"}))).totalItems).toBe(1);
+    expect((await repo.listPublished(publicSermonListQuerySchema.parse({query:"nonexistentfixtureword"}))).totalItems).toBe(0);
+    await expect(runSchema("rollback",migration)).rejects.toThrow();expect(await snapshot(p)).toEqual(after);
+  }));
+  it.each(["title","question","transcript","finding","media","passage","version"])("hides accepted content on a genuine dependency change: %s",async(kind)=>fixture(async(p,m)=>{
+    await applyRestrictedAcceptance(p,m,"local_loopback");
+    const sql={title:"UPDATE sermons SET title=title||' edited' WHERE id=$1",question:"UPDATE sermon_question_answers SET answer_text=answer_text||' Edited.' WHERE sermon_id=$1",
+      transcript:"UPDATE sermon_transcripts SET body_text=body_text||' Edited.' WHERE sermon_id=$1",finding:"UPDATE sermon_enrichment_reviews SET empty_item_set_acknowledged_at=NULL,empty_item_set_acknowledged_by_subject=NULL WHERE sermon_id=$1",
+      media:"UPDATE sermon_media SET title=title||' edited' WHERE sermon_id=$1",passage:"UPDATE sermon_primary_passage_reviews SET parser_version='edited-fixture' WHERE sermon_id=$1",
+      version:"UPDATE sermons SET row_version=row_version+1 WHERE id=$1"}[kind]!;
+    const c=await p.connect();try{await c.query("BEGIN");await c.query("SET LOCAL savinggrace.application_request='on'");await c.query(sql,[id]);await c.query("COMMIT");}
+    catch(error){await c.query("ROLLBACK");throw error;}finally{c.release();}
+    expect(await fixtureRepository(p,remainingDependencyHash(m)).findPublishedBySlug(slug)).toBeNull();
+    const before=await snapshot(p);await expect(applyRestrictedAcceptance(p,m,"local_loopback")).rejects.toThrow();expect(await snapshot(p)).toEqual(before);
+  }));
+  it("rejects stale manifest or concurrent metadata with no partial acceptance",async()=>fixture(async(p,m)=>{
+    await p.query("UPDATE sermons SET row_version=row_version+1 WHERE id=$1",[id]);const before=await snapshot(p);
+    await expect(applyRestrictedAcceptance(p,m,"local_loopback")).rejects.toThrow();expect(await snapshot(p)).toEqual(before);
+  }));
+  it("withdraws through append-only audit, preserves original acceptance, hides content and replays without churn",async()=>fixture(async(p,m)=>{
+    await applyRestrictedAcceptance(p,m,"local_loopback");const original=(await p.query("SELECT to_jsonb(a) AS row FROM sermon_restricted_acceptances a")).rows;
+    const request={sermonId:id,rowVersion:m.members[0]!.rowVersion+1,authorizationReference:"INVENTED-WITHDRAWAL-ONLY",reason:"Anonymised history-preserving recovery",manifestSha256:restrictedAcceptanceManifest};
+    expect(await withdrawRestrictedAcceptance(p,request,"local_loopback")).toBe("withdrawn");const after=await snapshot(p);
+    expect(await withdrawRestrictedAcceptance(p,request,"local_loopback")).toBe("unchanged");expect(await snapshot(p)).toEqual(after);
+    expect((await p.query("SELECT to_jsonb(a) AS row FROM sermon_restricted_acceptances a")).rows).toEqual(original);
+    expect(await fixtureRepository(p,remainingDependencyHash(m)).findPublishedBySlug(slug)).toBeNull();
+    await expect(p.query("DELETE FROM sermon_restricted_acceptances")).rejects.toThrow();await expect(p.query("UPDATE sermon_restricted_acceptance_withdrawals SET reason='erase'")).rejects.toThrow();
+    await expect(runSchema("rollback",migration)).rejects.toThrow();
+  }));
+  it("preserves legacy evidence across UTC/Sydney and gives new hashes identical DST-boundary instants",async()=>fixture(async(p,m)=>{
+    const c=await p.connect();try{
+      await c.query("BEGIN");const hashes=[];
+      for(const zone of ["UTC","Australia/Sydney"]){await c.query("SELECT set_config('TimeZone',$1,true)",[zone]);
+        hashes.push(remainingDependencyHash(await inspectRestrictedAcceptance(c)));expect((await c.query("SHOW timezone")).rows[0].TimeZone).toBe(zone);}
+      expect(hashes).toEqual([remainingDependencyHash(m),remainingDependencyHash(m)]);
+      for(const instant of ["2026-04-04T15:59:59Z","2026-04-04T16:00:00Z","2026-10-03T15:59:59Z","2026-10-03T16:00:00Z"]){
+        await c.query("UPDATE sermon_transcripts SET updated_at=$2 WHERE sermon_id=$1",[id,instant]);const raw=[],canonical=[];
+        for(const zone of ["UTC","Australia/Sydney"]){await c.query("SELECT set_config('TimeZone',$1,true)",[zone]);
+          raw.push((await c.query("SELECT to_jsonb(t)->>'updated_at' AS ts FROM sermon_transcripts t WHERE sermon_id=$1",[id])).rows[0].ts);
+          canonical.push((await c.query("SELECT restricted_acceptance_dependency($1) AS h",[id])).rows[0].h);}
+        expect(raw[0]).not.toBe(raw[1]);expect(new Date(raw[0]).getTime()).toBe(new Date(raw[1]).getTime());expect(canonical[0]).toBe(canonical[1]);
+      }
+      await c.query("SET LOCAL timezone='UTC'");await expect(withLegacyReviewTimezone(c,async()=>{throw new Error("invented failure");})).rejects.toThrow();
+      expect((await c.query("SHOW timezone")).rows[0].TimeZone).toBe("UTC");
+    }finally{await c.query("ROLLBACK");c.release();}
+  }));
+  it("roundtrips empty schema 0019, reapplies cleanly and keeps the migration journal idempotent",async()=>{
+    await runSchema("rollback",migration);const p=getPool();
+    expect(await applyRestrictedAcceptanceSchema(p,"local_loopback")).toEqual({outcome:"applied",applied:1});
+    const before=await snapshot(p);
+    expect(await applyRestrictedAcceptanceSchema(p,"local_loopback")).toEqual({outcome:"unchanged",applied:0});expect(await snapshot(p)).toEqual(before);
+    await runSchema("apply",migration);expect(await snapshot(p)).toEqual(before);
+    const count=(await p.query("SELECT count(*)::int n FROM pg_constraint WHERE conrelid='sermon_restricted_acceptances'::regclass")).rows[0].n;
+    expect(count).toBeGreaterThanOrEqual(13);
+  });
+}

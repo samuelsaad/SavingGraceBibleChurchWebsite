@@ -2,12 +2,18 @@ import { readFileSync } from "node:fs";
 import { Pool } from "pg";
 import { stagingConfiguration, stagingPassword, verifyStagingIdentity } from "./guard";
 import { databaseFingerprint, verifyReleaseSchema } from "./database-verification";
+import { runRestrictedAcceptanceCommand } from "../application/restricted-acceptance-command";
 
 async function main() {
   const operation = process.argv[2];
-  if (!["assert-empty", "verify", "fingerprint"].includes(operation ?? "")) throw new Error("operation_refused");
+  if (!["assert-empty", "verify", "fingerprint", "inspect", "capture-preservation", "verify-accepted", "apply-0019", "accept", "withdraw"].includes(operation ?? "")) throw new Error("operation_refused");
   const config = stagingConfiguration(process.env, true);
   const pool = new Pool({ ...config, password: stagingPassword(config.passwordFile), max: 1 });
+  if (["inspect","capture-preservation","verify-accepted","apply-0019","accept","withdraw"].includes(operation!)) {
+    try { process.stdout.write(JSON.stringify(await runRestrictedAcceptanceCommand(pool,"sealed_staging","/verification",operation!))+"\n"); }
+    finally { await pool.end(); }
+    return;
+  }
   const client = await pool.connect();
   try {
     await client.query("BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY");

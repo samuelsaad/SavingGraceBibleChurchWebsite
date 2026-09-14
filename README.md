@@ -1,5 +1,14 @@
 # Saving Grace Bible Church Website
 
+## D-158 restricted acceptance
+
+The bounded local/sealed-staging acceptance implementation is described in
+`restricted-acceptance-plan.md`. It records Samuel's bulk authority separately
+from preserved human/AI evidence, retains unresolved sermons outside the frontend,
+and adds history-preserving withdrawal and application recovery. It does not
+implement sign-in or authorize production/public-network exposure. Real delivery
+and verification status must be read from the handover and validation plan.
+
 ## Sealed staging candidate
 
 The isolated staging integration preserves the D-157 backend and the creative

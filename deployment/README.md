@@ -112,6 +112,24 @@ no pending migration; any future mismatch fails closed for a matching-release pl
 
 ## Rollback rehearsal and recovery
 
+**D-158 update:** after acceptance receipts exist, do not use the historical
+empty-volume restore rehearsal below as an application rollback. Preserve the
+current database and append-only review/acceptance history. The compatible D-158
+image supports `RESTRICTED_FRONTEND_DISABLED=1`: recreate only its read-only app
+container with that protected setting to deny all ordinary content routes while
+retaining health and private-route denial. Re-enable the verified compatible
+image only after its schema and eligibility checks pass. Keep the older image,
+dump and volume as evidence, not as a way to erase newer decisions. Audited
+individual withdrawal is a separate non-HTTP operation requiring explicit new
+authority. Its identical replay makes no changes. Empty 0019 schema rollback is
+tested separately; rollback after recorded acceptance intentionally refuses.
+
+D-158 maintenance uses `deployment/acceptance-compose.yaml` only with the explicit
+operation. It mounts exactly the verified dump, backup-integrity receipt and
+manifest read-only into the maintenance container, never an entire protected
+directory and never into the running application. The original snapshot-file
+mount remains unchanged. A rejected broad-directory proposal was not applied.
+
 Preserve the verified original named volume, dump, snapshot, environment and exact
 application image. Stop its socket/proxy units, then only this Compose candidate
 (`stop app`, then `stop db`).

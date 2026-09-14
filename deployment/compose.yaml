@@ -31,6 +31,7 @@ services:
       DB_PORT: '5432'
       DB_NAME: savinggrace_staging
       RELEASE_COMMIT: ${RELEASE_COMMIT:?exact commit required}
+      RESTRICTED_FRONTEND_DISABLED: ${RESTRICTED_FRONTEND_DISABLED:-0}
     secrets: [db_reader_password]
     # Internal-only Docker networks do not implement published host ports.
     # The separately guarded systemd socket proxy binds host loopback only.

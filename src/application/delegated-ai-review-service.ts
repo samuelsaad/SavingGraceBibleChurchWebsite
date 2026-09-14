@@ -1,4 +1,5 @@
 import type { Pool, PoolClient } from "pg";
+import { withLegacyReviewTimezone } from "./legacy-review-timezone";
 import { evaluateReviewSetIntegrity } from "../enrichment/review-set-integrity";
 import { authorisedLocalDatabaseName, assertDisposableLocalDatabase } from "../migration/local-database-safety";
 import { canonicalReviewJson, contentHash, delegatedReviewerSubject, delegatedReviewResultSchema, reviewHash, sourceProvenanceHash, validateDelegatedReview, type AiContent, type DelegatedReviewResult } from "../domain/delegated-ai-review";
@@ -101,6 +102,9 @@ export async function applyDelegatedReview(pool:Pool,raw:DelegatedReviewResult):
 }
 
 export async function listDelegatedReviews(pool:Pool | PoolClient, sermonIds?: readonly string[]) {
+  return withLegacyReviewTimezone(pool, client => listDelegatedReviewsLegacy(client, sermonIds));
+}
+async function listDelegatedReviewsLegacy(pool: PoolClient, sermonIds?: readonly string[]) {
   const rows=(await pool.query(`SELECT m.sequence,s.id AS sermon_id,s.title,a.artifact_key,r.id AS review_id,r.outcome,r.input_version,r.output_version,r.transcript_sha256,r.grounding_revision_id,r.source_sha256,r.policy_sha256,r.current_content,r.assessment,r.provenance,r.reviewed_at,
     t.body_text,t.grounding_revision_id AS current_grounding,es.source_content_sha256,to_jsonb(es) AS current_source_provenance,sc.policy_sha256 AS current_policy_sha256,
     s.summary,s.summary_row_version,s.summary_status,s.summary_approved_at,q.question_text,q.answer_text,q.row_version AS qa_version,q.status AS qa_status,q.approved_at AS qa_approved_at,q.display_order,

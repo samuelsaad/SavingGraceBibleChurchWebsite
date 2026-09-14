@@ -2,12 +2,12 @@ import { createHash } from "node:crypto";
 import type { PoolClient } from "pg";
 import { loadSchemaMigrations, validateSchemaMigrationJournal } from "../migration/schema-migrations";
 
-export async function verifyReleaseSchema(client: Pick<PoolClient, "query">) {
+export async function verifyReleaseSchema(client: Pick<PoolClient, "query">, expected: 18 | 19 = 19) {
   const migrations = await loadSchemaMigrations();
   const journal = await client.query("SELECT migration_order, migration_id, checksum_sha256 FROM schema_migrations ORDER BY migration_order");
   const applied = validateSchemaMigrationJournal(migrations, journal.rows);
-  if (applied !== migrations.length || applied !== 18) throw new Error("staging_pending_or_unexpected_migrations");
-  return { migrations: applied, pending: 0 };
+  if (applied !== expected || migrations.length !== 19) throw new Error("staging_pending_or_unexpected_migrations");
+  return { migrations: applied, pending: migrations.length - applied };
 }
 
 /** Only digests and counts cross this boundary; no row bodies or identities. */

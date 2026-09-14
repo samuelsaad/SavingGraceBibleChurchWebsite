@@ -37,7 +37,8 @@ async function main() {
       current_setting('server_version_num')::integer BETWEEN 160000 AND 169999 AS version,
       current_setting('transaction_read_only')='on' AS read_only`);
     if (!Object.values(identity.rows[0]).every(Boolean)) throw new Error("local_export_target_refused");
-    await verifyReleaseSchema(client);
+    // This exporter freezes the pre-D-158 backup, never an already-mutated DB.
+    await verifyReleaseSchema(client,18);
     const snapshot = await databaseFingerprint(client);
     const expected = { sermons: 155, transcripts: 155, descriptions: 155, qa: 1084, d156: 1121,
       d157_components: 847, ai_completions: 132, human_completions: 12, published: 0, publication_timestamps: 0 };

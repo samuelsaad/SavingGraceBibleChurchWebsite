@@ -70,6 +70,29 @@ For milestone evidence, record safe commands/results/defects/regressions in the 
 
 ## 10. Sermon and administration invariants
 
+### D-158 — restricted-environment bulk acceptance
+
+Samuel's separate post-rejection authorization permits migration 0019 and a
+non-HTTP, audited acceptance command only for the 144 completed records frozen at
+manifest SHA-256 `4759449bbbaed97238968d2fd4621d4137b8b4e41b73a20aeda319dc1212617c`.
+Read `restricted-acceptance-plan.md`. Record bulk authorization separately from
+unchanged human and AI reviews; do not claim individual human review or sign-in.
+Only the guarded local test database and verified existing sealed staging database
+may receive this acceptance and restricted frontend publication. The 11 unresolved
+records stay unchanged and hidden. Preserve original content, metadata, warnings,
+review evidence, timestamps, hashes and unrelated navigation differences.
+Migration 0019 adds immutable acceptance/withdrawal history and deterministic UTC
+dependency hashes; a destructive down operation must refuse when decisions exist.
+Support audited withdrawal without deleting history. Changed dependencies must
+invalidate display. Legacy D-156/D-157 validation narrowly reproduces the original
+Australia/Sydney JSON serialization without rewriting evidence or global settings.
+The restricted visitor runtime needs no sign-in, but remains loopback/SSH-only,
+non-indexable and read-only; remote admin/private-preview remain disabled.
+No production/internet publication, authentication implementation, new sermon,
+generation, embeddings, public Related themes, AWS networking or Git push is granted.
+All normal approval, publication and privacy rules remain unchanged outside this
+exact cohort/environment exception; D-151 through D-155 remain closed.
+
 ### D-157 — bounded remaining private review
 
 For Samuel's separately delegated existing 155-record collection only, bound to

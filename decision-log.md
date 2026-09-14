@@ -1,6 +1,6 @@
 # Project Decision Log
 
-**Status:** Approved decisions through D-157; public frontend preview remains private and local
+**Status:** Approved decisions through D-158; restricted acceptance is not internet-publication authority
 **Authority:** `church-website-architecture-plan.md` plus Yang’s confirmed migration decisions and Samuel Saad’s recorded project-owner decisions
 
 ## Evidence classifications
@@ -427,6 +427,47 @@ Samuel explicitly delegates substantive review of the existing local collection 
 Use a separate immutable, version/source/policy-bound AI review record, explicit AI/system attribution and per-artifact accepted/corrected-accepted/needs-human outcomes. These outcomes discharge repeated substantive description/Q&A review but never claim human approval or complete unrelated identity, finding, transcript or passage stages. One focused correction round is permitted only for defective unapproved artifacts, preserving original and corrected bytes, source/import receipts, ordering and history. Concurrency conflicts fail closed; identical writes are no-ops; changed inputs make prior acceptance stale. Existing publication/public-search/SEO/feed/sitemap/build/semantic gates remain unchanged. The additive private review schema, audited service, administrator status display, guarded fixture tests and safe local commits are authorised. All real evidence remains private. See the repository-scoped delegated-review contract for the complete requirements.
 
 **D-156 post-rejection compatibility authority (11 September 2026):** Samuel separately authorises removal of sermon-linked private D-156 membership and review records only when a future separately authorised permanent deletion passes the existing archived-state, exact-confirmation, concurrency, reason, tombstone, audit and SEO safeguards. The new history remains immutable to direct updates/deletes; its narrow cascade requires the guarded application transaction, absence of the deleted parent, and its preserved minimal tombstone. Scope hashes and non-content historical audit events remain retained. This authorises no sermon deletion now, no broad history purge, and no change to the substantive-review or publication boundaries.
+
+### D-158 — Manifest-bound bulk acceptance in local and sealed staging only
+
+Samuel explicitly authorizes the already reconciled 144 completed sermons, bound
+only to canonical manifest SHA-256
+`4759449bbbaed97238968d2fd4621d4137b8b4e41b73a20aeda319dc1212617c`,
+for separate bulk acceptance and ordinary frontend display in the authorized
+loopback application and existing sealed staging deployment. Eleven unresolved
+sermons stay excluded and unchanged. This is not a new substantive review, a
+personal authentication event, production publication or public-network approval.
+
+Following a recorded execution-safety rejection, Samuel separately and explicitly
+authorized additive migration `0019_restricted_bulk_acceptance`, its immutable
+history trigger, dependency function, bounded non-HTTP command and frontend
+integration, including publication-state changes for this exact cohort only.
+Record `samuel-saad-bulk-authorization` as authority and
+`codex-d158-restricted-acceptance` as system executor, never as human sign-in or
+individual review. Preserve existing human and AI decisions, original content,
+metadata, review history, uncertainty and provenance. D-155 remains closed.
+
+Existing D-156/D-157 hashes require explicit Australia/Sydney JSON timestamp
+serialization. Reproduce that legacy validation locally without changing any
+timestamp, stored hash or global time zone. New dependency fingerprints use
+`d158-utc-jsonb-v1`, explicitly UTC. Relevant changes make the receipt ineligible.
+Ordinary non-restricted publication rules remain unchanged.
+
+Acceptance and withdrawal are append-only. A later explicitly authorized audited
+withdrawal hides content and retains the original receipt; there is no destructive
+history rollback. The down migration must refuse after acceptance exists. Test
+empty-schema apply/down/reapply and history-preserving application recovery on
+invented disposable fixtures, never by withdrawing real acceptance for a test.
+
+Safe implementation must be tested and committed before real mutation. Independently
+verified fresh protected logical backups of both databases precede migration and
+acceptance. Apply the same manifest independently; preserve unrelated local/staging
+differences. Identical reruns must cause no content, version, timestamp or audit
+churn. Remote administrator/private-preview routes stay disabled, PostgreSQL stays
+unexposed, and staging stays accessible only through pinned SSH and loopback.
+Authentication implementation remains a separate task. The implementation and
+delivery evidence are recorded in `restricted-acceptance-plan.md` and the validation
+plan; authorization alone is not evidence of application or successful verification.
 
 ### D-157 — Evidence-based remaining private review of the existing collection
 

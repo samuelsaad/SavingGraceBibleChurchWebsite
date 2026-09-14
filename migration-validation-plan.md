@@ -1,5 +1,45 @@
 # Migration Validation Plan
 
+## D-158 restricted acceptance — pre-application verification
+
+Exact manifest and authority: see `restricted-acceptance-plan.md` and decision
+D-158. Migration 0019 is additive; original migrations retain their bytes and
+meaning. The earlier timezone audit reproduced the same 144/11 cohort under
+explicit Australia/Sydney serialization on both databases, whereas UTC rendering
+of the identical historical timestamps produced 12/143. No original evidence was
+modified. The implementation makes that legacy validation explicit and gives new
+hashes a distinct deterministic UTC format.
+
+Required gates: guarded anonymized migration/apply/down/reapply tests, immutable
+history and audited withdrawal, current-evidence-only display, independent
+unresolved-item exclusion, no-op replay, DST/genuine-change tests, recovery-mode
+denial, full standard and PostgreSQL suites, checks/build, offline audit and
+privacy/security scans. Real application and browser verification remain pending;
+do not infer delivery from this implementation checkpoint.
+
+Pre-application results: the complete guarded PostgreSQL runner passed 735 tests
+in 69 files with zero skips and removed its exact disposable database. Earlier
+fixture errors were corrected without changing real records or relaxing guards:
+cleanup now supplies the required gone disposition, simulated content editing
+uses the application transaction gate, and the keyword test uses the actual
+`query` field. Migration 0019 was applied through its bounded command, rerun
+unchanged, rolled back only while empty, and cleanly reapplied. Recorded-history
+rollback refused as intended; audited withdrawal and replay retained history.
+UTC/Sydney tests include both daylight-saving boundaries and genuine changes.
+
+Standard tests passed 622 with 113 database-gated skips; all database tests are
+included in the separate 735/zero-skip run. Astro/type
+checks passed for 269 files with no errors, warnings or hints. Production build,
+sealed bundles, the explicit anonymized dry-run fixture, offline audit (zero
+reported vulnerabilities), skill validation and seven network tests passed.
+The privacy scan compared 155 records and 1,092,303 protected content shingles:
+no new private prose, identities, secrets or prohibited paths were found.
+
+Execution review rejected an unnecessary broad verification-directory mount.
+It was not applied. The accepted replacement mounts exactly three required files
+read-only into maintenance only, never a directory or the application container.
+Real migration, acceptance, fresh backups and browser delivery remain pending.
+
 ## Sealed staging deployment and recovery — 14 September 2026
 
 - Samuel directly authorized execution after the recorded rejections. Integration

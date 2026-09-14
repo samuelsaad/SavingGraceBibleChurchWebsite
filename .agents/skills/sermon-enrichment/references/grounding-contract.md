@@ -1,5 +1,10 @@
 # Private grounding contract
 
+D-158 permits only the separately authorized, manifest-bound bulk acceptance in
+`restricted-acceptance-plan.md`. It does not regenerate content or rewrite these
+historical grounding records. New acceptance has its own UTC fingerprint format;
+historical timezone serialization is reproduced only for legacy validation.
+
 D-157 separately permits evidence-based remaining private review and final
 completion for manifest `c46c9125291f2d73d73162d1e0a2be42a7ce7a27c3166579e6b60fd0c7b9fa68`.
 Read [remaining-review-contract.md](remaining-review-contract.md). This is not

@@ -5,6 +5,18 @@
 
 ## Authority and current checkpoint
 
+### D-158 acceptance implementation in progress
+
+Samuel's post-rejection authority explicitly permits migration 0019 and separate
+manifest-bound bulk acceptance of the reconciled 144 completed records in local
+loopback and the existing sealed staging deployment. Eleven unresolved records
+remain excluded. Original human/AI reviews and content must not be rewritten.
+See `restricted-acceptance-plan.md` and D-158 for the exact scope, fresh-backup
+gate, UTC-versus-legacy timestamp fix, append-only withdrawal and history-preserving
+application recovery. Implementation is not yet delivery evidence: real migration,
+acceptance and ordinary frontend verification are pending at this checkpoint.
+Normal authentication and internet exposure remain unauthorized.
+
 ### Isolated sealed-staging integration
 
 **Sealed staging is running:** following Samuel's direct post-rejection

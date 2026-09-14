@@ -1,0 +1,23 @@
+# D-158 maintenance-only overlay. No directory mounts and no application mounts.
+# Supply only verified protected files for the explicit non-HTTP operation.
+services:
+  maintenance:
+    environment:
+      ALLOW_LOCAL_DB_WRITE: '1'
+      D158_OPERATION_AUTHORIZATION: D-158:4759449bbbaed97238968d2fd4621d4137b8b4e41b73a20aeda319dc1212617c
+    volumes:
+      - type: bind
+        source: ${ACCEPTANCE_DIRECTORY:?protected D-158 evidence path required}/before.dump
+        target: /verification/before.dump
+        read_only: true
+        bind: {create_host_path: false}
+      - type: bind
+        source: ${ACCEPTANCE_DIRECTORY:?protected D-158 evidence path required}/backup-integrity.private.json
+        target: /verification/backup-integrity.private.json
+        read_only: true
+        bind: {create_host_path: false}
+      - type: bind
+        source: ${ACCEPTANCE_DIRECTORY:?protected D-158 evidence path required}/acceptance-manifest.private.json
+        target: /verification/acceptance-manifest.private.json
+        read_only: true
+        bind: {create_host_path: false}

@@ -12,7 +12,7 @@ function plain(code: string, status: number) {
     "Content-Type": "text/plain; charset=utf-8",
     "Content-Security-Policy": "default-src 'none'; frame-ancestors 'none'; base-uri 'none'" } });
 }
-export function createSealedStagingHandler(repository: PublicSermonRepository, ready: () => Promise<void>, commit: string) {
+export function createSealedStagingHandler(repository: PublicSermonRepository, ready: () => Promise<void>, commit: string, frontendDisabled = false) {
   const publicApi = createPublicApiRouter(repository);
   const publicPages = createPublicSermonSiteHandler(repository);
   return async (request: Request): Promise<Response> => {
@@ -28,6 +28,9 @@ export function createSealedStagingHandler(repository: PublicSermonRepository, r
           { headers: { ...sealedHeaders, "Content-Type": "application/json" } });
       }
       if (path === "/robots.txt") return plain("User-agent: *\nDisallow: /\n", 200);
+      // History-preserving application recovery: no database rollback or identity
+      // bypass. Health and deny-by-default private routes remain available.
+      if (frontendDisabled) return plain("restricted_frontend_temporarily_disabled", 503);
       let response: Response | null;
       if (path === "/") {
         const [result, options] = await Promise.all([

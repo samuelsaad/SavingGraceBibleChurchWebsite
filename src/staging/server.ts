@@ -5,6 +5,7 @@ import { toWebRequest } from "../server/http/node-request-adapter";
 import { stagingConfiguration, stagingPassword, verifyStagingIdentity } from "./guard";
 import { verifyReleaseSchema } from "./database-verification";
 import { createSealedStagingHandler } from "./handler";
+import { verifyRestrictedPublicationBoundary } from "./restricted-publication-boundary";
 
 async function main() {
   const config = stagingConfiguration(process.env);
@@ -15,12 +16,12 @@ async function main() {
       await client.query("BEGIN READ ONLY");
       await verifyStagingIdentity(client);
       await verifyReleaseSchema(client);
-      const state = await client.query("SELECT count(*)::integer AS n FROM sermons WHERE status='published' OR published_at IS NOT NULL");
-      if (state.rows[0].n !== 0) throw new Error("sealed_publication_state_refused");
+      await verifyRestrictedPublicationBoundary(client,"sealed_staging");
     } finally { await client.query("ROLLBACK"); client.release(); }
   };
   await ready();
-  const handler = createSealedStagingHandler(new PostgresSermonRepository(pool), ready, process.env.RELEASE_COMMIT!);
+  const handler = createSealedStagingHandler(new PostgresSermonRepository(pool,"restricted_accepted"), ready,
+    process.env.RELEASE_COMMIT!, process.env.RESTRICTED_FRONTEND_DISABLED === "1");
   const server = createServer(async (incoming, outgoing) => {
     try {
       const response = await handler(await toWebRequest(incoming, "http://127.0.0.1:8080", 16_384));
