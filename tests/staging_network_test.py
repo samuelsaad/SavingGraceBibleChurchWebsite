@@ -3,6 +3,7 @@ import copy
 import importlib.util
 import pathlib
 import unittest
+from unittest.mock import patch
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("staging_restore", ROOT / "deployment/restore.py")
@@ -11,6 +12,11 @@ spec.loader.exec_module(restore)
 
 
 class SealedNetwork(unittest.TestCase):
+    def test_inspection_includes_maintenance_without_starting_it(self):
+        with patch.object(restore, "run", return_value=b'{"services": {}}') as command:
+            self.assertEqual(restore.read_compose_config(["docker", "compose"]), {"services": {}})
+            command.assert_called_once_with(["docker", "compose", "--profile", "maintenance", "config", "--format", "json"])
+
     def setUp(self):
         self.config = {
             "services": {

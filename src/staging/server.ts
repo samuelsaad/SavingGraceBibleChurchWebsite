@@ -30,7 +30,7 @@ async function main() {
   });
   server.requestTimeout = 15000;
   server.headersTimeout = 10000;
-  // Container-only listener: Compose publishes exclusively to host loopback.
+  // Internal-only container listener; the guarded host socket exposes loopback.
   server.listen(8080, "0.0.0.0", () => process.stdout.write("sealed_staging_ready\n"));
   const shutdown = () => server.close(() => { void pool.end().then(() => process.exit(0)); });
   process.once("SIGTERM", shutdown); process.once("SIGINT", shutdown);

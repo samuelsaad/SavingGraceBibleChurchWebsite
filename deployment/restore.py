@@ -21,6 +21,12 @@ def run(command, *, data=None):
     return result.stdout
 
 
+def read_compose_config(compose):
+    # Compose omits inactive profiles from config; inspect maintenance as well.
+    # This affects inspection only, not which services `up` starts.
+    return json.loads(run(compose + ["--profile", "maintenance", "config", "--format", "json"]))
+
+
 def verify_network(config, socket_text, service_text, release):
     if config["services"]["db"].get("ports"):
         raise RuntimeError("database_port_exposure_refused")
@@ -62,7 +68,7 @@ def main():
     if digest.hexdigest() != expected["dumpSha256"]:
         raise RuntimeError("restore_dump_hash_mismatch")
     compose = ["docker", "compose", "--env-file", str(environment), "-f", "deployment/compose.yaml"]
-    config = json.loads(run(compose + ["config", "--format", "json"]))
+    config = read_compose_config(compose)
     units = [pathlib.Path("/etc/systemd/system/savinggrace-staging." + suffix) for suffix in ("socket", "service")]
     for unit in units:
         if unit.is_symlink() or not unit.is_file() or unit.stat().st_uid != 0 or stat.S_IMODE(unit.stat().st_mode) & 0o022:
