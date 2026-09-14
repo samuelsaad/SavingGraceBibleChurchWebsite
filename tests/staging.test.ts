@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { readFileSync } from "node:fs";
 import type { PublicSermonRepository } from "../src/server/repositories/sermon-repository";
 import { stagingConfiguration, verifyStagingIdentity } from "../src/staging/guard";
 import { createSealedStagingHandler } from "../src/staging/handler";
@@ -8,6 +9,10 @@ import { permittedPackagePath } from "../deployment/package-policy.mjs";
 const environment = { NODE_ENV: "production", STAGING_SEALED: "1", DB_HOST: "db", DB_PORT: "5432",
   DB_NAME: "savinggrace_staging", RELEASE_COMMIT: "a".repeat(40) };
 describe("sealed staging target and authentication boundary", () => {
+  it("explicitly preserves strict-mode compilation without relying on unshipped workspace configuration", () => {
+    const source = readFileSync(new URL("../deployment/build.mjs", import.meta.url), "utf8");
+    expect(source).toContain("tsconfigRaw: { compilerOptions: { alwaysStrict: true } }");
+  });
   it("packages private-review schema code without admitting private artifact directories or filenames", () => {
     for (const path of ["db/migrations/0017_delegated_private_ai_review.sql", "db/migrations/0018_remaining_private_ai_review.down.sql", "src/staging/guard.ts"]) {
       expect(permittedPackagePath(path)).toBe(true);

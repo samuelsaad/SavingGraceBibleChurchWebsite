@@ -4,6 +4,9 @@ import { mkdir, writeFile } from "node:fs/promises";
 await mkdir("dist-staging", { recursive: true });
 for (const [name, entry] of Object.entries({ server: "src/staging/server.ts", database: "src/staging/database-cli.ts" })) {
   const result = await build({ entryPoints: [entry], outfile: `dist-staging/${name}.cjs`, bundle: true,
+    // The minimal archive intentionally excludes the Astro workspace config.
+    // Keep strict-mode semantics identical in local and isolated image builds.
+    tsconfigRaw: { compilerOptions: { alwaysStrict: true } },
     platform: "node", target: "node24", format: "cjs", external: ["pg-native"], metafile: true,
     sourcemap: false, legalComments: "none", logLevel: "silent" });
   if (Object.keys(result.metafile.inputs).some((path) => /(?:private\/|development-data\/|local-test-identity|local-dashboard-static|googleapis|transformers)/i.test(path))) {
