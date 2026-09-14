@@ -5,14 +5,19 @@
 
 ## Authority and current checkpoint
 
-Frontend correction follow-up: code `903e386f10f34001a04f3355ec096518c68e0ab8`
-is running locally and on sealed Docker staging. Reviewed primary books now reach
-cards and full-collection discovery, and the existing Sermons menu is restored.
-The 144 eligible sermons reconcile to 135 book-associated sermons across 16 books
-and nine reviewed no-primary outcomes, not automatic topical classifications.
-All 11 unresolved records remain excluded; database and D-158 evidence are unchanged.
-See `frontend-discovery-corrections.md` and `deployment/STATUS.md` for verified
-browser/count/security results, immutable image identity and the topical-data gap.
+Current running code is `60b31a1e18611191f9c751e382a7c2942538db56` locally and on
+sealed Docker staging. Samuel explicitly classified the nine accepted no-primary
+sermons as Topical, bound to private manifest
+`b1016476118bb3029a42658c78cc38e97897970b6adc553511f7cae06c7f8b56`.
+Each database has nine versioned editorial extensions and nine separately attributed
+audit events; both identical reruns made zero changes. No migration, content edit,
+new review, acceptance supersession or publication-state change was necessary.
+All original content, source evidence, human/AI reviews and D-158 receipts remain
+unchanged. The 144 eligible sermons now reconcile to **135 Bible-associated sermons
+across 16 books plus nine explicit Topical classifications**. All 11 unresolved
+sermons stay unchanged and hidden. Missing books are not automatically Topical.
+See `topical-classification-plan.md`, `deployment/HANDOVER.md` and
+`deployment/STATUS.md` for current verification, recovery artifacts and access.
 Local: `http://127.0.0.1:4381/`; sealed SSH-tunnel staging: `http://127.0.0.1:4380/`.
 
 ### D-158 acceptance and ordinary frontend delivery complete

@@ -11,6 +11,14 @@ The ordinary frontend is `http://127.0.0.1:4381/` locally and
 administrator sign-in. Remote admin/private-preview access stays disabled; real
 sign-in and production/public-network exposure remain separately scoped work.
 
+Samuel's separately authorized editorial follow-up now records exactly nine
+Topical classifications in the existing versioned extension relation, with nine
+audit events per environment. The other 135 accepted sermons remain associated
+with 16 Bible books; all 11 exceptions stay hidden. No content, review, acceptance
+hash or publication state changed. Both idempotency reruns made zero changes.
+See [current deployment handover](deployment/HANDOVER.md) for running commit/image,
+protected recovery materials, verified counts and SSH-tunnel instructions.
+
 ## Sealed staging candidate
 
 The isolated staging integration preserves the D-157 backend and the creative

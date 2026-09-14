@@ -36,20 +36,24 @@ dropdown links use single activation. No private-preview or admin route is opene
 Normal public-mode routes and their taxonomy/indexability boundary remain unchanged.
 Restricted pages emit no canonical or social metadata and retain noindex/no-store.
 
-## Topical evidence limitation
+## Original Topical evidence limitation and explicit resolution
 
 The shared card/detail renderer now supports an explicit trusted `isTopical`
 classification, with a labelled plum-colour tab that takes precedence over the
 book tab while retaining Scripture references. The optional display field does
 not create a classification workflow or database assignment.
 
-The current database has no approved topical-classification lifecycle or explicit
-topical assignments. Two series memberships named Topical are not classification
-decisions; neither those nor the nine no-primary outcomes are converted to topical.
-The repository therefore continues to return no topical collection. Real topical
-labels require explicit authoritative classifications through separately authorized
-review/data work. Rendering, precedence and contrast are tested with invented
-fixtures only; no claim is made that real sermons were classified as topical.
+At the earlier `903e386` checkpoint there were zero authoritative assignments.
+Two series memberships named Topical were not classification decisions, and no
+missing-book fallback was introduced. Samuel subsequently explicitly classified
+the exact nine accepted no-primary sermons as Topical. Implementation `60b31a1`
+persists his decision in the existing versioned allowlisted extension relation,
+with an exact private scope, original acceptance-dependency binding and separate
+system audit. Both databases now contain those nine assignments; each identical
+second operation made no changes. Original content/reviews/receipts, the other 135
+Bible-associated sermons and all 11 exclusions are unchanged. This is editorial
+organization, not newly discovered source evidence or another content review.
+See `topical-classification-plan.md` and the current deployment report.
 
 ## Verification
 

@@ -1,5 +1,104 @@
 # Sealed staging release: deployed and recovery verified
 
+## Nine explicit Topical classifications — 14 September 2026
+
+Starting checkpoint `4dc90582edb7bdf190abd81ac418f798b3a9f46b`; implementation
+and running code `60b31a1e18611191f9c751e382a7c2942538db56`. This supersedes the
+earlier zero-authoritative-Topical report below. Samuel explicitly classified the
+exact nine accepted no-single-primary records for website organization. Their
+private canonical manifest hash is
+`b1016476118bb3029a42658c78cc38e97897970b6adc553511f7cae06c7f8b56`.
+The identity-only digest reconciled independently in both databases before writes.
+
+Each transaction inserted **nine versioned editorial extensions and nine system
+audit events**, and each identical second operation returned nine unchanged.
+Full-database fingerprint equality proves no second-run mutation. Original
+content, titles, relationships, source evidence, human/AI reviews, D-158 receipts,
+versions, timestamps and publication states remain unchanged; original-row
+projections match the protected backups. The one retained unreviewed legacy book
+relationship was not removed or promoted. The nine primary-book assignments stay
+empty. No acceptance supersession or new schema migration was necessary.
+
+Independent totals in each environment: **155 stored, 144 valid/visible accepted,
+135 Bible-associated across 16 books, nine explicit Topical, 11 hidden exceptions**.
+Both still have 19 migrations through 0019. All 41 other table fingerprints and
+all sequences are identical. Original rows in the two changed tables are also
+unchanged; only the exact new extension/audit inserts are projected out. Unrelated
+local/staging navigation differences remain preserved.
+
+### Protected backups and immutable release
+
+- Local pre-change custom logical backup: 3,665,463 bytes,
+  SHA-256 `ea246fe1e8831a3ae1bb5c7e4627d37bd09f78cc3bbeaec01b6475a6d2087703`.
+- Staging pre-change custom logical backup: 3,666,899 bytes,
+  SHA-256 `f8c69ad2db8f92b6ecab3af4492f50b4a43601e93e94290d551c52a85341c66c`.
+- Both used consistent snapshots, no-owner/no-acl, and independent format/list/hash
+  verification before mutation. Originals and earlier recovery artifacts remain protected.
+- Image `sha256:e0598c4cfb0760933c0a2cd018aa9b2cbc3ce457e8b977816cbefc07feda101f`,
+  231,939,109 bytes; preserved archive 237,337,600 bytes,
+  SHA-256 `82d25d79e71bb0d1619397f009cfa11a8fa461b82c2ea340126808aaa55abe82`.
+- Exact package: 123 safe paths,
+  SHA-256 `45d12f7dae39ae9af654c6b26fbe3d6c8e4a354d764ec9475ed392d4b8789721`.
+- Server bundle `41c76dc4d47cad0028c84a6103d52a481d0cfb8c4fc5b311c52d242e76a3997d`;
+  maintenance bundle `e6571b609c962ac1bbbae6f2240c84f30664e0490d8f5af63c674ae1ffde4ca2`.
+  Both match the scanned local build. All 38 migration files and six official-base
+  layers are unchanged from the prior verified image.
+- Local full fingerprint after classification:
+  `71eaf6dc82f0304db25613be4a1ae795aa54a7831be17926c83c346916670486`.
+- Staging full fingerprint after classification:
+  `9f6bbce2a1aedba7b3fbf22b121b068361a0a8d64dd73cc085cfebaaf4d47252`.
+
+### Verification and operational corrections
+
+The full standard suite passed 633 tests; the separate full guarded PostgreSQL run
+passed 753 with zero skips and removed its disposable database. Type/Astro checks
+passed with zero errors/warnings and one existing private-helper hint. Production
+and staging builds, anonymized importer dry run, cached offline audit (zero known
+cached vulnerabilities), seven network regressions and private-content/security
+scans passed. The source scan covered all 155 records and 1,092,303 protected
+eight-word sequences, with zero findings. These are not live dependency advisories.
+
+Initial staging maintenance failed before any write because root-only inputs were
+unreadable to the container user. A root-only attempt still could not read the
+non-root-owned credential with all capabilities dropped. Read-only diagnostics
+proved the database unchanged after each refusal. The final successful method
+uses byte-identical read-only inputs owned by the existing container user behind
+a root-only host directory, mounted individually on maintenance. Original backup
+permissions, credentials, dropped capabilities and application identity were not
+weakened. Profile-aware Compose inspection was required. A browser assertion used
+the wrong invented CSS class; it was corrected to the existing `hue--topical`
+class without changing the implementation or weakening contrast checks.
+
+The full browser pass independently verified each working environment: all 144 records across 16 archive pages,
+all book pagination/counts, all nine real Topical details and the nine-item discovery
+section, speaker/series filtering, refresh, menu keyboard/touch at four widths,
+contrast and all 11 exclusions. It reported zero errors, external requests,
+mutation requests or screenshots. All nine Topical keyword-result cards were
+also verified individually in both environments, including refresh. Minimum book
+contrast was 6.15:1 and the existing plum treatment measured 9.43:1. Both complete
+browser runs used the unchanged local identity/metadata reference; their reference
+fingerprint is not a staging database fingerprint. The independent staging
+database verification above establishes its own final hash. Temporary browser
+contexts closed normally. An execution-approval service capacity error delayed an
+extra read-only check; the same request subsequently passed the normal approval
+path. No safety control was bypassed.
+
+App and database are healthy; the database container, start time and mounts were
+unchanged. The app remains non-root/read-only with dropped capabilities, only its
+reader-secret mount and `unless-stopped`. Docker publishes zero ports on its
+internal network. Host proxy and local/tunnel listeners remain loopback-only;
+only SSH was found on a non-loopback TCP listener. Private routes remain 401,
+with noindex/no-store/CSP and no development identity. No AWS, sign-in, production,
+Git push or protected-branch merge occurred. Preserved creative/backend worktree
+HEAD and diff fingerprints still match. See `HANDOVER.md` for current access and
+history-preserving recovery instructions.
+
+Final completion scan covered all six safe documentation changes and both build
+outputs, with zero credential, key, token, AWS, prohibited-path, symlink or new
+private-content/identity findings. The temporary port-4382 preview was stopped
+after verifying its process and release. Working ports 4381 and 4380 remain up;
+all temporary browser contexts and disposable database fixtures were closed.
+
 ## Frontend discovery and menu correction — 14 September 2026
 
 This application-only release supersedes the running-code entry in the historical
@@ -26,7 +125,8 @@ The sealed renderer now delivers the existing SermonsV1/SermonsV2/Speakers/Serie
 Books menu and its existing CSP-hashed enhancement. Taxonomy indexes link to the
 complete paginated archive. The ordinary public context remains unchanged.
 An explicit topical display classification has a distinct accessible plum tab;
-the real cohort has zero authoritative topical assignments. Neither missing
+the real cohort at that prior checkpoint had zero authoritative topical assignments.
+The explicit nine-record editorial decision above now supersedes that limitation. Neither missing
 metadata, the nine no-primary decisions nor two series memberships named Topical
 are treated as topical classifications. See `frontend-discovery-corrections.md`.
 

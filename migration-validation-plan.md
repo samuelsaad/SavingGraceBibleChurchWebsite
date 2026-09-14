@@ -14,7 +14,28 @@ primary-book records and complete rollback on failed preservation. Type/Astro
 reported zero errors/warnings and one existing private-helper hint. Production
 and staging builds, anonymized importer dry run and cached offline dependency
 audit (zero reported vulnerabilities) passed. Private-content/security scans had
-zero findings. These are pre-application results, not database/browser completion.
+zero findings. These were pre-application results; actual completion follows.
+
+### Actual local and sealed-staging completion
+
+Implementation `60b31a1e18611191f9c751e382a7c2942538db56` was committed before
+mutation. Fresh independently verified logical backups preceded both transactions.
+Each database persisted nine editorial extensions and nine system audit events;
+each identical second run returned nine unchanged with full-database fingerprint
+equality. Original content, source/review history, classifications and D-158
+receipts remain unchanged. No migration, supersession or publication-state edit
+was needed. Both environments retain 144 accepted, 135 Bible-associated across
+16 books, nine explicitly Topical and 11 hidden exceptions.
+
+Complete real browser passes succeeded independently on working ports 4381 and
+4380: all 16 archive pages, all book pagination/counts, nine-item Topical discovery,
+all nine real detail strips, speaker/series results, refresh, menu keyboard/touch
+at four widths, contrast and all exclusions. Extra checks verified each of the
+nine in keyword-result cards after refresh. Zero browser errors, external requests,
+mutation requests or screenshots occurred. The application/database are healthy;
+SSH-only and disabled-admin protections remain. Seven network regressions passed.
+See `deployment/STATUS.md` for independent hashes, maintenance permission handling
+and the distinction between browser reference metadata and staging fingerprints.
 
 ## Restricted frontend discovery follow-up — 14 September 2026
 
