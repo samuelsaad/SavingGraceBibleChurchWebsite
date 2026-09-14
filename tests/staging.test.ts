@@ -9,6 +9,13 @@ import { permittedPackagePath } from "../deployment/package-policy.mjs";
 const environment = { NODE_ENV: "production", STAGING_SEALED: "1", DB_HOST: "db", DB_PORT: "5432",
   DB_NAME: "savinggrace_staging", RELEASE_COMMIT: "a".repeat(40) };
 describe("sealed staging target and authentication boundary", () => {
+  it("admits only the two required pure enrichment validators into the isolated build",()=>{
+    const source=readFileSync(new URL("../.dockerignore",import.meta.url),"utf8");
+    expect(source).toContain("src/enrichment/**");
+    expect(source.split(/\r?\n/).filter(line=>line.startsWith("!src/enrichment/"))).toEqual([
+      "!src/enrichment/generated-text-mechanical-qa.ts","!src/enrichment/review-set-integrity.ts"]);
+    for(const guard of ["src/youtube/**","src/development-data/**","**/private/**","**/*.private.*","**/*.pem","**/.env*"])expect(source).toContain(guard);
+  });
   it("explicitly preserves strict-mode compilation without relying on unshipped workspace configuration", () => {
     const source = readFileSync(new URL("../deployment/build.mjs", import.meta.url), "utf8");
     expect(source).toContain("tsconfigRaw: { compilerOptions: { alwaysStrict: true } }");

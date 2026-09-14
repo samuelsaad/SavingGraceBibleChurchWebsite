@@ -40,6 +40,12 @@ It was not applied. The accepted replacement mounts exactly three required files
 read-only into maintenance only, never a directory or the application container.
 Real migration, acceptance, fresh backups and browser delivery remain pending.
 
+The first D-158 image build failed because Docker's historical blanket enrichment
+exclusion omitted a pure validator already present in the audited source archive.
+No service or database was changed. The packaging correction admits only
+`generated-text-mechanical-qa.ts` and `review-set-integrity.ts`; private artifacts,
+provider code, datasets and every other enrichment file remain excluded.
+
 ## Sealed staging deployment and recovery — 14 September 2026
 
 - Samuel directly authorized execution after the recorded rejections. Integration

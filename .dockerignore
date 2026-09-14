@@ -13,6 +13,9 @@
 !db/migrations/*.sql
 src/admin/**
 src/enrichment/**
+# Only these pure validation helpers are in the audited sealed bundle closure.
+!src/enrichment/generated-text-mechanical-qa.ts
+!src/enrichment/review-set-integrity.ts
 src/youtube/**
 src/development-data/**
 src/readiness/**
