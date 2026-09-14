@@ -1,18 +1,23 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
-**Handover date:** 13 September 2026
+**Handover date:** 14 September 2026
 **Purpose:** Public-safe orientation for continuing work from this repository. This file contains no sermon body, credential, token, session, raw caption export or private local path.
 
 ## Authority and current checkpoint
 
 ### Isolated sealed-staging integration
 
-**Local checkpoint:** integration commit `c36202ddbf14eb5376edc97472c22e0d396dc941`
-passed local application, zero-skip PostgreSQL, browser and privacy verification.
-Remote installation was rejected before execution because execution review
-requires direct deployment authorization rather than the supplied attachment.
-No package, dump, image or database was transferred and no server installation
-occurred. See `deployment/STATUS.md` for verified results and outstanding gates.
+**Sealed staging is running:** following Samuel's direct post-rejection
+authorization, integrated commit `c36202ddbf14eb5376edc97472c22e0d396dc941` was
+packaged with narrowly scoped staging corrections. The deployed application is
+`f9615104e80b03f46bfff758e9669003a3a0c5cf`; later completion documentation does
+not change that image. Docker PostgreSQL 16 and the read-only application are
+healthy on an internal network with no Docker-published ports. An OS socket proxy
+listens only on host loopback; access is through strictly pinned SSH tunnelling.
+The custom logical dump, 18 migration checksums and all 41 table/sequence hashes
+matched after both initial restore and a separate empty-volume recovery rehearsal.
+The original verified volume, dump and immutable image remain preserved. See
+`deployment/STATUS.md` for exact hashes, final verification and remaining gates.
 
 `staging-release-candidate` integrates the completed D-157 backend, Claude's
 creative frontend and both worktrees' preserved administrator/navigation/book-tab
@@ -24,8 +29,16 @@ disabled until real authentication and HTTPS receive a separate implementation.
 Private review completion remains distinct from publication and the unchanged
 frontend selector. Current local reconciliation is 155 sermons, 144 private
 completions, 11 genuine exceptions, 12 stricter frontend-preview results and zero
-public results. Deployment completion must be established by recorded container,
-restore, integrity, network and rollback verification, not inferred from this plan.
+public results. Remote admin/private-preview requests remain denied, including
+forged development-identity requests. No real authentication provider, public
+network access, publication, DNS or HTTPS was enabled.
+
+The transferred snapshot was frozen at 2026-09-14 01:24:35 UTC. Final source
+verification found one later local review-navigation update, limited to current
+stage, row version and update attribution/time. All content, approval, completion,
+AI decision, audit and other table fingerprints remained unchanged. That later
+local progress was preserved and was not copied over the verified staging snapshot;
+the two databases must not be described as currently byte-identical.
 
 The administrator presentation has been repaired on top of `ae8755a`, without
 changing backend review rules or persisted decisions. `/admin` now presents current

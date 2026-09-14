@@ -1,5 +1,63 @@
 # Migration Validation Plan
 
+## Sealed staging deployment and recovery — 14 September 2026
+
+- Samuel directly authorized execution after the recorded rejections. Integration
+  `c36202ddbf14eb5376edc97472c22e0d396dc941` was followed by safe checkpoint,
+  packaging, network and build corrections; deployed application commit is
+  `f9615104e80b03f46bfff758e9669003a3a0c5cf`. Exact intermediate commits and all
+  image/package/dump hashes are in `deployment/STATUS.md`.
+- Installed Docker 25.0.14 and checksum-verified official Compose 5.5.0 on the
+  confirmed blank staging host. Containers use only an internal network and no
+  published ports. A verified native OS socket proxy binds host loopback only.
+  The production-mode application has no development identity, denies private
+  endpoints and uses a SELECT-only, non-superuser PostgreSQL role.
+- Real anonymized container acceptance preceded the real restore. The guarded
+  custom-format dump used a consistent local read-only snapshot, `--no-owner`
+  and `--no-acl`. Independently verified transfer hashes preceded a fresh-target
+  single-transaction restore. PostgreSQL 16.15 matched the source 16.14 snapshot
+  across all 41 public tables and sequences, all 18 migration checksums, and
+  review/content counts. Zero migrations were pending or replayed on real data.
+- Actual recovery restored the same dump into another empty named volume, kept
+  the first verified volume and immutable image/dump, then started and restarted
+  the recovered pair. The same full fingerprint and readiness passed again.
+  Recovery is running. Host reboot was not tested; Docker/socket are enabled.
+- Final `npm test`: 613 passed, 101 database-gated skips. Separately,
+  `npm run test:postgres`: 714 passed, zero skips, 68 files; disposable database
+  removed. `npm run check`: 256 files, zero errors/warnings/hints. Production
+  build and sealed bundles passed. Eight focused staging tests and seven Python
+  network/restore tests passed. Anonymous importer dry run: five inputs, three
+  included, two excluded, zero rejected. Offline dependency audit: zero cached
+  advisories, not a live registry result. Final completion edits are documentation
+  only; these results apply to the unchanged deployed code.
+- Recovered staging passed 363 HTTP/private-data checks, covering all 155 private
+  HTML/API identities, forged identity requests, search, feeds, sitemap and SEO.
+  Actual desktop/mobile browser checks through pinned SSH passed with no overflow,
+  page errors, screenshots or external requests. Reader has no table write/schema
+  create privileges. App and DB are healthy, restart unless stopped, use limited
+  resources and rotated logs. App is non-root with read-only root filesystem and
+  dropped capabilities. External probes found no reachable 8080 or 5432 endpoint.
+- Private-content checks used 1,092,303 protected eight-word shingles without
+  printing source prose. The image's nine layers/5,807 regular files were scanned.
+  Nine key-pattern matches in public upstream GnuTLS fixtures were independently
+  traced to the identical binary in the pinned official Node base, not project
+  credentials. No unexplained/project keys, private application files, staging
+  passwords, content or protected identities were found in images/responses/logs.
+- Original source worktree commits, seven backend and thirteen creative changes,
+  binary-diff hashes and empty indexes remained unchanged. Local review servers
+  remained running. The source database was accessed read-only. Its final check
+  revealed one intervening local navigation update after the dump timestamp:
+  only current stage, row version and update time/subject changed in the review
+  table. All other 40 tables, sequence state, content, approvals, AI decisions,
+  audit rows and completion markers match. This progress was preserved locally;
+  staging matches the frozen dump, not the later live source fingerprint.
+- Staging contains 155 sermons, 1,084 Q&A, 1,121 D-156 decisions, 847 D-157
+  components, 132 AI completions, 12 human completions and 118 human artifact
+  approvals. Current private completion is 144 with 11 genuine exceptions;
+  publication remains zero. No decision/content repair or publication occurred.
+  Real sign-in, domain/HTTPS and off-instance/AWS backup decisions remain separate
+  work. No production, AWS network, DNS, push or protected-branch merge occurred.
+
 ## Isolated sealed staging integration — 13 September 2026
 
 - The isolated release integrates backend `ae8755ab93e446fa8c6da1f7ad32a39218a0fd45`,

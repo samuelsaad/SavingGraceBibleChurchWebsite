@@ -12,6 +12,14 @@ The isolated `staging-release-candidate` branch combines the D-157 backend at
 navigation and Bible-book-tab refinements. Both original worktrees are preserved.
 Normal human publication requirements remain separate from D-157 private completion.
 
+The verified deployed application is commit
+`f9615104e80b03f46bfff758e9669003a3a0c5cf`, including narrow packaging corrections
+after the integration commit. See `STATUS.md` for exact image/archive/dump hashes,
+the completed real restore and recovery rehearsal, and the final test evidence.
+Later documentation-only commits do not change the deployed image. The verified
+snapshot does not include one subsequent local review-navigation update; never
+overwrite that later local progress or describe this as live replication.
+
 Run `npm ci --offline --ignore-scripts`, `npm test`, `npm run test:postgres`,
 `npm run check`, `npm run build`, `npm run staging:bundle`, the anonymized browser
 regressions, `npm run migration:dry-run -- --input tests/fixtures/dry-run.json` and
@@ -66,6 +74,8 @@ Pin image digests/IDs and the exact source commit. The reader role receives SELE
 and schema usage only; it has no ownership, DML, DDL, publication or review authority.
 App limit: one CPU/768 MiB; DB: one CPU/1536 MiB. Logs rotate, both restart unless
 stopped, and app startup depends on DB health. `/health/ready` is database-dependent.
+Its JSON uses `release` for the exact deployed commit and `authentication` for
+`private_routes_disabled`; do not mistake transport access for administrator login.
 
 ## Consistent logical backup and restore
 
@@ -114,6 +124,12 @@ anonymous denial tests. Never run `down -v` or delete the only valid backup/volu
 For the first deployment there is no older application release; this rehearses
 return to the same verified matching application/database pair after total volume
 replacement. Future rollback needs the previous matching image and snapshot.
+
+This recovery procedure was executed successfully against a separate empty volume,
+not merely reviewed as a plan. The recovered pair is running, with the first
+verified volume and backup artifacts retained. Both containers were restarted and
+the identical table/sequence hashes and readiness were rechecked. Host reboot was
+not part of the rehearsal.
 
 Only leave the candidate running after all checks pass. Otherwise stop app/db
 without deleting volumes or evidence. Operator snapshots, independent off-instance
