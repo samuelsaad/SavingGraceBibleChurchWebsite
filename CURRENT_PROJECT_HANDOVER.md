@@ -7,6 +7,13 @@
 
 ### Isolated sealed-staging integration
 
+**Local checkpoint:** integration commit `c36202ddbf14eb5376edc97472c22e0d396dc941`
+passed local application, zero-skip PostgreSQL, browser and privacy verification.
+Remote installation was rejected before execution because execution review
+requires direct deployment authorization rather than the supplied attachment.
+No package, dump, image or database was transferred and no server installation
+occurred. See `deployment/STATUS.md` for verified results and outstanding gates.
+
 `staging-release-candidate` integrates the completed D-157 backend, Claude's
 creative frontend and both worktrees' preserved administrator/navigation/book-tab
 refinements. Original branches and worktrees are not changed. See
