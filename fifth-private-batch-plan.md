@@ -130,6 +130,49 @@ deployment or another batch is authorised.
 
 ## Evidence
 
-Manifest freezing and the read-only database baseline are complete. Retrieval,
-generation, import and final verification have not yet occurred. Execution results
-will be recorded here only after independently verified.
+Governance commit: `e67affe631cdf8542f9aada839a08f574a39dfa3`.
+On 15 September 2026 at 00:56:00 UTC, the retry-disabled initial
+`channels.list` operation failed with HTTP 400. The sanitized reason was
+`unrecognized_or_unavailable`, classification `unresolved_provider_error`.
+The underlying cause is not established: this is not evidence of quota exhaustion,
+token expiry or missing permissions. No raw provider body or secret was retained
+in ordinary output. No second request was made.
+
+The private interruption checkpoint and per-position report retain all 36 as
+pending, with zero terminal record attempts, downloads, transcripts, candidates,
+descriptions, Q&A, imports or content failures. One channel-gate attempt is recorded
+separately from sermon processing. No unknown-audio track was inspected or accepted.
+D-159 remains active; the immutable original freeze checkpoint is preserved.
+
+Verification before the provider call: focused policy/provider and grounding tests
+passed; the full guarded real PostgreSQL run passed 676 tests across 64 files with
+zero skips and removed its exact disposable database. Type/Astro checks reported
+zero errors, warnings or hints; skill validation passed. The separate standard run
+passed 574 tests and intentionally skipped its 102 database tests, which were all
+executed by the guarded run. Production build passed. The anonymised dry run
+included three and excluded two of five fixtures. Offline dependency audit
+reported zero known vulnerabilities from available local audit evidence, not a
+fresh online vulnerability assessment. Credential/token/key/AWS, protected-identity,
+prohibited tracked-path and symlink scans passed. The original 43-table baseline
+still matches: 155 sermons, 144 acceptance receipts and 19 migrations. Existing
+eleven exceptions and nine Topical assignments were not changed.
+
+No new source material exists, so real-caption parsing, transcript preservation,
+candidate quality, real imports, real second-import idempotency and new-draft
+browser checks remain unperformed, not passing. Their anonymised importer tests
+passed, including pending source-redaction findings, private state, rejection of
+human-edit conflicts and no-churn identical import. No frontend or staging process
+was started, stopped or changed.
+
+The initial governance commit included three trailing-blank-line warnings; these
+were subsequently removed without changing historical commits or validator rules.
+The importer compatibility helper's local alias was clarified without changing
+its operation or stored provenance.
+
+Resume only after the initial provider/channel gate can succeed. Reconcile the same
+branch, governance commit, manifest hash, interruption history and unchanged
+database baseline; begin at sequence 1 with retries disabled. Do not select a new
+manifest or consume any pending position because of this systemic interruption.
+The existing sanitized evidence cannot establish which owner action, if any, is
+needed. A controlled diagnostic must distinguish OAuth failure from API failure
+before requesting new consent or attributing a cause.
