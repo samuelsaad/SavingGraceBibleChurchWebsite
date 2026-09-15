@@ -231,3 +231,45 @@ symlink and production-output scans passed. A second read-only comparison of all
 43 application tables still matched the original baseline. No batch-content
 validation, new import or browser-ready draft outcome is claimed: all 36 remain
 pending the unresolved OAuth-stage diagnostic.
+
+### Guarded renewal continuation — 15 September 2026
+
+The separately authorised additional diagnostic made one retry-disabled token
+request. Google returned HTTP 400 / `invalid_grant`, with its recognized
+expired-or-revoked explanation. The diagnostic did not reach `channels.list`.
+This is Google's actual OAuth code, distinct from the earlier local fallback;
+it does not establish whether expiry or revocation caused the invalid grant and
+is not evidence of quota exhaustion. Credential files, all earlier attempts and
+the zero-processing checkpoint remained unchanged.
+
+Samuel then explicitly authorised implementing and executing owner renewal.
+The existing CLI now accepts `auth --renew`; ordinary authentication is unchanged.
+It uses the established protected desktop client and existing verified channel-ID
+anchor, never tests the invalid refresh token, requests only the current force-SSL
+scope, opens fresh consent/offline access in the system browser, and validates
+state plus PKCE on an ephemeral loopback-only callback. The owner signs in personally.
+Only a newly returned refresh token and successful authenticated exact channel-ID
+verification permit atomic replacement outside Git. A simultaneous renewal,
+concurrent token change, invalid callback, cancellation, timeout, missing token,
+wrong channel, verification failure or persistence failure fails closed without
+replacing the prior token. No token-saving callback, revocation, API-key fallback,
+scope expansion, raw error output or automatic retry is used.
+
+Synthetic Windows tests verify that the temporary file is empty until its DACL is
+protected for the current owner, SYSTEM and Administrators. Broad inherited grants
+are not copied into the replacement. The first ACL test exposed incompatible
+PowerShell Core module-path inheritance; the child Windows PowerShell now resolves
+its own built-in security module. No real credential was modified during tests.
+
+Implementation verification: 620 standard tests passed; the separate guarded
+PostgreSQL run passed all 722 tests with zero skips and removed its disposable
+database. Thirty new renewal tests cover callback/state/PKCE, owner verification,
+fresh credentials, SDK/transport retry prevention, secret exclusion, atomic
+replacement, restrictive permissions, cancellation and preservation failures.
+Type/Astro checks reported zero errors, warnings or hints; production build passed.
+The documented five-fixture dry run included three/excluded two; an initial
+invocation missing its input argument made no change and was corrected. Offline
+cached dependency audit reported zero known vulnerabilities. The read-only
+43-table application fingerprint still matches 155 sermons, 144 acceptance
+receipts and 19 migrations. Real renewal/channel success and batch outcomes must
+be reported separately; passing fixtures do not establish provider access.

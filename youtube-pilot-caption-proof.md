@@ -21,6 +21,40 @@ The commands are server-only local Node/TypeScript processes. They do not connec
 
 The granted scope permits more YouTube operations than this proof needs because the official caption-download endpoint requires it. The implementation itself contains only `channels.list`, `videos.list`, `captions.list` and `captions.download`; it provides no YouTube write call.
 
+### Explicit guarded owner renewal
+
+After current-task owner authorization, `npm run youtube:pilot-auth-local -- --renew`
+uses the existing workstation desktop configuration and protected token location.
+Ordinary authentication without this option is unchanged. Renewal never tests the
+old refresh token, revokes a grant, changes the OAuth client, broadens scope or
+substitutes an API key. The existing verified token's immutable channel ID is the
+ownership anchor; a channel display name is not an identity match.
+
+The system browser opens fresh account selection/consent with offline access,
+validated random state and S256 PKCE. Only the owner signs in. A temporary
+`127.0.0.1` callback accepts one valid response, returns no credentials and closes
+on completion, cancellation, invalid callback or timeout. Code exchange and
+authenticated `channels.list(mine=true)` use the official Google libraries, with
+SDK/transport retries and redirects disabled. No token-saving listener is attached.
+New access/refresh credentials stay in memory and must include a newly returned
+refresh token and exactly the existing scope. The returned authenticated channel
+must equal the established ID before persistence.
+
+An exclusive renewal lock prevents simultaneous renewals. The existing token is
+rechecked for concurrent changes before same-directory atomic replacement; it is
+never deleted first. An empty temporary file receives a restrictive DACL before
+any credentials are written: current owner, SYSTEM and Administrators only on
+Windows, mode 0600 elsewhere. Inherited broad read grants are not copied. Windows
+PowerShell resolves its own built-in security module instead of inheriting an
+incompatible PowerShell Core module path. Cancellation/failure removes temporary
+material and leaves the prior token intact. Raw SDK errors, callbacks, codes,
+token responses and credential-bearing paths are never printed. Only fixed safe
+failure codes and the existing allowlisted diagnostic schema may be emitted.
+
+This authentication option creates no sermon-processing or publication authority.
+See [Google's installed-app guidance](https://developers.google.com/identity/protocols/oauth2/native-app)
+for the system-browser, loopback and PKCE flow.
+
 ## Inspection and retrieval
 
 `npm run youtube:pilot-inspect-local` revalidates the stored channel identity and pilot ownership, calls `captions.list` with `part=snippet`, and reports safe track metadata without downloading caption bytes.
