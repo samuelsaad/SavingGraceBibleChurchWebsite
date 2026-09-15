@@ -3,6 +3,17 @@
 **Handover date:** 14 September 2026
 **Purpose:** Public-safe orientation for continuing work from this repository. This file contains no sermon body, credential, token, session, raw caption export or private local path.
 
+## D-159 isolated private batch checkpoint
+
+The fifth fixed batch is bound only to manifest SHA-256
+`49c7eac788ce5564678cc3ff0c8aa72ec09f3e4e8f746044c1c6e4ed00ea5297`.
+Thirty-six new identities were frozen after excluding all 159 prior attempts.
+The baseline is 155 sermons, with 144 existing restricted acceptance receipts
+and eleven separate unresolved records. Those existing records are out of scope.
+See `fifth-private-batch-plan.md` for authority, current execution evidence and
+the distinction between new private drafts and accepted frontend records.
+The pre-existing administrator UI edits remain separate uncommitted work.
+
 ## Authority and current checkpoint
 
 Current running code is `60b31a1e18611191f9c751e382a7c2942538db56` locally and on
