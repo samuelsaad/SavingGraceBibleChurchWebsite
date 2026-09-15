@@ -23,6 +23,17 @@ baseline remains unchanged. See the batch plan for test evidence and exact resum
 boundaries; do not repeat selection or infer that fresh consent is necessarily
 the remedy.
 
+The 15 September continuation localized one controlled HTTP 400 response to
+Google's OAuth token endpoint before any YouTube channel response. The old
+unrecognized label was our classifier fallback. The specific Google error code
+remains unavailable; the SDK redacts grant-type metadata. A tested opt-in
+diagnostic now preserves only that non-secret operation enum and allowlisted
+error/endpoint fields without disabling redaction. Execution review rejected an
+additional diagnostic request as exceeding its one-request interpretation; no
+further provider call or consent flow occurred. The original checkpoint and
+155-record database fingerprints remain unchanged. See the batch plan for the
+precise evidence and pending diagnostic authorization.
+
 ## Authority and current checkpoint
 
 Current running code is `60b31a1e18611191f9c751e382a7c2942538db56` locally and on
