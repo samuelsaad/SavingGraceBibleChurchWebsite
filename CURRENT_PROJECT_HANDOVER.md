@@ -14,6 +14,15 @@ See `fifth-private-batch-plan.md` for authority, current execution evidence and
 the distinction between new private drafts and accepted frontend records.
 The pre-existing administrator UI edits remain separate uncommitted work.
 
+D-159 governance is committed at `e67affe631cdf8542f9aada839a08f574a39dfa3`.
+The initial retry-disabled channel check returned HTTP 400 with an unrecognized
+structured reason; the cause remains unresolved. No captions were retrieved and
+no transcript, candidate or database import was created. All 36 positions remain
+pending at sequence 1; D-159 has not expired. The existing 155-record database
+baseline remains unchanged. See the batch plan for test evidence and exact resume
+boundaries; do not repeat selection or infer that fresh consent is necessarily
+the remedy.
+
 ## Authority and current checkpoint
 
 **D-157 is applied to the frozen existing 155 records.** The current private

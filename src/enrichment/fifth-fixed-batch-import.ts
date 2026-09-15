@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import type { Pool } from "pg";
 import {
   fifthFixedBatchAudioWarning, fifthFixedBatchDecisionId, fifthFixedBatchDraftArtifactSchema,
-  fifthFixedBatchProcessingVersion, toD151ValidationCompatibilityArtifact as toD155ValidationCompatibilityArtifact,
+  fifthFixedBatchProcessingVersion, toD151ValidationCompatibilityArtifact,
   validateFifthFixedBatchDraftArtifact, type FifthFixedBatchAuthorization
 } from "./fifth-fixed-batch";
 import { type OneTimePreapprovalBatchAuthorization } from "./one-time-preapproval-batch";
@@ -78,7 +78,7 @@ export async function importFifthFixedBatchPrivateDraft(
   if (!validation.valid || validation.stale) {
     throw new Error(`d159_import_validation_failed:${validation.issues.join(",")}`);
   }
-  const compatibilityArtifact = toD155ValidationCompatibilityArtifact(artifact);
+  const compatibilityArtifact = toD151ValidationCompatibilityArtifact(artifact);
   const compatibilityAuthorization: OneTimePreapprovalBatchAuthorization = {
     exceptionId: "D-151",
     manifestSha256: authorization.manifestSha256,
@@ -122,5 +122,3 @@ export async function importFifthFixedBatchPrivateDraft(
     }
   );
 }
-
-
