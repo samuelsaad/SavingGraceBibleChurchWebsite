@@ -176,3 +176,58 @@ manifest or consume any pending position because of this systemic interruption.
 The existing sanitized evidence cannot establish which owner action, if any, is
 needed. A controlled diagnostic must distinguish OAuth failure from API failure
 before requesting new consent or attributing a cause.
+
+### Access diagnosis continuation — 15 September 2026
+
+Reconciliation from `d222275e42951aad11e2b37c525450ae3a32b501` verified the unchanged
+manifest, original freeze checkpoint, interruption checksum and prior provider
+event. All 36 positions remain deferred with zero downloads, prepared transcripts,
+candidates or imports. The 155-sermon, 144-acceptance, 43-table database fingerprint
+still matches. All five pre-existing tracked edits and two untracked files remain
+preserved; they are excluded from the diagnostic commit.
+
+The old `unrecognized_or_unavailable` value is the local classifier's fallback,
+not a Google-supplied error reason. It only inspected the YouTube API error-array
+shape and could not identify OAuth string error codes. The authenticated
+`channels.list` parameters (`mine`, `part`, `maxResults`) are supported by Google's
+official reference; no API-key substitution or ownership relaxation is needed.
+
+One retry-disabled controlled diagnostic at 09:33:46 UTC made exactly one transport
+request and received HTTP 400 from `oauth2.googleapis.com/token`. It did not reach
+the YouTube channel endpoint. The stored access-token expiry is past, the desktop
+client and refresh-token metadata are present, and the required scope matches.
+Credential files were unchanged. These facts identify an OAuth-stage failure,
+but do not prove refresh-token expiry, revocation, quota exhaustion or a specific
+owner action. No raw response was retained.
+
+The Google SDK's default error redactor also redacts `grant_type`. The diagnostic
+now captures only its two allowed non-secret enum values before the request and
+can independently recognize an allowlisted OAuth code at a known token endpoint.
+It retains the SDK redactor, rejects arbitrary hosts/paths, strips query/credential
+material, substitutes fixed explanation codes for free text, and preserves the
+historical diagnostic schema and immutable events. Tests cover SDK-redacted grants,
+OAuth object/string/binary responses, channel errors, malformed bodies and secret
+exclusion without making a provider request.
+
+A follow-up controlled diagnostic was rejected by execution review because it
+considered the one-request allowance consumed. That request did not execute.
+No workaround, OAuth consent flow or further provider call was attempted. The
+precise Google error code remains unavailable; an explicitly authorized additional
+diagnostic is needed before prescribing renewed consent. D-159 remains active,
+resume sequence 1, with its original manifest and history unchanged.
+
+Official interpretation references:
+[Google installed-app OAuth errors](https://developers.google.com/identity/protocols/oauth2/native-app#errors)
+and [authenticated channel parameters](https://developers.google.com/youtube/v3/docs/channels/list).
+
+Continuation verification: 590 standard tests passed; its 102 database cases were
+executed in the separate guarded PostgreSQL run, which passed all 692 tests with
+zero skips and removed its exact disposable database. Type/Astro checks passed
+with zero errors, warnings or hints after correcting strict nullability in the
+ignored diagnostic helper. Production build and the five-fixture importer dry run
+passed. Offline dependency audit reported zero known vulnerabilities from cached
+local evidence. Credential/key/token/AWS, protected-identity, prohibited-file,
+symlink and production-output scans passed. A second read-only comparison of all
+43 application tables still matched the original baseline. No batch-content
+validation, new import or browser-ready draft outcome is claimed: all 36 remain
+pending the unresolved OAuth-stage diagnostic.
