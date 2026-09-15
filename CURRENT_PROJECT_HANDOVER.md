@@ -34,6 +34,16 @@ further provider call or consent flow occurred. The original checkpoint and
 155-record database fingerprints remain unchanged. See the batch plan for the
 precise evidence and pending diagnostic authorization.
 
+The subsequently authorised single token diagnostic returned Google's actual
+`invalid_grant` code with its expired-or-revoked explanation. This establishes a
+rejected refresh grant, not which of those causes occurred. No channel request or
+batch processing followed. Samuel then separately authorised guarded owner renewal.
+Use `npm run youtube:pilot-auth-local -- --renew` only under that current authority:
+fresh system-browser consent, state/PKCE, a newly returned refresh token and exact
+authenticated channel-ID verification precede atomic protected-token replacement.
+The old token is not retried or deleted as a diagnostic. See the batch plan and
+OAuth proof document for preservation, testing and continuation requirements.
+
 ## Authority and current checkpoint
 
 **D-157 is applied to the frozen existing 155 records.** The current private

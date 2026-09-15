@@ -16,6 +16,8 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { google, type youtube_v3 } from "googleapis";
 import { CodeChallengeMethod, type Credentials, type OAuth2Client } from "google-auth-library";
+import { OwnerRenewalError, renewOwnerToken } from "./owner-oauth-renewal";
+import { TokenReplacementError } from "./protected-token-replacement";
 import {
   analyzeStudioExport,
   alignCaptionAnalyses,
@@ -119,17 +121,17 @@ function requireString(value: unknown, field: string): string {
   return value;
 }
 
-async function loadOAuthClientConfiguration(): Promise<OAuthClientConfiguration> {
-  const directory = await lstat(oauthConfigurationDirectory).catch(() => null);
+async function loadOAuthClientConfiguration(directoryPath = oauthConfigurationDirectory): Promise<OAuthClientConfiguration> {
+  const directory = await lstat(directoryPath).catch(() => null);
   if (!directory?.isDirectory() || directory.isSymbolicLink()) {
     throw new SafeProofError("configuration_missing", "The protected desktop OAuth directory is unavailable");
   }
-  const entries = await readdir(oauthConfigurationDirectory, { withFileTypes: true });
+  const entries = await readdir(directoryPath, { withFileTypes: true });
   const jsonEntries = entries.filter((entry) => entry.isFile() && entry.name.toLocaleLowerCase("en-AU").endsWith(".json"));
   if (entries.some((entry) => entry.isSymbolicLink()) || jsonEntries.length !== 1 || entries.length !== 1) {
     throw new SafeProofError("configuration_invalid", "Expected exactly one regular desktop OAuth JSON file");
   }
-  const parsed = JSON.parse(await readFile(join(oauthConfigurationDirectory, jsonEntries[0]!.name), "utf8")) as {
+  const parsed = JSON.parse(await readFile(join(directoryPath, jsonEntries[0]!.name), "utf8")) as {
     installed?: { client_id?: unknown; client_secret?: unknown };
   };
   if (!parsed.installed) {
@@ -767,6 +769,23 @@ async function retrieveCommand(): Promise<void> {
 
 async function main(): Promise<void> {
   const [command, ...unexpected] = process.argv.slice(2);
+  if (command === "auth" && unexpected.length === 1 && unexpected[0] === "--renew") {
+    // Established desktop configuration stays outside this backend worktree.
+    const configuration = await loadOAuthClientConfiguration(join(homedir(), "SavingGraceBibleChurchWebsite", "youtube-oath"));
+    const controller = new AbortController();
+    const cancel = () => controller.abort();
+    process.once("SIGINT", cancel);
+    process.once("SIGTERM", cancel);
+    try {
+      process.stdout.write("Opening fresh Google consent. The channel owner must sign in personally and select the church identity.\n");
+      const result = await renewOwnerToken({ tokenPath, configuration, openBrowser: openSystemBrowser, signal: controller.signal });
+      process.stdout.write(`${JSON.stringify(result)}\n`);
+    } finally {
+      process.removeListener("SIGINT", cancel);
+      process.removeListener("SIGTERM", cancel);
+    }
+    return;
+  }
   if (unexpected.length > 0 || !new Set(["auth", "inspect", "retrieve"]).has(command ?? "")) {
     throw new SafeProofError("command_invalid", "Use exactly one command: auth, inspect, or retrieve");
   }
@@ -776,7 +795,10 @@ async function main(): Promise<void> {
 }
 
 main().catch((error: unknown) => {
-  const safe = error instanceof SafeProofError
+  const safe = error instanceof OwnerRenewalError
+    ? { code: error.code, ...(error.diagnostic ? { diagnostic: error.diagnostic } : {}) }
+    : error instanceof TokenReplacementError ? { code: error.code, ...(error.permissionStage ? { permissionStage: error.permissionStage } : {}) }
+    : error instanceof SafeProofError
     ? { code: error.code, message: error.message }
     : { code: "unexpected_failure", message: "The pilot caption command failed safely without exposing provider details" };
   process.stderr.write(`${JSON.stringify({ outcome: "failed", error: safe })}\n`);
