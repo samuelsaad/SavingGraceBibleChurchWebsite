@@ -1,5 +1,10 @@
 # Saving Grace Bible Church Website
 
+The new, separately authorised D-159 private draft batch is bound to one frozen
+36-record manifest. See [its scope and verification plan](fifth-private-batch-plan.md).
+It grants no acceptance, publication, semantic or staging authority and preserves
+the existing collection and unrelated frontend work.
+
 The current D-157 private exceptions queue is
 `http://127.0.0.1:4360/admin/remaining-reviews` when the authorised loopback review
 server is running. All 155 existing records were assessed: 144 private reviews

@@ -420,7 +420,7 @@ async function diagnosePrivateBatchPostcondition(
       contentChecksum,
       artifact.content.questionAnswers.length,
       artifact.target.sourceWordPressId,
-      profile.exceptionId === "D-155" ? fourthBatchReviewFindings(transcript, sermonId,
+      ["D-155", "D-159"].includes(profile.exceptionId) ? fourthBatchReviewFindings(transcript, sermonId,
         `${profile.sourceRecordKeyPrefix}-${artifact.target.sourceWordPressId}`, artifact.transcript.sourceTranscriptSha256).items.length : 0
     ]
   );
@@ -452,7 +452,7 @@ async function verifyPrivateBatchExisting(
   profile: PrivateBatchImportProfile,
   contentChecksum: string
 ): Promise<boolean> {
-  if (profile.exceptionId === "D-155") {
+  if (["D-155", "D-159"].includes(profile.exceptionId)) {
     const findings = fourthBatchReviewFindings(transcript, sermonId,
       `${profile.sourceRecordKeyPrefix}-${artifact.target.sourceWordPressId}`, artifact.transcript.sourceTranscriptSha256);
     return (await diagnosePrivateBatchPostcondition(client, artifact, sermonId, transcript, groundedReference,
@@ -462,7 +462,7 @@ async function verifyPrivateBatchExisting(
     return true;
   }
   if (profile.exceptionId !== secondFixedBatchDecisionId && profile.exceptionId !== thirdFixedBatchDecisionId &&
-    profile.exceptionId !== "D-155") return false;
+    profile.exceptionId !== "D-155" && profile.exceptionId !== "D-159") return false;
   return (await diagnosePrivateBatchPostcondition(
     client, artifact, sermonId, transcript, groundedReference, metadata, profile, contentChecksum
   )).length === 0;
@@ -588,7 +588,7 @@ export async function importOneTimePreapprovalPrivateDraft(
   const sermonId = deterministicPrivateBatchSermonId(artifact.target.videoId, profile.sermonIdNamespace);
   const groundedReference = oneTimePreapprovalGroundedSourceReference(artifact);
   const captionReference = transcriptSourceReference(artifact, metadata, profile);
-  const findings = profile.exceptionId === "D-155" ? fourthBatchReviewFindings(transcript, sermonId,
+  const findings = ["D-155", "D-159"].includes(profile.exceptionId) ? fourthBatchReviewFindings(transcript, sermonId,
     `${profile.sourceRecordKeyPrefix}-${artifact.target.sourceWordPressId}`, artifact.transcript.sourceTranscriptSha256) : null;
   const client = await pool.connect();
   try {
@@ -737,7 +737,7 @@ export async function importOneTimePreapprovalPrivateDraft(
     );
     const complete = await verifyPrivateBatchExisting(client, artifact, sermonId, transcript, groundedReference, metadata, profile, contentChecksum);
     if (!complete) {
-      const detail = profile.exceptionId === secondFixedBatchDecisionId || profile.exceptionId === thirdFixedBatchDecisionId || profile.exceptionId === "D-155"
+      const detail = profile.exceptionId === secondFixedBatchDecisionId || profile.exceptionId === thirdFixedBatchDecisionId || profile.exceptionId === "D-155" || profile.exceptionId === "D-159"
         ? await diagnosePrivateBatchPostcondition(client, artifact, sermonId, transcript, groundedReference, metadata, profile, contentChecksum)
         : [];
       throw new Error(`one_time_batch_import_postcondition_failed${detail.length > 0 ? `:${detail.join(",")}` : ""}`);

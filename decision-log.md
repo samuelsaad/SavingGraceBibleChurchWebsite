@@ -486,6 +486,37 @@ public-page metadata lookup could not connect and supplied no missing speaker
 evidence. No production database or provider API was accessed. Detailed evidence,
 remaining requirements and verification are in `remaining-private-review-plan.md`.
 
+### D-159 — Fifth fixed 36-sermon private enrichment batch
+
+Samuel separately authorised this new batch and its protected governance/skill
+amendments. It is bound only to canonical manifest SHA-256
+`49c7eac788ce5564678cc3ff0c8aa72ec09f3e4e8f746044c1c6e4ed00ea5297`.
+The 36 new unique source/video pairs follow the retained ascending source-ID order
+after excluding 159 earlier attempts; 159 clean candidates become 36 fixed
+positions plus 123 remaining. The eleven existing unresolved records are excluded.
+D-158 remains the separately integrated restricted-acceptance decision, not a
+number available for reuse on this backend branch.
+
+Only this exact manifest may use complete prepared but unapproved transcripts for
+private draft descriptions and Q&A in the current primary interactive Codex Astra
+session. Necessary private source/transcript/candidate tool context is authorised,
+not ordinary logs, other agents/providers, Git or public output. Official caption
+selection uses standard-primary, standard-unknown, ASR-primary, ASR-unknown
+priority; unknown audio retains its bounded warning and truthful unconfirmed
+association. Preserve every normal grounding, source-word, uncertainty, editorial,
+provenance, stale-result, approval and publication protection.
+
+Commit and verify the safe implementation before caption access. Preserve each
+original candidate and at most one pre-import correction. Atomic private imports
+and identical idempotency reruns use only the guarded local test database. All
+155 previous records and acceptance history remain unchanged; no new approval or
+public/semantic eligibility is created. The exception expires at 36 terminal
+positions, never permitting a substitute, 37th record or another batch. Quota or
+access interruptions preserve pending positions. Full scope, privacy, retry,
+cost, preservation and verification requirements are in
+`fifth-private-batch-plan.md`. No staging/frontend change, production access,
+schema change, deployment, push or merge is authorised.
+
 ## Decisions still required
 
 - Final AWS runtime/adapter and production networking.

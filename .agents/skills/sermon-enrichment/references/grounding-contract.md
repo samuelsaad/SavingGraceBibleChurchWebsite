@@ -1,5 +1,22 @@
 # Private grounding contract
 
+D-159 separately permits `unapproved` source transcripts only for manifest
+`49c7eac788ce5564678cc3ff0c8aa72ec09f3e4e8f746044c1c6e4ed00ea5297`. Apply every normal
+support-range, source-hash, paragraph/Q&A, editorial and output-integrity rule below.
+Bind the new governance commit and exact fixed sequence to each result; retain
+`source_transcript_approval_state_at_generation: unapproved` and mandatory later
+administrator review. Record interactive Codex Astra provenance, no separately
+billed API (AUD 0), unavailable runtime fields honestly and the limited-reproducibility
+warning. Preserve the original candidate; at most one pre-import correction binds
+both hashes, failures and correction provenance. Unknown-audio captions retain
+the bounded-decision warning and false primary-audio confirmation under D-159 only.
+Necessary source/transcript/candidate context is permitted only in the current primary
+Codex session and ignored artifacts. No historical receipt is changed and no public,
+search, feed, sitemap, metadata, build or semantic eligibility is created. Changes
+to transcript identity/bytes make dependent drafts stale. This exception cannot be
+reused for another manifest or after 36 terminal positions. See the repository-root
+`fifth-private-batch-plan.md`; earlier decision records remain unchanged.
+
 D-157 separately permits evidence-based remaining private review and final
 completion for manifest `c46c9125291f2d73d73162d1e0a2be42a7ce7a27c3166579e6b60fd0c7b9fa68`.
 Read [remaining-review-contract.md](remaining-review-contract.md). This is not

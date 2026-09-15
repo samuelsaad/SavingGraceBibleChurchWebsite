@@ -24,6 +24,23 @@ For Samuel's separately authorised review of the frozen existing local collectio
 
 ## Non-negotiable boundaries
 
+For the separately authorised D-159 fifth batch only, read
+`../../../fifth-private-batch-plan.md` at the repository root. Manifest SHA-256
+`49c7eac788ce5564678cc3ff0c8aa72ec09f3e4e8f746044c1c6e4ed00ea5297` permits the complete
+prepared but unapproved transcript to ground private draft generation. This exact
+exception takes precedence over the approved-transcript state checks below only
+for its 36 fixed records. It never changes grounding, editorial, uncertainty,
+stale-result or human/publication gates. Use current primary interactive Codex
+Astra sequentially; necessary private source/transcript/candidate tool/session
+context is authorised, not ordinary logs or another agent/provider. Preserve an
+original before validation and allow at most one preserved pre-import correction.
+Every output binds D-159, its manifest/governance/source/output hashes and truthful
+runtime provenance. No acceptance or publication is created. All earlier batches
+remain consumed, and no substitute, 37th record or automatic Topical assignment is
+permitted. The exception expires at 36 terminal results; quota/access interruptions
+do not turn untouched records into content failures. All normal rules below remain
+unchanged outside this manifest.
+
 - Use only the complete current administrator-approved transcript for content claims.
 - Invoke an explicitly approved text-generation model for synthesis and record its provider, model, immutable revision and approval reference. If no approved generator is configured or it fails, create no draft and return a structured manual-attention failure.
 - Use title, date, speaker, series, and classifications only for orientation and identity checks. Do not use metadata as authority for sermon claims.

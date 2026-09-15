@@ -70,6 +70,33 @@ For milestone evidence, record safe commands/results/defects/regressions in the 
 
 ## 10. Sermon and administration invariants
 
+### D-159 — fifth fixed private draft batch
+
+Samuel separately authorises the protected instruction amendments for only manifest
+SHA-256 `49c7eac788ce5564678cc3ff0c8aa72ec09f3e4e8f746044c1c6e4ed00ea5297`.
+Its 36 new identities are fixed in the verified inventory's ascending source-ID order;
+all 159 earlier attempts and the 11 separately unresolved existing sermons are excluded.
+For this manifest only, current interactive Codex Astra may prepare word-preserving
+transcripts and generate private unapproved descriptions/Q&A before transcript approval.
+Use the existing whole-transcript grounding/validation contract, one preserved pre-import
+correction at most, atomic guarded local imports and byte-identical idempotency reruns.
+Private source/transcript/candidate prose may pass through only the necessary primary
+Codex session context and ignored persistence, never ordinary logs, reports, Git, tests,
+screenshots, another provider or agent context. No separately billed generative API is
+permitted; its cost ceiling is AUD 0. Record exposed runtime identity truthfully and
+retain unavailable-revision/privacy warnings without inventing guarantees.
+Official YouTube captions use standard-primary, standard-unknown, ASR-primary,
+ASR-unknown priority. Unknown association remains explicitly unconfirmed and retains
+`CAPTION_AUDIO_ASSOCIATION_UNKNOWN_ACCEPTED_BY_BOUNDED_DECISION`, the D-159/manifest
+binding, `primary_audio_confirmed: false` and `accepted_under_bounded_exception: true`.
+Systemic quota/access errors pause without consuming untouched positions; no automatic
+retry loop is allowed. A record failure consumes its position, without substitution.
+The exception expires after 36 terminal outcomes. All ordinary approval, grounding,
+uncertainty, authentication and publication rules remain in force elsewhere. Preserve
+existing content, acceptances, historical decisions, frontend and staging. No schema,
+approval, Topical assignment, publication, semantic processing, deployment or push is
+authorised. Read `fifth-private-batch-plan.md` before this exact mode.
+
 ### D-157 — bounded remaining private review
 
 For Samuel's separately delegated existing 155-record collection only, bound to

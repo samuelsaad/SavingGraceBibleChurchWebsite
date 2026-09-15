@@ -102,6 +102,7 @@ import {inspectSpeakerMetadata,applySpeakerPlan,reviewMetadataAction} from "../s
 import {changedReviewBookSelection} from "../src/domain/review-metadata";
 import { registerDelegatedAiReviewPostgresTests } from "./delegated-ai-review-postgres";
 import { registerRemainingAiReviewPostgresTests } from "./remaining-ai-review-postgres";
+import { registerFifthBatchPostgresTests } from "./fifth-batch-postgres";
 
 const enabled = process.env.RUN_POSTGRES_INTEGRATION === "1";
 const integration = enabled ? describe : describe.skip;
@@ -299,6 +300,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
 
   registerDelegatedAiReviewPostgresTests(() => pool, runSchema);
   registerRemainingAiReviewPostgresTests(() => pool, runSchema);
+  registerFifthBatchPostgresTests(() => pool);
 
   it("prefills an exact source speaker without approval, preserves concurrent edits and reruns without audit churn",async()=>{
     const c=await pool.connect();const id="66666666-6666-4666-8666-666666666666";
