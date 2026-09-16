@@ -382,3 +382,53 @@ All 36 atomic imports succeeded as private unapproved drafts; all 36 identical s
 Final verification passed: 339 standard tests; 365 guarded real-PostgreSQL tests with zero skips; type/Astro checks with zero errors/warnings (two informational private-helper hints); production build; offline audit with zero reported vulnerabilities; anonymised import dry run; browser authentication/15-preview checks; public route/API/search/feed/sitemap and production-output exclusion; credential/key/cloud/private-content/identity/symlink/staged-file scans. Disposable test databases, the temporary verification tab and server were removed or closed. Private artifacts remain ignored and unstaged, and Claude's frontend tree is unchanged. No real sermon content entered Git and nothing was approved, published, pushed, merged or deployed.
 
 Stop for real administrator review. The automatic review estimate is about 38 hours for this batch, not measured human performance; all pending Stage-1 work totals about 144 estimated hours. No later batch, terminal retry, substitution, public integration, staging, deployment, embeddings, Related themes or Phase 3C is authorised.
+
+## D-160 protected draft-preview synchronization
+
+The exact D-160 manifest `0390f2b94252270821f9079159482a18e17051399cad654818905b1f1de20c94`
+is now synchronized from the unchanged 227-record local test database to the
+verified staging database. The private canonical package hash is
+`544d76ab8487d1d9f0bcd70e131f12bddc85cbcab65f85d885f07f1bfef47d6a`;
+the private package, manifest, sermon content and receipts remain ignored and
+untracked. The first staging import inserted exactly 36 sermons, 36 sources, 36
+transcripts, 36 media rows, 36 primary-passage review rows, 30 Scripture-reference
+rows, 252 ordered Q&A rows, 36 draft-import receipts, 36 pending review rows, five
+review findings and 72 audit events. The required identical second import and a
+final reconciliation on the deployed image both returned `unchanged` for every
+row.
+
+Staging now contains 191 sermons: the 36 D-160 records are drafts with no
+publication timestamp and 36 incomplete review sets. They have zero restricted
+acceptances, AI reviews or semantic eligibility. The prior 144 restricted
+acceptances remain unchanged. Public detail, archive, feed and sitemap checks found
+no D-160 identity; anonymous draft-preview requests return 401. Authenticated
+loopback checks discovered and opened all 36 draft records locally and on staging,
+including transcripts, descriptions, ordered Q&A, warnings and provenance. The
+local preview is `http://127.0.0.1:4392/`. The staging preview is reached only through
+the established SSH tunnel and opens at `http://127.0.0.1:4393/`.
+
+The deployed release is commit `be83983e9784197ac8a8fd0151448d70a4ddf3d8`,
+image `sha256:d720253435e91e2e9bec34762a529ca4835a580786f3e5c89453911ed7bf06af`
+and archive SHA-256 `49b16c563d2b8dbf667cc41a926fda9d312019ada6fbfabf9053d31bc7eabad4`.
+The visitor-facing frontend design and ordinary route behavior are unchanged. The draft preview listens on EC2 loopback
+only at port 8081. A hardened dynamic-user systemd socket proxy exposes the internal
+PostgreSQL service only at EC2 loopback port 5433; PostgreSQL has no public binding.
+Both the public application and draft preview are healthy after recreation, and the
+draft preview passed an explicit restart check.
+
+A protected pre-import custom-format dump was independently hashed and its restore
+catalog verified before any write. Partial imports roll back transactionally. The
+preserved recovery procedure is to stop the draft preview, restore that dump into a
+separate protected recovery volume/database, verify 155 records and migration 0019,
+then switch only under separate destructive rollback authority; never overwrite or
+delete the verified current volume merely to rehearse rollback. The earlier matching
+application image and release remain preserved for application-only rollback.
+
+Focused D-160/staging tests, sealed-network tests, type/Astro checks, the production
+build and offline audit pass. The guarded PostgreSQL run completed all database tests
+with zero database skips. Both the standard and PostgreSQL-inclusive suites retain
+one pre-existing, unrelated `admin-dashboard-layout` source-shape assertion failure;
+the affected admin files are unchanged from the integration base. Secret/key,
+protected-identity, private-content, build-output, symlink and staged-file scans pass;
+no D-160 content or identity entered Git or production output. Nothing was pushed,
+merged, approved or published.

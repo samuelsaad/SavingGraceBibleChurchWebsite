@@ -613,3 +613,48 @@ replacement of the older color test with the creative token-contrast coverage):
 - `tests/schema-contract.test.ts`
 - `tests/staging.test.ts`
 - `tsconfig.json`
+
+## D-160 protected staging synchronization — 17 September 2026
+
+The D-160 staging synchronization is complete for manifest SHA-256
+`0390f2b94252270821f9079159482a18e17051399cad654818905b1f1de20c94`.
+The final release is `be83983e9784197ac8a8fd0151448d70a4ddf3d8`; its image ID is
+`sha256:d720253435e91e2e9bec34762a529ca4835a580786f3e5c89453911ed7bf06af`
+and its release archive SHA-256 is
+`49b16c563d2b8dbf667cc41a926fda9d312019ada6fbfabf9053d31bc7eabad4`.
+The canonical private sync-package hash is
+`544d76ab8487d1d9f0bcd70e131f12bddc85cbcab65f85d885f07f1bfef47d6a`;
+its transfer-byte SHA-256 is
+`ca42f8ad2cb1f21f388116f1440c0fb1e63ba9e0aab174b1d84e0fd6c62f8a71`.
+No private package or sermon body is tracked.
+
+The protected pre-write PostgreSQL custom-format dump is 3,668,697 bytes with
+SHA-256 `cceb78a405687da0924ff290838bf7f2fef8e41ddea56198441914cf5284d8ee`;
+its restore catalog is readable. The first importer transaction inserted the exact
+36-record package and reached 191 staging sermons. The identical second pass and
+the final pass on the deployed image both returned `unchanged`. The 36 records are
+draft, unpublished and pending review, with 252 ordered Q&A and five retained
+findings. They have zero restricted acceptance, AI review or semantic eligibility.
+The 144 earlier restricted acceptances remain unchanged.
+
+`savinggrace-staging-db-1`, `savinggrace-staging-app-1` and
+`savinggrace-staging-draft-preview-1` are healthy. The new preview listens only on
+`127.0.0.1:8081`; the database relay listens only on `127.0.0.1:5433` and targets
+the fixed internal database address through hardened `systemd-socket-proxyd` units.
+The existing visitor staging binding on port 8080 is unchanged. Anonymous draft
+access returns 401, an authenticated tunnel session can discover all 36 drafts, and
+the draft container passed restart/readiness verification. Public detail, archive,
+feed and sitemap probes found zero D-160 identities.
+
+Recovery evidence and the previous matching image are preserved. Import failures
+roll back their single transaction. A later data rollback must restore the verified
+pre-sync dump to a separate recovery volume/database, verify the 155-record/0019
+baseline and switch only with separate destructive authority; do not overwrite the
+current volume. Application-only rollback may recreate the prior read-only image,
+which does not make D-160 drafts public.
+
+Focused tests (14), sealed-network tests (7), type/Astro checks, production build,
+offline dependency audit and privacy/security scans pass. The PostgreSQL suite ran
+all database tests with zero database skips. The standard and PostgreSQL-inclusive
+suites each report the same pre-existing unrelated `admin-dashboard-layout` source-
+shape assertion; the admin implementation and test are unchanged from the base.
