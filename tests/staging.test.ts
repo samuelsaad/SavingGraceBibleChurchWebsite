@@ -15,6 +15,8 @@ describe("sealed staging target and authentication boundary", () => {
     expect(source.split(/\r?\n/).filter(line=>line.startsWith("!src/enrichment/"))).toEqual([
       "!src/enrichment/generated-text-mechanical-qa.ts","!src/enrichment/review-set-integrity.ts"]);
     for(const guard of ["src/youtube/**","src/development-data/**","**/private/**","**/*.private.*","**/*.pem","**/.env*"])expect(source).toContain(guard);
+    expect(source).toContain("src/server/http/local*.ts");
+    expect(source).toContain("!src/server/http/local-frontend-preview.ts");
   });
   it("explicitly preserves strict-mode compilation without relying on unshipped workspace configuration", () => {
     const source = readFileSync(new URL("../deployment/build.mjs", import.meta.url), "utf8");
