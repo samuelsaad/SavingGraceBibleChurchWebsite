@@ -5,6 +5,7 @@ import {
 } from "../../api/contracts/public-sermons";
 import { InvalidLegacySermonQueryError } from "../../api/legacy-sermon-query";
 import {
+  draftPreviewRenderContext,
   previewRenderContext,
   renderFrontendBoundaryPage,
   renderFrontendHomePage,
@@ -12,6 +13,7 @@ import {
   renderFrontendTaxonomyIndex,
   renderPublicSermonArchivePage,
   renderPublicSermonPage,
+  type FrontendRenderContext,
   type FrontendTaxonomyKind
 } from "../../frontend";
 import type { LocalFrontendPreviewSession } from "../auth/local-frontend-preview-session";
@@ -26,12 +28,23 @@ import { frontendResponse, frontendResponseHeaders } from "./frontend-response";
 const previewRoot = "/frontend-preview";
 const taxonomyPageSize = 50;
 
+export interface ProtectedFrontendPreviewOptions {
+  root?: "/frontend-preview" | "/draft-preview";
+  context?: FrontendRenderContext;
+}
+
 function response(html: string, status = 200): Response {
   return frontendResponse(html, { status, privatePreview: true });
 }
 
-function boundary(status: number, title: string, message: string, kind: "not-found" | "private" | "error"): Response {
-  return response(renderFrontendBoundaryPage({ title, message, kind }, previewRenderContext), status);
+function boundary(
+  status: number,
+  title: string,
+  message: string,
+  kind: "not-found" | "private" | "error",
+  context: FrontendRenderContext = previewRenderContext
+): Response {
+  return response(renderFrontendBoundaryPage({ title, message, kind }, context), status);
 }
 
 function taxonomyOptions(options: PublicSermonFilterOptions, kind: FrontendTaxonomyKind): PublicSermonFilterOption[] {
@@ -49,11 +62,14 @@ function taxonomyQuery(kind: FrontendTaxonomyKind, slug: string): PublicSermonLi
 
 export function createLocalFrontendPreviewHandler(
   repository: PublicSermonRepository,
-  session: LocalFrontendPreviewSession
+  session: Pick<LocalFrontendPreviewSession, "authorizes">,
+  options: ProtectedFrontendPreviewOptions = {}
 ) {
+  const root = options.root ?? previewRoot;
+  const context = options.context ?? (root === "/draft-preview" ? draftPreviewRenderContext : previewRenderContext);
   return async (request: Request): Promise<Response | null> => {
     const url = new URL(request.url);
-    if (url.pathname !== previewRoot && !url.pathname.startsWith(`${previewRoot}/`)) return null;
+    if (url.pathname !== root && !url.pathname.startsWith(`${root}/`)) return null;
     if (request.method !== "GET") {
       return new Response("Method not allowed", {
         status: 405,
@@ -64,13 +80,16 @@ export function createLocalFrontendPreviewHandler(
       return boundary(
         401,
         "Administrator preview session required",
-        "Open the local administration dashboard first, then use its Frontend preview link.",
-        "private"
+        root === "/draft-preview"
+          ? "Start an authorized draft-preview session before viewing pending records."
+          : "Open the local administration dashboard first, then use its Frontend preview link.",
+        "private",
+        context
       );
     }
     if (
-      url.pathname === previewRoot
-      || /^\/frontend-preview\/(?:sermons(?:\/page\/\d+|\/[a-z0-9]+(?:-[a-z0-9]+)*)?|(?:speakers|series|books)(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)?)$/u.test(url.pathname)
+      url.pathname === root
+      || new RegExp(`^${root}/(?:sermons(?:/page/\\d+|/[a-z0-9]+(?:-[a-z0-9]+)*)?|(?:speakers|series|books)(?:/[a-z0-9]+(?:-[a-z0-9]+)*)?)$`, "u").test(url.pathname)
     ) {
       return new Response(null, {
         status: 307,
@@ -82,63 +101,64 @@ export function createLocalFrontendPreviewHandler(
     }
 
     try {
-      if (url.pathname === `${previewRoot}/`) {
+      if (url.pathname === `${root}/`) {
         const [sermons, options] = await Promise.all([
           repository.listPublished(publicSermonListQuerySchema.parse({ page: 1, pageSize: 50, order: "DESC" })),
           repository.listPublishedFilterOptions()
         ]);
-        return response(renderFrontendHomePage({ sermons: sermons.data, options, totalItems: sermons.totalItems }, previewRenderContext));
+        return response(renderFrontendHomePage({ sermons: sermons.data, options, totalItems: sermons.totalItems }, context));
       }
 
-      const archivePageMatch = /^\/frontend-preview\/sermons\/page\/(\d+)\/$/u.exec(url.pathname);
-      if (url.pathname === `${previewRoot}/sermons/` || archivePageMatch) {
+      const relativePath = url.pathname.slice(root.length);
+      const archivePageMatch = /^\/sermons\/page\/(\d+)\/$/u.exec(relativePath);
+      if (relativePath === "/sermons/" || archivePageMatch) {
         const page = archivePageMatch ? Number(archivePageMatch[1]) : 1;
         if (!Number.isSafeInteger(page) || page < 1) {
-          return boundary(404, "Page not found", "That sermon archive page does not exist.", "not-found");
+          return boundary(404, "Page not found", "That sermon archive page does not exist.", "not-found", context);
         }
         const loaded = await loadArchivePage(repository, url.searchParams, page);
         if (loaded.kind === "not-found") {
-          return boundary(404, "Page not found", "That sermon archive page does not exist.", "not-found");
+          return boundary(404, "Page not found", "That sermon archive page does not exist.", "not-found", context);
         }
-        return response(renderPublicSermonArchivePage(loaded.input, previewRenderContext));
+        return response(renderPublicSermonArchivePage(loaded.input, context));
       }
 
-      const detailMatch = /^\/frontend-preview\/sermons\/([a-z0-9]+(?:-[a-z0-9]+)*)\/$/u.exec(url.pathname);
+      const detailMatch = /^\/sermons\/([a-z0-9]+(?:-[a-z0-9]+)*)\/$/u.exec(relativePath);
       if (detailMatch) {
         const [sermon, options] = await Promise.all([
           repository.findPublishedBySlug(detailMatch[1]!),
           repository.listPublishedFilterOptions()
         ]);
         if (!sermon) {
-          return boundary(404, "Sermon not available", "This sermon is not eligible for the private frontend preview.", "private");
+          return boundary(404, "Sermon not available", "This sermon is not eligible for the private frontend preview.", "private", context);
         }
-        return response(renderPublicSermonPage(sermon, previewRenderContext, { options }));
+        return response(renderPublicSermonPage(sermon, context, { options }));
       }
 
-      const taxonomyIndexMatch = /^\/frontend-preview\/(speakers|series|books)\/$/u.exec(url.pathname);
+      const taxonomyIndexMatch = /^\/(speakers|series|books)\/$/u.exec(relativePath);
       if (taxonomyIndexMatch) {
         const kind = taxonomyIndexMatch[1] as FrontendTaxonomyKind;
         const options = await repository.listPublishedFilterOptions();
-        return response(renderFrontendTaxonomyIndex(kind, taxonomyOptions(options, kind), previewRenderContext, options));
+        return response(renderFrontendTaxonomyIndex(kind, taxonomyOptions(options, kind), context, options));
       }
 
-      const taxonomyDetailMatch = /^\/frontend-preview\/(speakers|series|books)\/([a-z0-9]+(?:-[a-z0-9]+)*)\/$/u.exec(url.pathname);
+      const taxonomyDetailMatch = /^\/(speakers|series|books)\/([a-z0-9]+(?:-[a-z0-9]+)*)\/$/u.exec(relativePath);
       if (taxonomyDetailMatch) {
         const kind = taxonomyDetailMatch[1] as FrontendTaxonomyKind;
         const slug = taxonomyDetailMatch[2]!;
         const options = await repository.listPublishedFilterOptions();
         const option = taxonomyOptions(options, kind).find((candidate) => candidate.slug === slug);
-        if (!option) return boundary(404, "Page not found", "That sermon classification is not available.", "not-found");
+        if (!option) return boundary(404, "Page not found", "That sermon classification is not available.", "not-found", context);
         const sermons = await repository.listPublished(taxonomyQuery(kind, slug));
-        return response(renderFrontendTaxonomyDetail({ kind, option, sermons: sermons.data, totalItems: sermons.totalItems, options }, previewRenderContext));
+        return response(renderFrontendTaxonomyDetail({ kind, option, sermons: sermons.data, totalItems: sermons.totalItems, options }, context));
       }
 
-      return boundary(404, "Page not found", "The requested frontend preview page does not exist.", "not-found");
+      return boundary(404, "Page not found", "The requested frontend preview page does not exist.", "not-found", context);
     } catch (error) {
       if (error instanceof ZodError || error instanceof InvalidLegacySermonQueryError) {
-        return boundary(400, "Check the sermon filters", "One or more filter values are invalid.", "error");
+        return boundary(400, "Check the sermon filters", "One or more filter values are invalid.", "error", context);
       }
-      return boundary(500, "Preview temporarily unavailable", "The private frontend preview could not be loaded.", "error");
+      return boundary(500, "Preview temporarily unavailable", "The private frontend preview could not be loaded.", "error", context);
     }
   };
 }

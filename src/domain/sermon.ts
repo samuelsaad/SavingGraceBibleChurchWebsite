@@ -77,7 +77,8 @@ export const sermonSummarySchema = z.object({
    * a no-primary outcome, or a series name. The current DB has no such lifecycle. */
   isTopical: z.boolean().optional(),
   books: z.array(z.object({ name: z.string(), slug: z.string() })),
-  primaryMedia: publicMediaSchema.nullable()
+  primaryMedia: publicMediaSchema.nullable(),
+  reviewState: z.enum(["draft_awaiting_review"]).optional()
 });
 
 export type SermonSummary = z.infer<typeof sermonSummarySchema>;
@@ -105,6 +106,17 @@ export const sermonDetailSchema = sermonSummarySchema.extend({
     answer: z.string().min(1),
     displayOrder: z.number().int().min(1).max(10)
   })),
+  reviewWarnings: z.array(z.object({
+    code: z.string().min(1).max(160),
+    detail: z.string().min(1).max(1_000)
+  })).optional(),
+  reviewProvenance: z.object({
+    sourceSha256: z.string().regex(/^[0-9a-f]{64}$/),
+    processingVersion: z.string().min(1).max(100),
+    transcriptStatus: z.literal("draft"),
+    descriptionStatus: z.literal("draft"),
+    questionAnswerStatus: z.literal("draft")
+  }).optional(),
   relatedSermons: z.array(relatedSermonSummarySchema).max(6).default([])
 });
 

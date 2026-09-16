@@ -2,6 +2,18 @@ import { readFileSync, lstatSync } from "node:fs";
 import type { PoolClient } from "pg";
 
 export const stagingDatabase = "savinggrace_staging";
+export function stagingDraftPreviewConfiguration(env: NodeJS.ProcessEnv) {
+  if (env.NODE_ENV !== "production" || env.STAGING_SEALED !== "1"
+    || env.DB_HOST !== "127.0.0.1" || env.DB_PORT !== "5433" || env.DB_NAME !== stagingDatabase
+    || env.ENABLE_LOCAL_TEST_IDENTITIES || env.ENABLE_LOCAL_DASHBOARD || env.DATABASE_URL
+    || env.PGHOST || env.PGUSER || env.PGPASSWORD || env.PGSERVICE || env.PGOPTIONS
+    || !/^[0-9a-f]{40}$/.test(env.RELEASE_COMMIT ?? "")) throw new Error("staging_draft_preview_configuration_refused");
+  return { host: "127.0.0.1", port: 5433, database: stagingDatabase, user: "staging_reader",
+    passwordFile: "/run/secrets/db_reader_password", max: 2, connectionTimeoutMillis: 5000,
+    statement_timeout: 15000, application_name: "sealed-staging-d160-draft-preview",
+    options: "-c default_transaction_read_only=on -c timezone=UTC" };
+}
+
 export function stagingConfiguration(env: NodeJS.ProcessEnv, maintenance = false) {
   if (env.NODE_ENV !== "production" || env.STAGING_SEALED !== "1"
     || env.DB_HOST !== "db" || env.DB_PORT !== "5432" || env.DB_NAME !== stagingDatabase

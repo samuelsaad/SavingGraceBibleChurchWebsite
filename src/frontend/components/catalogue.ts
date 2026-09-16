@@ -81,6 +81,7 @@ export function entry(sermon: SermonSummary, options: EntryOptions): Html {
   return html`<article class="entry entry--${variant}${sermon.isTopical ? " hue--topical" : book ? ` hue--${book.category}` : ""}">
     ${lead}
     ${when(options.ordinal !== undefined, () => html`<span class="sr-only">Result ${options.ordinal}.</span>`)}
+    ${when(sermon.reviewState === "draft_awaiting_review", () => html`<p class="entry__reason">Draft · awaiting administrator review</p>`)}
     ${passageStamp(sermon, "entry__stamp")}
     <${heading} class="entry__title"><a href="${links.sermon(sermon.slug)}">${sermon.title}</a></${heading}>
     ${metaLine(sermon, links)}

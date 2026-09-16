@@ -93,7 +93,10 @@ function headMetadata(input: PageShellInput, context: FrontendRenderContext): Ht
 /** Renders a complete HTML document. */
 export function pageShell(input: PageShellInput, context: FrontendRenderContext = publicRenderContext): string {
   const links = siteLinks(context);
-  const preview = context.mode === "preview";
+  const preview = context.mode === "preview" || context.mode === "draft-preview";
+  const previewLabel = context.mode === "draft-preview"
+    ? "Protected D-160 draft preview · Awaiting administrator review · Not public or indexable"
+    : "Private local frontend preview · Draft content · Not public or indexable";
   const title = input.suffixTitle === false ? input.title : documentTitle(input.title);
   const scripts = [...new Set<EnhancementScriptName>([...(input.scripts ?? []), ...(links.hasTaxonomyRoutes ? ["navigation" as const] : [])])];
   const document = html`<!doctype html>
@@ -110,7 +113,7 @@ export function pageShell(input: PageShellInput, context: FrontendRenderContext 
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
-    ${when(preview, () => html`<div class="preview-band" role="status">${shelfMark()}<span>Private local frontend preview · Draft content · Not public or indexable</span></div>`)}
+    ${when(preview, () => html`<div class="preview-band" role="status">${shelfMark()}<span>${previewLabel}</span></div>`)}
     <header class="masthead">
       <div class="masthead__inner">
         ${brand(context)}

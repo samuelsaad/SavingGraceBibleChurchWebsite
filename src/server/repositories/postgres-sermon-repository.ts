@@ -46,6 +46,7 @@ type PublicSermonRow = QueryResultRow & {
   primary_passage_state: unknown;
   books: unknown;
   primary_media: unknown;
+  review_state?: unknown;
   total_items?: number;
   is_topical?: boolean;
 };
@@ -56,6 +57,8 @@ type PublicSermonDetailRow = PublicSermonRow & {
   media: unknown;
   transcript: unknown;
   question_answers: unknown;
+  review_warnings?: unknown;
+  review_provenance?: unknown;
 };
 
 type RelatedSermonRow = PublicSermonRow & {
@@ -103,6 +106,7 @@ function summaryFromRow(row: PublicSermonRow): SermonSummary {
     primaryPassageState: row.primary_passage_state,
     books: row.books,
     primaryMedia: row.primary_media,
+    reviewState: row.review_state ?? undefined,
     isTopical: row.is_topical || undefined
   });
 }
@@ -118,6 +122,8 @@ function detailFromRow(
     media: row.media,
     transcript: row.transcript,
     questionAnswers: row.question_answers,
+    reviewWarnings: row.review_warnings ?? [],
+    reviewProvenance: row.review_provenance ?? undefined,
     relatedSermons
   });
 }

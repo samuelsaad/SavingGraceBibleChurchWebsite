@@ -73,6 +73,21 @@ export function renderPublicSermonPage(
         <div class="prose prose--lede">${plainTextParagraphs(sermon.summary)}</div>
       </section>`
     : null;
+  const reviewNotice = sermon.reviewState === "draft_awaiting_review"
+    ? html`<section class="sermon-section" aria-labelledby="draft-review-heading">
+        <h2 id="draft-review-heading" class="section__title">Draft review status</h2>
+        <p class="sermon__note">Private draft awaiting administrator review. Nothing on this page is approved or published.</p>
+        ${when(sermon.reviewProvenance, () => html`<dl class="rail__meta">
+          <dt>Source hash</dt><dd><code>${sermon.reviewProvenance!.sourceSha256}</code></dd>
+          <dt>Processing version</dt><dd><code>${sermon.reviewProvenance!.processingVersion}</code></dd>
+          <dt>Transcript</dt><dd>Draft</dd>
+          <dt>Description</dt><dd>Draft</dd>
+          <dt>Questions and answers</dt><dd>Draft</dd>
+        </dl>`)}
+        ${when(Boolean(sermon.reviewWarnings?.length), () => html`<h3>Warnings and findings requiring review</h3>
+          <ul>${sermon.reviewWarnings!.map((warning) => html`<li><strong>${warning.code}</strong>: ${warning.detail}</li>`)}</ul>`)}
+      </section>`
+    : null;
   const transcript = sermon.transcript
     ? html`<section class="sermon-section" id="transcript" aria-labelledby="transcript-heading">
         <h2 id="transcript-heading" class="section__title">Transcript</h2>
@@ -125,6 +140,7 @@ export function renderPublicSermonPage(
       ${tab}
       <div class="sermon__body">
         ${head}
+        ${reviewNotice}
         ${description}
         ${mediaSection(sermon)}
         ${transcript}

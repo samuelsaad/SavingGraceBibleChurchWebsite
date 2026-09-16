@@ -10,12 +10,14 @@ export const archivePath = "/sermons/";
 export const archivePageSize = 9;
 
 export interface FrontendRenderContext {
-  mode: "public" | "preview" | "restricted";
-  basePath: "" | "/frontend-preview";
+  mode: "public" | "preview" | "restricted" | "draft-preview";
+  basePath: "" | "/frontend-preview" | "/draft-preview";
 }
 
 export const publicRenderContext: FrontendRenderContext = Object.freeze({ mode: "public", basePath: "" });
 export const previewRenderContext: FrontendRenderContext = Object.freeze({ mode: "preview", basePath: "/frontend-preview" });
+/** Authenticated D-160 pending-draft preview; never a publication surface. */
+export const draftPreviewRenderContext: FrontendRenderContext = Object.freeze({ mode: "draft-preview", basePath: "/draft-preview" });
 /** Visitor presentation inside the sealed runtime, not an authenticated admin preview. */
 export const restrictedRenderContext: FrontendRenderContext = Object.freeze({ mode: "restricted", basePath: "" });
 

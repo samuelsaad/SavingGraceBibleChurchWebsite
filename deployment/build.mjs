@@ -2,7 +2,12 @@ import { build } from "esbuild";
 import { mkdir, writeFile } from "node:fs/promises";
 
 await mkdir("dist-staging", { recursive: true });
-for (const [name, entry] of Object.entries({ server: "src/staging/server.ts", database: "src/staging/database-cli.ts" })) {
+for (const [name, entry] of Object.entries({
+  server: "src/staging/server.ts",
+  database: "src/staging/database-cli.ts",
+  "draft-preview": "src/staging/draft-preview-server.ts",
+  "d160-sync": "deployment/d160-sync.ts"
+})) {
   const result = await build({ entryPoints: [entry], outfile: `dist-staging/${name}.cjs`, bundle: true,
     // The minimal archive intentionally excludes the Astro workspace config.
     // Keep strict-mode semantics identical in local and isolated image builds.

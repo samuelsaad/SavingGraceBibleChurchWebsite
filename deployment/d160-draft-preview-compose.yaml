@@ -1,0 +1,57 @@
+services:
+  db:
+    ports:
+      - 127.0.0.1:5433:5432
+  draft-preview:
+    image: ${APP_IMAGE:?exact release image required}
+    network_mode: host
+    environment:
+      NODE_ENV: production
+      STAGING_SEALED: '1'
+      DB_HOST: 127.0.0.1
+      DB_PORT: '5433'
+      DB_NAME: savinggrace_staging
+      RELEASE_COMMIT: ${RELEASE_COMMIT:?exact commit required}
+    secrets: [db_reader_password]
+    entrypoint: [node, draft-preview.cjs]
+    depends_on:
+      db: {condition: service_healthy}
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs: ['/tmp:size=16m,noexec,nosuid']
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    cpus: 0.5
+    mem_limit: 512m
+    pids_limit: 96
+    logging:
+      driver: json-file
+      options: {max-size: 10m, max-file: '3'}
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:8081/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 8s
+      retries: 4
+      start_period: 20s
+  d160-sync:
+    image: ${APP_IMAGE:?exact release image required}
+    profiles: [d160-sync]
+    environment:
+      NODE_ENV: production
+      STAGING_SEALED: '1'
+      DB_HOST: db
+      DB_PORT: '5432'
+      DB_NAME: savinggrace_staging
+      RELEASE_COMMIT: ${RELEASE_COMMIT:?exact commit required}
+      ALLOW_STAGING_D160_SYNC: '1'
+      D160_SYNC_PACKAGE: /run/d160-sync/package.private.json
+    secrets: [db_owner_password]
+    networks: [private]
+    entrypoint: [node, d160-sync.cjs, import]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 512m
+    volumes:
+      - ${D160_SYNC_DIRECTORY:?protected D-160 sync directory required}/package.private.json:/run/d160-sync/package.private.json:ro

@@ -15,10 +15,21 @@ interface PublishedConditions {
   searchExpression: string | null;
 }
 
-export type FrontendSermonScope = "public" | "completed_preview" | "restricted_accepted";
+export type FrontendSermonScope =
+  | "public"
+  | "completed_preview"
+  | "restricted_accepted"
+  | "d160_draft_preview";
+
+export const d160DraftSourceStatus = "phase3b2c_evaluation_36_batch_6_private" as const;
+export const d160DraftProcessingVersion = "phase3b2c-evaluation-36-d160-v1" as const;
+
+function exposesUnapprovedContent(scope: FrontendSermonScope): boolean {
+  return scope === "restricted_accepted" || scope === "d160_draft_preview";
+}
 
 function searchVector(scope: FrontendSermonScope): string {
-  if (scope !== "restricted_accepted") return "s.search_vector";
+  if (!exposesUnapprovedContent(scope)) return "s.search_vector";
   return `(s.search_vector || to_tsvector('english'::regconfig, COALESCE(s.summary,'') || ' ' ||
     COALESCE((SELECT t.body_text FROM sermon_transcripts t WHERE t.sermon_id=s.id),'') || ' ' ||
     COALESCE((SELECT string_agg(q.question_text || ' ' || q.answer_text,' ' ORDER BY q.display_order)
@@ -28,6 +39,8 @@ function acceptedPrimary(alias: string, scope: FrontendSermonScope): string {
   return scope === "restricted_accepted"
     ? `${alias}.review_status IN ('confirmed','proposed') AND EXISTS (SELECT 1 FROM sermon_restricted_acceptances pa
         WHERE pa.sermon_id=${alias}.sermon_id AND pa.passage_basis='primary_passage')`
+    : scope === "d160_draft_preview"
+      ? `${alias}.review_status IN ('unreviewed','proposed','confirmed')`
     : `${alias}.review_status = 'confirmed'`;
 }
 
@@ -83,6 +96,44 @@ export function frontendSermonEligibilitySql(
   scope: FrontendSermonScope
 ): string {
   if (scope === "restricted_accepted") return restrictedEligibilitySql(sermonAlias);
+  if (scope === "d160_draft_preview") {
+    return `(
+      ${sermonAlias}.deleted_at IS NULL
+      AND ${sermonAlias}.status = 'draft'
+      AND ${sermonAlias}.published_at IS NULL
+      AND ${sermonAlias}.source_status = '${d160DraftSourceStatus}'
+      AND ${sermonAlias}.summary_status = 'draft'
+      AND ${sermonAlias}.summary IS NOT NULL
+      AND EXISTS (
+        SELECT 1 FROM sermon_enrichment_sources draft_source
+        WHERE draft_source.sermon_id = ${sermonAlias}.id
+          AND draft_source.processing_version = '${d160DraftProcessingVersion}'
+          AND draft_source.accuracy_review_status = 'required'
+      )
+      AND EXISTS (
+        SELECT 1 FROM sermon_enrichment_reviews draft_review
+        WHERE draft_review.sermon_id = ${sermonAlias}.id
+          AND draft_review.completed_at IS NULL
+      )
+      AND EXISTS (
+        SELECT 1 FROM sermon_transcripts draft_transcript
+        WHERE draft_transcript.sermon_id = ${sermonAlias}.id
+          AND draft_transcript.status = 'draft'
+          AND char_length(trim(draft_transcript.body_text)) > 0
+      )
+      AND (SELECT count(*) FROM sermon_question_answers draft_qa
+           WHERE draft_qa.sermon_id = ${sermonAlias}.id) BETWEEN 5 AND 10
+      AND NOT EXISTS (
+        SELECT 1 FROM sermon_question_answers draft_qa
+        WHERE draft_qa.sermon_id = ${sermonAlias}.id
+          AND draft_qa.status <> 'draft'
+      )
+      AND NOT EXISTS (
+        SELECT 1 FROM sermon_restricted_acceptances accepted
+        WHERE accepted.sermon_id = ${sermonAlias}.id
+      )
+    )`;
+  }
   const transcriptAlias = `${sermonAlias}_eligible_transcript`;
   const summaryCurrent = groundedReferenceIsCurrentSql(
     sermonAlias,
@@ -243,6 +294,7 @@ function buildPublishedConditions(
 
 export function publicRelationshipProjection(alias = "s", scope: FrontendSermonScope = "public"): string {
   return `
+  ${scope === "d160_draft_preview" ? "'draft_awaiting_review'" : "NULL"} AS review_state,
   ${scope === "restricted_accepted" ? topicalClassificationSql(alias) : "false"} AS is_topical,
   (
     SELECT jsonb_build_object('name', sp.name, 'slug', sp.slug)
@@ -266,7 +318,7 @@ export function publicRelationshipProjection(alias = "s", scope: FrontendSermonS
     FROM scripture_references ref
     WHERE ref.sermon_id = ${alias}.id
       AND ref.review_status IN ('unreviewed', 'confirmed')
-      AND NOT (ref.relationship_role = 'primary' AND ${scope === "restricted_accepted" ? "true" : "ref.review_status = 'confirmed'"})
+      AND NOT (ref.relationship_role = 'primary' AND ${scope === "restricted_accepted" ? "true" : scope === "d160_draft_preview" ? "ref.review_status IN ('unreviewed','proposed','confirmed')" : "ref.review_status = 'confirmed'"})
   ), '[]'::jsonb) AS scripture_references,
   COALESCE((
     SELECT jsonb_agg(
@@ -366,7 +418,7 @@ export function buildPublishedSermonListQuery(
   return {
     text: `
       SELECT s.id, s.title, s.slug, to_char(s.service_date, 'YYYY-MM-DD') AS service_date,
-             CASE WHEN ${scope === "restricted_accepted" ? "true" : "s.summary_status = 'approved'"} THEN s.summary ELSE NULL END AS summary,
+             CASE WHEN ${exposesUnapprovedContent(scope) ? "true" : "s.summary_status = 'approved'"} THEN s.summary ELSE NULL END AS summary,
              count(*) OVER ()::integer AS total_items,
              ${publicRelationshipProjection("s", scope)}
       FROM sermons s
@@ -421,7 +473,7 @@ export function buildPublishedSeriesRepresentativesQuery(
         WHERE ${frontendSermonEligibilitySql("sermon", scope)}
       )
       SELECT s.id, s.title, s.slug, to_char(s.service_date, 'YYYY-MM-DD') AS service_date,
-             CASE WHEN ${scope === "restricted_accepted" ? "true" : "s.summary_status = 'approved'"} THEN s.summary ELSE NULL END AS summary,
+             CASE WHEN ${exposesUnapprovedContent(scope) ? "true" : "s.summary_status = 'approved'"} THEN s.summary ELSE NULL END AS summary,
              jsonb_build_object('name', ranked.series_name, 'slug', ranked.series_slug)
                AS representative_series,
              ${publicRelationshipProjection("s", scope)}
@@ -441,8 +493,8 @@ export function buildPublishedSermonDetailQuery(
   return {
     text: `
       SELECT s.id, s.title, s.slug, to_char(s.service_date, 'YYYY-MM-DD') AS service_date,
-             CASE WHEN ${scope === "restricted_accepted" ? "true" : "s.summary_status = 'approved'"} THEN s.summary ELSE NULL END AS summary,
-             CASE WHEN ${scope === "restricted_accepted" ? "true" : "s.summary_status = 'approved'"} THEN s.seo_description ELSE NULL END AS seo_description,
+             CASE WHEN ${exposesUnapprovedContent(scope) ? "true" : "s.summary_status = 'approved'"} THEN s.summary ELSE NULL END AS summary,
+             CASE WHEN ${exposesUnapprovedContent(scope) ? "true" : "s.summary_status = 'approved'"} THEN s.seo_description ELSE NULL END AS seo_description,
              s.body,
              ${publicRelationshipProjection("s", scope)},
              COALESCE((
@@ -464,7 +516,7 @@ export function buildPublishedSermonDetailQuery(
              (
                SELECT jsonb_build_object('bodyText', transcript.body_text)
                FROM sermon_transcripts transcript
-               WHERE transcript.sermon_id = s.id AND ${scope === "restricted_accepted" ? "true" : "transcript.status = 'approved'"}
+               WHERE transcript.sermon_id = s.id AND ${exposesUnapprovedContent(scope) ? "true" : "transcript.status = 'approved'"}
              ) AS transcript,
              COALESCE((
                SELECT jsonb_agg(jsonb_build_object(
@@ -473,8 +525,41 @@ export function buildPublishedSermonDetailQuery(
                  'displayOrder', qa.display_order
                ) ORDER BY qa.display_order, qa.id)
                FROM sermon_question_answers qa
-               WHERE qa.sermon_id = s.id AND ${scope === "restricted_accepted" ? "true" : "qa.status = 'approved'"}
-             ), '[]'::jsonb) AS question_answers
+               WHERE qa.sermon_id = s.id AND ${exposesUnapprovedContent(scope) ? "true" : "qa.status = 'approved'"}
+             ), '[]'::jsonb) AS question_answers,
+             ${scope === "d160_draft_preview" ? `COALESCE((
+               SELECT jsonb_agg(warning ORDER BY warning->>'code')
+               FROM (
+                 SELECT jsonb_build_object(
+                   'code', source_warning.value->>'code',
+                   'detail', source_warning.value->>'safeDetail'
+                 ) AS warning
+                 FROM sermon_enrichment_sources warning_source
+                 CROSS JOIN LATERAL jsonb_array_elements(warning_source.warnings) source_warning(value)
+                 WHERE warning_source.sermon_id = s.id
+                   AND source_warning.value->>'code' IS NOT NULL
+                   AND source_warning.value->>'safeDetail' IS NOT NULL
+                 UNION ALL
+                 SELECT jsonb_build_object(
+                   'code', 'source_finding_' || finding.category,
+                   'detail', finding.guidance
+                 )
+                 FROM sermon_enrichment_review_items finding
+                 WHERE finding.sermon_id = s.id
+                   AND finding.decision_status = 'pending'
+               ) draft_warnings
+             ), '[]'::jsonb)` : "'[]'::jsonb"} AS review_warnings,
+             ${scope === "d160_draft_preview" ? `(
+               SELECT jsonb_build_object(
+                 'sourceSha256', draft_source.source_content_sha256,
+                 'processingVersion', draft_source.processing_version,
+                 'transcriptStatus', 'draft',
+                 'descriptionStatus', 'draft',
+                 'questionAnswerStatus', 'draft'
+               )
+               FROM sermon_enrichment_sources draft_source
+               WHERE draft_source.sermon_id = s.id
+             )` : "NULL"} AS review_provenance
       FROM sermons s
       WHERE ${frontendSermonEligibilitySql("s", scope)}
         AND lower(s.slug) = lower($1)
@@ -575,7 +660,7 @@ export function buildRelatedPublishedSermonsQuery(
         JOIN sermons candidate ON candidate.id = score.id
       )
       SELECT s.id, s.title, s.slug, to_char(s.service_date, 'YYYY-MM-DD') AS service_date,
-             CASE WHEN ${scope === "restricted_accepted" ? "true" : "s.summary_status = 'approved'"} THEN s.summary ELSE NULL END AS summary,
+             CASE WHEN ${exposesUnapprovedContent(scope) ? "true" : "s.summary_status = 'approved'"} THEN s.summary ELSE NULL END AS summary,
              s.relationship_reasons,
              ${publicRelationshipProjection("s", scope)}
       FROM ranked s
