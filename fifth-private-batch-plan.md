@@ -273,3 +273,90 @@ cached dependency audit reported zero known vulnerabilities. The read-only
 43-table application fingerprint still matches 155 sermons, 144 acceptance
 receipts and 19 migrations. Real renewal/channel success and batch outcomes must
 be reported separately; passing fixtures do not establish provider access.
+
+### Completed private batch — 16 September 2026
+
+The owner's guarded renewal and authenticated church-channel verification
+succeeded. The known invalid grant was not retried. All subsequent caption
+retrievals were preserved; the interrupted continuation reused the 36 verified
+downloads and prepared transcripts without another OAuth flow or provider call.
+The original freeze and failed-operation histories remain intact. Recovery found
+no concurrent batch worker and independently revalidated zero prior D-159 imports
+against the unchanged 155-sermon baseline before any new database write.
+
+All manifest sequences 1–36 completed successfully. Each has a verified official
+English ASR source with unknown audio association, the bounded D-159 warning,
+and no claim of confirmed primary audio. Source totals: 12,782,435 exact VTT bytes,
+81,628 cues and 36 verified source hashes. Prepared transcripts contain 251,655
+words and 1,296,300 characters. Word, numeric and marker preservation passed;
+automated punctuation/paragraphing still requires administrator accuracy review.
+Four provider-redacted word markers remain pending findings: sequence 13 has
+three and sequence 27 has one. No missing wording was inferred.
+
+The primary interactive Astra session read each complete prepared transcript and
+produced 36 descriptions (201–218 words) and 252 ordered Q&A pairs (seven each).
+All passed the unchanged structural, grounding, editorial, provenance and privacy
+validators. Fourteen contextual editorial review flags remain; automated success
+is not theological or human approval. Every result retains the unapproved-source
+warning and limited-reproducibility warning. Model is `gpt-6-astra`; unavailable
+revision, session, privacy/retention and token metadata remain unavailable.
+No separately billed generative API was used; external generation cost was AUD 0.
+
+Exactly two allowed pre-import corrections were used. Sequence 15 changed only
+its question below minimum length, preserving its answer and description.
+Sequence 27 corrected grounding-purpose metadata for an already supported
+Scripture reference, without changing any generated prose. Original candidates,
+failed validation evidence, correction lineage and hashes are preserved privately.
+There was no regeneration of valid completed candidates or second correction.
+
+All 36 per-sermon atomic imports succeeded, with zero rollback/failure outcomes.
+The identical second pass returned `unchanged` for all 36. A full 43-table
+fingerprint comparison before/after that pass found no content, version,
+timestamp, audit or review-progress churn. Independent comparison of every prior
+row hash preserved the complete original 155-sermon population and associated
+tables. Stored transcripts, descriptions and each ordered question/answer match
+their validated bytes. The database now has 191 sermons, with 36 new pending
+Stage-1 reviews; the prior 144 restricted acceptances and eleven exceptions are
+unchanged. New human and AI review decisions, approvals and public eligibility
+remain zero. No schema migration or semantic model execution occurred.
+
+The shared transcript-preparation implementation now has anonymized regression
+coverage for leading and marker-only redactions, touching overlap, positive-gap
+repetitions, uncertainty/numeric preservation and rejection of unsafe or incomplete
+sources. A recovery-helper nullability issue was corrected privately. Neither
+change altered a source caption or relaxed a validator.
+
+Final verification:
+
+- Focused preservation/comparison/D-159 tests: 53 passed across three files.
+- Standard suite: 626 passed, with its 102 PostgreSQL-gated cases intentionally
+  skipped there. The separate real PostgreSQL suite passed all 728 tests across
+  67 files with zero skips and removed its exact disposable test database.
+- Type/Astro checks: 261 files, zero errors, warnings or hints. Production build:
+  successful, three static pages and six output files.
+- Anonymized importer dry run: five input records, three included, two excluded,
+  zero rejected. Offline dependency audit: zero reported vulnerabilities from
+  available cached evidence, not a fresh online vulnerability assessment.
+- Real read-only backend/browser verification: all 36 review sets and rendered
+  Stage-1 pages passed, later transcript stages remained locked, four source
+  findings remained pending, no review mutations or browser script errors occurred.
+  Mobile reflow had no page overflow. The isolated browser dispatched through the
+  current application handlers with a read-only database, no listening server,
+  no external requests and no screenshots. Existing servers were untouched.
+- Unauthenticated private API and preview requests returned 401. All 36 public
+  detail/API routes returned 404. Public search, archive, sitemap, feed boundary,
+  metadata and completed-preview checks excluded the new scope. No new content
+  entered production output or the existing review delegations.
+- Credential/token/private-key/AWS, protected-identity, prohibited-file, symlink,
+  tracked/staged and production-output scans passed. A 16-word shingle scan found
+  106 overlapping phrases solely inside the previously authorized 15-sermon seed;
+  that file is byte-identical to its pre-batch committed version. No new D-159
+  content or identity was added there or elsewhere in Git/build output.
+- All private evidence remains ignored and unstaged. The five pre-existing
+  tracked changes and two untracked files are preserved and excluded from the
+  completion commit. Claude's recorded frontend tree is unchanged.
+
+D-159 is terminal and consumed after these exact 36 positions. No substitutions,
+37th record, approval, publication, audio/video processing, frontend/staging
+change, push, merge or deployment occurred. Human source/accuracy, metadata,
+editorial, transcript and dependent-content review remains necessary.
