@@ -6,6 +6,7 @@ COPY package.json package-lock.json ./
 RUN npm ci --ignore-scripts --no-audit --no-fund
 COPY src ./src
 COPY deployment/build.mjs ./deployment/build.mjs
+COPY deployment/d160-sync.ts ./deployment/d160-sync.ts
 RUN node deployment/build.mjs
 
 FROM ${NODE_IMAGE} AS runtime

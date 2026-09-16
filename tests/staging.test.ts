@@ -21,6 +21,8 @@ describe("sealed staging target and authentication boundary", () => {
   it("explicitly preserves strict-mode compilation without relying on unshipped workspace configuration", () => {
     const source = readFileSync(new URL("../deployment/build.mjs", import.meta.url), "utf8");
     expect(source).toContain("tsconfigRaw: { compilerOptions: { alwaysStrict: true } }");
+    const dockerfile = readFileSync(new URL("../Dockerfile", import.meta.url), "utf8");
+    expect(dockerfile).toContain("COPY deployment/d160-sync.ts ./deployment/d160-sync.ts");
   });
   it("packages private-review schema code without admitting private artifact directories or filenames", () => {
     for (const path of ["db/migrations/0017_delegated_private_ai_review.sql", "db/migrations/0018_remaining_private_ai_review.down.sql", "src/staging/guard.ts"]) {
