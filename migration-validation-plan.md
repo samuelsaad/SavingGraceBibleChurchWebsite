@@ -1186,3 +1186,24 @@ outcomes, reading coverage and limitations are in
   new sermon, external generation, publication, push, merge or deployment is part
   of this milestone. Full outcomes are in
   [remaining-private-review-plan.md](remaining-private-review-plan.md).
+
+## D-159 final private-batch verification — 16 September 2026
+
+All 36 fixed positions passed validation and atomic private import; 36 identical
+second imports returned unchanged with no 43-table fingerprint churn. All original
+155 sermons and historical rows remain intact. Totals are 191 sermons, 144 existing
+restricted acceptances, 36 new pending Stage-1 drafts, 36 new descriptions and 252
+new Q&A. Four source-redaction findings and 14 editorial flags remain for review.
+
+Focused tests: 53 passed. Standard tests: 626 passed; the 102 gated PostgreSQL
+cases ran in the separate full PostgreSQL suite: 728 passed, zero skips, exact
+disposable database removed. Type/Astro: 261 files, zero diagnostics. Build passed;
+dry run included three/excluded two of five fixtures; offline audit reported zero
+known vulnerabilities from cached evidence. All 36 real read-only browser review
+pages passed; public/private authentication boundaries and new-draft exclusions
+passed without changing existing servers or saving review decisions. Privacy,
+credential/key/token/AWS, identity, symlink, tracked/staged and build scans passed.
+The authorized 15-sermon seed remains byte-identical despite pre-existing shared
+phrase matches. Unrelated edits remain preserved. Detailed commands, results,
+corrections, privacy qualifications and final state are recorded in
+[fifth-private-batch-plan.md](fifth-private-batch-plan.md).

@@ -5,6 +5,28 @@
 
 ## D-159 isolated private batch checkpoint
 
+**Completed 16 September 2026.** All 36 fixed positions were validated and imported
+as private, unapproved Stage-1 drafts, then returned `unchanged` on identical
+second import. The database now contains 191 sermons. Every original row across
+the 43-table baseline, including 155 earlier sermons, 144 restricted acceptance
+receipts and eleven earlier exceptions, is preserved. D-159 is consumed; do not
+retrieve, generate, correct or import another record under this decision.
+
+The 36 transcripts, 36 descriptions and 252 ordered Q&A retain Astra provenance,
+unknown-audio warnings and administrator-review requirements. Four provider-redacted
+words remain unresolved findings (three in sequence 13, one in sequence 27);
+fourteen contextual editorial flags also require review. Two bounded corrections
+preserved their originals: one short question in sequence 15 and support-purpose
+metadata only in sequence 27. No content was approved or accepted for frontend use.
+
+All 36 actual review pages passed isolated read-only browser verification without
+changing running servers, sending external requests, taking screenshots or saving
+decisions. Public and completed-preview eligibility are zero for the new scope.
+Final verification passed 728 real PostgreSQL tests with zero skips, type/Astro
+checks, build, dry run, offline audit and privacy/security scans. See the batch
+plan's completion evidence for details and qualifications. The historical access
+interruptions below are retained as history, not the current resume instruction.
+
 The fifth fixed batch is bound only to manifest SHA-256
 `49c7eac788ce5564678cc3ff0c8aa72ec09f3e4e8f746044c1c6e4ed00ea5297`.
 Thirty-six new identities were frozen after excluding all 159 prior attempts.
