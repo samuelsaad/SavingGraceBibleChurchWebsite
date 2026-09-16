@@ -5,6 +5,24 @@ D-158 permits only the separately authorized, manifest-bound bulk acceptance in
 historical grounding records. New acceptance has its own UTC fingerprint format;
 historical timezone serialization is reproduced only for legacy validation.
 
+D-160 separately permits `unapproved` source transcripts only for manifest
+`0390f2b94252270821f9079159482a18e17051399cad654818905b1f1de20c94`. Apply every normal
+support-range, source-hash, paragraph/Q&A, editorial, output-integrity, uncertainty,
+staleness and administrator-review rule below. Bind each result to D-160, the exact
+fixed sequence, governance commit, transcript hash and output hashes. Store Samuel's
+selected label `gpt-5.6-sol` separately from verified runtime model metadata. When
+runtime model/revision/session/privacy details are not exposed, use the required
+unavailable markers and limited-reproducibility warning; never invent them or copy
+Astra provenance from an earlier decision. Preserve the original candidate and allow
+at most one pre-import correction with both hashes, issue codes and truthful correction
+metadata. Unknown-audio captions retain the bounded warning and false primary-audio
+confirmation under D-160 only. Necessary prose may enter only the current primary
+Codex session and ignored artifacts. No public, search, feed, sitemap, metadata, build,
+semantic or approval eligibility is created. Transcript identity/byte changes make
+dependent drafts stale. The exception cannot be reused for another manifest, a
+substitute or after all 36 fixed positions become terminal. See
+`sixth-private-batch-plan.md`; every normal rule remains in force elsewhere.
+
 D-159 separately permits `unapproved` source transcripts only for manifest
 `49c7eac788ce5564678cc3ff0c8aa72ec09f3e4e8f746044c1c6e4ed00ea5297`. Apply every normal
 support-range, source-hash, paragraph/Q&A, editorial and output-integrity rule below.

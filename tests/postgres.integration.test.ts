@@ -104,6 +104,7 @@ import { registerDelegatedAiReviewPostgresTests } from "./delegated-ai-review-po
 import { registerRemainingAiReviewPostgresTests } from "./remaining-ai-review-postgres";
 import { registerRestrictedAcceptancePostgresTests } from "./restricted-acceptance-postgres";
 import { registerFifthBatchPostgresTests } from "./fifth-batch-postgres";
+import { registerSixthBatchPostgresTests } from "./sixth-batch-postgres";
 
 const enabled = process.env.RUN_POSTGRES_INTEGRATION === "1";
 const integration = enabled ? describe : describe.skip;
@@ -314,6 +315,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   registerRemainingAiReviewPostgresTests(() => pool, runSchema);
   registerRestrictedAcceptancePostgresTests(() => pool, runSchema);
   registerFifthBatchPostgresTests(() => pool);
+  registerSixthBatchPostgresTests(() => pool);
 
   it("prefills an exact source speaker without approval, preserves concurrent edits and reruns without audit churn",async()=>{
     const c=await pool.connect();const id="66666666-6666-4666-8666-666666666666";

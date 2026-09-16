@@ -28,6 +28,17 @@ authentication provider and HTTPS are configured, remotely hosted admin and
 private-preview routes are disabled; SSH tunneling is not application login.
 No publication or production cutover is implied by preparing this release.
 
+## D-160 sixth fixed private draft batch
+
+The separately authorised D-160 sixth private batch is bound only to frozen manifest
+SHA-256 `0390f2b94252270821f9079159482a18e17051399cad654818905b1f1de20c94`.
+It contains 36 fixed attempts selected after 195 earlier attempts, with 87 clean
+candidates left unselected. Samuel selected the Sol label for generation, while
+runtime-reported model metadata remains a distinct evidence field and may be recorded
+as unavailable. The exception creates private unapproved drafts only and grants no
+acceptance, publication, semantic, staging or further-batch authority. See
+[the D-160 plan](sixth-private-batch-plan.md).
+
 ## D-159 fifth fixed private draft batch
 
 The new, separately authorised D-159 private draft batch is bound to one frozen
