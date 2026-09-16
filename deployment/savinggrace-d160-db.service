@@ -1,0 +1,15 @@
+[Unit]
+Description=Sealed D-160 database loopback proxy
+Requires=savinggrace-d160-db.socket
+After=docker.service
+
+[Service]
+ExecStart=/usr/lib/systemd/systemd-socket-proxyd @DB_PRIVATE_ADDRESS@:5432
+DynamicUser=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+RestrictAddressFamilies=AF_INET
+CapabilityBoundingSet=
+Restart=on-failure

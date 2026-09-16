@@ -25,7 +25,8 @@ describe("sealed staging target and authentication boundary", () => {
     expect(dockerfile).toContain("COPY deployment/d160-sync.ts ./deployment/d160-sync.ts");
   });
   it("packages private-review schema code without admitting private artifact directories or filenames", () => {
-    for (const path of ["db/migrations/0017_delegated_private_ai_review.sql", "db/migrations/0018_remaining_private_ai_review.down.sql", "src/staging/guard.ts"]) {
+    for (const path of ["db/migrations/0017_delegated_private_ai_review.sql", "db/migrations/0018_remaining_private_ai_review.down.sql", "src/staging/guard.ts",
+      "deployment/savinggrace-d160-db.socket", "deployment/savinggrace-d160-db.service"]) {
       expect(permittedPackagePath(path)).toBe(true);
     }
     for (const path of ["private/example.json", "src/private/example.ts", "src/example.private.ts", "development-data/seed.json",

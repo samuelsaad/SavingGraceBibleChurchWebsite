@@ -1,7 +1,4 @@
 services:
-  db:
-    ports:
-      - 127.0.0.1:5433:5432
   draft-preview:
     image: ${APP_IMAGE:?exact release image required}
     network_mode: host

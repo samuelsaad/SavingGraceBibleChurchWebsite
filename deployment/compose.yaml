@@ -8,7 +8,9 @@ services:
       POSTGRES_INITDB_ARGS: --data-checksums --auth-host=scram-sha-256
     secrets: [db_owner_password]
     volumes: [postgres-data:/var/lib/postgresql/data]
-    networks: [private]
+    networks:
+      private:
+        ipv4_address: ${DB_PRIVATE_ADDRESS:?verified internal database address required}
     restart: unless-stopped
     shm_size: 128mb
     cpus: 1.0

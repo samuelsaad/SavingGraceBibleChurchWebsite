@@ -102,10 +102,16 @@ describe("D-160 protected draft preview", () => {
 
   it("keeps preview and database exposure on EC2 loopback in Compose", async () => {
     const compose = await readFile("deployment/d160-draft-preview-compose.yaml", "utf8");
-    expect(compose).toContain("127.0.0.1:5433:5432");
+    const socket = await readFile("deployment/savinggrace-d160-db.socket", "utf8");
+    const service = await readFile("deployment/savinggrace-d160-db.service", "utf8");
+    expect(compose).not.toContain("ports:");
     expect(compose).toContain("network_mode: host");
     expect(compose).not.toContain("0.0.0.0");
     expect(compose).toContain("entrypoint: [node, draft-preview.cjs]");
     expect(compose).toContain("read_only: true");
+    expect(socket).toContain("ListenStream=127.0.0.1:5433");
+    expect(socket).not.toContain("0.0.0.0");
+    expect(service).toContain("systemd-socket-proxyd @DB_PRIVATE_ADDRESS@:5432");
+    expect(service).toContain("DynamicUser=yes");
   });
 });
