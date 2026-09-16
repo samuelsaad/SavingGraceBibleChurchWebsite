@@ -12,6 +12,8 @@
     "preview": "cross-env ASTRO_TELEMETRY_DISABLED=1 astro preview",
     "check": "cross-env ASTRO_TELEMETRY_DISABLED=1 astro check",
     "test": "vitest run",
+    "staging:bundle": "node deployment/build.mjs",
+    "staging:export-local": "tsx deployment/export-local.ts",
     "test:model-local": "tsx scripts/local-model-acceptance.ts",
     "test:postgres": "tsx tests/postgres-test-runner.ts",
     "test:watch": "vitest",

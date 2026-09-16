@@ -27,7 +27,8 @@ export type SchemaMigrationScope =
   | "0015_optional_passage_and_grounding_identity"
   | "0016_legacy_completed_passage_reviews"
   | "0017_delegated_private_ai_review"
-  | "0018_remaining_private_ai_review";
+  | "0018_remaining_private_ai_review"
+  | "0019_restricted_bulk_acceptance";
 
 interface SchemaMigrationDefinition {
   id: string;
@@ -276,6 +277,14 @@ export const schemaMigrationDefinitions: readonly SchemaMigrationDefinition[] = 
     addedRelations: ["remaining_ai_review_scopes", "remaining_ai_review_members", "sermon_ai_component_reviews", "sermon_ai_metadata_assignments"],
     addedFunctions: ["protect_remaining_ai_review_history()"],
     addedTriggers: ["remaining_ai_review_scopes_immutable", "remaining_ai_review_members_immutable", "sermon_ai_component_reviews_immutable", "sermon_ai_metadata_assignments_immutable"]
+  },
+  {
+    id: "0019_restricted_bulk_acceptance", order: 19,
+    upPath: "db/migrations/0019_restricted_bulk_acceptance.sql",
+    downPath: "db/migrations/0019_restricted_bulk_acceptance.down.sql",
+    addedRelations: ["sermon_restricted_acceptances", "sermon_restricted_acceptance_withdrawals"],
+    addedFunctions: ["protect_restricted_acceptance_history()", "restricted_acceptance_dependency(uuid)"],
+    addedTriggers: ["sermon_restricted_acceptances_immutable", "sermon_restricted_acceptance_withdrawals_immutable"]
   }
 ] as const;
 

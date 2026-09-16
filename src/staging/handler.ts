@@ -1,0 +1,56 @@
+import type { PublicSermonRepository } from "../server/repositories/sermon-repository";
+import { createPublicApiRouter } from "../server/http/public-api-router";
+import { createPublicSermonSiteHandler, frontendResponse, renderFrontendHomePage } from "../server/http/public-sermon-page";
+import { publicSermonListQuerySchema } from "../api/contracts/public-sermons";
+import { restrictedRenderContext } from "../frontend/routes";
+import { renderFrontendTaxonomyIndex, type FrontendTaxonomyKind } from "../frontend";
+
+export const sealedHeaders = {
+  "Cache-Control": "private, no-store, max-age=0", "X-Robots-Tag": "noindex, nofollow, noarchive",
+  "Referrer-Policy": "no-referrer", "X-Content-Type-Options": "nosniff", "X-Frame-Options": "DENY"
+};
+function plain(code: string, status: number) {
+  return new Response(code, { status, headers: { ...sealedHeaders,
+    "Content-Type": "text/plain; charset=utf-8",
+    "Content-Security-Policy": "default-src 'none'; frame-ancestors 'none'; base-uri 'none'" } });
+}
+export function createSealedStagingHandler(repository: PublicSermonRepository, ready: () => Promise<void>, commit: string, frontendDisabled = false) {
+  const publicApi = createPublicApiRouter(repository);
+  const publicPages = createPublicSermonSiteHandler(repository, restrictedRenderContext);
+  return async (request: Request): Promise<Response> => {
+    try {
+      const url = new URL(request.url);
+      const path = decodeURIComponent(url.pathname);
+      if (/^\/(?:admin|frontend-preview|__local)(?:\/|$)/.test(path)
+        || /^\/api\/v1\/admin(?:\/|$)/.test(path)) return plain("staging_authentication_not_configured", 401);
+      if (request.method !== "GET" && request.method !== "HEAD") return plain("method_not_allowed", 405);
+      if (path === "/health/ready") {
+        await ready();
+        return new Response(JSON.stringify({ status: "ready", release: commit, authentication: "private_routes_disabled" }),
+          { headers: { ...sealedHeaders, "Content-Type": "application/json" } });
+      }
+      if (path === "/robots.txt") return plain("User-agent: *\nDisallow: /\n", 200);
+      // History-preserving application recovery: no database rollback or identity
+      // bypass. Health and deny-by-default private routes remain available.
+      if (frontendDisabled) return plain("restricted_frontend_temporarily_disabled", 503);
+      let response: Response | null;
+      if (path === "/") {
+        const [result, options] = await Promise.all([
+          repository.listPublished(publicSermonListQuerySchema.parse({ page: 1, pageSize: 6 })),
+          repository.listPublishedFilterOptions()
+        ]);
+        response = frontendResponse(renderFrontendHomePage({ sermons: result.data, totalItems: result.totalItems, options }, restrictedRenderContext));
+      } else if (/^\/(speakers|series|books)\/$/.test(path)) {
+        const kind = path.split('/')[1] as FrontendTaxonomyKind;
+        const options = await repository.listPublishedFilterOptions();
+        response = frontendResponse(renderFrontendTaxonomyIndex(kind, options[kind], restrictedRenderContext, options));
+      } else if (/^\/(speakers|series|books)$/.test(path)) {
+        response = new Response(null, {status:307, headers:{Location:`${path}/${url.search}`}});
+      } else response = path.startsWith("/api/") ? await publicApi(request) : await publicPages(request);
+      if (!response) return plain("not_found", 404);
+      const headers = new Headers(response.headers);
+      for (const [key, value] of Object.entries(sealedHeaders)) headers.set(key, value);
+      return new Response(request.method === "HEAD" ? null : response.body, { status: response.status, headers });
+    } catch { return plain("staging_unavailable", 503); }
+  };
+}

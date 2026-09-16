@@ -1,5 +1,315 @@
 # Migration Validation Plan
 
+## Public staging networking - 14 September 2026
+
+The explicitly authorized public visitor mode reuses the deployed `60b31a1` image
+and adds only `0.0.0.0:8080:8080/tcp` via the protected public-staging override.
+No V3 build was deployed. The base sealed restore policy remains unchanged; new
+guards compare the effective public configuration to the deployed base and reject
+extra ports, image/environment/storage/private-service changes. Seven sealed and
+seven public Python network tests passed, including environment-order equivalence,
+changed-value refusal and duplicate-variable refusal. The first ordering-only
+guard rejection exercised the app-only networking rollback successfully.
+
+Fresh evidence: 641 standard tests passed, 120 PostgreSQL gates skipped; 17 focused
+JS tests passed; Astro/type check zero errors/warnings and one existing hint; local
+production build, anonymized five-record dry run and offline cached audit passed.
+No PostgreSQL write/create/drop test was run during this networking-only task.
+
+All 43 staging table fingerprints and sequences remained identical, with unchanged
+database container/start/mounts: 155 stored, 144 published/accepted, 11 unresolved,
+19 migrations. Direct external HTTP verification passed 69 requests, all 16 archive
+pages/144 identities, all 11 HTML/API exclusions, ten accepted details including
+nine Topical, filters, redirects, anti-indexing and private-route denial. Public
+browser home/menu/search/pagination worked without the tunnel. The unchanged image
+contains inline assets and no V3 menu entry. Original V3 source hashes matched.
+
+A three-worker archive sweep returned a 500 before the complete serial pass.
+The cause is not established; database log-count inspection found no statement
+timeout or connection-limit messages. This is not load/capacity acceptance. AWS
+Name-tag and security-group metadata were unavailable; no AWS rule was changed.
+The pinned SSH host, expected instance ID/IP and deployed image were verified.
+See `deployment/STATUS.md` and `deployment/HANDOVER.md` for current public mode,
+exact image/fingerprint, private recovery evidence and exercised rollback.
+
+## Sermons V3 local alternative - 14 September 2026
+
+Implemented a separate reading-room presentation, V3-specific route renderer and
+styles, and one additional existing-menu entry. No V1/V2 page, content repository,
+database, authentication or deployment behavior was changed. New anonymised tests
+cover combined filters and pagination, explicit-only Topical display, escaping,
+CSP hashes, noindex/canonical policy, preview authorization, sealed administrator
+denial, route normalization, invalid input, empty results and sitemap exclusion.
+
+- `npm test`: 641 passed, 120 PostgreSQL-gated tests skipped. No PostgreSQL suite
+  was run: it creates/writes a disposable database and this task prohibits database
+  changes. Historical PostgreSQL results above/below are not fresh V3 evidence.
+- `npm run check`: zero errors/warnings, one existing private-helper import hint.
+- `npm run build`: passed. V3 is served by the runtime handler, not emitted as a
+  static real-sermon HTML export.
+- `npm run staging:bundle`: passed locally; no deployment or remote operation.
+- Changed-file secret/key/cloud/proprietary-pattern and symlink scan: no findings
+  across the 12 changed paths. `git diff --check` passed and the index stayed empty.
+- Anonymised `npm run migration:dry-run -- --input tests/fixtures/dry-run.json`:
+  passed, five fixture records, three included and two excluded; no import writes.
+- `npm audit --offline --audit-level=low`: zero reported vulnerabilities in cached
+  audit data; not a fresh online vulnerability assessment.
+- Real-browser views checked at 1280, 768, 360 and 320 pixels without document
+  overflow. Refined touch-target sizes and corrected Topical heading contrast after
+  rendering. Sample computed contrast ratios: Topical heading 9.43:1, book label
+  7.72:1, muted feature text 7.27:1 and gilt label 5.88:1.
+- Browser checks covered the new dropdown link, ArrowDown/Escape and focus return,
+  visible 3px keyboard focus, native filters, combined keyword/book search, pagination,
+  Back, speaker and series discovery, Topical and existing sermon details. The
+  Topical series remains distinct from explicit classification. No console errors
+  or warnings were observed on V3.
+- Entire V1 and V2 HTTP responses were byte-identical to port 4381 after removal
+  of only the V3 menu entry. Their browser main HTML, style blocks and enhancement
+  scripts also matched the pre-change snapshots exactly.
+- Read-only HTTP comparison traversed all 16 V3 archive pages: 144 unique ordered
+  results matched the eligible API. The nine explicit Topical identities matched
+  the API and all nine detail links returned 200. The API retained 135 sermons
+  associated with 16 books. No extra records were exposed by V3; the underlying
+  11-exception exclusion rules were reused unchanged, not reprocessed.
+- Native anchors, GET forms and details disclosures supply server-rendered
+  no-JavaScript navigation. Reduced-motion CSS was inspected in the rendered
+  stylesheet; switching the browser's motion preference or disabling JavaScript
+  was not supported by the available browser controls. Touch-target/layout checks
+  used responsive viewports, not a physical touch device.
+
+The dedicated local preview runs on loopback port 4383 with read-only database
+sessions and disabled private administrator routes. Ports 4381/4380, the existing
+SSH tunnel, staging and production were not changed. No commit, push or merge.
+
+## Nine explicit Topical classifications — pre-application verification
+
+The exact nine-record editorial manifest reconciled in both environments. The
+implementation reuses a versioned allowlisted `sermon_extensions` namespace;
+no migration or D-158 receipt supersession is needed. Original acceptance
+dependencies remain checked. The complete guarded PostgreSQL run passed 753 tests
+with zero skips and removed its disposable database; the standard run passed 633
+tests, with its 120 database gates covered by that separate run. New regressions
+cover persisted classification/discovery, truthful attribution, unchanged content/
+receipts, replay, stale dependencies, missing audit, tampered payload, non-topical
+primary-book records and complete rollback on failed preservation. Type/Astro
+reported zero errors/warnings and one existing private-helper hint. Production
+and staging builds, anonymized importer dry run and cached offline dependency
+audit (zero reported vulnerabilities) passed. Private-content/security scans had
+zero findings. These were pre-application results; actual completion follows.
+
+### Actual local and sealed-staging completion
+
+Implementation `60b31a1e18611191f9c751e382a7c2942538db56` was committed before
+mutation. Fresh independently verified logical backups preceded both transactions.
+Each database persisted nine editorial extensions and nine system audit events;
+each identical second run returned nine unchanged with full-database fingerprint
+equality. Original content, source/review history, classifications and D-158
+receipts remain unchanged. No migration, supersession or publication-state edit
+was needed. Both environments retain 144 accepted, 135 Bible-associated across
+16 books, nine explicitly Topical and 11 hidden exceptions.
+
+Complete real browser passes succeeded independently on working ports 4381 and
+4380: all 16 archive pages, all book pagination/counts, nine-item Topical discovery,
+all nine real detail strips, speaker/series results, refresh, menu keyboard/touch
+at four widths, contrast and all exclusions. Extra checks verified each of the
+nine in keyword-result cards after refresh. Zero browser errors, external requests,
+mutation requests or screenshots occurred. The application/database are healthy;
+SSH-only and disabled-admin protections remain. Seven network regressions passed.
+See `deployment/STATUS.md` for independent hashes, maintenance permission handling
+and the distinction between browser reference metadata and staging fingerprints.
+
+## Restricted frontend discovery follow-up — 14 September 2026
+
+Application-only commit `903e386f10f34001a04f3355ec096518c68e0ab8` connects current
+reviewed primary books to shared rendering, broad discovery and matching counts,
+and restores the existing restricted menu. No migration or real database write
+was performed. The full suite passed 629 standard tests and, separately, 743 real
+PostgreSQL tests with zero skips; the disposable database was removed. Initial
+failures were obsolete SQL-alias assertions and an invented fixture missing required
+proposal provenance; those were corrected without weakening the required guards.
+Type/Astro, build, staging bundle, offline audit, anonymized dry run and privacy/
+security scans passed. Both real frontends verified 144 eligible identities, 135
+book-associated sermons across 16 books, nine no-primary outcomes and 11 exclusions.
+Shared card labels/contrast, all pagination, menu keyboard/touch behavior and
+exact database preservation were verified. Real topical classifications remain
+absent, so only anonymized topical rendering was tested. Deployment/image and
+full browser evidence are recorded in `deployment/STATUS.md`.
+
+## D-158 restricted acceptance — actual application and verification
+
+Migration 0019 and the exact manifest-bound acceptance were applied independently
+to both authorized databases after fresh protected logical backups. Each accepted
+144; each identical replay returned 144 unchanged with no content, version,
+timestamp or audit churn. Eleven excluded rows and the independent original-content/
+history fingerprints remain unchanged. Exact release/image/backup and database
+hashes are in `deployment/STATUS.md`.
+
+The compatible application recovery rehearsal returned ordinary routes to 503,
+then 200, while private routes stayed 401 and the full staging database fingerprint
+never changed. No real withdrawal or destructive rollback was performed.
+Latest standard suite: 623 passed and 113 gated skips. Separate complete real
+PostgreSQL suite: 736 passed, zero skips, disposable database removed. Type/Astro
+checks have zero errors/warnings (one style hint in an ignored browser helper),
+production build and cached offline dependency audit passed. Each completed local
+and staging browser pass inspected all 144 detail pages and ordered content, all 16 archive
+pages, three discovery filters, keyword/passage search, refresh, all 11 exclusions,
+three responsive widths and private-route denial with zero external requests,
+mutations, screenshots or page errors. Both environments passed independently.
+Feed routes remain unavailable and the restricted sitemap intentionally omits all
+sermon entries; ordinary visitor visibility does not authorize indexing. Actual
+external probes could reach neither staging application nor database. Final
+image-layer findings were reconciled to exact official-base files; no project
+secret or private artifact was included. All original worktree hashes remain intact.
+
+The exhaustive browser harness initially treated the discovery landing as the
+first full results page. Inspection confirmed its intended three-recent-sermon
+view; the corrected check follows the existing `view=recent` Browse-all route.
+No frontend design or sermon was changed to satisfy that test.
+
+### Preserved pre-application evidence
+
+Exact manifest and authority: see `restricted-acceptance-plan.md` and decision
+D-158. Migration 0019 is additive; original migrations retain their bytes and
+meaning. The earlier timezone audit reproduced the same 144/11 cohort under
+explicit Australia/Sydney serialization on both databases, whereas UTC rendering
+of the identical historical timestamps produced 12/143. No original evidence was
+modified. The implementation makes that legacy validation explicit and gives new
+hashes a distinct deterministic UTC format.
+
+Required gates: guarded anonymized migration/apply/down/reapply tests, immutable
+history and audited withdrawal, current-evidence-only display, independent
+unresolved-item exclusion, no-op replay, DST/genuine-change tests, recovery-mode
+denial, full standard and PostgreSQL suites, checks/build, offline audit and
+privacy/security scans. Real application and browser verification remain pending;
+do not infer delivery from this implementation checkpoint.
+
+Pre-application results: the complete guarded PostgreSQL runner passed 735 tests
+in 69 files with zero skips and removed its exact disposable database. Earlier
+fixture errors were corrected without changing real records or relaxing guards:
+cleanup now supplies the required gone disposition, simulated content editing
+uses the application transaction gate, and the keyword test uses the actual
+`query` field. Migration 0019 was applied through its bounded command, rerun
+unchanged, rolled back only while empty, and cleanly reapplied. Recorded-history
+rollback refused as intended; audited withdrawal and replay retained history.
+UTC/Sydney tests include both daylight-saving boundaries and genuine changes.
+
+Standard tests passed 622 with 113 database-gated skips; all database tests are
+included in the separate 735/zero-skip run. Astro/type
+checks passed for 269 files with no errors, warnings or hints. Production build,
+sealed bundles, the explicit anonymized dry-run fixture, offline audit (zero
+reported vulnerabilities), skill validation and seven network tests passed.
+The privacy scan compared 155 records and 1,092,303 protected content shingles:
+no new private prose, identities, secrets or prohibited paths were found.
+
+Execution review rejected an unnecessary broad verification-directory mount.
+It was not applied. The accepted replacement mounts exactly three required files
+read-only into maintenance only, never a directory or the application container.
+Real migration, acceptance, fresh backups and browser delivery remain pending.
+
+The first D-158 image build failed because Docker's historical blanket enrichment
+exclusion omitted a pure validator already present in the audited source archive.
+No service or database was changed. The packaging correction admits only
+`generated-text-mechanical-qa.ts` and `review-set-integrity.ts`; private artifacts,
+provider code, datasets and every other enrichment file remain excluded.
+
+## Sealed staging deployment and recovery — 14 September 2026
+
+- Samuel directly authorized execution after the recorded rejections. Integration
+  `c36202ddbf14eb5376edc97472c22e0d396dc941` was followed by safe checkpoint,
+  packaging, network and build corrections; deployed application commit is
+  `f9615104e80b03f46bfff758e9669003a3a0c5cf`. Exact intermediate commits and all
+  image/package/dump hashes are in `deployment/STATUS.md`.
+- Installed Docker 25.0.14 and checksum-verified official Compose 5.5.0 on the
+  confirmed blank staging host. Containers use only an internal network and no
+  published ports. A verified native OS socket proxy binds host loopback only.
+  The production-mode application has no development identity, denies private
+  endpoints and uses a SELECT-only, non-superuser PostgreSQL role.
+- Real anonymized container acceptance preceded the real restore. The guarded
+  custom-format dump used a consistent local read-only snapshot, `--no-owner`
+  and `--no-acl`. Independently verified transfer hashes preceded a fresh-target
+  single-transaction restore. PostgreSQL 16.15 matched the source 16.14 snapshot
+  across all 41 public tables and sequences, all 18 migration checksums, and
+  review/content counts. Zero migrations were pending or replayed on real data.
+- Actual recovery restored the same dump into another empty named volume, kept
+  the first verified volume and immutable image/dump, then started and restarted
+  the recovered pair. The same full fingerprint and readiness passed again.
+  Recovery is running. Host reboot was not tested; Docker/socket are enabled.
+- Final `npm test`: 613 passed, 101 database-gated skips. Separately,
+  `npm run test:postgres`: 714 passed, zero skips, 68 files; disposable database
+  removed. `npm run check`: 256 files, zero errors/warnings/hints. Production
+  build and sealed bundles passed. Eight focused staging tests and seven Python
+  network/restore tests passed. Anonymous importer dry run: five inputs, three
+  included, two excluded, zero rejected. Offline dependency audit: zero cached
+  advisories, not a live registry result. Final completion edits are documentation
+  only; these results apply to the unchanged deployed code.
+- Recovered staging passed 363 HTTP/private-data checks, covering all 155 private
+  HTML/API identities, forged identity requests, search, feeds, sitemap and SEO.
+  Actual desktop/mobile browser checks through pinned SSH passed with no overflow,
+  page errors, screenshots or external requests. Reader has no table write/schema
+  create privileges. App and DB are healthy, restart unless stopped, use limited
+  resources and rotated logs. App is non-root with read-only root filesystem and
+  dropped capabilities. External probes found no reachable 8080 or 5432 endpoint.
+- Private-content checks used 1,092,303 protected eight-word shingles without
+  printing source prose. The image's nine layers/5,807 regular files were scanned.
+  Nine key-pattern matches in public upstream GnuTLS fixtures were independently
+  traced to the identical binary in the pinned official Node base, not project
+  credentials. No unexplained/project keys, private application files, staging
+  passwords, content or protected identities were found in images/responses/logs.
+- Original source worktree commits, seven backend and thirteen creative changes,
+  binary-diff hashes and empty indexes remained unchanged. Local review servers
+  remained running. The source database was accessed read-only. Its final check
+  revealed one intervening local navigation update after the dump timestamp:
+  only current stage, row version and update time/subject changed in the review
+  table. All other 40 tables, sequence state, content, approvals, AI decisions,
+  audit rows and completion markers match. This progress was preserved locally;
+  staging matches the frozen dump, not the later live source fingerprint.
+- Staging contains 155 sermons, 1,084 Q&A, 1,121 D-156 decisions, 847 D-157
+  components, 132 AI completions, 12 human completions and 118 human artifact
+  approvals. Current private completion is 144 with 11 genuine exceptions;
+  publication remains zero. No decision/content repair or publication occurred.
+  Real sign-in, domain/HTTPS and off-instance/AWS backup decisions remain separate
+  work. No production, AWS network, DNS, push or protected-branch merge occurred.
+
+## Isolated sealed staging integration — 13 September 2026
+
+- The isolated release integrates backend `ae8755ab93e446fa8c6da1f7ad32a39218a0fd45`,
+  creative frontend `eae2954a1d749d2fde0341c173866c8adcf0776e`, and the inspected
+  uncommitted administrator layout, navigation and slimmer Bible-book tabs.
+  Original worktrees and both documentation histories are preserved.
+- Final standard command `npm test` at 23:02:52: 611 passed, 101 database-gated
+  tests skipped. These skips are not PostgreSQL evidence.
+- Separate final command `npm run test:postgres` at 23:02:58: 68 files and all
+  712 tests passed, zero skips, exit zero. The runner confirmed removal of its
+  exact disposable database. Its captured completion output was independently
+  read before recording this result. No application database was recreated.
+- Astro/type checks: zero errors, warnings or hints. Production and sealed bundles
+  passed. Offline audit reported zero vulnerabilities in cached data. Anonymized
+  importer dry run: five inputs, three included, two excluded, none rejected.
+- Read-only database reconciliation: 155 sermons/transcripts/descriptions, 1,084
+  Q&A, 1,121 D-156 decisions, 847 D-157 component records, 132 AI completions and
+  12 human completions. The backend projects 144 current private completions and
+  11 genuine exceptions; the unchanged stricter frontend selector returns 12.
+  There are 18 matching migrations, none pending, zero public results and zero
+  publication timestamps. Integrity covers all 41 public tables and sequences.
+- Anonymous browser fixtures passed five routes at five widths, all six stages,
+  keyboard/mobile/filter/zoom checks and no overflow. Real read-only integrated
+  browser checks passed overview/exception counts, both creative preview pages,
+  book tabs, five menu links, refresh, anonymous denial, no-store and noindex.
+  No review mutation, external browser request or screenshot occurred.
+- The runtime build-closure check rejected an unnecessary development-dataset
+  module dependency. Its non-sensitive classification constant was separated;
+  dataset loading and identities remain out of the runtime. Eighty changed/new
+  safe paths and ten build outputs passed the privacy scan against 1,092,303
+  eight-word source shingles, plus identity, credential/key/token, prohibited-path
+  and symlink checks. Both original source commits were comparison baselines.
+- Execution review rejected a proposed write-opt-in verification startup and root
+  maintenance setting; neither was applied. The replacement uses the existing
+  read-only target guard without write opt-in and a directly tested HTTP gate that
+  denies review mutations before routing. Maintenance remains unprivileged.
+- Container, remote restore and rollback acceptance remain outstanding at this
+  local checkpoint. Docker is unavailable on the Windows host; those checks must
+  run on the sealed EC2 before declaring deployment complete.
+
 ## Administrator presentation repair — 13 September 2026
 
 Scope: administrator shell, overview, sermon list and guided-review layout on
@@ -327,6 +637,24 @@ strict remaining import checks and private artifact rules. D-155 remains closed.
 
 **Status:** Local PostgreSQL integration verified; description generation fails closed without an explicitly approved generative model
 **No production extraction, migration, database write, deployment, or infrastructure change has run. Database writes are limited to explicitly authorised reconciliation in local `savinggrace_sermons_test` and uniquely named disposable loopback test databases.**
+
+## Creative frontend side tabs and navigation — 13 September 2026
+
+### Follow-up: two preserved preview destinations and slimmer tabs
+
+- The preview-only dropdown labels its existing landing page **SermonsV1** and existing archive **SermonsV2**, followed by Speakers, Series and Books. Only menu labels/links and catalogue-tab widths changed; neither page composer was changed by this follow-up. The heading's double-click explicitly targets the archive rather than relying on the first menu item. Current-page attribution distinguishes the two destinations. Public navigation, footer links, URLs and search contracts remain unchanged.
+- Catalogue side columns are reduced from 3.5rem to 2.75rem on desktop/tablet and from 2.75rem to 2.25rem on mobile. Book names, category colours, label height and no-count-badge behaviour are retained for all entry variants.
+- Synthetic installed-browser checks passed at 1440, 768, 390 and 320 CSS-pixel viewports and 200% CSS zoom: all 66 book labels fit, no horizontal overflow with the menu open, all five links work, and keyboard, double-click-to-archive, touch and no-JavaScript navigation are preserved. No real-content screenshots were taken.
+- After refreshing only the read-only creative preview, authenticated checks passed on both existing pages. The before/after main-content HTML SHA-256 values were identical for each page. Anonymous requests still returned 401; private/no-store, noindex and public-metadata exclusion remained intact. No database write, review decision, Git commit or publication was performed.
+- Follow-up verification: 315 standard tests passed, with the 25 database-gated tests still skipped because no database mutation was in scope. Astro/type checks passed with zero errors or warnings and two existing temporary-helper hints; the initial restricted-cache permission error was resolved by running the same check with worktree access. Production build and anonymised dry run passed (three included, two excluded, zero rejected). Offline audit reported zero vulnerabilities in available cached data. All 13 changed/new safe paths and six production text files passed credential/key/token, prohibited-path, symlink and seed-prose scans (113,526 eight-word shingles); all 15 protected sermon slugs were absent from production output. A first scanner pass incorrectly included generic taxonomy slugs and was corrected to test sermon identities only. Nothing was staged. The temporary verification listener was stopped; only the requested creative preview remains running from this follow-up.
+
+- Scoped presentation refinement from `eae2954a1d749d2fde0341c173866c8adcf0776e`: all catalogue variants share a labelled category-coloured book tab, without a per-entry number badge. Existing first-book classification is reused; absent classifications remain neutral. Ordered archive pagination and ordinary sermon/taxonomy links are preserved.
+- Preview mastheads use a closed native Sermons disclosure. One click opens it; an unmodified primary-button double-click on the heading navigates to the archive. The four ordinary menu links, in order, are Sermons, Speakers, Series and Books. Enter/Space, ArrowDown, Escape, focus departure and touch alternatives are retained. Public-only navigation and footer links are unchanged; enhancement scripts remain CSP-hashed without unsafe-inline.
+- `npm test`: 314 passed, 25 database-gated tests skipped. This presentation-only task did not enable database mutation tests or change persistence. `npm run check`: zero errors, warnings or hints. `npm run build`: passed. Anonymised `migration:dry-run`: three included, two excluded, zero rejected. Offline dependency audit: zero reported vulnerabilities in locally available audit data; no fresh registry advisory check was made.
+- Headless installed-browser verification used synthetic fixtures for all 66 book labels across 70 card/row/related entries. Desktop 1440px, tablet 768px, mobile 390px, narrow 320px and 200% CSS zoom checks passed: side placement, label containment, no per-entry count badges and no horizontal page overflow, including an open menu. Keyboard, double-click, each single-click menu link, touch and no-JavaScript paths passed. A tablet open-menu overflow found during verification was corrected by right-aligning the menu at that breakpoint. Screenshots contained only synthetic fixtures and remain ignored.
+- Read-only authenticated loopback browser checks passed on the actual home and archive pages after restarting only the creative preview: status 200; anonymous requests denied with 401; no-store/noindex preserved; every rendered entry has a side tab; missing classification remains a neutral placeholder; zero per-entry count badges or browser script errors; menu initially closed. No canonical or structured public metadata was introduced.
+- Changed/new safe files and production text outputs passed credential, key, cloud/token, prohibited-path, symlink, seed-content-shingle and production-seed-slug scans. The proprietary-marker scan identified one unchanged historical plugin-name reference in this plan, verified against HEAD; no copied proprietary implementation was found. The eight-word scan used 236 designated dataset fields and 113,889 distinct shingles without printing content. No private content, authentication configuration or screenshots are staged. These checks do not claim to be a fresh audit of unrelated private artifacts.
+- No sermon wording, taxonomy data, administrator state, database content, authentication gate or publication eligibility changed. No Git commit, remote change, push, merge or deployment was requested or performed for this refinement. The existing local preview remains read-only.
 
 ## Permanent whole-site SEO launch gate
 
@@ -1257,3 +1585,20 @@ The authorized 15-sermon seed remains byte-identical despite pre-existing shared
 phrase matches. Unrelated edits remain preserved. Detailed commands, results,
 corrections, privacy qualifications and final state are recorded in
 [fifth-private-batch-plan.md](fifth-private-batch-plan.md).
+## Editorial sermon frontend redesign - 2 September 2026
+
+- Work started on `frontend-redesign` at baseline `0759302b76eacde250cefa6f50d3cfdcfe1d1f60` with a clean tracked worktree/index and the `origin` GitHub remote already configured. PostgreSQL 16 was not installed on the implementing machine (no binaries, service, listener on 5432 or registry entries), so the schema apply, reference seeding, dataset import, `npm run test:postgres` and the authenticated `/frontend-preview/` were not run there; those gates remain outstanding and are listed as prerequisites in the completion report. Visual and interaction verification used a scratch, uncommitted loopback harness that fed the tracked 15-sermon seed to the real preview handler through an in-memory repository.
+- The presentation layer was replaced by the framework-independent `src/frontend` package (D-149): typed tokens, an escaping `html` template, readable page-scoped style partials, three readable enhancement scripts, one sermon list item with density variants, shared page composers and a shell that both the server handlers and the static Astro pages consume. `public-sermon-page.ts` is now the public router only; a shared archive loader removes the duplicated discovery orchestration; `frontend-response.ts` derives every policy from the rendered document, hashing inline styles and scripts (no `style-src 'unsafe-inline'`) and emitting `frame-src` only for pages with a click-to-load frame. Routes, canonicals, legacy query names, selectors, privacy headers and the repository contract are unchanged.
+- An independent five-lens critique (visual, information architecture, accessibility, construction, performance/privacy), three independent design directions and a three-judge panel preceded implementation; the judges unanimously chose the editorial direction and their grafts were applied: Scripture kicker suppressed when a title already carries the reference, runtime-only roving tab index so every tile stays keyboard-reachable without JavaScript, continuous archive ordinals, list roles where list styling is removed, decorative glyphs hidden from assistive technology, a player loading state and forced-colours fallbacks.
+- Browser verification through the scratch harness covered desktop 1440×900, tablet 768×1024, mobile 375×812 and a 720×450 200%-zoom-equivalent viewport with zero horizontal overflow at each width and a clean console in a fresh tab across the archive, sermon and home pages. The three **Most Recent Sermons** items measured 292, 314 and 314 pixels at both 1440 and 768, against the recorded 567–605/754–791-pixel large cards, and the first sermon title sat at 728 pixels from the top of the 1440×900 preview. The native Sermons disclosure opened by click, mirrored `aria-expanded`, closed on Escape with focus returned to its summary, and the mobile Menu rendered the in-flow accordion. The picker revealed 42 chapters for a single book activation and 26 verses for a single chapter activation without changing the URL, moved a single roving tab stop with the arrow keys, returned to the parent level on Escape, submitted `passageScope=verse` for a verse activation with focus landing on the results section, submitted `passageScope=book` for a double activation, exposed working `Search all of …` links, and used one-panel mode with 44-pixel tiles at 720 and 375 pixels. The expanded recent archive paginated with continuous ordinals and browser Back restored the `view=recent` page. No YouTube player was activated and no external service was contacted.
+- Final `npm run check` covered 186 files with zero errors, warnings or hints. Final `npm test` passed 44 files and 291 tests with the single PostgreSQL file and its 25 cases intentionally gated; the focused frontend suites (`frontend-design-tokens`, `frontend-shell`, `public-sermon-site`, `public-sermon-page`, `local-frontend-preview`, `frontend-selector`) cover token contrast, stylesheet hygiene, policy/hash consistency, page structure, picker links and state, discovery and pagination behaviour, preview privacy and navigation. One pre-existing failure in `tests/schema-contract.test.ts` on Windows checkouts with `core.autocrlf=true` was corrected by comparing migration SQL as LF text. `npm run build` produced three static pages, and `npm audit --offline --audit-level=low` found zero vulnerabilities.
+- The candidate scan found zero eight-word fragments from the 236 dataset description/transcript/Q&A fields (113,889 distinct shingles) in the 44 changed or new files and the three static HTML outputs, zero dataset slugs or seed markers in the static build, zero preview banner or path references in the static build, and zero credential, private-key, cloud-key, JWT, credentialed-URL or absolute-user-path patterns; `git diff --check` passed and no symlink or reparse point was added. No sermon content, approval, relationship, lifecycle, publication/search state, embedding, semantic relationship, production system or external service changed; nothing was committed, merged, deployed, published or pushed in this session.
+
+## Creative sermon frontend redesign, "the Canon" - 3 September 2026
+
+- Work started on `frontend-redesign-creative-v2`, created from exactly `fb513b22ed31de874feb78e3084bc76d059d4d65` (the tip of `origin/frontend-redesign`) after confirming `origin/master` at `0759302b76eacde250cefa6f50d3cfdcfe1d1f60`. PostgreSQL 16 was again not installed on the implementing machine, so the schema apply, reference seeding, dataset import, `npm run test:postgres` and the authenticated database-backed `/frontend-preview/` were not run there. Visual and interaction verification used a scratch, uncommitted loopback harness feeding the tracked 15-sermon seed to the real preview handlers through an in-memory repository; no production system, WordPress, MariaDB, AWS, YouTube or other external service was accessed.
+- The presentation was replaced whole by the Canon (D-150): the 66-book shelf, canon strip, book tab, open book and reading-room sermon page, on the unchanged `src/frontend` construction. One additive projection change adds an optional `sermonCount` per speaker, series and book to the published filter-options query (`count(DISTINCT sermon.id)` under the same strict selector); the SQL text is covered by `tests/frontend-selector.test.ts`, and its behaviour on real PostgreSQL is an outstanding gate below.
+- Browser inspection through the harness covered the landing page, discovery and results archive views, book/chapter/verse scopes, the expanded recent list and pagination, a sermon page, the speakers, books and series pages and the 404 state at 1440 wide, plus tablet 768×1024, mobile 375×812 and a 720×450 200%-zoom-equivalent viewport, each with zero horizontal overflow. Keyboard checks confirmed one Tab stop per grid with arrow, Home, End and Escape movement on the shelf and rulers, focus landing on the results after a search and on the current cell after a passage step, the click-to-load player replacing the plate with a `youtube-nocookie.com` frame only on request, and the transcript disclosure toggling natively. Defects found and fixed during inspection: pagination pointing at a retired fragment, hard-coded `aria-expanded` on native summaries, the roving grid capturing the shelf's skip link, bookend labels overflowing on tablet and mobile, the sermon rail landing at the page foot on narrow screens, the mobile masthead search placement, `frame-src` triggered by script text rather than plate markup, and a "Browse all 0 sermons" link on an empty archive.
+- Final `npm run check` covered 188 files with zero errors, warnings or hints. Final `npm test` passed 45 files and 306 tests with the single PostgreSQL file and its 25 cases intentionally gated; the rewritten focused suites (`frontend-design-tokens`, `frontend-shell`, `frontend-canon`, `public-sermon-site`, `public-sermon-page`, `local-frontend-preview`, `frontend-selector`) cover token contrast including all nine spine hues, stylesheet hygiene, policy/hash consistency, shelf and ruler link structure, legacy query names in every generated URL, discovery and pagination behaviour, escaping, click-to-load media, Q&A-open rendering, preview privacy and navigation. `npm run build` produced three static pages and `npm audit --offline --audit-level=low` found zero vulnerabilities.
+- The candidate scan found zero eight-word fragments from the 238 dataset description/transcript/Q&A fields (113,898 distinct shingles) in the 43 changed or new files and the three static HTML outputs, zero dataset slugs, seed markers or preview references in the static build, zero credential, private-key, cloud-key, JWT, credentialed-URL or absolute-user-path patterns, zero prohibited filenames and zero symlinks or reparse points; `git diff --check` passed. No sermon content, approval, relationship, lifecycle, publication/search state, embedding, semantic relationship, production system or external service changed.
+- Outstanding PostgreSQL gates for the receiving computer: `npm run db:apply-local` and `npm run reference:apply-local`; `npm run development-data:verify-current15`; the current-15 import twice (`imported`, then `unchanged`); `npm run test:postgres` with zero skips; the real authenticated `/frontend-preview/` showing all 15 sermons on the shelf, in the archive and on their pages; and confirmation that the filter-options projection returns the expected per-speaker, per-series and per-book counts against the real database. The branch is a candidate only: nothing was merged, deployed, published or released.

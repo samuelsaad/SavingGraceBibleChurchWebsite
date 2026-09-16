@@ -16,6 +16,7 @@ import {
   buildPublishedSermonSitemapQuery,
   buildPublishedSeriesRepresentativesQuery,
   buildPublicSermonPathDispositionQuery,
+  buildPublishedTopicalSermonsQuery,
   buildRelatedPublishedSermonsQuery
 } from "../queries/public-sermons";
 import type { FrontendSermonScope } from "../queries/public-sermons";
@@ -46,6 +47,7 @@ type PublicSermonRow = QueryResultRow & {
   books: unknown;
   primary_media: unknown;
   total_items?: number;
+  is_topical?: boolean;
 };
 
 type PublicSermonDetailRow = PublicSermonRow & {
@@ -66,7 +68,8 @@ type SeriesRepresentativeRow = PublicSermonRow & {
 
 const filterOptionSchema = z.object({
   name: z.string().min(1),
-  slug: z.string().min(1).max(200).regex(/^[a-z0-9-]+$/)
+  slug: z.string().min(1).max(200).regex(/^[a-z0-9-]+$/),
+  sermonCount: z.number().int().nonnegative().optional()
 });
 
 const filterOptionsSchema = z.object({
@@ -99,7 +102,8 @@ function summaryFromRow(row: PublicSermonRow): SermonSummary {
     primaryPassages: row.primary_passages,
     primaryPassageState: row.primary_passage_state,
     books: row.books,
-    primaryMedia: row.primary_media
+    primaryMedia: row.primary_media,
+    isTopical: row.is_topical || undefined
   });
 }
 
@@ -171,8 +175,8 @@ export class PostgresSermonRepository implements PublicSermonRepository {
     );
   }
 
-  async listPublishedFilterOptions(): Promise<PublicSermonFilterOptions> {
-    const statement = buildPublishedSermonFilterOptionsQuery(this.scope);
+  async listPublishedFilterOptions(query?: PublicSermonListQuery): Promise<PublicSermonFilterOptions> {
+    const statement = buildPublishedSermonFilterOptionsQuery(this.scope, query);
     const result = await this.database.query(statement.text, statement.values);
     const row = result.rows[0] as
       | {
@@ -195,10 +199,9 @@ export class PostgresSermonRepository implements PublicSermonRepository {
   }
 
   async listPublishedTopicalSermons(): Promise<SermonSummary[]> {
-    // The current schema has no administrator-approved topical-classification
-    // lifecycle. An explicit no-primary-passage outcome is deliberately not
-    // treated as topical, so discovery fails closed until trusted metadata exists.
-    return [];
+    if (this.scope !== "restricted_accepted") return [];
+    const statement = buildPublishedTopicalSermonsQuery(this.scope);
+    return (await this.database.query(statement.text, statement.values)).rows.map(row => summaryFromRow(row as PublicSermonRow));
   }
 
   async listPublishedSeriesRepresentatives(): Promise<PublicSeriesRepresentative[]> {

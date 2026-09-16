@@ -70,6 +70,15 @@ describe("authoritative frontend sermon selector", () => {
     expect(sql).toContain("generate_series(");
   });
 
+  it("projects per-option sermon counts from distinct eligible sermons", () => {
+    for (const mode of ["public", "completed_preview"] as const) {
+      const sql = buildPublishedSermonFilterOptionsQuery(mode).text;
+      expect(sql).toContain("count(DISTINCT sermon.id)::integer");
+      expect(sql).toContain("'sermonCount', options.sermon_count");
+      expect(sql.match(/GROUP BY/gu)?.length ?? 0).toBeGreaterThanOrEqual(3);
+    }
+  });
+
   it("matches a selected verse through inclusive primary-passage range overlap", () => {
     const passage = publicSermonListQuerySchema.parse({
       passageBook: "romans",

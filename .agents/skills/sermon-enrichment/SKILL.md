@@ -11,6 +11,13 @@ Produce coherent, transcript-grounded private drafts for later human review. Tre
 
 ## Explicit D-156 delegated-review mode
 
+D-158 is separately authorized bulk acceptance, not another substantive review
+or generation run. For its exact completed cohort and restricted environments,
+follow `restricted-acceptance-plan.md` at the repository root. Preserve all prior
+human/AI evidence and uncertainty; never relabel it as personal human inspection.
+Existing decisions must validate against current dependencies before acceptance.
+Normal generation/approval safeguards below remain in force outside D-158.
+
 For the separately authorised D-157 remaining-review task, read
 [remaining-review-contract.md](references/remaining-review-contract.md) completely.
 Only its frozen 155-record scope may use separately attributed AI identity,

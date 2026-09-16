@@ -112,8 +112,8 @@ describe("private review status projection", () => {
   }
 
   async function project(row: unknown) {
-    const query = vi.fn().mockResolvedValue({ rows: [row] });
-    return (await listDelegatedReviews({ query } as unknown as Pool))[0];
+    const query = vi.fn().mockImplementation(async(sql:string) => ({ rows: sql === "SHOW timezone" ? [{TimeZone:"Australia/Sydney"}] : [row] }));
+    return (await listDelegatedReviews(fakePool(query).pool))[0];
   }
 
   it("does not mark a current unreviewed artifact stale or hide its identity", async () => {

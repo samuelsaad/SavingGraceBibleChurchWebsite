@@ -1,4 +1,5 @@
 import type { Pool, PoolClient } from "pg";
+import { withLegacyReviewTimezone } from "./legacy-review-timezone";
 import { z } from "zod";
 import { authorisedLocalDatabaseName } from "../migration/local-database-safety";
 import { evaluateReviewSetIntegrity, reviewSetSha256 } from "../enrichment/review-set-integrity";
@@ -44,6 +45,9 @@ async function consistentRead<T>(pool:Pool,read:(client:PoolClient)=>Promise<T>)
 
 /** Returns private review context to the authorised worker; callers must not log it. */
 export async function readRemainingReviewSnapshot(db: Queryable, sermonId: string): Promise<RemainingReviewSnapshot | null> {
+  return withLegacyReviewTimezone(db, client => readRemainingReviewSnapshotLegacy(client, sermonId));
+}
+async function readRemainingReviewSnapshotLegacy(db: Queryable, sermonId: string): Promise<RemainingReviewSnapshot | null> {
   if(!("release" in db))return consistentRead(db,c=>readRemainingReviewSnapshot(c,sermonId));
   if (!z.uuid().safeParse(sermonId).success) fail();
   if (!await installed(db)) return null;
@@ -146,6 +150,9 @@ function completionHash(s:RemainingReviewSnapshot,components:RemainingReviewStat
 }
 
 export async function listRemainingReviews(db:Queryable,sermonIds?:readonly string[]):Promise<Map<string,RemainingReviewStatus>> {
+  return withLegacyReviewTimezone(db, client => listRemainingReviewsLegacy(client, sermonIds));
+}
+async function listRemainingReviewsLegacy(db:Queryable,sermonIds?:readonly string[]):Promise<Map<string,RemainingReviewStatus>> {
   if(!("release" in db))return consistentRead(db,c=>listRemainingReviews(c,sermonIds));
   if(!await installed(db))return new Map();
   const ids=(await db.query("SELECT sermon_id FROM remaining_ai_review_members WHERE scope_id='D-157' AND ($1::uuid[] IS NULL OR sermon_id=ANY($1::uuid[])) ORDER BY sequence",[sermonIds??null])).rows.map(r=>r.sermon_id as string);

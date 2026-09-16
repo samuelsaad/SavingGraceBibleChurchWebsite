@@ -1,6 +1,6 @@
 # Project Decision Log
 
-**Status:** Approved decisions through D-157; public frontend preview remains private and local
+**Status:** Approved decisions through D-158; restricted acceptance is not internet-publication authority
 **Authority:** `church-website-architecture-plan.md` plus Yang’s confirmed migration decisions and Samuel Saad’s recorded project-owner decisions
 
 ## Evidence classifications
@@ -428,6 +428,66 @@ Use a separate immutable, version/source/policy-bound AI review record, explicit
 
 **D-156 post-rejection compatibility authority (11 September 2026):** Samuel separately authorises removal of sermon-linked private D-156 membership and review records only when a future separately authorised permanent deletion passes the existing archived-state, exact-confirmation, concurrency, reason, tombstone, audit and SEO safeguards. The new history remains immutable to direct updates/deletes; its narrow cascade requires the guarded application transaction, absence of the deleted parent, and its preserved minimal tombstone. Scope hashes and non-content historical audit events remain retained. This authorises no sermon deletion now, no broad history purge, and no change to the substantive-review or publication boundaries.
 
+### D-158 — Manifest-bound bulk acceptance in local and sealed staging only
+
+**Editorial follow-up, 14 September 2026:** Samuel separately classifies exactly
+nine accepted no-single-primary sermons as Topical, bound to private manifest
+`b1016476118bb3029a42658c78cc38e97897970b6adc553511f7cae06c7f8b56`.
+Use the existing versioned, allowlisted extension relation and audited system
+execution of Samuel's written decision, not fabricated source facts or a new
+substantive review. Preserve all original D-158 receipts and freshness predicates;
+bind the classification to their current dependency hash. No migration or change
+to the ordinary publication gate is required. See `topical-classification-plan.md`
+for exact transactional, backup, preservation and verification requirements.
+
+Samuel explicitly authorizes the already reconciled 144 completed sermons, bound
+only to canonical manifest SHA-256
+`4759449bbbaed97238968d2fd4621d4137b8b4e41b73a20aeda319dc1212617c`,
+for separate bulk acceptance and ordinary frontend display in the authorized
+loopback application and existing sealed staging deployment. Eleven unresolved
+sermons stay excluded and unchanged. This is not a new substantive review, a
+personal authentication event, production publication or public-network approval.
+
+Following a recorded execution-safety rejection, Samuel separately and explicitly
+authorized additive migration `0019_restricted_bulk_acceptance`, its immutable
+history trigger, dependency function, bounded non-HTTP command and frontend
+integration, including publication-state changes for this exact cohort only.
+Record `samuel-saad-bulk-authorization` as authority and
+`codex-d158-restricted-acceptance` as system executor, never as human sign-in or
+individual review. Preserve existing human and AI decisions, original content,
+metadata, review history, uncertainty and provenance. D-155 remains closed.
+
+Existing D-156/D-157 hashes require explicit Australia/Sydney JSON timestamp
+serialization. Reproduce that legacy validation locally without changing any
+timestamp, stored hash or global time zone. New dependency fingerprints use
+`d158-utc-jsonb-v1`, explicitly UTC. Relevant changes make the receipt ineligible.
+Ordinary non-restricted publication rules remain unchanged.
+
+Acceptance and withdrawal are append-only. A later explicitly authorized audited
+withdrawal hides content and retains the original receipt; there is no destructive
+history rollback. The down migration must refuse after acceptance exists. Test
+empty-schema apply/down/reapply and history-preserving application recovery on
+invented disposable fixtures, never by withdrawing real acceptance for a test.
+
+Safe implementation must be tested and committed before real mutation. Independently
+verified fresh protected logical backups of both databases precede migration and
+acceptance. Apply the same manifest independently; preserve unrelated local/staging
+differences. Identical reruns must cause no content, version, timestamp or audit
+churn. Remote administrator/private-preview routes stay disabled, PostgreSQL stays
+unexposed, and staging stays accessible only through pinned SSH and loopback.
+Authentication implementation remains a separate task. The implementation and
+delivery evidence are recorded in `restricted-acceptance-plan.md` and the validation
+plan; authorization alone is not evidence of application or successful verification.
+
+Application evidence (14 September 2026): safe implementation commit
+`e2b13990042ec5808b3265e825f1b6f6069daa6f`, followed by packaging correction
+`c08b044b1f1ba14344ad05a068c4ed32ca8b99ca`, was applied to both authorized
+environments after independent protected backups. Both accepted 144 and excluded
+11; identical replays returned 144 unchanged. Original evidence/content preservation
+passed independently. Actual fail-closed application recovery retained the complete
+database fingerprint and history. There is no new production, internet, sign-in,
+substantive-review or semantic authority. Final verification is recorded separately.
+
 ### D-157 — Evidence-based remaining private review of the existing collection
 
 Samuel delegates the remaining identity, explicit-source speaker, individual
@@ -485,6 +545,33 @@ test; no source or transcript was edited to conceal them. The bounded official
 public-page metadata lookup could not connect and supplied no missing speaker
 evidence. No production database or provider API was accessed. Detailed evidence,
 remaining requirements and verification are in `remaining-private-review-plan.md`.
+## Preserved frontend-branch decisions (D-149 and D-150)
+
+These earlier frontend decisions are retained from the creative branch during the
+isolated staging integration. Their verification statements describe that earlier
+run; current integrated verification is recorded separately in the validation plan.
+
+### D-149 - Editorial sermon frontend redesign on a framework-independent presentation package
+
+The sermon frontend is rebuilt as `src/frontend/`: typed design tokens emitted once as custom properties, an escaping `html` tagged template, readable page-scoped stylesheet partials, three readable enhancement scripts, one sermon list item with density variants, and page composers that both the server handlers and the static Astro pages consume. The public router, routes, canonical rules, legacy query names, preview privacy headers, strict selectors, escaping discipline and the `PublicSermonRepository` contract are unchanged. Every response's Content-Security-Policy is now derived from the rendered document: inline styles and scripts are hashed (`style-src 'unsafe-inline'` is removed) and `frame-src` for youtube-nocookie.com is emitted only on pages containing a click-to-load frame.
+
+The visual direction is editorial and Scripture-first: warm paper, a literary system serif for headings and reading text, hairline rules instead of boxed cards, one deep green accent and a restrained ember accent, a plain text wordmark and no invented logo, slogan, imagery or contact detail. Each sermon item leads with its reviewed passage (omitted when the title already states it), then the single title link, then date, speaker and series. The three **Most Recent Sermons** items clamp descriptions to eight lines on desktop/tablet and nine on mobile; measured heights of 292–314 pixels are approximately half the earlier 567–605-pixel cards, which the brief asked for, so this supersedes D-145's five/six-line clamp. Results and the expanded recent archive are one continuously numbered list.
+
+The header **Sermons** disclosure and the mobile accordion are native `<details>` elements enhanced with Escape, focus-departure and click-away closing and mirrored `aria-expanded`; they work without JavaScript, refining D-147's button description without changing routes or order. Bible picker tiles and the explicit **Search all of …** controls are ordinary links that perform the search server-side, so the picker degrades honestly; the enhancement adds reveal-only single activation, roving focus, arrow keys, announcements and one-panel layout below the tablet width, with D-146's Books grid, nine now-distinct group tints and neutral number tiles retained. The picker has its own **Browse by Bible passage** disclosure beside **Advanced search**, whose summary shows a visible active-filter count.
+
+Q&A answers are rendered open in normal flow; only the transcript uses a native disclosure. This follows `AGENTS.md` §11, which a task brief cannot waive, and supersedes the collapsed-Q&A wording of D-143 and the previous experience document. Historic unreviewed Scripture metadata and the "Topical or multi-passage sermon" sentence are no longer shown to visitors; the authenticated preview alone labels a reviewed no-primary outcome. **Topical Sermons** remains a section boundary that renders an honest note because no approved topic lifecycle exists, and the series literally named "Topical" is never promoted into a topic taxonomy. The public header keeps Home plus a plain Sermons link because the taxonomy indexes remain preview-only routes. No sermon content, approval, relationship, lifecycle, publication/search state, embedding, semantic relationship, production system or external service changed. (`explicit bounded frontend redesign under the frontend-redesign task brief; local verification only`)
+
+### D-150 - "The Canon": the creative sermon frontend, shelved by Scripture
+
+The visitor-facing presentation is replaced on `frontend-redesign-creative-v2` (created from `fb513b22ed31de874feb78e3084bc76d059d4d65`) by one concept: every sermon is shelved under the Bible book it was preached from. This supersedes the presentation wording of D-149 and the presentation-specific parts of D-143 to D-147 (header disclosure and mobile accordion, the three-panel Bible picker and its book-colour tiles, carousels, the three-card clamp rule and the fixed home section order) while keeping D-149's construction unchanged: the framework-independent `src/frontend/` package, typed tokens emitted once as custom properties, the escaping `html` template, `routes.ts` and the legacy query names, the shared archive loader, and `frontend-response.ts` deriving every policy from the rendered document.
+
+The Canon's parts, all rendered on the server as ordinary links so the whole passage flow works without JavaScript: the 66-book shelf (spine width grows with the square root of the chapter count; cloth hue by literary group; count stickers from the repository projection; Old and New Testament bookends; unpreached books drawn as outlines that are not links), the to-scale canon strip of 1,189 chapter units in the footer, on sermon heads and on taxonomy pages, the book tab, and the open book whose chapter and verse rulers are server searches using `passageBook`, `passageChapter`, `passageVerse` and `passageScope`. Results are title pages that name what was asked for, with continuous ordinals and pagination to `#results`. The sermon page is a reading room: book tab, contents rail marking the visible section, description, click-to-load plate, the transcript in a native disclosure open by default with margin numerals and a word/minute count, every question and answer open in flow (`AGENTS.md` §11), then metadata-related sermons. Navigation is plain masthead links with `aria-current="page"`; non-archive pages carry a compact search. The `canon` enhancement adds roving arrow-key grids (skip links stay ordinary Tab stops), focus placement on `#results`/`#canon`, disclosure restoration on history navigation and short search URLs; the `sermon` enhancement loads the privacy-enhanced player on request and marks the contents rail.
+
+Typography uses system stacks only (Sitka Banner and Sitka Text where present, Bahnschrift signage, Segoe UI Variable, with serif and sans fallbacks); the site is light-only with reduced-motion, forced-colours and print fallbacks and no font, image or script downloads. The bookshelf mark and its inline SVG favicon are this website's own device and are stated as such in the footer; they are not the church's logo. No photography, slogan, ministry, contact detail or topic taxonomy is invented; **Topical sermons** renders only when the repository returns administrator-declared topical sermons, and **Related themes** stays disabled.
+
+One additive data change: the published filter-options projection now carries an optional `sermonCount` per speaker, series and book (`count(DISTINCT sermon.id)` under the same strict selector and mode). Every consumer treats the field as optional, so the older projection shape still renders. Small corrections made while inspecting the rendered pages: pagination and the finder target `#results`; hard-coded `aria-expanded` was removed from native summaries; `frame-src` is emitted only for real plate markup rather than for the enhancement script's selector text; the results eyebrow names single-dimension searches only; the empty archive no longer offers a "Browse all 0 sermons" link.
+
+PostgreSQL 16 was not installed on the implementing machine, so the schema apply, reference seeding, dataset import, `npm run test:postgres` and the authenticated database-backed preview were not run there; the design was inspected through a scratch loopback harness that fed the tracked 15-sermon seed to the real handlers. The branch was committed as `WIP: creative frontend redesign pending PostgreSQL verification` and pushed as a candidate only; `master` and `frontend-redesign` are untouched and nothing is merged, deployed, published or released. The PostgreSQL gates listed in `migration-validation-plan.md` remain outstanding before any acceptance.
 
 ### D-159 — Fifth fixed 36-sermon private enrichment batch
 

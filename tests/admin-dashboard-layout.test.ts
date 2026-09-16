@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 describe("private admin workspace presentation", () => {
   it("gives the review form a full-width row, outside the evidence disclosure", async () => {
     const page = await readFile("src/pages/admin/index.astro", "utf8");
-    const client = await readFile("src/admin/dashboard.ts", "utf8");
+    const client = (await readFile("src/admin/dashboard.ts", "utf8")).replaceAll("\r\n", "\n");
     expect(page.includes(".review-workflow-layout { display: grid; grid-template-columns: minmax(0, 1fr)")).toBe(true);
     expect(client.includes('<details class="panel review-evidence-summary">')).toBe(true);
     expect(client.includes('</section></details>\n  <div class="review-workflow-layout">')).toBe(true);

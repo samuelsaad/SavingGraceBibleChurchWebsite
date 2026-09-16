@@ -1,7 +1,26 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
-**Handover date:** 13 September 2026
+**Handover date:** 16 September 2026
 **Purpose:** Public-safe orientation for continuing work from this repository. This file contains no sermon body, credential, token, session, raw caption export or private local path.
+
+## GitHub synchronization checkpoint — 16 September 2026
+
+The reviewed project state is preserved on three source checkpoint branches:
+`codex/backend-snapshot-2026-09-16`,
+`codex/frontend-staging-snapshot-2026-09-16`, and
+`codex/frontend-verification-snapshot-2026-09-16`. The integrated application is
+on `codex/project-sync-2026-09-16`. The combined branch retains the current backend
+and administrator interface, the V1/V2/V3 visitor experiences, staging network
+contracts, D-158 through D-160 governance, and the historical frontend verification
+report. These branches are source checkpoints only; pushing them does not authorize
+deployment, publication, approval, or a protected-branch merge.
+
+D-160 remains paused under its existing fixed manifest. Sequences 1–3 have retained
+private caption, transcript, and validated-candidate evidence; sequence 4 stopped on
+the preserved provider interruption; sequences 5–36 remain untouched. PostgreSQL has
+191 sermons and zero D-160 imports. No caption retrieval, generation, import, server,
+container, or deployment work was resumed during synchronization. All D-160 private
+artifacts remain ignored and unstaged.
 
 ## D-160 sixth fixed private batch checkpoint
 
@@ -87,6 +106,129 @@ The old token is not retried or deleted as a diagnostic. See the batch plan and
 OAuth proof document for preservation, testing and continuation requirements.
 
 ## Authority and current checkpoint
+
+### Public staging networking (14 September 2026)
+
+The current authorized networking task makes the existing visitor staging frontend
+public at `http://54.253.237.138:8080/`. Docker publishes only
+`0.0.0.0:8080:8080/tcp` for the unchanged application image
+`sha256:e0598c4cfb0760933c0a2cd018aa9b2cbc3ce457e8b977816cbefc07feda101f`
+(release `60b31a1e18611191f9c751e382a7c2942538db56`). The former loopback systemd
+proxy is disabled; the existing SSH tunnel is optional, not required for visitors.
+Staging must no longer be described as SSH-only. Noindex is not access control.
+
+The app alone was recreated; PostgreSQL's container, start time, volume, private
+network and all 43 table/sequence fingerprints are unchanged. The 144 published
+accepted sermons, nine explicit Topical classifications and 11 hidden unresolved
+records are preserved. Administrator/API/private-preview access remains denied,
+with no development identity. No TLS or real sign-in was added. AWS Name-tag and
+security-group inspection was unavailable, so no AWS rule was changed; external
+HTTP and browser access were verified directly. See `deployment/HANDOVER.md` and
+`deployment/STATUS.md` for current mode, limitations and exercised app-only rollback.
+
+All preceding V3 source changes were preserved byte-for-byte and were not deployed.
+V3 remains a local-only alternative at `http://127.0.0.1:4383/sermons-v3/`. Existing
+historical SSH-only descriptions below describe earlier checkpoints, not the
+current staging network mode. Nothing was committed, pushed or merged.
+
+### Local Sermons V3 implementation (14 September 2026)
+
+The current task adds an uncommitted, independently styled reading-room alternative
+at `/sermons-v3/` on branch `staging-release-candidate`, based on documentation HEAD
+`be9f0a2fd69600f8f8384f696c985daed6333c6f`. Its dedicated read-only local preview is
+`http://127.0.0.1:4383/sermons-v3/`. Existing previews on ports 4381 and 4380 have
+not been restarted or updated; the running-code checkpoint below still describes
+those environments, not the modified V3 source preview.
+
+V1 and V2 page implementations, styles and scripts are preserved. Their rendered
+responses match the existing preview after removing only the new Sermons V3 menu
+entry. V3 uses the same eligible repository, native GET filters and pagination,
+existing detail links, scoped styles and alternate-page noindex policy. Live
+read-only checks reconciled all 144 eligible results, 135 book-associated sermons
+across 16 books and nine explicit Topical links. No database, sermon, classification,
+acceptance, publication, authentication or remote changes were made. Administrator
+sign-in is deferred by the current task, not implemented. See the V3 section of
+`migration-validation-plan.md` for checks and limitations.
+
+### Historical local and sealed-staging checkpoint
+
+Current running code is `60b31a1e18611191f9c751e382a7c2942538db56` locally and on
+sealed Docker staging. Samuel explicitly classified the nine accepted no-primary
+sermons as Topical, bound to private manifest
+`b1016476118bb3029a42658c78cc38e97897970b6adc553511f7cae06c7f8b56`.
+Each database has nine versioned editorial extensions and nine separately attributed
+audit events; both identical reruns made zero changes. No migration, content edit,
+new review, acceptance supersession or publication-state change was necessary.
+All original content, source evidence, human/AI reviews and D-158 receipts remain
+unchanged. The 144 eligible sermons now reconcile to **135 Bible-associated sermons
+across 16 books plus nine explicit Topical classifications**. All 11 unresolved
+sermons stay unchanged and hidden. Missing books are not automatically Topical.
+See `topical-classification-plan.md`, `deployment/HANDOVER.md` and
+`deployment/STATUS.md` for current verification, recovery artifacts and access.
+Local: `http://127.0.0.1:4381/`; sealed SSH-tunnel staging: `http://127.0.0.1:4380/`.
+
+### D-158 acceptance and ordinary frontend delivery complete
+
+Migration `0019_restricted_bulk_acceptance` and the exact manifest-bound operation
+have been applied independently to local loopback PostgreSQL and sealed staging.
+Both contain 144 separately recorded Samuel bulk acceptances; identical reruns
+returned 144 unchanged and made no further writes. Eleven unresolved sermons
+remain draft, excluded and byte-for-byte unchanged. Independent preservation
+fingerprints passed for original content, metadata, human/AI reviews and audit
+history. The known local navigation-only difference was retained, not synchronized.
+
+Implementation commit: `e2b13990042ec5808b3265e825f1b6f6069daa6f`.
+Packaging correction and running application: `c08b044b1f1ba14344ad05a068c4ed32ca8b99ca`.
+The ordinary accepted frontend is `http://127.0.0.1:4381/` locally and
+`http://127.0.0.1:4380/` through the strictly pinned staging SSH tunnel. Neither
+requires administrator sign-in; administrator/private-preview routes remain
+disabled in these servers. Existing local review/creative servers are preserved.
+Staging still has no public application/database port. Sign-in is a separate task.
+
+See `restricted-acceptance-plan.md` and `deployment/STATUS.md` for exact hashes,
+protected independent backups, deterministic UTC versus legacy Sydney validation,
+append-only withdrawal and the completed history-preserving app recovery rehearsal.
+The full PostgreSQL suite passed 736 tests with zero skips. All acceptance and
+publication-state changes are confined to D-158's restricted environments; this
+does not authorize production or public-internet publication. Actual browsers
+verified all 144 detail pages and all 11 exclusions independently in each environment,
+including ordered content, discovery/search, pagination, refresh and responsive
+layouts. No screenshots, external requests or browser mutations occurred.
+
+### Prior isolated sealed-staging integration (before D-158 acceptance)
+
+**Sealed staging is running:** following Samuel's direct post-rejection
+authorization, integrated commit `c36202ddbf14eb5376edc97472c22e0d396dc941` was
+packaged with narrowly scoped staging corrections. The deployed application is
+`f9615104e80b03f46bfff758e9669003a3a0c5cf`; later completion documentation does
+not change that image. Docker PostgreSQL 16 and the read-only application are
+healthy on an internal network with no Docker-published ports. An OS socket proxy
+listens only on host loopback; access is through strictly pinned SSH tunnelling.
+The custom logical dump, 18 migration checksums and all 41 table/sequence hashes
+matched after both initial restore and a separate empty-volume recovery rehearsal.
+The original verified volume, dump and immutable image remain preserved. See
+`deployment/STATUS.md` for exact hashes, final verification and remaining gates.
+
+`staging-release-candidate` integrates the completed D-157 backend, Claude's
+creative frontend and both worktrees' preserved administrator/navigation/book-tab
+refinements. Original branches and worktrees are not changed. See
+`deployment/README.md` for the explicitly authorized sealed EC2 Compose design,
+logical restore, target checks and rollback procedure. The remotely hosted entry
+point has no development authenticator: admin and private-preview routes remain
+disabled until real authentication and HTTPS receive a separate implementation.
+Private review completion remains distinct from publication and the unchanged
+frontend selector. Current local reconciliation is 155 sermons, 144 private
+completions, 11 genuine exceptions, 12 stricter frontend-preview results and zero
+public results. Remote admin/private-preview requests remain denied, including
+forged development-identity requests. No real authentication provider, public
+network access, publication, DNS or HTTPS was enabled.
+
+The transferred snapshot was frozen at 2026-09-14 01:24:35 UTC. Final source
+verification found one later local review-navigation update, limited to current
+stage, row version and update attribution/time. All content, approval, completion,
+AI decision, audit and other table fingerprints remained unchanged. That later
+local progress was preserved and was not copied over the verified staging snapshot;
+the two databases must not be described as currently byte-identical.
 
 The administrator presentation has been repaired on top of `ae8755a`, without
 changing backend review rules or persisted decisions. `/admin` now presents current
@@ -268,10 +410,16 @@ Use `git status`, `git log` and `git remote` to verify current facts; do not tre
 ## Current application position
 
 - The repository implements the Astro/TypeScript/PostgreSQL sermon foundation, protected administration workflow, authenticated loopback frontend preview, keyword/structured Scripture search, metadata-based related sermons and a publicly disabled description-only Related themes foundation.
+- The sermon frontend was redesigned on the `frontend-redesign` branch from baseline `0759302b76eacde250cefa6f50d3cfdcfe1d1f60` (D-149): an editorial, Scripture-first presentation built as the framework-independent `src/frontend` package with typed tokens, an escaping template, page-scoped styles, three readable CSP-hashed enhancement scripts and shared page composers. Routes, query contracts, selectors, privacy headers and the database are unchanged.
+- A creative candidate, "the Canon" (D-150), was built on `frontend-redesign-creative-v2` from `fb513b22ed31de874feb78e3084bc76d059d4d65`: every sermon is shelved under the Bible book it was preached from, with a 66-book shelf, a to-scale canon strip, a book tab and an open book of chapter/verse rulers, all ordinary server links. It keeps the `src/frontend` construction, routes, query contracts, selectors and privacy headers, and adds one optional `sermonCount` per filter option to the published filter-options projection. It was committed as `WIP: creative frontend redesign pending PostgreSQL verification` because PostgreSQL was unavailable on the implementing machine; the database gates in `migration-validation-plan.md` must be completed on a PostgreSQL-equipped computer before acceptance, and nothing from either branch is merged, deployed or published.
 - The authenticated preview uses exactly 15 completed pilot/Wave-1 sermon records from the protected local PostgreSQL test database.
 - Those sermons remain application-level drafts. Git or future GitHub visibility does not make them public in the website.
 - Ordinary public routes, public search, feeds, sitemaps, semantic processing and production builds must continue excluding them unless a separate administrator/publication decision changes their application state.
 - No deployment, production cutover, Phase 3C or public Related themes integration is authorised by this handover.
+
+## Current creative frontend refinement
+
+The creative frontend's current local refinement uses labelled, category-coloured Bible-book side tabs for latest, recent, archive, taxonomy and related entries, without per-entry count badges. The slimmer catalogue tabs are 2.75rem wide on desktop/tablet and 2.25rem on mobile; unclassified entries retain a neutral placeholder rather than an inferred book. In the authenticated preview masthead, one click opens the Sermons disclosure and double-clicking its heading still opens the sermon archive. The dropdown now offers SermonsV1 (the unchanged landing page), SermonsV2 (the unchanged archive), Speakers, Series and Books, all navigating on one click. These are menu labels, not new routes or replacement page designs. Native disclosure and ordinary links preserve keyboard, touch and no-JavaScript alternatives. Footer links, search contracts, selectors and privacy gates are unchanged. See the 13 September 2026 verification entries in `migration-validation-plan.md`; these local refinements do not imply deployment or database changes.
 
 ## Exact 15-sermon public development-dataset decision
 

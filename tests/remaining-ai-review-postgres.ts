@@ -17,7 +17,7 @@ type RunSchema=(direction:"apply"|"rollback",scope?:SchemaMigrationScope)=>Promi
 const provenance={reviewer_kind:"ai",provider:"OpenAI",execution_surface:"Codex",model:"gpt-6-astra",mode:"interactive Codex session",
   immutable_revision:"not_exposed_by_runtime",session_id:"not_exposed_by_runtime",privacy_details:"not_exposed_by_runtime",separately_billed_api_used:false,external_api_cost_aud:0} as const;
 const at="2026-09-12T00:00:00.000Z";
-function packet(s:RemainingReviewSnapshot):RemainingReviewPacket {
+export function packet(s:RemainingReviewSnapshot):RemainingReviewPacket {
   const whole={start:0,end:s.transcript.body.length,sha256:s.transcript.sha256};
   return {decision:"D-157",scopeSha256:s.scopeSha256,policySha256:s.policySha256,sermonId:id,expectedSermonVersion:s.rowVersion,
     reviewedAt:at,provenance,requestPrivateCompletion:true,components:remainingComponents.map(component=>({component,dependencySha256:s.dependencies[component],
@@ -213,6 +213,6 @@ export function registerRemainingAiReviewPostgresTests(getPool:()=>Pool,runSchem
     const p=getPool();await expect(runSchema("rollback",migration)).resolves.toMatchObject({outcome:"rolled_back",journalReceiptCount:17});
     expect((await p.query("SELECT to_regclass('public.sermon_ai_component_reviews') AS relation")).rows[0].relation).toBeNull();
     await expect(runSchema("apply",migration)).resolves.toMatchObject({outcome:"applied",journalReceiptCount:18});
-    const before=await snapshot(p);await expect(runSchema("apply",migration)).resolves.toMatchObject({outcome:"no_op",journalReceiptCount:18});expect(await snapshot(p)).toEqual(before);
+    const before=await snapshot(p);await expect(runSchema("apply",migration)).resolves.toMatchObject({outcome:"no_op",journalReceiptCount:19});expect(await snapshot(p)).toEqual(before);
   });
 }
