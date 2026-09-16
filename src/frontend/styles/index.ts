@@ -9,12 +9,14 @@ import { coreStyles } from "./core";
 import { previewStyles } from "./preview";
 import { sermonStyles } from "./sermon";
 import { shelfStyles } from "./shelf";
+import { v3Styles } from "./v3";
 
 const blocks = {
   core: coreStyles,
   shelf: shelfStyles,
   sermon: sermonStyles,
-  preview: previewStyles
+  preview: previewStyles,
+  v3: v3Styles
 } as const;
 
 export type StyleBlockName = Exclude<keyof typeof blocks, "core">;

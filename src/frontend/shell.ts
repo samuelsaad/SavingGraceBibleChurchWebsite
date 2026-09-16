@@ -15,6 +15,7 @@ import { canonicalOrigin, siteLinks, type FrontendRenderContext, type FrontendTa
 import { enhancementScripts, type EnhancementScriptName } from "./scripts";
 import { siteStyles, type StyleBlockName } from "./styles";
 import { colour } from "./tokens";
+import { sermonsV3Path, sermonsV3Url } from "./v3-routes";
 
 export type RobotsDirective = "index, follow" | "noindex, follow" | "noindex, nofollow";
 
@@ -23,6 +24,8 @@ export interface PageShellInput {
   title: string;
   description?: string;
   canonicalPath: string;
+  /** Alternate pages may share an archive canonical without selecting its menu item. */
+  navigationPath?: string;
   robots: RobotsDirective;
   body: Html;
   openGraphType?: "website" | "article";
@@ -63,8 +66,8 @@ function navigationLinks(context: FrontendRenderContext, canonicalPath: string):
   if (links.hasTaxonomyRoutes) {
     const homeActive = canonicalPath === "/";
     return html`<details class="masthead__menu" data-sermon-menu>
-      <summary class="masthead__menu-toggle${active || homeActive ? " is-active" : ""}" aria-controls="sermon-navigation" title="Open menu; double-click to browse SermonsV2">Sermons<span class="masthead__chevron" aria-hidden="true"></span></summary>
-      <ul class="masthead__dropdown" id="sermon-navigation"><li><a href="${links.home}"${attribute("aria-current", homeActive ? "page" : null)}>SermonsV1</a></li>${items.map(([section, label]) => html`<li><a href="${section === "sermons" ? links.archive : links.taxonomyIndex(section)}"${when(section === "sermons", () => html` data-sermon-archive`)}${attribute("aria-current", active === section ? "page" : null)}>${section === "sermons" ? "SermonsV2" : label}</a></li>`)}</ul>
+      <summary class="masthead__menu-toggle${active || homeActive || canonicalPath === sermonsV3Path ? " is-active" : ""}" aria-controls="sermon-navigation" title="Open menu; double-click to browse SermonsV2">Sermons<span class="masthead__chevron" aria-hidden="true"></span></summary>
+      <ul class="masthead__dropdown" id="sermon-navigation"><li><a href="${links.home}"${attribute("aria-current", homeActive ? "page" : null)}>SermonsV1</a></li>${items.map(([section, label]) => html`<li><a href="${section === "sermons" ? links.archive : links.taxonomyIndex(section)}"${when(section === "sermons", () => html` data-sermon-archive`)}${attribute("aria-current", active === section ? "page" : null)}>${section === "sermons" ? "SermonsV2" : label}</a></li>${when(section === "sermons", () => html`<li><a href="${sermonsV3Url(context)}"${attribute("aria-current", canonicalPath === sermonsV3Path ? "page" : null)}>Sermons V3</a></li>`)}`)}</ul>
     </details>`;
   }
   return html`<ul class="masthead__links">${items.map(([section, label]) => html`<li><a href="${section === "sermons" ? links.archive : links.taxonomyIndex(section)}"${attribute("aria-current", active === section ? "page" : null)}>${label}</a></li>`)}</ul>`;
@@ -114,7 +117,7 @@ export function pageShell(input: PageShellInput, context: FrontendRenderContext 
     <header class="masthead">
       <div class="masthead__inner">
         ${brand(context)}
-        <nav class="masthead__nav" aria-label="Primary">${navigationLinks(context, input.canonicalPath)}</nav>
+        <nav class="masthead__nav" aria-label="Primary">${navigationLinks(context, input.navigationPath ?? input.canonicalPath)}</nav>
         ${when(input.mastheadSearch !== false, () => mastheadSearch(context))}
       </div>
     </header>

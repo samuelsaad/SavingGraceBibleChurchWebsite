@@ -5,6 +5,51 @@
 
 ## Authority and current checkpoint
 
+### Public staging networking (14 September 2026)
+
+The current authorized networking task makes the existing visitor staging frontend
+public at `http://54.253.237.138:8080/`. Docker publishes only
+`0.0.0.0:8080:8080/tcp` for the unchanged application image
+`sha256:e0598c4cfb0760933c0a2cd018aa9b2cbc3ce457e8b977816cbefc07feda101f`
+(release `60b31a1e18611191f9c751e382a7c2942538db56`). The former loopback systemd
+proxy is disabled; the existing SSH tunnel is optional, not required for visitors.
+Staging must no longer be described as SSH-only. Noindex is not access control.
+
+The app alone was recreated; PostgreSQL's container, start time, volume, private
+network and all 43 table/sequence fingerprints are unchanged. The 144 published
+accepted sermons, nine explicit Topical classifications and 11 hidden unresolved
+records are preserved. Administrator/API/private-preview access remains denied,
+with no development identity. No TLS or real sign-in was added. AWS Name-tag and
+security-group inspection was unavailable, so no AWS rule was changed; external
+HTTP and browser access were verified directly. See `deployment/HANDOVER.md` and
+`deployment/STATUS.md` for current mode, limitations and exercised app-only rollback.
+
+All preceding V3 source changes were preserved byte-for-byte and were not deployed.
+V3 remains a local-only alternative at `http://127.0.0.1:4383/sermons-v3/`. Existing
+historical SSH-only descriptions below describe earlier checkpoints, not the
+current staging network mode. Nothing was committed, pushed or merged.
+
+### Local Sermons V3 implementation (14 September 2026)
+
+The current task adds an uncommitted, independently styled reading-room alternative
+at `/sermons-v3/` on branch `staging-release-candidate`, based on documentation HEAD
+`be9f0a2fd69600f8f8384f696c985daed6333c6f`. Its dedicated read-only local preview is
+`http://127.0.0.1:4383/sermons-v3/`. Existing previews on ports 4381 and 4380 have
+not been restarted or updated; the running-code checkpoint below still describes
+those environments, not the modified V3 source preview.
+
+V1 and V2 page implementations, styles and scripts are preserved. Their rendered
+responses match the existing preview after removing only the new Sermons V3 menu
+entry. V3 uses the same eligible repository, native GET filters and pagination,
+existing detail links, scoped styles and alternate-page noindex policy. Live
+read-only checks reconciled all 144 eligible results, 135 book-associated sermons
+across 16 books and nine explicit Topical links. No database, sermon, classification,
+acceptance, publication, authentication or remote changes were made. Administrator
+sign-in is deferred by the current task, not implemented. See the V3 section of
+`migration-validation-plan.md` for checks and limitations.
+
+### Historical local and sealed-staging checkpoint
+
 Current running code is `60b31a1e18611191f9c751e382a7c2942538db56` locally and on
 sealed Docker staging. Samuel explicitly classified the nine accepted no-primary
 sermons as Topical, bound to private manifest

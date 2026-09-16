@@ -18,6 +18,7 @@ import type { PublicSermonRepository } from "../repositories/sermon-repository";
 import { loadArchivePage } from "./frontend-archive-loader";
 import { frontendResponse, plainResponseHeaders } from "./frontend-response";
 import type { FrontendRenderContext } from "../../frontend/routes";
+import { createSermonsV3Handler } from "./sermons-v3";
 
 export {
   hasActiveSermonFilters,
@@ -49,10 +50,13 @@ function renderSermonSitemap(entries: Array<{ slug: string; lastModified: string
 }
 
 export function createPublicSermonSiteHandler(repository: PublicSermonRepository, context: FrontendRenderContext = publicRenderContext) {
+  const v3 = createSermonsV3Handler(repository, context);
   function errorPage(status: 400 | 404 | 410 | 500, title: string, message: string): Response {
     return frontendResponse(renderFrontendBoundaryPage({ title, message }, context), { status });
   }
   return async (request: Request): Promise<Response | null> => {
+    const alternative = await v3(request);
+    if (alternative) return alternative;
     const url = new URL(request.url);
     const isArchiveRoot = url.pathname === archivePath;
     const archivePageMatch = /^\/sermons\/page\/(\d+)\/$/.exec(url.pathname);

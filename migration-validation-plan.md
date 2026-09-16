@@ -1,5 +1,86 @@
 # Migration Validation Plan
 
+## Public staging networking - 14 September 2026
+
+The explicitly authorized public visitor mode reuses the deployed `60b31a1` image
+and adds only `0.0.0.0:8080:8080/tcp` via the protected public-staging override.
+No V3 build was deployed. The base sealed restore policy remains unchanged; new
+guards compare the effective public configuration to the deployed base and reject
+extra ports, image/environment/storage/private-service changes. Seven sealed and
+seven public Python network tests passed, including environment-order equivalence,
+changed-value refusal and duplicate-variable refusal. The first ordering-only
+guard rejection exercised the app-only networking rollback successfully.
+
+Fresh evidence: 641 standard tests passed, 120 PostgreSQL gates skipped; 17 focused
+JS tests passed; Astro/type check zero errors/warnings and one existing hint; local
+production build, anonymized five-record dry run and offline cached audit passed.
+No PostgreSQL write/create/drop test was run during this networking-only task.
+
+All 43 staging table fingerprints and sequences remained identical, with unchanged
+database container/start/mounts: 155 stored, 144 published/accepted, 11 unresolved,
+19 migrations. Direct external HTTP verification passed 69 requests, all 16 archive
+pages/144 identities, all 11 HTML/API exclusions, ten accepted details including
+nine Topical, filters, redirects, anti-indexing and private-route denial. Public
+browser home/menu/search/pagination worked without the tunnel. The unchanged image
+contains inline assets and no V3 menu entry. Original V3 source hashes matched.
+
+A three-worker archive sweep returned a 500 before the complete serial pass.
+The cause is not established; database log-count inspection found no statement
+timeout or connection-limit messages. This is not load/capacity acceptance. AWS
+Name-tag and security-group metadata were unavailable; no AWS rule was changed.
+The pinned SSH host, expected instance ID/IP and deployed image were verified.
+See `deployment/STATUS.md` and `deployment/HANDOVER.md` for current public mode,
+exact image/fingerprint, private recovery evidence and exercised rollback.
+
+## Sermons V3 local alternative - 14 September 2026
+
+Implemented a separate reading-room presentation, V3-specific route renderer and
+styles, and one additional existing-menu entry. No V1/V2 page, content repository,
+database, authentication or deployment behavior was changed. New anonymised tests
+cover combined filters and pagination, explicit-only Topical display, escaping,
+CSP hashes, noindex/canonical policy, preview authorization, sealed administrator
+denial, route normalization, invalid input, empty results and sitemap exclusion.
+
+- `npm test`: 641 passed, 120 PostgreSQL-gated tests skipped. No PostgreSQL suite
+  was run: it creates/writes a disposable database and this task prohibits database
+  changes. Historical PostgreSQL results above/below are not fresh V3 evidence.
+- `npm run check`: zero errors/warnings, one existing private-helper import hint.
+- `npm run build`: passed. V3 is served by the runtime handler, not emitted as a
+  static real-sermon HTML export.
+- `npm run staging:bundle`: passed locally; no deployment or remote operation.
+- Changed-file secret/key/cloud/proprietary-pattern and symlink scan: no findings
+  across the 12 changed paths. `git diff --check` passed and the index stayed empty.
+- Anonymised `npm run migration:dry-run -- --input tests/fixtures/dry-run.json`:
+  passed, five fixture records, three included and two excluded; no import writes.
+- `npm audit --offline --audit-level=low`: zero reported vulnerabilities in cached
+  audit data; not a fresh online vulnerability assessment.
+- Real-browser views checked at 1280, 768, 360 and 320 pixels without document
+  overflow. Refined touch-target sizes and corrected Topical heading contrast after
+  rendering. Sample computed contrast ratios: Topical heading 9.43:1, book label
+  7.72:1, muted feature text 7.27:1 and gilt label 5.88:1.
+- Browser checks covered the new dropdown link, ArrowDown/Escape and focus return,
+  visible 3px keyboard focus, native filters, combined keyword/book search, pagination,
+  Back, speaker and series discovery, Topical and existing sermon details. The
+  Topical series remains distinct from explicit classification. No console errors
+  or warnings were observed on V3.
+- Entire V1 and V2 HTTP responses were byte-identical to port 4381 after removal
+  of only the V3 menu entry. Their browser main HTML, style blocks and enhancement
+  scripts also matched the pre-change snapshots exactly.
+- Read-only HTTP comparison traversed all 16 V3 archive pages: 144 unique ordered
+  results matched the eligible API. The nine explicit Topical identities matched
+  the API and all nine detail links returned 200. The API retained 135 sermons
+  associated with 16 books. No extra records were exposed by V3; the underlying
+  11-exception exclusion rules were reused unchanged, not reprocessed.
+- Native anchors, GET forms and details disclosures supply server-rendered
+  no-JavaScript navigation. Reduced-motion CSS was inspected in the rendered
+  stylesheet; switching the browser's motion preference or disabling JavaScript
+  was not supported by the available browser controls. Touch-target/layout checks
+  used responsive viewports, not a physical touch device.
+
+The dedicated local preview runs on loopback port 4383 with read-only database
+sessions and disabled private administrator routes. Ports 4381/4380, the existing
+SSH tunnel, staging and production were not changed. No commit, push or merge.
+
 ## Nine explicit Topical classifications — pre-application verification
 
 The exact nine-record editorial manifest reconciled in both environments. The

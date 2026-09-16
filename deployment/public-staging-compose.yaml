@@ -1,0 +1,20 @@
+# Explicitly authorized visitor-only public staging. Never use for production.
+# Layer on the verified deployed release's compose.yaml, not a new local build.
+services:
+  app:
+    labels:
+      org.savinggrace.access-mode: public-staging
+    ports: !override
+      - target: 8080
+        published: '8080'
+        host_ip: 0.0.0.0
+        protocol: tcp
+    networks:
+      frontend: {}
+networks:
+  frontend:
+    driver: bridge
+    internal: false
+    enable_ipv6: false
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'

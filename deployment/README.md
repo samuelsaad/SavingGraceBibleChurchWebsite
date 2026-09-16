@@ -1,6 +1,50 @@
-# Sealed staging release
+# Staging deployment modes
 
-This deployment is authorized only for the separately identified staging EC2
+## Current public visitor mode
+
+The 14 September 2026 task explicitly authorized public access to the existing
+eligible staging content at <http://54.253.237.138:8080/>. See `HANDOVER.md` and
+`STATUS.md` for the current image, verification, limitations and exact recovery
+checkpoint. This is public HTTP staging, not production or administrator sign-in.
+
+`public-staging-compose.yaml` adds the sole mapping `0.0.0.0:8080:8080/tcp` to
+the verified existing app image. Its `!override` port list prevents duplicate
+bindings. Only the app joins the new frontend bridge; the private database
+network, database service, volumes and secrets remain unchanged. IPv6 and IP
+masquerading on that bridge are disabled. The original loopback proxy is stopped
+and disabled while Docker owns port 8080. No 4380 mapping is added.
+
+Validate the merged configuration with `public_staging_network.py` in explicit
+`public-staging` mode against the unchanged deployed base configuration. Both
+normal and maintenance profiles must be included in inspection. It rejects
+additional ports, images, environment values, storage or private-service changes.
+The original `restore.py` guard remains sealed-only; public mode is not permission
+to bypass an empty-target restore or write data.
+
+```sh
+# Use the deployed base, environment and protected public override, not V3 source.
+docker compose --env-file "$DEPLOYED_ENV" -f "$DEPLOYED_COMPOSE" \
+  -f "$PUBLIC_OVERRIDE" up -d --no-deps --force-recreate --no-build --pull never \
+  --wait --wait-timeout 90 app
+```
+
+Capture private image/configuration evidence and an exact app-only rollback before
+changing a running service. Check the effective configuration for one and only one
+TCP mapping, strict SSH target identity, health, external access, private-route
+denial, current eligibility and unchanged table/sequence fingerprints afterward.
+Keep the SELECT-only production-mode runtime (`STAGING_SEALED=1`) and its private
+route denial; that variable controls application safeguards, not host reachability.
+Noindex/robots headers discourage indexing but do not restrict access. Do not
+enter administrator credentials over this public HTTP endpoint.
+
+Public networking does not authorize future sermons, changed publication states,
+development identity, V3 deployment, production changes or unrelated AWS rules.
+Run both network suites: `python -B tests/staging_network_test.py` and
+`python -B tests/staging_public_network_test.py`.
+
+## Original sealed-only mode and historical deployment procedure
+
+The original sealed deployment was authorized only for the separately identified staging EC2
 instance. It is not production, public-internet publication, a replacement
 authenticator or permission to change AWS networking. D-158 separately permits
 restricted frontend acceptance of exactly 144 completed sermons. Existing local
@@ -14,9 +58,9 @@ The isolated `staging-release-candidate` branch combines the D-157 backend at
 navigation and Bible-book-tab refinements. Both original worktrees are preserved.
 Normal human publication requirements remain separate from D-157 private completion.
 
-The verified deployed application is commit
-`c08b044b1f1ba14344ad05a068c4ed32ca8b99ca`, including D-158 and its narrow
-packaging correction. See `STATUS.md` for exact image/archive/dump hashes,
+The currently deployed application is commit
+`60b31a1e18611191f9c751e382a7c2942538db56`, including the completed discovery and
+Topical work. The public networking change reuses that image. See `STATUS.md` for exact image/archive/dump hashes,
 the initial restore, history-preserving D-158 recovery and final test evidence.
 Later documentation-only commits do not change the deployed image. The verified
 snapshot does not include one subsequent local review-navigation update; never

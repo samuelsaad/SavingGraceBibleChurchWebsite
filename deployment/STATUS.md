@@ -1,4 +1,117 @@
-# Sealed staging release: deployed and recovery verified
+# Staging release: public visitor access enabled
+
+## Public TCP 8080 networking - 14 September 2026
+
+**Current working URL: <http://54.253.237.138:8080/>.** Samuel explicitly authorized
+public access to the existing accepted visitor content for this staging instance.
+This entry supersedes all historical SSH-only access descriptions below. It does
+not authorize production cutover, real administrator sign-in or new publication.
+
+### Actual change and identity
+
+- Before: no Docker-published ports; both containers used an internal network,
+  with a systemd socket proxy listening on host `127.0.0.1:8080`. The suggested
+  localhost Docker mapping did not exist in the actual deployment.
+- After: only `app` publishes **`0.0.0.0:8080:8080/tcp`**. Its existing application
+  already listened on container `0.0.0.0:8080`. No 4380 mapping was added.
+- The explicit public-staging override adds an app-only bridge, with IPv6 and IP
+  masquerading disabled. The database and maintenance remain exclusively on the
+  unchanged internal network. The old socket/proxy is disabled/stopped, with its
+  original unit files preserved for rollback.
+- Same application image before and after:
+  `sha256:e0598c4cfb0760933c0a2cd018aa9b2cbc3ce457e8b977816cbefc07feda101f`.
+- Same deployed application commit: `60b31a1e18611191f9c751e382a7c2942538db56`.
+  Local V3 changes were not packaged, transferred or deployed.
+- Final app container: `5a53d2ea035f18836473bf9a59789821862be1d3bf3e9af2af927791f0267c94`.
+- Preserved database container:
+  `4b96b98308f92c09c23346d2b7fb36c7f3b1a5469340a111cdde668082fb1784`.
+- Strict pinned ED25519 SSH and IMDSv2 verified the existing instance ID
+  `i-0f7abc9421733e79c`, expected IPv4 and existing immutable staging image.
+  The Name tag `new-website` could not be independently re-read: instance tags
+  were unavailable in IMDS, and AWS CLI had no credentials. The security-group
+  rule was likewise not inspected. No AWS, shared security group, host firewall,
+  production instance, SSH configuration or Docker management listener changed.
+
+An unintended explicit sandbox group grant made OpenSSH reject the existing PEM.
+Only that grant was removed immediately before strict SSH use; owner, SYSTEM and
+administrator access were preserved. Key contents were never read or displayed.
+
+### Preservation, rollback and safeguards
+
+Before changing containers, protected private local storage recorded image identity,
+relevant non-secret configuration, all table/sequence fingerprints, unresolved
+identities and exact app-only rollback commands. Original deployed Compose/env files,
+images, database volumes, secrets and systemd units were not overwritten.
+
+The first recreation was automatically rolled back because a runtime guard compared
+environment lists in order. Fresh comparison verified values against the original
+image plus Compose configuration. The guard was corrected and tested to compare
+names and values exactly, rejecting changed values and duplicate names. One retry
+passed, preserving the first plan and guard as recovery evidence.
+
+All **43 table fingerprints and sequence state** match before and after:
+`9f6bbce2a1aedba7b3fbf22b121b068361a0a8d64dd73cc085cfebaaf4d47252`.
+Database container identity, start time and mounts are identical. Counts remain
+155 stored sermons, 144 published/accepted with 144 publication timestamps,
+11 unresolved, 19 migrations. No migration, import, classification, acceptance,
+review, content, metadata or publication-state write occurred.
+
+The app remains `node`, read-only, capability-dropped, no-new-privileges, with the
+same reader-secret mount, environment values and `unless-stopped` policy.
+`STAGING_SEALED=1` continues enforcing the production-mode read-only runtime and
+private-route denial; it no longer describes host networking. No development
+administrator identity is enabled. HTML retains CSP and escaping; responses retain
+no-store/noindex. Robots disallows crawling. **Noindex is not access control**;
+the approved visitor content is publicly accessible over HTTP without TLS.
+
+Rollback uses the exact privately recorded deployed base/environment paths,
+`up -d --no-deps --force-recreate --no-build --pull never app` without the public
+override, followed by enabling the original socket. This restores the former
+SSH-only transport without touching data. It was actually exercised after the
+first guard rejection. Do not restore a database or run Compose teardown.
+See `HANDOVER.md` for the operator procedure.
+
+### Fresh verification and limits
+
+- Direct external Windows HTTP checks made 69 requests without SSH forwarding.
+  All 16 archive pages reconciled to 144 unique eligible API identities: 135
+  book-associated sermons across 16 books and nine explicit Topical records.
+- All 11 unresolved identities returned 404 through both detail HTML and API and
+  were absent from the eligible API/archive. Ten accepted details, including all
+  nine Topical details, returned 200.
+- Book, combined keyword/book, speaker and series filters worked with counts
+  44, 41, 91 and 2 respectively. The two-sermon Topical series remains distinct
+  from the nine explicit Topical classifications.
+- Public redirects stayed on the public origin, with no localhost navigation.
+  Current home uses one inline style block and two inline scripts, no external
+  asset references. V3 is absent from the deployed menu.
+- Real browser access loaded the public home and V2 menu, keyword search and
+  filtered pagination. Styling and menu interactions worked without a tunnel.
+- Administrator, administrator API, private-preview, encoded administrator and
+  local-helper routes returned 401; health returned ready/private_routes_disabled.
+- **Capacity limitation:** an earlier three-worker archive sweep returned a 500.
+  The complete serial sweep passed. Sanitized database log counts showed no
+  statement-timeout or connection-limit messages; the cause is not established.
+  This is not a concurrency/load-readiness sign-off. No application/resource
+  setting was changed to mask it.
+- Seven original sealed-network tests and seven new public-network tests passed.
+  Seventeen focused JS staging/V3 tests and the full standard suite passed:
+  641 passed, 120 database-gated skips. No PostgreSQL write/create/drop suite was run.
+- Type/Astro: zero errors/warnings, one existing private-helper hint. Local
+  production build, five-record anonymized importer dry run and cached offline
+  dependency audit passed (zero cached vulnerabilities, not a live advisory scan).
+- Final secret/key/cloud/proprietary-pattern and symlink scan covered 18 changed
+  paths with no findings. `git diff --check` passed. Ten pre-existing V3
+  implementation/test files remained byte-identical; only their handover and
+  validation documents received the new deployment checkpoint. HEAD remains
+  `be9f0a2fd69600f8f8384f696c985daed6333c6f`, with an empty index.
+
+The exact Name tag/security-group rule, HTTPS and concurrency capacity are not
+claimed verified. Public reachability from outside EC2 is independently verified.
+No commit, push or merge was performed; all pre-existing V3 source bytes remain
+preserved and its local port-4383 preview was not restarted.
+
+## Historical sealed deployment and content milestones
 
 ## Nine explicit Topical classifications — 14 September 2026
 

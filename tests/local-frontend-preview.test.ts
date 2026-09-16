@@ -218,13 +218,14 @@ describe("authenticated local frontend preview", () => {
     const expectedRoutes = [
       "/frontend-preview/",
       "/frontend-preview/sermons/",
+      "/frontend-preview/sermons-v3/",
       "/frontend-preview/speakers/",
       "/frontend-preview/series/",
       "/frontend-preview/books/"
     ];
 
     expect(navigation).toContain('<details class="masthead__menu" data-sermon-menu>');
-    expect(navigation).toContain('<ul class="masthead__dropdown" id="sermon-navigation"><li><a href="/frontend-preview/" aria-current="page">SermonsV1</a></li><li><a href="/frontend-preview/sermons/" data-sermon-archive>SermonsV2</a></li><li><a href="/frontend-preview/speakers/">Speakers</a></li><li><a href="/frontend-preview/series/">Series</a></li><li><a href="/frontend-preview/books/">Books</a></li></ul>');
+    expect(navigation).toContain('<ul class="masthead__dropdown" id="sermon-navigation"><li><a href="/frontend-preview/" aria-current="page">SermonsV1</a></li><li><a href="/frontend-preview/sermons/" data-sermon-archive>SermonsV2</a></li><li><a href="/frontend-preview/sermons-v3/">Sermons V3</a></li><li><a href="/frontend-preview/speakers/">Speakers</a></li><li><a href="/frontend-preview/series/">Series</a></li><li><a href="/frontend-preview/books/">Books</a></li></ul>');
     expect(navigation).not.toContain('data-sermon-menu open');
     expect(navigation).toContain('aria-controls="sermon-navigation"');
     expect(html).toContain('<script data-enhancement="navigation">');

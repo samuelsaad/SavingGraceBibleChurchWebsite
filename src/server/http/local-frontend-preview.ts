@@ -22,6 +22,7 @@ import type {
 } from "../repositories/sermon-repository";
 import { loadArchivePage } from "./frontend-archive-loader";
 import { frontendResponse, frontendResponseHeaders } from "./frontend-response";
+import { createSermonsV3Handler } from "./sermons-v3";
 
 const previewRoot = "/frontend-preview";
 const taxonomyPageSize = 50;
@@ -51,6 +52,7 @@ export function createLocalFrontendPreviewHandler(
   repository: PublicSermonRepository,
   session: LocalFrontendPreviewSession
 ) {
+  const v3 = createSermonsV3Handler(repository, previewRenderContext);
   return async (request: Request): Promise<Response | null> => {
     const url = new URL(request.url);
     if (url.pathname !== previewRoot && !url.pathname.startsWith(`${previewRoot}/`)) return null;
@@ -68,6 +70,8 @@ export function createLocalFrontendPreviewHandler(
         "private"
       );
     }
+    const alternative = await v3(request);
+    if (alternative) return alternative;
     if (
       url.pathname === previewRoot
       || /^\/frontend-preview\/(?:sermons(?:\/page\/\d+|\/[a-z0-9]+(?:-[a-z0-9]+)*)?|(?:speakers|series|books)(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)?)$/u.test(url.pathname)
