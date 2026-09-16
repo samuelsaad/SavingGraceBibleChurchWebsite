@@ -1,5 +1,55 @@
 # Migration Validation Plan
 
+## Administrator presentation repair — 13 September 2026
+
+Scope: administrator shell, overview, sermon list and guided-review layout on
+`ae8755ab93e446fa8c6da1f7ad32a39218a0fd45`. No database writes, migrations, approval
+handlers, authentication logic, domain completion predicates or creative frontend
+files changed. The source of the narrow review form was a third status-panel child
+in a two-column grid; status evidence is now outside a full-width stage workspace.
+The six review stages, locking, save/approval controls and version-bound human/AI
+attribution remain intact. Filters retain their names, values and dependent resets;
+advanced controls expand automatically when their query parameters are present.
+
+- `npm test -- --reporter=dot --no-color`: 565 passed; 101 explicitly gated tests
+  skipped. No real-PostgreSQL test-run authorization was inferred for this UI-only
+  task, and no disposable database was created. These are standard-suite results,
+  not a new real-PostgreSQL acceptance run.
+- `npm run check`: zero errors, warnings or hints. The first concurrent check/build
+  received a generated-file `EPERM`; the separately permitted check passed.
+- `npm run build`: passed. No runtime data is included in static output.
+- `npm run migration:dry-run -- --input tests/fixtures/dry-run.json`: three included,
+  two excluded, zero rejected; anonymized fixture only. The initial command without
+  its required input did not run an import.
+- `npm audit --offline --json`: zero reported vulnerabilities; no network audit.
+- `scripts/verify-admin-dashboard-ui.mjs`: offline, synthetic browser responses at
+  1440, 1024, 768, 390 and 320 CSS pixels across five routes, all six review stages,
+  mobile keyboard/Escape/focus containment, advanced-filter preservation, empty
+  search, current human/AI attribution, completed-stage read-only controls and
+  later-stage locks passed. 200% reflow and zoom passed; no page overflow, external
+  requests or review writes. Playwright uses an existing local installation supplied
+  with `PLAYWRIGHT_MODULE_PATH`; no dependency was installed. Optional screenshots
+  contain synthetic fixtures only and remain in ignored temporary storage.
+- Read-only live browser checks at 1440 and 390 pixels passed on the existing
+  loopback server: overview, sermon queue, evidence and content-outcome queues,
+  plus a completed and an outstanding guided review. Shell and asset hashes matched
+  the new local build. Private API access without the development identity returned
+  401; the public sermon API returned zero records; no-store and noindex remained.
+  Aggregates were 155 sermons, 144 private completions, 11 outstanding records and
+  1,121 AI decisions. Before/after hashes of all paginated summaries and current
+  review projections matched; no review mutation or external request was submitted.
+- The attempted replacement listener found the original loopback listener still
+  active. It was not stopped; the existing process serves the new built assets.
+- Two obsolete literal UI-copy assertions were updated; no security or review-gate
+  assertion was weakened. No commit, branch switch, push or publication was made.
+- Changed-file and static-output scans: seven intentional files, zero credential,
+  key/token/cloud-pattern findings, zero matches against current protected sermon
+  identities, and zero duplicated seed-body shingles outside the designated seed.
+  No changed-file symlinks or staged files; anonymous screenshots remain ignored.
+  Claude's committed creative frontend tree is unchanged. All database-backed
+  inspection returned aggregates only; no private sermon prose entered reports,
+  fixtures, screenshots or the patch.
+
 ## D-156 private handler resolution — 12 September 2026
 
 Starting commit `766928553e4f5e6364a9f22939f651b3a909862f`; Samuel explicitly

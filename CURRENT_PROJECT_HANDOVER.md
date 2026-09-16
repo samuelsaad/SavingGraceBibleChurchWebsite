@@ -1,6 +1,6 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
-**Handover date:** 12 September 2026
+**Handover date:** 13 September 2026
 **Purpose:** Public-safe orientation for continuing work from this repository. This file contains no sermon body, credential, token, session, raw caption export or private local path.
 
 ## D-160 sixth fixed private batch checkpoint
@@ -22,7 +22,6 @@ D-159 and earlier Astra provenance is historical and must not be copied or chang
 No caption, transcript, generated content or database write had occurred at this
 checkpoint. Continue only after committing and verifying D-160's safe governance,
 contracts and anonymised tests. See `sixth-private-batch-plan.md`.
-
 
 ## D-159 isolated private batch checkpoint
 
@@ -88,6 +87,18 @@ The old token is not retried or deleted as a diagnostic. See the batch plan and
 OAuth proof document for preservation, testing and continuation requirements.
 
 ## Authority and current checkpoint
+
+The administrator presentation has been repaired on top of `ae8755a`, without
+changing backend review rules or persisted decisions. `/admin` now presents current
+private-review totals and evidence exceptions first, with publication readiness in
+a separate disclosure. Sermon rows combine identifying metadata, expose remaining
+requirements and retain expandable decision attribution. The guided form occupies
+the full workspace: the extra status panel no longer displaces it into a narrow
+grid column. Mobile navigation supports Escape, contained keyboard focus and an
+inert closed sidebar. See the 13 September UI entry in `migration-validation-plan.md`.
+The existing loopback review server serves the updated build at `/admin`; this
+remains development-identity access, not personal sign-in. No database decision,
+governance policy, publication gate or visitor-facing frontend was changed.
 
 **D-157 is applied to the frozen existing 155 records.** The current private
 administrator workflow has 144 completed reviews: 132 new separately attributed
