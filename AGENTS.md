@@ -70,6 +70,36 @@ For milestone evidence, record safe commands/results/defects/regressions in the 
 
 ## 10. Sermon and administration invariants
 
+### D-160 — sixth fixed private draft batch
+
+Samuel separately authorises the protected instruction amendments for only manifest
+SHA-256 `0390f2b94252270821f9079159482a18e17051399cad654818905b1f1de20c94`.
+Its 36 identities are fixed in the verified inventory's ascending source-ID order
+after excluding all 195 prior attempts; no substitute or thirty-seventh record is
+permitted. For this manifest only, the complete prepared but unapproved transcript
+may ground private unapproved descriptions and Q&A in the current primary Codex
+session. Samuel selected the label `gpt-5.6-sol`; store that label separately from
+verified runtime identity. Runtime model, immutable revision, session and privacy
+details that are not exposed must remain unavailable and must never be invented.
+Do not copy Astra attribution from D-151 through D-159 or rewrite their provenance.
+
+Apply the complete whole-transcript grounding, source-word preservation, uncertainty,
+editorial, stale-result, private-draft and administrator-review rules. Preserve every
+original candidate and permit at most one recorded pre-import correction. Official
+YouTube selection uses standard-primary, standard-unknown, ASR-primary, ASR-unknown
+priority. Unknown association remains explicitly unconfirmed and retains
+`CAPTION_AUDIO_ASSOCIATION_UNKNOWN_ACCEPTED_BY_BOUNDED_DECISION`, the D-160/manifest
+binding, `primary_audio_confirmed: false` and `accepted_under_bounded_exception: true`.
+Private source/transcript/candidate prose may pass only through necessary primary
+session context and ignored persistence, never ordinary logs, reports, Git, tests,
+screenshots, another provider or agent. External generative API cost is AUD 0.
+Atomic guarded local imports and identical reruns create no approval, acceptance,
+public/search/build/semantic eligibility or administrator decision. A failure consumes
+its fixed position; systemic access/quota failure pauses untouched positions. D-160
+expires after 36 terminal outcomes. All permanent safeguards and the ordinary approved-
+transcript rule remain unchanged outside this manifest. Read
+`sixth-private-batch-plan.md` before using this mode.
+
 ### D-159 — fifth fixed private draft batch
 
 Samuel separately authorises the protected instruction amendments for only manifest

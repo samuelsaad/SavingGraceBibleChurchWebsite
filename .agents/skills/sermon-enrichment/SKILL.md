@@ -1,6 +1,6 @@
 ---
 name: sermon-enrichment
-description: Create, regenerate, review, or validate private sermon descriptions and Q&A drafts from a complete approved transcript, plus the exact D-151 through D-155 private pre-approval batch attempts when their manifest contracts are satisfied. Use for transcript-grounded enrichment, replacement drafts, grounding evidence, coherence and readability review, or any request involving sermon description or question-and-answer quality.
+description: Create, regenerate, review, or validate private sermon descriptions and Q&A drafts from a complete approved transcript, plus exact separately authorised fixed-manifest exceptions such as D-160 when their contracts are satisfied. Use for transcript-grounded enrichment, replacement drafts, grounding evidence, coherence and readability review, or any request involving sermon description or question-and-answer quality.
 ---
 
 # Sermon Enrichment
@@ -23,6 +23,22 @@ precedence over the human-only private-stage rules below only within that scope.
 For Samuel's separately authorised review of the frozen existing local collection only, read [the delegated-review contract](references/delegated-review-contract.md) completely and use it instead of the default human-only acceptance and complete-approved-transcript-reading requirements below. Assess every pending description and Q&A in full against sufficient contextual source evidence; record separately scoped AI acceptance, not human approval. The mode permits one focused, preserved correction round and exact-version revalidation. It never permits transcript edits, audio verification claims, publication or automatic completion of unrelated review stages. Existing human approvals and all consumed batch histories remain intact. Outside this mode, every normal rule below still applies.
 
 ## Non-negotiable boundaries
+
+For the separately authorised D-160 sixth batch only, read
+`../../../sixth-private-batch-plan.md` at the repository root. Manifest SHA-256
+`0390f2b94252270821f9079159482a18e17051399cad654818905b1f1de20c94` permits the complete
+prepared but unapproved transcript to ground private drafts for its 36 fixed records.
+Samuel selected `gpt-5.6-sol`, but that selection is not proof of runtime identity:
+record the selection and the runtime-reported model separately, using the prescribed
+unavailable marker when the current session exposes no verifiable model metadata.
+Never copy Astra attribution or relabel earlier batches. Use one sermon at a time in
+the primary session, preserve every original, allow no more than one pre-import
+correction, and bind all source/output/manifest/governance hashes and warnings.
+Necessary private prose may enter this primary session and ignored persistence only.
+It remains prohibited from ordinary logs, reports, Git, tests, screenshots, subagents
+or another provider. No content is approved or public. A failed position is consumed,
+no substitute or thirty-seventh record is allowed, and D-160 expires after 36 terminal
+results. All normal rules below remain unchanged outside this exact manifest.
 
 For the separately authorised D-159 fifth batch only, read
 `../../../fifth-private-batch-plan.md` at the repository root. Manifest SHA-256

@@ -3,6 +3,27 @@
 **Handover date:** 12 September 2026
 **Purpose:** Public-safe orientation for continuing work from this repository. This file contains no sermon body, credential, token, session, raw caption export or private local path.
 
+## D-160 sixth fixed private batch checkpoint
+
+Samuel authorised one new fixed batch and separately authorised the protected
+AGENTS/skill/grounding amendments. The private identity manifest contains 36 unique
+previously unprocessed source/video pairs in retained ascending source-ID order and
+has canonical SHA-256
+`0390f2b94252270821f9079159482a18e17051399cad654818905b1f1de20c94`.
+It excludes 195 prior attempts and every current PostgreSQL identity; 123 clean
+candidates existed before selection and 87 remain. Its service-date range is
+10 November 2019 through 18 August 2024. PostgreSQL remains at 191 sermons and
+144 restricted acceptance records, and the private D-160 checkpoint has zero attempts.
+
+Samuel selected `gpt-5.6-sol` for this batch. Treat that as the user-selected label,
+not verified runtime identity. Store runtime model/revision/session/privacy metadata
+only when exposed; otherwise retain the required unavailable markers and warning.
+D-159 and earlier Astra provenance is historical and must not be copied or changed.
+No caption, transcript, generated content or database write had occurred at this
+checkpoint. Continue only after committing and verifying D-160's safe governance,
+contracts and anonymised tests. See `sixth-private-batch-plan.md`.
+
+
 ## D-159 isolated private batch checkpoint
 
 **Completed 16 September 2026.** All 36 fixed positions were validated and imported

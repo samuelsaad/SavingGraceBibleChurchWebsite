@@ -517,6 +517,33 @@ cost, preservation and verification requirements are in
 `fifth-private-batch-plan.md`. No staging/frontend change, production access,
 schema change, deployment, push or merge is authorised.
 
+### D-160 — Sixth fixed 36-sermon private enrichment batch
+
+Samuel separately authorised the next deterministic fixed batch and the protected
+governance/skill amendments. D-160 is bound only to canonical manifest SHA-256
+`0390f2b94252270821f9079159482a18e17051399cad654818905b1f1de20c94`.
+The 36 unique source/video pairs are the first 36 clean records in the preserved
+ascending authoritative source-ID order after excluding all 195 earlier attempts and
+current PostgreSQL identities. A failed position consumes its place; no substitute,
+reselection, historical manifest reuse or thirty-seventh sermon is permitted.
+
+For this manifest only, official YouTube caption retrieval, word-preserving private
+transcript preparation and grounded private description/Q&A generation may use the
+complete prepared but unapproved transcript in the current primary Codex session.
+Samuel selected model label `gpt-5.6-sol`. This selection must be stored separately
+from runtime-reported identity: absent verifiable runtime metadata is recorded as
+`not_exposed_by_runtime`, never inferred from the selection or copied from D-159.
+No separately billed generative API is permitted and its cost is AUD 0.
+
+Unknown audio association is eligible only under D-160's exact manifest-bound warning
+and false primary-audio confirmation. Preserve complete grounding evidence, source and
+output hashes, uncertainties, original candidates and at most one recorded pre-import
+correction. Imports are atomic, idempotent and limited to the guarded local test
+database. All outputs remain private, unapproved, review-required and excluded from
+public/search/feed/sitemap/build/semantic use. Existing 191 sermons, 144 acceptances,
+11 unresolved records, all earlier decisions, frontend and staging remain unchanged.
+D-160 expires after the 36 positions are terminal. See `sixth-private-batch-plan.md`.
+
 ## Decisions still required
 
 - Final AWS runtime/adapter and production networking.
