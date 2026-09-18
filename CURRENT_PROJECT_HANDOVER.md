@@ -449,3 +449,46 @@ is accepted-subset delivery in loopback and sealed staging only; it is not human
 approval or internet publication. Implementation/application results must be
 recorded here only after migration, idempotency, preservation, browser, privacy,
 security and staging reconciliation checks have actually passed.
+
+D-161 execution is complete for all 36 fixed D-160 records. The current Codex
+runtime substantively compared all 36 descriptions and 252 ordered Q&A pairs with
+their complete retained-caption transcripts. Every content artifact passed; no
+focused correction was used. The records truthfully retain their original Sol
+generation provenance, while D-161 reviewer metadata records unavailable runtime
+model details as `not_exposed_by_runtime`. The review wrote 288 artifact decisions,
+216 component decisions plus four private completions, five evidence-supported
+speaker assignments and four restricted-frontend acceptances. Thirty-two records
+remain pending: 31 lack an explicit retained full canonical speaker identity, and
+five retain provider-redacted wording findings, with overlap between those groups.
+No unsupported speaker was inferred and no human approval was created.
+
+Local migration 0020 and the D-161 writes were applied and replayed idempotently.
+The application database remains 227 sermons; all 36 D-160 records remain draft,
+unpublished and non-semantic. The protected local frontend contains 148 accepted
+records at `http://127.0.0.1:4381/` while its private preview session is active.
+
+Sealed staging retains 191 sermons. Migration 0020 was applied after a protected
+custom-format backup (SHA-256
+`a9514ef7e7c7c320b37fd83d4b10a548fe002562887e6e10bc1b30cf33d58fed`).
+The first D-161 synchronization applied 929 scoped rows/updates; the identical
+second synchronization returned 929 unchanged and zero changed. Staging has 288
+D-161 content decisions, 220 component/private-completion rows, five assignments
+and four acceptance receipts. All 36 source sermons remain draft with no publication
+timestamp. The running sealed application commit is
+`6e1f740b6117be0a8e2550288f1803b7e4ebbb2e`, image SHA-256
+`eb538f9b676b0d1ea837e58abebe053156ee4b36778bfa15c1da6e7ebcef0271`,
+and release archive SHA-256
+`0f0a6b1ca75432a1e2dabca67a657006068fc1963ff02118fbe62d4917202b95`.
+It serves 148 accepted records only through EC2 loopback; local ports 8080 and 5432
+remain externally unreachable. The current SSH tunnel exposes the sealed view at
+`http://127.0.0.1:4394/`. Admin routes remain denied and responses retain
+private/no-store/noindex controls.
+
+Focused D-161, selector and staging tests pass; type/Astro checks and the production
+build pass; the offline dependency audit reports zero cached vulnerabilities. The
+complete standard and real-PostgreSQL suites retain one pre-existing unrelated
+`admin-dashboard-layout` source-shape assertion failure. All 764 PostgreSQL-inclusive
+tests executed with zero skips, and the disposable test database was removed.
+Private artifacts remain ignored and unstaged; no sermon prose, credential, token,
+manifest identity or database artifact entered Git. Nothing was pushed, merged,
+deployed publicly, approved by a human or published on the internet.
