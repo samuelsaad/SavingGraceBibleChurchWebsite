@@ -109,7 +109,7 @@ export async function preservationSnapshot(client: PoolClient, changedIds: strin
     WHERE table_schema='public' AND table_type='BASE TABLE' ORDER BY table_name`)).rows;
   const fingerprints: Record<string, string> = {};
   for (const { table_name: table } of tables) {
-    if (!/^[a-z_]+$/.test(table)) throw Error("unexpected_table_identifier");
+    if (!/^[a-z_][a-z0-9_]*$/.test(table)) throw Error("unexpected_table_identifier");
     let expression = "to_jsonb(t)";
     let where = "";
     let parameters: unknown[] = [];

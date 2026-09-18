@@ -5,6 +5,9 @@ export const restrictedAcceptanceManifest = "4759449bbbaed97238968d2fd4621d4137b
 export const restrictedAcceptanceExecutor = "codex-d158-restricted-acceptance";
 export const restrictedAcceptanceAuthorizer = "samuel-saad-bulk-authorization";
 export const restrictedAcceptanceFormat = "d158-utc-jsonb-v1";
+export const d161SourceManifest = "0390f2b94252270821f9079159482a18e17051399cad654818905b1f1de20c94";
+export const d161AcceptanceFormat = "d161-utc-jsonb-v1";
+export const d161AcceptanceExecutor = "codex-d161-d160-private-review";
 const digest = z.string().regex(/^[a-f0-9]{64}$/);
 export const restrictedManifestSchema = z.object({ decision: z.literal("D-158"), version: z.literal(1),
   members: z.array(z.object({ sermonId: z.uuid(), rowVersion: z.number().int().positive(),
@@ -39,4 +42,29 @@ export function restrictedEligibilitySql(alias: string): string {
       AND accepted.content_dependency_sha256=restricted_acceptance_dependency(${alias}.id)
       AND NOT EXISTS (SELECT 1 FROM sermon_restricted_acceptance_withdrawals withdrawn WHERE withdrawn.sermon_id=${alias}.id)
   ))`;
+}
+
+/** D-161 is intentionally a separate selector. Callers must opt into the
+ * guarded loopback/sealed-staging runtime; no public/default scope uses it. */
+export function d161RestrictedEligibilitySql(alias:string):string{
+  if(!/^[a-z][a-z_]*$/.test(alias))throw new Error("invalid_sql_alias");
+  return `(${alias}.status='draft' AND ${alias}.published_at IS NULL AND ${alias}.deleted_at IS NULL AND EXISTS (
+    SELECT 1 FROM sermon_d161_restricted_acceptances accepted
+    WHERE accepted.sermon_id=${alias}.id AND accepted.decision='D-161'
+      AND accepted.source_manifest_sha256='${d161SourceManifest}'
+      AND accepted.fingerprint_format='${d161AcceptanceFormat}'
+      AND accepted.accepted_row_version=${alias}.row_version
+      AND accepted.content_dependency_sha256=d161_restricted_acceptance_dependency(${alias}.id)
+      AND NOT EXISTS (SELECT 1 FROM sermon_d161_restricted_acceptance_withdrawals withdrawn WHERE withdrawn.sermon_id=${alias}.id)
+  ))`;
+}
+export function d161CombinedRestrictedEligibilitySql(alias:string):string{
+  return `(${restrictedEligibilitySql(alias)} OR ${d161RestrictedEligibilitySql(alias)})`;
+}
+
+export function restrictedPassageAcceptanceSql(sermonExpression:string,basis?:"primary_passage"|"no_single_primary"):string {
+  if(!/^[a-z][a-z_]*\.(?:id|sermon_id)$/.test(sermonExpression)) throw new Error("invalid_sql_sermon_expression");
+  const clause=basis?` AND accepted.passage_basis='${basis}'`:"";
+  return `(EXISTS (SELECT 1 FROM sermon_restricted_acceptances accepted WHERE accepted.sermon_id=${sermonExpression}${clause})
+    OR EXISTS (SELECT 1 FROM sermon_d161_restricted_acceptances accepted WHERE accepted.sermon_id=${sermonExpression}${clause}))`;
 }

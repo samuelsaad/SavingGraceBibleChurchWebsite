@@ -432,3 +432,20 @@ the affected admin files are unchanged from the integration base. Secret/key,
 protected-identity, private-content, build-output, symlink and staged-file scans pass;
 no D-160 content or identity entered Git or production output. Nothing was pushed,
 merged, approved or published.
+
+## D-161 D-160 delegated review and accepted-subset integration
+
+D-161 is bound only to D-160 manifest SHA-256
+`0390f2b94252270821f9079159482a18e17051399cad654818905b1f1de20c94`.
+It permits truthful private AI review of the 36 current D-160 transcripts,
+descriptions and individual Q&A, one preserved focused correction per artifact,
+and evidence-supported source-component decisions. Unsupported or provider-
+redacted cases remain pending. Earlier Sol generation provenance, all human
+decisions, D-156/D-157 evidence and D-158's 144 receipts are immutable.
+
+Only records with current accepted content and every required component may gain
+a separate D-161 private completion and restricted-frontend receipt. That receipt
+is accepted-subset delivery in loopback and sealed staging only; it is not human
+approval or internet publication. Implementation/application results must be
+recorded here only after migration, idempotency, preservation, browser, privacy,
+security and staging reconciliation checks have actually passed.

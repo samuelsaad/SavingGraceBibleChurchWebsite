@@ -2,11 +2,11 @@ import { createHash } from "node:crypto";
 import type { PoolClient } from "pg";
 import { loadSchemaMigrations, validateSchemaMigrationJournal } from "../migration/schema-migrations";
 
-export async function verifyReleaseSchema(client: Pick<PoolClient, "query">, expected: 18 | 19 = 19) {
+export async function verifyReleaseSchema(client: Pick<PoolClient, "query">, expected: 18 | 19 | 20 = 20) {
   const migrations = await loadSchemaMigrations();
   const journal = await client.query("SELECT migration_order, migration_id, checksum_sha256 FROM schema_migrations ORDER BY migration_order");
   const applied = validateSchemaMigrationJournal(migrations, journal.rows);
-  if (applied !== expected || migrations.length !== 19) throw new Error("staging_pending_or_unexpected_migrations");
+  if (applied !== expected || migrations.length < expected) throw new Error("staging_pending_or_unexpected_migrations");
   return { migrations: applied, pending: migrations.length - applied };
 }
 
@@ -18,7 +18,7 @@ export async function databaseFingerprint(client: PoolClient) {
   const names = await client.query(`SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY tablename COLLATE "C"`);
   const tables: Array<{ table: string; count: number; sha256: string }> = [];
   for (const { tablename } of names.rows) {
-    if (!/^[a-z_]+$/.test(tablename)) throw new Error("unrecognized_table_name");
+    if (!/^[a-z_][a-z0-9_]*$/.test(tablename)) throw new Error("unrecognized_table_name");
     const result = await client.query(`SELECT count(*)::integer AS count,
       encode(digest(COALESCE(string_agg(h, '' ORDER BY h COLLATE "C"), ''), 'sha256'),'hex') AS sha256
       FROM (SELECT encode(digest(to_jsonb(t)::text, 'sha256'), 'hex') h FROM public."${tablename}" t) hashes`);

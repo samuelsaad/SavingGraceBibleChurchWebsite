@@ -820,7 +820,7 @@ export function registerDelegatedAiReviewPostgresTests(getPool: () => Pool, runS
     await expect(runSchema("apply", migrationId)).resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 17 });
     expect(await objects()).toEqual(original);
     const reapplied = await snapshot(pool);
-    await expect(runSchema("apply", migrationId)).resolves.toMatchObject({ outcome: "no_op", journalReceiptCount: 19 });
+    await expect(runSchema("apply", migrationId)).resolves.toMatchObject({ outcome: "no_op", journalReceiptCount: 20 });
     expect(await snapshot(pool)).toEqual(reapplied);
   });
 }

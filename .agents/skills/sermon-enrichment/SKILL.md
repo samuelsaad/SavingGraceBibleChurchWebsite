@@ -18,6 +18,27 @@ human/AI evidence and uncertainty; never relabel it as personal human inspection
 Existing decisions must validate against current dependencies before acceptance.
 Normal generation/approval safeguards below remain in force outside D-158.
 
+### D-161 review of the exact D-160 cohort
+
+D-161 is a review and restricted-acceptance mode, not a new generation batch.
+It applies only to the 36 identities already fixed by D-160 manifest SHA-256
+`0390f2b94252270821f9079159482a18e17051399cad654818905b1f1de20c94`.
+Read each retained source, complete transcript and current artifact only as needed
+in the primary Codex context. Preserve the original D-160 candidate and truthful
+Sol/runtime provenance. Permit at most one focused correction per artifact,
+preserve the superseded bytes and lineage privately, and rerun every unchanged
+grounding, editorial and privacy validator.
+
+Accept content or source components only when their exact current hashes and
+evidence support the decision. Retained-caption fidelity is not audio
+verification. Provider redaction, ambiguity, stale dependencies, missing source
+facts or unsupported Scripture/speaker/passage claims are `needs_human`, not an
+invitation to infer or normalize. Human approvals and earlier AI decisions are
+immutable. Private completion and the separate restricted-frontend receipt are
+allowed only when every current requirement is satisfied; unsupported records
+remain pending and hidden. D-161 creates no human approval, ordinary publication,
+semantic eligibility, new provider use, additional record or internet exposure.
+
 For the separately authorised D-157 remaining-review task, read
 [remaining-review-contract.md](references/remaining-review-contract.md) completely.
 Only its frozen 155-record scope may use separately attributed AI identity,

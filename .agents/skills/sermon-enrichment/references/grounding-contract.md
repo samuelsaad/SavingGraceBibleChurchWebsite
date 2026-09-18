@@ -14,6 +14,22 @@ is added. Current relevant content/source changes still invalidate acceptance.
 
 D-156 is a separate delegated-review mode, governed by [delegated-review-contract.md](delegated-review-contract.md), not a renewed batch-generation exception. Its immutable AI decisions bind exact current content and transcript hashes, source provenance, policy, contextual reading coverage and reviewer identity. An unapproved but integrity-checked transcript may support private AI acceptance; neither transcript approval nor human content approval is created. The ordinary generation result contract below remains unchanged outside this mode.
 
+D-161 applies the same hash-bound substantive-review and preserved single focused
+correction principles only to the 36 current artifacts originating from D-160
+manifest SHA-256
+`0390f2b94252270821f9079159482a18e17051399cad654818905b1f1de20c94`.
+Every decision additionally binds the current transcript grounding revision,
+retained-caption/source hash, current artifact version and D-161 policy hash.
+Coverage must describe what the current Codex runtime actually read; unexposed
+model, revision, session or privacy fields use the required unavailable marker and
+must never be invented. Earlier Sol generation provenance remains unchanged.
+Retained-caption comparison establishes textual fidelity only, never audio
+accuracy. A provider-redacted or otherwise unsupported claim remains pending.
+Only a current accepted description, every current ordered Q&A, and all supported
+identity/speaker/passage/finding/transcript/media components can support D-161
+private completion and its separate restricted-frontend receipt. Any relevant
+content/source/version change makes that decision stale and ineligible.
+
 For the exact D-155 fourth manifest `eb6000c8ec11be8a7f55482fd84658a377953427e1dc18309dbb90f6ab00407a` only, `unapproved` is also a permitted source-transcript state. Bind the D-155 governance commit, exact immutable grounding revision and transcript SHA-256, fixed sequence/source identity, original candidate/output SHA-256, and current interactive Codex `gpt-6-astra` generation/validation/correction evidence. Keep the complete normal support-range contract below. Record separately billed API use as false and cost as AUD 0, unavailable runtime fields as `not_exposed_by_runtime`, and retain the limited-reproducibility warning. An original candidate has retry count zero and no correction; the sole permitted pre-import correction has count one, preserved original hash, validator-failure codes, correction kind, timestamp and Astra attribution. Candidate text may enter only this manifest's minimum primary Codex tool/session context and approved ignored persistence, never ordinary logs, user-facing prose, Git or another context. Successful import forbids later content changes; only an identical rerun is allowed. All results remain private/unapproved and require transcript approval and separate administrator review before dependent approval; changed transcript identity/hash makes them stale. No terminal retry, substitution or thirty-seventh record is allowed. Every other manifest retains its existing gate, and all 36 terminal positions consume D-155.
 
 Use a versioned private JSON result. Keep real values in approved Git-ignored storage.

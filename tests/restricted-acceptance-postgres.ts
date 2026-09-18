@@ -180,6 +180,7 @@ export function registerRestrictedAcceptancePostgresTests(getPool:()=>Pool,runSc
   it("roundtrips empty schema 0019, reapplies cleanly and keeps the migration journal idempotent",async()=>{
     await runSchema("rollback",migration);const p=getPool();
     expect(await applyRestrictedAcceptanceSchema(p,"local_loopback")).toEqual({outcome:"applied",applied:1});
+    await runSchema("apply","0020_d160_delegated_review_acceptance");
     const before=await snapshot(p);
     expect(await applyRestrictedAcceptanceSchema(p,"local_loopback")).toEqual({outcome:"unchanged",applied:0});expect(await snapshot(p)).toEqual(before);
     await runSchema("apply",migration);expect(await snapshot(p)).toEqual(before);

@@ -545,6 +545,39 @@ test; no source or transcript was edited to conceal them. The bounded official
 public-page metadata lookup could not connect and supplied no missing speaker
 evidence. No production database or provider API was accessed. Detailed evidence,
 remaining requirements and verification are in `remaining-private-review-plan.md`.
+### D-161 — D-160 manifest-bound delegated review and restricted acceptance
+
+Samuel separately authorises a new immutable private-review decision for only the
+36 records in D-160 manifest SHA-256
+`0390f2b94252270821f9079159482a18e17051399cad654818905b1f1de20c94`.
+This decision does not renew D-160 generation or alter its truthful Sol
+provenance. The current interactive Codex runtime may substantively review each
+current transcript, description and individual ordered Q&A; make at most one
+preserved focused correction per artifact; and record evidence-bound AI outcomes.
+Unexposed runtime model, immutable revision, session and privacy data are recorded
+as `not_exposed_by_runtime`, never inferred.
+
+D-161 also permits evidence-supported identity, explicit speaker, supported
+primary-passage, individual finding/set, retained-caption-fidelity transcript and
+existing-media decisions. Transcript acceptance is fidelity to retained caption
+bytes and never claims audio verification. Redacted, ambiguous, missing, stale or
+conflicting evidence remains a specific pending exception. Human approvals,
+D-156/D-157 decisions and D-158's 144 immutable acceptance receipts remain
+unchanged.
+
+A D-161 private completion and separate restricted-frontend acceptance receipt
+may be created only for a current record whose description, every Q&A and every
+required source component are accepted with no unresolved exception. The receipt
+may expose that accepted subset only in the authorised loopback and existing
+sealed-staging visitor runtimes. It is AI-attributed restricted acceptance, not a
+human approval, production publication or internet-publication decision. Relevant
+dependency changes invalidate eligibility. The normal public selector, all
+authentication/privacy/anti-indexing/database-network controls, append-only audit
+and tombstone safeguards remain intact. No additional sermon, provider,
+generation batch, semantic processing, production access, push or public network
+exposure is authorised. (`explicit project-owner protected-governance amendment,
+guarded local writes and accepted-subset sealed-staging synchronization`)
+
 ## Preserved frontend-branch decisions (D-149 and D-150)
 
 These earlier frontend decisions are retained from the creative branch during the

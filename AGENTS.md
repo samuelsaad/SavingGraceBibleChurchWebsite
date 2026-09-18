@@ -120,6 +120,39 @@ Read `.agents/skills/sermon-enrichment/references/remaining-review-contract.md`
 before this mode. Normal human-authority and approved-transcript requirements
 remain unchanged outside this exact scope.
 
+### D-161 — D-160 manifest-bound delegated private review and restricted acceptance
+
+Samuel separately authorises private AI review only for the 36 records in the
+existing D-160 identity manifest SHA-256
+`0390f2b94252270821f9079159482a18e17051399cad654818905b1f1de20c94`.
+This is not a new enrichment batch and does not reopen D-160 generation. The
+current interactive Codex runtime may read the retained caption, complete
+transcript, description and ordered Q&A for one member at a time; record only
+runtime metadata that is actually exposed and use the approved unavailable
+markers otherwise. Never relabel earlier Sol generation provenance.
+
+For each exact current artifact, D-161 may record truthful AI acceptance,
+`needs_human`, or one preserved focused correction followed by revalidation.
+Identity, explicit-source speaker, supported passage, each finding/set,
+retained-caption fidelity and existing media identity may be accepted only from
+hash-bound evidence. Transcript review is fidelity to the retained caption, not
+audio verification. Redacted, conflicting, stale or insufficient evidence stays
+pending with the required information stated; it is never guessed or cleared.
+Human approvals and every D-156/D-157/D-158 decision remain unchanged.
+
+Private completion is valid only when every current substantive and component
+requirement is satisfied, the record is still private, dependencies are current,
+and no genuine exception remains. A separate immutable D-161 restricted-frontend
+receipt may then expose only that accepted subset in the authorised loopback and
+sealed-staging visitor runtime. It is AI-attributed restricted acceptance, not a
+human approval or internet-publication decision. Ordinary public selectors,
+authentication, anti-indexing, no-public-database-port, stale-result, audit,
+concurrency, tombstone and publication protections remain unchanged. D-161 is
+bound to the exact D-160 manifest, permits no additional sermon or provider, and
+grants no production, public-network, semantic, embedding, push or deployment
+authority beyond synchronising the accepted subset to the already authorised
+sealed staging environment.
+
 ### D-156 — delegated private AI review
 
 Samuel explicitly authorises the new delegated-review policy for only the existing local collection frozen by the D-156 scope receipt. This is not a reopening of D-151–D-155. Read `.agents/skills/sermon-enrichment/references/delegated-review-contract.md` for this mode. Full-file source-integrity checks plus sufficient contextual transcript reading may ground private description/Q&A review and one focused correction round per artifact without transcript approval. Record semantic-reading coverage honestly; this is neither complete transcript review nor audio verification. Accepted outcomes are explicitly AI decisions under Samuel's delegation, never human approvals or personal authentication. They discharge repeated substantive description/Q&A review only for the exact content/source/policy versions accepted. Preserve human decisions, source limitations, original content, correction lineage, stale-result protection, and unrelated review stages. AI acceptance never changes publication, public-search, feed, sitemap, SEO, build or semantic eligibility. Transcript accuracy, unresolved identity/passages/findings and publication remain independent human responsibilities. Normal approved-transcript and human-authority requirements remain unchanged outside this exact delegated mode. Only current interactive Codex Astra is authorised; no separate generative API or new source retrieval. Private evidence may enter the authorised Codex review context (including bounded Astra workers), never ordinary logs, reports, screenshots, tracked files or another provider.

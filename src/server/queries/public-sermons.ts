@@ -1,7 +1,7 @@
 import type { PublicSermonListQuery } from "../../api/contracts/public-sermons";
 import { bibleBookBySlug, resolveBibleBook } from "../../domain/bible-passage";
 import { previewDatasetSourceStatus } from "../../domain/development-seed-source";
-import { restrictedEligibilitySql } from "../../domain/restricted-acceptance";
+import { d161CombinedRestrictedEligibilitySql, restrictedEligibilitySql, restrictedPassageAcceptanceSql } from "../../domain/restricted-acceptance";
 import { topicalClassificationSql } from "../../domain/topical-classification";
 
 export interface ParameterizedQuery {
@@ -19,13 +19,15 @@ export type FrontendSermonScope =
   | "public"
   | "completed_preview"
   | "restricted_accepted"
+  | "d161_restricted_accepted"
   | "d160_draft_preview";
+const restrictedScope=(scope:FrontendSermonScope)=>scope==="restricted_accepted"||scope==="d161_restricted_accepted";
 
 export const d160DraftSourceStatus = "phase3b2c_evaluation_36_batch_6_private" as const;
 export const d160DraftProcessingVersion = "phase3b2c-evaluation-36-d160-v1" as const;
 
 function exposesUnapprovedContent(scope: FrontendSermonScope): boolean {
-  return scope === "restricted_accepted" || scope === "d160_draft_preview";
+  return restrictedScope(scope) || scope === "d160_draft_preview";
 }
 
 function searchVector(scope: FrontendSermonScope): string {
@@ -36,9 +38,8 @@ function searchVector(scope: FrontendSermonScope): string {
       FROM sermon_question_answers q WHERE q.sermon_id=s.id),'')))`;
 }
 function acceptedPrimary(alias: string, scope: FrontendSermonScope): string {
-  return scope === "restricted_accepted"
-    ? `${alias}.review_status IN ('confirmed','proposed') AND EXISTS (SELECT 1 FROM sermon_restricted_acceptances pa
-        WHERE pa.sermon_id=${alias}.sermon_id AND pa.passage_basis='primary_passage')`
+  return restrictedScope(scope)
+    ? `${alias}.review_status IN ('confirmed','proposed') AND ${restrictedPassageAcceptanceSql(`${alias}.sermon_id`,"primary_passage")}`
     : scope === "d160_draft_preview"
       ? `${alias}.review_status IN ('unreviewed','proposed','confirmed')`
     : `${alias}.review_status = 'confirmed'`;
@@ -96,6 +97,7 @@ export function frontendSermonEligibilitySql(
   scope: FrontendSermonScope
 ): string {
   if (scope === "restricted_accepted") return restrictedEligibilitySql(sermonAlias);
+  if (scope === "d161_restricted_accepted") return d161CombinedRestrictedEligibilitySql(sermonAlias);
   if (scope === "d160_draft_preview") {
     return `(
       ${sermonAlias}.deleted_at IS NULL
@@ -130,6 +132,10 @@ export function frontendSermonEligibilitySql(
       )
       AND NOT EXISTS (
         SELECT 1 FROM sermon_restricted_acceptances accepted
+        WHERE accepted.sermon_id = ${sermonAlias}.id
+      )
+      AND NOT EXISTS (
+        SELECT 1 FROM sermon_d161_restricted_acceptances accepted
         WHERE accepted.sermon_id = ${sermonAlias}.id
       )
     )`;
@@ -295,7 +301,7 @@ function buildPublishedConditions(
 export function publicRelationshipProjection(alias = "s", scope: FrontendSermonScope = "public"): string {
   return `
   ${scope === "d160_draft_preview" ? "'draft_awaiting_review'" : "NULL"} AS review_state,
-  ${scope === "restricted_accepted" ? topicalClassificationSql(alias) : "false"} AS is_topical,
+  ${restrictedScope(scope) ? topicalClassificationSql(alias) : "false"} AS is_topical,
   (
     SELECT jsonb_build_object('name', sp.name, 'slug', sp.slug)
     FROM speakers sp
@@ -318,7 +324,7 @@ export function publicRelationshipProjection(alias = "s", scope: FrontendSermonS
     FROM scripture_references ref
     WHERE ref.sermon_id = ${alias}.id
       AND ref.review_status IN ('unreviewed', 'confirmed')
-      AND NOT (ref.relationship_role = 'primary' AND ${scope === "restricted_accepted" ? "true" : scope === "d160_draft_preview" ? "ref.review_status IN ('unreviewed','proposed','confirmed')" : "ref.review_status = 'confirmed'"})
+      AND NOT (ref.relationship_role = 'primary' AND ${restrictedScope(scope) ? "true" : scope === "d160_draft_preview" ? "ref.review_status IN ('unreviewed','proposed','confirmed')" : "ref.review_status = 'confirmed'"})
   ), '[]'::jsonb) AS scripture_references,
   COALESCE((
     SELECT jsonb_agg(
@@ -331,7 +337,7 @@ export function publicRelationshipProjection(alias = "s", scope: FrontendSermonS
       AND ${acceptedPrimary("primary_ref", scope)}
   ), '[]'::jsonb) AS primary_passages,
   CASE
-    ${scope === "restricted_accepted" ? `WHEN EXISTS (SELECT 1 FROM sermon_restricted_acceptances pa WHERE pa.sermon_id=${alias}.id AND pa.passage_basis='no_single_primary') THEN 'none'` : ""}
+    ${restrictedScope(scope) ? `WHEN ${restrictedPassageAcceptanceSql(`${alias}.id`,"no_single_primary")} THEN 'none'` : ""}
     WHEN EXISTS (
       SELECT 1 FROM sermon_primary_passage_reviews passage_state
       WHERE passage_state.sermon_id = ${alias}.id AND passage_state.review_status = 'confirmed_none'
@@ -449,7 +455,7 @@ export function buildPublishedTopicalSermonsQuery(scope: FrontendSermonScope): P
   return { text: `SELECT s.id,s.title,s.slug,to_char(s.service_date,'YYYY-MM-DD') AS service_date,
     s.summary,${publicRelationshipProjection("s", scope)} FROM sermons s
     WHERE ${frontendSermonEligibilitySql("s", scope)}
-      AND ${scope === "restricted_accepted" ? topicalClassificationSql("s") : "false"}
+      AND ${restrictedScope(scope) ? topicalClassificationSql("s") : "false"}
     ORDER BY s.service_date DESC,s.id`, values: [] };
 }
 

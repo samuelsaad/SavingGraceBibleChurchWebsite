@@ -39,7 +39,7 @@ async function transaction<T>(pool:Pool, environment:AcceptanceEnvironment, work
     // Freeze dependent metadata/decisions as well as parent versions while the
     // exact operation validates and writes. Never mutate the excluded records.
     const names=(await c.query("SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY tablename")).rows.map(r=>r.tablename as string);
-    if (names.some(n=>!/^[_a-z]+$/.test(n))) fail();
+    if (names.some(n=>!/^[a-z_][a-z0-9_]*$/.test(n))) fail();
     await c.query(`LOCK TABLE ${names.map(n=>`public."${n}"`).join(",")} IN SHARE ROW EXCLUSIVE MODE`);
     await verifyReleaseSchema(c);
     const result=await work(c); await c.query("COMMIT"); return result;
