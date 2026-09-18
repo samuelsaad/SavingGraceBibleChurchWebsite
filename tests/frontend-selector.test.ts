@@ -7,6 +7,7 @@ import {
   buildPublishedSermonSitemapQuery
 } from "../src/server/queries/public-sermons";
 import { publicSermonListQuerySchema } from "../src/api/contracts/public-sermons";
+import { localFrontendPreviewScope } from "../src/server/restricted-preview-scope";
 
 describe("authoritative frontend sermon selector", () => {
   const query = publicSermonListQuerySchema.parse({ page: 1, pageSize: 9 });
@@ -92,5 +93,13 @@ describe("authoritative frontend sermon selector", () => {
     expect(sql).toContain("primary_filter.review_status = 'confirmed'");
     expect(sql).toContain("<=");
     expect(sql).toContain(">=");
+  });
+
+  it("enables D-161 accepted records locally only through the exact fail-closed gate", () => {
+    expect(localFrontendPreviewScope({})).toBe("completed_preview");
+    expect(localFrontendPreviewScope({ D161_RESTRICTED_ACCEPTANCE_ENABLED: "1" })).toBe("d161_restricted_accepted");
+    expect(() => localFrontendPreviewScope({ D161_RESTRICTED_ACCEPTANCE_ENABLED: "0" })).toThrow(
+      "d161_restricted_preview_configuration_refused"
+    );
   });
 });

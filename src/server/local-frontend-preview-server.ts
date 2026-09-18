@@ -8,6 +8,7 @@ import { serveLocalDashboard } from "./http/local-dashboard-static";
 import { IncomingRequestTooLargeError, toWebRequest } from "./http/node-request-adapter";
 import { assertLoopbackApiHost } from "./local-api-safety";
 import { PostgresSermonRepository } from "./repositories/postgres-sermon-repository";
+import { localFrontendPreviewScope } from "./restricted-preview-scope";
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) throw new Error("DATABASE_URL is required");
@@ -43,7 +44,7 @@ const identityProvider = new LocalTestIdentityProvider(
   process.env.ENABLE_LOCAL_TEST_IDENTITIES === "1"
 );
 const preview = createLocalFrontendPreviewHandler(
-  new PostgresSermonRepository(pool, "completed_preview"),
+  new PostgresSermonRepository(pool, localFrontendPreviewScope(process.env)),
   session
 );
 
