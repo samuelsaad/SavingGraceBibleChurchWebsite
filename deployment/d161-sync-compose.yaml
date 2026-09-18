@@ -3,6 +3,9 @@ services:
     environment:
       D161_RESTRICTED_ACCEPTANCE_ENABLED: '1'
     ports: ['127.0.0.1:8080:8080']
+  maintenance:
+    environment:
+      ALLOW_LOCAL_DB_WRITE: '1'
   d161-sync:
     image: ${APP_IMAGE:?exact release image required}
     profiles: [d161-sync]
