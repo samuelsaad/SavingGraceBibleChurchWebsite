@@ -4,8 +4,9 @@ import {authorisedLocalDatabaseName} from "../migration/local-database-safety";
 import {evaluateReviewSetIntegrity,reviewSetSha256} from "../enrichment/review-set-integrity";
 import {contentHash,reviewHash,sourceProvenanceHash,type AiContent} from "../domain/delegated-ai-review";
 import {remainingComponents,type RemainingComponent,type RemainingReviewValidationContext} from "../domain/remaining-ai-review";
-import {d161ComponentPacketSchema,d161ContentReviewSchema,d161Decision,d161Hash,d161ReviewerSubject,d161SourceManifest,
-  validateD161ComponentPacket,validateD161ContentReview,type D161ComponentPacket,type D161ContentReview} from "../domain/d161-review";
+import {d161CanonicalSpeakerInMediaTitle,d161ComponentPacketSchema,d161ContentReviewSchema,d161Decision,d161Hash,
+  d161ReviewerSubject,d161SourceManifest,d161SpeakerAssignmentSchema,validateD161ComponentPacket,validateD161ContentReview,
+  type D161ComponentPacket,type D161ContentReview,type D161SpeakerAssignment} from "../domain/d161-review";
 
 type Row=Record<string,any>;
 const fail=(code="d161_review_evidence_or_concurrency_conflict"):never=>{throw new Error(code);};
@@ -74,6 +75,30 @@ export async function applyD161ContentReview(pool:Pool,raw:D161ContentReview):Pr
     await c.query(`INSERT INTO sermon_ai_content_reviews(scope_id,sermon_id,artifact_key,request_sha256,policy_sha256,transcript_sha256,grounding_revision_id,source_sha256,input_sha256,output_sha256,input_version,output_version,outcome,correction_round,original_content,current_content,evidence,coverage,assessment,provenance,reviewer_subject,reviewed_at)
       VALUES('D-161',$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14::jsonb,$15::jsonb,$16::jsonb,$17::jsonb,$18::jsonb,$19::jsonb,$20,$21)`,[r.sermonId,r.artifactKey,request,r.policySha256,r.transcriptSha256,r.groundingRevisionId,r.sourceSha256,r.inputSha256,r.outputSha256,r.inputVersion,outputVersion,r.outcome,r.correctionRound,JSON.stringify(r.original),JSON.stringify(r.output),JSON.stringify(r.evidence),JSON.stringify(r.coverage),JSON.stringify({...r.assessment,artifactDisplayOrder:r.displayOrder}),JSON.stringify({...r.provenance,source_provenance_sha256:r.sourceProvenanceSha256}),d161ReviewerSubject,r.reviewedAt]);
     await c.query("INSERT INTO audit_events(actor_subject,actor_role,action,entity_type,entity_id,outcome,changed_fields,request_correlation_id) VALUES($1,'system',$2,'sermon',$3,'succeeded',$4::jsonb,$5)",[d161ReviewerSubject,`sermon.d161.content.${r.outcome}`,r.sermonId,JSON.stringify([r.artifactKey]),request]);
+    await c.query("COMMIT");return"recorded";
+  }catch{discard=await rollback(c);return fail();}finally{c.release(discard);}
+}
+
+/** Assigns a missing D-161 speaker only from an existing canonical full name
+ * explicitly present in the retained media title. This creates no human
+ * decision and requires a fresh component review after the row-version change. */
+export async function applyD161SpeakerAssignment(pool:Pool,raw:D161SpeakerAssignment):Promise<"recorded"|"unchanged">{
+  const parsed=d161SpeakerAssignmentSchema.safeParse(raw);if(!parsed.success)return fail();const request=parsed.data;
+  const c=await guarded(pool);let discard=false;
+  try{
+    const s=await readD161Snapshot(c,request.sermonId);if(!s||s.policySha256!==request.policySha256||
+      s.status!=="draft"||s.publishedAt!==null||s.sourceSha256!==request.sourceSha256)return fail();
+    const requestSha256=d161Hash(request),prior=(await c.query("SELECT output_sha256 FROM sermon_ai_metadata_assignments WHERE scope_id='D-161' AND sermon_id=$1 AND component='speaker' AND request_sha256=$2",[request.sermonId,requestSha256])).rows[0];
+    if(prior){const current=d161Hash({speaker:s.metadata.speaker});if(prior.output_sha256!==current)fail();await c.query("COMMIT");return"unchanged";}
+    if(s.rowVersion!==request.expectedSermonVersion||s.speakerAvailable||s.metadata.speaker!==null)fail();
+    const speaker=(await c.query("SELECT id,name FROM speakers WHERE id=$1 FOR SHARE",[request.speakerId])).rows[0],media=s.media.find(m=>m.id===request.mediaId);
+    if(!speaker||!media||reviewHash(media.title??"")!==request.mediaTitleSha256||!d161CanonicalSpeakerInMediaTitle(media.title??"",speaker.name))fail();
+    const previous={speaker:s.metadata.speaker};
+    await c.query("UPDATE sermons SET speaker_id=$2,row_version=row_version+1,updated_at=now(),updated_by_subject=$3 WHERE id=$1",[request.sermonId,request.speakerId,d161ReviewerSubject]);
+    const after=await readD161Snapshot(c,request.sermonId);if(!after||!after.speakerAvailable)fail();const current={speaker:after.metadata.speaker};
+    await c.query(`INSERT INTO sermon_ai_metadata_assignments(scope_id,sermon_id,component,request_sha256,policy_sha256,input_sha256,output_sha256,evidence,previous_metadata,current_metadata,reviewer_subject)
+      VALUES('D-161',$1,'speaker',$2,$3,$4,$5,$6::jsonb,$7::jsonb,$8::jsonb,$9)`,[request.sermonId,requestSha256,request.policySha256,d161Hash(previous),d161Hash(current),JSON.stringify(request),JSON.stringify(previous),JSON.stringify(current),d161ReviewerSubject]);
+    await c.query("INSERT INTO audit_events(actor_subject,actor_role,action,entity_type,entity_id,outcome,changed_fields,request_correlation_id) VALUES($1,'system','sermon.d161.speaker_source_assignment','sermon',$2,'succeeded','[\"speakerId\"]'::jsonb,$3)",[d161ReviewerSubject,request.sermonId,requestSha256]);
     await c.query("COMMIT");return"recorded";
   }catch{discard=await rollback(c);return fail();}finally{c.release(discard);}
 }

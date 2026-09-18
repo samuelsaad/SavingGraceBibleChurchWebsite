@@ -13,6 +13,18 @@ export const d161ProvenanceSchema=z.object({reviewer_kind:z.literal("ai"),provid
   model:z.literal(d161RuntimeModel),mode:z.literal("interactive Codex session"),immutable_revision:z.literal("not_exposed_by_runtime"),
   session_id:z.literal("not_exposed_by_runtime"),privacy_details:z.literal("not_exposed_by_runtime"),
   separately_billed_api_used:z.literal(false),external_api_cost_aud:z.literal(0)}).strict();
+export const d161SpeakerAssignmentSchema=z.object({decision:z.literal(d161Decision),scopeSha256:z.literal(d161SourceManifest),policySha256:sha,
+  sermonId:z.uuid(),expectedSermonVersion:z.number().int().positive(),sourceSha256:sha,speakerId:z.uuid(),mediaId:z.uuid(),mediaTitleSha256:sha,
+  reviewedAt:z.iso.datetime(),provenance:d161ProvenanceSchema,rationale:safe}).strict();
+export type D161SpeakerAssignment=z.infer<typeof d161SpeakerAssignmentSchema>;
+const canonicalWords=(value:string)=>value.normalize("NFKC").toLocaleLowerCase("en-AU").replace(/[^\p{L}\p{N}]+/gu," ").trim();
+/** D-161 may fill a missing speaker only when a retained media title contains
+ * the existing canonical full name. A first name, alias, or typical speaker is
+ * never enough. */
+export function d161CanonicalSpeakerInMediaTitle(mediaTitle:string,speakerName:string):boolean{
+  const name=canonicalWords(speakerName);if(name.split(" ").length<2)return false;
+  return (` ${canonicalWords(mediaTitle)} `).includes(` ${name} `);
+}
 
 export const d161ContentReviewSchema=z.object({decision:z.literal(d161Decision),scopeSha256:z.literal(d161SourceManifest),policySha256:sha,
   sermonId:z.uuid(),artifactKey:z.string().refine(v=>v==="description"||v.startsWith("qa:")&&z.uuid().safeParse(v.slice(3)).success),

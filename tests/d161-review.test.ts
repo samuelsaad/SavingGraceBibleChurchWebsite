@@ -1,6 +1,6 @@
 import{describe,expect,it}from"vitest";
 import{contentHash,reviewHash}from"../src/domain/delegated-ai-review";
-import{d161ContentReviewSchema,d161Hash,d161RuntimeModel,d161SourceManifest,validateD161ContentReview}from"../src/domain/d161-review";
+import{d161CanonicalSpeakerInMediaTitle,d161ContentReviewSchema,d161Hash,d161RuntimeModel,d161SourceManifest,validateD161ContentReview}from"../src/domain/d161-review";
 import{d161AcceptanceManifestHash,parseD161RestrictedManifest}from"../src/domain/d161-restricted-acceptance";
 import{d161CombinedRestrictedEligibilitySql,d161RestrictedEligibilitySql,restrictedEligibilitySql}from"../src/domain/restricted-acceptance";
 
@@ -38,5 +38,10 @@ describe("D-161 exact D-160 review boundary",()=>{
   });
   it("does not confuse generated-candidate provenance with D-161 review provenance",()=>{
     expect(d161Hash(provenance)).toMatch(/^[a-f0-9]{64}$/u);expect(provenance.model).toBe("not_exposed_by_runtime");
+  });
+  it("requires the existing canonical full speaker name in retained media metadata",()=>{
+    expect(d161CanonicalSpeakerInMediaTitle("A fictional sermon | Alex Example — private source","Alex Example")).toBe(true);
+    expect(d161CanonicalSpeakerInMediaTitle("A fictional sermon | Alex — private source","Alex Example")).toBe(false);
+    expect(d161CanonicalSpeakerInMediaTitle("A fictional sermon | Alexander Example — private source","Alex Example")).toBe(false);
   });
 });
