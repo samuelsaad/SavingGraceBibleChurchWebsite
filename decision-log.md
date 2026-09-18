@@ -545,6 +545,7 @@ test; no source or transcript was edited to conceal them. The bounded official
 public-page metadata lookup could not connect and supplied no missing speaker
 evidence. No production database or provider API was accessed. Detailed evidence,
 remaining requirements and verification are in `remaining-private-review-plan.md`.
+
 ### D-161 — D-160 manifest-bound delegated review and restricted acceptance
 
 Samuel separately authorises a new immutable private-review decision for only the
@@ -663,6 +664,30 @@ database. All outputs remain private, unapproved, review-required and excluded f
 public/search/feed/sitemap/build/semantic use. Existing 191 sermons, 144 acceptances,
 11 unresolved records, all earlier decisions, frontend and staging remain unchanged.
 D-160 expires after the 36 positions are terminal. See `sixth-private-batch-plan.md`.
+
+### D-162 — Seventh fixed 36-sermon enrichment, substantive review and restricted reconciliation
+
+Samuel authorised the exact deterministic manifest SHA-256
+`e47da706e8b458bed6f8198570cc4a51e4b9604049e394d71a02cc84f79ea17f`.
+It contains the first 36 clean source/video pairs in preserved ascending mapping
+order after 231 prior attempts; failures consume their fixed positions and no
+substitution or 37th record is permitted. Only this manifest may use eligible
+official English captions, the bounded unknown-audio exception, complete private
+unapproved transcripts, Samuel's selected `gpt-5.6-sol` label, and the current
+primary Codex session to create private drafts. Runtime metadata remains separate
+and unavailable values are never inferred.
+
+Every original candidate is retained and at most one focused correction is allowed.
+After atomic guarded local import, every current description and ordered Q&A must
+receive substantive transcript-grounded AI review; automated validation alone is
+insufficient. Exact current hashes and evidence govern identity, speaker, passage,
+findings, retained-caption fidelity and media decisions. Redaction, ambiguity,
+missing evidence or stale dependencies remain pending. Separately attributed
+restricted acceptance and scoped local/sealed-staging synchronization are allowed
+only when every current requirement passes. Existing current eligible evidence may
+be reconciled without repeating valid reviews. This creates no human approval,
+public/production publication, semantic eligibility, additional provider, another
+batch or Git publication. See `seventh-private-batch-plan.md`.
 
 ## Decisions still required
 

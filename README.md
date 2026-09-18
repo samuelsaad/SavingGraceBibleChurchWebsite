@@ -1,5 +1,14 @@
 # Saving Grace Bible Church Website
 
+## D-162 seventh fixed private enrichment and reconciliation
+
+D-162 is bound only to private manifest SHA-256
+`e47da706e8b458bed6f8198570cc4a51e4b9604049e394d71a02cc84f79ea17f`.
+It fixes 36 positions from 87 clean remaining candidates in authoritative order.
+Generation, substantive AI review, guarded local import and scoped restricted-
+frontend synchronization remain private, unapproved and fail closed. See
+[the D-162 plan](seventh-private-batch-plan.md).
+
 ## D-158 restricted acceptance
 
 Both authorized databases now contain 144 D-158 bulk acceptances and 11 unchanged,

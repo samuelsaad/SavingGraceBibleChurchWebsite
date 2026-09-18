@@ -15,7 +15,7 @@ import {
   primaryPassageDecisionInputSchema,
   sermonTransitionInputSchema,
   taxonomyWriteInputSchema,
-  updateSermonInputSchema
+  updateSermonInputSchema,
 } from "../src/api/contracts/admin-sermons";
 import { publicSermonListQuerySchema } from "../src/api/contracts/public-sermons";
 import { AdminSermonService } from "../src/application/admin-sermon-service";
@@ -28,53 +28,53 @@ import {
   applyReferenceCatalogue,
   protestantBibleBooks,
   rollbackReferenceCatalogue,
-  savingGraceSpeakers
+  savingGraceSpeakers,
 } from "../src/migration/reference-catalogue";
 import {
   loadSchemaMigrations,
   runSchemaMigrations,
-  type SchemaMigrationScope
+  type SchemaMigrationScope,
 } from "../src/migration/schema-migrations";
 import { legacySermonRecordSchema } from "../src/migration/types";
 import { assertDisposableIntegrationTestDatabase } from "../src/migration/local-database-safety";
 import {
   protectedLocalPostgresPassword,
-  protectedLocalPostgresUser
+  protectedLocalPostgresUser,
 } from "../src/migration/protected-local-postgres";
 import {
   buildEnrichmentQueue,
-  importEnrichmentDraftBundle
+  importEnrichmentDraftBundle,
 } from "../src/enrichment/postgres-enrichment";
 import { supersededWave1GenerationVersion } from "../src/enrichment/sermon-enrichment-policy";
 import {
   atomicReviewItemSetSha256,
-  buildAtomicReviewItems
+  buildAtomicReviewItems,
 } from "../src/enrichment/atomic-review-contracts";
 import {
   assemblePhase3b2AtomicReviewManifest,
   importPhase3b2AtomicReviewManifest,
-  verifyPhase3b2AtomicReviewManifest
+  verifyPhase3b2AtomicReviewManifest,
 } from "../src/enrichment/atomic-review";
 import {
   runPhase3b2PunctuationCompletion,
-  verifyPhase3b2PunctuationCompletion
+  verifyPhase3b2PunctuationCompletion,
 } from "../src/enrichment/phase3b2b-pilot";
 import {
   deterministicPilotUuid,
   remainingAuthorisedPilotVideoId,
-  restoreRemainingPhase3b2Pilot
+  restoreRemainingPhase3b2Pilot,
 } from "../src/enrichment/phase3b2-pilot";
 import { importTrackedPreviewDataset } from "../src/development-data/import-preview-sermon-dataset";
 import {
   loadTrackedPreviewDataset,
   previewDatasetAllowedSlugs,
-  previewDatasetSourceStatus
+  previewDatasetSourceStatus,
 } from "../src/development-data/preview-sermon-dataset";
 import { deterministicSourceUuid } from "../src/migration/identity";
 import {
   buildPunctuationPack,
   createPunctuationWorkspaceTemplate,
-  phase3b2PunctuationProcessingVersion
+  phase3b2PunctuationProcessingVersion,
 } from "../src/enrichment/pilot-punctuation";
 import { LocalTestIdentityProvider } from "../src/server/auth/local-test-identity-provider";
 import { createApplicationApiRouter } from "../src/server/http/application-api-router";
@@ -84,41 +84,65 @@ import { PostgresSermonRepository } from "../src/server/repositories/postgres-se
 import {
   rebuildDescriptionSemanticRelationships,
   type DescriptionEmbeddingModel,
-  type DescriptionSemanticPipeline
+  type DescriptionSemanticPipeline,
 } from "../src/semantic/description-related-themes";
 import {
   carryForwardLegacyCompletedPassageReviews,
   legacyPassageCarryForwardAction,
   legacyPassageCarryForwardActor,
-  legacyPassageCarryForwardAuthorization
+  legacyPassageCarryForwardAuthorization,
 } from "../src/scripture/legacy-completed-passage-carry-forward";
 import { anonymisedAtomicManifest } from "./fixtures/atomic-review";
-import { fourthBatchReviewFindings, insertFourthBatchReviewFindings, providerRedactionWarning,
-  verifyFourthBatchReviewFindings } from "../src/enrichment/fourth-fixed-batch-review-findings";
-import { createTitlePlan, applyTitlePlan, preservationSnapshot, titleCorrectionAction,
-  titleCorrectionActor, titleHash } from "../src/metadata/sermon-title-correction";
-import { inspectPrimaryBooks,applyBookPlan,automaticBookAction } from "../src/scripture/automatic-primary-book";
-import {inspectSpeakerMetadata,applySpeakerPlan,reviewMetadataAction} from "../src/metadata/automatic-review-metadata";
-import {changedReviewBookSelection} from "../src/domain/review-metadata";
+import {
+  fourthBatchReviewFindings,
+  insertFourthBatchReviewFindings,
+  providerRedactionWarning,
+  verifyFourthBatchReviewFindings,
+} from "../src/enrichment/fourth-fixed-batch-review-findings";
+import {
+  createTitlePlan,
+  applyTitlePlan,
+  preservationSnapshot,
+  titleCorrectionAction,
+  titleCorrectionActor,
+  titleHash,
+} from "../src/metadata/sermon-title-correction";
+import {
+  inspectPrimaryBooks,
+  applyBookPlan,
+  automaticBookAction,
+} from "../src/scripture/automatic-primary-book";
+import {
+  inspectSpeakerMetadata,
+  applySpeakerPlan,
+  reviewMetadataAction,
+} from "../src/metadata/automatic-review-metadata";
+import { changedReviewBookSelection } from "../src/domain/review-metadata";
 import { registerDelegatedAiReviewPostgresTests } from "./delegated-ai-review-postgres";
 import { registerRemainingAiReviewPostgresTests } from "./remaining-ai-review-postgres";
 import { registerRestrictedAcceptancePostgresTests } from "./restricted-acceptance-postgres";
 import { registerFifthBatchPostgresTests } from "./fifth-batch-postgres";
 import { registerSixthBatchPostgresTests } from "./sixth-batch-postgres";
+import { registerSeventhBatchPostgresTests } from "./seventh-batch-postgres";
 
 const enabled = process.env.RUN_POSTGRES_INTEGRATION === "1";
 const integration = enabled ? describe : describe.skip;
 
 function disposableConnectionString(): string {
   if (process.env.ALLOW_LOCAL_DB_WRITE !== "1") {
-    throw new Error("PostgreSQL integration tests require ALLOW_LOCAL_DB_WRITE=1");
+    throw new Error(
+      "PostgreSQL integration tests require ALLOW_LOCAL_DB_WRITE=1",
+    );
   }
   const value = process.env.TEST_DATABASE_URL;
-  if (!value) throw new Error("TEST_DATABASE_URL is required for PostgreSQL integration tests");
+  if (!value)
+    throw new Error(
+      "TEST_DATABASE_URL is required for PostgreSQL integration tests",
+    );
   assertDisposableIntegrationTestDatabase(
     value,
     process.env.DISPOSABLE_TEST_DATABASE_TOKEN,
-    process.env.ALLOW_LOCAL_DB_WRITE
+    process.env.ALLOW_LOCAL_DB_WRITE,
   );
   return value;
 }
@@ -131,36 +155,41 @@ function testRunToken(): string {
 
 function approvedEnrichment() {
   return {
-    summary: "This approved local description explains the sermon message and prepares a visitor to engage with its scripture-grounded application.",
+    summary:
+      "This approved local description explains the sermon message and prepares a visitor to engage with its scripture-grounded application.",
     summaryStatus: "approved" as const,
     summarySourceKind: "manual" as const,
     summarySourceReference: null,
     transcript: {
-      bodyText: "A complete anonymised transcript reviewed for local integration testing.",
+      bodyText:
+        "A complete anonymised transcript reviewed for local integration testing.",
       status: "approved" as const,
       sourceKind: "manual" as const,
-      sourceReference: null
+      sourceReference: null,
     },
     questionAnswers: Array.from({ length: 5 }, (_, index) => ({
       question: `What truth should be considered in question ${index + 1}?`,
       answer: `This reviewed answer applies the sermon and scripture in example ${index + 1}.`,
       status: "approved" as const,
       sourceKind: "manual" as const,
-      sourceReference: null
-    }))
+      sourceReference: null,
+    })),
   };
 }
 
 async function makeAnonymisedPublishedFixturesFrontendEligible(
   pool: Pool,
-  slugs = ["grace-for-an-anonymised-congregation", "hope-in-an-anonymised-trial"]
+  slugs = [
+    "grace-for-an-anonymised-congregation",
+    "hope-in-an-anonymised-trial",
+  ],
 ): Promise<void> {
   const fixtures = await pool.query<{ id: string }>(
     `SELECT id
      FROM sermons
      WHERE slug = ANY($1::text[])
      ORDER BY slug`,
-    [slugs]
+    [slugs],
   );
   expect(fixtures.rows).toHaveLength(slugs.length);
 
@@ -180,8 +209,8 @@ async function makeAnonymisedPublishedFixturesFrontendEligible(
        WHERE id = $1`,
       [
         fixture.id,
-        `This approved anonymised description ${fixtureIndex + 1} explains the sermon message and its scripture-grounded application for public-selector integration testing.`
-      ]
+        `This approved anonymised description ${fixtureIndex + 1} explains the sermon message and its scripture-grounded application for public-selector integration testing.`,
+      ],
     );
     await pool.query(
       `INSERT INTO sermon_transcripts (
@@ -198,9 +227,15 @@ async function makeAnonymisedPublishedFixturesFrontendEligible(
          approved_by_subject = EXCLUDED.approved_by_subject,
          reviewed_at = EXCLUDED.reviewed_at,
          approved_at = EXCLUDED.approved_at`,
-      [fixture.id, `A complete approved anonymised transcript ${fixtureIndex + 1} for public-selector integration testing.`]
+      [
+        fixture.id,
+        `A complete approved anonymised transcript ${fixtureIndex + 1} for public-selector integration testing.`,
+      ],
     );
-    await pool.query("DELETE FROM sermon_question_answers WHERE sermon_id = $1", [fixture.id]);
+    await pool.query(
+      "DELETE FROM sermon_question_answers WHERE sermon_id = $1",
+      [fixture.id],
+    );
     for (let index = 1; index <= 5; index += 1) {
       await pool.query(
         `INSERT INTO sermon_question_answers (
@@ -212,8 +247,8 @@ async function makeAnonymisedPublishedFixturesFrontendEligible(
           fixture.id,
           `What truth should be considered in fixture ${fixtureIndex + 1}, question ${index}?`,
           `This approved anonymised answer ${index} remains grounded in the synthetic fixture sermon.`,
-          index
-        ]
+          index,
+        ],
       );
     }
     await pool.query(
@@ -223,7 +258,7 @@ async function makeAnonymisedPublishedFixturesFrontendEligible(
        ) VALUES ($1, 'no_reference', 'administrator', $2, 'anonymised-fixture-v1',
          'confirmed_none', 'local-admin-0001', now())
        ON CONFLICT (sermon_id) DO NOTHING`,
-      [fixture.id, `${fixtureIndex + 1}`.repeat(64)]
+      [fixture.id, `${fixtureIndex + 1}`.repeat(64)],
     );
   }
 }
@@ -231,28 +266,57 @@ async function makeAnonymisedPublishedFixturesFrontendEligible(
 integration("disposable PostgreSQL Phase 3B application", () => {
   let pool: Pool;
 
-  async function runSchema(direction: "apply" | "rollback", scope: SchemaMigrationScope = "all") {
+  async function runSchema(
+    direction: "apply" | "rollback",
+    scope: SchemaMigrationScope = "all",
+  ) {
     // Historic tests intentionally exercise exact earlier migration boundaries.
-    if(scope==="0019_restricted_bulk_acceptance"&&direction==="rollback"){
-      const present=(await pool.query("SELECT to_regclass('public.sermon_restricted_acceptances') IS NOT NULL present")).rows[0]?.present===true;
-      const accepted=present?(await pool.query("SELECT count(*)::int count FROM sermon_restricted_acceptances")).rows[0]?.count??0:0;
+    if (
+      scope === "0019_restricted_bulk_acceptance" &&
+      direction === "rollback"
+    ) {
+      const present =
+        (
+          await pool.query(
+            "SELECT to_regclass('public.sermon_restricted_acceptances') IS NOT NULL present",
+          )
+        ).rows[0]?.present === true;
+      const accepted = present
+        ? ((
+            await pool.query(
+              "SELECT count(*)::int count FROM sermon_restricted_acceptances",
+            )
+          ).rows[0]?.count ?? 0)
+        : 0;
       // A destructive 0019 rollback must fail without first removing the newer
       // empty schema when immutable D-158 receipts exist. This preserves the
       // complete pre-attempt state. Empty-schema boundary tests may remove 0020.
-      if(present&&accepted===0)await runSchema("rollback","0020_d160_delegated_review_acceptance");
+      if (present && accepted === 0)
+        await runSchema("rollback", "0020_d160_delegated_review_acceptance");
     }
-    if(scope==="0018_remaining_private_ai_review"&&direction==="rollback")await runSchema("rollback","0019_restricted_bulk_acceptance");
-    if(scope==="0017_delegated_private_ai_review"&&direction==="rollback")await runSchema("rollback","0018_remaining_private_ai_review");
-    const result=await runSchemaMigrations(pool, {
+    if (
+      scope === "0018_remaining_private_ai_review" &&
+      direction === "rollback"
+    )
+      await runSchema("rollback", "0019_restricted_bulk_acceptance");
+    if (
+      scope === "0017_delegated_private_ai_review" &&
+      direction === "rollback"
+    )
+      await runSchema("rollback", "0018_remaining_private_ai_review");
+    const result = await runSchemaMigrations(pool, {
       direction,
       scope,
       connectionString: disposableConnectionString(),
       writeOptIn: process.env.ALLOW_LOCAL_DB_WRITE,
-      testRunToken: testRunToken()
+      testRunToken: testRunToken(),
     });
-    if(scope==="0017_delegated_private_ai_review"&&direction==="apply")await runSchema("apply","0018_remaining_private_ai_review");
-    if(scope==="0018_remaining_private_ai_review"&&direction==="apply")await runSchema("apply","0019_restricted_bulk_acceptance");
-    if(scope==="0019_restricted_bulk_acceptance"&&direction==="apply")await runSchema("apply","0020_d160_delegated_review_acceptance");
+    if (scope === "0017_delegated_private_ai_review" && direction === "apply")
+      await runSchema("apply", "0018_remaining_private_ai_review");
+    if (scope === "0018_remaining_private_ai_review" && direction === "apply")
+      await runSchema("apply", "0019_restricted_bulk_acceptance");
+    if (scope === "0019_restricted_bulk_acceptance" && direction === "apply")
+      await runSchema("apply", "0020_d160_delegated_review_acceptance");
     return result;
   }
 
@@ -264,7 +328,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       database: decodeURIComponent(testUrl.pathname.slice(1)),
       user: protectedLocalPostgresUser,
       password: protectedLocalPostgresPassword,
-      max: 4
+      max: 4,
     });
     const identity = await pool.query<{
       server_16: boolean;
@@ -279,14 +343,14 @@ integration("disposable PostgreSQL Phase 3B application", () => {
          inet_server_port() = 5432 AS port_5432,
          current_database() = $1 AS target_database,
          version() LIKE 'PostgreSQL%' AS postgres_server`,
-      [`savinggrace_test_run_${testRunToken()}`]
+      [`savinggrace_test_run_${testRunToken()}`],
     );
     expect(identity.rows[0]).toEqual({
       server_16: true,
       loopback: true,
       port_5432: true,
       target_database: true,
-      postgres_server: true
+      postgres_server: true,
     });
 
     await runSchema("rollback");
@@ -294,12 +358,12 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     await applyReferenceCatalogue(pool, {
       connectionString: disposableConnectionString(),
       writeOptIn: process.env.ALLOW_LOCAL_DB_WRITE,
-      testRunToken: testRunToken()
+      testRunToken: testRunToken(),
     });
 
-    const fixture = legacySermonRecordSchema.array().parse(
-      JSON.parse(await readFile("tests/fixtures/dry-run.json", "utf8"))
-    );
+    const fixture = legacySermonRecordSchema
+      .array()
+      .parse(JSON.parse(await readFile("tests/fixtures/dry-run.json", "utf8")));
     const transformed = runMigrationDryRun(fixture);
     await loadMigrationResult(pool, transformed, "anonymised-phase3b-fixture");
     await loadMigrationResult(pool, transformed, "anonymised-phase3b-fixture");
@@ -316,124 +380,404 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   registerRestrictedAcceptancePostgresTests(() => pool, runSchema);
   registerFifthBatchPostgresTests(() => pool);
   registerSixthBatchPostgresTests(() => pool);
+  registerSeventhBatchPostgresTests(() => pool);
 
-  it("prefills an exact source speaker without approval, preserves concurrent edits and reruns without audit churn",async()=>{
-    const c=await pool.connect();const id="66666666-6666-4666-8666-666666666666";
+  it("prefills an exact source speaker without approval, preserves concurrent edits and reruns without audit churn", async () => {
+    const c = await pool.connect();
+    const id = "66666666-6666-4666-8666-666666666666";
     try {
       await c.query("BEGIN");
-      const speaker=(await c.query("SELECT id,source_term_id FROM speakers WHERE source_term_id IS NOT NULL ORDER BY id LIMIT 1")).rows[0];
+      const speaker = (
+        await c.query(
+          "SELECT id,source_term_id FROM speakers WHERE source_term_id IS NOT NULL ORDER BY id LIMIT 1",
+        )
+      ).rows[0];
       expect(speaker).toBeDefined();
-      await c.query("INSERT INTO sermons(id,title,slug,status,service_date,source_wordpress_id) VALUES($1,'Speaker fixture','speaker-prefill-fixture','draft','2025-01-05',909090)",[id]);
-      const evidence={sourceWordPressId:909090,relationshipCount:1,termIds:[Number(speaker.source_term_id)],evidenceSha256:"d".repeat(64)};
-      const plan=await inspectSpeakerMetadata(c,[evidence],[id]);const hash=titleHash(JSON.stringify(plan));
+      await c.query(
+        "INSERT INTO sermons(id,title,slug,status,service_date,source_wordpress_id) VALUES($1,'Speaker fixture','speaker-prefill-fixture','draft','2025-01-05',909090)",
+        [id],
+      );
+      const evidence = {
+        sourceWordPressId: 909090,
+        relationshipCount: 1,
+        termIds: [Number(speaker.source_term_id)],
+        evidenceSha256: "d".repeat(64),
+      };
+      const plan = await inspectSpeakerMetadata(c, [evidence], [id]);
+      const hash = titleHash(JSON.stringify(plan));
       await c.query("SAVEPOINT speaker_conflict");
-      await c.query("UPDATE sermons SET row_version=row_version+1,title='Human correction' WHERE id=$1",[id]);
-      expect((await applySpeakerPlan(c,plan,hash)).results).toEqual([{id,outcome:"conflict_preserved"}]);
+      await c.query(
+        "UPDATE sermons SET row_version=row_version+1,title='Human correction' WHERE id=$1",
+        [id],
+      );
+      expect((await applySpeakerPlan(c, plan, hash)).results).toEqual([
+        { id, outcome: "conflict_preserved" },
+      ]);
       await c.query("ROLLBACK TO SAVEPOINT speaker_conflict");
-      expect((await applySpeakerPlan(c,plan,hash)).results).toEqual([{id,outcome:"assigned"}]);
-      expect((await c.query("SELECT speaker_id,status,summary_status,title FROM sermons WHERE id=$1",[id])).rows[0])
-        .toEqual({speaker_id:speaker.id,status:"draft",summary_status:"missing",title:"Speaker fixture"});
-      const snapshot=await preservationSnapshot(c,[]);
-      expect((await applySpeakerPlan(c,plan,hash)).results).toEqual([{id,outcome:"unchanged"}]);
-      expect(await preservationSnapshot(c,[])).toEqual(snapshot);
-      expect((await c.query("SELECT actor_role,count(*)::int n FROM audit_events WHERE entity_id=$1 AND action=$2 GROUP BY actor_role",[id,reviewMetadataAction])).rows)
-        .toEqual([{actor_role:"system",n:1}]);
-      await c.query("UPDATE sermons SET speaker_id=NULL,row_version=row_version+1 WHERE id=$1",[id]);
-      await c.query("INSERT INTO audit_events(actor_subject,actor_role,action,entity_type,entity_id,changed_fields,outcome,request_correlation_id) VALUES('fixture-admin','admin','sermon.speaker_assignment_updated','sermon',$1,'[\"speakerId\"]','succeeded','fixture-speaker-clear')",[id]);
-      expect((await inspectSpeakerMetadata(c,[evidence],[id]))[0]?.assessment.reason).toBe("human_clearing_preserved");
-    }finally{await c.query("ROLLBACK");c.release();}
+      expect((await applySpeakerPlan(c, plan, hash)).results).toEqual([
+        { id, outcome: "assigned" },
+      ]);
+      expect(
+        (
+          await c.query(
+            "SELECT speaker_id,status,summary_status,title FROM sermons WHERE id=$1",
+            [id],
+          )
+        ).rows[0],
+      ).toEqual({
+        speaker_id: speaker.id,
+        status: "draft",
+        summary_status: "missing",
+        title: "Speaker fixture",
+      });
+      const snapshot = await preservationSnapshot(c, []);
+      expect((await applySpeakerPlan(c, plan, hash)).results).toEqual([
+        { id, outcome: "unchanged" },
+      ]);
+      expect(await preservationSnapshot(c, [])).toEqual(snapshot);
+      expect(
+        (
+          await c.query(
+            "SELECT actor_role,count(*)::int n FROM audit_events WHERE entity_id=$1 AND action=$2 GROUP BY actor_role",
+            [id, reviewMetadataAction],
+          )
+        ).rows,
+      ).toEqual([{ actor_role: "system", n: 1 }]);
+      await c.query(
+        "UPDATE sermons SET speaker_id=NULL,row_version=row_version+1 WHERE id=$1",
+        [id],
+      );
+      await c.query(
+        "INSERT INTO audit_events(actor_subject,actor_role,action,entity_type,entity_id,changed_fields,outcome,request_correlation_id) VALUES('fixture-admin','admin','sermon.speaker_assignment_updated','sermon',$1,'[\"speakerId\"]','succeeded','fixture-speaker-clear')",
+        [id],
+      );
+      expect(
+        (await inspectSpeakerMetadata(c, [evidence], [id]))[0]?.assessment
+          .reason,
+      ).toBe("human_clearing_preserved");
+    } finally {
+      await c.query("ROLLBACK");
+      c.release();
+    }
   });
 
   it("an unchanged identity-form save preserves every book relationship and passage decision", async () => {
-    const service=new AdminSermonService(new PostgresAdminSermonRepository(pool));
-    const identity:ApplicationIdentity={subject:"fixture-metadata-admin",role:"admin"};
-    let id:string|undefined;
+    const service = new AdminSermonService(
+      new PostgresAdminSermonRepository(pool),
+    );
+    const identity: ApplicationIdentity = {
+      subject: "fixture-metadata-admin",
+      role: "admin",
+    };
+    let id: string | undefined;
     try {
-      const books=(await pool.query("SELECT id FROM book_classifications WHERE canonical_book_id IS NOT NULL ORDER BY canonical_book_id LIMIT 2")).rows.map(r=>r.id);
-      const speaker=(await pool.query("SELECT id FROM speakers ORDER BY id LIMIT 1")).rows[0].id;
-      const created=await service.create(createSermonInputSchema.parse({title:"Metadata preservation fixture",slug:"metadata-save-fixture",serviceDate:"2025-01-05",
-        speakerId:speaker,bookClassificationIds:books,scriptureReferences:[{displayText:"Genesis 1:1",relationshipRole:"primary",isLead:true},{displayText:"Exodus 1:1",relationshipRole:"supporting"}]}),identity,"fixture-metadata-create");
-      id=created.id;
-      const reviewed=await service.decidePrimaryPassage(id,primaryPassageDecisionInputSchema.parse({
-        sermonRowVersion:created.rowVersion,reviewRowVersion:created.primaryPassageReview!.rowVersion,action:"confirm_passages",
-        passages:[{canonicalBookId:1,startChapter:1,startVerse:1,endChapter:1,endVerse:1,relationshipRole:"primary",isLead:true},
-          {canonicalBookId:2,startChapter:1,startVerse:1,endChapter:1,endVerse:1,relationshipRole:"supporting",isLead:false}]
-      }),identity,"fixture-metadata-passage-decision");
-      const snapshot=async()=>({
-        books:(await pool.query("SELECT to_jsonb(b) value FROM sermon_book_classifications b WHERE sermon_id=$1 ORDER BY book_classification_id",[id])).rows,
-        references:(await pool.query("SELECT to_jsonb(r) value FROM scripture_references r WHERE sermon_id=$1 ORDER BY id",[id])).rows,
-        decision:(await pool.query("SELECT to_jsonb(p) value FROM sermon_primary_passage_reviews p WHERE sermon_id=$1",[id])).rows
+      const books = (
+        await pool.query(
+          "SELECT id FROM book_classifications WHERE canonical_book_id IS NOT NULL ORDER BY canonical_book_id LIMIT 2",
+        )
+      ).rows.map((r) => r.id);
+      const speaker = (
+        await pool.query("SELECT id FROM speakers ORDER BY id LIMIT 1")
+      ).rows[0].id;
+      const created = await service.create(
+        createSermonInputSchema.parse({
+          title: "Metadata preservation fixture",
+          slug: "metadata-save-fixture",
+          serviceDate: "2025-01-05",
+          speakerId: speaker,
+          bookClassificationIds: books,
+          scriptureReferences: [
+            {
+              displayText: "Genesis 1:1",
+              relationshipRole: "primary",
+              isLead: true,
+            },
+            { displayText: "Exodus 1:1", relationshipRole: "supporting" },
+          ],
+        }),
+        identity,
+        "fixture-metadata-create",
+      );
+      id = created.id;
+      const reviewed = await service.decidePrimaryPassage(
+        id,
+        primaryPassageDecisionInputSchema.parse({
+          sermonRowVersion: created.rowVersion,
+          reviewRowVersion: created.primaryPassageReview!.rowVersion,
+          action: "confirm_passages",
+          passages: [
+            {
+              canonicalBookId: 1,
+              startChapter: 1,
+              startVerse: 1,
+              endChapter: 1,
+              endVerse: 1,
+              relationshipRole: "primary",
+              isLead: true,
+            },
+            {
+              canonicalBookId: 2,
+              startChapter: 1,
+              startVerse: 1,
+              endChapter: 1,
+              endVerse: 1,
+              relationshipRole: "supporting",
+              isLead: false,
+            },
+          ],
+        }),
+        identity,
+        "fixture-metadata-passage-decision",
+      );
+      const snapshot = async () => ({
+        books: (
+          await pool.query(
+            "SELECT to_jsonb(b) value FROM sermon_book_classifications b WHERE sermon_id=$1 ORDER BY book_classification_id",
+            [id],
+          )
+        ).rows,
+        references: (
+          await pool.query(
+            "SELECT to_jsonb(r) value FROM scripture_references r WHERE sermon_id=$1 ORDER BY id",
+            [id],
+          )
+        ).rows,
+        decision: (
+          await pool.query(
+            "SELECT to_jsonb(p) value FROM sermon_primary_passage_reviews p WHERE sermon_id=$1",
+            [id],
+          )
+        ).rows,
       });
-      const before=await snapshot();
-      const saved=await service.update(id,updateSermonInputSchema.parse({rowVersion:reviewed.rowVersion,title:created.title,serviceDate:created.serviceDate,speakerId:speaker,
-        ...changedReviewBookSelection(books[0],books[0])}),identity,"fixture-metadata-unchanged");
+      const before = await snapshot();
+      const saved = await service.update(
+        id,
+        updateSermonInputSchema.parse({
+          rowVersion: reviewed.rowVersion,
+          title: created.title,
+          serviceDate: created.serviceDate,
+          speakerId: speaker,
+          ...changedReviewBookSelection(books[0], books[0]),
+        }),
+        identity,
+        "fixture-metadata-unchanged",
+      );
       expect(saved.speaker?.id).toBe(speaker);
       expect(await snapshot()).toEqual(before);
-      expect((await pool.query("SELECT count(*)::int n FROM audit_events WHERE entity_id=$1 AND request_correlation_id='fixture-metadata-unchanged' AND action IN ('sermon.speaker_assignment_updated','sermon.bible_book_assignment_updated')",[id])).rows[0].n).toBe(0);
-    } finally {if(id)await pool.query("DELETE FROM sermons WHERE id=$1",[id]);}
+      expect(
+        (
+          await pool.query(
+            "SELECT count(*)::int n FROM audit_events WHERE entity_id=$1 AND request_correlation_id='fixture-metadata-unchanged' AND action IN ('sermon.speaker_assignment_updated','sermon.bible_book_assignment_updated')",
+            [id],
+          )
+        ).rows[0].n,
+      ).toBe(0);
+    } finally {
+      if (id) await pool.query("DELETE FROM sermons WHERE id=$1", [id]);
+    }
   });
 
   it("assigns title-backed primary metadata atomically, protects concurrent edits, and makes an identical run a strict no-op", async () => {
-    const client=await pool.connect();
-    const id="77777777-7777-4777-8777-777777777777";
+    const client = await pool.connect();
+    const id = "77777777-7777-4777-8777-777777777777";
     try {
       await client.query("BEGIN");
-      await client.query(`INSERT INTO sermons(id,title,slug,status,service_date)
-        VALUES($1,'Anonymised Hope','automatic-book-fixture','draft','2025-01-05')`,[id]);
-      await client.query(`INSERT INTO sermon_enrichment_sources(sermon_id,provider,video_id,canonical_url,
+      await client.query(
+        `INSERT INTO sermons(id,title,slug,status,service_date)
+        VALUES($1,'Anonymised Hope','automatic-book-fixture','draft','2025-01-05')`,
+        [id],
+      );
+      await client.query(
+        `INSERT INTO sermon_enrichment_sources(sermon_id,provider,video_id,canonical_url,
         caption_language,caption_track_type,original_filename,source_content_sha256,retrieval_attribution,
         source_character_count,cleaned_character_count,apparent_completeness,uncertainty_marker_count,
         processing_version,imported_at,processed_at,processing_duration_ms,estimated_review_minutes)
         VALUES($1,'youtube','Z0000000098','https://www.youtube.com/watch?v=Z0000000098','en','automatic',
-        'fixture.vtt',$2,'authorised_youtube_data_api',100,100,'apparently_complete',0,'anonymised-book-policy',now(),now(),0,35)`,[id,"b".repeat(64)]);
-      await client.query(`INSERT INTO sermon_media(sermon_id,media_type,provider,external_id,canonical_url,title,is_primary,display_order)
+        'fixture.vtt',$2,'authorised_youtube_data_api',100,100,'apparently_complete',0,'anonymised-book-policy',now(),now(),0,35)`,
+        [id, "b".repeat(64)],
+      );
+      await client.query(
+        `INSERT INTO sermon_media(sermon_id,media_type,provider,external_id,canonical_url,title,is_primary,display_order)
         VALUES($1,'video','youtube','Z0000000098','https://www.youtube.com/watch?v=Z0000000098',
-          'Anonymised Hope — 1 John 2:1–6 — private evaluation source',true,0)`,[id]);
-      await client.query("SELECT refresh_sermon_enrichment($1)",[id]);
-      await client.query("INSERT INTO sermon_enrichment_reviews(sermon_id) VALUES($1)",[id]);
-      const plan=await inspectPrimaryBooks(client,[id]);
-      expect(plan[0]?.assessment).toMatchObject({outcome:"newly_assigned",passage:{canonicalBookId:62}});
-      const hash=titleHash(JSON.stringify(plan));
+          'Anonymised Hope — 1 John 2:1–6 — private evaluation source',true,0)`,
+        [id],
+      );
+      await client.query("SELECT refresh_sermon_enrichment($1)", [id]);
+      await client.query(
+        "INSERT INTO sermon_enrichment_reviews(sermon_id) VALUES($1)",
+        [id],
+      );
+      const plan = await inspectPrimaryBooks(client, [id]);
+      expect(plan[0]?.assessment).toMatchObject({
+        outcome: "newly_assigned",
+        passage: { canonicalBookId: 62 },
+      });
+      const hash = titleHash(JSON.stringify(plan));
       await client.query("SAVEPOINT book_concurrency");
-      await client.query("UPDATE sermons SET row_version=row_version+1,title='Human revision' WHERE id=$1",[id]);
-      expect(await applyBookPlan(client,plan,hash)).toEqual([{id,result:"concurrent_metadata_edit_preserved"}]);
-      expect((await client.query("SELECT count(*)::int n FROM sermon_primary_passage_reviews WHERE sermon_id=$1",[id])).rows[0].n).toBe(0);
+      await client.query(
+        "UPDATE sermons SET row_version=row_version+1,title='Human revision' WHERE id=$1",
+        [id],
+      );
+      expect(await applyBookPlan(client, plan, hash)).toEqual([
+        { id, result: "concurrent_metadata_edit_preserved" },
+      ]);
+      expect(
+        (
+          await client.query(
+            "SELECT count(*)::int n FROM sermon_primary_passage_reviews WHERE sermon_id=$1",
+            [id],
+          )
+        ).rows[0].n,
+      ).toBe(0);
       await client.query("ROLLBACK TO SAVEPOINT book_concurrency");
-      expect(await applyBookPlan(client,plan,hash)).toEqual([{id,result:"changed"}]);
-      expect((await client.query(`SELECT canonical_book_id,start_chapter,start_verse,end_chapter,end_verse,
-        relationship_role,review_status,reviewer_subject FROM scripture_references WHERE sermon_id=$1`,[id])).rows).toEqual([
-        {canonical_book_id:62,start_chapter:2,start_verse:1,end_chapter:2,end_verse:6,relationship_role:"primary",review_status:"proposed",reviewer_subject:null}]);
-      expect((await client.query("SELECT review_status,reviewed_by_subject FROM sermon_primary_passage_reviews WHERE sermon_id=$1",[id])).rows[0])
-        .toEqual({review_status:"pending",reviewed_by_subject:null});
-      expect((await client.query("SELECT identity_status,current_stage,completed_at FROM sermon_enrichment_reviews WHERE sermon_id=$1",[id])).rows[0])
-        .toEqual({identity_status:"pending",current_stage:1,completed_at:null});
-      const after=await preservationSnapshot(client,[]);
-      expect(await applyBookPlan(client,plan,hash)).toEqual([{id,result:"unchanged"}]);
-      expect(await preservationSnapshot(client,[])).toEqual(after);
-      expect((await client.query("SELECT actor_role,count(*)::int n FROM audit_events WHERE entity_id=$1 AND action=$2 GROUP BY 1",[id,automaticBookAction])).rows)
-        .toEqual([{actor_role:"system",n:1}]);
-      expect((await client.query("SELECT title,slug,status,summary_status FROM sermons WHERE id=$1",[id])).rows[0])
-        .toEqual({title:"Anonymised Hope",slug:"automatic-book-fixture",status:"draft",summary_status:"missing"});
-    } finally {await client.query("ROLLBACK");client.release();}
+      expect(await applyBookPlan(client, plan, hash)).toEqual([
+        { id, result: "changed" },
+      ]);
+      expect(
+        (
+          await client.query(
+            `SELECT canonical_book_id,start_chapter,start_verse,end_chapter,end_verse,
+        relationship_role,review_status,reviewer_subject FROM scripture_references WHERE sermon_id=$1`,
+            [id],
+          )
+        ).rows,
+      ).toEqual([
+        {
+          canonical_book_id: 62,
+          start_chapter: 2,
+          start_verse: 1,
+          end_chapter: 2,
+          end_verse: 6,
+          relationship_role: "primary",
+          review_status: "proposed",
+          reviewer_subject: null,
+        },
+      ]);
+      expect(
+        (
+          await client.query(
+            "SELECT review_status,reviewed_by_subject FROM sermon_primary_passage_reviews WHERE sermon_id=$1",
+            [id],
+          )
+        ).rows[0],
+      ).toEqual({ review_status: "pending", reviewed_by_subject: null });
+      expect(
+        (
+          await client.query(
+            "SELECT identity_status,current_stage,completed_at FROM sermon_enrichment_reviews WHERE sermon_id=$1",
+            [id],
+          )
+        ).rows[0],
+      ).toEqual({
+        identity_status: "pending",
+        current_stage: 1,
+        completed_at: null,
+      });
+      const after = await preservationSnapshot(client, []);
+      expect(await applyBookPlan(client, plan, hash)).toEqual([
+        { id, result: "unchanged" },
+      ]);
+      expect(await preservationSnapshot(client, [])).toEqual(after);
+      expect(
+        (
+          await client.query(
+            "SELECT actor_role,count(*)::int n FROM audit_events WHERE entity_id=$1 AND action=$2 GROUP BY 1",
+            [id, automaticBookAction],
+          )
+        ).rows,
+      ).toEqual([{ actor_role: "system", n: 1 }]);
+      expect(
+        (
+          await client.query(
+            "SELECT title,slug,status,summary_status FROM sermons WHERE id=$1",
+            [id],
+          )
+        ).rows[0],
+      ).toEqual({
+        title: "Anonymised Hope",
+        slug: "automatic-book-fixture",
+        status: "draft",
+        summary_status: "missing",
+      });
+    } finally {
+      await client.query("ROLLBACK");
+      client.release();
+    }
   });
 
-  it("persists the inferred book through normal primary metadata create/edit without confirming it", async()=>{
-    const service=new AdminSermonService(new PostgresAdminSermonRepository(pool));
-    const identity:ApplicationIdentity={subject:"anonymised-book-admin",role:"admin"};
-    let id:string|undefined;
+  it("persists the inferred book through normal primary metadata create/edit without confirming it", async () => {
+    const service = new AdminSermonService(
+      new PostgresAdminSermonRepository(pool),
+    );
+    const identity: ApplicationIdentity = {
+      subject: "anonymised-book-admin",
+      role: "admin",
+    };
+    let id: string | undefined;
     try {
-      const created=await service.create(createSermonInputSchema.parse({title:"Book mapping fixture",slug:"book-mapping-fixture",serviceDate:"2025-01-05",
-        scriptureReferences:[{displayText:"1 John 2:1–6",relationshipRole:"primary",isLead:true}]}),identity,"anonymised-book-create");
-      id=created.id;
-      expect(created.scriptureReferences[0]).toMatchObject({canonicalBookId:62,reviewStatus:"unreviewed",startChapter:null});
-      expect(created.primaryPassageReview).toMatchObject({reviewStatus:"pending",reviewedBySubject:null,evidenceSource:"administrator"});
-      const edited=await service.update(id,updateSermonInputSchema.parse({rowVersion:created.rowVersion,
-        scriptureReferences:[{displayText:"Romans",relationshipRole:"primary",isLead:true}]}),identity,"anonymised-book-edit");
-      expect(edited.scriptureReferences[0]).toMatchObject({canonicalBookId:45,startChapter:null,endChapter:null,reviewStatus:"unreviewed"});
+      const created = await service.create(
+        createSermonInputSchema.parse({
+          title: "Book mapping fixture",
+          slug: "book-mapping-fixture",
+          serviceDate: "2025-01-05",
+          scriptureReferences: [
+            {
+              displayText: "1 John 2:1–6",
+              relationshipRole: "primary",
+              isLead: true,
+            },
+          ],
+        }),
+        identity,
+        "anonymised-book-create",
+      );
+      id = created.id;
+      expect(created.scriptureReferences[0]).toMatchObject({
+        canonicalBookId: 62,
+        reviewStatus: "unreviewed",
+        startChapter: null,
+      });
+      expect(created.primaryPassageReview).toMatchObject({
+        reviewStatus: "pending",
+        reviewedBySubject: null,
+        evidenceSource: "administrator",
+      });
+      const edited = await service.update(
+        id,
+        updateSermonInputSchema.parse({
+          rowVersion: created.rowVersion,
+          scriptureReferences: [
+            {
+              displayText: "Romans",
+              relationshipRole: "primary",
+              isLead: true,
+            },
+          ],
+        }),
+        identity,
+        "anonymised-book-edit",
+      );
+      expect(edited.scriptureReferences[0]).toMatchObject({
+        canonicalBookId: 45,
+        startChapter: null,
+        endChapter: null,
+        reviewStatus: "unreviewed",
+      });
       expect(edited.primaryPassageReview?.reviewStatus).toBe("pending");
-      await expect(service.update(id,updateSermonInputSchema.parse({rowVersion:created.rowVersion,title:"Stale edit"}),identity,"anonymised-book-stale"))
-        .rejects.toMatchObject({status:409});
-    } finally {if(id)await pool.query("DELETE FROM sermons WHERE id=$1",[id]);}
+      await expect(
+        service.update(
+          id,
+          updateSermonInputSchema.parse({
+            rowVersion: created.rowVersion,
+            title: "Stale edit",
+          }),
+          identity,
+          "anonymised-book-stale",
+        ),
+      ).rejects.toMatchObject({ status: 409 });
+    } finally {
+      if (id) await pool.query("DELETE FROM sermons WHERE id=$1", [id]);
+    }
   });
 
   it("corrects only corroborated titles with audit, review invalidation, concurrency and exact idempotency", async () => {
@@ -441,145 +785,382 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     const id = "88888888-8888-4888-8888-888888888888";
     try {
       await client.query("BEGIN");
-      await client.query(`INSERT INTO sermons(id,title,slug,status,service_date)
-        VALUES($1,'A Living Hope — 1 Peter 1:3–9','title-policy-fixture','draft','2025-01-05')`, [id]);
+      await client.query(
+        `INSERT INTO sermons(id,title,slug,status,service_date)
+        VALUES($1,'A Living Hope — 1 Peter 1:3–9','title-policy-fixture','draft','2025-01-05')`,
+        [id],
+      );
       const sourceHash = "a".repeat(64);
-      await client.query(`INSERT INTO sermon_enrichment_sources(sermon_id,provider,video_id,canonical_url,
+      await client.query(
+        `INSERT INTO sermon_enrichment_sources(sermon_id,provider,video_id,canonical_url,
         caption_language,caption_track_type,original_filename,source_content_sha256,retrieval_attribution,
         source_character_count,cleaned_character_count,apparent_completeness,uncertainty_marker_count,
         processing_version,imported_at,processed_at,processing_duration_ms,estimated_review_minutes)
         VALUES($1,'youtube','Z0000000099','https://www.youtube.com/watch?v=Z0000000099','en','automatic',
-        'fixture.vtt',$2,'authorised_youtube_data_api',100,100,'apparently_complete',0,'anonymised-title-policy',now(),now(),0,35)`, [id, sourceHash]);
-      await client.query(`INSERT INTO scripture_references(sermon_id,display_text,parse_status)
-        VALUES($1,'1 Peter 1:3–9','unparsed')`, [id]);
-      await client.query(`INSERT INTO sermon_transcripts(sermon_id,body_text,status,source_kind,
+        'fixture.vtt',$2,'authorised_youtube_data_api',100,100,'apparently_complete',0,'anonymised-title-policy',now(),now(),0,35)`,
+        [id, sourceHash],
+      );
+      await client.query(
+        `INSERT INTO scripture_references(sermon_id,display_text,parse_status)
+        VALUES($1,'1 Peter 1:3–9','unparsed')`,
+        [id],
+      );
+      await client.query(
+        `INSERT INTO sermon_transcripts(sermon_id,body_text,status,source_kind,
         reviewed_by_subject,approved_by_subject,reviewed_at,approved_at)
-        VALUES($1,'An anonymised approved transcript.','approved','manual','fixture-admin','fixture-admin',now(),now())`, [id]);
+        VALUES($1,'An anonymised approved transcript.','approved','manual','fixture-admin','fixture-admin',now(),now())`,
+        [id],
+      );
       await client.query("SELECT refresh_sermon_enrichment($1)", [id]);
-      await client.query(`UPDATE sermon_enrichment_reviews SET identity_status='confirmed',current_stage=6,
+      await client.query(
+        `UPDATE sermon_enrichment_reviews SET identity_status='confirmed',current_stage=6,
         completed_at=now(),completed_by_subject='fixture-admin',
-        empty_item_set_acknowledged_at=now(),empty_item_set_acknowledged_by_subject='fixture-admin' WHERE sermon_id=$1`, [id]);
+        empty_item_set_acknowledged_at=now(),empty_item_set_acknowledged_by_subject='fixture-admin' WHERE sermon_id=$1`,
+        [id],
+      );
       const plan = await createTitlePlan(client);
       plan.records = plan.records.filter((row) => row.id === id);
-      expect(plan.records[0]?.assessment).toMatchObject({ outcome: "correctable", title: "A Living Hope" });
+      expect(plan.records[0]?.assessment).toMatchObject({
+        outcome: "correctable",
+        title: "A Living Hope",
+      });
       const hash = titleHash(JSON.stringify(plan));
       const before = await preservationSnapshot(client, [id]);
       await client.query("SAVEPOINT title_concurrency");
-      await client.query("UPDATE sermons SET title='Samuel revised this title',row_version=row_version+1 WHERE id=$1", [id]);
-      await expect(applyTitlePlan(client, plan, hash)).rejects.toThrow("title_plan_concurrent_edit");
-      expect((await client.query("SELECT title FROM sermons WHERE id=$1", [id])).rows[0]?.title).toBe("Samuel revised this title");
+      await client.query(
+        "UPDATE sermons SET title='Samuel revised this title',row_version=row_version+1 WHERE id=$1",
+        [id],
+      );
+      await expect(applyTitlePlan(client, plan, hash)).rejects.toThrow(
+        "title_plan_concurrent_edit",
+      );
+      expect(
+        (await client.query("SELECT title FROM sermons WHERE id=$1", [id]))
+          .rows[0]?.title,
+      ).toBe("Samuel revised this title");
       await client.query("ROLLBACK TO SAVEPOINT title_concurrency");
-      expect(await applyTitlePlan(client, plan, hash)).toEqual({ corrected: 1, unchanged: 0 });
+      expect(await applyTitlePlan(client, plan, hash)).toEqual({
+        corrected: 1,
+        unchanged: 0,
+      });
       expect(await preservationSnapshot(client, [id])).toEqual(before);
-      expect((await client.query("SELECT title,slug,status FROM sermons WHERE id=$1", [id])).rows[0])
-        .toEqual({ title: "A Living Hope", slug: "title-policy-fixture", status: "draft" });
-      expect((await client.query(`SELECT identity_status,current_stage,completed_at,
-        empty_item_set_acknowledged_by_subject FROM sermon_enrichment_reviews WHERE sermon_id=$1`, [id])).rows[0])
-        .toEqual({ identity_status: "pending", current_stage: 1, completed_at: null, empty_item_set_acknowledged_by_subject: "fixture-admin" });
-      const audit = (await client.query(`SELECT actor_role,actor_subject,action,changed_fields
-        FROM audit_events WHERE entity_id=$1`, [id])).rows;
-      expect(audit).toEqual([{ actor_role: "system", actor_subject: titleCorrectionActor,
-        action: titleCorrectionAction, changed_fields: ["title"] }]);
+      expect(
+        (
+          await client.query(
+            "SELECT title,slug,status FROM sermons WHERE id=$1",
+            [id],
+          )
+        ).rows[0],
+      ).toEqual({
+        title: "A Living Hope",
+        slug: "title-policy-fixture",
+        status: "draft",
+      });
+      expect(
+        (
+          await client.query(
+            `SELECT identity_status,current_stage,completed_at,
+        empty_item_set_acknowledged_by_subject FROM sermon_enrichment_reviews WHERE sermon_id=$1`,
+            [id],
+          )
+        ).rows[0],
+      ).toEqual({
+        identity_status: "pending",
+        current_stage: 1,
+        completed_at: null,
+        empty_item_set_acknowledged_by_subject: "fixture-admin",
+      });
+      const audit = (
+        await client.query(
+          `SELECT actor_role,actor_subject,action,changed_fields
+        FROM audit_events WHERE entity_id=$1`,
+          [id],
+        )
+      ).rows;
+      expect(audit).toEqual([
+        {
+          actor_role: "system",
+          actor_subject: titleCorrectionActor,
+          action: titleCorrectionAction,
+          changed_fields: ["title"],
+        },
+      ]);
       const after = await preservationSnapshot(client, []);
-      expect(await applyTitlePlan(client, plan, hash)).toEqual({ corrected: 0, unchanged: 1 });
+      expect(await applyTitlePlan(client, plan, hash)).toEqual({
+        corrected: 0,
+        unchanged: 1,
+      });
       expect(await preservationSnapshot(client, [])).toEqual(after);
-      expect((await client.query("SELECT actor_role,actor_subject,action,changed_fields FROM audit_events WHERE entity_id=$1", [id])).rows).toEqual(audit);
-      expect((await createTitlePlan(client)).records.find((row) => row.id === id)?.assessment.outcome).toBe("clean");
-    } finally { await client.query("ROLLBACK"); client.release(); }
+      expect(
+        (
+          await client.query(
+            "SELECT actor_role,actor_subject,action,changed_fields FROM audit_events WHERE entity_id=$1",
+            [id],
+          )
+        ).rows,
+      ).toEqual(audit);
+      expect(
+        (await createTitlePlan(client)).records.find((row) => row.id === id)
+          ?.assessment.outcome,
+      ).toBe("clean");
+    } finally {
+      await client.query("ROLLBACK");
+      client.release();
+    }
   });
 
   it("normalizes metadata through the administrator service without changing passages or slugs", async () => {
-    const service = new AdminSermonService(new PostgresAdminSermonRepository(pool));
-    const identity: ApplicationIdentity = { subject: "anonymised-title-admin", role: "admin" };
+    const service = new AdminSermonService(
+      new PostgresAdminSermonRepository(pool),
+    );
+    const identity: ApplicationIdentity = {
+      subject: "anonymised-title-admin",
+      role: "admin",
+    };
     let id: string | undefined;
     try {
-      const created = await service.create(createSermonInputSchema.parse({
-        title: "A Living Hope — 1 Peter 1:3–9", slug: "admin-title-policy-fixture", serviceDate: "2025-01-05",
-        scriptureReferences: [{ displayText: "1 Peter 1:3–9" }]
-      }), identity, "anonymised-title-create");
+      const created = await service.create(
+        createSermonInputSchema.parse({
+          title: "A Living Hope — 1 Peter 1:3–9",
+          slug: "admin-title-policy-fixture",
+          serviceDate: "2025-01-05",
+          scriptureReferences: [{ displayText: "1 Peter 1:3–9" }],
+        }),
+        identity,
+        "anonymised-title-create",
+      );
       id = created.id;
       expect(created.title).toBe("A Living Hope");
-      const changed = await service.update(id, updateSermonInputSchema.parse({
-        rowVersion: created.rowVersion, title: "Another Hope — 1 Peter 1:3–9"
-      }), identity, "anonymised-title-edit");
+      const changed = await service.update(
+        id,
+        updateSermonInputSchema.parse({
+          rowVersion: created.rowVersion,
+          title: "Another Hope — 1 Peter 1:3–9",
+        }),
+        identity,
+        "anonymised-title-edit",
+      );
       expect(changed.title).toBe("Another Hope");
       expect(changed.slug).toBe(created.slug);
       expect(changed.scriptureReferences).toEqual(created.scriptureReferences);
-      await expect(service.update(id, updateSermonInputSchema.parse({rowVersion:created.rowVersion,title:"Stale title"}),identity,"stale-title"))
-        .rejects.toMatchObject({ code: "stale_write" });
+      await expect(
+        service.update(
+          id,
+          updateSermonInputSchema.parse({
+            rowVersion: created.rowVersion,
+            title: "Stale title",
+          }),
+          identity,
+          "stale-title",
+        ),
+      ).rejects.toMatchObject({ code: "stale_write" });
     } finally {
-      if (id) { await pool.query("DELETE FROM sermons WHERE id=$1", [id]); await pool.query("DELETE FROM audit_events WHERE entity_id=$1", [id]); }
+      if (id) {
+        await pool.query("DELETE FROM sermons WHERE id=$1", [id]);
+        await pool.query("DELETE FROM audit_events WHERE entity_id=$1", [id]);
+      }
     }
   });
 
   it("prevents old source imports from restoring corrected or human-owned titles atomically", async () => {
-    const fixtures = legacySermonRecordSchema.array().parse(JSON.parse(await readFile("tests/fixtures/dry-run.json", "utf8")));
-    const source = { ...fixtures[0]!, sourceId: 999951, title: "A Living Hope — 1 Peter 1:3–9", slug: "migration-title-policy-fixture" };
+    const fixtures = legacySermonRecordSchema
+      .array()
+      .parse(JSON.parse(await readFile("tests/fixtures/dry-run.json", "utf8")));
+    const source = {
+      ...fixtures[0]!,
+      sourceId: 999951,
+      title: "A Living Hope — 1 Peter 1:3–9",
+      slug: "migration-title-policy-fixture",
+    };
     const result = runMigrationDryRun([source]);
     expect(result.candidates[0]?.title).toBe("A Living Hope");
     expect(source.title).toBe("A Living Hope — 1 Peter 1:3–9");
     const id = result.candidates[0]!.id;
     const snapshotName = "anonymised-title-policy-import";
     try {
-      await loadMigrationResult(pool, result, snapshotName, { forcePrivateDraft: true });
-      await loadMigrationResult(pool, result, snapshotName, { forcePrivateDraft: true });
-      expect((await pool.query("SELECT title,slug FROM sermons WHERE id=$1", [id])).rows[0])
-        .toEqual({ title: "A Living Hope", slug: source.slug });
-      await pool.query(`INSERT INTO sermon_primary_passage_reviews(sermon_id,proposal_outcome,evidence_source,evidence_sha256,parser_version)
-        VALUES($1,'administrator_entered','administrator',$2,'anonymised-human-metadata')`,[id,"c".repeat(64)]);
-      const passageBefore=(await pool.query("SELECT to_jsonb(r) row FROM scripture_references r WHERE sermon_id=$1 ORDER BY id",[id])).rows;
-      await expect(loadMigrationResult(pool,result,snapshotName,{forcePrivateDraft:true})).rejects.toThrow("editorially owned passage relationships");
-      expect((await pool.query("SELECT to_jsonb(r) row FROM scripture_references r WHERE sermon_id=$1 ORDER BY id",[id])).rows).toEqual(passageBefore);
-      await pool.query("DELETE FROM sermon_primary_passage_reviews WHERE sermon_id=$1",[id]);
-      await pool.query("UPDATE sermons SET title='A personally revised title',updated_by_subject='fixture-admin',row_version=row_version+1 WHERE id=$1", [id]);
-      const before = (await pool.query("SELECT to_jsonb(s) AS row FROM sermons s WHERE id=$1", [id])).rows;
-      await expect(loadMigrationResult(pool, result, snapshotName, { forcePrivateDraft: true }))
-        .rejects.toThrow("A source import cannot overwrite an editorially owned sermon title.");
-      expect((await pool.query("SELECT to_jsonb(s) AS row FROM sermons s WHERE id=$1", [id])).rows).toEqual(before);
+      await loadMigrationResult(pool, result, snapshotName, {
+        forcePrivateDraft: true,
+      });
+      await loadMigrationResult(pool, result, snapshotName, {
+        forcePrivateDraft: true,
+      });
+      expect(
+        (await pool.query("SELECT title,slug FROM sermons WHERE id=$1", [id]))
+          .rows[0],
+      ).toEqual({ title: "A Living Hope", slug: source.slug });
+      await pool.query(
+        `INSERT INTO sermon_primary_passage_reviews(sermon_id,proposal_outcome,evidence_source,evidence_sha256,parser_version)
+        VALUES($1,'administrator_entered','administrator',$2,'anonymised-human-metadata')`,
+        [id, "c".repeat(64)],
+      );
+      const passageBefore = (
+        await pool.query(
+          "SELECT to_jsonb(r) row FROM scripture_references r WHERE sermon_id=$1 ORDER BY id",
+          [id],
+        )
+      ).rows;
+      await expect(
+        loadMigrationResult(pool, result, snapshotName, {
+          forcePrivateDraft: true,
+        }),
+      ).rejects.toThrow("editorially owned passage relationships");
+      expect(
+        (
+          await pool.query(
+            "SELECT to_jsonb(r) row FROM scripture_references r WHERE sermon_id=$1 ORDER BY id",
+            [id],
+          )
+        ).rows,
+      ).toEqual(passageBefore);
+      await pool.query(
+        "DELETE FROM sermon_primary_passage_reviews WHERE sermon_id=$1",
+        [id],
+      );
+      await pool.query(
+        "UPDATE sermons SET title='A personally revised title',updated_by_subject='fixture-admin',row_version=row_version+1 WHERE id=$1",
+        [id],
+      );
+      const before = (
+        await pool.query(
+          "SELECT to_jsonb(s) AS row FROM sermons s WHERE id=$1",
+          [id],
+        )
+      ).rows;
+      await expect(
+        loadMigrationResult(pool, result, snapshotName, {
+          forcePrivateDraft: true,
+        }),
+      ).rejects.toThrow(
+        "A source import cannot overwrite an editorially owned sermon title.",
+      );
+      expect(
+        (
+          await pool.query(
+            "SELECT to_jsonb(s) AS row FROM sermons s WHERE id=$1",
+            [id],
+          )
+        ).rows,
+      ).toEqual(before);
     } finally {
       await pool.query("DELETE FROM sermons WHERE id=$1", [id]);
-      await pool.query("DELETE FROM migration_runs WHERE id=$1", [deterministicSourceUuid("migration-run", snapshotName)]);
+      await pool.query("DELETE FROM migration_runs WHERE id=$1", [
+        deterministicSourceUuid("migration-run", snapshotName),
+      ]);
     }
   });
 
   it("preserves D-155 redactions as pending atomic findings with idempotent read verification", async () => {
     const client = await pool.connect();
-    const id="99999999-9999-4999-8999-999999999999";
+    const id = "99999999-9999-4999-8999-999999999999";
     try {
       await client.query("BEGIN");
-      const text="An anonymised [ __ ] sentence.\n\nA second [ __ ] example.";
-      const digest=createHash("sha256").update(text).digest("hex");
-      const findings=fourthBatchReviewFindings(text,id,"authorised-record-90001",digest);
-      await client.query(`INSERT INTO sermons (id,title,slug,status,service_date,created_by_subject,updated_by_subject)
-        VALUES ($1,'Anonymised source review','anonymised-source-review','draft','2025-01-05','fixture','fixture')`,[id]);
-      await client.query(`INSERT INTO sermon_transcripts (sermon_id,body_text,status,source_kind)
-        VALUES ($1,$2,'draft','caption')`,[id,text]);
-      await client.query(`INSERT INTO sermon_enrichment_sources (sermon_id,provider,video_id,canonical_url,
+      const text = "An anonymised [ __ ] sentence.\n\nA second [ __ ] example.";
+      const digest = createHash("sha256").update(text).digest("hex");
+      const findings = fourthBatchReviewFindings(
+        text,
+        id,
+        "authorised-record-90001",
+        digest,
+      );
+      await client.query(
+        `INSERT INTO sermons (id,title,slug,status,service_date,created_by_subject,updated_by_subject)
+        VALUES ($1,'Anonymised source review','anonymised-source-review','draft','2025-01-05','fixture','fixture')`,
+        [id],
+      );
+      await client.query(
+        `INSERT INTO sermon_transcripts (sermon_id,body_text,status,source_kind)
+        VALUES ($1,$2,'draft','caption')`,
+        [id, text],
+      );
+      await client.query(
+        `INSERT INTO sermon_enrichment_sources (sermon_id,provider,video_id,canonical_url,
         caption_language,caption_track_type,original_filename,source_content_sha256,retrieval_attribution,
         source_character_count,cleaned_character_count,apparent_completeness,uncertainty_marker_count,warnings,
         unresolved_passages,processing_version,imported_at,processed_at,processing_duration_ms,estimated_review_minutes)
         VALUES ($1,'youtube','Z0000000001','https://www.youtube.com/watch?v=Z0000000001','en','automatic','fixture.vtt',
         $2,'authorised_youtube_data_api',100,100,'requires_manual_review',2,$3::jsonb,$4::jsonb,'anonymised-d155',now(),now(),0,35)`,
-        [id,digest,JSON.stringify([providerRedactionWarning]),JSON.stringify(findings.unresolvedPassages)]);
-      await client.query("SELECT refresh_sermon_enrichment($1)",[id]);
-      await client.query(`UPDATE sermon_enrichment_reviews SET source_record_key='authorised-record-90001',
+        [
+          id,
+          digest,
+          JSON.stringify([providerRedactionWarning]),
+          JSON.stringify(findings.unresolvedPassages),
+        ],
+      );
+      await client.query("SELECT refresh_sermon_enrichment($1)", [id]);
+      await client.query(
+        `UPDATE sermon_enrichment_reviews SET source_record_key='authorised-record-90001',
         expected_item_count=0,expected_item_set_sha256=$2,expected_transcript_sha256=$3,
         expected_transcript_row_version=1,atomic_schema_version=1 WHERE sermon_id=$1`,
-        [id,createHash("sha256").update("").digest("hex"),digest]);
-      await insertFourthBatchReviewFindings(client,id,findings);
-      expect(await verifyFourthBatchReviewFindings(client,id,findings)).toBe(true);
-      const snapshot=await client.query("SELECT to_jsonb(i) row FROM sermon_enrichment_review_items i WHERE sermon_id=$1 ORDER BY display_order",[id]);
-      expect(await verifyFourthBatchReviewFindings(client,id,findings)).toBe(true);
-      expect((await client.query("SELECT to_jsonb(i) row FROM sermon_enrichment_review_items i WHERE sermon_id=$1 ORDER BY display_order",[id])).rows).toEqual(snapshot.rows);
-      expect((await client.query("SELECT body_text,status FROM sermon_transcripts WHERE sermon_id=$1",[id])).rows[0]).toEqual({body_text:text,status:"draft"});
-      expect((await client.query("SELECT current_stage,identity_status,completed_at,empty_item_set_acknowledged_at FROM sermon_enrichment_reviews WHERE sermon_id=$1",[id])).rows[0])
-        .toEqual({current_stage:1,identity_status:"pending",completed_at:null,empty_item_set_acknowledged_at:null});
+        [id, createHash("sha256").update("").digest("hex"), digest],
+      );
+      await insertFourthBatchReviewFindings(client, id, findings);
+      expect(await verifyFourthBatchReviewFindings(client, id, findings)).toBe(
+        true,
+      );
+      const snapshot = await client.query(
+        "SELECT to_jsonb(i) row FROM sermon_enrichment_review_items i WHERE sermon_id=$1 ORDER BY display_order",
+        [id],
+      );
+      expect(await verifyFourthBatchReviewFindings(client, id, findings)).toBe(
+        true,
+      );
+      expect(
+        (
+          await client.query(
+            "SELECT to_jsonb(i) row FROM sermon_enrichment_review_items i WHERE sermon_id=$1 ORDER BY display_order",
+            [id],
+          )
+        ).rows,
+      ).toEqual(snapshot.rows);
+      expect(
+        (
+          await client.query(
+            "SELECT body_text,status FROM sermon_transcripts WHERE sermon_id=$1",
+            [id],
+          )
+        ).rows[0],
+      ).toEqual({ body_text: text, status: "draft" });
+      expect(
+        (
+          await client.query(
+            "SELECT current_stage,identity_status,completed_at,empty_item_set_acknowledged_at FROM sermon_enrichment_reviews WHERE sermon_id=$1",
+            [id],
+          )
+        ).rows[0],
+      ).toEqual({
+        current_stage: 1,
+        identity_status: "pending",
+        completed_at: null,
+        empty_item_set_acknowledged_at: null,
+      });
       // Existing human decisions are detected, never reset by verification or an idempotency check.
-      await client.query("UPDATE sermon_enrichment_review_items SET decision_status='left_unresolved',decided_by_subject='anonymised-admin',decided_at=now() WHERE sermon_id=$1 AND display_order=1",[id]);
-      expect(await verifyFourthBatchReviewFindings(client,id,findings)).toBe(false);
-      expect((await client.query("SELECT decided_by_subject FROM sermon_enrichment_review_items WHERE sermon_id=$1 AND display_order=1",[id])).rows[0]?.decided_by_subject).toBe("anonymised-admin");
-    } finally { await client.query("ROLLBACK");client.release(); }
-    expect((await pool.query("SELECT count(*)::int count FROM sermons WHERE id=$1",[id])).rows[0]?.count).toBe(0);
+      await client.query(
+        "UPDATE sermon_enrichment_review_items SET decision_status='left_unresolved',decided_by_subject='anonymised-admin',decided_at=now() WHERE sermon_id=$1 AND display_order=1",
+        [id],
+      );
+      expect(await verifyFourthBatchReviewFindings(client, id, findings)).toBe(
+        false,
+      );
+      expect(
+        (
+          await client.query(
+            "SELECT decided_by_subject FROM sermon_enrichment_review_items WHERE sermon_id=$1 AND display_order=1",
+            [id],
+          )
+        ).rows[0]?.decided_by_subject,
+      ).toBe("anonymised-admin");
+    } finally {
+      await client.query("ROLLBACK");
+      client.release();
+    }
+    expect(
+      (
+        await pool.query(
+          "SELECT count(*)::int count FROM sermons WHERE id=$1",
+          [id],
+        )
+      ).rows[0]?.count,
+    ).toBe(0);
   });
 
   it("applies 0001-0013 and loads anonymised fixtures idempotently", async () => {
@@ -606,7 +1187,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
          to_regclass('public.sermon_enrichment_sources')::text AS source_table,
          to_regclass('public.sermon_enrichment_reviews')::text AS review_table,
          to_regclass('public.sermon_enrichment_review_items')::text AS review_item_table,
-         to_regclass('public.sermon_speakers') IS NULL AS speaker_join_removed`
+         to_regclass('public.sermon_speakers') IS NULL AS speaker_join_removed`,
     );
     expect(counts.rows[0]).toEqual({
       sermons: 3,
@@ -618,7 +1199,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       source_table: "sermon_enrichment_sources",
       review_table: "sermon_enrichment_reviews",
       review_item_table: "sermon_enrichment_review_items",
-      speaker_join_removed: true
+      speaker_join_removed: true,
     });
   });
 
@@ -627,15 +1208,19 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       `SELECT pg_get_constraintdef(oid) AS definition
        FROM pg_constraint
        WHERE conrelid = 'sermon_enrichment_sources'::regclass
-         AND conname = 'sermon_enrichment_sources_retrieval_attribution_check'`
+         AND conname = 'sermon_enrichment_sources_retrieval_attribution_check'`,
     );
-    expect(constraint.rows[0]!.definition).toContain("authorised_youtube_studio_export");
-    expect(constraint.rows[0]!.definition).toContain("authorised_youtube_data_api");
+    expect(constraint.rows[0]!.definition).toContain(
+      "authorised_youtube_studio_export",
+    );
+    expect(constraint.rows[0]!.definition).toContain(
+      "authorised_youtube_data_api",
+    );
 
     const target = await pool.query<{ id: string }>(
       `SELECT sermon.id FROM sermons sermon
        WHERE NOT EXISTS (SELECT 1 FROM sermon_enrichment_sources source WHERE source.sermon_id = sermon.id)
-       ORDER BY sermon.id LIMIT 1`
+       ORDER BY sermon.id LIMIT 1`,
     );
     const client = await pool.connect();
     await client.query("BEGIN");
@@ -655,16 +1240,18 @@ integration("disposable PostgreSQL Phase 3B application", () => {
            'requires_manual_review', 0, '[]'::jsonb, '[]'::jsonb, 'anonymised-provenance-v1',
            now(), now(), 1, 1, true, 'required'
          )`,
-        [target.rows[0]!.id, "a".repeat(64)]
+        [target.rows[0]!.id, "a".repeat(64)],
       );
       await client.query(
         "UPDATE sermon_enrichment_sources SET retrieval_attribution = 'authorised_youtube_studio_export' WHERE sermon_id = $1",
-        [target.rows[0]!.id]
+        [target.rows[0]!.id],
       );
-      await expect(client.query(
-        "UPDATE sermon_enrichment_sources SET retrieval_attribution = 'invalid' WHERE sermon_id = $1",
-        [target.rows[0]!.id]
-      )).rejects.toMatchObject({ code: "23514" });
+      await expect(
+        client.query(
+          "UPDATE sermon_enrichment_sources SET retrieval_attribution = 'invalid' WHERE sermon_id = $1",
+          [target.rows[0]!.id],
+        ),
+      ).rejects.toMatchObject({ code: "23514" });
     } finally {
       await client.query("ROLLBACK");
       client.release();
@@ -672,11 +1259,13 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   });
 
   it("seeds reference catalogues idempotently, orders selectors, and derives scoped counts", async () => {
-    await expect(applyReferenceCatalogue(pool, {
-      connectionString: disposableConnectionString(),
-      writeOptIn: process.env.ALLOW_LOCAL_DB_WRITE,
-      testRunToken: testRunToken()
-    })).resolves.toMatchObject({ outcome: "unchanged" });
+    await expect(
+      applyReferenceCatalogue(pool, {
+        connectionString: disposableConnectionString(),
+        writeOptIn: process.env.ALLOW_LOCAL_DB_WRITE,
+        testRunToken: testRunToken(),
+      }),
+    ).resolves.toMatchObject({ outcome: "unchanged" });
 
     const catalogue = await pool.query<{
       seeded_speakers: number;
@@ -687,7 +1276,8 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       min_order: number;
       max_order: number;
       distinct_orders: number;
-    }>(`SELECT
+    }>(
+      `SELECT
       (SELECT count(*)::integer FROM speakers WHERE id = ANY($1::uuid[])) AS seeded_speakers,
       (SELECT count(*)::integer FROM bible_books) AS bible_books,
       (SELECT count(*)::integer FROM bible_books WHERE testament = 'old') AS old_testament,
@@ -696,10 +1286,12 @@ integration("disposable PostgreSQL Phase 3B application", () => {
        WHERE id = ANY($2::uuid[]) AND classification_type = 'canonical') AS canonical_classifications,
       (SELECT min(canonical_order)::integer FROM bible_books) AS min_order,
       (SELECT max(canonical_order)::integer FROM bible_books) AS max_order,
-      (SELECT count(DISTINCT canonical_order)::integer FROM bible_books) AS distinct_orders`, [
-      savingGraceSpeakers.map((speaker) => speaker.id),
-      protestantBibleBooks.map((book) => book.classificationId)
-    ]);
+      (SELECT count(DISTINCT canonical_order)::integer FROM bible_books) AS distinct_orders`,
+      [
+        savingGraceSpeakers.map((speaker) => speaker.id),
+        protestantBibleBooks.map((book) => book.classificationId),
+      ],
+    );
     expect(catalogue.rows[0]).toEqual({
       seeded_speakers: 7,
       bible_books: 66,
@@ -708,55 +1300,97 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       canonical_classifications: 66,
       min_order: 1,
       max_order: 66,
-      distinct_orders: 66
+      distinct_orders: 66,
     });
 
     const repository = new PostgresAdminSermonRepository(pool);
     const speakers = await repository.listTaxonomies("speakers");
     const books = await repository.listTaxonomies("books");
-    expect(speakers.filter((speaker) => savingGraceSpeakers.some((seed) => seed.id === speaker.id))
-      .map((speaker) => speaker.name)).toEqual(savingGraceSpeakers.map((speaker) => speaker.name));
-    expect(books.filter((book) => protestantBibleBooks.some((seed) => seed.classificationId === book.id))
-      .map((book) => book.name)).toEqual(protestantBibleBooks.map((book) => book.canonicalName));
+    expect(
+      speakers
+        .filter((speaker) =>
+          savingGraceSpeakers.some((seed) => seed.id === speaker.id),
+        )
+        .map((speaker) => speaker.name),
+    ).toEqual(savingGraceSpeakers.map((speaker) => speaker.name));
+    expect(
+      books
+        .filter((book) =>
+          protestantBibleBooks.some(
+            (seed) => seed.classificationId === book.id,
+          ),
+        )
+        .map((book) => book.name),
+    ).toEqual(protestantBibleBooks.map((book) => book.canonicalName));
 
-    const target = (await pool.query<{ id: string; original_speaker_id: string | null }>(
-      "SELECT id, speaker_id AS original_speaker_id FROM sermons ORDER BY id LIMIT 1"
-    )).rows[0]!;
-    await pool.query("UPDATE sermons SET speaker_id = $2 WHERE id = $1", [target.id, savingGraceSpeakers[0]!.id]);
+    const target = (
+      await pool.query<{ id: string; original_speaker_id: string | null }>(
+        "SELECT id, speaker_id AS original_speaker_id FROM sermons ORDER BY id LIMIT 1",
+      )
+    ).rows[0]!;
+    await pool.query("UPDATE sermons SET speaker_id = $2 WHERE id = $1", [
+      target.id,
+      savingGraceSpeakers[0]!.id,
+    ]);
     try {
-      await expect(rollbackReferenceCatalogue(pool, {
-        connectionString: disposableConnectionString(),
-        writeOptIn: process.env.ALLOW_LOCAL_DB_WRITE,
-        testRunToken: testRunToken()
-      })).rejects.toThrow("reference catalogue is in use");
+      await expect(
+        rollbackReferenceCatalogue(pool, {
+          connectionString: disposableConnectionString(),
+          writeOptIn: process.env.ALLOW_LOCAL_DB_WRITE,
+          testRunToken: testRunToken(),
+        }),
+      ).rejects.toThrow("reference catalogue is in use");
     } finally {
-      await pool.query("UPDATE sermons SET speaker_id = $2 WHERE id = $1", [target.id, target.original_speaker_id]);
+      await pool.query("UPDATE sermons SET speaker_id = $2 WHERE id = $1", [
+        target.id,
+        target.original_speaker_id,
+      ]);
     }
 
-    const draftTarget = (await pool.query<{ id: string; original_speaker_id: string | null }>(
-      "SELECT id, speaker_id AS original_speaker_id FROM sermons WHERE status <> 'published' ORDER BY id LIMIT 1"
-    )).rows[0]!;
-    await pool.query("UPDATE sermons SET speaker_id = $2 WHERE id = $1", [draftTarget.id, savingGraceSpeakers[0]!.id]);
+    const draftTarget = (
+      await pool.query<{ id: string; original_speaker_id: string | null }>(
+        "SELECT id, speaker_id AS original_speaker_id FROM sermons WHERE status <> 'published' ORDER BY id LIMIT 1",
+      )
+    ).rows[0]!;
+    await pool.query("UPDATE sermons SET speaker_id = $2 WHERE id = $1", [
+      draftTarget.id,
+      savingGraceSpeakers[0]!.id,
+    ]);
     await pool.query(
       `INSERT INTO sermon_book_classifications (sermon_id, book_classification_id)
        VALUES ($1, $2)`,
-      [draftTarget.id, protestantBibleBooks[0]!.classificationId]
+      [draftTarget.id, protestantBibleBooks[0]!.classificationId],
     );
     const dynamicSpeakers = await repository.listTaxonomies("speakers");
     const dynamicBooks = await repository.listTaxonomies("books");
-    expect(dynamicSpeakers.find((speaker) => speaker.id === savingGraceSpeakers[0]!.id))
-      .toMatchObject({ administratorSermonCount: 1, publicSermonCount: 0 });
-    expect(dynamicBooks.find((book) => book.id === protestantBibleBooks[0]!.classificationId))
-      .toMatchObject({ administratorSermonCount: 1, publicSermonCount: 0 });
-    await pool.query("DELETE FROM sermon_book_classifications WHERE sermon_id = $1 AND book_classification_id = $2", [
+    expect(
+      dynamicSpeakers.find(
+        (speaker) => speaker.id === savingGraceSpeakers[0]!.id,
+      ),
+    ).toMatchObject({ administratorSermonCount: 1, publicSermonCount: 0 });
+    expect(
+      dynamicBooks.find(
+        (book) => book.id === protestantBibleBooks[0]!.classificationId,
+      ),
+    ).toMatchObject({ administratorSermonCount: 1, publicSermonCount: 0 });
+    await pool.query(
+      "DELETE FROM sermon_book_classifications WHERE sermon_id = $1 AND book_classification_id = $2",
+      [draftTarget.id, protestantBibleBooks[0]!.classificationId],
+    );
+    await pool.query("UPDATE sermons SET speaker_id = $2 WHERE id = $1", [
       draftTarget.id,
-      protestantBibleBooks[0]!.classificationId
+      draftTarget.original_speaker_id,
     ]);
-    await pool.query("UPDATE sermons SET speaker_id = $2 WHERE id = $1", [draftTarget.id, draftTarget.original_speaker_id]);
-    expect((await repository.listTaxonomies("speakers")).find((speaker) => speaker.id === savingGraceSpeakers[0]!.id))
-      .toMatchObject({ administratorSermonCount: 0, publicSermonCount: 0 });
-    expect((await repository.listTaxonomies("books")).find((book) => book.id === protestantBibleBooks[0]!.classificationId))
-      .toMatchObject({ administratorSermonCount: 0, publicSermonCount: 0 });
+    expect(
+      (await repository.listTaxonomies("speakers")).find(
+        (speaker) => speaker.id === savingGraceSpeakers[0]!.id,
+      ),
+    ).toMatchObject({ administratorSermonCount: 0, publicSermonCount: 0 });
+    expect(
+      (await repository.listTaxonomies("books")).find(
+        (book) => book.id === protestantBibleBooks[0]!.classificationId,
+      ),
+    ).toMatchObject({ administratorSermonCount: 0, publicSermonCount: 0 });
   });
 
   it("imports the exact tracked 15-sermon dataset idempotently for preview only", async () => {
@@ -764,10 +1398,12 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     const options = {
       connectionString: disposableConnectionString(),
       writeOptIn: process.env.ALLOW_LOCAL_DB_WRITE,
-      testRunToken: testRunToken()
+      testRunToken: testRunToken(),
     };
     try {
-      await expect(importTrackedPreviewDataset(pool, options)).resolves.toMatchObject({
+      await expect(
+        importTrackedPreviewDataset(pool, options),
+      ).resolves.toMatchObject({
         outcome: "imported",
         sermons: 15,
         questionAnswers: 103,
@@ -775,15 +1411,17 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         previewEligible: 15,
         semanticEligible: 0,
         contentSha256: tracked.contentSha256,
-        manifestSha256: tracked.manifestSha256
+        manifestSha256: tracked.manifestSha256,
       });
-      await expect(importTrackedPreviewDataset(pool, options)).resolves.toMatchObject({
+      await expect(
+        importTrackedPreviewDataset(pool, options),
+      ).resolves.toMatchObject({
         outcome: "unchanged",
         sermons: 15,
         questionAnswers: 103,
         publicEligible: 0,
         previewEligible: 15,
-        semanticEligible: 0
+        semanticEligible: 0,
       });
 
       const stored = await pool.query<{
@@ -795,7 +1433,8 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         enrichment_sources: number;
         guided_reviews: number;
         audit_events: number;
-      }>(`SELECT
+      }>(
+        `SELECT
         count(*)::integer AS sermons,
         count(*) FILTER (WHERE status = 'draft')::integer AS drafts,
         count(*) FILTER (WHERE published_at IS NULL)::integer AS unpublished,
@@ -814,7 +1453,9 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         (SELECT count(*)::integer FROM audit_events audit
           JOIN sermons item ON item.id = audit.entity_id
           WHERE item.source_status = $1) AS audit_events
-        FROM sermons WHERE source_status = $1`, [previewDatasetSourceStatus]);
+        FROM sermons WHERE source_status = $1`,
+        [previewDatasetSourceStatus],
+      );
       expect(stored.rows[0]).toEqual({
         sermons: 15,
         drafts: 15,
@@ -823,16 +1464,20 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         question_answers: 103,
         enrichment_sources: 0,
         guided_reviews: 0,
-        audit_events: 0
+        audit_events: 0,
       });
 
       const publicRepository = new PostgresSermonRepository(pool, "public");
-      const previewRepository = new PostgresSermonRepository(pool, "completed_preview");
-      const previewList = await previewRepository.listPublished(
-        publicSermonListQuerySchema.parse({ page: 1, pageSize: 50 })
+      const previewRepository = new PostgresSermonRepository(
+        pool,
+        "completed_preview",
       );
-      expect(previewList.data.map((sermon) => sermon.slug).sort())
-        .toEqual([...previewDatasetAllowedSlugs].sort());
+      const previewList = await previewRepository.listPublished(
+        publicSermonListQuerySchema.parse({ page: 1, pageSize: 50 }),
+      );
+      expect(previewList.data.map((sermon) => sermon.slug).sort()).toEqual(
+        [...previewDatasetAllowedSlugs].sort(),
+      );
       for (const slug of previewDatasetAllowedSlugs) {
         expect(await publicRepository.findPublishedBySlug(slug)).toBeNull();
         const detail = await previewRepository.findPublishedBySlug(slug);
@@ -841,16 +1486,34 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         expect(detail?.questionAnswers.length).toBeGreaterThanOrEqual(5);
       }
       const sitemap = await publicRepository.listPublishedSitemapEntries();
-      expect(sitemap.some((entry) => previewDatasetAllowedSlugs.includes(
-        entry.slug as typeof previewDatasetAllowedSlugs[number]
-      ))).toBe(false);
+      expect(
+        sitemap.some((entry) =>
+          previewDatasetAllowedSlugs.includes(
+            entry.slug as (typeof previewDatasetAllowedSlugs)[number],
+          ),
+        ),
+      ).toBe(false);
     } finally {
-      await pool.query("DELETE FROM sermons WHERE source_status = $1", [previewDatasetSourceStatus]);
-      const seriesIds = [...new Set(tracked.dataset.sermons.flatMap((sermon) =>
-        sermon.series.map((item) => deterministicSourceUuid("public-development-series", item.slug))
-      ))];
-      if (seriesIds.length > 0) await pool.query("DELETE FROM series WHERE id = ANY($1::uuid[])", [seriesIds]);
-      await pool.query("DELETE FROM source_taxonomy_terms WHERE source_system = $1", [previewDatasetSourceStatus]);
+      await pool.query("DELETE FROM sermons WHERE source_status = $1", [
+        previewDatasetSourceStatus,
+      ]);
+      const seriesIds = [
+        ...new Set(
+          tracked.dataset.sermons.flatMap((sermon) =>
+            sermon.series.map((item) =>
+              deterministicSourceUuid("public-development-series", item.slug),
+            ),
+          ),
+        ),
+      ];
+      if (seriesIds.length > 0)
+        await pool.query("DELETE FROM series WHERE id = ANY($1::uuid[])", [
+          seriesIds,
+        ]);
+      await pool.query(
+        "DELETE FROM source_taxonomy_terms WHERE source_system = $1",
+        [previewDatasetSourceStatus],
+      );
     }
   }, 30_000);
 
@@ -861,10 +1524,21 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     // Canonical import metadata now carries an unreviewed primary designation.
     // Prove the unchanged rollback guard protects it, then reset only these
     // anonymised source fixtures to their pre-0014 relationship shape for this migration test.
-    await expect(runSchema("rollback", "0014_primary_preaching_passages")).rejects.toMatchObject({code:"migration_transaction_failure"});
-    const migrationFixtures=runMigrationDryRun(legacySermonRecordSchema.array().parse(JSON.parse(await readFile("tests/fixtures/dry-run.json","utf8"))));
-    await pool.query(`UPDATE scripture_references SET relationship_role='unclassified',is_lead=false
-      WHERE sermon_id=ANY($1::uuid[]) AND provenance='legacy_import' AND review_status='unreviewed'`,[migrationFixtures.candidates.map(r=>r.id)]);
+    await expect(
+      runSchema("rollback", "0014_primary_preaching_passages"),
+    ).rejects.toMatchObject({ code: "migration_transaction_failure" });
+    const migrationFixtures = runMigrationDryRun(
+      legacySermonRecordSchema
+        .array()
+        .parse(
+          JSON.parse(await readFile("tests/fixtures/dry-run.json", "utf8")),
+        ),
+    );
+    await pool.query(
+      `UPDATE scripture_references SET relationship_role='unclassified',is_lead=false
+      WHERE sermon_id=ANY($1::uuid[]) AND provenance='legacy_import' AND review_status='unreviewed'`,
+      [migrationFixtures.candidates.map((r) => r.id)],
+    );
     await runSchema("rollback", "0014_primary_preaching_passages");
     await runSchema("rollback", "0013_official_youtube_caption_provenance");
     await runSchema("rollback", "0012_description_semantic_runtime_provenance");
@@ -876,7 +1550,10 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     await runSchema("rollback", "0006_phase3b2_pilot_provenance");
     await runSchema("rollback", "0005_approved_sermon_descriptions");
     await runSchema("rollback", "0004_sermon_enrichment_readiness");
-    const target = await pool.query<{ sermon_id: string; other_speaker_id: string }>(
+    const target = await pool.query<{
+      sermon_id: string;
+      other_speaker_id: string;
+    }>(
       `SELECT s.id AS sermon_id, sp.id AS other_speaker_id
        FROM sermons s
        CROSS JOIN LATERAL (
@@ -885,25 +1562,34 @@ integration("disposable PostgreSQL Phase 3B application", () => {
          ) ORDER BY id LIMIT 1
        ) sp
        WHERE EXISTS (SELECT 1 FROM sermon_speakers ss WHERE ss.sermon_id = s.id)
-       ORDER BY s.id LIMIT 1`
+       ORDER BY s.id LIMIT 1`,
     );
     const anomaly = target.rows[0]!;
     await pool.query(
       `INSERT INTO sermon_speakers (sermon_id, speaker_id, display_order)
        VALUES ($1, $2, 1)`,
-      [anomaly.sermon_id, anomaly.other_speaker_id]
+      [anomaly.sermon_id, anomaly.other_speaker_id],
     );
-    await expect(runSchema("apply", "0004_sermon_enrichment_readiness"))
-      .rejects.toMatchObject({ code: "migration_transaction_failure" });
-    expect((await pool.query<{ count: number }>(
-      "SELECT count(*)::integer AS count FROM schema_migrations WHERE migration_order = 4"
-    )).rows[0]).toEqual({ count: 0 });
+    await expect(
+      runSchema("apply", "0004_sermon_enrichment_readiness"),
+    ).rejects.toMatchObject({ code: "migration_transaction_failure" });
     expect(
-      (await pool.query("SELECT to_regclass('public.sermon_speakers')::text AS value")).rows[0]
+      (
+        await pool.query<{ count: number }>(
+          "SELECT count(*)::integer AS count FROM schema_migrations WHERE migration_order = 4",
+        )
+      ).rows[0],
+    ).toEqual({ count: 0 });
+    expect(
+      (
+        await pool.query(
+          "SELECT to_regclass('public.sermon_speakers')::text AS value",
+        )
+      ).rows[0],
     ).toEqual({ value: "sermon_speakers" });
     await pool.query(
       "DELETE FROM sermon_speakers WHERE sermon_id = $1 AND speaker_id = $2",
-      [anomaly.sermon_id, anomaly.other_speaker_id]
+      [anomaly.sermon_id, anomaly.other_speaker_id],
     );
     await runSchema("apply", "0004_sermon_enrichment_readiness");
     await runSchema("apply", "0005_approved_sermon_descriptions");
@@ -920,14 +1606,20 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     await runSchema("apply", "0016_legacy_completed_passage_reviews");
     await runSchema("apply", "0017_delegated_private_ai_review");
     expect(
-      (await pool.query("SELECT to_regclass('public.sermon_speakers') IS NULL AS removed")).rows[0]
+      (
+        await pool.query(
+          "SELECT to_regclass('public.sermon_speakers') IS NULL AS removed",
+        )
+      ).rows[0],
     ).toEqual({ removed: true });
   });
 
   it("preserves published-only public list, search, filters, pagination, and safe detail", async () => {
     await makeAnonymisedPublishedFixturesFrontendEligible(pool);
     const repository = new PostgresSermonRepository(pool);
-    const page = await repository.listPublished(publicSermonListQuerySchema.parse({ pageSize: 1 }));
+    const page = await repository.listPublished(
+      publicSermonListQuerySchema.parse({ pageSize: 1 }),
+    );
     expect(page).toMatchObject({ totalItems: 2 });
     expect(page.data).toHaveLength(1);
 
@@ -939,28 +1631,31 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         passage: "romans-8-1-4",
         book: "romans",
         dateFrom: "2026-08-02",
-        dateTo: "2026-08-02"
-      })
+        dateTo: "2026-08-02",
+      }),
     );
     expect(filtered.data.map((sermon) => sermon.slug)).toEqual([
-      "grace-for-an-anonymised-congregation"
+      "grace-for-an-anonymised-congregation",
     ]);
     expect(
       await repository.listPublished(
         publicSermonListQuerySchema.parse({
           series: "example-series",
-          speaker: "second-speaker"
-        })
-      )
+          speaker: "second-speaker",
+        }),
+      ),
     ).toMatchObject({ data: [], totalItems: 0 });
 
-    expect(await repository.findPublishedBySlug("an-anonymised-pending-sermon")).toBeNull();
+    expect(
+      await repository.findPublishedBySlug("an-anonymised-pending-sermon"),
+    ).toBeNull();
     const searchableId = (
       await pool.query<{ id: string }>(
-        "SELECT id FROM sermons WHERE slug = 'grace-for-an-anonymised-congregation'"
+        "SELECT id FROM sermons WHERE slug = 'grace-for-an-anonymised-congregation'",
       )
     ).rows[0]!.id;
-    const approvedDescription = "This approved description contains intermediateweighttoken and clearly explains the sermon message before a visitor chooses its media.";
+    const approvedDescription =
+      "This approved description contains intermediateweighttoken and clearly explains the sermon message before a visitor chooses its media.";
     await pool.query(
       `UPDATE sermons
        SET summary = $2, summary_status = 'approved', summary_source_kind = 'manual',
@@ -969,12 +1664,12 @@ integration("disposable PostgreSQL Phase 3B application", () => {
            summary_approved_by_subject = 'local-admin-0001',
            summary_reviewed_at = now(), summary_approved_at = now()
        WHERE id = $1`,
-      [searchableId, approvedDescription]
+      [searchableId, approvedDescription],
     );
     const draftDescription = (
       await pool.query<{ id: string; slug: string; body: string | null }>(
         "SELECT id, slug, body FROM sermons WHERE status = 'published' AND id <> $1 ORDER BY id LIMIT 1",
-        [searchableId]
+        [searchableId],
       )
     ).rows[0]!;
     const draftDescriptionId = draftDescription.id;
@@ -984,7 +1679,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
            summary_status = 'draft', summary_source_kind = 'manual',
            summary_created_at = now(), summary_updated_at = now()
        WHERE id = $1`,
-      [draftDescriptionId]
+      [draftDescriptionId],
     );
     await pool.query(
       `UPDATE sermon_transcripts
@@ -994,7 +1689,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
            approved_by_subject = 'local-admin-0001',
            reviewed_at = now(), approved_at = now()
        WHERE sermon_id = $1`,
-      [searchableId]
+      [searchableId],
     );
     for (let index = 1; index <= 5; index += 1) {
       await pool.query(
@@ -1009,28 +1704,34 @@ integration("disposable PostgreSQL Phase 3B application", () => {
           searchableId,
           `How does covenantalthoughtword ${index} shape this passage?`,
           `It grounds reflection ${index} in the sermon and scripture.`,
-          index
-        ]
+          index,
+        ],
       );
     }
     expect(
       (
         await repository.listPublished(
-          publicSermonListQuerySchema.parse({ query: "eschatologicalneologism" })
+          publicSermonListQuerySchema.parse({
+            query: "eschatologicalneologism",
+          }),
         )
-      ).data.map((item) => item.id)
+      ).data.map((item) => item.id),
     ).toEqual([searchableId]);
     expect(
       (
         await repository.listPublished(
-          publicSermonListQuerySchema.parse({ query: "intermediateweighttoken" })
+          publicSermonListQuerySchema.parse({
+            query: "intermediateweighttoken",
+          }),
         )
-      ).data.map((item) => item.id)
+      ).data.map((item) => item.id),
     ).toEqual([searchableId]);
     expect(
       await repository.listPublished(
-        publicSermonListQuerySchema.parse({ query: "draftonlydescriptiontoken" })
-      )
+        publicSermonListQuerySchema.parse({
+          query: "draftonlydescriptiontoken",
+        }),
+      ),
     ).toMatchObject({ data: [], totalItems: 0 });
     await pool.query(
       `UPDATE sermon_transcripts
@@ -1039,7 +1740,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
            reviewed_by_subject = NULL, approved_by_subject = NULL,
            reviewed_at = NULL, approved_at = NULL
        WHERE sermon_id = $1`,
-      [draftDescriptionId]
+      [draftDescriptionId],
     );
     await pool.query(
       `UPDATE sermon_question_answers
@@ -1048,86 +1749,116 @@ integration("disposable PostgreSQL Phase 3B application", () => {
            reviewed_by_subject = NULL, approved_by_subject = NULL,
            reviewed_at = NULL, approved_at = NULL
        WHERE sermon_id = $1 AND display_order = 1`,
-      [draftDescriptionId]
+      [draftDescriptionId],
     );
     try {
       expect(
         await repository.listPublished(
-          publicSermonListQuerySchema.parse({ query: "privatetranscripttoken" })
-        )
+          publicSermonListQuerySchema.parse({
+            query: "privatetranscripttoken",
+          }),
+        ),
       ).toMatchObject({ data: [], totalItems: 0 });
       expect(
         await repository.listPublished(
-          publicSermonListQuerySchema.parse({ query: "privatequestiontoken" })
-        )
+          publicSermonListQuerySchema.parse({ query: "privatequestiontoken" }),
+        ),
       ).toMatchObject({ data: [], totalItems: 0 });
-      expect(await repository.findPublishedBySlug(draftDescription.slug)).toBeNull();
+      expect(
+        await repository.findPublishedBySlug(draftDescription.slug),
+      ).toBeNull();
     } finally {
-      await makeAnonymisedPublishedFixturesFrontendEligible(pool, [draftDescription.slug]);
+      await makeAnonymisedPublishedFixturesFrontendEligible(pool, [
+        draftDescription.slug,
+      ]);
     }
     expect(
       (
         await repository.listPublished(
-          publicSermonListQuerySchema.parse({ query: "covenantalthoughtword" })
+          publicSermonListQuerySchema.parse({ query: "covenantalthoughtword" }),
         )
-      ).data.map((item) => item.id)
+      ).data.map((item) => item.id),
     ).toEqual([searchableId]);
     const sermon = await repository.findPublishedBySlug(
-      "grace-for-an-anonymised-congregation"
+      "grace-for-an-anonymised-congregation",
     );
     const json = JSON.stringify(sermon);
-    expect(sermon?.media.map((media) => media.provider)).toEqual(["youtube", "sermonaudio"]);
+    expect(sermon?.media.map((media) => media.provider)).toEqual([
+      "youtube",
+      "sermonaudio",
+    ]);
     expect(sermon?.transcript?.bodyText).toContain("eschatologicalneologism");
     expect(sermon?.summary).toBe(approvedDescription);
     expect(sermon?.questionAnswers).toHaveLength(5);
-    expect(json).not.toMatch(/<iframe|legacyViewCount|originalValue|source_wordpress/i);
-    const publicList = await repository.listPublished(
-      publicSermonListQuerySchema.parse({ pageSize: 50 })
+    expect(json).not.toMatch(
+      /<iframe|legacyViewCount|originalValue|source_wordpress/i,
     );
-    expect(publicList.data.find((item) => item.id === searchableId)?.summary).toBe(approvedDescription);
-    expect(publicList.data.find((item) => item.id === draftDescriptionId)?.summary).toBeTruthy();
-    expect(JSON.stringify(publicList)).not.toMatch(/transcript|questionAnswers|draftonlydescriptiontoken/);
+    const publicList = await repository.listPublished(
+      publicSermonListQuerySchema.parse({ pageSize: 50 }),
+    );
+    expect(
+      publicList.data.find((item) => item.id === searchableId)?.summary,
+    ).toBe(approvedDescription);
+    expect(
+      publicList.data.find((item) => item.id === draftDescriptionId)?.summary,
+    ).toBeTruthy();
+    expect(JSON.stringify(publicList)).not.toMatch(
+      /transcript|questionAnswers|draftonlydescriptiontoken/,
+    );
 
-    await pool.query("UPDATE sermons SET body = 'An anonymised lower-weight body mentions grace.' WHERE id = $1", [draftDescriptionId]);
+    await pool.query(
+      "UPDATE sermons SET body = 'An anonymised lower-weight body mentions grace.' WHERE id = $1",
+      [draftDescriptionId],
+    );
     try {
       const ranked = await repository.listPublished(
-        publicSermonListQuerySchema.parse({ query: "grace", pageSize: 50 })
+        publicSermonListQuerySchema.parse({ query: "grace", pageSize: 50 }),
       );
       expect(ranked.data[0]?.id).toBe(searchableId);
     } finally {
-      await pool.query("UPDATE sermons SET body = $2 WHERE id = $1", [draftDescriptionId, draftDescription.body]);
+      await pool.query("UPDATE sermons SET body = $2 WHERE id = $1", [
+        draftDescriptionId,
+        draftDescription.body,
+      ]);
     }
 
     const filterOptions = await repository.listPublishedFilterOptions();
     expect(filterOptions.speakers.map((item) => item.slug)).toEqual([
       "example-speaker",
-      "second-speaker"
+      "second-speaker",
     ]);
     expect(filterOptions.series.map((item) => item.slug)).toEqual([
       "example-series",
-      "second-example-series"
+      "second-example-series",
     ]);
     expect(filterOptions.passages.map((item) => item.slug)).toEqual([
       "psalm-13",
-      "romans-8-1-4"
+      "romans-8-1-4",
     ]);
-    expect(filterOptions.books.map((item) => item.slug)).toEqual(["psalms", "romans"]);
+    expect(filterOptions.books.map((item) => item.slug)).toEqual([
+      "psalms",
+      "romans",
+    ]);
     expect(filterOptions.passageVerseAvailability).toEqual([]);
-    expect(JSON.stringify(filterOptions)).not.toContain("an-anonymised-pending-sermon");
+    expect(JSON.stringify(filterOptions)).not.toContain(
+      "an-anonymised-pending-sermon",
+    );
 
     expect(await repository.listPublishedTopicalSermons()).toEqual([]);
-    const seriesRepresentatives = await repository.listPublishedSeriesRepresentatives();
+    const seriesRepresentatives =
+      await repository.listPublishedSeriesRepresentatives();
     expect(seriesRepresentatives.map((item) => item.series.slug)).toEqual([
       "example-series",
-      "second-example-series"
+      "second-example-series",
     ]);
-    expect(new Set(seriesRepresentatives.map((item) => item.series.slug)).size)
-      .toBe(seriesRepresentatives.length);
+    expect(
+      new Set(seriesRepresentatives.map((item) => item.series.slug)).size,
+    ).toBe(seriesRepresentatives.length);
 
     const sitemapEntries = await repository.listPublishedSitemapEntries();
     expect(sitemapEntries.map((item) => item.slug).sort()).toEqual([
       "grace-for-an-anonymised-congregation",
-      "hope-in-an-anonymised-trial"
+      "hope-in-an-anonymised-trial",
     ]);
     expect(JSON.stringify(sitemapEntries)).not.toContain("pending");
   });
@@ -1135,53 +1866,74 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   it("ranks deterministic related sermons without duplicates or private rows", async () => {
     await makeAnonymisedPublishedFixturesFrontendEligible(pool);
     const repository = new PostgresSermonRepository(pool);
-    const current = (await pool.query<{ id: string; slug: string; speaker_id: string }>(
-      `SELECT id, slug, speaker_id FROM sermons
-       WHERE slug = 'grace-for-an-anonymised-congregation'`
-    )).rows[0]!;
-    const candidate = (await pool.query<{ id: string; slug: string; speaker_id: string }>(
-      `SELECT id, slug, speaker_id FROM sermons
-       WHERE slug = 'hope-in-an-anonymised-trial'`
-    )).rows[0]!;
-    const sharedSeries = (await pool.query<{ series_id: string }>(
-      "SELECT series_id FROM sermon_series_map WHERE sermon_id = $1 ORDER BY display_order LIMIT 1",
-      [current.id]
-    )).rows[0]!;
+    const current = (
+      await pool.query<{ id: string; slug: string; speaker_id: string }>(
+        `SELECT id, slug, speaker_id FROM sermons
+       WHERE slug = 'grace-for-an-anonymised-congregation'`,
+      )
+    ).rows[0]!;
+    const candidate = (
+      await pool.query<{ id: string; slug: string; speaker_id: string }>(
+        `SELECT id, slug, speaker_id FROM sermons
+       WHERE slug = 'hope-in-an-anonymised-trial'`,
+      )
+    ).rows[0]!;
+    const sharedSeries = (
+      await pool.query<{ series_id: string }>(
+        "SELECT series_id FROM sermon_series_map WHERE sermon_id = $1 ORDER BY display_order LIMIT 1",
+        [current.id],
+      )
+    ).rows[0]!;
 
-    await pool.query("UPDATE sermons SET speaker_id = $2 WHERE id = $1", [candidate.id, current.speaker_id]);
+    await pool.query("UPDATE sermons SET speaker_id = $2 WHERE id = $1", [
+      candidate.id,
+      current.speaker_id,
+    ]);
     await pool.query(
       `INSERT INTO sermon_series_map (sermon_id, series_id, display_order)
        VALUES ($1, $2, 0)`,
-      [candidate.id, sharedSeries.series_id]
+      [candidate.id, sharedSeries.series_id],
     );
     try {
       const detail = await repository.findPublishedBySlug(current.slug);
       expect(detail?.relatedSermons).toHaveLength(1);
       expect(detail?.relatedSermons[0]).toMatchObject({
         slug: candidate.slug,
-        relationshipReasons: ["same_series", "same_speaker"]
+        relationshipReasons: ["same_series", "same_speaker"],
       });
-      expect(detail?.relatedSermons.some((item) => item.id === current.id)).toBe(false);
+      expect(
+        detail?.relatedSermons.some((item) => item.id === current.id),
+      ).toBe(false);
       expect(new Set(detail?.relatedSermons.map((item) => item.id)).size).toBe(
-        detail?.relatedSermons.length
+        detail?.relatedSermons.length,
       );
     } finally {
       await pool.query(
         "DELETE FROM sermon_series_map WHERE sermon_id = $1 AND series_id = $2",
-        [candidate.id, sharedSeries.series_id]
+        [candidate.id, sharedSeries.series_id],
       );
-      await pool.query("UPDATE sermons SET speaker_id = $2 WHERE id = $1", [candidate.id, candidate.speaker_id]);
+      await pool.query("UPDATE sermons SET speaker_id = $2 WHERE id = $1", [
+        candidate.id,
+        candidate.speaker_id,
+      ]);
       await pool.query(
         `DELETE FROM sermon_primary_passage_reviews
          WHERE sermon_id IN (
            SELECT id FROM sermons
            WHERE slug = ANY($1::text[])
          )`,
-        [["grace-for-an-anonymised-congregation", "hope-in-an-anonymised-trial"]]
+        [
+          [
+            "grace-for-an-anonymised-congregation",
+            "hope-in-an-anonymised-trial",
+          ],
+        ],
       );
     }
 
-    expect(await repository.findPublishedBySlug("an-anonymised-pending-sermon")).toBeNull();
+    expect(
+      await repository.findPublishedBySlug("an-anonymised-pending-sermon"),
+    ).toBeNull();
   });
 
   it("precomputes description-only semantic relationships with eligibility, provenance, quality and stale-data gates", async () => {
@@ -1197,27 +1949,119 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       archived: "a2000000-0000-4000-8000-000000000005",
       deleted: "a2000000-0000-4000-8000-000000000006",
       unapproved: "a2000000-0000-4000-8000-000000000007",
-      blank: "a2000000-0000-4000-8000-000000000008"
+      blank: "a2000000-0000-4000-8000-000000000008",
     } as const;
     const descriptions = {
-      source: "An anonymised approved description reflects on patient hope, faithful endurance, and compassionate care in a wholly synthetic example.",
-      neighbour: "A separate anonymised approved description considers enduring hope, steady faith, and caring service in a synthetic congregation.",
+      source:
+        "An anonymised approved description reflects on patient hope, faithful endurance, and compassionate care in a wholly synthetic example.",
+      neighbour:
+        "A separate anonymised approved description considers enduring hope, steady faith, and caring service in a synthetic congregation.",
       weak: "This anonymised approved description discusses an intentionally unrelated mechanical fixture without any real sermon or private material.",
-      changed: "This changed anonymised approved description reflects on hope and compassionate care using only deterministic synthetic wording.",
-      ineligible: "This anonymised description is long enough for lifecycle constraints but belongs to a deliberately ineligible synthetic sermon record."
+      changed:
+        "This changed anonymised approved description reflects on hope and compassionate care using only deterministic synthetic wording.",
+      ineligible:
+        "This anonymised description is long enough for lifecycle constraints but belongs to a deliberately ineligible synthetic sermon record.",
     };
     const rows = [
-      [ids.source, "Synthetic semantic source", "synthetic-semantic-source", "published", descriptions.source, "approved", null],
-      [ids.neighbour, "Synthetic semantic neighbour", "synthetic-semantic-neighbour", "published", descriptions.neighbour, "approved", null],
-      [ids.weak, "Synthetic weak candidate", "synthetic-weak-candidate", "published", descriptions.weak, "approved", null],
-      [ids.draft, "Synthetic draft", "synthetic-semantic-draft", "draft", descriptions.ineligible, "approved", null],
-      [ids.pending, "Synthetic pending", "synthetic-semantic-pending", "pending", descriptions.ineligible, "approved", null],
-      [ids.scheduled, "Synthetic scheduled", "synthetic-semantic-scheduled", "scheduled", descriptions.ineligible, "approved", null],
-      [ids.unpublished, "Synthetic unpublished", "synthetic-semantic-unpublished", "unpublished", descriptions.ineligible, "approved", null],
-      [ids.archived, "Synthetic archived", "synthetic-semantic-archived", "archived", descriptions.ineligible, "approved", null],
-      [ids.deleted, "Synthetic deleted", "synthetic-semantic-deleted", "published", descriptions.ineligible, "approved", "2026-08-17T00:00:00.000Z"],
-      [ids.unapproved, "Synthetic unapproved", "synthetic-semantic-unapproved", "published", descriptions.ineligible, "draft", null],
-      [ids.blank, "Synthetic blank", "synthetic-semantic-blank", "published", null, "missing", null]
+      [
+        ids.source,
+        "Synthetic semantic source",
+        "synthetic-semantic-source",
+        "published",
+        descriptions.source,
+        "approved",
+        null,
+      ],
+      [
+        ids.neighbour,
+        "Synthetic semantic neighbour",
+        "synthetic-semantic-neighbour",
+        "published",
+        descriptions.neighbour,
+        "approved",
+        null,
+      ],
+      [
+        ids.weak,
+        "Synthetic weak candidate",
+        "synthetic-weak-candidate",
+        "published",
+        descriptions.weak,
+        "approved",
+        null,
+      ],
+      [
+        ids.draft,
+        "Synthetic draft",
+        "synthetic-semantic-draft",
+        "draft",
+        descriptions.ineligible,
+        "approved",
+        null,
+      ],
+      [
+        ids.pending,
+        "Synthetic pending",
+        "synthetic-semantic-pending",
+        "pending",
+        descriptions.ineligible,
+        "approved",
+        null,
+      ],
+      [
+        ids.scheduled,
+        "Synthetic scheduled",
+        "synthetic-semantic-scheduled",
+        "scheduled",
+        descriptions.ineligible,
+        "approved",
+        null,
+      ],
+      [
+        ids.unpublished,
+        "Synthetic unpublished",
+        "synthetic-semantic-unpublished",
+        "unpublished",
+        descriptions.ineligible,
+        "approved",
+        null,
+      ],
+      [
+        ids.archived,
+        "Synthetic archived",
+        "synthetic-semantic-archived",
+        "archived",
+        descriptions.ineligible,
+        "approved",
+        null,
+      ],
+      [
+        ids.deleted,
+        "Synthetic deleted",
+        "synthetic-semantic-deleted",
+        "published",
+        descriptions.ineligible,
+        "approved",
+        "2026-08-17T00:00:00.000Z",
+      ],
+      [
+        ids.unapproved,
+        "Synthetic unapproved",
+        "synthetic-semantic-unapproved",
+        "published",
+        descriptions.ineligible,
+        "draft",
+        null,
+      ],
+      [
+        ids.blank,
+        "Synthetic blank",
+        "synthetic-semantic-blank",
+        "published",
+        null,
+        "missing",
+        null,
+      ],
     ] as const;
     const pipeline: DescriptionSemanticPipeline = {
       pipelineVersion: "description-only-semantic-v1",
@@ -1237,28 +2081,38 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       pooling: "mean",
       normalisation: "l2_float32",
       truncationMaxTokens: 128,
-      dimensions: 3
+      dimensions: 3,
     };
     const policy = {
       corpusBuildVersion: "synthetic-postgres-corpus-v1",
       qualityPolicyId: "synthetic-mechanics-threshold-v1",
       minimumCosineScore: 0.8,
-      maximumResults: 3
+      maximumResults: 3,
     };
     const vectors = new Map<string, Float32Array>([
       [descriptions.source, new Float32Array([1, 0, 0])],
       [descriptions.neighbour, new Float32Array([0.9, 0.1, 0])],
       [descriptions.changed, new Float32Array([0.95, 0.05, 0])],
-      [descriptions.weak, new Float32Array([0, 1, 0])]
+      [descriptions.weak, new Float32Array([0, 1, 0])],
     ]);
     const model: DescriptionEmbeddingModel = {
       async embedApprovedDescriptions(values) {
-        return values.map((value) => vectors.get(value) ?? new Float32Array([0, 0, 1]));
-      }
+        return values.map(
+          (value) => vectors.get(value) ?? new Float32Array([0, 0, 1]),
+        );
+      },
     };
     const insertedIds = Object.values(ids);
     try {
-      for (const [id, title, slug, status, summary, summaryStatus, deletedAt] of rows) {
+      for (const [
+        id,
+        title,
+        slug,
+        status,
+        summary,
+        summaryStatus,
+        deletedAt,
+      ] of rows) {
         const approved = summaryStatus === "approved";
         await pool.query(
           `INSERT INTO sermons (
@@ -1278,16 +2132,34 @@ integration("disposable PostgreSQL Phase 3B application", () => {
              CASE WHEN $8 THEN now() ELSE NULL END,
              CASE WHEN $8 THEN now() ELSE NULL END
            )`,
-          [id, title, slug, summary, status, summaryStatus, deletedAt, approved]
+          [
+            id,
+            title,
+            slug,
+            summary,
+            status,
+            summaryStatus,
+            deletedAt,
+            approved,
+          ],
         );
       }
 
-      const eligibleIds = (await semanticRepository.listEligibleApprovedDescriptions())
-        .map((source) => source.sermonId);
-      expect(eligibleIds).toEqual(expect.arrayContaining([ids.source, ids.neighbour, ids.weak]));
+      const eligibleIds = (
+        await semanticRepository.listEligibleApprovedDescriptions()
+      ).map((source) => source.sermonId);
+      expect(eligibleIds).toEqual(
+        expect.arrayContaining([ids.source, ids.neighbour, ids.weak]),
+      );
       for (const ineligibleId of [
-        ids.draft, ids.pending, ids.scheduled, ids.unpublished, ids.archived,
-        ids.deleted, ids.unapproved, ids.blank
+        ids.draft,
+        ids.pending,
+        ids.scheduled,
+        ids.unpublished,
+        ids.archived,
+        ids.deleted,
+        ids.unapproved,
+        ids.blank,
       ]) {
         expect(eligibleIds).not.toContain(ineligibleId);
       }
@@ -1297,92 +2169,118 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         model,
         pipeline,
         policy,
-        generatedAt: new Date("2026-08-17T00:00:00.000Z")
+        generatedAt: new Date("2026-08-17T00:00:00.000Z"),
       });
-      expect(await semanticRepository.listQualityApprovedRelated({
-        sourceSermonId: ids.source,
-        pipelineFingerprint: firstPlan.pipelineFingerprint,
-        corpusBuildVersion: policy.corpusBuildVersion,
-        limit: 3
-      })).toEqual([]);
+      expect(
+        await semanticRepository.listQualityApprovedRelated({
+          sourceSermonId: ids.source,
+          pipelineFingerprint: firstPlan.pipelineFingerprint,
+          corpusBuildVersion: policy.corpusBuildVersion,
+          limit: 3,
+        }),
+      ).toEqual([]);
       await pool.query(
         `UPDATE description_semantic_builds
          SET quality_status = 'approved',
              quality_approved_by_subject = 'synthetic-test-only',
-             quality_approved_at = now()`
+             quality_approved_at = now()`,
       );
-      const selectedBeforeMetadata = await semanticRepository.listQualityApprovedRelated({
-        sourceSermonId: ids.source,
-        pipelineFingerprint: firstPlan.pipelineFingerprint,
-        corpusBuildVersion: policy.corpusBuildVersion,
-        limit: 3
-      });
-      expect(selectedBeforeMetadata.map((item) => item.neighbourSermonId)).toEqual([ids.neighbour]);
+      const selectedBeforeMetadata =
+        await semanticRepository.listQualityApprovedRelated({
+          sourceSermonId: ids.source,
+          pipelineFingerprint: firstPlan.pipelineFingerprint,
+          corpusBuildVersion: policy.corpusBuildVersion,
+          limit: 3,
+        });
+      expect(
+        selectedBeforeMetadata.map((item) => item.neighbourSermonId),
+      ).toEqual([ids.neighbour]);
 
-      const metadata = (await pool.query<{
-        speaker_id: string;
-        series_id: string;
-        source_term_id: string;
-        book_id: string;
-      }>(
-        `SELECT
+      const metadata = (
+        await pool.query<{
+          speaker_id: string;
+          series_id: string;
+          source_term_id: string;
+          book_id: string;
+        }>(
+          `SELECT
            (SELECT id FROM speakers ORDER BY id LIMIT 1) AS speaker_id,
            (SELECT id FROM series ORDER BY id LIMIT 1) AS series_id,
            (SELECT id FROM source_taxonomy_terms ORDER BY id LIMIT 1) AS source_term_id,
-           (SELECT id FROM book_classifications WHERE review_status = 'approved' ORDER BY id LIMIT 1) AS book_id`
-      )).rows[0]!;
+           (SELECT id FROM book_classifications WHERE review_status = 'approved' ORDER BY id LIMIT 1) AS book_id`,
+        )
+      ).rows[0]!;
       await pool.query(
         "UPDATE sermons SET title = 'Changed synthetic metadata title', service_date = '2030-12-31', speaker_id = $2 WHERE id = $1",
-        [ids.neighbour, metadata.speaker_id]
+        [ids.neighbour, metadata.speaker_id],
       );
-      await pool.query("INSERT INTO sermon_series_map (sermon_id, series_id) VALUES ($1, $2)", [ids.neighbour, metadata.series_id]);
-      await pool.query("INSERT INTO sermon_source_terms (sermon_id, source_taxonomy_term_id) VALUES ($1, $2)", [ids.neighbour, metadata.source_term_id]);
-      await pool.query("INSERT INTO sermon_book_classifications (sermon_id, book_classification_id) VALUES ($1, $2)", [ids.neighbour, metadata.book_id]);
+      await pool.query(
+        "INSERT INTO sermon_series_map (sermon_id, series_id) VALUES ($1, $2)",
+        [ids.neighbour, metadata.series_id],
+      );
+      await pool.query(
+        "INSERT INTO sermon_source_terms (sermon_id, source_taxonomy_term_id) VALUES ($1, $2)",
+        [ids.neighbour, metadata.source_term_id],
+      );
+      await pool.query(
+        "INSERT INTO sermon_book_classifications (sermon_id, book_classification_id) VALUES ($1, $2)",
+        [ids.neighbour, metadata.book_id],
+      );
       await pool.query(
         `INSERT INTO scripture_references (sermon_id, display_text, display_order, parse_status)
          VALUES ($1, 'Synthetic changed reference', 0, 'curated')`,
-        [ids.neighbour]
+        [ids.neighbour],
       );
-      expect(await semanticRepository.listQualityApprovedRelated({
-        sourceSermonId: ids.source,
-        pipelineFingerprint: firstPlan.pipelineFingerprint,
-        corpusBuildVersion: policy.corpusBuildVersion,
-        limit: 3
-      })).toEqual(selectedBeforeMetadata);
+      expect(
+        await semanticRepository.listQualityApprovedRelated({
+          sourceSermonId: ids.source,
+          pipelineFingerprint: firstPlan.pipelineFingerprint,
+          corpusBuildVersion: policy.corpusBuildVersion,
+          limit: 3,
+        }),
+      ).toEqual(selectedBeforeMetadata);
 
       await pool.query(
         `UPDATE sermons
          SET summary = $2, summary_updated_at = now(), summary_row_version = summary_row_version + 1
          WHERE id = $1`,
-        [ids.neighbour, descriptions.changed]
+        [ids.neighbour, descriptions.changed],
       );
-      expect((await pool.query<{ count: number }>(
-        `SELECT count(*)::integer AS count
+      expect(
+        (
+          await pool.query<{ count: number }>(
+            `SELECT count(*)::integer AS count
          FROM description_semantic_relationships
          WHERE source_sermon_id = $1 OR neighbour_sermon_id = $1`,
-        [ids.neighbour]
-      )).rows[0]).toEqual({ count: 0 });
+            [ids.neighbour],
+          )
+        ).rows[0],
+      ).toEqual({ count: 0 });
 
       const changedPlan = await rebuildDescriptionSemanticRelationships({
         store: semanticRepository,
         model,
         pipeline,
         policy,
-        generatedAt: new Date("2026-08-17T01:00:00.000Z")
+        generatedAt: new Date("2026-08-17T01:00:00.000Z"),
       });
       expect(changedPlan.buildFingerprint).not.toBe(firstPlan.buildFingerprint);
       await pool.query(
         `UPDATE description_semantic_builds
          SET quality_status = 'approved',
              quality_approved_by_subject = 'synthetic-test-only',
-             quality_approved_at = now()`
+             quality_approved_at = now()`,
       );
-      expect((await semanticRepository.listQualityApprovedRelated({
-        sourceSermonId: ids.source,
-        pipelineFingerprint: changedPlan.pipelineFingerprint,
-        corpusBuildVersion: policy.corpusBuildVersion,
-        limit: 3
-      })).map((item) => item.neighbourSermonId)).toEqual([ids.neighbour]);
+      expect(
+        (
+          await semanticRepository.listQualityApprovedRelated({
+            sourceSermonId: ids.source,
+            pipelineFingerprint: changedPlan.pipelineFingerprint,
+            corpusBuildVersion: policy.corpusBuildVersion,
+            limit: 3,
+          })
+        ).map((item) => item.neighbourSermonId),
+      ).toEqual([ids.neighbour]);
 
       await pool.query(
         `UPDATE sermons
@@ -1390,41 +2288,51 @@ integration("disposable PostgreSQL Phase 3B application", () => {
              summary_approved_by_subject = NULL,
              summary_approved_at = NULL
          WHERE id = $1`,
-        [ids.neighbour]
+        [ids.neighbour],
       );
       const request = {
         sourceSermonId: ids.source,
         pipelineFingerprint: changedPlan.pipelineFingerprint,
         corpusBuildVersion: policy.corpusBuildVersion,
-        limit: 3
+        limit: 3,
       };
-      expect(await semanticRepository.listQualityApprovedRelated(request)).toEqual([]);
-      expect(await semanticRepository.listQualityApprovedRelated(request)).toEqual([]);
-      expect((await pool.query<{ count: number }>(
-        `SELECT count(*)::integer AS count
+      expect(
+        await semanticRepository.listQualityApprovedRelated(request),
+      ).toEqual([]);
+      expect(
+        await semanticRepository.listQualityApprovedRelated(request),
+      ).toEqual([]);
+      expect(
+        (
+          await pool.query<{ count: number }>(
+            `SELECT count(*)::integer AS count
          FROM description_semantic_relationships
          WHERE source_sermon_id = $1 OR neighbour_sermon_id = $1`,
-        [ids.neighbour]
-      )).rows[0]).toEqual({ count: 0 });
+            [ids.neighbour],
+          )
+        ).rows[0],
+      ).toEqual({ count: 0 });
 
-      const provenance = (await pool.query<{
-        input_field: string;
-        input_mode: string;
-        query_prefix: string | null;
-        document_prefix: string | null;
-        model_revision: string;
-        runtime_identifier: string;
-        runtime_version: string;
-        runtime_package_integrity: string;
-        normalisation: string;
-        dimensions: number;
-        quality_status: string;
-      }>(
-        `SELECT input_field, input_mode, query_prefix, document_prefix,
+      const provenance = (
+        await pool.query<{
+          input_field: string;
+          input_mode: string;
+          query_prefix: string | null;
+          document_prefix: string | null;
+          model_revision: string;
+          runtime_identifier: string;
+          runtime_version: string;
+          runtime_package_integrity: string;
+          normalisation: string;
+          dimensions: number;
+          quality_status: string;
+        }>(
+          `SELECT input_field, input_mode, query_prefix, document_prefix,
                 model_revision, runtime_identifier, runtime_version,
                 runtime_package_integrity, normalisation, dimensions, quality_status
-         FROM description_semantic_builds`
-      )).rows[0]!;
+         FROM description_semantic_builds`,
+        )
+      ).rows[0]!;
       expect(provenance).toMatchObject({
         input_field: "approved_public_description",
         input_mode: "symmetric_document",
@@ -1436,45 +2344,78 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         runtime_package_integrity: `sha512-${"A".repeat(86)}==`,
         normalisation: "l2_float32",
         dimensions: 3,
-        quality_status: "approved"
+        quality_status: "approved",
       });
-      const relationshipColumns = (await pool.query<{ column_name: string }>(
-        `SELECT column_name FROM information_schema.columns
+      const relationshipColumns = (
+        await pool.query<{ column_name: string }>(
+          `SELECT column_name FROM information_schema.columns
          WHERE table_name = 'description_semantic_relationships'
-         ORDER BY column_name`
-      )).rows.map((row) => row.column_name);
-      expect(relationshipColumns).not.toEqual(expect.arrayContaining([
-        "description", "title", "scripture", "speaker", "series", "topics",
-        "body", "transcript", "question", "answer", "embedding"
-      ]));
+         ORDER BY column_name`,
+        )
+      ).rows.map((row) => row.column_name);
+      expect(relationshipColumns).not.toEqual(
+        expect.arrayContaining([
+          "description",
+          "title",
+          "scripture",
+          "speaker",
+          "series",
+          "topics",
+          "body",
+          "transcript",
+          "question",
+          "answer",
+          "embedding",
+        ]),
+      );
     } finally {
       await pool.query("DELETE FROM description_semantic_builds");
-      await pool.query("DELETE FROM sermons WHERE id = ANY($1::uuid[])", [insertedIds]);
+      await pool.query("DELETE FROM sermons WHERE id = ANY($1::uuid[])", [
+        insertedIds,
+      ]);
     }
   });
 
   it("exports deterministic work and imports enrichment drafts idempotently without approval", async () => {
-    const firstQueue = await buildEnrichmentQueue(pool, "anonymised-phase3b-fixture");
-    const secondQueue = await buildEnrichmentQueue(pool, "anonymised-phase3b-fixture");
+    const firstQueue = await buildEnrichmentQueue(
+      pool,
+      "anonymised-phase3b-fixture",
+    );
+    const secondQueue = await buildEnrichmentQueue(
+      pool,
+      "anonymised-phase3b-fixture",
+    );
     expect(firstQueue).toEqual(secondQueue);
-    const target = firstQueue.records.find((record) => record.sourceWordPressId === 9003)!;
+    const target = firstQueue.records.find(
+      (record) => record.sourceWordPressId === 9003,
+    )!;
     const bundle = {
       schemaVersion: 3 as const,
       sourceWordPressId: target.sourceWordPressId,
       targetSermonId: target.targetSermonId,
       expectedRowVersion: target.rowVersion,
       description: {
-        bodyText: "This imported local description draft explains the anonymised sermon context for later human review.",
-        provenance: { sourceKind: "generated_draft" as const, sourceReference: "safe-local-job-9003" }
+        bodyText:
+          "This imported local description draft explains the anonymised sermon context for later human review.",
+        provenance: {
+          sourceKind: "generated_draft" as const,
+          sourceReference: "safe-local-job-9003",
+        },
       },
       transcript: {
         bodyText: "A local anonymised transcript draft.",
-        provenance: { sourceKind: "caption" as const, sourceReference: "safe-local-job-9003" }
+        provenance: {
+          sourceKind: "caption" as const,
+          sourceReference: "safe-local-job-9003",
+        },
       },
       questionAnswers: Array.from({ length: 5 }, (_, index) => ({
         question: `What should the listener consider in example ${index + 1}?`,
         answer: `The draft answer remains subject to human review ${index + 1}.`,
-        provenance: { sourceKind: "generated_draft" as const, sourceReference: "safe-local-job-9003" }
+        provenance: {
+          sourceKind: "generated_draft" as const,
+          sourceReference: "safe-local-job-9003",
+        },
       })),
       sourceProvenance: {
         provider: "youtube" as const,
@@ -1489,7 +2430,12 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         cleanedCharacterCount: 10_020,
         apparentCompleteness: "apparently_complete" as const,
         uncertaintyMarkerCount: 0,
-        warnings: [{ code: "administrator_accuracy_review_required", safeDetail: "Human review remains required." }],
+        warnings: [
+          {
+            code: "administrator_accuracy_review_required",
+            safeDetail: "Human review remains required.",
+          },
+        ],
         unresolvedPassages: [],
         processingVersion: "phase3b2-test-v1",
         importedAt: "2026-08-06T00:00:00.000Z",
@@ -1497,11 +2443,15 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         processingDurationMs: 1_000,
         estimatedReviewMinutes: 60,
         manualAttentionRequired: true as const,
-        accuracyReviewStatus: "required" as const
-      }
+        accuracyReviewStatus: "required" as const,
+      },
     };
-    expect((await importEnrichmentDraftBundle(pool, bundle)).outcome).toBe("imported_as_draft");
-    expect((await importEnrichmentDraftBundle(pool, bundle)).outcome).toBe("unchanged");
+    expect((await importEnrichmentDraftBundle(pool, bundle)).outcome).toBe(
+      "imported_as_draft",
+    );
+    expect((await importEnrichmentDraftBundle(pool, bundle)).outcome).toBe(
+      "unchanged",
+    );
     const stored = await pool.query<{
       description_status: string;
       transcript_status: string;
@@ -1517,7 +2467,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
          (SELECT count(*)::integer FROM sermon_question_answers WHERE sermon_id = $1 AND status = 'approved') AS approved_questions,
          (SELECT count(*)::integer FROM audit_events WHERE entity_id = $1 AND action = 'sermon.enrichment_draft_imported') AS audits,
          (SELECT count(*)::integer FROM sermon_enrichment_sources WHERE sermon_id = $1) AS provenance`,
-      [target.targetSermonId]
+      [target.targetSermonId],
     );
     expect(stored.rows[0]).toEqual({
       description_status: "draft",
@@ -1525,15 +2475,21 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       questions: 5,
       approved_questions: 0,
       audits: 1,
-      provenance: 1
+      provenance: 1,
     });
-    expect((await new PostgresAdminSermonRepository(pool).findSermon(target.targetSermonId))?.enrichmentSource)
-      .toMatchObject({
-        videoId: "aaaaaaaaaaa",
-        captionTrackType: "unknown",
-        accuracyReviewStatus: "required"
-      });
-    const approvedText = "This administrator-approved description must remain intact when a later draft import contains different proposed wording.";
+    expect(
+      (
+        await new PostgresAdminSermonRepository(pool).findSermon(
+          target.targetSermonId,
+        )
+      )?.enrichmentSource,
+    ).toMatchObject({
+      videoId: "aaaaaaaaaaa",
+      captionTrackType: "unknown",
+      accuracyReviewStatus: "required",
+    });
+    const approvedText =
+      "This administrator-approved description must remain intact when a later draft import contains different proposed wording.";
     await pool.query(
       `UPDATE sermons
        SET summary = $2, summary_status = 'approved', summary_source_kind = 'manual',
@@ -1541,10 +2497,13 @@ integration("disposable PostgreSQL Phase 3B application", () => {
            summary_approved_by_subject = 'local-admin-0001', summary_reviewed_at = now(),
            summary_approved_at = now(), row_version = row_version + 1
        WHERE id = $1`,
-      [target.targetSermonId, approvedText]
+      [target.targetSermonId, approvedText],
     );
     const currentVersion = (
-      await pool.query<{ row_version: number }>("SELECT row_version FROM sermons WHERE id = $1", [target.targetSermonId])
+      await pool.query<{ row_version: number }>(
+        "SELECT row_version FROM sermons WHERE id = $1",
+        [target.targetSermonId],
+      )
     ).rows[0]!.row_version;
     await expect(
       importEnrichmentDraftBundle(pool, {
@@ -1552,34 +2511,44 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         expectedRowVersion: currentVersion,
         description: {
           ...bundle.description,
-          bodyText: "This conflicting draft description must never replace an already approved administrator description."
-        }
-      })
+          bodyText:
+            "This conflicting draft description must never replace an already approved administrator description.",
+        },
+      }),
     ).rejects.toThrow("approved_description_conflict");
     expect(
-      (await pool.query<{ summary: string }>("SELECT summary FROM sermons WHERE id = $1", [target.targetSermonId])).rows[0]!.summary
+      (
+        await pool.query<{ summary: string }>(
+          "SELECT summary FROM sermons WHERE id = $1",
+          [target.targetSermonId],
+        )
+      ).rows[0]!.summary,
     ).toBe(approvedText);
     await pool.query(
       `UPDATE sermon_transcripts
        SET status = 'approved', reviewed_by_subject = 'local-admin-0001',
            approved_by_subject = 'local-admin-0001', reviewed_at = now(), approved_at = now()
        WHERE sermon_id = $1`,
-      [target.targetSermonId]
+      [target.targetSermonId],
     );
     await pool.query(
       `UPDATE sermon_question_answers
        SET status = 'approved', reviewed_by_subject = 'local-admin-0001',
            approved_by_subject = 'local-admin-0001', reviewed_at = now(), approved_at = now()
        WHERE sermon_id = $1`,
-      [target.targetSermonId]
+      [target.targetSermonId],
     );
     await expect(
       importEnrichmentDraftBundle(pool, {
         ...bundle,
         expectedRowVersion: currentVersion,
         description: { ...bundle.description, bodyText: approvedText },
-        transcript: { ...bundle.transcript, bodyText: "A different draft must not replace an approved transcript." }
-      })
+        transcript: {
+          ...bundle.transcript,
+          bodyText:
+            "A different draft must not replace an approved transcript.",
+        },
+      }),
     ).rejects.toThrow("approved_transcript_conflict");
     await expect(
       importEnrichmentDraftBundle(pool, {
@@ -1587,59 +2556,94 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         expectedRowVersion: currentVersion,
         description: { ...bundle.description, bodyText: approvedText },
         questionAnswers: bundle.questionAnswers.map((item, index) =>
-          index === 0 ? { ...item, answer: "A conflicting answer must not replace approved Q&A." } : item
-        )
-      })
+          index === 0
+            ? {
+                ...item,
+                answer: "A conflicting answer must not replace approved Q&A.",
+              }
+            : item,
+        ),
+      }),
     ).rejects.toThrow("approved_question_answers_conflict");
-    expect(await new PostgresSermonRepository(pool).findPublishedBySlug("an-anonymised-pending-sermon")).toBeNull();
+    expect(
+      await new PostgresSermonRepository(pool).findPublishedBySlug(
+        "an-anonymised-pending-sermon",
+      ),
+    ).toBeNull();
   });
 
   it("prevents administrator approval of superseded extractive descriptions and Q&A", async () => {
     const repository = new PostgresAdminSermonRepository(pool);
-    const service = new AdminSermonService(repository, () => new Date("2026-08-19T00:00:00.000Z"));
-    const admin = { subject: "local-admin-0001", role: "admin" } satisfies ApplicationIdentity;
+    const service = new AdminSermonService(
+      repository,
+      () => new Date("2026-08-19T00:00:00.000Z"),
+    );
+    const admin = {
+      subject: "local-admin-0001",
+      role: "admin",
+    } satisfies ApplicationIdentity;
     const reference = `anonymised:${supersededWave1GenerationVersion}`;
-    const created = await service.create(createSermonInputSchema.parse({
-      title: "Anonymised superseded-generation gate",
-      slug: "anonymised-superseded-generation-gate",
-      serviceDate: "2026-01-01",
-      summary: "This anonymised description is long enough for review but remains a superseded private draft that must never be approved.",
-      summaryStatus: "draft",
-      summarySourceKind: "generated_draft",
-      summarySourceReference: reference,
-      transcript: {
-        bodyText: "A complete anonymised approved transcript exists solely to exercise the superseded-generation approval gate.",
-        status: "approved",
-        sourceKind: "manual",
-        sourceReference: null
-      },
-      questionAnswers: Array.from({ length: 7 }, (_, index) => ({
-        question: `Which anonymised concern is considered in pair ${index + 1}?`,
-        answer: `This complete anonymised answer remains a superseded draft for pair ${index + 1}.`,
-        status: "draft",
-        sourceKind: "generated_draft",
-        sourceReference: reference
-      }))
-    }), admin, "anonymised-create-superseded");
+    const created = await service.create(
+      createSermonInputSchema.parse({
+        title: "Anonymised superseded-generation gate",
+        slug: "anonymised-superseded-generation-gate",
+        serviceDate: "2026-01-01",
+        summary:
+          "This anonymised description is long enough for review but remains a superseded private draft that must never be approved.",
+        summaryStatus: "draft",
+        summarySourceKind: "generated_draft",
+        summarySourceReference: reference,
+        transcript: {
+          bodyText:
+            "A complete anonymised approved transcript exists solely to exercise the superseded-generation approval gate.",
+          status: "approved",
+          sourceKind: "manual",
+          sourceReference: null,
+        },
+        questionAnswers: Array.from({ length: 7 }, (_, index) => ({
+          question: `Which anonymised concern is considered in pair ${index + 1}?`,
+          answer: `This complete anonymised answer remains a superseded draft for pair ${index + 1}.`,
+          status: "draft",
+          sourceKind: "generated_draft",
+          sourceReference: reference,
+        })),
+      }),
+      admin,
+      "anonymised-create-superseded",
+    );
     try {
-      await expect(service.update(created.id, updateSermonInputSchema.parse({
-        rowVersion: created.rowVersion,
-        summary: created.summary,
-        summaryStatus: "approved",
-        summarySourceKind: created.summarySourceKind,
-        summarySourceReference: created.summarySourceReference
-      }), admin, "anonymised-approve-description")).rejects.toThrow("superseded extractive Wave 1 generator");
+      await expect(
+        service.update(
+          created.id,
+          updateSermonInputSchema.parse({
+            rowVersion: created.rowVersion,
+            summary: created.summary,
+            summaryStatus: "approved",
+            summarySourceKind: created.summarySourceKind,
+            summarySourceReference: created.summarySourceReference,
+          }),
+          admin,
+          "anonymised-approve-description",
+        ),
+      ).rejects.toThrow("superseded extractive Wave 1 generator");
 
-      await expect(service.update(created.id, updateSermonInputSchema.parse({
-        rowVersion: created.rowVersion,
-        questionAnswers: created.questionAnswers.map((item, index) => ({
-          question: item.question,
-          answer: item.answer,
-          status: index === 0 ? "approved" : "draft",
-          sourceKind: item.sourceKind,
-          sourceReference: item.sourceReference
-        }))
-      }), admin, "anonymised-approve-question")).rejects.toThrow("superseded extractive Wave 1 generator");
+      await expect(
+        service.update(
+          created.id,
+          updateSermonInputSchema.parse({
+            rowVersion: created.rowVersion,
+            questionAnswers: created.questionAnswers.map((item, index) => ({
+              question: item.question,
+              answer: item.answer,
+              status: index === 0 ? "approved" : "draft",
+              sourceKind: item.sourceKind,
+              sourceReference: item.sourceReference,
+            })),
+          }),
+          admin,
+          "anonymised-approve-question",
+        ),
+      ).rejects.toThrow("superseded extractive Wave 1 generator");
     } finally {
       await pool.query("DELETE FROM sermons WHERE id = $1", [created.id]);
     }
@@ -1647,60 +2651,91 @@ integration("disposable PostgreSQL Phase 3B application", () => {
 
   it("blocks generated descriptions and Q&A from review when the mechanical proofread fails", async () => {
     const repository = new PostgresAdminSermonRepository(pool);
-    const service = new AdminSermonService(repository, () => new Date("2026-08-26T00:00:00.000Z"));
-    const admin = { subject: "local-admin-0001", role: "admin" } satisfies ApplicationIdentity;
+    const service = new AdminSermonService(
+      repository,
+      () => new Date("2026-08-26T00:00:00.000Z"),
+    );
+    const admin = {
+      subject: "local-admin-0001",
+      role: "admin",
+    } satisfies ApplicationIdentity;
     const reference = "anonymised-grounded-generated-draft";
     const input = {
       title: "Anonymised mechanical-proofread gate",
       slug: "anonymised-mechanical-proofread-gate",
       serviceDate: "2026-01-02",
-      summary: "This anonymised generated description explains that jesus is misspelled for the regression case while remaining long enough for review.",
+      summary:
+        "This anonymised generated description explains that jesus is misspelled for the regression case while remaining long enough for review.",
       summaryStatus: "draft",
       summarySourceKind: "generated_draft",
       summarySourceReference: reference,
       transcript: {
-        bodyText: "A complete anonymised approved transcript exists solely to exercise the generated-text mechanical gate.",
+        bodyText:
+          "A complete anonymised approved transcript exists solely to exercise the generated-text mechanical gate.",
         status: "approved",
         sourceKind: "manual",
-        sourceReference: null
+        sourceReference: null,
       },
       questionAnswers: Array.from({ length: 7 }, (_, index) => ({
-        question: index === 0 ? "Why does jesus matter in this anonymised example?" : `Which concern is considered in pair ${index + 1}?`,
+        question:
+          index === 0
+            ? "Why does jesus matter in this anonymised example?"
+            : `Which concern is considered in pair ${index + 1}?`,
         answer: `This complete anonymised answer remains a generated draft for pair ${index + 1}.`,
         status: "draft",
         sourceKind: "generated_draft",
-        sourceReference: reference
-      }))
+        sourceReference: reference,
+      })),
     };
-    await expect(service.create(createSermonInputSchema.parse({
-      ...input,
-      summaryStatus: "in_review"
-    }), admin, "anonymised-create-in-review-mechanical-gate")).rejects.toThrow("deterministic editorial proofread");
+    await expect(
+      service.create(
+        createSermonInputSchema.parse({
+          ...input,
+          summaryStatus: "in_review",
+        }),
+        admin,
+        "anonymised-create-in-review-mechanical-gate",
+      ),
+    ).rejects.toThrow("deterministic editorial proofread");
     const created = await service.create(
       createSermonInputSchema.parse(input),
       admin,
-      "anonymised-create-mechanical-gate"
+      "anonymised-create-mechanical-gate",
     );
     try {
       expect(created.generatedTextMechanicalQa?.outcome).toBe("failed");
-      await expect(service.update(created.id, updateSermonInputSchema.parse({
-        rowVersion: created.rowVersion,
-        summary: created.summary,
-        summaryStatus: "in_review",
-        summarySourceKind: created.summarySourceKind,
-        summarySourceReference: created.summarySourceReference
-      }), admin, "anonymised-review-mechanical-description")).rejects.toThrow("deterministic editorial proofread");
+      await expect(
+        service.update(
+          created.id,
+          updateSermonInputSchema.parse({
+            rowVersion: created.rowVersion,
+            summary: created.summary,
+            summaryStatus: "in_review",
+            summarySourceKind: created.summarySourceKind,
+            summarySourceReference: created.summarySourceReference,
+          }),
+          admin,
+          "anonymised-review-mechanical-description",
+        ),
+      ).rejects.toThrow("deterministic editorial proofread");
 
-      await expect(service.update(created.id, updateSermonInputSchema.parse({
-        rowVersion: created.rowVersion,
-        questionAnswers: created.questionAnswers.map((item, index) => ({
-          question: item.question,
-          answer: item.answer,
-          status: index === 0 ? "in_review" : "draft",
-          sourceKind: item.sourceKind,
-          sourceReference: item.sourceReference
-        }))
-      }), admin, "anonymised-review-mechanical-question")).rejects.toThrow("deterministic editorial proofread");
+      await expect(
+        service.update(
+          created.id,
+          updateSermonInputSchema.parse({
+            rowVersion: created.rowVersion,
+            questionAnswers: created.questionAnswers.map((item, index) => ({
+              question: item.question,
+              answer: item.answer,
+              status: index === 0 ? "in_review" : "draft",
+              sourceKind: item.sourceKind,
+              sourceReference: item.sourceReference,
+            })),
+          }),
+          admin,
+          "anonymised-review-mechanical-question",
+        ),
+      ).rejects.toThrow("deterministic editorial proofread");
     } finally {
       await pool.query("DELETE FROM sermons WHERE id = $1", [created.id]);
     }
@@ -1708,31 +2743,38 @@ integration("disposable PostgreSQL Phase 3B application", () => {
 
   it("runs the real Phase 3B.2b filesystem, orchestration, importer and fail-closed verifier paths", async () => {
     const roots: string[] = [];
-    const makeCaption = (punctuated: boolean) => Array.from(
-      { length: 110 },
-      () => punctuated
-        ? "The anonymised speaker explains a local example and invites careful review."
-        : "the anonymised speaker explains a local example and invites careful review [unclear]"
-    ).join(" ");
-    const completionRecord = (videoId: string, punctuationPackFilename: string) => ({
+    const makeCaption = (punctuated: boolean) =>
+      Array.from({ length: 110 }, () =>
+        punctuated
+          ? "The anonymised speaker explains a local example and invites careful review."
+          : "the anonymised speaker explains a local example and invites careful review [unclear]",
+      ).join(" ");
+    const completionRecord = (
+      videoId: string,
+      punctuationPackFilename: string,
+    ) => ({
       videoId,
       punctuationPackFilename,
-      descriptionDraft: "This anonymised local description is grounded in the test transcript and remains a private draft for explicit administrator review.",
+      descriptionDraft:
+        "This anonymised local description is grounded in the test transcript and remains a private draft for explicit administrator review.",
       descriptionSupportingParagraphs: [1],
       questionAnswers: Array.from({ length: 7 }, (_, index) => ({
         question: `What should be considered in anonymised question ${index + 1}?`,
-        answer: "This transcript-grounded anonymised answer remains a private draft for administrator review.",
-        supportingParagraphs: [1]
+        answer:
+          "This transcript-grounded anonymised answer remains a private draft for administrator review.",
+        supportingParagraphs: [1],
       })),
-      possibleCaptionErrors: [{
-        detail: "An anonymised source uncertainty remains for review.",
-        supportingParagraphs: [1]
-      }],
-      apparentNamesAndScriptureReferences: []
+      possibleCaptionErrors: [
+        {
+          detail: "An anonymised source uncertainty remains for review.",
+          supportingParagraphs: [1],
+        },
+      ],
+      apparentNamesAndScriptureReferences: [],
     });
     const createFixture = async (
       videoIds: readonly [string, string, string],
-      sourceIdBase: number
+      sourceIdBase: number,
     ) => {
       const root = await mkdtemp(join(tmpdir(), "phase3b2b-postgres-"));
       roots.push(root);
@@ -1747,62 +2789,97 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         slug: `anonymised-punctuation-pilot-${sourceIdBase + index}`,
         serviceDate: "1970-01-01",
         descriptionDraft: null,
-        questionAnswers: []
+        questionAnswers: [],
       }));
       const manifest = {
         schemaVersion: 1 as const,
         sourceSnapshotId: `anonymised-phase3b2b-${sourceIdBase}`,
         allowlistedVideoIds: [...videoIds],
-        records
+        records,
       };
-      await Promise.all(records.map((record, index) =>
-        writeFile(join(root, record.captionFilename), makeCaption(index === 0), "utf8")
-      ));
+      await Promise.all(
+        records.map((record, index) =>
+          writeFile(
+            join(root, record.captionFilename),
+            makeCaption(index === 0),
+            "utf8",
+          ),
+        ),
+      );
       const completionRecords = [];
       for (const [index, record] of records.slice(1).entries()) {
-        const sourceText = await readFile(join(root, record.captionFilename), "utf8");
-        const template = createPunctuationWorkspaceTemplate(record.videoId, sourceText);
+        const sourceText = await readFile(
+          join(root, record.captionFilename),
+          "utf8",
+        );
+        const template = createPunctuationWorkspaceTemplate(
+          record.videoId,
+          sourceText,
+        );
         const pack = buildPunctuationPack(
           record.videoId,
           sourceText,
           template,
-          template.chunks.map((chunk) => sourceText.slice(chunk.sourceStart, chunk.sourceEnd))
+          template.chunks.map((chunk) =>
+            sourceText.slice(chunk.sourceStart, chunk.sourceEnd),
+          ),
         );
         const packFilename = `anonymised-${index + 1}.pack.private.json`;
-        await writeFile(join(root, packFilename), `${JSON.stringify(pack, null, 2)}\n`, "utf8");
+        await writeFile(
+          join(root, packFilename),
+          `${JSON.stringify(pack, null, 2)}\n`,
+          "utf8",
+        );
         completionRecords.push(completionRecord(record.videoId, packFilename));
       }
       const completion = {
         schemaVersion: 2 as const,
         sourceSnapshotId: manifest.sourceSnapshotId,
-        records: completionRecords
+        records: completionRecords,
       };
       return { root, manifest, completion, records };
     };
 
-    const successfulIds = ["ddddddddddd", "eeeeeeeeeee", "fffffffffff"] as const;
+    const successfulIds = [
+      "ddddddddddd",
+      "eeeeeeeeeee",
+      "fffffffffff",
+    ] as const;
     const successful = await createFixture(successfulIds, 991_000);
-    const successfulSourceIds = successful.records.slice(1).map((record) => record.sourceWordPressId);
+    const successfulSourceIds = successful.records
+      .slice(1)
+      .map((record) => record.sourceWordPressId);
     try {
       const first = await runPhase3b2PunctuationCompletion(
         pool,
         successful.root,
         successful.manifest,
-        successful.completion
+        successful.completion,
       );
       expect(first).toHaveLength(2);
-      expect(first.every((outcome) => outcome.importedOutcome === "imported_as_draft" && outcome.failure === null))
-        .toBe(true);
-      expect(first.every((outcome) => outcome.uncertaintyMarkerCount > 0)).toBe(true);
+      expect(
+        first.every(
+          (outcome) =>
+            outcome.importedOutcome === "imported_as_draft" &&
+            outcome.failure === null,
+        ),
+      ).toBe(true);
+      expect(first.every((outcome) => outcome.uncertaintyMarkerCount > 0)).toBe(
+        true,
+      );
 
       const second = await runPhase3b2PunctuationCompletion(
         pool,
         successful.root,
         successful.manifest,
-        successful.completion
+        successful.completion,
       );
-      expect(second.every((outcome) => outcome.importedOutcome === "unchanged" && outcome.failure === null))
-        .toBe(true);
+      expect(
+        second.every(
+          (outcome) =>
+            outcome.importedOutcome === "unchanged" && outcome.failure === null,
+        ),
+      ).toBe(true);
 
       const retained = await pool.query<{
         records: number;
@@ -1834,7 +2911,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
              WHERE s.source_wordpress_id = ANY($1::bigint[]) AND source.caption_language = 'en-AU') AS language_records,
            (SELECT count(*)::integer FROM sermon_enrichment_sources source JOIN sermons s ON s.id = source.sermon_id
              WHERE s.source_wordpress_id = ANY($1::bigint[]) AND source.caption_track_type = 'unknown') AS track_type_records`,
-        [successfulSourceIds]
+        [successfulSourceIds],
       );
       expect(retained.rows[0]).toEqual({
         records: 2,
@@ -1846,26 +2923,30 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         unresolved_records: 2,
         warning_records: 2,
         language_records: 2,
-        track_type_records: 2
+        track_type_records: 2,
       });
 
-      await expect(verifyPhase3b2PunctuationCompletion(
-        pool,
-        successful.root,
-        successful.manifest,
-        successful.completion
-      )).resolves.toMatchObject({
+      await expect(
+        verifyPhase3b2PunctuationCompletion(
+          pool,
+          successful.root,
+          successful.manifest,
+          successful.completion,
+        ),
+      ).resolves.toMatchObject({
         authorisedRecordCount: 2,
         idempotentRerunCount: 2,
         everySermonDraft: true,
         publicRoutesIsolated: true,
-        historicalReadinessIsolated: true
+        historicalReadinessIsolated: true,
       });
 
       const invalidStates = [
         {
-          apply: "UPDATE sermons SET status = 'published', published_at = now() WHERE source_wordpress_id = $1",
-          restore: "UPDATE sermons SET status = 'draft', published_at = NULL WHERE source_wordpress_id = $1"
+          apply:
+            "UPDATE sermons SET status = 'published', published_at = now() WHERE source_wordpress_id = $1",
+          restore:
+            "UPDATE sermons SET status = 'draft', published_at = NULL WHERE source_wordpress_id = $1",
         },
         {
           apply: `UPDATE sermons SET summary_status = 'approved', summary_reviewed_by_subject = 'local-admin-0001',
@@ -1873,7 +2954,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
                   WHERE source_wordpress_id = $1`,
           restore: `UPDATE sermons SET summary_status = 'draft', summary_reviewed_by_subject = NULL,
                     summary_approved_by_subject = NULL, summary_reviewed_at = NULL, summary_approved_at = NULL
-                  WHERE source_wordpress_id = $1`
+                  WHERE source_wordpress_id = $1`,
         },
         {
           apply: `UPDATE sermon_question_answers SET status = 'approved', reviewed_by_subject = 'local-admin-0001',
@@ -1881,22 +2962,26 @@ integration("disposable PostgreSQL Phase 3B application", () => {
                   WHERE sermon_id = (SELECT id FROM sermons WHERE source_wordpress_id = $1)`,
           restore: `UPDATE sermon_question_answers SET status = 'draft', reviewed_by_subject = NULL,
                     approved_by_subject = NULL, reviewed_at = NULL, approved_at = NULL
-                  WHERE sermon_id = (SELECT id FROM sermons WHERE source_wordpress_id = $1)`
+                  WHERE sermon_id = (SELECT id FROM sermons WHERE source_wordpress_id = $1)`,
         },
         {
-          apply: "UPDATE sermons SET source_status = 'unexpected_source' WHERE source_wordpress_id = $1",
-          restore: "UPDATE sermons SET source_status = 'phase3b2_pilot' WHERE source_wordpress_id = $1"
-        }
+          apply:
+            "UPDATE sermons SET source_status = 'unexpected_source' WHERE source_wordpress_id = $1",
+          restore:
+            "UPDATE sermons SET source_status = 'phase3b2_pilot' WHERE source_wordpress_id = $1",
+        },
       ];
       for (const state of invalidStates) {
         await pool.query(state.apply, [successfulSourceIds[0]]);
         try {
-          await expect(verifyPhase3b2PunctuationCompletion(
-            pool,
-            successful.root,
-            successful.manifest,
-            successful.completion
-          )).rejects.toMatchObject({ code: "database_verification_failure" });
+          await expect(
+            verifyPhase3b2PunctuationCompletion(
+              pool,
+              successful.root,
+              successful.manifest,
+              successful.completion,
+            ),
+          ).rejects.toMatchObject({ code: "database_verification_failure" });
         } finally {
           await pool.query(state.restore, [successfulSourceIds[0]]);
         }
@@ -1909,145 +2994,179 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         `SELECT s.summary, source.caption_language
          FROM sermons s JOIN sermon_enrichment_sources source ON source.sermon_id = s.id
          WHERE s.source_wordpress_id = $1`,
-        [successfulSourceIds[0]]
+        [successfulSourceIds[0]],
       );
       const originalStored = originalStoredValues.rows[0]!;
       await pool.query(
         "UPDATE sermons SET summary = summary || ' An anonymised verifier mutation.' WHERE source_wordpress_id = $1",
-        [successfulSourceIds[0]]
+        [successfulSourceIds[0]],
       );
       try {
-        await expect(verifyPhase3b2PunctuationCompletion(
-          pool,
-          successful.root,
-          successful.manifest,
-          successful.completion
-        )).rejects.toMatchObject({ code: "database_verification_failure" });
+        await expect(
+          verifyPhase3b2PunctuationCompletion(
+            pool,
+            successful.root,
+            successful.manifest,
+            successful.completion,
+          ),
+        ).rejects.toMatchObject({ code: "database_verification_failure" });
       } finally {
         await pool.query(
           "UPDATE sermons SET summary = $2 WHERE source_wordpress_id = $1",
-          [successfulSourceIds[0], originalStored.summary]
+          [successfulSourceIds[0], originalStored.summary],
         );
       }
       await pool.query(
         `UPDATE sermon_enrichment_sources SET caption_language = 'en'
          WHERE sermon_id = (SELECT id FROM sermons WHERE source_wordpress_id = $1)`,
-        [successfulSourceIds[0]]
+        [successfulSourceIds[0]],
       );
       try {
-        await expect(verifyPhase3b2PunctuationCompletion(
-          pool,
-          successful.root,
-          successful.manifest,
-          successful.completion
-        )).rejects.toMatchObject({ code: "database_verification_failure" });
+        await expect(
+          verifyPhase3b2PunctuationCompletion(
+            pool,
+            successful.root,
+            successful.manifest,
+            successful.completion,
+          ),
+        ).rejects.toMatchObject({ code: "database_verification_failure" });
       } finally {
         await pool.query(
           `UPDATE sermon_enrichment_sources SET caption_language = $2
            WHERE sermon_id = (SELECT id FROM sermons WHERE source_wordpress_id = $1)`,
-          [successfulSourceIds[0], originalStored.caption_language]
+          [successfulSourceIds[0], originalStored.caption_language],
         );
       }
 
-      const fixtureProvenance = await pool.query<{ processing_version: string }>(
+      const fixtureProvenance = await pool.query<{
+        processing_version: string;
+      }>(
         `SELECT source.processing_version FROM sermon_enrichment_sources source
-         JOIN sermons s ON s.id = source.sermon_id WHERE s.source_wordpress_id = 9003`
+         JOIN sermons s ON s.id = source.sermon_id WHERE s.source_wordpress_id = 9003`,
       );
       if (fixtureProvenance.rows[0]) {
         await pool.query(
           `UPDATE sermon_enrichment_sources SET processing_version = $1
            WHERE sermon_id = (SELECT id FROM sermons WHERE source_wordpress_id = 9003)`,
-          [phase3b2PunctuationProcessingVersion]
+          [phase3b2PunctuationProcessingVersion],
         );
         try {
-          await expect(verifyPhase3b2PunctuationCompletion(
-            pool,
-            successful.root,
-            successful.manifest,
-            successful.completion
-          )).rejects.toMatchObject({ code: "database_verification_failure" });
+          await expect(
+            verifyPhase3b2PunctuationCompletion(
+              pool,
+              successful.root,
+              successful.manifest,
+              successful.completion,
+            ),
+          ).rejects.toMatchObject({ code: "database_verification_failure" });
         } finally {
           await pool.query(
             `UPDATE sermon_enrichment_sources SET processing_version = $1
              WHERE sermon_id = (SELECT id FROM sermons WHERE source_wordpress_id = 9003)`,
-            [fixtureProvenance.rows[0].processing_version]
+            [fixtureProvenance.rows[0].processing_version],
           );
         }
       }
 
       const failedIds = ["ggggggggggg", "hhhhhhhhhhh", "iiiiiiiiiii"] as const;
       const failed = await createFixture(failedIds, 992_000);
-      const firstPackPath = join(failed.root, failed.completion.records[0]!.punctuationPackFilename);
+      const firstPackPath = join(
+        failed.root,
+        failed.completion.records[0]!.punctuationPackFilename,
+      );
       const firstPack = JSON.parse(await readFile(firstPackPath, "utf8")) as {
         chunks: Array<{ cleanedText: string; cleanedOutputSha256: string }>;
       };
-      firstPack.chunks[0]!.cleanedText = firstPack.chunks[0]!.cleanedText.replace(
-        /anonymised/i,
-        "substituted"
-      );
+      firstPack.chunks[0]!.cleanedText =
+        firstPack.chunks[0]!.cleanedText.replace(/anonymised/i, "substituted");
       firstPack.chunks[0]!.cleanedOutputSha256 = createHash("sha256")
         .update(firstPack.chunks[0]!.cleanedText, "utf8")
         .digest("hex");
-      await writeFile(firstPackPath, `${JSON.stringify(firstPack, null, 2)}\n`, "utf8");
+      await writeFile(
+        firstPackPath,
+        `${JSON.stringify(firstPack, null, 2)}\n`,
+        "utf8",
+      );
       const failedOutcomes = await runPhase3b2PunctuationCompletion(
         pool,
         failed.root,
         failed.manifest,
-        failed.completion
+        failed.completion,
       );
       expect(failedOutcomes.map((outcome) => outcome.failure?.code)).toEqual([
         "lexical_preservation_failure",
-        "not_attempted_prior_failure"
+        "not_attempted_prior_failure",
       ]);
-      expect((await pool.query<{ count: number }>(
-        "SELECT count(*)::integer AS count FROM sermons WHERE source_wordpress_id = ANY($1::bigint[])",
-        [failed.records.slice(1).map((record) => record.sourceWordPressId)]
-      )).rows[0]?.count).toBe(0);
+      expect(
+        (
+          await pool.query<{ count: number }>(
+            "SELECT count(*)::integer AS count FROM sermons WHERE source_wordpress_id = ANY($1::bigint[])",
+            [failed.records.slice(1).map((record) => record.sourceWordPressId)],
+          )
+        ).rows[0]?.count,
+      ).toBe(0);
     } finally {
       await pool.query(
         "DELETE FROM migration_records WHERE source_system = 'phase3b2_pilot' AND source_id = ANY($1::text[])",
-        [successfulSourceIds.map(String)]
+        [successfulSourceIds.map(String)],
       );
-      await pool.query("DELETE FROM sermons WHERE source_wordpress_id = ANY($1::bigint[])", [successfulSourceIds]);
+      await pool.query(
+        "DELETE FROM sermons WHERE source_wordpress_id = ANY($1::bigint[])",
+        [successfulSourceIds],
+      );
       await pool.query(
         `DELETE FROM migration_runs run WHERE migration_version = 'phase3b2-pilot-v1'
-         AND NOT EXISTS (SELECT 1 FROM migration_records record WHERE record.migration_run_id = run.id)`
+         AND NOT EXISTS (SELECT 1 FROM migration_records record WHERE record.migration_run_id = run.id)`,
       );
-      await Promise.all(roots.map((root) => rm(root, { recursive: true, force: true })));
+      await Promise.all(
+        roots.map((root) => rm(root, { recursive: true, force: true })),
+      );
     }
   });
 
   it("restores exact 42/44 atomic findings and fails closed on missing, extra, stale, or sibling state", async () => {
     const manifest = anonymisedAtomicManifest();
-    const targetIds = manifest.records.map((record) => record.draftBundle.targetSermonId);
-    const sourceIds = manifest.records.map((record) => String(record.draftBundle.sourceWordPressId));
+    const targetIds = manifest.records.map(
+      (record) => record.draftBundle.targetSermonId,
+    );
+    const sourceIds = manifest.records.map((record) =>
+      String(record.draftBundle.sourceWordPressId),
+    );
     const root = await mkdtemp(join(tmpdir(), "sgbc-atomic-review-"));
     const preparedRoot = join(root, "prepared-private");
     const repository = new PostgresAdminSermonRepository(pool);
-    const service = new AdminSermonService(repository, () => new Date("2026-08-07T00:00:00.000Z"));
-    const admin = { subject: "local-admin-0001", role: "admin" } satisfies ApplicationIdentity;
+    const service = new AdminSermonService(
+      repository,
+      () => new Date("2026-08-07T00:00:00.000Z"),
+    );
+    const admin = {
+      subject: "local-admin-0001",
+      role: "admin",
+    } satisfies ApplicationIdentity;
     try {
       const imported = await importPhase3b2AtomicReviewManifest(pool, manifest);
       expect(imported).toEqual({
         contentOutcomes: ["imported_as_draft", "imported_as_draft"],
         atomicOutcomes: ["imported_atomic_items", "imported_atomic_items"],
-        totalItemCount: 86
+        totalItemCount: 86,
       });
-      await expect(verifyPhase3b2AtomicReviewManifest(pool, manifest)).resolves.toEqual({
+      await expect(
+        verifyPhase3b2AtomicReviewManifest(pool, manifest),
+      ).resolves.toEqual({
         recordCounts: [42, 44],
         totalItemCount: 86,
         pendingItemCount: 86,
         decisionCount: 0,
         approvalCount: 0,
         publicSearchCharacters: 0,
-        exactIdentitySets: true
+        exactIdentitySets: true,
       });
 
       const rerun = await importPhase3b2AtomicReviewManifest(pool, manifest);
       expect(rerun).toEqual({
         contentOutcomes: ["unchanged", "unchanged"],
         atomicOutcomes: ["unchanged", "unchanged"],
-        totalItemCount: 86
+        totalItemCount: 86,
       });
 
       await mkdir(preparedRoot);
@@ -2059,74 +3178,114 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         questionAnswers: record.draftBundle.questionAnswers.map((item) => ({
           question: item.question,
           answer: item.answer,
-          supportingParagraphs: [1]
+          supportingParagraphs: [1],
         })),
         possibleCaptionErrors: record.reviewItems
           .filter((item) => item.category === "caption_error")
-          .map((item) => ({ detail: item.detail, supportingParagraphs: item.supportingParagraphs })),
+          .map((item) => ({
+            detail: item.detail,
+            supportingParagraphs: item.supportingParagraphs,
+          })),
         apparentNamesAndScriptureReferences: record.reviewItems
           .filter((item) => item.category === "name_or_scripture_reference")
-          .map((item) => ({ detail: item.detail, supportingParagraphs: item.supportingParagraphs }))
+          .map((item) => ({
+            detail: item.detail,
+            supportingParagraphs: item.supportingParagraphs,
+          })),
       }));
       for (const record of manifest.records) {
         const videoId = record.draftBundle.sourceProvenance.videoId;
         await writeFile(
           join(preparedRoot, `${videoId}.phase3b2b-v2.private.json`),
           `${JSON.stringify(record.draftBundle, null, 2)}\n`,
-          "utf8"
+          "utf8",
         );
         await writeFile(
           join(preparedRoot, `${videoId}.phase3b2b-v2.review.private.json`),
-          `${JSON.stringify({
-            schemaVersion: 2,
-            recordKey: record.recordKey,
-            tokenSequenceComparison: {
-              sourceSha256: record.transcriptEvidence.sourceTokenSequenceSha256,
-              cleanedSha256: record.transcriptEvidence.cleanedTokenSequenceSha256,
-              match: true
+          `${JSON.stringify(
+            {
+              schemaVersion: 2,
+              recordKey: record.recordKey,
+              tokenSequenceComparison: {
+                sourceSha256:
+                  record.transcriptEvidence.sourceTokenSequenceSha256,
+                cleanedSha256:
+                  record.transcriptEvidence.cleanedTokenSequenceSha256,
+                match: true,
+              },
+              preservation: {
+                zeroAddedRemovedSubstitutedDuplicatedOrReorderedTokens: true,
+                whitespaceBoundariesPreserved: true,
+                sourceSegmentsCompleteAndUnique: true,
+                chunkReassemblyComplete: true,
+                sourceTokenCount: record.transcriptEvidence.sourceTokenCount,
+                cleanedTokenCount: record.transcriptEvidence.cleanedTokenCount,
+              },
+              possibleCaptionErrors: completionRecords.find(
+                (item) => item.videoId === videoId,
+              )!.possibleCaptionErrors,
+              apparentNamesAndScriptureReferences: completionRecords.find(
+                (item) => item.videoId === videoId,
+              )!.apparentNamesAndScriptureReferences,
             },
-            preservation: {
-              zeroAddedRemovedSubstitutedDuplicatedOrReorderedTokens: true,
-              whitespaceBoundariesPreserved: true,
-              sourceSegmentsCompleteAndUnique: true,
-              chunkReassemblyComplete: true,
-              sourceTokenCount: record.transcriptEvidence.sourceTokenCount,
-              cleanedTokenCount: record.transcriptEvidence.cleanedTokenCount
-            },
-            possibleCaptionErrors: completionRecords.find((item) => item.videoId === videoId)!
-              .possibleCaptionErrors,
-            apparentNamesAndScriptureReferences: completionRecords.find((item) => item.videoId === videoId)!
-              .apparentNamesAndScriptureReferences
-          }, null, 2)}\n`,
-          "utf8"
+            null,
+            2,
+          )}\n`,
+          "utf8",
         );
       }
       const completionPath = join(root, "completion.private.json");
-      await writeFile(completionPath, `${JSON.stringify({
-        schemaVersion: 2,
-        sourceSnapshotId: manifest.sourceSnapshotId,
-        records: completionRecords
-      }, null, 2)}\n`, "utf8");
-      await expect(assemblePhase3b2AtomicReviewManifest(
-        pool,
+      await writeFile(
         completionPath,
-        "atomic-completion.private.json"
-      )).resolves.toEqual({ persistence: "created", recordCounts: [42, 44], totalItemCount: 86 });
-      await expect(assemblePhase3b2AtomicReviewManifest(
-        pool,
-        completionPath,
-        "atomic-completion.private.json"
-      )).resolves.toEqual({ persistence: "unchanged", recordCounts: [42, 44], totalItemCount: 86 });
+        `${JSON.stringify(
+          {
+            schemaVersion: 2,
+            sourceSnapshotId: manifest.sourceSnapshotId,
+            records: completionRecords,
+          },
+          null,
+          2,
+        )}\n`,
+        "utf8",
+      );
+      await expect(
+        assemblePhase3b2AtomicReviewManifest(
+          pool,
+          completionPath,
+          "atomic-completion.private.json",
+        ),
+      ).resolves.toEqual({
+        persistence: "created",
+        recordCounts: [42, 44],
+        totalItemCount: 86,
+      });
+      await expect(
+        assemblePhase3b2AtomicReviewManifest(
+          pool,
+          completionPath,
+          "atomic-completion.private.json",
+        ),
+      ).resolves.toEqual({
+        persistence: "unchanged",
+        recordCounts: [42, 44],
+        totalItemCount: 86,
+      });
 
       const firstRecord = manifest.records[0]!;
       const removed = firstRecord.reviewItems.at(-1)!;
-      await pool.query("DELETE FROM sermon_enrichment_review_items WHERE id = $1", [removed.id]);
-      const missing = await service.enrichmentReviewDetail(firstRecord.draftBundle.targetSermonId, admin);
+      await pool.query(
+        "DELETE FROM sermon_enrichment_review_items WHERE id = $1",
+        [removed.id],
+      );
+      const missing = await service.enrichmentReviewDetail(
+        firstRecord.draftBundle.targetSermonId,
+        admin,
+      );
       expect(missing.progress).toMatchObject({
         totalItemCount: 42,
         presentItemCount: 41,
         itemSetMatches: false,
-        canFinish: false
+        canFinish: false,
       });
       await pool.query(
         `INSERT INTO sermon_enrichment_review_items (
@@ -2150,8 +3309,8 @@ integration("disposable PostgreSQL Phase 3B application", () => {
           removed.categoryOrdinal,
           removed.detail,
           removed.supportingParagraphs,
-          removed.sourceTranscriptSha256
-        ]
+          removed.sourceTranscriptSha256,
+        ],
       );
 
       await pool.query(
@@ -2160,40 +3319,54 @@ integration("disposable PostgreSQL Phase 3B application", () => {
            transcript_row_version
          ) VALUES ($1, 'unexpected-aggregate', 'caption_error', 99,
            'Unexpected aggregate', 'Anonymised unexpected aggregate.', $2)`,
-        [firstRecord.draftBundle.targetSermonId, firstRecord.transcriptEvidence.expectedRowVersion]
-      );
-      const extra = await service.enrichmentReviewDetail(firstRecord.draftBundle.targetSermonId, admin);
-      expect(extra.progress).toMatchObject({ presentItemCount: 43, itemSetMatches: false, canFinish: false });
-      expect(await repository.transaction((transaction) =>
-        transaction.hasBlockingEnrichmentReviewItems(
+        [
           firstRecord.draftBundle.targetSermonId,
-          firstRecord.transcriptEvidence.expectedRowVersion
-        )
-      )).toBe(true);
+          firstRecord.transcriptEvidence.expectedRowVersion,
+        ],
+      );
+      const extra = await service.enrichmentReviewDetail(
+        firstRecord.draftBundle.targetSermonId,
+        admin,
+      );
+      expect(extra.progress).toMatchObject({
+        presentItemCount: 43,
+        itemSetMatches: false,
+        canFinish: false,
+      });
+      expect(
+        await repository.transaction((transaction) =>
+          transaction.hasBlockingEnrichmentReviewItems(
+            firstRecord.draftBundle.targetSermonId,
+            firstRecord.transcriptEvidence.expectedRowVersion,
+          ),
+        ),
+      ).toBe(true);
       await pool.query(
         "DELETE FROM sermon_enrichment_review_items WHERE sermon_id = $1 AND item_key = 'unexpected-aggregate'",
-        [firstRecord.draftBundle.targetSermonId]
+        [firstRecord.draftBundle.targetSermonId],
       );
 
       const staleItem = firstRecord.reviewItems[1]!;
       await pool.query(
         "UPDATE sermon_enrichment_review_items SET transcript_row_version = transcript_row_version + 1 WHERE id = $1",
-        [staleItem.id]
+        [staleItem.id],
       );
-      expect(await repository.transaction((transaction) =>
-        transaction.hasBlockingEnrichmentReviewItems(
-          firstRecord.draftBundle.targetSermonId,
-          firstRecord.transcriptEvidence.expectedRowVersion
-        )
-      )).toBe(true);
+      expect(
+        await repository.transaction((transaction) =>
+          transaction.hasBlockingEnrichmentReviewItems(
+            firstRecord.draftBundle.targetSermonId,
+            firstRecord.transcriptEvidence.expectedRowVersion,
+          ),
+        ),
+      ).toBe(true);
       await pool.query(
         "UPDATE sermon_enrichment_review_items SET transcript_row_version = $2 WHERE id = $1",
-        [staleItem.id, staleItem.expectedTranscriptRowVersion]
+        [staleItem.id, staleItem.expectedTranscriptRowVersion],
       );
 
       const beforeDecision = await service.enrichmentReviewDetail(
         firstRecord.draftBundle.targetSermonId,
-        admin
+        admin,
       );
       const decided = await service.decideEnrichmentReviewItem(
         firstRecord.draftBundle.targetSermonId,
@@ -2203,29 +3376,36 @@ integration("disposable PostgreSQL Phase 3B application", () => {
           sermonRowVersion: beforeDecision.sermon.rowVersion,
           reviewRowVersion: beforeDecision.review.rowVersion,
           itemRowVersion: beforeDecision.items[0]!.rowVersion,
-          transcriptRowVersion: beforeDecision.sermon.transcript!.rowVersion
+          transcriptRowVersion: beforeDecision.sermon.transcript!.rowVersion,
         }),
         admin,
-        "anonymised-atomic-single-decision"
+        "anonymised-atomic-single-decision",
       );
       expect(decided.progress).toMatchObject({
         resolvedItemCount: 1,
         unresolvedItemCount: 41,
         totalItemCount: 42,
         itemSetMatches: true,
-        canFinish: false
+        canFinish: false,
       });
-      expect(decided.items.filter((item) => item.decisionStatus === "pending")).toHaveLength(41);
+      expect(
+        decided.items.filter((item) => item.decisionStatus === "pending"),
+      ).toHaveLength(41);
     } finally {
-      await pool.query("DELETE FROM audit_events WHERE entity_id = ANY($1::uuid[])", [targetIds]);
+      await pool.query(
+        "DELETE FROM audit_events WHERE entity_id = ANY($1::uuid[])",
+        [targetIds],
+      );
       await pool.query(
         "DELETE FROM migration_records WHERE source_system = 'phase3b2_pilot' AND source_id = ANY($1::text[])",
-        [sourceIds]
+        [sourceIds],
       );
-      await pool.query("DELETE FROM sermons WHERE id = ANY($1::uuid[])", [targetIds]);
+      await pool.query("DELETE FROM sermons WHERE id = ANY($1::uuid[])", [
+        targetIds,
+      ]);
       await pool.query(
         `DELETE FROM migration_runs run WHERE migration_version = 'phase3b2-pilot-v1'
-         AND NOT EXISTS (SELECT 1 FROM migration_records record WHERE record.migration_run_id = run.id)`
+         AND NOT EXISTS (SELECT 1 FROM migration_records record WHERE record.migration_run_id = run.id)`,
       );
       await rm(root, { recursive: true, force: true });
     }
@@ -2233,8 +3413,13 @@ integration("disposable PostgreSQL Phase 3B application", () => {
 
   it("restores only the exact remaining pilot identity idempotently with a truthful zero-finding review", async () => {
     const root = await mkdtemp(join(tmpdir(), "remaining-pilot-restoration-"));
-    const service = new AdminSermonService(new PostgresAdminSermonRepository(pool));
-    const admin = { subject: "local-admin-0001", role: "admin" } satisfies ApplicationIdentity;
+    const service = new AdminSermonService(
+      new PostgresAdminSermonRepository(pool),
+    );
+    const admin = {
+      subject: "local-admin-0001",
+      role: "admin",
+    } satisfies ApplicationIdentity;
     const sourceWordPressId = 994_001;
     const sermonId = deterministicPilotUuid(remainingAuthorisedPilotVideoId);
     const otherVideoIds = ["restoretwo1", "restorethr1"];
@@ -2243,7 +3428,8 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       const captionFilename = "anonymised-remaining-caption.txt";
       const caption = Array.from(
         { length: 110 },
-        () => "The anonymised speaker explains a complete example and invites careful local review."
+        () =>
+          "The anonymised speaker explains a complete example and invites careful local review.",
       ).join(" ");
       await writeFile(join(root, captionFilename), caption, "utf8");
       const record = {
@@ -2256,47 +3442,60 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         title: "Anonymised remaining pilot",
         slug: "anonymised-remaining-pilot",
         serviceDate: "1970-01-01",
-        descriptionDraft: "This anonymised description remains a private draft and contains enough useful context for an administrator to review it explicitly later.",
+        descriptionDraft:
+          "This anonymised description remains a private draft and contains enough useful context for an administrator to review it explicitly later.",
         questionAnswers: Array.from({ length: 5 }, (_, index) => ({
           question: `What anonymised point is considered in example ${index + 1}?`,
-          answer: `The anonymised answer for example ${index + 1} remains private and requires explicit administrator review.`
-        }))
+          answer: `The anonymised answer for example ${index + 1} remains private and requires explicit administrator review.`,
+        })),
       };
       const manifest = {
         schemaVersion: 1 as const,
         sourceSnapshotId: "anonymised-remaining-restoration",
-        allowlistedVideoIds: [remainingAuthorisedPilotVideoId, ...otherVideoIds],
-        records: [record, ...otherVideoIds.map((videoId, index) => ({
-          videoId,
-          videoUrl: `https://www.youtube.com/watch?v=${videoId}`,
-          captionFilename: `unused-${index + 2}.txt`,
-          captionLanguage: "en-AU",
-          captionTrackType: "unknown" as const,
-          sourceWordPressId: sourceWordPressId + index + 1,
-          title: `Unused anonymised record ${index + 2}`,
-          slug: `unused-anonymised-record-${index + 2}`,
-          serviceDate: "1970-01-01",
-          descriptionDraft: null,
-          questionAnswers: []
-        }))]
+        allowlistedVideoIds: [
+          remainingAuthorisedPilotVideoId,
+          ...otherVideoIds,
+        ],
+        records: [
+          record,
+          ...otherVideoIds.map((videoId, index) => ({
+            videoId,
+            videoUrl: `https://www.youtube.com/watch?v=${videoId}`,
+            captionFilename: `unused-${index + 2}.txt`,
+            captionLanguage: "en-AU",
+            captionTrackType: "unknown" as const,
+            sourceWordPressId: sourceWordPressId + index + 1,
+            title: `Unused anonymised record ${index + 2}`,
+            slug: `unused-anonymised-record-${index + 2}`,
+            serviceDate: "1970-01-01",
+            descriptionDraft: null,
+            questionAnswers: [],
+          })),
+        ],
       };
 
       const first = await restoreRemainingPhase3b2Pilot(
         pool,
         root,
         manifest,
-        remainingAuthorisedPilotVideoId
+        remainingAuthorisedPilotVideoId,
       );
       const second = await restoreRemainingPhase3b2Pilot(
         pool,
         root,
         manifest,
-        remainingAuthorisedPilotVideoId
+        remainingAuthorisedPilotVideoId,
       );
       expect(first).toHaveLength(1);
-      expect(first[0]).toMatchObject({ importedOutcome: "imported_as_draft", questionAnswerCount: 5 });
+      expect(first[0]).toMatchObject({
+        importedOutcome: "imported_as_draft",
+        questionAnswerCount: 5,
+      });
       expect(second).toHaveLength(1);
-      expect(second[0]).toMatchObject({ importedOutcome: "unchanged", questionAnswerCount: 5 });
+      expect(second[0]).toMatchObject({
+        importedOutcome: "unchanged",
+        questionAnswerCount: 5,
+      });
 
       const state = await pool.query<{
         status: string;
@@ -2320,7 +3519,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
          JOIN sermon_transcripts transcript ON transcript.sermon_id = sermon.id
          JOIN sermon_enrichment_reviews review ON review.sermon_id = sermon.id
          WHERE sermon.id = $1`,
-        [sermonId]
+        [sermonId],
       );
       expect(state.rows[0]).toEqual({
         status: "draft",
@@ -2331,7 +3530,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         expected_item_count: 0,
         source_record_key: "authorised-record-1",
         identity_status: "pending",
-        completed_at: null
+        completed_at: null,
       });
       let zeroReview = await service.enrichmentReviewDetail(sermonId, admin);
       expect(zeroReview).toMatchObject({
@@ -2339,7 +3538,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         review: {
           identityStatus: "pending",
           emptyItemSetAcknowledgedAt: null,
-          emptyItemSetAcknowledgedBySubject: null
+          emptyItemSetAcknowledgedBySubject: null,
         },
         progress: {
           totalItemCount: 0,
@@ -2351,8 +3550,8 @@ integration("disposable PostgreSQL Phase 3B application", () => {
           reviewSetVerified: true,
           requiresEmptyItemSetAcknowledgement: true,
           stageCompletion: { identity: false, findings: false },
-          canFinish: false
-        }
+          canFinish: false,
+        },
       });
 
       const identified = await service.update(
@@ -2360,10 +3559,10 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         updateSermonInputSchema.parse({
           rowVersion: zeroReview.sermon.rowVersion,
           speakerId: savingGraceSpeakers[0]!.id,
-          serviceDate: "2026-08-05"
+          serviceDate: "2026-08-05",
         }),
         admin,
-        "zero-review-identity-save"
+        "zero-review-identity-save",
       );
       zeroReview = await service.enrichmentReviewDetail(sermonId, admin);
       zeroReview = await service.updateEnrichmentReviewProgress(
@@ -2372,29 +3571,34 @@ integration("disposable PostgreSQL Phase 3B application", () => {
           sermonRowVersion: identified.rowVersion,
           reviewRowVersion: zeroReview.review.rowVersion,
           currentStage: 2,
-          identityStatus: "confirmed"
+          identityStatus: "confirmed",
         }),
         admin,
-        "zero-review-identity-confirm"
+        "zero-review-identity-confirm",
       );
-      expect(zeroReview.progress.stageCompletion).toMatchObject({ identity: true, findings: false });
-      await expect(service.updateEnrichmentReviewProgress(
-        sermonId,
-        enrichmentReviewProgressInputSchema.parse({
-          sermonRowVersion: zeroReview.sermon.rowVersion,
-          reviewRowVersion: zeroReview.review.rowVersion,
-          currentStage: 3
-        }),
-        admin,
-        "zero-review-skip-attempt"
-      )).rejects.toMatchObject({ status: 400, code: "invalid_request" });
+      expect(zeroReview.progress.stageCompletion).toMatchObject({
+        identity: true,
+        findings: false,
+      });
+      await expect(
+        service.updateEnrichmentReviewProgress(
+          sermonId,
+          enrichmentReviewProgressInputSchema.parse({
+            sermonRowVersion: zeroReview.sermon.rowVersion,
+            reviewRowVersion: zeroReview.review.rowVersion,
+            currentStage: 3,
+          }),
+          admin,
+          "zero-review-skip-attempt",
+        ),
+      ).rejects.toMatchObject({ status: 400, code: "invalid_request" });
 
       await pool.query(
         `UPDATE sermon_enrichment_reviews
          SET expected_transcript_row_version = expected_transcript_row_version + 1,
              row_version = row_version + 1
          WHERE sermon_id = $1`,
-        [sermonId]
+        [sermonId],
       );
       zeroReview = await service.enrichmentReviewDetail(sermonId, admin);
       expect(zeroReview.progress).toMatchObject({
@@ -2402,24 +3606,26 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         transcriptMatchesExpected: false,
         reviewSetVerified: false,
         requiresEmptyItemSetAcknowledgement: false,
-        stageCompletion: { findings: false }
+        stageCompletion: { findings: false },
       });
-      await expect(service.acknowledgeEmptyEnrichmentReviewItems(
-        sermonId,
-        acknowledgeEmptyEnrichmentReviewInputSchema.parse({
-          sermonRowVersion: zeroReview.sermon.rowVersion,
-          reviewRowVersion: zeroReview.review.rowVersion,
-          transcriptRowVersion: zeroReview.sermon.transcript!.rowVersion
-        }),
-        admin,
-        "zero-review-mismatch-acknowledgement"
-      )).rejects.toMatchObject({ status: 409, code: "stale_write" });
+      await expect(
+        service.acknowledgeEmptyEnrichmentReviewItems(
+          sermonId,
+          acknowledgeEmptyEnrichmentReviewInputSchema.parse({
+            sermonRowVersion: zeroReview.sermon.rowVersion,
+            reviewRowVersion: zeroReview.review.rowVersion,
+            transcriptRowVersion: zeroReview.sermon.transcript!.rowVersion,
+          }),
+          admin,
+          "zero-review-mismatch-acknowledgement",
+        ),
+      ).rejects.toMatchObject({ status: 409, code: "stale_write" });
       await pool.query(
         `UPDATE sermon_enrichment_reviews
          SET expected_transcript_row_version = $2,
              row_version = row_version + 1
          WHERE sermon_id = $1`,
-        [sermonId, zeroReview.sermon.transcript!.rowVersion]
+        [sermonId, zeroReview.sermon.transcript!.rowVersion],
       );
       zeroReview = await service.enrichmentReviewDetail(sermonId, admin);
 
@@ -2431,19 +3637,21 @@ integration("disposable PostgreSQL Phase 3B application", () => {
             bodyText: zeroReview.sermon.transcript!.bodyText,
             status: "in_review",
             sourceKind: zeroReview.sermon.transcript!.sourceKind,
-            sourceReference: zeroReview.sermon.transcript!.sourceReference
-          }
+            sourceReference: zeroReview.sermon.transcript!.sourceReference,
+          },
         }),
         admin,
-        "zero-review-status-only-transcript"
+        "zero-review-status-only-transcript",
       );
       zeroReview = await service.enrichmentReviewDetail(sermonId, admin);
-      expect(zeroReview.sermon.rowVersion).toBe(statusOnlyTranscript.rowVersion);
+      expect(zeroReview.sermon.rowVersion).toBe(
+        statusOnlyTranscript.rowVersion,
+      );
       expect(zeroReview.progress).toMatchObject({
         unresolvedItemCount: 0,
         transcriptMatchesExpected: true,
         reviewSetVerified: true,
-        requiresEmptyItemSetAcknowledgement: true
+        requiresEmptyItemSetAcknowledgement: true,
       });
 
       zeroReview = await service.acknowledgeEmptyEnrichmentReviewItems(
@@ -2451,17 +3659,17 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         acknowledgeEmptyEnrichmentReviewInputSchema.parse({
           sermonRowVersion: zeroReview.sermon.rowVersion,
           reviewRowVersion: zeroReview.review.rowVersion,
-          transcriptRowVersion: zeroReview.sermon.transcript!.rowVersion
+          transcriptRowVersion: zeroReview.sermon.transcript!.rowVersion,
         }),
         admin,
-        "zero-review-explicit-acknowledgement"
+        "zero-review-explicit-acknowledgement",
       );
       expect(zeroReview).toMatchObject({
         items: [],
         review: {
           currentStage: 3,
           emptyItemSetAcknowledgedBySubject: admin.subject,
-          emptyItemSetAcknowledgedAt: expect.any(String)
+          emptyItemSetAcknowledgedAt: expect.any(String),
         },
         progress: {
           unresolvedItemCount: 0,
@@ -2472,83 +3680,106 @@ integration("disposable PostgreSQL Phase 3B application", () => {
             transcript: false,
             description: false,
             questionAnswers: false,
-            final: false
+            final: false,
           },
           completedStageCount: 2,
           percentReviewed: 33,
-          canFinish: false
-        }
+          canFinish: false,
+        },
       });
-      expect((await service.listAudit(sermonId, admin)).filter(
-        (event) => event.action === "sermon.enrichment_zero_findings_acknowledged"
-      )).toHaveLength(1);
-      await expect(service.acknowledgeEmptyEnrichmentReviewItems(
-        sermonId,
-        acknowledgeEmptyEnrichmentReviewInputSchema.parse({
-          sermonRowVersion: zeroReview.sermon.rowVersion,
-          reviewRowVersion: zeroReview.review.rowVersion,
-          transcriptRowVersion: zeroReview.sermon.transcript!.rowVersion
-        }),
-        admin,
-        "zero-review-duplicate-acknowledgement"
-      )).rejects.toMatchObject({ status: 409, code: "stale_write" });
-      expect(await new PostgresSermonRepository(pool).findPublishedBySlug(record.slug)).toBeNull();
+      expect(
+        (await service.listAudit(sermonId, admin)).filter(
+          (event) =>
+            event.action === "sermon.enrichment_zero_findings_acknowledged",
+        ),
+      ).toHaveLength(1);
+      await expect(
+        service.acknowledgeEmptyEnrichmentReviewItems(
+          sermonId,
+          acknowledgeEmptyEnrichmentReviewInputSchema.parse({
+            sermonRowVersion: zeroReview.sermon.rowVersion,
+            reviewRowVersion: zeroReview.review.rowVersion,
+            transcriptRowVersion: zeroReview.sermon.transcript!.rowVersion,
+          }),
+          admin,
+          "zero-review-duplicate-acknowledgement",
+        ),
+      ).rejects.toMatchObject({ status: 409, code: "stale_write" });
+      expect(
+        await new PostgresSermonRepository(pool).findPublishedBySlug(
+          record.slug,
+        ),
+      ).toBeNull();
     } finally {
-      await pool.query("DELETE FROM audit_events WHERE entity_id = $1", [sermonId]);
+      await pool.query("DELETE FROM audit_events WHERE entity_id = $1", [
+        sermonId,
+      ]);
       await pool.query(
         "DELETE FROM migration_records WHERE source_system = 'phase3b2_pilot' AND source_id = $1",
-        [String(sourceWordPressId)]
+        [String(sourceWordPressId)],
       );
       await pool.query("DELETE FROM sermons WHERE id = $1", [sermonId]);
       await pool.query(
         `DELETE FROM migration_runs run WHERE migration_version = 'phase3b2-pilot-v1'
-         AND NOT EXISTS (SELECT 1 FROM migration_records record WHERE record.migration_run_id = run.id)`
+         AND NOT EXISTS (SELECT 1 FROM migration_records record WHERE record.migration_run_id = run.id)`,
       );
       await rm(root, { recursive: true, force: true });
     }
   });
 
   it("guides an explicit private enrichment review with concurrency, audit, and reopen safeguards", async () => {
-    const admin = { subject: "local-admin-0001", role: "admin" } satisfies ApplicationIdentity;
+    const admin = {
+      subject: "local-admin-0001",
+      role: "admin",
+    } satisfies ApplicationIdentity;
     const repository = new PostgresAdminSermonRepository(pool);
     const publicRepository = new PostgresSermonRepository(pool);
-    const service = new AdminSermonService(repository, () => new Date("2026-08-05T00:00:00.000Z"));
+    const service = new AdminSermonService(
+      repository,
+      () => new Date("2026-08-05T00:00:00.000Z"),
+    );
     let sermonId: string | null = null;
     try {
       const speakerId = (
-        await pool.query<{ id: string }>("SELECT id FROM speakers ORDER BY id LIMIT 1")
+        await pool.query<{ id: string }>(
+          "SELECT id FROM speakers ORDER BY id LIMIT 1",
+        )
       ).rows[0]!.id;
       const created = await service.create(
         createSermonInputSchema.parse({
           title: "Anonymised guided review",
           slug: "anonymised-guided-review",
           serviceDate: "1970-01-01",
-          summary: "This private draft description explains an anonymised sermon and remains unavailable to public visitors until reviewed.",
+          summary:
+            "This private draft description explains an anonymised sermon and remains unavailable to public visitors until reviewed.",
           summaryStatus: "draft",
           summarySourceKind: "generated_draft",
           transcript: {
-            bodyText: "Opening context includes mistaken caption wording for review. The remainder is anonymised local fixture text.",
+            bodyText:
+              "Opening context includes mistaken caption wording for review. The remainder is anonymised local fixture text.",
             status: "draft",
             sourceKind: "caption",
-            sourceReference: null
+            sourceReference: null,
           },
           questionAnswers: Array.from({ length: 5 }, (_, index) => ({
             question: `What anonymised point is reviewed in question ${index + 1}?`,
             answer: `This private fixture answer explains anonymised point ${index + 1} without real sermon content.`,
             status: "draft",
             sourceKind: "generated_draft",
-            sourceReference: null
+            sourceReference: null,
           })),
-          media: [{
-            provider: "youtube",
-            mediaType: "video",
-            externalId: "review00001",
-            canonicalUrl: "https://www.youtube.com/watch?v=review00001",
-            title: "Anonymised controlled video"
-          }]
+          media: [
+            {
+              provider: "youtube",
+              mediaType: "video",
+              externalId: "review00001",
+              canonicalUrl: "https://www.youtube.com/watch?v=review00001",
+              title: "Anonymised controlled video",
+            },
+          ],
         }),
         admin,
-        "guided-review-create"
+        "guided-review-create",
       );
       sermonId = created.id;
       await pool.query(
@@ -2571,38 +3802,52 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         [
           sermonId,
           "a".repeat(64),
-          JSON.stringify([{
-            code: "names_and_scripture_references_require_verification",
-            safeDetail: "Verify anonymised names and scripture references."
-          }]),
-          JSON.stringify([{
-            marker: "mistaken caption wording",
-            safeReason: "Check the anonymised caption phrase."
-          }])
-        ]
+          JSON.stringify([
+            {
+              code: "names_and_scripture_references_require_verification",
+              safeDetail: "Verify anonymised names and scripture references.",
+            },
+          ]),
+          JSON.stringify([
+            {
+              marker: "mistaken caption wording",
+              safeReason: "Check the anonymised caption phrase.",
+            },
+          ]),
+        ],
       );
 
-      const transcriptState = await pool.query<{ body_text: string; row_version: number }>(
+      const transcriptState = await pool.query<{
+        body_text: string;
+        row_version: number;
+      }>(
         "SELECT body_text, row_version FROM sermon_transcripts WHERE sermon_id = $1",
-        [sermonId]
+        [sermonId],
       );
       const transcriptBody = transcriptState.rows[0]!.body_text;
       const transcriptRowVersion = transcriptState.rows[0]!.row_version;
-      const transcriptSha256 = createHash("sha256").update(transcriptBody, "utf8").digest("hex");
+      const transcriptSha256 = createHash("sha256")
+        .update(transcriptBody, "utf8")
+        .digest("hex");
       const atomicItems = buildAtomicReviewItems({
         sourceRecordKey: "authorised-record-2",
         transcriptSermonId: sermonId,
         sourceTranscriptSha256: transcriptSha256,
         expectedTranscriptRowVersion: transcriptRowVersion,
-        captionErrors: [{
-          detail: "Check the anonymised caption phrase.",
-          supportingParagraphs: [1],
-          sourceMarker: "mistaken caption wording"
-        }],
+        captionErrors: [
+          {
+            detail: "Check the anonymised caption phrase.",
+            supportingParagraphs: [1],
+            sourceMarker: "mistaken caption wording",
+          },
+        ],
         namesOrScriptureReferences: [
           { detail: "Verify an anonymised name.", supportingParagraphs: [1] },
-          { detail: "Verify an anonymised Scripture reference.", supportingParagraphs: [1] }
-        ]
+          {
+            detail: "Verify an anonymised Scripture reference.",
+            supportingParagraphs: [1],
+          },
+        ],
       });
       for (const item of atomicItems) {
         await pool.query(
@@ -2627,8 +3872,8 @@ integration("disposable PostgreSQL Phase 3B application", () => {
             item.categoryOrdinal,
             item.detail,
             item.supportingParagraphs,
-            item.sourceTranscriptSha256
-          ]
+            item.sourceTranscriptSha256,
+          ],
         );
       }
       await pool.query(
@@ -2645,47 +3890,66 @@ integration("disposable PostgreSQL Phase 3B application", () => {
           atomicItems.length,
           atomicReviewItemSetSha256(atomicItems),
           transcriptSha256,
-          transcriptRowVersion
-        ]
+          transcriptRowVersion,
+        ],
       );
 
       const auditBeforeRead = (await service.listAudit(sermonId, admin)).length;
       const initial = await service.enrichmentReviewDetail(sermonId, admin);
-      const repeatedRead = await service.enrichmentReviewDetail(sermonId, admin);
+      const repeatedRead = await service.enrichmentReviewDetail(
+        sermonId,
+        admin,
+      );
       expect(repeatedRead.review).toEqual(initial.review);
-      expect((await service.listAudit(sermonId, admin)).length).toBe(auditBeforeRead);
+      expect((await service.listAudit(sermonId, admin)).length).toBe(
+        auditBeforeRead,
+      );
       expect(initial).toMatchObject({
         sermon: {
           status: "draft",
           serviceDate: "1970-01-01",
           youtubeSource: {
             videoId: "review00001",
-            canonicalUrl: "https://www.youtube.com/watch?v=review00001"
+            canonicalUrl: "https://www.youtube.com/watch?v=review00001",
           },
-          enrichmentSource: { warningResolutionStatus: "unresolved" }
+          enrichmentSource: { warningResolutionStatus: "unresolved" },
         },
-        review: { identityStatus: "pending", currentStage: 1, completedAt: null },
-        progress: { resolvedItemCount: 0, unresolvedItemCount: 3, canFinish: false }
+        review: {
+          identityStatus: "pending",
+          currentStage: 1,
+          completedAt: null,
+        },
+        progress: {
+          resolvedItemCount: 0,
+          unresolvedItemCount: 3,
+          canFinish: false,
+        },
       });
       expect(initial.items.map((item) => item.category)).toEqual([
         "caption_error",
         "name_or_scripture_reference",
-        "name_or_scripture_reference"
+        "name_or_scripture_reference",
       ]);
-      expect(initial.items[0]?.context?.flagged).toBe("mistaken caption wording");
-      expect(initial.items.every((item) => item.decisionStatus === "pending")).toBe(true);
+      expect(initial.items[0]?.context?.flagged).toBe(
+        "mistaken caption wording",
+      );
+      expect(
+        initial.items.every((item) => item.decisionStatus === "pending"),
+      ).toBe(true);
 
-      await expect(service.updateEnrichmentReviewProgress(
-        sermonId,
-        enrichmentReviewProgressInputSchema.parse({
-          sermonRowVersion: initial.sermon.rowVersion,
-          reviewRowVersion: initial.review.rowVersion,
-          currentStage: 2,
-          identityStatus: "confirmed"
-        }),
-        admin,
-        "guided-review-invalid-identity"
-      )).rejects.toMatchObject({ status: 400, code: "invalid_request" });
+      await expect(
+        service.updateEnrichmentReviewProgress(
+          sermonId,
+          enrichmentReviewProgressInputSchema.parse({
+            sermonRowVersion: initial.sermon.rowVersion,
+            reviewRowVersion: initial.review.rowVersion,
+            currentStage: 2,
+            identityStatus: "confirmed",
+          }),
+          admin,
+          "guided-review-invalid-identity",
+        ),
+      ).rejects.toMatchObject({ status: 400, code: "invalid_request" });
 
       const identifiedSermon = await service.update(
         sermonId,
@@ -2693,10 +3957,10 @@ integration("disposable PostgreSQL Phase 3B application", () => {
           rowVersion: initial.sermon.rowVersion,
           title: "Anonymised guided review",
           speakerId,
-          serviceDate: "2026-08-05"
+          serviceDate: "2026-08-05",
         }),
         admin,
-        "guided-review-identity-save"
+        "guided-review-identity-save",
       );
       let review = await service.enrichmentReviewDetail(sermonId, admin);
       review = await service.updateEnrichmentReviewProgress(
@@ -2705,16 +3969,18 @@ integration("disposable PostgreSQL Phase 3B application", () => {
           sermonRowVersion: identifiedSermon.rowVersion,
           reviewRowVersion: review.review.rowVersion,
           currentStage: 2,
-          identityStatus: "confirmed"
+          identityStatus: "confirmed",
         }),
         admin,
-        "guided-review-identity-confirm"
+        "guided-review-identity-confirm",
       );
       expect(review.review.identityStatus).toBe("confirmed");
 
-      const caption = review.items.find((item) => item.category === "caption_error")!;
+      const caption = review.items.find(
+        (item) => item.category === "caption_error",
+      )!;
       const combinedItems = review.items.filter(
-        (item) => item.category === "name_or_scripture_reference"
+        (item) => item.category === "name_or_scripture_reference",
       );
       const name = combinedItems[0]!;
       const scripture = combinedItems[1]!;
@@ -2726,25 +3992,27 @@ integration("disposable PostgreSQL Phase 3B application", () => {
           reviewRowVersion: review.review.rowVersion,
           itemRowVersion: name.rowVersion,
           transcriptRowVersion: review.sermon.transcript!.rowVersion,
-          decision: "left_unresolved"
+          decision: "left_unresolved",
         }),
         admin,
-        "guided-review-left-unresolved"
+        "guided-review-left-unresolved",
       );
       expect(review.progress.unresolvedItemCount).toBe(3);
-      await expect(service.decideEnrichmentReviewItem(
-        sermonId,
-        name.id,
-        enrichmentReviewItemDecisionInputSchema.parse({
-          sermonRowVersion: review.sermon.rowVersion,
-          reviewRowVersion: initial.review.rowVersion,
-          itemRowVersion: name.rowVersion,
-          transcriptRowVersion: review.sermon.transcript!.rowVersion,
-          decision: "accepted"
-        }),
-        admin,
-        "guided-review-stale-item"
-      )).rejects.toMatchObject({ status: 409, code: "stale_write" });
+      await expect(
+        service.decideEnrichmentReviewItem(
+          sermonId,
+          name.id,
+          enrichmentReviewItemDecisionInputSchema.parse({
+            sermonRowVersion: review.sermon.rowVersion,
+            reviewRowVersion: initial.review.rowVersion,
+            itemRowVersion: name.rowVersion,
+            transcriptRowVersion: review.sermon.transcript!.rowVersion,
+            decision: "accepted",
+          }),
+          admin,
+          "guided-review-stale-item",
+        ),
+      ).rejects.toMatchObject({ status: 409, code: "stale_write" });
 
       for (const itemId of [name.id, scripture.id]) {
         const item = review.items.find((candidate) => candidate.id === itemId)!;
@@ -2757,18 +4025,22 @@ integration("disposable PostgreSQL Phase 3B application", () => {
             reviewRowVersion: review.review.rowVersion,
             itemRowVersion: item.rowVersion,
             transcriptRowVersion: review.sermon.transcript!.rowVersion,
-            decision: "accepted"
+            decision: "accepted",
           }),
           admin,
-          `guided-review-accept-${item.category}`
+          `guided-review-accept-${item.category}`,
         );
-        expect(review.sermon.transcript!.bodyText).toBe(transcriptBeforeAcceptance);
+        expect(review.sermon.transcript!.bodyText).toBe(
+          transcriptBeforeAcceptance,
+        );
       }
-      const currentCaption = review.items.find((item) => item.id === caption.id)!;
+      const currentCaption = review.items.find(
+        (item) => item.id === caption.id,
+      )!;
       const originalAssociatedWording = currentCaption.associatedWording!;
       const correctedAssociatedWording = originalAssociatedWording.replace(
         "mistaken caption wording",
-        "reviewed caption wording"
+        "reviewed caption wording",
       );
       review = await service.decideEnrichmentReviewItem(
         sermonId,
@@ -2780,23 +4052,32 @@ integration("disposable PostgreSQL Phase 3B application", () => {
           transcriptRowVersion: review.sermon.transcript!.rowVersion,
           decision: "corrected",
           originalWording: originalAssociatedWording,
-          correctionText: correctedAssociatedWording
+          correctionText: correctedAssociatedWording,
         }),
         admin,
-        "guided-review-correction"
+        "guided-review-correction",
       );
-      expect(review.sermon.transcript?.bodyText).toContain("reviewed caption wording");
-      expect(review.progress).toMatchObject({ resolvedItemCount: 3, unresolvedItemCount: 0 });
-      expect(review.items.filter((item) => item.id !== caption.id).every(
-        (item) => item.decisionStatus === "accepted"
-      )).toBe(true);
+      expect(review.sermon.transcript?.bodyText).toContain(
+        "reviewed caption wording",
+      );
+      expect(review.progress).toMatchObject({
+        resolvedItemCount: 3,
+        unresolvedItemCount: 0,
+      });
+      expect(
+        review.items
+          .filter((item) => item.id !== caption.id)
+          .every((item) => item.decisionStatus === "accepted"),
+      ).toBe(true);
       expect(review.progress.unresolvedItemCount).toBe(0);
       expect(review.sermon).toMatchObject({
         status: "draft",
         summaryStatus: "draft",
-        transcript: { status: "draft" }
+        transcript: { status: "draft" },
       });
-      expect(review.sermon.questionAnswers.every((item) => item.status === "draft")).toBe(true);
+      expect(
+        review.sermon.questionAnswers.every((item) => item.status === "draft"),
+      ).toBe(true);
       const storedCorrection = await pool.query<{
         source_marker: string;
         correction_text: string;
@@ -2804,12 +4085,12 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       }>(
         `SELECT source_marker, correction_text, decided_by_subject
          FROM sermon_enrichment_review_items WHERE id = $1`,
-        [caption.id]
+        [caption.id],
       );
       expect(storedCorrection.rows[0]).toEqual({
         source_marker: originalAssociatedWording,
         correction_text: correctedAssociatedWording,
-        decided_by_subject: admin.subject
+        decided_by_subject: admin.subject,
       });
 
       let sermon = await service.update(
@@ -2820,11 +4101,11 @@ integration("disposable PostgreSQL Phase 3B application", () => {
             bodyText: review.sermon.transcript!.bodyText,
             status: "approved",
             sourceKind: "caption",
-            sourceReference: null
-          }
+            sourceReference: null,
+          },
         }),
         admin,
-        "guided-review-transcript-approve"
+        "guided-review-transcript-approve",
       );
       sermon = await service.update(
         sermonId,
@@ -2833,10 +4114,10 @@ integration("disposable PostgreSQL Phase 3B application", () => {
           summary: sermon.summary,
           summaryStatus: "approved",
           summarySourceKind: sermon.summarySourceKind,
-          summarySourceReference: sermon.summarySourceReference
+          summarySourceReference: sermon.summarySourceReference,
         }),
         admin,
-        "guided-review-description-approve"
+        "guided-review-description-approve",
       );
       sermon = await service.update(
         sermonId,
@@ -2847,81 +4128,94 @@ integration("disposable PostgreSQL Phase 3B application", () => {
             answer: item.answer,
             status: "approved",
             sourceKind: item.sourceKind,
-            sourceReference: item.sourceReference
-          }))
+            sourceReference: item.sourceReference,
+          })),
         }),
         admin,
-        "guided-review-qa-approve"
+        "guided-review-qa-approve",
       );
       await pool.query(
         `INSERT INTO sermon_primary_passage_reviews (
            sermon_id, proposal_outcome, evidence_source, evidence_sha256, parser_version
          ) VALUES ($1, 'no_reference', 'local_youtube_title', $2, 'saving-grace-primary-passage-v1')`,
-        [sermonId, "e".repeat(64)]
+        [sermonId, "e".repeat(64)],
       );
       sermon = await service.decidePrimaryPassage(
         sermonId,
         primaryPassageDecisionInputSchema.parse({
           sermonRowVersion: sermon.rowVersion,
           reviewRowVersion: 1,
-          action: "confirm_no_primary_passage"
+          action: "confirm_no_primary_passage",
         }),
         admin,
-        "guided-review-no-primary-passage"
+        "guided-review-no-primary-passage",
       );
       review = await service.enrichmentReviewDetail(sermonId, admin);
-      expect(review.items.every(
-        (item) => item.transcriptRowVersion === review.sermon.transcript!.rowVersion
-      )).toBe(true);
+      expect(
+        review.items.every(
+          (item) =>
+            item.transcriptRowVersion === review.sermon.transcript!.rowVersion,
+        ),
+      ).toBe(true);
       review = await service.updateEnrichmentReviewProgress(
         sermonId,
         enrichmentReviewProgressInputSchema.parse({
           sermonRowVersion: sermon.rowVersion,
           reviewRowVersion: review.review.rowVersion,
-          currentStage: 6
+          currentStage: 6,
         }),
         admin,
-        "guided-review-resume-stage"
+        "guided-review-resume-stage",
       );
-      expect((await service.enrichmentReviewDetail(sermonId, admin)).review.currentStage).toBe(6);
+      expect(
+        (await service.enrichmentReviewDetail(sermonId, admin)).review
+          .currentStage,
+      ).toBe(6);
       review = await service.finishEnrichmentReview(
         sermonId,
         finishEnrichmentReviewInputSchema.parse({
           sermonRowVersion: review.sermon.rowVersion,
-          reviewRowVersion: review.review.rowVersion
+          reviewRowVersion: review.review.rowVersion,
         }),
         admin,
-        "guided-review-finish"
+        "guided-review-finish",
       );
       expect(review).toMatchObject({
         sermon: { status: "draft" },
         review: { currentStage: 6 },
-        progress: { canFinish: true, percentReviewed: 100 }
+        progress: { canFinish: true, percentReviewed: 100 },
       });
       expect(review.review.completedAt).not.toBeNull();
       expect(review.sermon).toMatchObject({
         readiness: {
           isContentComplete: true,
           isComplete: true,
-          hasRequiredBibleBook: false
+          hasRequiredBibleBook: false,
         },
-        enrichmentSource: { warningResolutionStatus: "resolved_by_completed_review" }
+        enrichmentSource: {
+          warningResolutionStatus: "resolved_by_completed_review",
+        },
       });
 
-      const auditCountBeforeInspection = (await service.listAudit(sermonId, admin)).length;
-      const inspectedCompletedStage = await service.updateEnrichmentReviewProgress(
-        sermonId,
-        enrichmentReviewProgressInputSchema.parse({
-          sermonRowVersion: review.sermon.rowVersion,
-          reviewRowVersion: review.review.rowVersion,
-          currentStage: 1
-        }),
-        admin,
-        "guided-review-read-only-backward-inspection"
-      );
+      const auditCountBeforeInspection = (
+        await service.listAudit(sermonId, admin)
+      ).length;
+      const inspectedCompletedStage =
+        await service.updateEnrichmentReviewProgress(
+          sermonId,
+          enrichmentReviewProgressInputSchema.parse({
+            sermonRowVersion: review.sermon.rowVersion,
+            reviewRowVersion: review.review.rowVersion,
+            currentStage: 1,
+          }),
+          admin,
+          "guided-review-read-only-backward-inspection",
+        );
       expect(inspectedCompletedStage.review).toMatchObject({ currentStage: 6 });
       expect(inspectedCompletedStage.review.completedAt).not.toBeNull();
-      expect((await service.listAudit(sermonId, admin)).length).toBe(auditCountBeforeInspection);
+      expect((await service.listAudit(sermonId, admin)).length).toBe(
+        auditCountBeforeInspection,
+      );
 
       const metadataComplete = await service.detail(sermonId, admin);
       expect(metadataComplete).toMatchObject({
@@ -2931,65 +4225,100 @@ integration("disposable PostgreSQL Phase 3B application", () => {
           isContentComplete: true,
           isComplete: true,
           hasRequiredBibleBook: false,
-          hasRequiredPassageDecision: true
+          hasRequiredPassageDecision: true,
         },
-        enrichmentReview: { currentStage: 6 }
+        enrichmentReview: { currentStage: 6 },
       });
-      expect(metadataComplete.questionAnswers.every((item) => item.status === "approved")).toBe(true);
+      expect(
+        metadataComplete.questionAnswers.every(
+          (item) => item.status === "approved",
+        ),
+      ).toBe(true);
       review = await service.enrichmentReviewDetail(sermonId, admin);
 
       const itemAudits = (await service.listAudit(sermonId, admin)).filter(
-        (event) => event.action.startsWith("sermon.enrichment_review_item_")
+        (event) => event.action.startsWith("sermon.enrichment_review_item_"),
       );
       expect(itemAudits).toHaveLength(4);
-      expect(itemAudits.filter((event) => event.requestCorrelationId === "guided-review-left-unresolved"))
-        .toHaveLength(1);
-      expect(itemAudits.every((event) => /^[0-9a-f]{64}$/.test(event.reviewItemIdentitySha256 ?? "")))
-        .toBe(true);
-      expect((await service.listAudit(sermonId, admin)).some(
-        (event) => event.action === "sermon.no_primary_passage_confirmed"
-          && event.requestCorrelationId === "guided-review-no-primary-passage"
-      )).toBe(true);
+      expect(
+        itemAudits.filter(
+          (event) =>
+            event.requestCorrelationId === "guided-review-left-unresolved",
+        ),
+      ).toHaveLength(1);
+      expect(
+        itemAudits.every((event) =>
+          /^[0-9a-f]{64}$/.test(event.reviewItemIdentitySha256 ?? ""),
+        ),
+      ).toBe(true);
+      expect(
+        (await service.listAudit(sermonId, admin)).some(
+          (event) =>
+            event.action === "sermon.no_primary_passage_confirmed" &&
+            event.requestCorrelationId === "guided-review-no-primary-passage",
+        ),
+      ).toBe(true);
 
       const auditTarget = itemAudits[0]!;
       const appendOnlyClient = await pool.connect();
       try {
         await appendOnlyClient.query("BEGIN");
-        await appendOnlyClient.query("SET LOCAL savinggrace.application_request = 'on'");
-        await expect(appendOnlyClient.query(
-          "UPDATE audit_events SET action = action WHERE id = $1",
-          [auditTarget.id]
-        )).rejects.toThrow("audit_events_are_append_only_for_application_requests");
+        await appendOnlyClient.query(
+          "SET LOCAL savinggrace.application_request = 'on'",
+        );
+        await expect(
+          appendOnlyClient.query(
+            "UPDATE audit_events SET action = action WHERE id = $1",
+            [auditTarget.id],
+          ),
+        ).rejects.toThrow(
+          "audit_events_are_append_only_for_application_requests",
+        );
         await appendOnlyClient.query("ROLLBACK");
         await appendOnlyClient.query("BEGIN");
-        await appendOnlyClient.query("SET LOCAL savinggrace.application_request = 'on'");
-        await expect(appendOnlyClient.query(
-          "DELETE FROM audit_events WHERE id = $1",
-          [auditTarget.id]
-        )).rejects.toThrow("audit_events_are_append_only_for_application_requests");
+        await appendOnlyClient.query(
+          "SET LOCAL savinggrace.application_request = 'on'",
+        );
+        await expect(
+          appendOnlyClient.query("DELETE FROM audit_events WHERE id = $1", [
+            auditTarget.id,
+          ]),
+        ).rejects.toThrow(
+          "audit_events_are_append_only_for_application_requests",
+        );
         await appendOnlyClient.query("ROLLBACK");
       } finally {
         appendOnlyClient.release();
       }
-      expect(await publicRepository.findPublishedBySlug("anonymised-guided-review")).toBeNull();
-      expect((await publicRepository.listPublished(
-        publicSermonListQuerySchema.parse({ query: "anonymised-guided-review" })
-      )).data).toHaveLength(0);
+      expect(
+        await publicRepository.findPublishedBySlug("anonymised-guided-review"),
+      ).toBeNull();
+      expect(
+        (
+          await publicRepository.listPublished(
+            publicSermonListQuerySchema.parse({
+              query: "anonymised-guided-review",
+            }),
+          )
+        ).data,
+      ).toHaveLength(0);
 
-      await expect(service.update(
-        sermonId,
-        updateSermonInputSchema.parse({
-          rowVersion: review.sermon.rowVersion,
-          transcript: {
-            bodyText: `${review.sermon.transcript!.bodyText} Changed after completion.`,
-            status: "approved",
-            sourceKind: "caption",
-            sourceReference: null
-          }
-        }),
-        admin,
-        "guided-review-unsafe-direct-approval"
-      )).rejects.toMatchObject({ status: 400, code: "invalid_request" });
+      await expect(
+        service.update(
+          sermonId,
+          updateSermonInputSchema.parse({
+            rowVersion: review.sermon.rowVersion,
+            transcript: {
+              bodyText: `${review.sermon.transcript!.bodyText} Changed after completion.`,
+              status: "approved",
+              sourceKind: "caption",
+              sourceReference: null,
+            },
+          }),
+          admin,
+          "guided-review-unsafe-direct-approval",
+        ),
+      ).rejects.toMatchObject({ status: 400, code: "invalid_request" });
       const reopenedSermon = await service.update(
         sermonId,
         updateSermonInputSchema.parse({
@@ -2998,66 +4327,94 @@ integration("disposable PostgreSQL Phase 3B application", () => {
             bodyText: `${review.sermon.transcript!.bodyText} Changed after completion.`,
             status: "draft",
             sourceKind: "caption",
-            sourceReference: null
-          }
+            sourceReference: null,
+          },
         }),
         admin,
-        "guided-review-reopen"
+        "guided-review-reopen",
       );
       const reopened = await service.enrichmentReviewDetail(sermonId, admin);
       expect(reopened).toMatchObject({
         sermon: { rowVersion: reopenedSermon.rowVersion, status: "draft" },
         review: { currentStage: 2, completedAt: null },
-        progress: { resolvedItemCount: 0, unresolvedItemCount: 3, canFinish: false }
+        progress: {
+          resolvedItemCount: 0,
+          unresolvedItemCount: 3,
+          canFinish: false,
+        },
       });
-      expect(reopened.items.every((item) => item.decisionStatus === "pending")).toBe(true);
-      expect((await service.listAudit(sermonId, admin)).map((event) => event.action)).toEqual(
+      expect(
+        reopened.items.every((item) => item.decisionStatus === "pending"),
+      ).toBe(true);
+      expect(
+        (await service.listAudit(sermonId, admin)).map((event) => event.action),
+      ).toEqual(
         expect.arrayContaining([
           "sermon.enrichment_identity_confirmed",
           "sermon.enrichment_review_item_corrected",
-          "sermon.enrichment_review_finished"
-        ])
+          "sermon.enrichment_review_finished",
+        ]),
       );
     } finally {
       if (sermonId) {
-        await pool.query("DELETE FROM audit_events WHERE entity_id = $1", [sermonId]);
+        await pool.query("DELETE FROM audit_events WHERE entity_id = $1", [
+          sermonId,
+        ]);
         await pool.query("DELETE FROM sermons WHERE id = $1", [sermonId]);
       }
     }
   });
 
   it("keeps title proposals private until an explicit versioned primary-passage decision", async () => {
-    const admin = { subject: "local-admin-0001", role: "admin" } satisfies ApplicationIdentity;
+    const admin = {
+      subject: "local-admin-0001",
+      role: "admin",
+    } satisfies ApplicationIdentity;
     const repository = new PostgresAdminSermonRepository(pool);
     const publicRepository = new PostgresSermonRepository(pool);
-    const service = new AdminSermonService(repository, () => new Date("2026-08-05T00:00:00.000Z"));
+    const service = new AdminSermonService(
+      repository,
+      () => new Date("2026-08-05T00:00:00.000Z"),
+    );
     let sermonId: string | null = null;
     try {
-      const speakerId = (await pool.query<{ id: string }>("SELECT id FROM speakers ORDER BY id LIMIT 1")).rows[0]!.id;
-      const bookClassificationId = (await pool.query<{ id: string }>(
-        "SELECT id FROM book_classifications WHERE canonical_book_id = 45 AND classification_type = 'canonical'"
-      )).rows[0]!.id;
-      const created = await service.create(createSermonInputSchema.parse({
-        title: "An anonymised primary-passage integration sermon",
-        slug: "anonymised-primary-passage-integration",
-        serviceDate: "2026-08-05",
-        speakerId,
-        bookClassificationIds: [bookClassificationId],
-        ...approvedEnrichment(),
-        media: [{
-          provider: "youtube",
-          mediaType: "video",
-          externalId: null,
-          canonicalUrl: "https://www.youtube.com/watch?v=passage0001",
-          title: "Anonymised controlled video"
-        }]
-      }), admin, "primary-passage-create");
+      const speakerId = (
+        await pool.query<{ id: string }>(
+          "SELECT id FROM speakers ORDER BY id LIMIT 1",
+        )
+      ).rows[0]!.id;
+      const bookClassificationId = (
+        await pool.query<{ id: string }>(
+          "SELECT id FROM book_classifications WHERE canonical_book_id = 45 AND classification_type = 'canonical'",
+        )
+      ).rows[0]!.id;
+      const created = await service.create(
+        createSermonInputSchema.parse({
+          title: "An anonymised primary-passage integration sermon",
+          slug: "anonymised-primary-passage-integration",
+          serviceDate: "2026-08-05",
+          speakerId,
+          bookClassificationIds: [bookClassificationId],
+          ...approvedEnrichment(),
+          media: [
+            {
+              provider: "youtube",
+              mediaType: "video",
+              externalId: null,
+              canonicalUrl: "https://www.youtube.com/watch?v=passage0001",
+              title: "Anonymised controlled video",
+            },
+          ],
+        }),
+        admin,
+        "primary-passage-create",
+      );
       sermonId = created.id;
       await pool.query(
         `INSERT INTO sermon_primary_passage_reviews (
            sermon_id, proposal_outcome, evidence_source, evidence_sha256, parser_version
          ) VALUES ($1, 'proposed', 'local_youtube_title', $2, 'saving-grace-primary-passage-v1')`,
-        [sermonId, "a".repeat(64)]
+        [sermonId, "a".repeat(64)],
       );
       const proposed = await pool.query<{ id: string }>(
         `INSERT INTO scripture_references (
@@ -3067,155 +4424,282 @@ integration("disposable PostgreSQL Phase 3B application", () => {
          ) VALUES ($1, 'Romans 8:1–4', 45, 8, 1, 8, 4, 0, 'exact', 'primary', true,
                    'Romans 8:1-4', 'title_proposal', 'proposed', 'saving-grace-primary-passage-v1')
          RETURNING id`,
-        [sermonId]
+        [sermonId],
       );
       await pool.query(
         "INSERT INTO scripture_reference_sources (scripture_reference_id, sermon_id, source_kind, original_value) VALUES ($1, $2, 'curated', 'Romans 8:1-4')",
-        [proposed.rows[0]!.id, sermonId]
+        [proposed.rows[0]!.id, sermonId],
       );
-      const proposedAdminResults = await repository.listSermons(adminSermonListQuerySchema.parse({
-        passageBook: 45,
-        passageChapter: 8,
-        passageVerse: 2,
-        passageReviewState: "proposed_passage"
-      }));
-      expect(proposedAdminResults.data).toEqual(expect.arrayContaining([
-        expect.objectContaining({
-          id: sermonId,
-          primaryPassage: { state: "proposed_passage", displayText: "Romans 8:1–4" }
-        })
-      ]));
-      await expect(service.transition(
-        created.id,
-        "publish",
-        { rowVersion: created.rowVersion },
-        admin,
-        "primary-passage-pending-publish"
-      )).rejects.toMatchObject({ status: 400, code: "content_incomplete" });
-      expect(await publicRepository.findPublishedBySlug(created.slug)).toBeNull();
-      expect((await publicRepository.listPublished(publicSermonListQuerySchema.parse({
-        passageBook: "romans", passageChapter: 8, passageVerse: 2
-      }))).data).toHaveLength(0);
-      const before = (await pool.query<{ digest: string }>(
-        `SELECT encode(digest(convert_to(concat_ws(E'\\n', sermon.summary, transcript.body_text,
+      const proposedAdminResults = await repository.listSermons(
+        adminSermonListQuerySchema.parse({
+          passageBook: 45,
+          passageChapter: 8,
+          passageVerse: 2,
+          passageReviewState: "proposed_passage",
+        }),
+      );
+      expect(proposedAdminResults.data).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: sermonId,
+            primaryPassage: {
+              state: "proposed_passage",
+              displayText: "Romans 8:1–4",
+            },
+          }),
+        ]),
+      );
+      await expect(
+        service.transition(
+          created.id,
+          "publish",
+          { rowVersion: created.rowVersion },
+          admin,
+          "primary-passage-pending-publish",
+        ),
+      ).rejects.toMatchObject({ status: 400, code: "content_incomplete" });
+      expect(
+        await publicRepository.findPublishedBySlug(created.slug),
+      ).toBeNull();
+      expect(
+        (
+          await publicRepository.listPublished(
+            publicSermonListQuerySchema.parse({
+              passageBook: "romans",
+              passageChapter: 8,
+              passageVerse: 2,
+            }),
+          )
+        ).data,
+      ).toHaveLength(0);
+      const before = (
+        await pool.query<{ digest: string }>(
+          `SELECT encode(digest(convert_to(concat_ws(E'\\n', sermon.summary, transcript.body_text,
           (SELECT string_agg(qa.question_text || E'\\n' || qa.answer_text, E'\\n' ORDER BY qa.display_order)
            FROM sermon_question_answers qa WHERE qa.sermon_id = sermon.id)), 'UTF8'), 'sha256'), 'hex') AS digest
          FROM sermons sermon JOIN sermon_transcripts transcript ON transcript.sermon_id = sermon.id WHERE sermon.id = $1`,
-        [sermonId]
-      )).rows[0]!.digest;
+          [sermonId],
+        )
+      ).rows[0]!.digest;
       const prepared = await service.detail(sermonId, admin);
       const initialGroundingRevision = prepared.transcript!.groundingRevisionId;
-      const bookOnly = await service.decidePrimaryPassage(sermonId, primaryPassageDecisionInputSchema.parse({
-        sermonRowVersion: prepared.rowVersion,
-        reviewRowVersion: prepared.primaryPassageReview!.rowVersion,
-        action: "confirm_passages",
-        passages: [
-          { canonicalBookId: 45, relationshipRole: "primary", isLead: true }
-        ]
-      }), admin, "primary-passage-book-only");
+      const bookOnly = await service.decidePrimaryPassage(
+        sermonId,
+        primaryPassageDecisionInputSchema.parse({
+          sermonRowVersion: prepared.rowVersion,
+          reviewRowVersion: prepared.primaryPassageReview!.rowVersion,
+          action: "confirm_passages",
+          passages: [
+            { canonicalBookId: 45, relationshipRole: "primary", isLead: true },
+          ],
+        }),
+        admin,
+        "primary-passage-book-only",
+      );
       expect(bookOnly).toMatchObject({
         primaryPassage: { state: "confirmed_passage", displayText: "Romans" },
-        readiness: { hasRequiredPassageDecision: true, isComplete: true }
+        readiness: { hasRequiredPassageDecision: true, isComplete: true },
       });
-      const chapterOnly = await service.decidePrimaryPassage(sermonId, primaryPassageDecisionInputSchema.parse({
-        sermonRowVersion: bookOnly.rowVersion,
-        reviewRowVersion: bookOnly.primaryPassageReview!.rowVersion,
-        action: "confirm_passages",
-        passages: [
-          { canonicalBookId: 45, startChapter: 8, endChapter: 8, relationshipRole: "primary", isLead: true }
-        ]
-      }), admin, "primary-passage-chapter-only");
-      expect(chapterOnly.primaryPassage).toEqual({ state: "confirmed_passage", displayText: "Romans 8" });
-      const confirmed = await service.decidePrimaryPassage(sermonId, primaryPassageDecisionInputSchema.parse({
-        sermonRowVersion: chapterOnly.rowVersion,
-        reviewRowVersion: chapterOnly.primaryPassageReview!.rowVersion,
-        action: "confirm_passages",
-        passages: [
-          { canonicalBookId: 45, startChapter: 8, startVerse: 1, endChapter: 8, endVerse: 4, relationshipRole: "primary", isLead: true },
-          { canonicalBookId: 43, startChapter: 3, startVerse: 16, endChapter: 3, endVerse: 16, relationshipRole: "supporting", isLead: false }
-        ]
-      }), admin, "primary-passage-confirm");
+      const chapterOnly = await service.decidePrimaryPassage(
+        sermonId,
+        primaryPassageDecisionInputSchema.parse({
+          sermonRowVersion: bookOnly.rowVersion,
+          reviewRowVersion: bookOnly.primaryPassageReview!.rowVersion,
+          action: "confirm_passages",
+          passages: [
+            {
+              canonicalBookId: 45,
+              startChapter: 8,
+              endChapter: 8,
+              relationshipRole: "primary",
+              isLead: true,
+            },
+          ],
+        }),
+        admin,
+        "primary-passage-chapter-only",
+      );
+      expect(chapterOnly.primaryPassage).toEqual({
+        state: "confirmed_passage",
+        displayText: "Romans 8",
+      });
+      const confirmed = await service.decidePrimaryPassage(
+        sermonId,
+        primaryPassageDecisionInputSchema.parse({
+          sermonRowVersion: chapterOnly.rowVersion,
+          reviewRowVersion: chapterOnly.primaryPassageReview!.rowVersion,
+          action: "confirm_passages",
+          passages: [
+            {
+              canonicalBookId: 45,
+              startChapter: 8,
+              startVerse: 1,
+              endChapter: 8,
+              endVerse: 4,
+              relationshipRole: "primary",
+              isLead: true,
+            },
+            {
+              canonicalBookId: 43,
+              startChapter: 3,
+              startVerse: 16,
+              endChapter: 3,
+              endVerse: 16,
+              relationshipRole: "supporting",
+              isLead: false,
+            },
+          ],
+        }),
+        admin,
+        "primary-passage-confirm",
+      );
       expect(confirmed.primaryPassageReview).toMatchObject({
         reviewStatus: "confirmed_passage",
-        reviewedBySubject: admin.subject
+        reviewedBySubject: admin.subject,
       });
-      expect(confirmed.transcript!.groundingRevisionId).toBe(initialGroundingRevision);
-      expect(confirmed.scriptureReferences.filter((reference) => reference.reviewStatus === "confirmed")).toHaveLength(2);
+      expect(confirmed.transcript!.groundingRevisionId).toBe(
+        initialGroundingRevision,
+      );
+      expect(
+        confirmed.scriptureReferences.filter(
+          (reference) => reference.reviewStatus === "confirmed",
+        ),
+      ).toHaveLength(2);
       const published = await service.transition(
         sermonId,
         "publish",
         { rowVersion: confirmed.rowVersion },
         admin,
-        "primary-passage-publish"
+        "primary-passage-publish",
       );
-      const confirmedAdminResults = await repository.listSermons(adminSermonListQuerySchema.parse({
-        passageBook: 45,
-        passageChapter: 8,
-        passageVerse: 4,
-        passageReviewState: "confirmed_passage"
-      }));
-      expect(confirmedAdminResults.data).toEqual(expect.arrayContaining([
-        expect.objectContaining({
-          id: sermonId,
-          primaryPassage: { state: "confirmed_passage", displayText: "Romans 8:1–4" }
-        })
-      ]));
-      expect((await repository.listSermons(adminSermonListQuerySchema.parse({
-        passageBook: 45,
-        passageChapter: 8,
-        passageVerse: 5
-      }))).data.some((sermon) => sermon.id === sermonId)).toBe(false);
-      expect((await publicRepository.listPublished(publicSermonListQuerySchema.parse({
-        passageBook: "romans", passageChapter: 8, passageVerse: 2
-      }))).data).toHaveLength(1);
-      expect(await publicRepository.findPublishedBySlug(published.slug)).toMatchObject({
+      const confirmedAdminResults = await repository.listSermons(
+        adminSermonListQuerySchema.parse({
+          passageBook: 45,
+          passageChapter: 8,
+          passageVerse: 4,
+          passageReviewState: "confirmed_passage",
+        }),
+      );
+      expect(confirmedAdminResults.data).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: sermonId,
+            primaryPassage: {
+              state: "confirmed_passage",
+              displayText: "Romans 8:1–4",
+            },
+          }),
+        ]),
+      );
+      expect(
+        (
+          await repository.listSermons(
+            adminSermonListQuerySchema.parse({
+              passageBook: 45,
+              passageChapter: 8,
+              passageVerse: 5,
+            }),
+          )
+        ).data.some((sermon) => sermon.id === sermonId),
+      ).toBe(false);
+      expect(
+        (
+          await publicRepository.listPublished(
+            publicSermonListQuerySchema.parse({
+              passageBook: "romans",
+              passageChapter: 8,
+              passageVerse: 2,
+            }),
+          )
+        ).data,
+      ).toHaveLength(1);
+      expect(
+        await publicRepository.findPublishedBySlug(published.slug),
+      ).toMatchObject({
         scriptureReferences: [{ displayText: "John 3:16" }],
-        primaryPassages: [{ displayText: "Romans 8:1–4", isLead: true }]
+        primaryPassages: [{ displayText: "Romans 8:1–4", isLead: true }],
       });
-      expect((await publicRepository.listPublished(publicSermonListQuerySchema.parse({
-        passageBook: "john", passageChapter: 3, passageVerse: 16
-      }))).data).toHaveLength(0);
-      expect((await publicRepository.listPublishedFilterOptions()).passageVerseAvailability)
-        .toEqual([{ bookSlug: "romans", chapter: 8, verses: [1, 2, 3, 4] }]);
-      const after = (await pool.query<{ digest: string }>(
-        `SELECT encode(digest(convert_to(concat_ws(E'\\n', sermon.summary, transcript.body_text,
+      expect(
+        (
+          await publicRepository.listPublished(
+            publicSermonListQuerySchema.parse({
+              passageBook: "john",
+              passageChapter: 3,
+              passageVerse: 16,
+            }),
+          )
+        ).data,
+      ).toHaveLength(0);
+      expect(
+        (await publicRepository.listPublishedFilterOptions())
+          .passageVerseAvailability,
+      ).toEqual([{ bookSlug: "romans", chapter: 8, verses: [1, 2, 3, 4] }]);
+      const after = (
+        await pool.query<{ digest: string }>(
+          `SELECT encode(digest(convert_to(concat_ws(E'\\n', sermon.summary, transcript.body_text,
           (SELECT string_agg(qa.question_text || E'\\n' || qa.answer_text, E'\\n' ORDER BY qa.display_order)
            FROM sermon_question_answers qa WHERE qa.sermon_id = sermon.id)), 'UTF8'), 'sha256'), 'hex') AS digest
          FROM sermons sermon JOIN sermon_transcripts transcript ON transcript.sermon_id = sermon.id WHERE sermon.id = $1`,
-        [sermonId]
-      )).rows[0]!.digest;
+          [sermonId],
+        )
+      ).rows[0]!.digest;
       expect(after).toBe(before);
-      await expect(service.decidePrimaryPassage(sermonId, primaryPassageDecisionInputSchema.parse({
-        sermonRowVersion: published.rowVersion,
-        reviewRowVersion: chapterOnly.primaryPassageReview!.rowVersion,
-        action: "confirm_no_primary_passage"
-      }), admin, "primary-passage-stale")).rejects.toMatchObject({ status: 409, code: "stale_write" });
+      await expect(
+        service.decidePrimaryPassage(
+          sermonId,
+          primaryPassageDecisionInputSchema.parse({
+            sermonRowVersion: published.rowVersion,
+            reviewRowVersion: chapterOnly.primaryPassageReview!.rowVersion,
+            action: "confirm_no_primary_passage",
+          }),
+          admin,
+          "primary-passage-stale",
+        ),
+      ).rejects.toMatchObject({ status: 409, code: "stale_write" });
       await pool.query(
         "UPDATE sermon_transcripts SET approved_at = approved_at + interval '1 second', row_version = row_version + 1 WHERE sermon_id = $1",
-        [sermonId]
+        [sermonId],
       );
-      expect((await service.detail(sermonId, admin)).transcript!.groundingRevisionId).toBe(initialGroundingRevision);
-      await pool.query("UPDATE sermon_transcripts SET body_text = body_text || ' Changed.' WHERE sermon_id = $1", [sermonId]);
-      expect((await service.detail(sermonId, admin)).transcript!.groundingRevisionId).not.toBe(initialGroundingRevision);
+      expect(
+        (await service.detail(sermonId, admin)).transcript!.groundingRevisionId,
+      ).toBe(initialGroundingRevision);
+      await pool.query(
+        "UPDATE sermon_transcripts SET body_text = body_text || ' Changed.' WHERE sermon_id = $1",
+        [sermonId],
+      );
+      expect(
+        (await service.detail(sermonId, admin)).transcript!.groundingRevisionId,
+      ).not.toBe(initialGroundingRevision);
     } finally {
       if (sermonId) {
-        await pool.query("DELETE FROM audit_events WHERE entity_id = $1", [sermonId]);
+        await pool.query("DELETE FROM audit_events WHERE entity_id = $1", [
+          sermonId,
+        ]);
         await pool.query("DELETE FROM sermons WHERE id = $1", [sermonId]);
       }
     }
   });
 
   it("prevents Stage 6 completion while passage review is pending and accepts an explicit no-primary decision", async () => {
-    const admin = { subject: "local-admin-0001", role: "admin" } satisfies ApplicationIdentity;
-    const service = new AdminSermonService(new PostgresAdminSermonRepository(pool));
+    const admin = {
+      subject: "local-admin-0001",
+      role: "admin",
+    } satisfies ApplicationIdentity;
+    const service = new AdminSermonService(
+      new PostgresAdminSermonRepository(pool),
+    );
     let sermonId: string | null = null;
     try {
-      const created = await service.create(createSermonInputSchema.parse({
-        title: "An anonymised completed-review passage gate",
-        slug: "anonymised-completed-review-passage-gate",
-        serviceDate: "2026-08-05",
-        ...approvedEnrichment()
-      }), admin, "completed-review-passage-gate-create");
+      const created = await service.create(
+        createSermonInputSchema.parse({
+          title: "An anonymised completed-review passage gate",
+          slug: "anonymised-completed-review-passage-gate",
+          serviceDate: "2026-08-05",
+          ...approvedEnrichment(),
+        }),
+        admin,
+        "completed-review-passage-gate-create",
+      );
       sermonId = created.id;
       await pool.query(
         `INSERT INTO sermon_enrichment_sources (
@@ -3232,7 +4716,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
            'requires_manual_review', 0, '[]'::jsonb, '[]'::jsonb, 'anonymised-stage6-gate-v1',
            now(), now(), 1, 1, true, 'required'
          )`,
-        [sermonId, "c".repeat(64)]
+        [sermonId, "c".repeat(64)],
       );
 
       const pending = await pool.connect();
@@ -3242,17 +4726,20 @@ integration("disposable PostgreSQL Phase 3B application", () => {
           `INSERT INTO sermon_primary_passage_reviews (
              sermon_id, proposal_outcome, evidence_source, evidence_sha256, parser_version
            ) VALUES ($1, 'proposed', 'local_youtube_title', $2, 'saving-grace-primary-passage-v1')`,
-          [sermonId, "a".repeat(64)]
+          [sermonId, "a".repeat(64)],
         );
         await pending.query(
           `UPDATE sermon_enrichment_reviews
            SET identity_status = 'confirmed', current_stage = 6,
                completed_by_subject = $2, completed_at = now()
            WHERE sermon_id = $1`,
-          [sermonId, admin.subject]
+          [sermonId, admin.subject],
         );
-        await expect(pending.query("SET CONSTRAINTS ALL IMMEDIATE"))
-          .rejects.toThrow("completed_enrichment_review_requires_primary_passage_decision");
+        await expect(
+          pending.query("SET CONSTRAINTS ALL IMMEDIATE"),
+        ).rejects.toThrow(
+          "completed_enrichment_review_requires_primary_passage_decision",
+        );
       } finally {
         await pending.query("ROLLBACK").catch(() => undefined);
         pending.release();
@@ -3267,35 +4754,46 @@ integration("disposable PostgreSQL Phase 3B application", () => {
              review_status, reviewed_by_subject, reviewed_at
            ) VALUES ($1, 'no_reference', 'local_youtube_title', $2,
                      'saving-grace-primary-passage-v1', 'confirmed_none', $3, now())`,
-          [sermonId, "b".repeat(64), admin.subject]
+          [sermonId, "b".repeat(64), admin.subject],
         );
         await reviewedNone.query(
           `UPDATE sermon_enrichment_reviews
            SET identity_status = 'confirmed', current_stage = 6,
                completed_by_subject = $2, completed_at = now()
            WHERE sermon_id = $1`,
-          [sermonId, admin.subject]
+          [sermonId, admin.subject],
         );
-        await expect(reviewedNone.query("SET CONSTRAINTS ALL IMMEDIATE")).resolves.toBeDefined();
+        await expect(
+          reviewedNone.query("SET CONSTRAINTS ALL IMMEDIATE"),
+        ).resolves.toBeDefined();
       } finally {
         await reviewedNone.query("ROLLBACK");
         reviewedNone.release();
       }
     } finally {
       if (sermonId) {
-        await pool.query("DELETE FROM audit_events WHERE entity_id = $1", [sermonId]);
+        await pool.query("DELETE FROM audit_events WHERE entity_id = $1", [
+          sermonId,
+        ]);
         await pool.query("DELETE FROM sermons WHERE id = $1", [sermonId]);
       }
     }
   });
 
   it("carries forward only the exact anonymised legacy-complete passage set with preserved content and idempotent audit", async () => {
-    const admin = { subject: "local-admin-0001", role: "admin" } satisfies ApplicationIdentity;
+    const admin = {
+      subject: "local-admin-0001",
+      role: "admin",
+    } satisfies ApplicationIdentity;
     const legacyReviewer = "anonymised-legacy-reviewer";
-    const service = new AdminSermonService(new PostgresAdminSermonRepository(pool));
+    const service = new AdminSermonService(
+      new PostgresAdminSermonRepository(pool),
+    );
     const sermonIds: string[] = [];
-    const protectedSnapshot = async () => (await pool.query(
-      `SELECT sermon.id,
+    const protectedSnapshot = async () =>
+      (
+        await pool.query(
+          `SELECT sermon.id,
               sermon.row_version AS sermon_row_version,
               encode(digest(convert_to(COALESCE(sermon.summary, ''), 'UTF8'), 'sha256'), 'hex') AS summary_sha256,
               sermon.summary_status, sermon.summary_source_reference,
@@ -3320,46 +4818,65 @@ integration("disposable PostgreSQL Phase 3B application", () => {
        WHERE sermon.id = ANY($1::uuid[])
        GROUP BY sermon.id, transcript.sermon_id, review.sermon_id
        ORDER BY sermon.id`,
-      [sermonIds]
-    )).rows;
+          [sermonIds],
+        )
+      ).rows;
     try {
       await runSchema("rollback", "0017_delegated_private_ai_review");
       await runSchema("rollback", "0016_legacy_completed_passage_reviews");
-      const migration0015AppliedAt = (await pool.query<{ applied_at: Date }>(
-        "SELECT applied_at FROM schema_migrations WHERE migration_id = '0015_optional_passage_and_grounding_identity'"
-      )).rows[0]!.applied_at;
-      const completedBefore0015 = new Date(migration0015AppliedAt.getTime() - 120_000);
-      const proposedBeforeCompletion = new Date(migration0015AppliedAt.getTime() - 180_000);
+      const migration0015AppliedAt = (
+        await pool.query<{ applied_at: Date }>(
+          "SELECT applied_at FROM schema_migrations WHERE migration_id = '0015_optional_passage_and_grounding_identity'",
+        )
+      ).rows[0]!.applied_at;
+      const completedBefore0015 = new Date(
+        migration0015AppliedAt.getTime() - 120_000,
+      );
+      const proposedBeforeCompletion = new Date(
+        migration0015AppliedAt.getTime() - 180_000,
+      );
       const completedAfter0015 = new Date(migration0015AppliedAt.getTime() + 1);
-      const speakerId = (await pool.query<{ id: string }>(
-        "SELECT id FROM speakers ORDER BY id LIMIT 1"
-      )).rows[0]!.id;
-      const emptyItemSetSha256 = createHash("sha256").update("", "utf8").digest("hex");
+      const speakerId = (
+        await pool.query<{ id: string }>(
+          "SELECT id FROM speakers ORDER BY id LIMIT 1",
+        )
+      ).rows[0]!.id;
+      const emptyItemSetSha256 = createHash("sha256")
+        .update("", "utf8")
+        .digest("hex");
 
       for (let index = 0; index < 15; index += 1) {
         const videoId = `lgycf${String(index + 1).padStart(6, "0")}`;
-        const title = index === 14
-          ? "God's Will For The Local Church"
-          : `Anonymised legacy passage review ${index + 1}`;
-        const processingVersion = index === 0
-          ? "phase3b2-caption-v1"
-          : index < 3
-            ? "phase3b2b-punctuation-v2"
-            : "phase3b2c-wave1-extractive-drafts-v2";
-        const created = await service.create(createSermonInputSchema.parse({
-          title,
-          slug: `anonymised-legacy-passage-review-${index + 1}`,
-          serviceDate: "2026-08-05",
-          speakerId,
-          ...approvedEnrichment(),
-          media: [{
-            provider: "youtube",
-            mediaType: "video",
-            externalId: videoId,
-            canonicalUrl: `https://www.youtube.com/watch?v=${videoId}`,
-            title: "Anonymised controlled video"
-          }]
-        }), admin, `legacy-passage-create-${index + 1}`);
+        const title =
+          index === 14
+            ? "God's Will For The Local Church"
+            : `Anonymised legacy passage review ${index + 1}`;
+        const processingVersion =
+          index === 0
+            ? "phase3b2-caption-v1"
+            : index < 3
+              ? "phase3b2b-punctuation-v2"
+              : "phase3b2c-wave1-extractive-drafts-v2";
+        const created = await service.create(
+          createSermonInputSchema.parse({
+            title,
+            slug: `anonymised-legacy-passage-review-${index + 1}`,
+            serviceDate: "2026-08-05",
+            speakerId,
+            ...approvedEnrichment(),
+            media: [
+              {
+                provider: "youtube",
+                mediaType: "video",
+                externalId: videoId,
+                canonicalUrl: `https://www.youtube.com/watch?v=${videoId}`,
+                title: "Anonymised controlled video",
+              },
+            ],
+          }),
+          admin,
+          `legacy-passage-create-${index + 1}`,
+        );
         sermonIds.push(created.id);
         await pool.query(
           `INSERT INTO sermon_enrichment_sources (
@@ -3375,20 +4892,29 @@ integration("disposable PostgreSQL Phase 3B application", () => {
              'authorised_youtube_studio_export', 100, 100, 'requires_manual_review',
              0, '[]'::jsonb, '[]'::jsonb, $5, now(), now(), 1, 1, true, 'required'
            )`,
-          [created.id, videoId, `https://www.youtube.com/watch?v=${videoId}`,
-            createHash("sha256").update(videoId).digest("hex"), processingVersion]
+          [
+            created.id,
+            videoId,
+            `https://www.youtube.com/watch?v=${videoId}`,
+            createHash("sha256").update(videoId).digest("hex"),
+            processingVersion,
+          ],
         );
-        const transcript = (await pool.query<{
-          row_version: number;
-          transcript_sha256: string;
-          grounding_revision_id: string;
-        }>(`SELECT row_version,
+        const transcript = (
+          await pool.query<{
+            row_version: number;
+            transcript_sha256: string;
+            grounding_revision_id: string;
+          }>(
+            `SELECT row_version,
                   encode(digest(convert_to(body_text, 'UTF8'), 'sha256'), 'hex') AS transcript_sha256,
                   grounding_revision_id
-             FROM sermon_transcripts WHERE sermon_id = $1`, [created.id])).rows[0]!;
-        const completionTime = index < 9 || index === 14
-          ? completedBefore0015
-          : completedAfter0015;
+             FROM sermon_transcripts WHERE sermon_id = $1`,
+            [created.id],
+          )
+        ).rows[0]!;
+        const completionTime =
+          index < 9 || index === 14 ? completedBefore0015 : completedAfter0015;
         await pool.query(
           `UPDATE sermon_enrichment_reviews
            SET identity_status = 'confirmed', current_stage = 6,
@@ -3400,8 +4926,15 @@ integration("disposable PostgreSQL Phase 3B application", () => {
                empty_item_set_acknowledged_at = $3,
                updated_by_subject = $2, updated_at = $3, row_version = row_version + 1
            WHERE sermon_id = $1`,
-          [created.id, legacyReviewer, completionTime, `authorised-record-${1001 + index}`,
-            emptyItemSetSha256, transcript.transcript_sha256, transcript.row_version]
+          [
+            created.id,
+            legacyReviewer,
+            completionTime,
+            `authorised-record-${1001 + index}`,
+            emptyItemSetSha256,
+            transcript.transcript_sha256,
+            transcript.row_version,
+          ],
         );
         if (index === 14) {
           await pool.query(
@@ -3410,18 +4943,28 @@ integration("disposable PostgreSQL Phase 3B application", () => {
                review_status, reviewed_by_subject, reviewed_at, proposed_at, updated_at
              ) VALUES ($1, 'no_reference', 'administrator', $2, 'administrator-manual-v1',
                        'confirmed_none', $3, $4, $5, $5)`,
-            [created.id, createHash("sha256").update(`none-${index}`).digest("hex"),
-              legacyReviewer, completedBefore0015, proposedBeforeCompletion]
+            [
+              created.id,
+              createHash("sha256").update(`none-${index}`).digest("hex"),
+              legacyReviewer,
+              completedBefore0015,
+              proposedBeforeCompletion,
+            ],
           );
         } else {
-          const proposalTime = index < 9 ? proposedBeforeCompletion : migration0015AppliedAt;
+          const proposalTime =
+            index < 9 ? proposedBeforeCompletion : migration0015AppliedAt;
           await pool.query(
             `INSERT INTO sermon_primary_passage_reviews (
                sermon_id, proposal_outcome, evidence_source, evidence_sha256, parser_version,
                proposed_at, updated_at
              ) VALUES ($1, 'proposed', 'local_youtube_title', $2,
                        'saving-grace-primary-passage-v1', $3, $3)`,
-            [created.id, createHash("sha256").update(`passage-${index}`).digest("hex"), proposalTime]
+            [
+              created.id,
+              createHash("sha256").update(`passage-${index}`).digest("hex"),
+              proposalTime,
+            ],
           );
           await pool.query(
             `INSERT INTO scripture_references (
@@ -3431,7 +4974,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
                parser_version, created_at, updated_at
              ) VALUES ($1, $2, 45, 8, 1, 8, 4, 0, 'exact', 'primary', true,
                        $2, 'title_proposal', 'proposed', 'saving-grace-primary-passage-v1', $3, $3)`,
-            [created.id, `Romans 8:${index + 1}`, proposalTime]
+            [created.id, `Romans 8:${index + 1}`, proposalTime],
           );
         }
       }
@@ -3454,13 +4997,13 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         questionAnswerRowsChanged: 0,
         completedReviewRowsChanged: 0,
         publicRecordsCreated: 0,
-        semanticRowsCreated: 0
+        semanticRowsCreated: 0,
       });
       expect(second).toMatchObject({
         carriedForward: 0,
         preservedFromPriorRun: 9,
         leftPending: 5,
-        confirmedNoPrimaryPreserved: 1
+        confirmedNoPrimaryPreserved: 1,
       });
       expect(second.protectedStateSha256).toBe(first.protectedStateSha256);
       expect(afterProtected).toEqual(beforeProtected);
@@ -3471,77 +5014,114 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         actor_count: number;
         actor_subject: string;
         authorization_count: number;
-      }>(`SELECT count(*)::integer AS audit_count,
+      }>(
+        `SELECT count(*)::integer AS audit_count,
                  count(DISTINCT entity_id)::integer AS sermon_count,
                  count(DISTINCT actor_subject)::integer AS actor_count,
                  min(actor_subject) AS actor_subject,
                  count(DISTINCT request_correlation_id)::integer AS authorization_count
           FROM audit_events
           WHERE action = $1 AND request_correlation_id = $2`,
-      [legacyPassageCarryForwardAction, legacyPassageCarryForwardAuthorization]);
+        [
+          legacyPassageCarryForwardAction,
+          legacyPassageCarryForwardAuthorization,
+        ],
+      );
       expect(audit.rows[0]).toEqual({
         audit_count: 9,
         sermon_count: 9,
         actor_count: 1,
         actor_subject: legacyPassageCarryForwardActor,
-        authorization_count: 1
+        authorization_count: 1,
       });
-      expect((await pool.query(
-        `SELECT count(*)::integer AS count
+      expect(
+        (
+          await pool.query(
+            `SELECT count(*)::integer AS count
          FROM sermon_primary_passage_reviews
          WHERE sermon_id = ANY($1::uuid[]) AND review_status = 'confirmed_passage'
            AND reviewed_by_subject = $2`,
-        [sermonIds, legacyPassageCarryForwardActor]
-      )).rows[0]).toEqual({ count: 9 });
-      expect((await pool.query(
-        `SELECT count(*)::integer AS count
+            [sermonIds, legacyPassageCarryForwardActor],
+          )
+        ).rows[0],
+      ).toEqual({ count: 9 });
+      expect(
+        (
+          await pool.query(
+            `SELECT count(*)::integer AS count
          FROM sermon_primary_passage_reviews
          WHERE sermon_id = ANY($1::uuid[]) AND review_status = 'pending'`,
-        [sermonIds]
-      )).rows[0]).toEqual({ count: 5 });
-      expect((await pool.query(
-        `SELECT review_status, reviewed_by_subject, reviewed_at
+            [sermonIds],
+          )
+        ).rows[0],
+      ).toEqual({ count: 5 });
+      expect(
+        (
+          await pool.query(
+            `SELECT review_status, reviewed_by_subject, reviewed_at
          FROM sermon_primary_passage_reviews passage
          JOIN sermons sermon ON sermon.id = passage.sermon_id
          WHERE sermon.id = ANY($1::uuid[]) AND sermon.title = $2`,
-        [sermonIds, "God's Will For The Local Church"]
-      )).rows[0]).toEqual({
+            [sermonIds, "God's Will For The Local Church"],
+          )
+        ).rows[0],
+      ).toEqual({
         review_status: "confirmed_none",
         reviewed_by_subject: legacyReviewer,
-        reviewed_at: completedBefore0015
+        reviewed_at: completedBefore0015,
       });
     } finally {
       if (sermonIds.length) {
-        await pool.query("DELETE FROM audit_events WHERE entity_id = ANY($1::uuid[])", [sermonIds]);
-        await pool.query("DELETE FROM sermons WHERE id = ANY($1::uuid[])", [sermonIds]);
+        await pool.query(
+          "DELETE FROM audit_events WHERE entity_id = ANY($1::uuid[])",
+          [sermonIds],
+        );
+        await pool.query("DELETE FROM sermons WHERE id = ANY($1::uuid[])", [
+          sermonIds,
+        ]);
       }
-      const migrationPresent = (await pool.query<{ present: boolean }>(
-        "SELECT EXISTS (SELECT 1 FROM schema_migrations WHERE migration_id = '0016_legacy_completed_passage_reviews') AS present"
-      )).rows[0]!.present;
-      if (!migrationPresent) await runSchema("apply", "0016_legacy_completed_passage_reviews");
+      const migrationPresent = (
+        await pool.query<{ present: boolean }>(
+          "SELECT EXISTS (SELECT 1 FROM schema_migrations WHERE migration_id = '0016_legacy_completed_passage_reviews') AS present",
+        )
+      ).rows[0]!.present;
+      if (!migrationPresent)
+        await runSchema("apply", "0016_legacy_completed_passage_reviews");
       await runSchema("apply", "0017_delegated_private_ai_review");
     }
   });
 
   it("supports admin filters, counts, every state transition, and transactional edits", async () => {
-    const admin = { subject: "local-admin-0001", role: "admin" } satisfies ApplicationIdentity;
+    const admin = {
+      subject: "local-admin-0001",
+      role: "admin",
+    } satisfies ApplicationIdentity;
     const repository = new PostgresAdminSermonRepository(pool);
     const publicRepository = new PostgresSermonRepository(pool);
-    const service = new AdminSermonService(repository, () => new Date("2026-08-05T00:00:00.000Z"));
+    const service = new AdminSermonService(
+      repository,
+      () => new Date("2026-08-05T00:00:00.000Z"),
+    );
     const taxonomyIds: string[] = [];
     const sermonIds: string[] = [];
     try {
       const speaker = await service.createTaxonomy(
         "speakers",
-        taxonomyWriteInputSchema.parse({ name: "Phase 3B Speaker", slug: "phase-3b-speaker" }),
+        taxonomyWriteInputSchema.parse({
+          name: "Phase 3B Speaker",
+          slug: "phase-3b-speaker",
+        }),
         admin,
-        "phase3b-speaker"
+        "phase3b-speaker",
       );
       const series = await service.createTaxonomy(
         "series",
-        taxonomyWriteInputSchema.parse({ name: "Phase 3B Series", slug: "phase-3b-series" }),
+        taxonomyWriteInputSchema.parse({
+          name: "Phase 3B Series",
+          slug: "phase-3b-series",
+        }),
         admin,
-        "phase3b-series"
+        "phase3b-series",
       );
       taxonomyIds.push(speaker.id, series.id);
 
@@ -3553,16 +5133,18 @@ integration("disposable PostgreSQL Phase 3B application", () => {
           speakerId: speaker.id,
           seriesIds: [series.id],
           scriptureReferences: [{ displayText: "Romans 8:1-4" }],
-          media: [{
-            provider: "youtube",
-            mediaType: "video",
-            externalId: null,
-            canonicalUrl: "https://www.youtube.com/watch?v=abcdefghijk",
-            title: "Controlled sermon video"
-          }]
+          media: [
+            {
+              provider: "youtube",
+              mediaType: "video",
+              externalId: null,
+              canonicalUrl: "https://www.youtube.com/watch?v=abcdefghijk",
+              title: "Controlled sermon video",
+            },
+          ],
         }),
         admin,
-        "phase3b-create"
+        "phase3b-create",
       );
       sermonIds.push(created.id);
       expect(created).toMatchObject({ status: "draft" });
@@ -3570,18 +5152,26 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       expect(created.readiness.hasApprovedDescription).toBe(false);
       expect(created).not.toHaveProperty("ownership");
 
-      const list = await service.list(
-        { query: "Controlled", speakerId: speaker.id, seriesId: series.id, page: 1, pageSize: 20 },
-        admin
-      ) as ListResponseShape;
+      const list = (await service.list(
+        {
+          query: "Controlled",
+          speakerId: speaker.id,
+          seriesId: series.id,
+          page: 1,
+          pageSize: 20,
+        },
+        admin,
+      )) as ListResponseShape;
       expect(list.data).toHaveLength(1);
       expect(list.countsByStatus.draft).toBeGreaterThanOrEqual(1);
       expect(list.data[0]?.speaker?.name).toBe("Phase 3B Speaker");
-      const missingDescriptions = await service.list(
+      const missingDescriptions = (await service.list(
         { contentIssue: "missing_description", page: 1, pageSize: 20 },
-        admin
-      ) as ListResponseShape;
-      expect(missingDescriptions.data.some((item) => item.id === created.id)).toBe(true);
+        admin,
+      )) as ListResponseShape;
+      expect(
+        missingDescriptions.data.some((item) => item.id === created.id),
+      ).toBe(true);
 
       await expect(
         service.transition(
@@ -3589,61 +5179,79 @@ integration("disposable PostgreSQL Phase 3B application", () => {
           "withdraw",
           sermonTransitionInputSchema.parse({ rowVersion: created.rowVersion }),
           admin,
-          "phase3b-invalid-transition"
-        )
+          "phase3b-invalid-transition",
+        ),
       ).rejects.toMatchObject({ status: 400, code: "invalid_request" });
       await expect(
         service.transition(
           created.id,
           "schedule",
-          sermonTransitionInputSchema.parse({ rowVersion: created.rowVersion, scheduledFor: "2026-08-04T00:00:00.000Z" }),
+          sermonTransitionInputSchema.parse({
+            rowVersion: created.rowVersion,
+            scheduledFor: "2026-08-04T00:00:00.000Z",
+          }),
           admin,
-          "phase3b-invalid-schedule"
-        )
+          "phase3b-invalid-schedule",
+        ),
       ).rejects.toMatchObject({ status: 400, code: "invalid_request" });
 
       await expect(
         service.transition(
           created.id,
           "schedule",
-          { rowVersion: created.rowVersion, scheduledFor: "2027-08-05T00:00:00.000Z" },
+          {
+            rowVersion: created.rowVersion,
+            scheduledFor: "2027-08-05T00:00:00.000Z",
+          },
           admin,
-          "phase3b-incomplete-schedule"
-        )
+          "phase3b-incomplete-schedule",
+        ),
       ).rejects.toMatchObject({ status: 400, code: "content_incomplete" });
 
       const completed = await service.update(
         created.id,
-        updateSermonInputSchema.parse({ rowVersion: created.rowVersion, ...approvedEnrichment() }),
+        updateSermonInputSchema.parse({
+          rowVersion: created.rowVersion,
+          ...approvedEnrichment(),
+        }),
         admin,
-        "phase3b-complete-content"
+        "phase3b-complete-content",
       );
       expect(completed.readiness.isComplete).toBe(false);
       expect(completed).toMatchObject({
         summaryStatus: "approved",
         summarySourceKind: "manual",
-        readiness: { hasApprovedDescription: true }
+        readiness: { hasApprovedDescription: true },
       });
       expect(completed.summaryReviewedAt).not.toBeNull();
       expect(completed.summaryApprovedAt).not.toBeNull();
-      expect(completed.summaryRowVersion).toBeGreaterThan(created.summaryRowVersion);
-      const descriptionAudit = (await service.listAudit(created.id, admin)).find(
-        (event) => event.requestCorrelationId === "phase3b-complete-content"
+      expect(completed.summaryRowVersion).toBeGreaterThan(
+        created.summaryRowVersion,
+      );
+      const descriptionAudit = (
+        await service.listAudit(created.id, admin)
+      ).find(
+        (event) => event.requestCorrelationId === "phase3b-complete-content",
       );
       expect(descriptionAudit?.changedFields).toEqual(
-        expect.arrayContaining(["summary", "summaryStatus", "transcript", "questionAnswers"])
+        expect.arrayContaining([
+          "summary",
+          "summaryStatus",
+          "transcript",
+          "questionAnswers",
+        ]),
       );
 
       expect(completed.readiness).toMatchObject({
         isContentComplete: true,
         isComplete: false,
-        hasRequiredBibleBook: false
+        hasRequiredBibleBook: false,
       });
       await pool.query(
         `INSERT INTO sermon_primary_passage_reviews (
            sermon_id, proposal_outcome, evidence_source, evidence_sha256, parser_version
          ) VALUES ($1, 'no_reference', 'administrator', $2, 'administrator-manual-v1')`,
-        [created.id, "d".repeat(64)]
+        [created.id, "d".repeat(64)],
       );
       const passagePending = await service.detail(created.id, admin);
       const metadataCompleted = await service.decidePrimaryPassage(
@@ -3651,54 +5259,112 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         primaryPassageDecisionInputSchema.parse({
           sermonRowVersion: passagePending.rowVersion,
           reviewRowVersion: passagePending.primaryPassageReview!.rowVersion,
-          action: "confirm_no_primary_passage"
+          action: "confirm_no_primary_passage",
         }),
         admin,
-        "phase3b-no-primary-passage"
+        "phase3b-no-primary-passage",
       );
       expect(metadataCompleted.readiness).toMatchObject({
         isContentComplete: true,
         isComplete: true,
         hasRequiredBibleBook: false,
-        hasRequiredPassageDecision: true
+        hasRequiredPassageDecision: true,
       });
       expect(metadataCompleted).toMatchObject({
         summaryStatus: "approved",
-        transcript: { status: "approved" }
+        transcript: { status: "approved" },
       });
-      expect(metadataCompleted.questionAnswers.every((item) => item.status === "approved")).toBe(true);
+      expect(
+        metadataCompleted.questionAnswers.every(
+          (item) => item.status === "approved",
+        ),
+      ).toBe(true);
 
-      const pending = await service.transition(created.id, "submit", { rowVersion: metadataCompleted.rowVersion }, admin, "phase3b-submit");
-      const withdrawn = await service.transition(created.id, "withdraw", { rowVersion: pending.rowVersion }, admin, "phase3b-withdraw");
+      const pending = await service.transition(
+        created.id,
+        "submit",
+        { rowVersion: metadataCompleted.rowVersion },
+        admin,
+        "phase3b-submit",
+      );
+      const withdrawn = await service.transition(
+        created.id,
+        "withdraw",
+        { rowVersion: pending.rowVersion },
+        admin,
+        "phase3b-withdraw",
+      );
       const scheduled = await service.transition(
         created.id,
         "schedule",
-        { rowVersion: withdrawn.rowVersion, scheduledFor: "2027-08-05T00:00:00.000Z" },
+        {
+          rowVersion: withdrawn.rowVersion,
+          scheduledFor: "2027-08-05T00:00:00.000Z",
+        },
         admin,
-        "phase3b-schedule"
+        "phase3b-schedule",
       );
-      const published = await service.transition(created.id, "publish", { rowVersion: scheduled.rowVersion }, admin, "phase3b-publish");
+      const published = await service.transition(
+        created.id,
+        "publish",
+        { rowVersion: scheduled.rowVersion },
+        admin,
+        "phase3b-publish",
+      );
       expect(published.publishedAt).toBe("2026-08-05T00:00:00.000Z");
-      expect((await publicRepository.findPublishedBySlug(published.slug))?.id).toBe(created.id);
-      const unpublished = await service.transition(created.id, "unpublish", { rowVersion: published.rowVersion }, admin, "phase3b-unpublish");
-      const archived = await service.transition(created.id, "archive", { rowVersion: unpublished.rowVersion }, admin, "phase3b-archive");
-      const restored = await service.transition(created.id, "restore", { rowVersion: archived.rowVersion }, admin, "phase3b-restore");
-      expect(restored).toMatchObject({ status: "draft", publishedAt: published.publishedAt });
-      expect(await publicRepository.findPublishedBySlug(restored.slug)).toBeNull();
+      expect(
+        (await publicRepository.findPublishedBySlug(published.slug))?.id,
+      ).toBe(created.id);
+      const unpublished = await service.transition(
+        created.id,
+        "unpublish",
+        { rowVersion: published.rowVersion },
+        admin,
+        "phase3b-unpublish",
+      );
+      const archived = await service.transition(
+        created.id,
+        "archive",
+        { rowVersion: unpublished.rowVersion },
+        admin,
+        "phase3b-archive",
+      );
+      const restored = await service.transition(
+        created.id,
+        "restore",
+        { rowVersion: archived.rowVersion },
+        admin,
+        "phase3b-restore",
+      );
+      expect(restored).toMatchObject({
+        status: "draft",
+        publishedAt: published.publishedAt,
+      });
+      expect(
+        await publicRepository.findPublishedBySlug(restored.slug),
+      ).toBeNull();
 
       const current = await service.update(
         created.id,
-        updateSermonInputSchema.parse({ rowVersion: restored.rowVersion, summary: "Current edit", summaryStatus: "draft" }),
+        updateSermonInputSchema.parse({
+          rowVersion: restored.rowVersion,
+          summary: "Current edit",
+          summaryStatus: "draft",
+        }),
         admin,
-        "phase3b-current"
+        "phase3b-current",
       );
       await expect(
         service.update(
           created.id,
-          updateSermonInputSchema.parse({ rowVersion: restored.rowVersion, summary: "Stale edit", summaryStatus: "draft" }),
+          updateSermonInputSchema.parse({
+            rowVersion: restored.rowVersion,
+            summary: "Stale edit",
+            summaryStatus: "draft",
+          }),
           admin,
-          "phase3b-stale"
-        )
+          "phase3b-stale",
+        ),
       ).rejects.toMatchObject({ status: 409, code: "stale_write" });
 
       await expect(
@@ -3707,39 +5373,62 @@ integration("disposable PostgreSQL Phase 3B application", () => {
           updateSermonInputSchema.parse({
             rowVersion: current.rowVersion,
             title: "Must roll back",
-            seriesIds: ["00000000-0000-4000-8000-000000000099"]
+            seriesIds: ["00000000-0000-4000-8000-000000000099"],
           }),
           admin,
-          "phase3b-rollback"
-        )
+          "phase3b-rollback",
+        ),
       ).rejects.toBeInstanceOf(ApplicationError);
-      expect((await service.detail(created.id, admin)).title).not.toBe("Must roll back");
+      expect((await service.detail(created.id, admin)).title).not.toBe(
+        "Must roll back",
+      );
 
-      const importedId = (await pool.query<{ id: string }>("SELECT id FROM sermons WHERE source_wordpress_id = 9003")).rows[0]!.id;
+      const importedId = (
+        await pool.query<{ id: string }>(
+          "SELECT id FROM sermons WHERE source_wordpress_id = 9003",
+        )
+      ).rows[0]!.id;
       expect((await service.detail(importedId, admin)).id).toBe(importedId);
     } finally {
-      await pool.query("DELETE FROM audit_events WHERE actor_subject = 'local-admin-0001'");
-      if (sermonIds.length) await pool.query("DELETE FROM sermons WHERE id = ANY($1::uuid[])", [sermonIds]);
+      await pool.query(
+        "DELETE FROM audit_events WHERE actor_subject = 'local-admin-0001'",
+      );
+      if (sermonIds.length)
+        await pool.query("DELETE FROM sermons WHERE id = ANY($1::uuid[])", [
+          sermonIds,
+        ]);
       if (taxonomyIds.length) {
-        await pool.query("DELETE FROM speakers WHERE id = ANY($1::uuid[])", [taxonomyIds]);
-        await pool.query("DELETE FROM series WHERE id = ANY($1::uuid[])", [taxonomyIds]);
+        await pool.query("DELETE FROM speakers WHERE id = ANY($1::uuid[])", [
+          taxonomyIds,
+        ]);
+        await pool.query("DELETE FROM series WHERE id = ANY($1::uuid[])", [
+          taxonomyIds,
+        ]);
       }
     }
   });
 
   it("records slug redirects and enforces permanent deletion safeguards with minimal tombstones", async () => {
     await makeAnonymisedPublishedFixturesFrontendEligible(pool);
-    const admin = { subject: "local-admin-0001", role: "admin" } satisfies ApplicationIdentity;
+    const admin = {
+      subject: "local-admin-0001",
+      role: "admin",
+    } satisfies ApplicationIdentity;
     const repository = new PostgresAdminSermonRepository(pool);
-    const service = new AdminSermonService(repository, () => new Date("2026-08-05T00:00:00.000Z"));
+    const service = new AdminSermonService(
+      repository,
+      () => new Date("2026-08-05T00:00:00.000Z"),
+    );
     const createdIds: string[] = [];
     try {
       const existingSpeakerId = (
-        await pool.query<{ id: string }>("SELECT id FROM speakers ORDER BY id LIMIT 1")
+        await pool.query<{ id: string }>(
+          "SELECT id FROM speakers ORDER BY id LIMIT 1",
+        )
       ).rows[0]!.id;
       const canonicalBookId = (
         await pool.query<{ id: string }>(
-          "SELECT id FROM book_classifications WHERE classification_type = 'canonical' ORDER BY canonical_book_id LIMIT 1"
+          "SELECT id FROM book_classifications WHERE classification_type = 'canonical' ORDER BY canonical_book_id LIMIT 1",
         )
       ).rows[0]!.id;
       const created = await service.create(
@@ -3751,23 +5440,25 @@ integration("disposable PostgreSQL Phase 3B application", () => {
           bookClassificationIds: [canonicalBookId],
           ...approvedEnrichment(),
           scriptureReferences: [{ displayText: "John 3:16" }],
-          media: [{
-            provider: "sermonaudio",
-            mediaType: "audio",
-            externalId: null,
-            canonicalUrl: "https://www.sermonaudio.com/sermons/example",
-            title: "Controlled audio"
-          }]
+          media: [
+            {
+              provider: "sermonaudio",
+              mediaType: "audio",
+              externalId: null,
+              canonicalUrl: "https://www.sermonaudio.com/sermons/example",
+              title: "Controlled audio",
+            },
+          ],
         }),
         admin,
-        "delete-create"
+        "delete-create",
       );
       createdIds.push(created.id);
       await pool.query(
         `INSERT INTO sermon_primary_passage_reviews (
            sermon_id, proposal_outcome, evidence_source, evidence_sha256, parser_version
          ) VALUES ($1, 'no_reference', 'administrator', $2, 'administrator-manual-v1')`,
-        [created.id, "e".repeat(64)]
+        [created.id, "e".repeat(64)],
       );
       const passagePending = await service.detail(created.id, admin);
       const passageComplete = await service.decidePrimaryPassage(
@@ -3775,72 +5466,130 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         primaryPassageDecisionInputSchema.parse({
           sermonRowVersion: passagePending.rowVersion,
           reviewRowVersion: passagePending.primaryPassageReview!.rowVersion,
-          action: "confirm_no_primary_passage"
+          action: "confirm_no_primary_passage",
         }),
         admin,
-        "delete-no-primary-passage"
+        "delete-no-primary-passage",
       );
-      const published = await service.transition(created.id, "publish", { rowVersion: passageComplete.rowVersion }, admin, "delete-publish");
+      const published = await service.transition(
+        created.id,
+        "publish",
+        { rowVersion: passageComplete.rowVersion },
+        admin,
+        "delete-publish",
+      );
       const renamed = await service.update(
         created.id,
-        updateSermonInputSchema.parse({ rowVersion: published.rowVersion, slug: "delete-safeguard-renamed" }),
+        updateSermonInputSchema.parse({
+          rowVersion: published.rowVersion,
+          slug: "delete-safeguard-renamed",
+        }),
         admin,
-        "delete-rename"
+        "delete-rename",
       );
       expect(
-        (await pool.query("SELECT new_path, status_code FROM redirects WHERE old_path = '/sermons/delete-safeguard-sermon/'")).rows[0]
-      ).toEqual({ new_path: "/sermons/delete-safeguard-renamed/", status_code: 301 });
+        (
+          await pool.query(
+            "SELECT new_path, status_code FROM redirects WHERE old_path = '/sermons/delete-safeguard-sermon/'",
+          )
+        ).rows[0],
+      ).toEqual({
+        new_path: "/sermons/delete-safeguard-renamed/",
+        status_code: 301,
+      });
 
       await expect(
         service.permanentlyDelete(
           created.id,
-          permanentlyDeleteSermonInputSchema.parse({ rowVersion: renamed.rowVersion, confirmation: renamed.slug, reason: "Incorrect state", seoDisposition: { kind: "gone" } }),
+          permanentlyDeleteSermonInputSchema.parse({
+            rowVersion: renamed.rowVersion,
+            confirmation: renamed.slug,
+            reason: "Incorrect state",
+            seoDisposition: { kind: "gone" },
+          }),
           admin,
-          "delete-wrong-state"
-        )
+          "delete-wrong-state",
+        ),
       ).rejects.toMatchObject({ status: 400, code: "invalid_request" });
 
-      const archived = await service.transition(created.id, "archive", { rowVersion: renamed.rowVersion }, admin, "delete-archive");
+      const archived = await service.transition(
+        created.id,
+        "archive",
+        { rowVersion: renamed.rowVersion },
+        admin,
+        "delete-archive",
+      );
       await expect(
         service.permanentlyDelete(
           created.id,
-          permanentlyDeleteSermonInputSchema.parse({ rowVersion: archived.rowVersion, confirmation: "wrong", reason: "Mismatch", seoDisposition: { kind: "gone" } }),
+          permanentlyDeleteSermonInputSchema.parse({
+            rowVersion: archived.rowVersion,
+            confirmation: "wrong",
+            reason: "Mismatch",
+            seoDisposition: { kind: "gone" },
+          }),
           admin,
-          "delete-confirmation"
-        )
+          "delete-confirmation",
+        ),
       ).rejects.toMatchObject({ status: 400, code: "invalid_request" });
       await expect(
         service.permanentlyDelete(
           created.id,
-          permanentlyDeleteSermonInputSchema.parse({ rowVersion: archived.rowVersion - 1, confirmation: archived.slug, reason: "Stale", seoDisposition: { kind: "gone" } }),
+          permanentlyDeleteSermonInputSchema.parse({
+            rowVersion: archived.rowVersion - 1,
+            confirmation: archived.slug,
+            reason: "Stale",
+            seoDisposition: { kind: "gone" },
+          }),
           admin,
-          "delete-stale"
-        )
+          "delete-stale",
+        ),
       ).rejects.toMatchObject({ status: 409, code: "stale_write" });
       await expect(
         service.permanentlyDelete(
           created.id,
-          permanentlyDeleteSermonInputSchema.parse({ rowVersion: archived.rowVersion, confirmation: archived.slug, reason: "Missing disposition" }),
+          permanentlyDeleteSermonInputSchema.parse({
+            rowVersion: archived.rowVersion,
+            confirmation: archived.slug,
+            reason: "Missing disposition",
+          }),
           admin,
-          "delete-missing-seo"
-        )
+          "delete-missing-seo",
+        ),
       ).rejects.toMatchObject({ status: 400, code: "invalid_request" });
       await expect(
         service.permanentlyDelete(
           created.id,
-          permanentlyDeleteSermonInputSchema.parse({ rowVersion: archived.rowVersion, confirmation: archived.slug, reason: "Invalid target", seoDisposition: { kind: "redirect", targetPath: "/sermons/not-a-published-target/" } }),
+          permanentlyDeleteSermonInputSchema.parse({
+            rowVersion: archived.rowVersion,
+            confirmation: archived.slug,
+            reason: "Invalid target",
+            seoDisposition: {
+              kind: "redirect",
+              targetPath: "/sermons/not-a-published-target/",
+            },
+          }),
           admin,
-          "delete-invalid-target"
-        )
+          "delete-invalid-target",
+        ),
       ).rejects.toMatchObject({ status: 400, code: "invalid_request" });
 
       const result = await service.permanentlyDelete(
         created.id,
-        permanentlyDeleteSermonInputSchema.parse({ rowVersion: archived.rowVersion, confirmation: archived.slug, reason: "Duplicate content retired", seoDisposition: { kind: "gone" } }),
+        permanentlyDeleteSermonInputSchema.parse({
+          rowVersion: archived.rowVersion,
+          confirmation: archived.slug,
+          reason: "Duplicate content retired",
+          seoDisposition: { kind: "gone" },
+        }),
         admin,
-        "delete-success"
+        "delete-success",
       );
-      expect(result).toMatchObject({ deleted: true, formerSlug: "delete-safeguard-renamed", seoDisposition: { kind: "gone" } });
+      expect(result).toMatchObject({
+        deleted: true,
+        formerSlug: "delete-safeguard-renamed",
+        seoDisposition: { kind: "gone" },
+      });
       createdIds.splice(createdIds.indexOf(created.id), 1);
 
       const dependent = await pool.query<{
@@ -3858,37 +5607,90 @@ integration("disposable PostgreSQL Phase 3B application", () => {
            (SELECT count(*)::integer FROM sermon_media_source_audit a JOIN sermon_media m ON m.id = a.sermon_media_id WHERE m.sermon_id = $1) AS media_source,
            (SELECT count(*)::integer FROM sermon_deletion_tombstones WHERE former_sermon_id = $1) AS tombstone,
            (SELECT count(*)::integer FROM audit_events WHERE entity_id = $1 AND action = 'sermon.permanent_delete') AS audit`,
-        [created.id]
+        [created.id],
       );
-      expect(dependent.rows[0]).toEqual({ sermon: 0, scripture: 0, media: 0, media_source: 0, tombstone: 1, audit: 1 });
-      const dispositions = await pool.query("SELECT old_path, new_path, status_code FROM redirects WHERE source_sermon_id = $1 ORDER BY old_path", [created.id]);
+      expect(dependent.rows[0]).toEqual({
+        sermon: 0,
+        scripture: 0,
+        media: 0,
+        media_source: 0,
+        tombstone: 1,
+        audit: 1,
+      });
+      const dispositions = await pool.query(
+        "SELECT old_path, new_path, status_code FROM redirects WHERE source_sermon_id = $1 ORDER BY old_path",
+        [created.id],
+      );
       expect(dispositions.rows).toEqual([
-        { old_path: "/sermons/delete-safeguard-renamed/", new_path: null, status_code: 410 },
-        { old_path: "/sermons/delete-safeguard-sermon/", new_path: null, status_code: 410 }
+        {
+          old_path: "/sermons/delete-safeguard-renamed/",
+          new_path: null,
+          status_code: 410,
+        },
+        {
+          old_path: "/sermons/delete-safeguard-sermon/",
+          new_path: null,
+          status_code: 410,
+        },
       ]);
       const publicRepository = new PostgresSermonRepository(pool);
       expect(
-        await publicRepository.findPublicPathDisposition("/sermons/delete-safeguard-sermon/")
+        await publicRepository.findPublicPathDisposition(
+          "/sermons/delete-safeguard-sermon/",
+        ),
       ).toEqual({ kind: "gone" });
       const history = await service.auditHistory(admin);
-      const tombstone = history.deletionTombstones.find((item) => item.formerSermonId === created.id);
-      expect(tombstone).toMatchObject({ formerSlug: "delete-safeguard-renamed", reason: "Duplicate content retired", seoDisposition: "gone" });
-      expect(JSON.stringify(tombstone)).not.toMatch(/body|media|iframe|originalValue|password|token|secret/i);
-      expect((await service.listAudit(created.id, admin)).some((event) => event.action === "sermon.permanent_delete")).toBe(true);
+      const tombstone = history.deletionTombstones.find(
+        (item) => item.formerSermonId === created.id,
+      );
+      expect(tombstone).toMatchObject({
+        formerSlug: "delete-safeguard-renamed",
+        reason: "Duplicate content retired",
+        seoDisposition: "gone",
+      });
+      expect(JSON.stringify(tombstone)).not.toMatch(
+        /body|media|iframe|originalValue|password|token|secret/i,
+      );
+      expect(
+        (await service.listAudit(created.id, admin)).some(
+          (event) => event.action === "sermon.permanent_delete",
+        ),
+      ).toBe(true);
 
       const neverPublished = await service.create(
-        createSermonInputSchema.parse({ title: "Never Public", slug: "never-public", serviceDate: "2026-08-05" }),
+        createSermonInputSchema.parse({
+          title: "Never Public",
+          slug: "never-public",
+          serviceDate: "2026-08-05",
+        }),
         admin,
-        "never-public-create"
+        "never-public-create",
       );
-      const neverArchived = await service.transition(neverPublished.id, "archive", { rowVersion: neverPublished.rowVersion }, admin, "never-public-archive");
+      const neverArchived = await service.transition(
+        neverPublished.id,
+        "archive",
+        { rowVersion: neverPublished.rowVersion },
+        admin,
+        "never-public-archive",
+      );
       await service.permanentlyDelete(
         neverPublished.id,
-        permanentlyDeleteSermonInputSchema.parse({ rowVersion: neverArchived.rowVersion, confirmation: "Never Public", reason: "Draft entered in error" }),
+        permanentlyDeleteSermonInputSchema.parse({
+          rowVersion: neverArchived.rowVersion,
+          confirmation: "Never Public",
+          reason: "Draft entered in error",
+        }),
         admin,
-        "never-public-delete"
+        "never-public-delete",
       );
-      expect((await pool.query("SELECT count(*)::integer AS count FROM redirects WHERE source_sermon_id = $1", [neverPublished.id])).rows[0].count).toBe(0);
+      expect(
+        (
+          await pool.query(
+            "SELECT count(*)::integer AS count FROM redirects WHERE source_sermon_id = $1",
+            [neverPublished.id],
+          )
+        ).rows[0].count,
+      ).toBe(0);
 
       const redirectSource = await service.create(
         createSermonInputSchema.parse({
@@ -3898,36 +5700,55 @@ integration("disposable PostgreSQL Phase 3B application", () => {
           speakerId: existingSpeakerId,
           bookClassificationIds: [canonicalBookId],
           ...approvedEnrichment(),
-          media: [{
-            provider: "sermonaudio",
-            mediaType: "audio",
-            externalId: null,
-            canonicalUrl: "https://www.sermonaudio.com/sermons/redirect-example",
-            title: "Controlled redirect example audio"
-          }]
+          media: [
+            {
+              provider: "sermonaudio",
+              mediaType: "audio",
+              externalId: null,
+              canonicalUrl:
+                "https://www.sermonaudio.com/sermons/redirect-example",
+              title: "Controlled redirect example audio",
+            },
+          ],
         }),
         admin,
-        "redirect-delete-create"
+        "redirect-delete-create",
       );
       await pool.query(
         `INSERT INTO sermon_primary_passage_reviews (
            sermon_id, proposal_outcome, evidence_source, evidence_sha256, parser_version
          ) VALUES ($1, 'no_reference', 'administrator', $2, 'administrator-manual-v1')`,
-        [redirectSource.id, "f".repeat(64)]
+        [redirectSource.id, "f".repeat(64)],
       );
-      const redirectPassagePending = await service.detail(redirectSource.id, admin);
+      const redirectPassagePending = await service.detail(
+        redirectSource.id,
+        admin,
+      );
       const redirectPassageComplete = await service.decidePrimaryPassage(
         redirectSource.id,
         primaryPassageDecisionInputSchema.parse({
           sermonRowVersion: redirectPassagePending.rowVersion,
-          reviewRowVersion: redirectPassagePending.primaryPassageReview!.rowVersion,
-          action: "confirm_no_primary_passage"
+          reviewRowVersion:
+            redirectPassagePending.primaryPassageReview!.rowVersion,
+          action: "confirm_no_primary_passage",
         }),
         admin,
-        "redirect-delete-no-primary-passage"
+        "redirect-delete-no-primary-passage",
       );
-      const redirectPublished = await service.transition(redirectSource.id, "publish", { rowVersion: redirectPassageComplete.rowVersion }, admin, "redirect-delete-publish");
-      const redirectArchived = await service.transition(redirectSource.id, "archive", { rowVersion: redirectPublished.rowVersion }, admin, "redirect-delete-archive");
+      const redirectPublished = await service.transition(
+        redirectSource.id,
+        "publish",
+        { rowVersion: redirectPassageComplete.rowVersion },
+        admin,
+        "redirect-delete-publish",
+      );
+      const redirectArchived = await service.transition(
+        redirectSource.id,
+        "archive",
+        { rowVersion: redirectPublished.rowVersion },
+        admin,
+        "redirect-delete-archive",
+      );
       await service.permanentlyDelete(
         redirectSource.id,
         permanentlyDeleteSermonInputSchema.parse({
@@ -3936,37 +5757,55 @@ integration("disposable PostgreSQL Phase 3B application", () => {
           reason: "Consolidated with retained sermon",
           seoDisposition: {
             kind: "redirect",
-            targetPath: "/sermons/grace-for-an-anonymised-congregation/"
-          }
+            targetPath: "/sermons/grace-for-an-anonymised-congregation/",
+          },
         }),
         admin,
-        "redirect-delete-success"
+        "redirect-delete-success",
       );
       expect(
-        (await pool.query("SELECT new_path, status_code FROM redirects WHERE old_path = '/sermons/redirect-retired-sermon/'")).rows[0]
+        (
+          await pool.query(
+            "SELECT new_path, status_code FROM redirects WHERE old_path = '/sermons/redirect-retired-sermon/'",
+          )
+        ).rows[0],
       ).toEqual({
         new_path: "/sermons/grace-for-an-anonymised-congregation/",
-        status_code: 301
+        status_code: 301,
       });
       expect(
-        await publicRepository.findPublicPathDisposition("/sermons/redirect-retired-sermon/")
+        await publicRepository.findPublicPathDisposition(
+          "/sermons/redirect-retired-sermon/",
+        ),
       ).toEqual({
         kind: "redirect",
-        location: "/sermons/grace-for-an-anonymised-congregation/"
+        location: "/sermons/grace-for-an-anonymised-congregation/",
       });
     } finally {
-      if (createdIds.length) await pool.query("DELETE FROM sermons WHERE id = ANY($1::uuid[])", [createdIds]);
+      if (createdIds.length)
+        await pool.query("DELETE FROM sermons WHERE id = ANY($1::uuid[])", [
+          createdIds,
+        ]);
       await pool.query(
         `DELETE FROM sermon_primary_passage_reviews
          WHERE sermon_id IN (
            SELECT id FROM sermons
            WHERE slug = ANY($1::text[])
          )`,
-        [["grace-for-an-anonymised-congregation", "hope-in-an-anonymised-trial"]]
+        [
+          [
+            "grace-for-an-anonymised-congregation",
+            "hope-in-an-anonymised-trial",
+          ],
+        ],
       );
-      await pool.query("DELETE FROM redirects WHERE source_sermon_id IS NOT NULL");
+      await pool.query(
+        "DELETE FROM redirects WHERE source_sermon_id IS NOT NULL",
+      );
       await pool.query("DELETE FROM sermon_deletion_tombstones");
-      await pool.query("DELETE FROM audit_events WHERE actor_subject = 'local-admin-0001'");
+      await pool.query(
+        "DELETE FROM audit_events WHERE actor_subject = 'local-admin-0001'",
+      );
     }
   });
 
@@ -3974,17 +5813,53 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     const route = createApplicationApiRouter(
       new PostgresSermonRepository(pool),
       new PostgresAdminSermonRepository(pool),
-      new LocalTestIdentityProvider(true, "development")
+      new LocalTestIdentityProvider(true, "development"),
     );
-    expect((await route(new Request("http://127.0.0.1/api/v1/admin/sermons"))).status).toBe(401);
-    expect((await route(new Request(
-      "http://127.0.0.1/api/v1/admin/sermons/75df2144-b557-50f6-98bd-011cd696bfb9/review"
-    ))).status).toBe(401);
-    expect((await route(new Request("http://127.0.0.1/api/v1/admin/sermons", { headers: { "x-local-identity": "admin" } }))).status).toBe(200);
+    expect(
+      (await route(new Request("http://127.0.0.1/api/v1/admin/sermons")))
+        .status,
+    ).toBe(401);
+    expect(
+      (
+        await route(
+          new Request(
+            "http://127.0.0.1/api/v1/admin/sermons/75df2144-b557-50f6-98bd-011cd696bfb9/review",
+          ),
+        )
+      ).status,
+    ).toBe(401);
+    expect(
+      (
+        await route(
+          new Request("http://127.0.0.1/api/v1/admin/sermons", {
+            headers: { "x-local-identity": "admin" },
+          }),
+        )
+      ).status,
+    ).toBe(200);
     for (const selector of ["editor", "contributor", "unknown"]) {
-      expect((await route(new Request("http://127.0.0.1/api/v1/admin/sermons", { headers: { "x-local-identity": selector, "x-actor-role": "admin" } }))).status).toBe(401);
+      expect(
+        (
+          await route(
+            new Request("http://127.0.0.1/api/v1/admin/sermons", {
+              headers: {
+                "x-local-identity": selector,
+                "x-actor-role": "admin",
+              },
+            }),
+          )
+        ).status,
+      ).toBe(401);
     }
-    expect((await route(new Request("http://127.0.0.1/api/v1/admin/audit", { headers: { "x-local-identity": "admin" } }))).status).toBe(200);
+    expect(
+      (
+        await route(
+          new Request("http://127.0.0.1/api/v1/admin/audit", {
+            headers: { "x-local-identity": "admin" },
+          }),
+        )
+      ).status,
+    ).toBe(200);
   });
 
   it("keeps schema receipts separate from content-import receipts and verifies a no-op", async () => {
@@ -3996,14 +5871,16 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       applied_at: Date;
     }>(
       `SELECT migration_order, migration_id, checksum_sha256, applied_at
-       FROM schema_migrations ORDER BY migration_order`
+       FROM schema_migrations ORDER BY migration_order`,
     );
-    expect(journal.rows).toEqual(migrations.map((migration) => ({
-      migration_order: migration.order,
-      migration_id: migration.id,
-      checksum_sha256: migration.checksumSha256,
-      applied_at: expect.any(Date)
-    })));
+    expect(journal.rows).toEqual(
+      migrations.map((migration) => ({
+        migration_order: migration.order,
+        migration_id: migration.id,
+        checksum_sha256: migration.checksumSha256,
+        applied_at: expect.any(Date),
+      })),
+    );
     const before = await pool.query<{
       schema_receipts: number;
       content_records: number;
@@ -4012,7 +5889,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       `SELECT
          (SELECT count(*)::integer FROM schema_migrations) AS schema_receipts,
          (SELECT count(*)::integer FROM migration_records) AS content_records,
-         (SELECT count(*)::integer FROM sermon_enrichment_draft_imports) AS draft_import_receipts`
+         (SELECT count(*)::integer FROM sermon_enrichment_draft_imports) AS draft_import_receipts`,
     );
     expect(before.rows[0]?.schema_receipts).toBe(20);
     expect(before.rows[0]?.content_records).toBe(5);
@@ -4022,18 +5899,22 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       outcome: "no_op",
       appliedMigrationIds: [],
       rolledBackMigrationIds: [],
-      journalReceiptCount: 20
+      journalReceiptCount: 20,
     });
-    expect((await pool.query<{
-      schema_receipts: number;
-      content_records: number;
-      draft_import_receipts: number;
-    }>(
-      `SELECT
+    expect(
+      (
+        await pool.query<{
+          schema_receipts: number;
+          content_records: number;
+          draft_import_receipts: number;
+        }>(
+          `SELECT
          (SELECT count(*)::integer FROM schema_migrations) AS schema_receipts,
          (SELECT count(*)::integer FROM migration_records) AS content_records,
-         (SELECT count(*)::integer FROM sermon_enrichment_draft_imports) AS draft_import_receipts`
-    )).rows[0]).toEqual(before.rows[0]);
+         (SELECT count(*)::integer FROM sermon_enrichment_draft_imports) AS draft_import_receipts`,
+        )
+      ).rows[0],
+    ).toEqual(before.rows[0]);
   });
 
   it("applies only the pending canonical suffix from a valid partial journal", async () => {
@@ -4051,9 +5932,13 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     await runSchema("rollback", "0006_phase3b2_pilot_provenance");
     await runSchema("rollback", "0005_approved_sermon_descriptions");
     await runSchema("rollback", "0004_sermon_enrichment_readiness");
-    expect((await pool.query<{ count: number }>(
-      "SELECT count(*)::integer AS count FROM schema_migrations"
-    )).rows[0]).toEqual({ count: 3 });
+    expect(
+      (
+        await pool.query<{ count: number }>(
+          "SELECT count(*)::integer AS count FROM schema_migrations",
+        )
+      ).rows[0],
+    ).toEqual({ count: 3 });
     await expect(runSchema("apply")).resolves.toEqual({
       direction: "apply",
       outcome: "applied",
@@ -4074,10 +5959,10 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         "0017_delegated_private_ai_review",
         "0018_remaining_private_ai_review",
         "0019_restricted_bulk_acceptance",
-        "0020_d160_delegated_review_acceptance"
+        "0020_d160_delegated_review_acceptance",
       ],
       rolledBackMigrationIds: [],
-      journalReceiptCount: 20
+      journalReceiptCount: 20,
     });
   });
 
@@ -4086,20 +5971,25 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     const eighth = migrations[7]!;
     await pool.query(
       "UPDATE schema_migrations SET checksum_sha256 = $1 WHERE migration_order = 8",
-      ["f".repeat(64)]
+      ["f".repeat(64)],
     );
-    await expect(runSchema("rollback", "0009_pilot_completion_safeguards"))
-      .rejects.toMatchObject({ code: "migration_checksum_mismatch" });
-    expect((await pool.query<{ receipt: number; atomic_present: boolean }>(
-      `SELECT
+    await expect(
+      runSchema("rollback", "0009_pilot_completion_safeguards"),
+    ).rejects.toMatchObject({ code: "migration_checksum_mismatch" });
+    expect(
+      (
+        await pool.query<{ receipt: number; atomic_present: boolean }>(
+          `SELECT
          (SELECT count(*)::integer FROM schema_migrations WHERE migration_order = 8) AS receipt,
          EXISTS (SELECT 1 FROM information_schema.columns
                  WHERE table_name = 'sermon_enrichment_review_items'
-                   AND column_name = 'item_identity_sha256') AS atomic_present`
-    )).rows[0]).toEqual({ receipt: 1, atomic_present: true });
+                   AND column_name = 'item_identity_sha256') AS atomic_present`,
+        )
+      ).rows[0],
+    ).toEqual({ receipt: 1, atomic_present: true });
     await pool.query(
       "UPDATE schema_migrations SET checksum_sha256 = $1 WHERE migration_order = 8",
-      [eighth.checksumSha256]
+      [eighth.checksumSha256],
     );
     await runSchema("rollback", "0017_delegated_private_ai_review");
     await runSchema("rollback", "0016_legacy_completed_passage_reviews");
@@ -4114,113 +6004,186 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     await pool.query(
       `ALTER TABLE sermon_enrichment_review_items
        ADD COLUMN atomic_review_rollback_probe text
-       GENERATED ALWAYS AS (item_identity_sha256) STORED`
+       GENERATED ALWAYS AS (item_identity_sha256) STORED`,
     );
-    await expect(runSchema("rollback", "0008_atomic_sermon_review_items"))
-      .rejects.toMatchObject({ code: "migration_transaction_failure" });
-    expect((await pool.query<{ receipt: number; atomic_present: boolean }>(
-      `SELECT
+    await expect(
+      runSchema("rollback", "0008_atomic_sermon_review_items"),
+    ).rejects.toMatchObject({ code: "migration_transaction_failure" });
+    expect(
+      (
+        await pool.query<{ receipt: number; atomic_present: boolean }>(
+          `SELECT
          (SELECT count(*)::integer FROM schema_migrations WHERE migration_order = 8) AS receipt,
          EXISTS (SELECT 1 FROM information_schema.columns
                  WHERE table_name = 'sermon_enrichment_review_items'
-                   AND column_name = 'item_identity_sha256') AS atomic_present`
-    )).rows[0]).toEqual({ receipt: 1, atomic_present: true });
+                   AND column_name = 'item_identity_sha256') AS atomic_present`,
+        )
+      ).rows[0],
+    ).toEqual({ receipt: 1, atomic_present: true });
     await pool.query(
-      "ALTER TABLE sermon_enrichment_review_items DROP COLUMN atomic_review_rollback_probe"
+      "ALTER TABLE sermon_enrichment_review_items DROP COLUMN atomic_review_rollback_probe",
     );
 
-    await expect(runSchema("rollback", "0008_atomic_sermon_review_items"))
-      .resolves.toMatchObject({ outcome: "rolled_back", journalReceiptCount: 7 });
-    expect((await pool.query<{ receipt: number; atomic_present: boolean }>(
-      `SELECT
+    await expect(
+      runSchema("rollback", "0008_atomic_sermon_review_items"),
+    ).resolves.toMatchObject({
+      outcome: "rolled_back",
+      journalReceiptCount: 7,
+    });
+    expect(
+      (
+        await pool.query<{ receipt: number; atomic_present: boolean }>(
+          `SELECT
          (SELECT count(*)::integer FROM schema_migrations WHERE migration_order = 8) AS receipt,
          EXISTS (SELECT 1 FROM information_schema.columns
                  WHERE table_name = 'sermon_enrichment_review_items'
-                   AND column_name = 'item_identity_sha256') AS atomic_present`
-    )).rows[0]).toEqual({ receipt: 0, atomic_present: false });
+                   AND column_name = 'item_identity_sha256') AS atomic_present`,
+        )
+      ).rows[0],
+    ).toEqual({ receipt: 0, atomic_present: false });
 
     await pool.query(
       `INSERT INTO schema_migrations (migration_order, migration_id, checksum_sha256)
        VALUES (8, '0009_unknown', $1)`,
-      [eighth.checksumSha256]
+      [eighth.checksumSha256],
     );
-    await expect(runSchema("apply")).rejects.toMatchObject({ code: "journal_state_failure" });
-    expect((await pool.query<{ present: boolean }>(
-      `SELECT EXISTS (SELECT 1 FROM information_schema.columns
+    await expect(runSchema("apply")).rejects.toMatchObject({
+      code: "journal_state_failure",
+    });
+    expect(
+      (
+        await pool.query<{ present: boolean }>(
+          `SELECT EXISTS (SELECT 1 FROM information_schema.columns
                       WHERE table_name = 'sermon_enrichment_review_items'
-                        AND column_name = 'item_identity_sha256') AS present`
-    )).rows[0]).toEqual({ present: false });
+                        AND column_name = 'item_identity_sha256') AS present`,
+        )
+      ).rows[0],
+    ).toEqual({ present: false });
     await pool.query("DELETE FROM schema_migrations WHERE migration_order = 8");
-    await expect(runSchema("apply", "0008_atomic_sermon_review_items"))
-      .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 8 });
-    await expect(runSchema("apply", "0009_pilot_completion_safeguards"))
-      .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 9 });
-    await expect(runSchema("apply", "0010_zero_finding_guided_review"))
-      .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 10 });
-    await expect(runSchema("apply", "0011_description_semantic_relationships"))
-      .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 11 });
-    await expect(runSchema("apply", "0012_description_semantic_runtime_provenance"))
-      .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 12 });
-    await expect(runSchema("apply", "0013_official_youtube_caption_provenance"))
-      .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 13 });
-    await expect(runSchema("apply", "0014_primary_preaching_passages"))
-      .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 14 });
-    await expect(runSchema("apply", "0015_optional_passage_and_grounding_identity"))
-      .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 15 });
-    await expect(runSchema("apply", "0016_legacy_completed_passage_reviews"))
-      .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 16 });
-    await expect(runSchema("apply", "0017_delegated_private_ai_review"))
-      .resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 17 });
+    await expect(
+      runSchema("apply", "0008_atomic_sermon_review_items"),
+    ).resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 8 });
+    await expect(
+      runSchema("apply", "0009_pilot_completion_safeguards"),
+    ).resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 9 });
+    await expect(
+      runSchema("apply", "0010_zero_finding_guided_review"),
+    ).resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 10 });
+    await expect(
+      runSchema("apply", "0011_description_semantic_relationships"),
+    ).resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 11 });
+    await expect(
+      runSchema("apply", "0012_description_semantic_runtime_provenance"),
+    ).resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 12 });
+    await expect(
+      runSchema("apply", "0013_official_youtube_caption_provenance"),
+    ).resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 13 });
+    await expect(
+      runSchema("apply", "0014_primary_preaching_passages"),
+    ).resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 14 });
+    await expect(
+      runSchema("apply", "0015_optional_passage_and_grounding_identity"),
+    ).resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 15 });
+    await expect(
+      runSchema("apply", "0016_legacy_completed_passage_reviews"),
+    ).resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 16 });
+    await expect(
+      runSchema("apply", "0017_delegated_private_ai_review"),
+    ).resolves.toMatchObject({ outcome: "applied", journalReceiptCount: 17 });
   });
 
   it("adds D-161 without altering D-158 receipts or creating publication-state columns", async () => {
-    const state=await pool.query(`SELECT
+    const state = await pool.query(`SELECT
       to_regclass('public.sermon_d161_restricted_acceptances') IS NOT NULL AS acceptance_table,
       to_regprocedure('public.d161_restricted_acceptance_dependency(uuid)') IS NOT NULL AS dependency_function,
       EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='sermon_d161_restricted_acceptances' AND column_name='accepted_row_version') AS accepted_version,
       NOT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='sermon_d161_restricted_acceptances' AND column_name IN ('published_row_version','publication_state')) AS no_publication_columns,
       (SELECT count(*)::int FROM sermon_restricted_acceptances)=0 AS d158_untouched`);
-    expect(state.rows[0]).toEqual({acceptance_table:true,dependency_function:true,accepted_version:true,no_publication_columns:true,d158_untouched:true});
-    const before=(await pool.query("SELECT count(*)::int n FROM delegated_ai_review_scopes")).rows[0].n;
-    const client=await pool.connect();await client.query("BEGIN");
-    try{
-      await client.query("INSERT INTO delegated_ai_review_scopes(id,scope_sha256,policy_sha256,member_count) VALUES('D-161',$1,$2,36)",["0".repeat(64),"1".repeat(64)]);
-      await expect(client.query("INSERT INTO delegated_ai_review_scopes(id,scope_sha256,policy_sha256,member_count) VALUES('D-999',$1,$2,1)",["2".repeat(64),"3".repeat(64)])).rejects.toThrow();
-    }finally{await client.query("ROLLBACK");client.release();}
-    expect((await pool.query("SELECT count(*)::int n FROM delegated_ai_review_scopes")).rows[0].n).toBe(before);
+    expect(state.rows[0]).toEqual({
+      acceptance_table: true,
+      dependency_function: true,
+      accepted_version: true,
+      no_publication_columns: true,
+      d158_untouched: true,
+    });
+    const before = (
+      await pool.query("SELECT count(*)::int n FROM delegated_ai_review_scopes")
+    ).rows[0].n;
+    const client = await pool.connect();
+    await client.query("BEGIN");
+    try {
+      await client.query(
+        "INSERT INTO delegated_ai_review_scopes(id,scope_sha256,policy_sha256,member_count) VALUES('D-161',$1,$2,36)",
+        ["0".repeat(64), "1".repeat(64)],
+      );
+      await expect(
+        client.query(
+          "INSERT INTO delegated_ai_review_scopes(id,scope_sha256,policy_sha256,member_count) VALUES('D-999',$1,$2,1)",
+          ["2".repeat(64), "3".repeat(64)],
+        ),
+      ).rejects.toThrow();
+    } finally {
+      await client.query("ROLLBACK");
+      client.release();
+    }
+    expect(
+      (
+        await pool.query(
+          "SELECT count(*)::int n FROM delegated_ai_review_scopes",
+        )
+      ).rows[0].n,
+    ).toBe(before);
   });
 
   it("refuses unjournalled objects and serialises concurrent fresh application", async () => {
     await expect(runSchema("rollback")).resolves.toMatchObject({
       outcome: "rolled_back",
-      journalReceiptCount: 0
+      journalReceiptCount: 0,
     });
     await pool.query("DROP TABLE schema_migrations");
     await pool.query("CREATE TABLE sermons (id integer PRIMARY KEY)");
-    await expect(runSchema("apply")).rejects.toMatchObject({ code: "schema_drift_failure" });
-    expect((await pool.query<{ journal_present: boolean; sermon_present: boolean }>(
-      `SELECT
+    await expect(runSchema("apply")).rejects.toMatchObject({
+      code: "schema_drift_failure",
+    });
+    expect(
+      (
+        await pool.query<{ journal_present: boolean; sermon_present: boolean }>(
+          `SELECT
          to_regclass('public.schema_migrations') IS NOT NULL AS journal_present,
-         to_regclass('public.sermons') IS NOT NULL AS sermon_present`
-    )).rows[0]).toEqual({ journal_present: false, sermon_present: true });
+         to_regclass('public.sermons') IS NOT NULL AS sermon_present`,
+        )
+      ).rows[0],
+    ).toEqual({ journal_present: false, sermon_present: true });
     await pool.query("DROP TABLE sermons");
 
     const results = await Promise.all([runSchema("apply"), runSchema("apply")]);
-    expect(results.map((result) => result.outcome).sort()).toEqual(["applied", "no_op"]);
-    expect(results.reduce((count, result) => count + result.appliedMigrationIds.length, 0)).toBe(20);
-    expect((await pool.query<{ receipts: number; distinct_receipts: number }>(
-      `SELECT count(*)::integer AS receipts,
+    expect(results.map((result) => result.outcome).sort()).toEqual([
+      "applied",
+      "no_op",
+    ]);
+    expect(
+      results.reduce(
+        (count, result) => count + result.appliedMigrationIds.length,
+        0,
+      ),
+    ).toBe(20);
+    expect(
+      (
+        await pool.query<{ receipts: number; distinct_receipts: number }>(
+          `SELECT count(*)::integer AS receipts,
               count(DISTINCT migration_id)::integer AS distinct_receipts
-       FROM schema_migrations`
-    )).rows[0]).toEqual({ receipts: 20, distinct_receipts: 20 });
+       FROM schema_migrations`,
+        )
+      ).rows[0],
+    ).toEqual({ receipts: 20, distinct_receipts: 20 });
 
     await expect(runSchema("rollback")).resolves.toMatchObject({
       outcome: "rolled_back",
-      journalReceiptCount: 0
+      journalReceiptCount: 0,
     });
     await expect(runSchema("apply")).resolves.toMatchObject({
       outcome: "applied",
-      journalReceiptCount: 20
+      journalReceiptCount: 20,
     });
   });
 });

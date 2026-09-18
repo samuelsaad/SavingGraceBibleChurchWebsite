@@ -1,5 +1,17 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
+## D-162 seventh fixed batch in progress — 19 September 2026
+
+Work continues only on branch `codex/next-36-after-d161`. The next 36 identities
+were deterministically frozen from the verified private inventory after excluding
+231 prior attempts. The exact private manifest SHA-256 is
+`e47da706e8b458bed6f8198570cc4a51e4b9604049e394d71a02cc84f79ea17f`;
+87 clean candidates became 36 fixed positions plus 51 remaining. The zero-attempt
+checkpoint and pre-write local database fingerprint are private and Git-ignored.
+The local database baseline is 227 sermons, 213 pending Stage-1 reviews, 144
+ordinary restricted acceptances plus four separate D-161 acceptances, and migration 0020. No D-162 provider access, generation or database write occurred before this
+governance checkpoint. Read `seventh-private-batch-plan.md`.
+
 **Handover date:** 14 September 2026
 **Purpose:** Public-safe orientation for continuing work from this repository. This file contains no sermon body, credential, token, session, raw caption export or private local path.
 
@@ -22,7 +34,6 @@ D-159 and earlier Astra provenance is historical and must not be copied or chang
 No caption, transcript, generated content or database write had occurred at this
 checkpoint. Continue only after committing and verifying D-160's safe governance,
 contracts and anonymised tests. See `sixth-private-batch-plan.md`.
-
 
 ## D-159 isolated private batch checkpoint
 

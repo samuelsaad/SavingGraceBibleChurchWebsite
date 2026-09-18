@@ -93,6 +93,37 @@ generation, embeddings, public Related themes, AWS networking or Git push is gra
 All normal approval, publication and privacy rules remain unchanged outside this
 exact cohort/environment exception; D-151 through D-155 remain closed.
 
+### D-162 — seventh fixed private enrichment and review batch
+
+Samuel separately authorises only manifest SHA-256
+`e47da706e8b458bed6f8198570cc4a51e4b9604049e394d71a02cc84f79ea17f`.
+Its 36 identities are the first 36 clean records in the preserved ascending
+authoritative source-ID order after 231 earlier attempts, leaving 51. No
+substitution or thirty-seventh record is permitted. For this manifest only, the
+current primary Codex session may retrieve eligible official English captions,
+prepare word-preserving private transcripts, and use complete but unapproved
+transcripts to generate private descriptions and ordered Q&A. Samuel selected
+`gpt-5.6-sol`; store that selection separately from runtime-reported identity,
+using `not_exposed_by_runtime` rather than inventing unavailable metadata.
+
+Preserve complete grounding, uncertainty, source/output hashes, every original
+candidate and at most one focused correction round. The established bounded
+unknown-audio warning and false primary-audio confirmation apply only to this
+manifest. After atomic local import, D-162 may perform separately attributed
+substantive AI review of every current description and Q&A plus evidence-supported
+identity, speaker, passage, finding, retained-caption and media checks. Restricted
+acceptance is allowed only when all exact current dependencies pass; unresolved or
+redacted evidence remains pending. Necessary private prose may enter only the
+primary Codex tool/session context and ignored persistence, never ordinary logs,
+reports, Git, tests, screenshots, another provider or agent.
+
+The same task may reconcile existing current review evidence and synchronize only
+qualifying restricted acceptances to the established loopback local and sealed
+staging frontends through scoped, recoverable, idempotent transfer. This creates no
+human approval, production/public eligibility, semantic eligibility or publication
+authority. Normal approved-transcript, human-administrator, privacy and publication
+rules remain unchanged everywhere else. Read `seventh-private-batch-plan.md`.
+
 ### D-160 — sixth fixed private draft batch
 
 Samuel separately authorises the protected instruction amendments for only manifest

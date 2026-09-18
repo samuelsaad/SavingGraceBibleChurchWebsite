@@ -1,19 +1,28 @@
 import { createHash } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
 import { assessSermonTitle } from "../domain/sermon-title";
-import { inspectPrimaryBooks, prepareAutomaticPrimaryBook } from "../scripture/automatic-primary-book";
-import { inspectSpeakerMetadata, applySpeakerPlan, speakerPlanHash } from "../metadata/automatic-review-metadata";
+import {
+  inspectPrimaryBooks,
+  prepareAutomaticPrimaryBook,
+} from "../scripture/automatic-primary-book";
+import {
+  inspectSpeakerMetadata,
+  applySpeakerPlan,
+  speakerPlanHash,
+} from "../metadata/automatic-review-metadata";
 import type { SourceSpeakerEvidence } from "../domain/review-metadata";
 import {
-  fourthBatchReviewFindings, insertFourthBatchReviewFindings,
-  providerRedactionWarning, verifyFourthBatchReviewFindings
+  fourthBatchReviewFindings,
+  insertFourthBatchReviewFindings,
+  providerRedactionWarning,
+  verifyFourthBatchReviewFindings,
 } from "./fourth-fixed-batch-review-findings";
 import {
   inspectOneTimePreapprovalValidationRetry,
   oneTimePreapprovalDraftArtifactSchema,
   validateOneTimePreapprovalDraftArtifact,
   type OneTimePreapprovalBatchAuthorization,
-  type OneTimePreapprovalDraftArtifact
+  type OneTimePreapprovalDraftArtifact,
 } from "./one-time-preapproval-batch";
 import { groundedSermonEnrichmentSourceReference } from "./sermon-enrichment-policy";
 import {
@@ -23,7 +32,7 @@ import {
   secondFixedBatchProcessingVersion,
   toD151ValidationCompatibilityArtifact,
   validateSecondFixedBatchDraftArtifact,
-  type SecondFixedBatchAuthorization
+  type SecondFixedBatchAuthorization,
 } from "./second-fixed-batch";
 import {
   thirdFixedBatchAudioWarning,
@@ -32,13 +41,17 @@ import {
   thirdFixedBatchProcessingVersion,
   toD151ValidationCompatibilityArtifact as toD154ValidationCompatibilityArtifact,
   validateThirdFixedBatchDraftArtifact,
-  type ThirdFixedBatchAuthorization
+  type ThirdFixedBatchAuthorization,
 } from "./third-fixed-batch";
 
-export const oneTimePreapprovalImportActor = "local-d151-private-batch-importer" as const;
-export const oneTimePreapprovalImportProcessingVersion = "phase3b2c-evaluation-36-d151-d152-v1" as const;
-export const secondFixedBatchImportActor = "local-d153-private-batch-importer" as const;
-export const thirdFixedBatchImportActor = "local-d154-private-batch-importer" as const;
+export const oneTimePreapprovalImportActor =
+  "local-d151-private-batch-importer" as const;
+export const oneTimePreapprovalImportProcessingVersion =
+  "phase3b2c-evaluation-36-d151-d152-v1" as const;
+export const secondFixedBatchImportActor =
+  "local-d153-private-batch-importer" as const;
+export const thirdFixedBatchImportActor =
+  "local-d154-private-batch-importer" as const;
 
 interface PrivateBatchImportProfile {
   exceptionId: string;
@@ -70,12 +83,32 @@ const d151ImportProfile: PrivateBatchImportProfile = {
   sourceRecordKeyPrefix: "authorised-record",
   audioWarningCode: "audio_track_type_unverified",
   warnings: [
-    { code: "audio_track_type_unverified", safeDetail: "The official API reported an unknown audio-track type under the bounded D-152 fallback." },
-    { code: "primary_audio_association_unconfirmed", safeDetail: "YouTube did not confirm primary-audio association; administrator verification remains required." },
-    { code: "source_transcript_unapproved", safeDetail: "D-151 permits private draft generation before transcript approval for this fixed manifest only." },
-    { code: "administrator_accuracy_review_required", safeDetail: "The transcript and all dependent generated content require administrator review." },
-    { code: "model_revision_unavailable_limited_reproducibility", safeDetail: "The interactive runtime did not expose an immutable model revision." }
-  ]
+    {
+      code: "audio_track_type_unverified",
+      safeDetail:
+        "The official API reported an unknown audio-track type under the bounded D-152 fallback.",
+    },
+    {
+      code: "primary_audio_association_unconfirmed",
+      safeDetail:
+        "YouTube did not confirm primary-audio association; administrator verification remains required.",
+    },
+    {
+      code: "source_transcript_unapproved",
+      safeDetail:
+        "D-151 permits private draft generation before transcript approval for this fixed manifest only.",
+    },
+    {
+      code: "administrator_accuracy_review_required",
+      safeDetail:
+        "The transcript and all dependent generated content require administrator review.",
+    },
+    {
+      code: "model_revision_unavailable_limited_reproducibility",
+      safeDetail:
+        "The interactive runtime did not expose an immutable model revision.",
+    },
+  ],
 };
 
 export const secondFixedBatchImportProfile = Object.freeze({
@@ -92,13 +125,37 @@ export const secondFixedBatchImportProfile = Object.freeze({
   sourceRecordKeyPrefix: "authorised-record",
   audioWarningCode: secondFixedBatchAudioWarning,
   warnings: [
-    { code: secondFixedBatchAudioWarning, safeDetail: "D-153 accepted an otherwise eligible caption whose audio-track association was reported as unknown; primary audio was not confirmed." },
-    { code: "primary_audio_association_unconfirmed", safeDetail: "YouTube did not confirm primary-audio association; administrator verification remains required." },
-    { code: "source_transcript_unapproved", safeDetail: "D-153 permits private draft generation before transcript approval for this exact fixed manifest only." },
-    { code: "automated_punctuation_and_paragraphing_requires_review", safeDetail: "Automated punctuation and paragraphing require administrator accuracy review." },
-    { code: "administrator_accuracy_review_required", safeDetail: "The transcript and all dependent generated content require administrator review." },
-    { code: "model_revision_unavailable_limited_reproducibility", safeDetail: "The interactive runtime did not expose an immutable model revision." }
-  ]
+    {
+      code: secondFixedBatchAudioWarning,
+      safeDetail:
+        "D-153 accepted an otherwise eligible caption whose audio-track association was reported as unknown; primary audio was not confirmed.",
+    },
+    {
+      code: "primary_audio_association_unconfirmed",
+      safeDetail:
+        "YouTube did not confirm primary-audio association; administrator verification remains required.",
+    },
+    {
+      code: "source_transcript_unapproved",
+      safeDetail:
+        "D-153 permits private draft generation before transcript approval for this exact fixed manifest only.",
+    },
+    {
+      code: "automated_punctuation_and_paragraphing_requires_review",
+      safeDetail:
+        "Automated punctuation and paragraphing require administrator accuracy review.",
+    },
+    {
+      code: "administrator_accuracy_review_required",
+      safeDetail:
+        "The transcript and all dependent generated content require administrator review.",
+    },
+    {
+      code: "model_revision_unavailable_limited_reproducibility",
+      safeDetail:
+        "The interactive runtime did not expose an immutable model revision.",
+    },
+  ],
 } satisfies PrivateBatchImportProfile);
 
 export const thirdFixedBatchImportProfile = Object.freeze({
@@ -115,13 +172,37 @@ export const thirdFixedBatchImportProfile = Object.freeze({
   sourceRecordKeyPrefix: "authorised-record",
   audioWarningCode: thirdFixedBatchAudioWarning,
   warnings: [
-    { code: thirdFixedBatchAudioWarning, safeDetail: "D-154 accepted an otherwise eligible caption whose audio-track association was reported as unknown; primary audio was not confirmed." },
-    { code: "primary_audio_association_unconfirmed", safeDetail: "YouTube did not confirm primary-audio association; administrator verification remains required." },
-    { code: "source_transcript_unapproved", safeDetail: "D-154 permits private draft generation before transcript approval for this exact fixed manifest only." },
-    { code: "automated_punctuation_and_paragraphing_requires_review", safeDetail: "Automated punctuation and paragraphing require administrator accuracy review." },
-    { code: "administrator_accuracy_review_required", safeDetail: "The transcript and all dependent generated content require administrator review." },
-    { code: "model_revision_unavailable_limited_reproducibility", safeDetail: "The interactive runtime did not expose an immutable model revision." }
-  ]
+    {
+      code: thirdFixedBatchAudioWarning,
+      safeDetail:
+        "D-154 accepted an otherwise eligible caption whose audio-track association was reported as unknown; primary audio was not confirmed.",
+    },
+    {
+      code: "primary_audio_association_unconfirmed",
+      safeDetail:
+        "YouTube did not confirm primary-audio association; administrator verification remains required.",
+    },
+    {
+      code: "source_transcript_unapproved",
+      safeDetail:
+        "D-154 permits private draft generation before transcript approval for this exact fixed manifest only.",
+    },
+    {
+      code: "automated_punctuation_and_paragraphing_requires_review",
+      safeDetail:
+        "Automated punctuation and paragraphing require administrator accuracy review.",
+    },
+    {
+      code: "administrator_accuracy_review_required",
+      safeDetail:
+        "The transcript and all dependent generated content require administrator review.",
+    },
+    {
+      code: "model_revision_unavailable_limited_reproducibility",
+      safeDetail:
+        "The interactive runtime did not expose an immutable model revision.",
+    },
+  ],
 } satisfies PrivateBatchImportProfile);
 
 export interface OneTimePreapprovalImportMetadata {
@@ -145,7 +226,10 @@ export interface OneTimePreapprovalImportMetadata {
 export interface OneTimePreapprovalImportResult {
   sourceWordPressId: number;
   sermonId: string;
-  outcome: "imported_as_private_draft" | "repaired_after_validation_retry" | "unchanged";
+  outcome:
+    | "imported_as_private_draft"
+    | "repaired_after_validation_retry"
+    | "unchanged";
   questionAnswerCount: number;
 }
 
@@ -159,42 +243,61 @@ interface PrivateBatchImportOptions {
 }
 
 function uuidFrom(value: string): string {
-  const bytes = Buffer.from(createHash("sha256").update(value).digest().subarray(0, 16));
+  const bytes = Buffer.from(
+    createHash("sha256").update(value).digest().subarray(0, 16),
+  );
   bytes[6] = (bytes[6]! & 0x0f) | 0x40;
   bytes[8] = (bytes[8]! & 0x3f) | 0x80;
   const hex = bytes.toString("hex");
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
-function deterministicPrivateBatchSermonId(videoId: string, namespace: string): string {
-  if (!/^[A-Za-z0-9_-]{11}$/u.test(videoId)) throw new Error("one_time_batch_video_identity_invalid");
+function deterministicPrivateBatchSermonId(
+  videoId: string,
+  namespace: string,
+): string {
+  if (!/^[A-Za-z0-9_-]{11}$/u.test(videoId))
+    throw new Error("one_time_batch_video_identity_invalid");
   return uuidFrom(`${namespace}\n${videoId}`);
 }
 
-export function deterministicOneTimePreapprovalSermonId(videoId: string): string {
-  return deterministicPrivateBatchSermonId(videoId, d151ImportProfile.sermonIdNamespace);
+export function deterministicOneTimePreapprovalSermonId(
+  videoId: string,
+): string {
+  return deterministicPrivateBatchSermonId(
+    videoId,
+    d151ImportProfile.sermonIdNamespace,
+  );
 }
 
 export function deterministicSecondFixedBatchSermonId(videoId: string): string {
-  return deterministicPrivateBatchSermonId(videoId, secondFixedBatchImportProfile.sermonIdNamespace);
+  return deterministicPrivateBatchSermonId(
+    videoId,
+    secondFixedBatchImportProfile.sermonIdNamespace,
+  );
 }
 
 export function deterministicThirdFixedBatchSermonId(videoId: string): string {
-  return deterministicPrivateBatchSermonId(videoId, thirdFixedBatchImportProfile.sermonIdNamespace);
+  return deterministicPrivateBatchSermonId(
+    videoId,
+    thirdFixedBatchImportProfile.sermonIdNamespace,
+  );
 }
 
-export function oneTimePreapprovalGroundedSourceReference(artifact: OneTimePreapprovalDraftArtifact): string {
+export function oneTimePreapprovalGroundedSourceReference(
+  artifact: OneTimePreapprovalDraftArtifact,
+): string {
   return groundedSermonEnrichmentSourceReference(
     artifact.transcript.sourceTranscriptSha256,
     artifact.transcript.groundingRevisionId,
-    artifact.generator.outputSha256
+    artifact.generator.outputSha256,
   );
 }
 
 function transcriptSourceReference(
   artifact: OneTimePreapprovalDraftArtifact,
   metadata: OneTimePreapprovalImportMetadata,
-  profile: PrivateBatchImportProfile = d151ImportProfile
+  profile: PrivateBatchImportProfile = d151ImportProfile,
 ): string {
   return `youtube-api:${artifact.target.videoId}:${metadata.captionSourceSha256}:${profile.processingVersion}`;
 }
@@ -205,13 +308,13 @@ async function ensureMigrationReceipt(
   artifact: OneTimePreapprovalDraftArtifact,
   sermonId: string,
   metadata: OneTimePreapprovalImportMetadata,
-  profile: PrivateBatchImportProfile = d151ImportProfile
+  profile: PrivateBatchImportProfile = d151ImportProfile,
 ): Promise<void> {
   const existingRun = await client.query<{ id: string }>(
     `SELECT id FROM migration_runs
      WHERE migration_version = $1 AND source_snapshot_id = $2 AND dry_run = false AND status = 'succeeded'
      ORDER BY started_at LIMIT 1`,
-    [profile.processingVersion, authorization.manifestSha256]
+    [profile.processingVersion, authorization.manifestSha256],
   );
   let runId = existingRun.rows[0]?.id;
   if (!runId) {
@@ -223,8 +326,11 @@ async function ensureMigrationReceipt(
       [
         profile.processingVersion,
         authorization.manifestSha256,
-        JSON.stringify({ scope: "private_manifest_bound_36", exceptionId: profile.exceptionId })
-      ]
+        JSON.stringify({
+          scope: "private_manifest_bound_36",
+          exceptionId: profile.exceptionId,
+        }),
+      ],
     );
     runId = inserted.rows[0]?.id;
   }
@@ -244,8 +350,8 @@ async function ensureMigrationReceipt(
       canonicalUrl,
       metadata.captionSourceSha256,
       sermonId,
-      profile.migrationReasonCode
-    ]
+      profile.migrationReasonCode,
+    ],
   );
   const exact = await client.query<{ matches: boolean }>(
     `SELECT EXISTS (
@@ -263,10 +369,11 @@ async function ensureMigrationReceipt(
       canonicalUrl,
       metadata.captionSourceSha256,
       sermonId,
-      profile.migrationReasonCode
-    ]
+      profile.migrationReasonCode,
+    ],
   );
-  if (!exact.rows[0]?.matches) throw new Error("one_time_batch_migration_receipt_conflict");
+  if (!exact.rows[0]?.matches)
+    throw new Error("one_time_batch_migration_receipt_conflict");
 }
 
 async function verifyExisting(
@@ -277,7 +384,7 @@ async function verifyExisting(
   groundedReference: string,
   metadata: OneTimePreapprovalImportMetadata,
   profile: PrivateBatchImportProfile = d151ImportProfile,
-  contentChecksum: string = artifact.integrity.canonicalSha256
+  contentChecksum: string = artifact.integrity.canonicalSha256,
 ): Promise<boolean> {
   const result = await client.query<{ matches: boolean }>(
     `SELECT EXISTS (
@@ -335,27 +442,41 @@ async function verifyExisting(
       profile.processingVersion,
       contentChecksum,
       artifact.content.questionAnswers.length,
-      [metadata.title, assessSermonTitle(metadata.title, { sourceTitles: [metadata.title] }).title],
+      [
+        metadata.title,
+        assessSermonTitle(metadata.title, { sourceTitles: [metadata.title] })
+          .title,
+      ],
       metadata.serviceDate,
       transcriptSourceReference(artifact, metadata),
       metadata.captionSourceSha256,
       metadata.captionTrackKind === "asr" ? "automatic" : "manual",
       profile.sourceStatus,
-      profile.audioWarningCode
-    ]
+      profile.audioWarningCode,
+    ],
   );
   if (result.rows[0]?.matches !== true) return false;
-  const questions = await client.query<{ question_text: string; answer_text: string; display_order: number }>(
+  const questions = await client.query<{
+    question_text: string;
+    answer_text: string;
+    display_order: number;
+  }>(
     `SELECT question_text, answer_text, display_order
      FROM sermon_question_answers WHERE sermon_id = $1 ORDER BY display_order`,
-    [sermonId]
+    [sermonId],
   );
-  return questions.rows.length === artifact.content.questionAnswers.length &&
+  return (
+    questions.rows.length === artifact.content.questionAnswers.length &&
     questions.rows.every((row, index) => {
       const expected = artifact.content.questionAnswers[index];
-      return expected !== undefined && row.display_order === expected.displayOrder &&
-        row.question_text === expected.question && row.answer_text === expected.answer;
-    });
+      return (
+        expected !== undefined &&
+        row.display_order === expected.displayOrder &&
+        row.question_text === expected.question &&
+        row.answer_text === expected.answer
+      );
+    })
+  );
 }
 
 async function diagnosePrivateBatchPostcondition(
@@ -366,7 +487,7 @@ async function diagnosePrivateBatchPostcondition(
   groundedReference: string,
   metadata: OneTimePreapprovalImportMetadata,
   profile: PrivateBatchImportProfile,
-  contentChecksum: string
+  contentChecksum: string,
 ): Promise<string[]> {
   const result = await client.query<Record<string, boolean>>(
     `SELECT
@@ -409,7 +530,11 @@ async function diagnosePrivateBatchPostcondition(
       artifact.transcript.groundingRevisionId,
       artifact.transcript.sourceTranscriptSha256,
       artifact.target.videoId,
-      [metadata.title, assessSermonTitle(metadata.title, { sourceTitles: [metadata.title] }).title],
+      [
+        metadata.title,
+        assessSermonTitle(metadata.title, { sourceTitles: [metadata.title] })
+          .title,
+      ],
       metadata.serviceDate,
       transcriptSourceReference(artifact, metadata, profile),
       profile.processingVersion,
@@ -420,24 +545,40 @@ async function diagnosePrivateBatchPostcondition(
       contentChecksum,
       artifact.content.questionAnswers.length,
       artifact.target.sourceWordPressId,
-      ["D-155", "D-159", "D-160"].includes(profile.exceptionId) ? fourthBatchReviewFindings(transcript, sermonId,
-        `${profile.sourceRecordKeyPrefix}-${artifact.target.sourceWordPressId}`, artifact.transcript.sourceTranscriptSha256).items.length : 0
-    ]
+      ["D-155", "D-159", "D-160", "D-162"].includes(profile.exceptionId)
+        ? fourthBatchReviewFindings(
+            transcript,
+            sermonId,
+            `${profile.sourceRecordKeyPrefix}-${artifact.target.sourceWordPressId}`,
+            artifact.transcript.sourceTranscriptSha256,
+          ).items.length
+        : 0,
+    ],
   );
   const row = result.rows[0];
   if (!row) return ["sermon_row_missing"];
-  const issues = Object.entries(row).filter(([, passed]) => passed !== true).map(([name]) => name);
-  const questions = await client.query<{ question_text: string; answer_text: string; display_order: number }>(
+  const issues = Object.entries(row)
+    .filter(([, passed]) => passed !== true)
+    .map(([name]) => name);
+  const questions = await client.query<{
+    question_text: string;
+    answer_text: string;
+    display_order: number;
+  }>(
     `SELECT question_text, answer_text, display_order
      FROM sermon_question_answers WHERE sermon_id = $1 ORDER BY display_order`,
-    [sermonId]
+    [sermonId],
   );
-  if (questions.rows.length !== artifact.content.questionAnswers.length) issues.push("qa_exact_count");
+  if (questions.rows.length !== artifact.content.questionAnswers.length)
+    issues.push("qa_exact_count");
   questions.rows.forEach((question, index) => {
     const expected = artifact.content.questionAnswers[index];
-    if (!expected || question.display_order !== expected.displayOrder) issues.push(`qa_order_${index + 1}`);
-    if (!expected || question.question_text !== expected.question) issues.push(`qa_question_${index + 1}`);
-    if (!expected || question.answer_text !== expected.answer) issues.push(`qa_answer_${index + 1}`);
+    if (!expected || question.display_order !== expected.displayOrder)
+      issues.push(`qa_order_${index + 1}`);
+    if (!expected || question.question_text !== expected.question)
+      issues.push(`qa_question_${index + 1}`);
+    if (!expected || question.answer_text !== expected.answer)
+      issues.push(`qa_answer_${index + 1}`);
   });
   return issues;
 }
@@ -450,22 +591,68 @@ async function verifyPrivateBatchExisting(
   groundedReference: string,
   metadata: OneTimePreapprovalImportMetadata,
   profile: PrivateBatchImportProfile,
-  contentChecksum: string
+  contentChecksum: string,
 ): Promise<boolean> {
-  if (["D-155", "D-159", "D-160"].includes(profile.exceptionId)) {
-    const findings = fourthBatchReviewFindings(transcript, sermonId,
-      `${profile.sourceRecordKeyPrefix}-${artifact.target.sourceWordPressId}`, artifact.transcript.sourceTranscriptSha256);
-    return (await diagnosePrivateBatchPostcondition(client, artifact, sermonId, transcript, groundedReference,
-      metadata, profile, contentChecksum)).length === 0 && await verifyFourthBatchReviewFindings(client, sermonId, findings);
+  if (["D-155", "D-159", "D-160", "D-162"].includes(profile.exceptionId)) {
+    const findings = fourthBatchReviewFindings(
+      transcript,
+      sermonId,
+      `${profile.sourceRecordKeyPrefix}-${artifact.target.sourceWordPressId}`,
+      artifact.transcript.sourceTranscriptSha256,
+    );
+    return (
+      (
+        await diagnosePrivateBatchPostcondition(
+          client,
+          artifact,
+          sermonId,
+          transcript,
+          groundedReference,
+          metadata,
+          profile,
+          contentChecksum,
+        )
+      ).length === 0 &&
+      (await verifyFourthBatchReviewFindings(client, sermonId, findings))
+    );
   }
-  if (await verifyExisting(client, artifact, sermonId, transcript, groundedReference, metadata, profile, contentChecksum)) {
+  if (
+    await verifyExisting(
+      client,
+      artifact,
+      sermonId,
+      transcript,
+      groundedReference,
+      metadata,
+      profile,
+      contentChecksum,
+    )
+  ) {
     return true;
   }
-  if (profile.exceptionId !== secondFixedBatchDecisionId && profile.exceptionId !== thirdFixedBatchDecisionId &&
-    profile.exceptionId !== "D-155" && profile.exceptionId !== "D-159" && profile.exceptionId !== "D-160") return false;
-  return (await diagnosePrivateBatchPostcondition(
-    client, artifact, sermonId, transcript, groundedReference, metadata, profile, contentChecksum
-  )).length === 0;
+  if (
+    profile.exceptionId !== secondFixedBatchDecisionId &&
+    profile.exceptionId !== thirdFixedBatchDecisionId &&
+    profile.exceptionId !== "D-155" &&
+    profile.exceptionId !== "D-159" &&
+    profile.exceptionId !== "D-160" &&
+    profile.exceptionId !== "D-162"
+  )
+    return false;
+  return (
+    (
+      await diagnosePrivateBatchPostcondition(
+        client,
+        artifact,
+        sermonId,
+        transcript,
+        groundedReference,
+        metadata,
+        profile,
+        contentChecksum,
+      )
+    ).length === 0
+  );
 }
 
 async function applyAuthorisedValidationRetry(
@@ -475,15 +662,29 @@ async function applyAuthorisedValidationRetry(
   sermonId: string,
   transcript: string,
   groundedReference: string,
-  metadata: OneTimePreapprovalImportMetadata
+  metadata: OneTimePreapprovalImportMetadata,
 ): Promise<boolean> {
   const previous = oneTimePreapprovalDraftArtifactSchema.parse(previousInput);
-  const inspection = inspectOneTimePreapprovalValidationRetry(previous, artifact);
+  const inspection = inspectOneTimePreapprovalValidationRetry(
+    previous,
+    artifact,
+  );
   if (!inspection.valid) {
-    throw new Error(`one_time_batch_validation_retry_not_authorised:${inspection.issues.join(",")}`);
+    throw new Error(
+      `one_time_batch_validation_retry_not_authorised:${inspection.issues.join(",")}`,
+    );
   }
   const previousReference = oneTimePreapprovalGroundedSourceReference(previous);
-  if (!(await verifyExisting(client, previous, sermonId, transcript, previousReference, metadata))) {
+  if (
+    !(await verifyExisting(
+      client,
+      previous,
+      sermonId,
+      transcript,
+      previousReference,
+      metadata,
+    ))
+  ) {
     throw new Error("one_time_batch_validation_retry_previous_state_mismatch");
   }
   const untouched = await client.query<{ safe: boolean }>(
@@ -516,37 +717,63 @@ async function applyAuthorisedValidationRetry(
      JOIN sermon_transcripts transcript ON transcript.sermon_id = sermon.id
      JOIN sermon_enrichment_reviews review ON review.sermon_id = sermon.id
      WHERE sermon.id = $1`,
-    [sermonId]
+    [sermonId],
   );
   if (untouched.rows.length !== 1 || untouched.rows[0]?.safe !== true) {
-    throw new Error("one_time_batch_validation_retry_administrator_progress_detected");
+    throw new Error(
+      "one_time_batch_validation_retry_administrator_progress_detected",
+    );
   }
   const summary = await client.query(
     `UPDATE sermons
      SET summary_source_reference = $2, summary_updated_at = now(), updated_at = now(),
          updated_by_subject = $3, row_version = row_version + 1
      WHERE id = $1 AND summary_source_reference = $4`,
-    [sermonId, groundedReference, oneTimePreapprovalImportActor, previousReference]
+    [
+      sermonId,
+      groundedReference,
+      oneTimePreapprovalImportActor,
+      previousReference,
+    ],
   );
-  if (summary.rowCount !== 1) throw new Error("one_time_batch_validation_retry_summary_update_mismatch");
+  if (summary.rowCount !== 1)
+    throw new Error("one_time_batch_validation_retry_summary_update_mismatch");
   for (const item of artifact.content.questionAnswers) {
-    const changed = inspection.changedQuestionOrders.includes(item.displayOrder);
+    const changed = inspection.changedQuestionOrders.includes(
+      item.displayOrder,
+    );
     const result = await client.query(
       `UPDATE sermon_question_answers
        SET question_text = CASE WHEN $4 THEN $2 ELSE question_text END,
            source_reference = $3, updated_at = now(), row_version = row_version + 1
        WHERE sermon_id = $1 AND display_order = $5 AND source_reference = $6`,
-      [sermonId, item.question, groundedReference, changed, item.displayOrder, previousReference]
+      [
+        sermonId,
+        item.question,
+        groundedReference,
+        changed,
+        item.displayOrder,
+        previousReference,
+      ],
     );
-    if (result.rowCount !== 1) throw new Error("one_time_batch_validation_retry_question_update_mismatch");
+    if (result.rowCount !== 1)
+      throw new Error(
+        "one_time_batch_validation_retry_question_update_mismatch",
+      );
   }
   const receipt = await client.query(
     `UPDATE sermon_enrichment_draft_imports
      SET content_checksum = $2, imported_at = now(), imported_by_subject = $3
      WHERE sermon_id = $1 AND content_checksum = $4`,
-    [sermonId, artifact.integrity.canonicalSha256, oneTimePreapprovalImportActor, previous.integrity.canonicalSha256]
+    [
+      sermonId,
+      artifact.integrity.canonicalSha256,
+      oneTimePreapprovalImportActor,
+      previous.integrity.canonicalSha256,
+    ],
   );
-  if (receipt.rowCount !== 1) throw new Error("one_time_batch_validation_retry_receipt_update_mismatch");
+  if (receipt.rowCount !== 1)
+    throw new Error("one_time_batch_validation_retry_receipt_update_mismatch");
   await client.query("SELECT refresh_sermon_enrichment($1)", [sermonId]);
   await client.query(
     `INSERT INTO audit_events (
@@ -555,9 +782,20 @@ async function applyAuthorisedValidationRetry(
      ) VALUES ($1, 'system', 'sermon.d151_validation_retry_repaired', 'sermon', $2,
        '["questionOpenings","groundedSourceReference","supportEvidence","contentChecksum"]'::jsonb,
        $3, 'succeeded')`,
-    [oneTimePreapprovalImportActor, sermonId, `d151-validation-${artifact.integrity.canonicalSha256.slice(0, 16)}`]
+    [
+      oneTimePreapprovalImportActor,
+      sermonId,
+      `d151-validation-${artifact.integrity.canonicalSha256.slice(0, 16)}`,
+    ],
   );
-  return verifyExisting(client, artifact, sermonId, transcript, groundedReference, metadata);
+  return verifyExisting(
+    client,
+    artifact,
+    sermonId,
+    transcript,
+    groundedReference,
+    metadata,
+  );
 }
 
 export async function importOneTimePreapprovalPrivateDraft(
@@ -567,62 +805,122 @@ export async function importOneTimePreapprovalPrivateDraft(
   transcript: string,
   metadata: OneTimePreapprovalImportMetadata,
   validationRetry?: OneTimePreapprovalValidationRetry,
-  options: PrivateBatchImportOptions = {}
+  options: PrivateBatchImportOptions = {},
 ): Promise<OneTimePreapprovalImportResult> {
   const artifact = oneTimePreapprovalDraftArtifactSchema.parse(input);
   const profile = options.profile ?? d151ImportProfile;
-  const contentChecksum = options.contentChecksum ?? artifact.integrity.canonicalSha256;
-  if (validationRetry && profile.exceptionId !== d151ImportProfile.exceptionId) {
+  const contentChecksum =
+    options.contentChecksum ?? artifact.integrity.canonicalSha256;
+  if (
+    validationRetry &&
+    profile.exceptionId !== d151ImportProfile.exceptionId
+  ) {
     throw new Error("one_time_batch_validation_retry_profile_not_authorised");
   }
   const record = authorization.orderedRecords[artifact.target.sequence - 1];
-  if (!record || record.sourceWordPressId !== artifact.target.sourceWordPressId || record.videoId !== artifact.target.videoId) {
+  if (
+    !record ||
+    record.sourceWordPressId !== artifact.target.sourceWordPressId ||
+    record.videoId !== artifact.target.videoId
+  ) {
     throw new Error("one_time_batch_import_target_out_of_scope");
   }
   const validation = validateOneTimePreapprovalDraftArtifact(
     artifact,
     authorization,
-    { bodyText: transcript, sha256: artifact.transcript.sourceTranscriptSha256 }
+    {
+      bodyText: transcript,
+      sha256: artifact.transcript.sourceTranscriptSha256,
+    },
   );
-  if (!validation.valid || validation.stale) throw new Error(`one_time_batch_import_validation_failed:${validation.issues.join(",")}`);
-  const sermonId = deterministicPrivateBatchSermonId(artifact.target.videoId, profile.sermonIdNamespace);
+  if (!validation.valid || validation.stale)
+    throw new Error(
+      `one_time_batch_import_validation_failed:${validation.issues.join(",")}`,
+    );
+  const sermonId = deterministicPrivateBatchSermonId(
+    artifact.target.videoId,
+    profile.sermonIdNamespace,
+  );
   const groundedReference = oneTimePreapprovalGroundedSourceReference(artifact);
-  const captionReference = transcriptSourceReference(artifact, metadata, profile);
-  const findings = ["D-155", "D-159", "D-160"].includes(profile.exceptionId) ? fourthBatchReviewFindings(transcript, sermonId,
-    `${profile.sourceRecordKeyPrefix}-${artifact.target.sourceWordPressId}`, artifact.transcript.sourceTranscriptSha256) : null;
+  const captionReference = transcriptSourceReference(
+    artifact,
+    metadata,
+    profile,
+  );
+  const findings = ["D-155", "D-159", "D-160", "D-162"].includes(
+    profile.exceptionId,
+  )
+    ? fourthBatchReviewFindings(
+        transcript,
+        sermonId,
+        `${profile.sourceRecordKeyPrefix}-${artifact.target.sourceWordPressId}`,
+        artifact.transcript.sourceTranscriptSha256,
+      )
+    : null;
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    const collision = await client.query<{ id: string; source_wordpress_id: string }>(
+    const collision = await client.query<{
+      id: string;
+      source_wordpress_id: string;
+    }>(
       `SELECT sermon.id, sermon.source_wordpress_id
        FROM sermons sermon
        WHERE sermon.id = $1 OR sermon.source_wordpress_id = $2
           OR EXISTS (SELECT 1 FROM sermon_media media WHERE media.sermon_id = sermon.id AND media.provider = 'youtube' AND media.external_id = $3)
        FOR UPDATE`,
-      [sermonId, artifact.target.sourceWordPressId, artifact.target.videoId]
+      [sermonId, artifact.target.sourceWordPressId, artifact.target.videoId],
     );
     if (collision.rows.length > 0) {
-      if (collision.rows.length !== 1 || collision.rows[0]!.id !== sermonId ||
-        Number(collision.rows[0]!.source_wordpress_id) !== artifact.target.sourceWordPressId) {
+      if (
+        collision.rows.length !== 1 ||
+        collision.rows[0]!.id !== sermonId ||
+        Number(collision.rows[0]!.source_wordpress_id) !==
+          artifact.target.sourceWordPressId
+      ) {
         throw new Error("one_time_batch_existing_identity_or_content_conflict");
       }
-      if (await verifyPrivateBatchExisting(client, artifact, sermonId, transcript, groundedReference, metadata, profile, contentChecksum)) {
+      if (
+        await verifyPrivateBatchExisting(
+          client,
+          artifact,
+          sermonId,
+          transcript,
+          groundedReference,
+          metadata,
+          profile,
+          contentChecksum,
+        )
+      ) {
         await client.query("COMMIT");
-        return { sourceWordPressId: artifact.target.sourceWordPressId, sermonId, outcome: "unchanged", questionAnswerCount: artifact.content.questionAnswers.length };
+        return {
+          sourceWordPressId: artifact.target.sourceWordPressId,
+          sermonId,
+          outcome: "unchanged",
+          questionAnswerCount: artifact.content.questionAnswers.length,
+        };
       }
-      if (!validationRetry || !(await applyAuthorisedValidationRetry(
-        client,
-        artifact,
-        validationRetry.previousArtifact,
-        sermonId,
-        transcript,
-        groundedReference,
-        metadata
-      ))) {
+      if (
+        !validationRetry ||
+        !(await applyAuthorisedValidationRetry(
+          client,
+          artifact,
+          validationRetry.previousArtifact,
+          sermonId,
+          transcript,
+          groundedReference,
+          metadata,
+        ))
+      ) {
         throw new Error("one_time_batch_existing_identity_or_content_conflict");
       }
       await client.query("COMMIT");
-      return { sourceWordPressId: artifact.target.sourceWordPressId, sermonId, outcome: "repaired_after_validation_retry", questionAnswerCount: artifact.content.questionAnswers.length };
+      return {
+        sourceWordPressId: artifact.target.sourceWordPressId,
+        sermonId,
+        outcome: "repaired_after_validation_retry",
+        questionAnswerCount: artifact.content.questionAnswers.length,
+      };
     }
     await client.query(
       `INSERT INTO sermons (
@@ -633,38 +931,57 @@ export async function importOneTimePreapprovalPrivateDraft(
          true, 'draft', 'generated_draft', $7, now(), now(), $8, $8)`,
       [
         sermonId,
-        assessSermonTitle(metadata.title, { sourceTitles: [metadata.title] }).title,
+        assessSermonTitle(metadata.title, { sourceTitles: [metadata.title] })
+          .title,
         `${profile.slugPrefix}-${artifact.target.sourceWordPressId}`,
         artifact.content.description.bodyText,
         metadata.serviceDate,
         artifact.target.sourceWordPressId,
         groundedReference,
         profile.actor,
-        profile.sourceStatus
-      ]
+        profile.sourceStatus,
+      ],
     );
     await client.query(
       `INSERT INTO sermon_media (
          sermon_id, media_type, provider, external_id, canonical_url, title,
          is_primary, display_order, availability_status
        ) VALUES ($1, 'video', 'youtube', $2, $3, $4, true, 0, 'available')`,
-      [sermonId, artifact.target.videoId, `https://www.youtube.com/watch?v=${artifact.target.videoId}`, `${metadata.title} — private evaluation source`]
+      [
+        sermonId,
+        artifact.target.videoId,
+        `https://www.youtube.com/watch?v=${artifact.target.videoId}`,
+        `${metadata.title} — private evaluation source`,
+      ],
     );
     await client.query(
       `INSERT INTO sermon_transcripts (
          sermon_id, body_text, status, source_kind, source_reference, grounding_revision_id
        ) VALUES ($1, $2, 'draft', 'caption', $3, $4)`,
-      [sermonId, transcript, captionReference, artifact.transcript.groundingRevisionId]
+      [
+        sermonId,
+        transcript,
+        captionReference,
+        artifact.transcript.groundingRevisionId,
+      ],
     );
     for (const item of artifact.content.questionAnswers) {
       await client.query(
         `INSERT INTO sermon_question_answers (
            sermon_id, question_text, answer_text, display_order, status, source_kind, source_reference
          ) VALUES ($1, $2, $3, $4, 'draft', 'generated_draft', $5)`,
-        [sermonId, item.question, item.answer, item.displayOrder, groundedReference]
+        [
+          sermonId,
+          item.question,
+          item.answer,
+          item.displayOrder,
+          groundedReference,
+        ],
       );
     }
-    const warnings = findings?.items.length ? [...profile.warnings, providerRedactionWarning] : profile.warnings;
+    const warnings = findings?.items.length
+      ? [...profile.warnings, providerRedactionWarning]
+      : profile.warnings;
     await client.query(
       `INSERT INTO sermon_enrichment_sources (
          sermon_id, provider, video_id, canonical_url, caption_language, caption_track_type,
@@ -691,15 +1008,27 @@ export async function importOneTimePreapprovalPrivateDraft(
         metadata.processedAt,
         Math.max(35, Math.ceil(metadata.transcriptWordCount / 180) + 25),
         findings?.items.length ?? 0,
-        JSON.stringify(findings?.unresolvedPassages ?? [])
-      ]
+        JSON.stringify(findings?.unresolvedPassages ?? []),
+      ],
     );
-    await ensureMigrationReceipt(client, authorization, artifact, sermonId, metadata, profile);
+    await ensureMigrationReceipt(
+      client,
+      authorization,
+      artifact,
+      sermonId,
+      metadata,
+      profile,
+    );
     await client.query(
       `INSERT INTO sermon_enrichment_draft_imports (
          sermon_id, source_wordpress_id, content_checksum, imported_by_subject
        ) VALUES ($1, $2, $3, $4)`,
-      [sermonId, artifact.target.sourceWordPressId, contentChecksum, profile.actor]
+      [
+        sermonId,
+        artifact.target.sourceWordPressId,
+        contentChecksum,
+        profile.actor,
+      ],
     );
     await client.query("SELECT refresh_sermon_enrichment($1)", [sermonId]);
     await client.query(
@@ -717,15 +1046,34 @@ export async function importOneTimePreapprovalPrivateDraft(
          AND review.identity_status = 'pending'
          AND review.current_stage = 1
          AND review.completed_at IS NULL`,
-      [sermonId, `${profile.sourceRecordKeyPrefix}-${artifact.target.sourceWordPressId}`, artifact.transcript.sourceTranscriptSha256, profile.actor]
+      [
+        sermonId,
+        `${profile.sourceRecordKeyPrefix}-${artifact.target.sourceWordPressId}`,
+        artifact.transcript.sourceTranscriptSha256,
+        profile.actor,
+      ],
     );
-    if (findings) await insertFourthBatchReviewFindings(client, sermonId, findings);
+    if (findings)
+      await insertFourthBatchReviewFindings(client, sermonId, findings);
     const primaryBook = (await inspectPrimaryBooks(client, [sermonId]))[0]!;
-    await prepareAutomaticPrimaryBook(client, primaryBook, `${profile.correlationPrefix}:primary-book:${contentChecksum}`, false);
+    await prepareAutomaticPrimaryBook(
+      client,
+      primaryBook,
+      `${profile.correlationPrefix}:primary-book:${contentChecksum}`,
+      false,
+    );
     if (metadata.sourceSpeaker) {
-      if (metadata.sourceSpeaker.sourceWordPressId !== artifact.target.sourceWordPressId) throw Error("one_time_batch_speaker_source_mismatch");
-      const speakerPlan=await inspectSpeakerMetadata(client,[metadata.sourceSpeaker],[sermonId]);
-      await applySpeakerPlan(client,speakerPlan,speakerPlanHash(speakerPlan));
+      if (
+        metadata.sourceSpeaker.sourceWordPressId !==
+        artifact.target.sourceWordPressId
+      )
+        throw Error("one_time_batch_speaker_source_mismatch");
+      const speakerPlan = await inspectSpeakerMetadata(
+        client,
+        [metadata.sourceSpeaker],
+        [sermonId],
+      );
+      await applySpeakerPlan(client, speakerPlan, speakerPlanHash(speakerPlan));
     }
     await client.query(
       `INSERT INTO audit_events (
@@ -733,17 +1081,53 @@ export async function importOneTimePreapprovalPrivateDraft(
          changed_fields, request_correlation_id, outcome
        ) VALUES ($1, 'system', $4, 'sermon', $2,
          '["summary","transcript","questionAnswers","privateProvenance"]'::jsonb, $3, 'succeeded')`,
-      [profile.actor, sermonId, `${profile.correlationPrefix}-${contentChecksum.slice(0, 16)}`, profile.auditAction]
+      [
+        profile.actor,
+        sermonId,
+        `${profile.correlationPrefix}-${contentChecksum.slice(0, 16)}`,
+        profile.auditAction,
+      ],
     );
-    const complete = await verifyPrivateBatchExisting(client, artifact, sermonId, transcript, groundedReference, metadata, profile, contentChecksum);
+    const complete = await verifyPrivateBatchExisting(
+      client,
+      artifact,
+      sermonId,
+      transcript,
+      groundedReference,
+      metadata,
+      profile,
+      contentChecksum,
+    );
     if (!complete) {
-      const detail = profile.exceptionId === secondFixedBatchDecisionId || profile.exceptionId === thirdFixedBatchDecisionId || profile.exceptionId === "D-155" || profile.exceptionId === "D-159" || profile.exceptionId === "D-160"
-        ? await diagnosePrivateBatchPostcondition(client, artifact, sermonId, transcript, groundedReference, metadata, profile, contentChecksum)
-        : [];
-      throw new Error(`one_time_batch_import_postcondition_failed${detail.length > 0 ? `:${detail.join(",")}` : ""}`);
+      const detail =
+        profile.exceptionId === secondFixedBatchDecisionId ||
+        profile.exceptionId === thirdFixedBatchDecisionId ||
+        profile.exceptionId === "D-155" ||
+        profile.exceptionId === "D-159" ||
+        profile.exceptionId === "D-160" ||
+        profile.exceptionId === "D-162"
+          ? await diagnosePrivateBatchPostcondition(
+              client,
+              artifact,
+              sermonId,
+              transcript,
+              groundedReference,
+              metadata,
+              profile,
+              contentChecksum,
+            )
+          : [];
+      throw new Error(
+        `one_time_batch_import_postcondition_failed${detail.length > 0 ? `:${detail.join(",")}` : ""}`,
+      );
     }
     await client.query("COMMIT");
-    return { sourceWordPressId: artifact.target.sourceWordPressId, sermonId, outcome: "imported_as_private_draft", questionAnswerCount: artifact.content.questionAnswers.length };
+    return {
+      sourceWordPressId: artifact.target.sourceWordPressId,
+      sermonId,
+      outcome: "imported_as_private_draft",
+      questionAnswerCount: artifact.content.questionAnswers.length,
+    };
   } catch (error) {
     await client.query("ROLLBACK").catch(() => undefined);
     throw error;
@@ -757,21 +1141,30 @@ export async function importSecondFixedBatchPrivateDraft(
   input: unknown,
   authorization: SecondFixedBatchAuthorization,
   transcript: string,
-  metadata: OneTimePreapprovalImportMetadata
+  metadata: OneTimePreapprovalImportMetadata,
 ): Promise<OneTimePreapprovalImportResult> {
   const artifact = secondFixedBatchDraftArtifactSchema.parse(input);
   const record = authorization.orderedRecords[artifact.target.sequence - 1];
-  if (!record || record.sourceWordPressId !== artifact.target.sourceWordPressId ||
-    record.videoId !== artifact.target.videoId || metadata.serviceDate !== record.serviceDate) {
+  if (
+    !record ||
+    record.sourceWordPressId !== artifact.target.sourceWordPressId ||
+    record.videoId !== artifact.target.videoId ||
+    metadata.serviceDate !== record.serviceDate
+  ) {
     throw new Error("d153_import_target_or_metadata_out_of_scope");
   }
   const validation = validateSecondFixedBatchDraftArtifact(
     artifact,
     authorization,
-    { bodyText: transcript, sha256: artifact.transcript.sourceTranscriptSha256 }
+    {
+      bodyText: transcript,
+      sha256: artifact.transcript.sourceTranscriptSha256,
+    },
   );
   if (!validation.valid || validation.stale) {
-    throw new Error(`d153_import_validation_failed:${validation.issues.join(",")}`);
+    throw new Error(
+      `d153_import_validation_failed:${validation.issues.join(",")}`,
+    );
   }
   const compatibilityArtifact = toD151ValidationCompatibilityArtifact(artifact);
   const compatibilityAuthorization: OneTimePreapprovalBatchAuthorization = {
@@ -783,7 +1176,11 @@ export async function importSecondFixedBatchPrivateDraft(
       sourceWordPressId: item.sourceWordPressId,
       videoId: item.videoId,
       priorInspectionSha256: item.inventoryRowSha256,
-      selectedCaption: { captionId: `d153-${item.sequence}`, language: "en", trackKind: "standard" },
+      selectedCaption: {
+        captionId: `d153-${item.sequence}`,
+        language: "en",
+        trackKind: "standard",
+      },
       sourceSnapshot: {
         publicationStatus: item.publicationStatus,
         serviceDate: item.serviceDate,
@@ -792,9 +1189,9 @@ export async function importSecondFixedBatchPrivateDraft(
         seriesTermIds: [],
         bibleBookTermIds: [],
         passageMetadataPresent: false,
-        metadataAnomalyFlags: []
-      }
-    }))
+        metadataAnomalyFlags: [],
+      },
+    })),
   };
   return importOneTimePreapprovalPrivateDraft(
     pool,
@@ -803,7 +1200,10 @@ export async function importSecondFixedBatchPrivateDraft(
     transcript,
     metadata,
     undefined,
-    { profile: secondFixedBatchImportProfile, contentChecksum: artifact.integrity.canonicalSha256 }
+    {
+      profile: secondFixedBatchImportProfile,
+      contentChecksum: artifact.integrity.canonicalSha256,
+    },
   );
 }
 
@@ -812,21 +1212,30 @@ export async function importThirdFixedBatchPrivateDraft(
   input: unknown,
   authorization: ThirdFixedBatchAuthorization,
   transcript: string,
-  metadata: OneTimePreapprovalImportMetadata
+  metadata: OneTimePreapprovalImportMetadata,
 ): Promise<OneTimePreapprovalImportResult> {
   const artifact = thirdFixedBatchDraftArtifactSchema.parse(input);
   const record = authorization.orderedRecords[artifact.target.sequence - 1];
-  if (!record || record.sourceWordPressId !== artifact.target.sourceWordPressId ||
-    record.videoId !== artifact.target.videoId || metadata.serviceDate !== record.serviceDate) {
+  if (
+    !record ||
+    record.sourceWordPressId !== artifact.target.sourceWordPressId ||
+    record.videoId !== artifact.target.videoId ||
+    metadata.serviceDate !== record.serviceDate
+  ) {
     throw new Error("d154_import_target_or_metadata_out_of_scope");
   }
   const validation = validateThirdFixedBatchDraftArtifact(
     artifact,
     authorization,
-    { bodyText: transcript, sha256: artifact.transcript.sourceTranscriptSha256 }
+    {
+      bodyText: transcript,
+      sha256: artifact.transcript.sourceTranscriptSha256,
+    },
   );
   if (!validation.valid || validation.stale) {
-    throw new Error(`d154_import_validation_failed:${validation.issues.join(",")}`);
+    throw new Error(
+      `d154_import_validation_failed:${validation.issues.join(",")}`,
+    );
   }
   const compatibilityArtifact = toD154ValidationCompatibilityArtifact(artifact);
   const compatibilityAuthorization: OneTimePreapprovalBatchAuthorization = {
@@ -838,7 +1247,11 @@ export async function importThirdFixedBatchPrivateDraft(
       sourceWordPressId: item.sourceWordPressId,
       videoId: item.videoId,
       priorInspectionSha256: item.inventoryRowSha256,
-      selectedCaption: { captionId: `d154-${item.sequence}`, language: "en", trackKind: "standard" },
+      selectedCaption: {
+        captionId: `d154-${item.sequence}`,
+        language: "en",
+        trackKind: "standard",
+      },
       sourceSnapshot: {
         publicationStatus: item.publicationStatus,
         serviceDate: item.serviceDate,
@@ -847,9 +1260,9 @@ export async function importThirdFixedBatchPrivateDraft(
         seriesTermIds: [],
         bibleBookTermIds: [],
         passageMetadataPresent: false,
-        metadataAnomalyFlags: []
-      }
-    }))
+        metadataAnomalyFlags: [],
+      },
+    })),
   };
   return importOneTimePreapprovalPrivateDraft(
     pool,
@@ -858,6 +1271,9 @@ export async function importThirdFixedBatchPrivateDraft(
     transcript,
     metadata,
     undefined,
-    { profile: thirdFixedBatchImportProfile, contentChecksum: artifact.integrity.canonicalSha256 }
+    {
+      profile: thirdFixedBatchImportProfile,
+      contentChecksum: artifact.integrity.canonicalSha256,
+    },
   );
 }

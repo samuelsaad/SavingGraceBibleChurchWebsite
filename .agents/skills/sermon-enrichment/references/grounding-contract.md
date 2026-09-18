@@ -1,5 +1,20 @@
 # Private grounding contract
 
+D-162 separately permits `unapproved` source transcripts only for manifest
+`e47da706e8b458bed6f8198570cc4a51e4b9604049e394d71a02cc84f79ea17f`.
+Apply every normal support-range, source-hash, editorial, uncertainty, output-
+integrity and stale-result rule below. Bind every generation and review artifact to
+D-162, the fixed sequence, governance commit, transcript/retained-caption hashes,
+current artifact hashes and truthful Sol-selection/runtime provenance. Preserve the
+original candidate and one maximum focused correction with both hashes and complete
+lineage. Unknown-audio captions retain the bounded warning, `primary_audio_confirmed:
+false` and exact manifest provenance. Substantive AI acceptance requires complete
+current description and per-Q&A review plus every applicable evidence component.
+Retained-caption fidelity is not audio verification. Missing, conflicting, stale or
+provider-redacted evidence remains pending. A separate restricted acceptance may be
+saved only when all current dependencies pass, and creates no human approval,
+ordinary publication or semantic eligibility. See `seventh-private-batch-plan.md`.
+
 D-158 permits only the separately authorized, manifest-bound bulk acceptance in
 `restricted-acceptance-plan.md`. It does not regenerate content or rewrite these
 historical grounding records. New acceptance has its own UTC fingerprint format;
