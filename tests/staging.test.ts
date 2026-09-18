@@ -23,6 +23,8 @@ describe("sealed staging target and authentication boundary", () => {
     expect(source).toContain("tsconfigRaw: { compilerOptions: { alwaysStrict: true } }");
     const dockerfile = readFileSync(new URL("../Dockerfile", import.meta.url), "utf8");
     expect(dockerfile).toContain("COPY deployment/d160-sync.ts ./deployment/d160-sync.ts");
+    expect(dockerfile).toContain("COPY deployment/d161-sync.ts ./deployment/d161-sync.ts");
+    expect(dockerfile).toContain("/build/dist-staging/d161-sync.cjs ./d161-sync.cjs");
   });
   it("packages private-review schema code without admitting private artifact directories or filenames", () => {
     for (const path of ["db/migrations/0017_delegated_private_ai_review.sql", "db/migrations/0018_remaining_private_ai_review.down.sql", "src/staging/guard.ts",
