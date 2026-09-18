@@ -95,7 +95,7 @@ export async function applyD161SpeakerAssignment(pool:Pool,raw:D161SpeakerAssign
     if(!speaker||!media||reviewHash(media.title??"")!==request.mediaTitleSha256||!d161CanonicalSpeakerInMediaTitle(media.title??"",speaker.name))fail();
     const previous={speaker:s.metadata.speaker};
     await c.query("UPDATE sermons SET speaker_id=$2,row_version=row_version+1,updated_at=now(),updated_by_subject=$3 WHERE id=$1",[request.sermonId,request.speakerId,d161ReviewerSubject]);
-    const after=await readD161Snapshot(c,request.sermonId);if(!after||!after.speakerAvailable)fail();const current={speaker:after.metadata.speaker};
+    const after=await readD161Snapshot(c,request.sermonId);if(!after||!after.speakerAvailable)return fail();const current={speaker:after.metadata.speaker};
     await c.query(`INSERT INTO sermon_ai_metadata_assignments(scope_id,sermon_id,component,request_sha256,policy_sha256,input_sha256,output_sha256,evidence,previous_metadata,current_metadata,reviewer_subject)
       VALUES('D-161',$1,'speaker',$2,$3,$4,$5,$6::jsonb,$7::jsonb,$8::jsonb,$9)`,[request.sermonId,requestSha256,request.policySha256,d161Hash(previous),d161Hash(current),JSON.stringify(request),JSON.stringify(previous),JSON.stringify(current),d161ReviewerSubject]);
     await c.query("INSERT INTO audit_events(actor_subject,actor_role,action,entity_type,entity_id,outcome,changed_fields,request_correlation_id) VALUES($1,'system','sermon.d161.speaker_source_assignment','sermon',$2,'succeeded','[\"speakerId\"]'::jsonb,$3)",[d161ReviewerSubject,request.sermonId,requestSha256]);

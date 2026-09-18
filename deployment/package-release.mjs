@@ -10,10 +10,10 @@ const destination = await realpath(directory);
 if (!relative(process.cwd(), destination).startsWith("..")) throw new Error("package_inside_repository_refused");
 const commit = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
 const paths = new Set(["Dockerfile", ".dockerignore", "package.json", "package-lock.json",
-  "deployment/build.mjs", "deployment/compose.yaml", "deployment/acceptance-compose.yaml", "deployment/topical-compose.yaml", "deployment/d160-draft-preview-compose.yaml", "deployment/d160-sync.ts", "deployment/restore.py", "deployment/README.md",
+  "deployment/build.mjs", "deployment/compose.yaml", "deployment/acceptance-compose.yaml", "deployment/topical-compose.yaml", "deployment/d160-draft-preview-compose.yaml", "deployment/d160-sync.ts", "deployment/d161-sync-compose.yaml", "deployment/d161-sync.ts", "deployment/restore.py", "deployment/README.md",
   "deployment/savinggrace-staging.socket", "deployment/savinggrace-staging.service",
   "deployment/savinggrace-d160-db.socket", "deployment/savinggrace-d160-db.service"]);
-for (const name of ["server", "database", "draft-preview", "d160-sync"]) {
+for (const name of ["server", "database", "draft-preview", "d160-sync", "d161-sync"]) {
   for (const path of JSON.parse(await readFile(`dist-staging/${name}.inputs.json`, "utf8"))) {
     if (path.startsWith("src/")) paths.add(path);
   }

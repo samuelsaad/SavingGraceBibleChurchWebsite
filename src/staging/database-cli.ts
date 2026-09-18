@@ -4,12 +4,14 @@ import { stagingConfiguration, stagingPassword, verifyStagingIdentity } from "./
 import { databaseFingerprint, verifyReleaseSchema } from "./database-verification";
 import { runRestrictedAcceptanceCommand } from "../application/restricted-acceptance-command";
 import { runTopicalClassificationCommand } from "../application/topical-classification-command";
+import { applyD161ReviewSchema } from "../application/d161-review-schema";
 
 async function main() {
   const operation = process.argv[2];
-  if (!["assert-empty", "verify", "fingerprint", "inspect", "capture-preservation", "verify-accepted", "apply-0019", "accept", "withdraw", "classify-topical"].includes(operation ?? "")) throw new Error("operation_refused");
+  if (!["assert-empty", "verify", "fingerprint", "inspect", "capture-preservation", "verify-accepted", "apply-0019", "apply-0020", "accept", "withdraw", "classify-topical"].includes(operation ?? "")) throw new Error("operation_refused");
   const config = stagingConfiguration(process.env, true);
   const pool = new Pool({ ...config, password: stagingPassword(config.passwordFile), max: 1 });
+  if(operation==="apply-0020"){try{process.stdout.write(JSON.stringify(await applyD161ReviewSchema(pool,"sealed_staging"))+"\n");}finally{await pool.end();}return;}
   if (operation === "classify-topical") {
     try { process.stdout.write(JSON.stringify(await runTopicalClassificationCommand(pool,"sealed_staging","/verification")) + "\n"); }
     finally { await pool.end(); }

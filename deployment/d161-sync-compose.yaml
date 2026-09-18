@@ -1,0 +1,26 @@
+services:
+  app:
+    environment:
+      D161_RESTRICTED_ACCEPTANCE_ENABLED: '1'
+    ports: ['127.0.0.1:8080:8080']
+  d161-sync:
+    image: ${APP_IMAGE:?exact release image required}
+    profiles: [d161-sync]
+    environment:
+      NODE_ENV: production
+      STAGING_SEALED: '1'
+      DB_HOST: db
+      DB_PORT: '5432'
+      DB_NAME: savinggrace_staging
+      RELEASE_COMMIT: ${RELEASE_COMMIT:?exact commit required}
+      ALLOW_STAGING_D161_SYNC: '1'
+      D161_SYNC_PACKAGE: /run/d161-sync/package.private.json
+    secrets: [db_owner_password]
+    networks: [private]
+    entrypoint: [node, d161-sync.cjs, import]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 512m
+    volumes:
+      - ${D161_SYNC_DIRECTORY:?protected D-161 sync directory required}/package.private.json:/run/d161-sync/package.private.json:ro

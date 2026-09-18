@@ -16,6 +16,8 @@
     "staging:export-local": "tsx deployment/export-local.ts",
     "staging:d160-export-local": "tsx deployment/d160-sync.ts export",
     "staging:d160-import": "node d160-sync.cjs import",
+    "staging:d161-export-local": "tsx deployment/d161-sync.ts export",
+    "staging:d161-import": "node d161-sync.cjs import",
     "test:model-local": "tsx scripts/local-model-acceptance.ts",
     "test:postgres": "tsx tests/postgres-test-runner.ts",
     "test:watch": "vitest",
