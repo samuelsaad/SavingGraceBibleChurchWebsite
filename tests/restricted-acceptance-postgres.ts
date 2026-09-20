@@ -181,6 +181,7 @@ export function registerRestrictedAcceptancePostgresTests(getPool:()=>Pool,runSc
     await runSchema("rollback",migration);const p=getPool();
     expect(await applyRestrictedAcceptanceSchema(p,"local_loopback")).toEqual({outcome:"applied",applied:1});
     await runSchema("apply","0020_d160_delegated_review_acceptance");
+    await runSchema("apply","0021_d162_delegated_review_acceptance");
     const before=await snapshot(p);
     expect(await applyRestrictedAcceptanceSchema(p,"local_loopback")).toEqual({outcome:"unchanged",applied:0});expect(await snapshot(p)).toEqual(before);
     await runSchema("apply",migration);expect(await snapshot(p)).toEqual(before);

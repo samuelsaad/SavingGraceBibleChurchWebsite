@@ -1,16 +1,28 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
-## D-162 seventh fixed batch in progress — 19 September 2026
+## D-162 seventh fixed batch completed and held for evidence — 20 September 2026
 
 Work continues only on branch `codex/next-36-after-d161`. The next 36 identities
 were deterministically frozen from the verified private inventory after excluding
 231 prior attempts. The exact private manifest SHA-256 is
 `e47da706e8b458bed6f8198570cc4a51e4b9604049e394d71a02cc84f79ea17f`;
-87 clean candidates became 36 fixed positions plus 51 remaining. The zero-attempt
-checkpoint and pre-write local database fingerprint are private and Git-ignored.
-The local database baseline is 227 sermons, 213 pending Stage-1 reviews, 144
-ordinary restricted acceptances plus four separate D-161 acceptances, and migration 0020. No D-162 provider access, generation or database write occurred before this
-governance checkpoint. Read `seventh-private-batch-plan.md`.
+87 clean candidates became 36 fixed positions plus 51 remaining. The private
+checkpoints, source material, candidates, decisions and receipts remain Git-ignored.
+All 36 positions are terminal: 34 validated records were imported as private,
+unapproved drafts and returned `unchanged` on an identical second import; two were
+held after their single correction allowance. The local database contains 261
+sermons and migration 0021. All 227 earlier sermons were preserved.
+
+Substantive review covered all 34 imported descriptions and 238 ordered Q&A pairs.
+Thirty-three descriptions and every Q&A passed; one description remains pending
+because a genuine incomplete phrase was found after its correction allowance was
+consumed. Seven imported records retain provider-redaction blockers. One missing
+speaker was assigned only from an exact canonical full name in retained metadata;
+the other 33 imported records lack sufficient speaker evidence, and three also lack
+stored primary-passage evidence. Consequently D-162 created no restricted acceptance.
+The existing 144 D-158 plus four D-161 accepted records remain the complete current
+restricted population on both local and sealed staging frontends. No staging data
+write or release change was necessary. Read `seventh-private-batch-plan.md`.
 
 **Handover date:** 14 September 2026
 **Purpose:** Public-safe orientation for continuing work from this repository. This file contains no sermon body, credential, token, session, raw caption export or private local path.

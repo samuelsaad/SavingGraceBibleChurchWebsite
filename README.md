@@ -5,8 +5,12 @@
 D-162 is bound only to private manifest SHA-256
 `e47da706e8b458bed6f8198570cc4a51e4b9604049e394d71a02cc84f79ea17f`.
 It fixes 36 positions from 87 clean remaining candidates in authoritative order.
-Generation, substantive AI review, guarded local import and scoped restricted-
-frontend synchronization remain private, unapproved and fail closed. See
+All 36 fixed positions are terminal. Thirty-four validated records were imported as
+private unapproved drafts; two remain held after their single correction allowance.
+Substantive review accepted 33 descriptions and all 238 ordered Q&A pairs, while one
+description and the evidence-limited metadata/source components remain pending. No
+D-162 record currently meets every restricted-acceptance requirement, so both
+restricted frontends correctly remain at the existing 148 accepted sermons. See
 [the D-162 plan](seventh-private-batch-plan.md).
 
 ## D-158 restricted acceptance

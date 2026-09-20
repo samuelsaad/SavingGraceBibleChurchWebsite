@@ -13,15 +13,16 @@ export async function applyRestrictedAcceptanceSchema(pool:Pool, environment:Acc
     await c.query("SELECT pg_advisory_xact_lock(1397176899,1397111885)");
     const rows=(await c.query("SELECT migration_order,migration_id,checksum_sha256 FROM schema_migrations ORDER BY migration_order")).rows;
     const count=validateSchemaMigrationJournal(migrations,rows);
-    if(count!==18 && count!==19 && count!==20) throw new Error("restricted_schema_baseline_mismatch");
+    if(count!==18 && count!==19 && count!==20 && count!==21) throw new Error(`restricted_schema_baseline_mismatch_${count}`);
     if(count>=19) { await c.query("COMMIT"); return {outcome:"unchanged",applied:0}; }
     await c.query(migrations[18].upBody);
     await c.query("INSERT INTO schema_migrations(migration_order,migration_id,checksum_sha256) VALUES(19,$1,$2)",
       [migrations[18].id,migrations[18].checksumSha256]);
     if(environment==="sealed_staging") await c.query("GRANT SELECT ON sermon_restricted_acceptances,sermon_restricted_acceptance_withdrawals TO staging_reader");
     await c.query("COMMIT");return {outcome:"applied",applied:1};
-  } catch {
+  } catch (error) {
     try{await c.query("ROLLBACK");}catch{discard=true;}
-    throw new Error("restricted_schema_apply_refused");
+    const diagnostic=error instanceof Error&&/^[a-z0-9_]+$/u.test(error.message)?`:${error.message}`:"";
+    throw new Error(`restricted_schema_apply_refused${diagnostic}`);
   } finally {c.release(discard);}
 }

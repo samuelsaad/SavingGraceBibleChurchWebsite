@@ -40,3 +40,31 @@ Private identities, captions, transcripts, candidates, receipts and credentials
 remain Git-ignored. Commit only safe contracts, anonymized tests and documentation.
 No push, production deployment, publication, approval, embeddings or next batch is
 authorized.
+
+## Completion evidence — 20 September 2026
+
+All 36 fixed positions reached terminal outcomes without substitution. Exact source
+and transcript hashes were reverified for every position. Thirty-four records passed
+generation validation and were imported atomically as private, unapproved drafts;
+two remained held after their single correction allowance. The identical import pass
+returned `unchanged` for all 34, with the 227-record baseline preserved.
+
+Complete-transcript substantive review accepted 33 of 34 imported descriptions and
+all 238 ordered Q&A pairs. One description remains pending after a genuine incomplete
+phrase was found with no correction allowance remaining. Seven imported records
+retain provider-redaction blockers. Evidence supported one exact canonical speaker
+assignment, but that record remains held by redaction; 33 imported records still lack
+authoritative speaker evidence and three lack stored primary-passage evidence. No
+D-162 record therefore received private completion or restricted acceptance.
+
+The pre-existing restricted population was reconciled at 144 D-158 and four D-161
+records, with no missing qualifying receipt. Local and sealed staging frontends each
+render all 148 and retain private/no-store/noindex boundaries. Because D-162 added no
+eligible member, no staging data transfer or service replacement was required.
+
+Focused D-162, selector and migration tests pass, as do type/Astro checks and the
+production build. The complete PostgreSQL run passes 853 of 854 tests with zero
+database tests skipped; its sole failure is the already-known unrelated admin
+dashboard markup assertion. The complete standard run has the same sole failure.
+The previously observed pilot timeout passed in isolated rerun and is not a D-162
+regression.

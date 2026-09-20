@@ -1,5 +1,15 @@
 # Sealed staging release: deployed and recovery verified
 
+## D-162 restricted reconciliation — 20 September 2026
+
+The D-162 local batch completed with 34 private draft imports, but no record met all
+current restricted-acceptance requirements. The existing sealed staging population
+therefore remains correct at 191 stored sermons and 148 restricted frontend records.
+No D-162 package, database row, image or service was transferred. The pinned SSH
+tunnel health and aggregate API checks returned 200 with private/no-store/noindex
+headers. This no-write reconciliation preserves the running staging release and its
+rollback materials.
+
 ## Nine explicit Topical classifications — 14 September 2026
 
 Starting checkpoint `4dc90582edb7bdf190abd81ac418f798b3a9f46b`; implementation

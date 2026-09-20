@@ -290,10 +290,17 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         : 0;
       // A destructive 0019 rollback must fail without first removing the newer
       // empty schema when immutable D-158 receipts exist. This preserves the
-      // complete pre-attempt state. Empty-schema boundary tests may remove 0020.
+      // complete pre-attempt state. Empty-schema boundary tests may remove 0021/0020.
+      if (present && accepted === 0)
+        await runSchema("rollback", "0021_d162_delegated_review_acceptance");
       if (present && accepted === 0)
         await runSchema("rollback", "0020_d160_delegated_review_acceptance");
     }
+    if (
+      scope === "0020_d160_delegated_review_acceptance" &&
+      direction === "rollback"
+    )
+      await runSchema("rollback", "0021_d162_delegated_review_acceptance");
     if (
       scope === "0018_remaining_private_ai_review" &&
       direction === "rollback"
@@ -317,6 +324,8 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       await runSchema("apply", "0019_restricted_bulk_acceptance");
     if (scope === "0019_restricted_bulk_acceptance" && direction === "apply")
       await runSchema("apply", "0020_d160_delegated_review_acceptance");
+    if ((scope === "0019_restricted_bulk_acceptance" || scope === "0020_d160_delegated_review_acceptance") && direction === "apply")
+      await runSchema("apply", "0021_d162_delegated_review_acceptance");
     return result;
   }
 
@@ -5891,7 +5900,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
          (SELECT count(*)::integer FROM migration_records) AS content_records,
          (SELECT count(*)::integer FROM sermon_enrichment_draft_imports) AS draft_import_receipts`,
     );
-    expect(before.rows[0]?.schema_receipts).toBe(20);
+    expect(before.rows[0]?.schema_receipts).toBe(21);
     expect(before.rows[0]?.content_records).toBe(5);
     expect(before.rows[0]?.draft_import_receipts).toBeGreaterThanOrEqual(0);
     await expect(runSchema("apply")).resolves.toEqual({
@@ -5899,7 +5908,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       outcome: "no_op",
       appliedMigrationIds: [],
       rolledBackMigrationIds: [],
-      journalReceiptCount: 20,
+      journalReceiptCount: 21,
     });
     expect(
       (
@@ -5960,9 +5969,10 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         "0018_remaining_private_ai_review",
         "0019_restricted_bulk_acceptance",
         "0020_d160_delegated_review_acceptance",
+        "0021_d162_delegated_review_acceptance",
       ],
       rolledBackMigrationIds: [],
-      journalReceiptCount: 20,
+      journalReceiptCount: 21,
     });
   });
 
@@ -6135,6 +6145,35 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     ).toBe(before);
   });
 
+  it("adds D-162 as a separate draft-only restricted acceptance boundary", async () => {
+    const state = await pool.query(`SELECT
+      to_regclass('public.sermon_d162_restricted_acceptances') IS NOT NULL AS acceptance_table,
+      to_regprocedure('public.d162_restricted_acceptance_dependency(uuid)') IS NOT NULL AS dependency_function,
+      EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='sermon_d162_restricted_acceptances' AND column_name='accepted_row_version') AS accepted_version,
+      NOT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='sermon_d162_restricted_acceptances' AND column_name IN ('published_row_version','publication_state')) AS no_publication_columns`);
+    expect(state.rows[0]).toEqual({
+      acceptance_table: true,
+      dependency_function: true,
+      accepted_version: true,
+      no_publication_columns: true,
+    });
+    const client = await pool.connect();
+    await client.query("BEGIN");
+    try {
+      await client.query(
+        "INSERT INTO delegated_ai_review_scopes(id,scope_sha256,policy_sha256,member_count) VALUES('D-162',$1,$2,34)",
+        ["4".repeat(64), "5".repeat(64)],
+      );
+      await client.query(
+        "INSERT INTO remaining_ai_review_scopes(id,scope_sha256,policy_sha256,member_count) VALUES('D-162',$1,$2,34)",
+        ["4".repeat(64), "5".repeat(64)],
+      );
+    } finally {
+      await client.query("ROLLBACK");
+      client.release();
+    }
+  });
+
   it("refuses unjournalled objects and serialises concurrent fresh application", async () => {
     await expect(runSchema("rollback")).resolves.toMatchObject({
       outcome: "rolled_back",
@@ -6166,7 +6205,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         (count, result) => count + result.appliedMigrationIds.length,
         0,
       ),
-    ).toBe(20);
+    ).toBe(21);
     expect(
       (
         await pool.query<{ receipts: number; distinct_receipts: number }>(
@@ -6175,7 +6214,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
        FROM schema_migrations`,
         )
       ).rows[0],
-    ).toEqual({ receipts: 20, distinct_receipts: 20 });
+    ).toEqual({ receipts: 21, distinct_receipts: 21 });
 
     await expect(runSchema("rollback")).resolves.toMatchObject({
       outcome: "rolled_back",
@@ -6183,7 +6222,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     });
     await expect(runSchema("apply")).resolves.toMatchObject({
       outcome: "applied",
-      journalReceiptCount: 20,
+      journalReceiptCount: 21,
     });
   });
 });

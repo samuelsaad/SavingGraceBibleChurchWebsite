@@ -20,8 +20,10 @@ async function main() {
     } finally { await client.query("ROLLBACK"); client.release(); }
   };
   await ready();
+  const d162Enabled=process.env.D162_RESTRICTED_ACCEPTANCE_ENABLED==="1";
   const d161Enabled=process.env.D161_RESTRICTED_ACCEPTANCE_ENABLED==="1";
-  const handler = createSealedStagingHandler(new PostgresSermonRepository(pool,d161Enabled?"d161_restricted_accepted":"restricted_accepted"), ready,
+  const scope=d162Enabled?"d162_restricted_accepted":d161Enabled?"d161_restricted_accepted":"restricted_accepted";
+  const handler = createSealedStagingHandler(new PostgresSermonRepository(pool,scope), ready,
     process.env.RELEASE_COMMIT!, process.env.RESTRICTED_FRONTEND_DISABLED === "1");
   const server = createServer(async (incoming, outgoing) => {
     try {

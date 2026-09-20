@@ -102,4 +102,20 @@ describe("authoritative frontend sermon selector", () => {
       "d161_restricted_preview_configuration_refused"
     );
   });
+
+  it("enables D-162 accepted records only through its newer fail-closed combined gate", () => {
+    expect(localFrontendPreviewScope({ D162_RESTRICTED_ACCEPTANCE_ENABLED: "1" })).toBe("d162_restricted_accepted");
+    expect(localFrontendPreviewScope({
+      D161_RESTRICTED_ACCEPTANCE_ENABLED: "1",
+      D162_RESTRICTED_ACCEPTANCE_ENABLED: "1"
+    })).toBe("d162_restricted_accepted");
+    expect(() => localFrontendPreviewScope({ D162_RESTRICTED_ACCEPTANCE_ENABLED: "0" })).toThrow(
+      "d162_restricted_preview_configuration_refused"
+    );
+    const sql = buildPublishedSermonListQuery(query, "d162_restricted_accepted").text;
+    expect(sql).toContain("sermon_restricted_acceptances");
+    expect(sql).toContain("sermon_d161_restricted_acceptances");
+    expect(sql).toContain("sermon_d162_restricted_acceptances");
+    expect(sql).toContain("d162_restricted_acceptance_dependency");
+  });
 });
