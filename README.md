@@ -1,5 +1,16 @@
 # Saving Grace Bible Church Website
 
+## Complete project handoff for SermonsV4
+
+Branch `codex/project-sync-for-sermons-v4` is the complete V4 starting point. It contains SermonsV1 and SermonsV2 and intentionally excludes the V3-only application line. The current sermon collection is tracked at `development-data/project-sermon-snapshot-v1/` under D-163's branch-only authority. This Git handoff does not publish or approve sermon content.
+
+```text
+npm run development-data:verify-project-sermons
+npm run development-data:dry-run-project-sermons
+```
+
+The guarded importer is available as `npm run development-data:import-project-sermons-local` only for a uniquely named disposable local PostgreSQL test database with the normal write gate and test-run token. It forces imported sermons to remain private drafts and restores no operational review, acceptance, audit, public or semantic eligibility.
+
 ## D-162 seventh fixed private enrichment and reconciliation
 
 D-162 is bound only to private manifest SHA-256

@@ -68,6 +68,10 @@
     "development-data:export-current15-local": "tsx src/development-data/export-preview-sermon-dataset.ts",
     "development-data:verify-current15": "tsx src/development-data/preview-sermon-dataset-cli.ts verify",
     "development-data:import-current15-local": "tsx src/development-data/preview-sermon-dataset-cli.ts import",
+    "development-data:export-project-sermons-local": "tsx src/development-data/project-sermon-snapshot-cli.ts export",
+    "development-data:verify-project-sermons": "tsx src/development-data/project-sermon-snapshot-cli.ts verify",
+    "development-data:dry-run-project-sermons": "tsx src/development-data/project-sermon-snapshot-cli.ts dry-run",
+    "development-data:import-project-sermons-local": "tsx src/development-data/project-sermon-snapshot-cli.ts import",
     "dashboard:local": "cross-env API_HOST=127.0.0.1 ENABLE_LOCAL_TEST_IDENTITIES=1 ENABLE_LOCAL_DASHBOARD=1 tsx src/server/local-api.ts"
   },
   "dependencies": {

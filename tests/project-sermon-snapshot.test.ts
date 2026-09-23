@@ -1,0 +1,39 @@
+import { describe, expect, it } from "vitest";
+import {
+  loadTrackedProjectSermonSnapshot,
+  sha256,
+  validateProjectSermonSnapshot
+} from "../src/development-data/project-sermon-snapshot";
+
+describe("tracked project sermon snapshot", () => {
+  it("has a complete, hash-bound collection with contiguous ordered Q&A", async () => {
+    const loaded = await loadTrackedProjectSermonSnapshot();
+    expect(loaded.snapshot.tables.sermons.length).toBeGreaterThan(15);
+    expect(loaded.snapshot.tables.transcripts).toHaveLength(loaded.snapshot.tables.sermons.length);
+    expect(loaded.snapshot.tables.questionAnswers.length).toBeGreaterThan(loaded.snapshot.tables.sermons.length * 4);
+    expect(loaded.manifest.counts).toEqual(Object.fromEntries(
+      Object.entries(loaded.snapshot.tables).map(([name, rows]) => [name, rows.length])
+    ));
+  });
+
+  it("rejects operational identities and transcript or Q&A hash drift", async () => {
+    const loaded = await loadTrackedProjectSermonSnapshot();
+    const actorLeak = structuredClone(loaded.snapshot) as typeof loaded.snapshot & { reviewer_subject?: string };
+    actorLeak.reviewer_subject = "private-administrator";
+    expect(() => validateProjectSermonSnapshot(actorLeak)).toThrow("Forbidden operational field");
+
+    const transcriptDrift = structuredClone(loaded.snapshot);
+    transcriptDrift.tables.transcripts[0]!.body_text = `${transcriptDrift.tables.transcripts[0]!.body_text} changed`;
+    expect(() => validateProjectSermonSnapshot(transcriptDrift)).toThrow("Transcript content hash mismatch");
+
+    const qaDrift = structuredClone(loaded.snapshot);
+    qaDrift.tables.questionAnswers[0]!.content_sha256 = sha256("wrong");
+    expect(() => validateProjectSermonSnapshot(qaDrift)).toThrow("Q&A content hash mismatch");
+  });
+
+  it("contains no V3 application projection and documents private import semantics", async () => {
+    const loaded = await loadTrackedProjectSermonSnapshot();
+    expect(loaded.manifest.importMode).toBe("private-development-projection");
+    expect(JSON.stringify(loaded.manifest.operationalDataExcluded)).toContain("accounts");
+  });
+});

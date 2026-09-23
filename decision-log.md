@@ -689,6 +689,12 @@ be reconciled without repeating valid reviews. This creates no human approval,
 public/production publication, semantic eligibility, additional provider, another
 batch or Git publication. See `seventh-private-batch-plan.md`.
 
+### D-163 — Branch-bound complete project sermon snapshot
+
+Samuel separately authorised a public Git handoff of the current local sermon collection only on `codex/project-sync-for-sermons-v4`. The snapshot is a deliberate JSON projection with an integrity manifest, not an unrestricted PostgreSQL dump. It includes current church-owned sermon content, ordering, relationships, lifecycle labels, non-secret provenance, warnings, findings and sanitised AI/restricted-acceptance evidence needed for the V4 handoff.
+
+Accounts, administrator subject identities, sessions, audit events, credentials, OAuth material, tokens, private keys, raw caption exports, local filenames, proprietary source and unrelated private artifacts remain excluded. Repository visibility does not change any review, approval, publication, public-route, search, feed, sitemap, build or semantic state. The guarded importer targets only uniquely named disposable local databases, forces imported sermons to remain draft, restores no operational review/acceptance/audit authority, verifies hashes, and must return unchanged on an identical second import. This decision authorises only the named branch, snapshot paths, local verification and normal push to the user-named GitHub repository; it grants no deployment, production write, provider operation, approval or publication authority.
+
 ## Decisions still required
 
 - Final AWS runtime/adapter and production networking.

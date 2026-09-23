@@ -1,5 +1,11 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
+## Project-sync-for-sermons-v4 handoff — 23 September 2026
+
+The integration branch is `codex/project-sync-for-sermons-v4`, based on D-162 completion commit `9e95bc57f6267ec8f8646d3a4fa11c99a88714d4`. It contains the completed backend/admin work and the V1/V2 frontend line; the V3-only line is not part of this application tree. D-163 authorises the tracked project handoff snapshot only on this branch.
+
+The tracked snapshot is `development-data/project-sermon-snapshot-v1/`. It is a hash-bound projection of the current local collection containing sermon content, relationships, lifecycle labels and sanitised non-secret evidence. It is not a database dump and excludes accounts, sessions, administrator subject identities, audit events, credentials, OAuth material, tokens, keys, raw caption exports and local filenames. Repository visibility changes no application state. Validate it with `npm run development-data:verify-project-sermons` or `npm run development-data:dry-run-project-sermons`. Its importer is restricted to guarded `savinggrace_test_run_*` databases, imports every sermon as draft, restores no operational acceptance/audit authority, and must be run twice to prove idempotency. See the dataset README and `project-sermon-snapshot-validation.md`.
+
 ## D-162 seventh fixed batch completed and held for evidence — 20 September 2026
 
 Work continues only on branch `codex/next-36-after-d161`. The next 36 identities
