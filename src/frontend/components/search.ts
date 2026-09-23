@@ -10,7 +10,7 @@ import type { PublicSermonListQuery } from "../../api/contracts/public-sermons";
 import { passageQueryLabel } from "../../domain/bible-passage";
 import type { PublicSermonFilterOption, PublicSermonFilterOptions } from "../../server/repositories/sermon-repository";
 import { attribute, countLabel, html, when, type Html } from "../html";
-import { archivePath, contextualPath, hasActiveSermonFilters, standardizedFilterParameters, type FrontendRenderContext } from "../routes";
+import { archiveTarget, contextualPath, hasActiveSermonFilters, standardizedFilterParameters, type ArchiveTarget, type FrontendRenderContext } from "../routes";
 
 function options(items: PublicSermonFilterOption[], value: string | undefined, emptyLabel: string): Html {
   return html`<option value="">${emptyLabel}</option>${items.map((item) => html`<option value="${item.slug}"${attribute("selected", value === item.slug)}>${item.name}${item.sermonCount !== undefined ? ` (${item.sermonCount})` : ""}</option>`)}`;
@@ -30,14 +30,14 @@ export function refineActiveCount(query: PublicSermonListQuery): number {
 }
 
 /** One removable token per active filter dimension. */
-export function filterTokens(query: PublicSermonListQuery, filterOptions: PublicSermonFilterOptions, context: FrontendRenderContext): Html | null {
+export function filterTokens(query: PublicSermonListQuery, filterOptions: PublicSermonFilterOptions, context: FrontendRenderContext, target: ArchiveTarget = archiveTarget): Html | null {
   if (!hasActiveSermonFilters(query)) return null;
-  const base = contextualPath(context, archivePath);
+  const base = contextualPath(context, target.path);
   const without = (...names: string[]): string => {
     const parameters = standardizedFilterParameters(query);
     for (const name of names) parameters.delete(name);
     parameters.delete("view");
-    return `${parameters.size ? `${base}?${parameters.toString()}` : base}#results`;
+    return `${parameters.size ? `${base}?${parameters.toString()}` : base}#${target.fragment}`;
   };
   const passageLabel = passageQueryLabel(query);
   const tokens: Array<[string, string] | null> = [
@@ -62,12 +62,15 @@ export interface FinderInput {
   query: PublicSermonListQuery;
   options: PublicSermonFilterOptions;
   context: FrontendRenderContext;
+  /** The presentation that receives the search; the archive by default. */
+  target?: ArchiveTarget;
 }
 
 /** The archive's search controls. Passage state rides along in hidden inputs. */
 export function finder(input: FinderInput): Html {
   const { query, options: filterOptions, context } = input;
-  const action = `${contextualPath(context, archivePath)}#results`;
+  const target = input.target ?? archiveTarget;
+  const action = `${contextualPath(context, target.path)}#${target.fragment}`;
   const refineCount = refineActiveCount(query);
   const passageActive = Boolean(query.passageBook);
   return html`<section class="finder" aria-labelledby="finder-heading">
@@ -92,12 +95,12 @@ export function finder(input: FinderInput): Html {
         </div>
       </details>
     </form>
-    ${filterTokens(query, filterOptions, context)}
+    ${filterTokens(query, filterOptions, context, target)}
   </section>`;
 }
 
 /** The compact keyword form in the masthead. */
 export function mastheadSearch(context: FrontendRenderContext): Html {
-  const action = `${contextualPath(context, archivePath)}#results`;
-  return html`<form class="masthead__search" method="get" action="${action}" role="search" aria-label="Search sermons"><label class="sr-only" for="masthead-search">Search sermons</label><input id="masthead-search" class="control" name="s" type="search" maxlength="120" placeholder="Search sermons" autocomplete="off" /><button class="button button--outline" type="submit">Search</button></form><a class="masthead__search-link" href="${contextualPath(context, archivePath)}#sermon-search">Search</a>`;
+  const action = `${contextualPath(context, archiveTarget.path)}#${archiveTarget.fragment}`;
+  return html`<form class="masthead__search" method="get" action="${action}" role="search" aria-label="Search sermons"><label class="sr-only" for="masthead-search">Search sermons</label><input id="masthead-search" class="control" name="s" type="search" maxlength="120" placeholder="Search sermons" autocomplete="off" /><button class="button button--outline" type="submit">Search</button></form><a class="masthead__search-link" href="${contextualPath(context, archiveTarget.path)}#sermon-search">Search</a>`;
 }

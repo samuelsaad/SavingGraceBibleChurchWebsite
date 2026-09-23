@@ -15,6 +15,7 @@ import {
 } from "../../frontend";
 import { escapeXml } from "../../frontend/xml";
 import type { PublicSermonRepository } from "../repositories/sermon-repository";
+import { createAlternateArchiveHandlers } from "./alternate-archives";
 import { loadArchivePage } from "./frontend-archive-loader";
 import { frontendResponse, plainResponseHeaders } from "./frontend-response";
 import type { FrontendRenderContext } from "../../frontend/routes";
@@ -52,7 +53,10 @@ export function createPublicSermonSiteHandler(repository: PublicSermonRepository
   function errorPage(status: 400 | 404 | 410 | 500, title: string, message: string): Response {
     return frontendResponse(renderFrontendBoundaryPage({ title, message }, context), { status });
   }
+  const alternates = createAlternateArchiveHandlers(repository, context);
   return async (request: Request): Promise<Response | null> => {
+    const alternate = await alternates(request);
+    if (alternate) return alternate;
     const url = new URL(request.url);
     const isArchiveRoot = url.pathname === archivePath;
     const archivePageMatch = /^\/sermons\/page\/(\d+)\/$/.exec(url.pathname);

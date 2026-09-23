@@ -5,6 +5,7 @@ import { LocalTestIdentityProvider } from "./auth/local-test-identity-provider";
 import { createPostgresPool } from "./database";
 import { createLocalFrontendPreviewHandler } from "./http/local-frontend-preview";
 import { serveLocalDashboard } from "./http/local-dashboard-static";
+import { siteAssetResponse } from "./http/site-assets";
 import { IncomingRequestTooLargeError, toWebRequest } from "./http/node-request-adapter";
 import { assertLoopbackApiHost } from "./local-api-safety";
 import { PostgresSermonRepository } from "./repositories/postgres-sermon-repository";
@@ -55,7 +56,8 @@ const server = createServer(async (incoming, outgoing) => {
     const pathname = new URL(request.url).pathname;
     const response = pathname === "/api/v1/admin/frontend-preview-session"
       ? await session.issue(request, identityProvider)
-      : (await preview(request))
+      : siteAssetResponse(request)
+        ?? (await preview(request))
         ?? (await serveLocalDashboard(request, true))
         ?? new Response("Not found", {
           status: 404,

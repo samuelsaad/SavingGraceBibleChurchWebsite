@@ -8,6 +8,7 @@ import {
   renderFrontendHomePage,
   renderFrontendTaxonomyDetail,
   renderFrontendTaxonomyIndex,
+  renderSermonsV1Page,
   siteStyles
 } from "../src/frontend";
 import { contentSecurityPolicy, embeddedScriptHashes, embeddedStyleHashes } from "../src/server/http/frontend-response";
@@ -17,8 +18,9 @@ const series = { name: "Example Series", slug: "example-series", sermonCount: 2 
 const options = { ...emptyFilterOptions, speakers: [speaker], series: [series], books: [{ name: "Romans", slug: "romans", sermonCount: 3 }] };
 
 const pages = {
-  home: renderFrontendHomePage({ sermons: [], options: emptyFilterOptions, totalItems: 0 }),
-  previewHome: renderFrontendHomePage({ sermons: [], options, totalItems: 3 }, previewRenderContext),
+  home: renderSermonsV1Page({ sermons: [], options: emptyFilterOptions, totalItems: 0 }),
+  previewHome: renderSermonsV1Page({ sermons: [], options, totalItems: 3 }, previewRenderContext),
+  churchHome: renderFrontendHomePage({ sermons: [], options: emptyFilterOptions, totalItems: 0 }),
   boundary: renderFrontendBoundaryPage({ title: "Page not found", message: "The page you requested could not be found." }),
   privateBoundary: renderFrontendBoundaryPage({ title: "Administrator preview session required", message: "Open the dashboard first.", kind: "private" }, previewRenderContext),
   taxonomyIndex: renderFrontendTaxonomyIndex("series", [series]),
@@ -32,14 +34,17 @@ describe("shared frontend shell", () => {
       expect(html, name).toContain('<a class="skip-link" href="#main-content">Skip to main content</a>');
       expect(html, name).toContain('<main id="main-content" class="site-main">');
       const isPreview = html.includes('class="preview-band"');
-      expect(html, name).toContain('<nav class="masthead__nav" aria-label="Primary">');
-      expect(html, name).toContain(isPreview ? '<details class="masthead__menu" data-sermon-menu>' : '<ul class="masthead__links">');
+      expect(html, name).toContain('<nav class="masthead__nav" aria-label="Primary"><ul class="masthead__links">');
+      expect(html, name).toContain(isPreview ? '<details class="masthead__menu" data-sermon-menu>' : '<li class="masthead__links-sermons"><a href="/sermons/"');
       expect(html, name).not.toContain('data-sermon-menu open');
       expect(html, name).toContain('<nav aria-label="Footer">');
       expect(html, name).toContain('<a class="brand" href="');
-      expect(html, name).toContain('<span class="wordmark__line">Saving Grace</span><span class="wordmark__line">Bible Church</span>');
-      expect(html, name).toContain("The bookshelf mark is this website's own device.");
-      if (!isPreview) expect(html, name).not.toContain("<details");
+      expect(html, name).toContain('<img class="brand__logo" src="/brand/saving-grace-logo.png" width="300" height="178" alt="Saving Grace Bible Church" decoding="async" />');
+      expect(html, name).toContain("the Saving Grace Bible Church logo is the church's own.");
+      expect(html, name).toContain('<h2 class="footer-col__title" id="footer-contact-heading">Contact Us</h2>');
+      expect(html, name).toContain("<span>Tel: 0450545589</span>");
+      expect(html, name).toContain('<a class="button masthead__give" href="');
+      if (!isPreview) expect(html.replace(/<details class="refine"[\s\S]*?<\/details>/gu, ""), name).not.toContain("<details");
       expect(html, name).not.toContain(' style="');
       expect(html, name).toContain('<meta name="color-scheme" content="light" />');
       expect(html, name).toContain('lang="en-AU"');
@@ -67,12 +72,15 @@ describe("shared frontend shell", () => {
     expect(pages.home).toContain('<script data-enhancement="canon">');
     expect(pages.home.match(/<script /gu)).toHaveLength(1);
     expect(pages.boundary).not.toContain("<script");
+    expect(pages.churchHome).not.toContain("<script");
     expect(pages.previewHome).not.toContain('rel="canonical"');
     expect(pages.previewHome).not.toContain('property="og:');
     expect(pages.previewHome).toContain('<meta name="robots" content="noindex, nofollow, noarchive"');
     expect(pages.previewHome).toContain('<div class="preview-band" role="status">');
-    expect(pages.home).toContain('rel="canonical" href="https://www.savinggrace.org.au/"');
-    expect(pages.home).toContain('<meta property="og:type" content="website" />');
+    expect(pages.home).toContain('rel="canonical" href="https://www.savinggrace.org.au/sermons/"');
+    expect(pages.home).toContain('<meta name="robots" content="noindex, follow" />');
+    expect(pages.churchHome).toContain('rel="canonical" href="https://www.savinggrace.org.au/"');
+    expect(pages.churchHome).toContain('<meta property="og:type" content="website" />');
     expect(pages.home).not.toContain('class="preview-band"');
     for (const html of Object.values(pages)) {
       expect(html.includes('<script data-enhancement="navigation">')).toBe(html.includes('class="preview-band"'));
@@ -86,14 +94,14 @@ describe("shared frontend shell", () => {
       expect(source, `${name} is readable`).toContain("\n");
       expect(source).not.toMatch(/innerHTML|eval\(|fetch\(|XMLHttpRequest|document\.write|autoplay/u);
     }
-    for (const html of [pages.home, pages.previewHome]) {
+    for (const html of [pages.home, pages.previewHome, pages.churchHome]) {
       const csp = contentSecurityPolicy(html);
       for (const scriptHash of embeddedScriptHashes(html)) expect(csp).toContain(scriptHash);
       for (const styleHash of embeddedStyleHashes(html)) expect(csp).toContain(styleHash);
       expect(csp).toContain("default-src 'none'");
       expect(csp).toContain("frame-ancestors 'none'");
       expect(csp).not.toContain("unsafe-inline");
-      expect(csp).toContain("script-src 'sha256-");
+      if (html !== pages.churchHome) expect(csp).toContain("script-src 'sha256-");
     }
     expect(contentSecurityPolicy(pages.boundary)).not.toContain("script-src");
   });
@@ -127,15 +135,18 @@ describe("shared frontend shell", () => {
   });
 
   it("renders taxonomy links as archive filters in public mode and as pages in preview mode", () => {
-    const publicHome = renderFrontendHomePage({ sermons: [], options, totalItems: 3 }, publicRenderContext);
+    const publicHome = renderSermonsV1Page({ sermons: [], options, totalItems: 3 }, publicRenderContext);
     expect(publicHome).toContain('<a href="/sermons/?sermon_series=example-series"><span>Example Series</span><span class="index__count">2 sermons</span></a>');
     expect(publicHome).toContain('<a class="spine__link" href="/sermons/?sermon_book=romans">');
     expect(publicHome).not.toContain("All series</a>");
     expect(publicHome).not.toContain("/speakers/");
     expect(publicHome).not.toContain("SermonsV1");
     expect(publicHome).not.toContain("SermonsV2");
+    expect(publicHome).not.toContain("SermonsV4");
     expect(pages.previewHome).toContain('href="/frontend-preview/series/example-series/"');
     expect(pages.previewHome).toContain('href="/frontend-preview/series/">All series</a>');
     expect(pages.previewHome).toContain('<li><a href="/frontend-preview/books/">Books</a></li>');
+    expect(pages.previewHome).toContain('<li><a href="/frontend-preview/sermons-v1/" aria-current="page">SermonsV1</a></li>');
+    expect(pages.previewHome).toContain('<li><a href="/frontend-preview/sermons-v4/">SermonsV4</a></li>');
   });
 });

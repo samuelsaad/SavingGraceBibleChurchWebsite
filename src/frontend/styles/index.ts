@@ -5,15 +5,21 @@
  * the result is inlined once per page and hashed into the Content-Security-
  * Policy by the server response builder.
  */
+import { cardStyles } from "./cards";
 import { coreStyles } from "./core";
+import { homeStyles } from "./home";
 import { previewStyles } from "./preview";
 import { sermonStyles } from "./sermon";
 import { shelfStyles } from "./shelf";
+import { v4Styles } from "./v4";
 
 const blocks = {
   core: coreStyles,
   shelf: shelfStyles,
   sermon: sermonStyles,
+  cards: cardStyles,
+  v4: v4Styles,
+  home: homeStyles,
   preview: previewStyles
 } as const;
 
@@ -42,7 +48,7 @@ export function siteStyles(extra: StyleBlockName[] = []): string {
 
 /** The complete stylesheet, for the static build and for tests. */
 export function publicSiteStyles(): string {
-  return siteStyles(["shelf", "sermon"]);
+  return siteStyles(["shelf", "sermon", "cards", "v4", "home"]);
 }
 
 /** Readable sources, for the stylesheet hygiene test. */

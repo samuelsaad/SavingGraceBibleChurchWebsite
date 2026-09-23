@@ -10,6 +10,7 @@ import { createApplicationApiRouter } from "../src/server/http/application-api-r
 import { createLocalFrontendPreviewHandler } from "../src/server/http/local-frontend-preview";
 import { serveLocalDashboard } from "../src/server/http/local-dashboard-static";
 import { toWebRequest } from "../src/server/http/node-request-adapter";
+import { siteAssetResponse } from "../src/server/http/site-assets";
 import { readOnlyVerificationHandler } from "./read-only-handler";
 
 // Verification only: existing read-only target guard; no database-write opt-in.
@@ -27,7 +28,7 @@ async function main() {
   const preview = createLocalFrontendPreviewHandler(new PostgresSermonRepository(pool, "completed_preview"), session);
   const api = createApplicationApiRouter(new PostgresSermonRepository(pool), new PostgresAdminSermonRepository(pool), identityProvider);
   const handler = readOnlyVerificationHandler(request => session.issue(request, identityProvider),
-    async request => (await preview(request)) ?? (await serveLocalDashboard(request, true)) ?? await api(request));
+    async request => siteAssetResponse(request) ?? (await preview(request)) ?? (await serveLocalDashboard(request, true)) ?? await api(request));
   const server = createServer(async (incoming, outgoing) => {
     try {
       const response = await handler(await toWebRequest(incoming, "http://127.0.0.1:4361", 16384));

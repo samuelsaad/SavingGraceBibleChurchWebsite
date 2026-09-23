@@ -9,6 +9,15 @@ export const canonicalOrigin = "https://www.savinggrace.org.au";
 export const archivePath = "/sermons/";
 export const archivePageSize = 9;
 
+/**
+ * Alternate archive presentations. The home, archive and detail URLs stay
+ * intact; these routes are noindex comparison surfaces reached from the
+ * Sermons menu.
+ */
+export const sermonsV1Path = "/sermons-v1/";
+export const sermonsV4Path = "/sermons-v4/";
+export type ArchiveBasePath = typeof archivePath | typeof sermonsV1Path | typeof sermonsV4Path;
+
 export interface FrontendRenderContext {
   mode: "public" | "preview" | "restricted" | "draft-preview";
   basePath: "" | "/frontend-preview" | "/draft-preview";
@@ -33,8 +42,8 @@ export function sermonPath(context: FrontendRenderContext, slug: string): string
   return contextualPath(context, `/sermons/${encodeURIComponent(slug)}/`);
 }
 
-export function archivePagePath(page: number, context = publicRenderContext): string {
-  return contextualPath(context, page <= 1 ? archivePath : `/sermons/page/${page}/`);
+export function archivePagePath(page: number, context = publicRenderContext, base: ArchiveBasePath = archivePath): string {
+  return contextualPath(context, page <= 1 ? base : `${base}page/${page}/`);
 }
 
 /** Archive URL filtered by one legacy-compatible query parameter. */
@@ -128,7 +137,8 @@ export function paginationUrl(
   page: number,
   query: PublicSermonListQuery,
   context = publicRenderContext,
-  expandedRecent = false
+  expandedRecent = false,
+  target: ArchiveTarget = archiveTarget
 ): string {
   const parameters = standardizedFilterParameters(query);
   if (expandedRecent && !hasActiveSermonFilters(query)) {
@@ -136,8 +146,17 @@ export function paginationUrl(
     else parameters.delete("view");
   }
   const suffix = parameters.size ? `?${parameters.toString()}` : "";
-  return `${archivePagePath(page, context)}${suffix}#${resultsAnchor}`;
+  return `${archivePagePath(page, context, target.path)}${suffix}#${target.fragment}`;
 }
+
+/** Where an archive presentation sends its searches, filters and pagination. */
+export interface ArchiveTarget {
+  path: ArchiveBasePath;
+  fragment: string;
+}
+
+export const archiveTarget: ArchiveTarget = Object.freeze({ path: archivePath, fragment: "results" });
+export const sermonsV4Target: ArchiveTarget = Object.freeze({ path: sermonsV4Path, fragment: "v4-results" });
 
 export const resultsAnchor = "results";
 export const recentAnchor = "most-recent-sermons";
@@ -147,6 +166,8 @@ export interface SiteLinks {
   readonly context: FrontendRenderContext;
   readonly home: string;
   readonly archive: string;
+  readonly sermonsV1: string;
+  readonly sermonsV4: string;
   readonly hasTaxonomyRoutes: boolean;
   archivePage(page: number): string;
   sermon(slug: string): string;
@@ -161,6 +182,8 @@ export function siteLinks(context: FrontendRenderContext): SiteLinks {
     context,
     home: contextualPath(context, "/"),
     archive: contextualPath(context, archivePath),
+    sermonsV1: contextualPath(context, sermonsV1Path),
+    sermonsV4: contextualPath(context, sermonsV4Path),
     hasTaxonomyRoutes: context.mode !== "public",
     archivePage: (page) => archivePagePath(page, context),
     sermon: (slug) => sermonPath(context, slug),
@@ -180,7 +203,8 @@ export function withFilter(
   query: PublicSermonListQuery,
   changes: Record<string, string | null>,
   context: FrontendRenderContext,
-  fragment = "results"
+  fragment = "results",
+  path: ArchiveBasePath = archivePath
 ): string {
   const parameters = standardizedFilterParameters(query);
   parameters.delete("view");
@@ -188,13 +212,13 @@ export function withFilter(
     if (value === null) parameters.delete(name);
     else parameters.set(name, value);
   }
-  const base = contextualPath(context, archivePath);
+  const base = contextualPath(context, path);
   return `${base}${parameters.size ? `?${parameters.toString()}` : ""}#${fragment}`;
 }
 
 /** Removes every precise-passage parameter and the broad book filter. */
-export function withoutPassage(query: PublicSermonListQuery, context: FrontendRenderContext, fragment = "results"): string {
+export function withoutPassage(query: PublicSermonListQuery, context: FrontendRenderContext, fragment = "results", path: ArchiveBasePath = archivePath): string {
   return withFilter(query, {
     passageBook: null, passageChapter: null, passageVerse: null, passageEndVerse: null, passageScope: null, sermon_book: null
-  }, context, fragment);
+  }, context, fragment, path);
 }

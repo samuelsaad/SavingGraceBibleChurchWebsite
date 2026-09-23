@@ -5,6 +5,7 @@ import { createPostgresPool } from "./database";
 import { createApplicationApiRouter } from "./http/application-api-router";
 import { IncomingRequestTooLargeError, toWebRequest } from "./http/node-request-adapter";
 import { serveLocalDashboard } from "./http/local-dashboard-static";
+import { siteAssetResponse } from "./http/site-assets";
 import { createPublicSermonPageHandler } from "./http/public-sermon-page";
 import { createLocalFrontendPreviewHandler } from "./http/local-frontend-preview";
 import { PostgresAdminSermonRepository } from "./repositories/postgres-admin-sermon-repository";
@@ -41,7 +42,8 @@ const server = createServer(async (incoming, outgoing) => {
     const request = await toWebRequest(incoming, `http://${originHostname}:${port}`);
     const response = new URL(request.url).pathname === "/api/v1/admin/frontend-preview-session"
       ? await previewSession.issue(request, identityProvider)
-      : (await frontendPreview(request)) ??
+      : siteAssetResponse(request) ??
+      (await frontendPreview(request)) ??
       (await publicSermonPage(request)) ??
       (await serveLocalDashboard(
         request,

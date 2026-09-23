@@ -4,6 +4,7 @@ import { createPublicSermonSiteHandler, frontendResponse, renderFrontendHomePage
 import { publicSermonListQuerySchema } from "../api/contracts/public-sermons";
 import { restrictedRenderContext } from "../frontend/routes";
 import { renderFrontendTaxonomyIndex, type FrontendTaxonomyKind } from "../frontend";
+import { siteAssetResponse } from "../server/http/site-assets";
 
 export const sealedHeaders = {
   "Cache-Control": "private, no-store, max-age=0", "X-Robots-Tag": "noindex, nofollow, noarchive",
@@ -33,8 +34,10 @@ export function createSealedStagingHandler(repository: PublicSermonRepository, r
       // History-preserving application recovery: no database rollback or identity
       // bypass. Health and deny-by-default private routes remain available.
       if (frontendDisabled) return plain("restricted_frontend_temporarily_disabled", 503);
-      let response: Response | null;
-      if (path === "/") {
+      let response: Response | null = siteAssetResponse(request);
+      if (response) {
+        // The church logo: embedded bytes, no filesystem, no database.
+      } else if (path === "/") {
         const [result, options] = await Promise.all([
           repository.listPublished(publicSermonListQuerySchema.parse({ page: 1, pageSize: 6 })),
           repository.listPublishedFilterOptions()

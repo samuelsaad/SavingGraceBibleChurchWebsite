@@ -118,17 +118,19 @@ describe("public sermon site routes", () => {
     expect(html).toContain('<option value="example-speaker" selected>Example Speaker (10)</option>');
     expect(html).toContain('<details class="refine" data-refine data-active="true" open>');
     expect(html).toContain('<span class="refine__badge">5 filters active</span>');
-    expect(html).not.toContain("aria-expanded");
+    expect(html.replace(/<script[\s\S]*?<\/script>/gu, "")).not.toContain("aria-expanded");
     expect(html).toContain('<section class="results" id="results" tabindex="-1" aria-labelledby="results-heading results-status">');
     expect(html).toContain('<h2 id="results-heading" class="section__title">Sermons</h2>');
     expect(html).toContain('<span class="results__status" id="results-status">10 sermons · Page 2 of 2</span>');
     expect(html).toContain('<ol class="catalogue results__list" role="list" start="10">');
     expect(html).toContain('aria-label="Active filters"');
     expect(html).toContain('<a class="tokens__clear" href="/sermons/">Clear all</a>');
-    const masthead = section(html, '<header class="masthead">', "</header>");
-    expect(masthead).toContain('<ul class="masthead__links"><li><a href="/sermons/" aria-current="page">Sermons</a></li></ul>');
+    const masthead = section(html, '<header class="masthead"', "</header>");
+    expect(masthead).toContain('<ul class="masthead__links"><li><a href="/#about">About Us</a></li><li class="masthead__links-sermons"><a href="/sermons/" aria-current="page">Sermons</a></li><li><a href="/#events">News &amp; Events</a></li><li><a href="/#contact">Contact Us</a></li></ul>');
     expect(masthead).not.toContain("/speakers/");
+    expect(masthead).not.toContain("SermonsV");
     expect(masthead).not.toContain("masthead__search");
+    expect(masthead).toContain('<a class="button masthead__give" href="/#give">Give</a>');
     expect(html).not.toContain("<details class=\"book-details\"");
     expect(html).toContain(encodeURIComponent(summary.slug));
     expect(html).not.toContain('id="transcript-heading"');
@@ -449,13 +451,13 @@ describe("public sermon site routes", () => {
 
   it("renders an honest static home without invented branding", () => {
     const html = renderFrontendHomePage({ sermons: [], options: emptyFilterOptions, totalItems: 0 });
-    expect(html).toContain('<h1 id="hero-heading" class="hero__title">Sermons, shelved by Scripture.</h1>');
-    expect(html).toContain("Sermons are being prepared");
+    expect(html).toContain('<h1 id="hero-heading" class="arrive__title"><span class="arrive__name">Saving Grace</span><span class="arrive__name">Bible Church</span></h1>');
+    expect(html).toContain("No sermon is available yet. Please check back soon.");
     expect(html).toContain("No sermon is available yet. Please check back soon.");
     expect(html).toContain('<a class="brand" href="/">');
-    expect(html).toContain("No sermons have been shelved yet.");
-    expect(html.match(/<li class="spine /gu)).toHaveLength(66);
-    expect(html).not.toContain('class="spine__link"');
+    expect(html).not.toContain('<article class="card');
+    expect(html).not.toContain('class="spine');
+    expect(html).toContain("Welcome to Saving Grace Bible Church");
     expect(html).not.toContain("Scripture for faith and life");
     expect(html).not.toContain("Built around the sermon");
     expect(html.match(/<h1/gu)).toHaveLength(1);

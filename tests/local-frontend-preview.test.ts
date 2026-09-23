@@ -93,7 +93,7 @@ async function authorisedRoute() {
 }
 
 function masthead(html: string): string {
-  return html.slice(html.indexOf('<header class="masthead">'), html.indexOf("</header>"));
+  return html.slice(html.indexOf('<header class="masthead"'), html.indexOf("</header>"));
 }
 
 describe("authenticated local frontend preview", () => {
@@ -140,11 +140,19 @@ describe("authenticated local frontend preview", () => {
     expect(homeHtml).not.toContain("application/ld+json");
     expect(homeHtml).toContain('<meta name="robots" content="noindex, nofollow, noarchive"');
     expect(home?.headers.get("cache-control")).toBe("private, no-store, max-age=0, must-revalidate");
-    expect(homeHtml).toContain('<ul class="stats hero__stats" role="list"><li>1 sermon</li><li>1 of 66 books</li><li>1 speaker</li><li>1 series</li></ul>');
-    expect(homeHtml).toContain('<a class="spine__link" href="/frontend-preview/books/romans/">');
-    expect(homeHtml).toContain('<span class="spine__count" aria-hidden="true">1</span>');
-    expect(homeHtml).toContain('<h2 id="latest-heading" class="section__title">Latest sermon</h2>');
-    expect(homeHtml).toContain('<h3 class="entry__title"><a href="/frontend-preview/sermons/an-anonymised-reviewed-draft/">An anonymised reviewed draft</a></h3>');
+    expect(homeHtml).toContain('<h1 id="hero-heading" class="arrive__title">');
+    expect(homeHtml).toContain('<h2 id="recent-heading" class="section__title">Recent Sermons</h2>');
+    expect(homeHtml).toContain('<h3 class="card__title"><a href="/frontend-preview/sermons/an-anonymised-reviewed-draft/">An anonymised reviewed draft</a></h3>');
+    expect(homeHtml).toContain('<span class="card__group">Pauline Epistles</span>');
+
+    const landing = await route(new Request("http://127.0.0.1/frontend-preview/sermons-v1/", { headers: { cookie } }));
+    const landingHtml = await landing!.text();
+    expect(landing?.status).toBe(200);
+    expect(landingHtml).toContain('<ul class="stats hero__stats" role="list"><li>1 sermon</li><li>1 of 66 books</li><li>1 speaker</li><li>1 series</li></ul>');
+    expect(landingHtml).toContain('<a class="spine__link" href="/frontend-preview/books/romans/">');
+    expect(landingHtml).toContain('<span class="spine__count" aria-hidden="true">1</span>');
+    expect(landingHtml).toContain('<h2 id="latest-heading" class="section__title">Latest sermon</h2>');
+    expect(landingHtml).toContain('<h3 class="entry__title"><a href="/frontend-preview/sermons/an-anonymised-reviewed-draft/">An anonymised reviewed draft</a></h3>');
 
     const sermon = await route(new Request(`http://127.0.0.1/frontend-preview/sermons/${summary.slug}/`, { headers: { cookie } }));
     const sermonHtml = await sermon!.text();
@@ -217,27 +225,35 @@ describe("authenticated local frontend preview", () => {
     const navigation = masthead(html);
     const expectedRoutes = [
       "/frontend-preview/",
+      "/frontend-preview/sermons-v1/",
       "/frontend-preview/sermons/",
+      "/frontend-preview/sermons-v4/",
       "/frontend-preview/speakers/",
       "/frontend-preview/series/",
       "/frontend-preview/books/"
     ];
 
     expect(navigation).toContain('<details class="masthead__menu" data-sermon-menu>');
-    expect(navigation).toContain('<ul class="masthead__dropdown" id="sermon-navigation"><li><a href="/frontend-preview/" aria-current="page">SermonsV1</a></li><li><a href="/frontend-preview/sermons/" data-sermon-archive>SermonsV2</a></li><li><a href="/frontend-preview/speakers/">Speakers</a></li><li><a href="/frontend-preview/series/">Series</a></li><li><a href="/frontend-preview/books/">Books</a></li></ul>');
+    expect(navigation).toContain('<ul class="masthead__dropdown" id="sermon-navigation"><li><a href="/frontend-preview/sermons-v1/">SermonsV1</a></li><li><a href="/frontend-preview/sermons/" data-sermon-archive>SermonsV2</a></li><li><a href="/frontend-preview/sermons-v4/">SermonsV4</a></li><li><a href="/frontend-preview/speakers/">Speakers</a></li><li><a href="/frontend-preview/series/">Series</a></li><li><a href="/frontend-preview/books/">Books</a></li></ul>');
     expect(navigation).not.toContain('data-sermon-menu open');
     expect(navigation).toContain('aria-controls="sermon-navigation"');
     expect(html).toContain('<script data-enhancement="navigation">');
-    expect(navigation.match(/aria-current="page"/gu)).toHaveLength(1);
+    expect(navigation.match(/aria-current="page"/gu)).toBeNull();
     expect(navigation).toContain('<form class="masthead__search" method="get" action="/frontend-preview/sermons/#results" role="search" aria-label="Search sermons">');
     expect(navigation).toContain('<a class="masthead__search-link" href="/frontend-preview/sermons/#sermon-search">');
+    expect(navigation).toContain('<a class="button masthead__give" href="/frontend-preview/#give">Give</a>');
     for (const routePath of expectedRoutes) expect(navigation).toContain(`href="${routePath}"`);
-    expect(html).toContain('<script data-enhancement="canon">');
-    const script = html.slice(html.indexOf('<script data-enhancement="canon">'), html.indexOf("</script>"));
-    for (const key of ["'ArrowRight'", "'ArrowLeft'", "'Home'", "'End'", "'Escape'", "'pageshow'"]) expect(script).toContain(key);
-    expect(script).not.toContain("innerHTML");
     expect(home?.headers.get("content-security-policy")).toContain("script-src 'sha256-");
     expect(html.match(/<h1/gu)).toHaveLength(1);
+
+    const landing = await route(new Request("http://127.0.0.1/frontend-preview/sermons-v1/", { headers: { cookie } }));
+    const landingHtml = await landing!.text();
+    expect(masthead(landingHtml)).toContain('<a href="/frontend-preview/sermons-v1/" aria-current="page">SermonsV1</a>');
+    expect(masthead(landingHtml).match(/aria-current="page"/gu)).toHaveLength(1);
+    expect(landingHtml).toContain('<script data-enhancement="canon">');
+    const script = landingHtml.slice(landingHtml.indexOf('<script data-enhancement="canon">'), landingHtml.indexOf("</script>", landingHtml.indexOf('<script data-enhancement="canon">')));
+    for (const key of ["'ArrowRight'", "'ArrowLeft'", "'Home'", "'End'", "'Escape'", "'pageshow'"]) expect(script).toContain(key);
+    expect(script).not.toContain("innerHTML");
 
     const speakers = await route(new Request("http://127.0.0.1/frontend-preview/speakers/", { headers: { cookie } }));
     const speakersNavigation = masthead(await speakers!.text());
@@ -248,7 +264,8 @@ describe("authenticated local frontend preview", () => {
     const archive = await route(new Request("http://127.0.0.1/frontend-preview/sermons/", { headers: { cookie } }));
     const archiveNavigation = masthead(await archive!.text());
     expect(archiveNavigation).toContain('<a href="/frontend-preview/sermons/" data-sermon-archive aria-current="page">SermonsV2</a>');
-    expect(archiveNavigation).toContain('<a href="/frontend-preview/">SermonsV1</a>');
+    expect(archiveNavigation).toContain('<a href="/frontend-preview/sermons-v1/">SermonsV1</a>');
+    expect(archiveNavigation).toContain('<a href="/frontend-preview/sermons-v4/">SermonsV4</a>');
     expect(archiveNavigation.match(/aria-current="page"/gu)).toHaveLength(1);
   });
 

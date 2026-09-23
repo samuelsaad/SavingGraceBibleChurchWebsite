@@ -22,6 +22,7 @@ import type {
   PublicSermonFilterOptions,
   PublicSermonRepository
 } from "../repositories/sermon-repository";
+import { createAlternateArchiveHandlers } from "./alternate-archives";
 import { loadArchivePage } from "./frontend-archive-loader";
 import { frontendResponse, frontendResponseHeaders } from "./frontend-response";
 
@@ -67,6 +68,7 @@ export function createLocalFrontendPreviewHandler(
 ) {
   const root = options.root ?? previewRoot;
   const context = options.context ?? (root === "/draft-preview" ? draftPreviewRenderContext : previewRenderContext);
+  const alternates = createAlternateArchiveHandlers(repository, context);
   return async (request: Request): Promise<Response | null> => {
     const url = new URL(request.url);
     if (url.pathname !== root && !url.pathname.startsWith(`${root}/`)) return null;
@@ -87,6 +89,8 @@ export function createLocalFrontendPreviewHandler(
         context
       );
     }
+    const alternate = await alternates(request);
+    if (alternate) return alternate;
     if (
       url.pathname === root
       || new RegExp(`^${root}/(?:sermons(?:/page/\\d+|/[a-z0-9]+(?:-[a-z0-9]+)*)?|(?:speakers|series|books)(?:/[a-z0-9]+(?:-[a-z0-9]+)*)?)$`, "u").test(url.pathname)

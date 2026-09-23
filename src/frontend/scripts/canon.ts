@@ -9,7 +9,8 @@
  * and End jump, Space activates a link, and Escape moves focus to the grid's
  * escape target (its skip link). Skip links and captions stay ordinary Tab
  * stops. Search forms drop empty and default fields on submit so shared URLs
- * stay short; the server accepts either shape.
+ * stay short; the server accepts either shape. A folded shelf mirrors its
+ * native open state as aria-expanded on its summary.
  */
 export const canonScript = `(function () {
   var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -26,6 +27,17 @@ export const canonScript = `(function () {
   }
   window.addEventListener('pageshow', restoreDisclosures);
   restoreDisclosures();
+
+  /* ---- mirror the folded shelf's state for assistive technology ---- */
+  var folds = document.querySelectorAll('details[data-fold]');
+  for (var k = 0; k < folds.length; k += 1) wireFold(folds[k]);
+  function wireFold(fold) {
+    var summary = fold.querySelector('summary');
+    if (!summary) return;
+    function syncFold() { summary.setAttribute('aria-expanded', String(fold.open)); }
+    fold.addEventListener('toggle', syncFold);
+    syncFold();
+  }
 
   /* ---- tidy search URLs: leave empty and default fields out of the query ---- */
   var forms = document.querySelectorAll('form[role="search"]');
@@ -46,8 +58,8 @@ export const canonScript = `(function () {
 
   /* ---- focus placement after a search or passage step ---- */
   var hash = window.location.hash;
-  if (hash === '#results') {
-    var results = document.getElementById('results');
+  if (hash === '#results' || hash === '#v4-results') {
+    var results = document.getElementById(hash.slice(1));
     if (results) results.focus({ preventScroll: true });
   } else if (hash === '#canon') {
     var current = document.querySelector('[data-canon-grid] [aria-current="true"]');

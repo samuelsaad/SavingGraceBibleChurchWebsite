@@ -74,6 +74,8 @@ export const size = {
   reading: "1.0625rem",
   lede: "1.25rem",
   h3: "1.375rem",
+  /** Card titles: between the h3 and the card-title sizes, for three lines at three columns. */
+  cardHeading: "1.625rem",
   cardTitle: "clamp(1.5rem, 1.2rem + 1vw, 2rem)",
   title: "clamp(2rem, 1.5rem + 2.2vw, 3.25rem)",
   display: "clamp(2.75rem, 1.9rem + 3.6vw, 5rem)",

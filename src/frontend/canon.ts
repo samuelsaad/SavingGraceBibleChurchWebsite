@@ -106,3 +106,20 @@ export function readingStats(text: string): { words: number; paragraphs: number;
 export function formatCount(count: number, singular: string, plural = `${singular}s`): string {
   return `${count.toLocaleString("en-AU")} ${count === 1 ? singular : plural}`;
 }
+
+/**
+ * A short excerpt of approved text for card lists: whole words, cut at the
+ * last sentence end after roughly two thirds of the limit when one exists,
+ * otherwise at the last word boundary, closed with an ellipsis. The wording
+ * is never altered, only shortened; the full text lives on the sermon page.
+ */
+export function excerpt(text: string, limit = 150): string {
+  const single = text.replace(/\s+/gu, " ").trim();
+  if (single.length <= limit) return single;
+  const window = single.slice(0, limit);
+  const floor = Math.floor(limit * 0.5);
+  const sentenceEnd = Math.max(window.lastIndexOf(". "), window.lastIndexOf("! "), window.lastIndexOf("? "));
+  if (sentenceEnd >= floor) return window.slice(0, sentenceEnd + 1);
+  const wordEnd = window.lastIndexOf(" ");
+  return `${window.slice(0, wordEnd > 0 ? wordEnd : limit).replace(/[,;:]$/u, "")}…`;
+}

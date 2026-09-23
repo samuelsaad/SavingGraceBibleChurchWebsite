@@ -11,7 +11,7 @@ import { bibleBookCategories, bibleBooks, type BibleBookDefinition } from "../..
 import type { PublicSermonFilterOptions } from "../../server/repositories/sermon-repository";
 import { availabilityByBook, canonSegments, categoryLabel, formatCount, shelfBooks, spineLabel, totalChapters } from "../canon";
 import { attribute, html, raw, when, type Html } from "../html";
-import { type FrontendRenderContext, withFilter, withoutPassage } from "../routes";
+import { archiveTarget, type ArchiveTarget, type FrontendRenderContext, withFilter, withoutPassage } from "../routes";
 
 export interface ShelfOptions {
   /** Destination for a preached book. */
@@ -118,25 +118,28 @@ export interface OpenBookInput {
   headingLevel: 1 | 2 | 3;
   /** Whether the panel is scoped by the broad classification rather than a passage. */
   broad?: boolean;
+  /** The presentation that receives chapter and verse searches; the archive by default. */
+  target?: ArchiveTarget;
 }
 
 /** The open book: tab, chapter ruler and, once a chapter is chosen, the verse ruler. */
 export function openBook(input: OpenBookInput): Html {
   const { book, query, options, context } = input;
+  const target = input.target ?? archiveTarget;
   const availability = availabilityByBook(options.passageVerseAvailability).get(book.slug) ?? new Map<number, number[]>();
   const heading = `h${input.headingLevel}`;
-  const wholeBook = withFilter(query, { passageBook: book.slug, passageChapter: null, passageVerse: null, passageEndVerse: null, passageScope: "book", sermon_book: null }, context, "canon");
+  const wholeBook = withFilter(query, { passageBook: book.slug, passageChapter: null, passageVerse: null, passageEndVerse: null, passageScope: "book", sermon_book: null }, context, "canon", target.path);
   const chapterCells = Array.from({ length: book.chapterCount }, (_, index) => index + 1).map((chapter) => {
     const verses = availability.get(chapter);
     const current = chapter === input.chapter;
-    const href = withFilter(query, { passageBook: book.slug, passageChapter: String(chapter), passageVerse: null, passageEndVerse: null, passageScope: "chapter", sermon_book: null }, context, "canon");
+    const href = withFilter(query, { passageBook: book.slug, passageChapter: String(chapter), passageVerse: null, passageEndVerse: null, passageScope: "chapter", sermon_book: null }, context, "canon", target.path);
     return html`<li><a class="ruler__cell hue--${book.category}${verses ? " is-marked" : ""}" href="${href}"${attribute("aria-current", current ? "true" : null)}><span aria-hidden="true">${chapter}</span><span class="sr-only">Chapter ${chapter}${verses ? ", has sermons" : ""}${current ? ", current search" : ""}</span></a></li>`;
   });
   const verseCells = input.chapter !== undefined
     ? Array.from({ length: book.verseCounts[input.chapter - 1] ?? 0 }, (_, index) => index + 1).map((verse) => {
       const covered = availability.get(input.chapter!)?.includes(verse) ?? false;
       const current = verse === input.verse;
-      const href = withFilter(query, { passageBook: book.slug, passageChapter: String(input.chapter), passageVerse: String(verse), passageEndVerse: null, passageScope: "verse", sermon_book: null }, context, "canon");
+      const href = withFilter(query, { passageBook: book.slug, passageChapter: String(input.chapter), passageVerse: String(verse), passageEndVerse: null, passageScope: "verse", sermon_book: null }, context, "canon", target.path);
       return html`<li><a class="ruler__cell hue--${book.category}${covered ? " is-marked" : ""}" href="${href}"${attribute("aria-current", current ? "true" : null)}><span aria-hidden="true">${verse}</span><span class="sr-only">Verse ${verse}${covered ? ", has sermons" : ""}${current ? ", current search" : ""}</span></a></li>`;
     })
     : [];
@@ -164,7 +167,7 @@ export function openBook(input: OpenBookInput): Html {
         <ol class="ruler" role="list" aria-labelledby="verse-ruler-label" data-canon-grid data-escape-to="skip-verses">${verseCells}</ol>
         <p class="ruler__note" id="after-verses">Choosing a verse searches that exact verse.</p>
       </div>`)}
-      <a class="open-book__clear" href="${withoutPassage(query, context)}">Put the book back</a>
+      <a class="open-book__clear" href="${withoutPassage(query, context, target.fragment, target.path)}">Put the book back</a>
     </div>
   </section>`;
 }

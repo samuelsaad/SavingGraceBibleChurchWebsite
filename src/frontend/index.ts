@@ -7,6 +7,8 @@
 export { renderPublicSermonArchivePage, resultsTitle, type SermonArchivePageInput } from "./pages/archive";
 export { renderPublicSermonPage, type SermonPageOptions } from "./pages/sermon";
 export { emptyFilterOptions, renderFrontendHomePage, type FrontendHomePageInput } from "./pages/home";
+export { renderSermonsV1Page, type SermonLandingInput } from "./pages/sermons-v1";
+export { renderSermonsV4Page } from "./pages/sermons-v4";
 export {
   renderFrontendTaxonomyDetail,
   renderFrontendTaxonomyIndex,
@@ -26,6 +28,9 @@ export {
   isExpandedRecentView,
   previewRenderContext,
   publicRenderContext,
+  sermonsV1Path,
+  sermonsV4Path,
+  sermonsV4Target,
   siteLinks,
   withFilter,
   type FrontendRenderContext,
