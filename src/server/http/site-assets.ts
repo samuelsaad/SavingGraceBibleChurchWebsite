@@ -1,23 +1,34 @@
 /**
  * The site's own static assets, served from bytes embedded in the frontend
  * package so every runtime delivers the identical file: the static Astro
- * build (through its own endpoint), the authenticated local preview, the
+ * build (through its own endpoints), the authenticated local preview, the
  * loopback verification server and the sealed visitor runtime, whose release
  * bundle contains only src/.
  *
- * Only an explicit allowlist is served; there is no directory or filesystem
- * lookup, so nothing outside these entries can be reached.
+ * Only an explicit allowlist is served (the church logo, its favicon and
+ * touch icon under /brand/, and the church website's images under
+ * /media/); there is no directory or filesystem lookup, so nothing outside
+ * these entries can be reached.
  */
 import { logoBytes, logoPath } from "../../frontend/assets/logo";
+import { faviconPath, siteImageBytes, siteImages, touchIconPath, type MediaId } from "../../frontend/assets/media";
 
 interface SiteAsset {
   contentType: string;
   bytes: () => Uint8Array<ArrayBuffer>;
 }
 
-const siteAssets: ReadonlyMap<string, SiteAsset> = new Map([
-  [logoPath, { contentType: "image/png", bytes: logoBytes }]
-]);
+const brandAssets: Array<[string, SiteAsset]> = [
+  [logoPath, { contentType: "image/png", bytes: logoBytes }],
+  [faviconPath, { contentType: "image/png", bytes: () => siteImageBytes("favicon-32") }],
+  [touchIconPath, { contentType: "image/png", bytes: () => siteImageBytes("icon-192") }]
+];
+
+const mediaAssets: Array<[string, SiteAsset]> = siteImages
+  .filter((image) => image.id !== "favicon-32" && image.id !== "icon-192")
+  .map((image) => [image.path, { contentType: image.type, bytes: () => siteImageBytes(image.id as MediaId) }]);
+
+const siteAssets: ReadonlyMap<string, SiteAsset> = new Map([...brandAssets, ...mediaAssets]);
 
 const assetHeaders = {
   "Cache-Control": "public, max-age=86400",

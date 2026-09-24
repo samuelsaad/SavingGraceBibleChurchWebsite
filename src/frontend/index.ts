@@ -15,6 +15,17 @@ export {
   type TaxonomyDetailInput
 } from "./pages/taxonomy";
 export { renderFrontendBoundaryPage, type BoundaryPageInput } from "./pages/boundary";
+export {
+  renderBlogIndex,
+  renderBlogPost,
+  renderCalendarFeed,
+  renderChurchPage,
+  renderEventPage,
+  renderEventsPage,
+  renderSitemapPage,
+  staticChurchPaths,
+  type ChurchPageData
+} from "./pages/church";
 export { pageShell, type PageShellInput } from "./shell";
 export { publicSiteStyles, siteStyles, type StyleBlockName } from "./styles";
 export { enhancementScripts, type EnhancementScriptName } from "./scripts";

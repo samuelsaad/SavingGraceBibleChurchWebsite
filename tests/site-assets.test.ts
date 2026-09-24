@@ -10,7 +10,8 @@ const sha256 = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest(
 
 describe("embedded site assets", () => {
   it("serves only the allowlisted church logo, byte-identical everywhere, from embedded bytes", async () => {
-    expect(siteAssetPaths).toEqual([logoPath]);
+    expect(siteAssetPaths[0]).toBe(logoPath);
+    expect(siteAssetPaths.every((path) => path.startsWith("/brand/") || path.startsWith("/media/"))).toBe(true);
     const bytes = logoBytes();
     expect(bytes.byteLength).toBe(23_240);
     expect(sha256(bytes)).toBe("b617726b47e7456936246af30bdcd35ae31a4660aaa72e52637cd29f9f971c8f");

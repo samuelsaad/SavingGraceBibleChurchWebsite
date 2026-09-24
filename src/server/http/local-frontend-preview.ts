@@ -8,7 +8,6 @@ import {
   draftPreviewRenderContext,
   previewRenderContext,
   renderFrontendBoundaryPage,
-  renderFrontendHomePage,
   renderFrontendTaxonomyDetail,
   renderFrontendTaxonomyIndex,
   renderPublicSermonArchivePage,
@@ -23,6 +22,7 @@ import type {
   PublicSermonRepository
 } from "../repositories/sermon-repository";
 import { createAlternateArchiveHandlers } from "./alternate-archives";
+import { createChurchSiteHandler, type ChurchSiteOptions } from "./church-site";
 import { loadArchivePage } from "./frontend-archive-loader";
 import { frontendResponse, frontendResponseHeaders } from "./frontend-response";
 
@@ -32,6 +32,7 @@ const taxonomyPageSize = 50;
 export interface ProtectedFrontendPreviewOptions {
   root?: "/frontend-preview" | "/draft-preview";
   context?: FrontendRenderContext;
+  church?: ChurchSiteOptions;
 }
 
 function response(html: string, status = 200): Response {
@@ -69,6 +70,7 @@ export function createLocalFrontendPreviewHandler(
   const root = options.root ?? previewRoot;
   const context = options.context ?? (root === "/draft-preview" ? draftPreviewRenderContext : previewRenderContext);
   const alternates = createAlternateArchiveHandlers(repository, context);
+  const church = createChurchSiteHandler(repository, context, options.church ?? {});
   return async (request: Request): Promise<Response | null> => {
     const url = new URL(request.url);
     if (url.pathname !== root && !url.pathname.startsWith(`${root}/`)) return null;
@@ -91,6 +93,8 @@ export function createLocalFrontendPreviewHandler(
     }
     const alternate = await alternates(request);
     if (alternate) return alternate;
+    const churchPage = await church(request);
+    if (churchPage) return churchPage;
     if (
       url.pathname === root
       || new RegExp(`^${root}/(?:sermons(?:/page/\\d+|/[a-z0-9]+(?:-[a-z0-9]+)*)?|(?:speakers|series|books)(?:/[a-z0-9]+(?:-[a-z0-9]+)*)?)$`, "u").test(url.pathname)
@@ -105,14 +109,6 @@ export function createLocalFrontendPreviewHandler(
     }
 
     try {
-      if (url.pathname === `${root}/`) {
-        const [sermons, options] = await Promise.all([
-          repository.listPublished(publicSermonListQuerySchema.parse({ page: 1, pageSize: 50, order: "DESC" })),
-          repository.listPublishedFilterOptions()
-        ]);
-        return response(renderFrontendHomePage({ sermons: sermons.data, options, totalItems: sermons.totalItems }, context));
-      }
-
       const relativePath = url.pathname.slice(root.length);
       const archivePageMatch = /^\/sermons\/page\/(\d+)\/$/u.exec(relativePath);
       if (relativePath === "/sermons/" || archivePageMatch) {

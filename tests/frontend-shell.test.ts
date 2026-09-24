@@ -20,7 +20,7 @@ const options = { ...emptyFilterOptions, speakers: [speaker], series: [series], 
 const pages = {
   home: renderSermonsV1Page({ sermons: [], options: emptyFilterOptions, totalItems: 0 }),
   previewHome: renderSermonsV1Page({ sermons: [], options, totalItems: 3 }, previewRenderContext),
-  churchHome: renderFrontendHomePage({ sermons: [], options: emptyFilterOptions, totalItems: 0 }),
+  churchHome: renderFrontendHomePage({ sermons: [], options: emptyFilterOptions, totalItems: 0, today: "2026-09-24" }),
   boundary: renderFrontendBoundaryPage({ title: "Page not found", message: "The page you requested could not be found." }),
   privateBoundary: renderFrontendBoundaryPage({ title: "Administrator preview session required", message: "Open the dashboard first.", kind: "private" }, previewRenderContext),
   taxonomyIndex: renderFrontendTaxonomyIndex("series", [series]),
@@ -35,16 +35,18 @@ describe("shared frontend shell", () => {
       expect(html, name).toContain('<main id="main-content" class="site-main">');
       const isPreview = html.includes('class="preview-band"');
       expect(html, name).toContain('<nav class="masthead__nav" aria-label="Primary"><ul class="masthead__links">');
-      expect(html, name).toContain(isPreview ? '<details class="masthead__menu" data-sermon-menu>' : '<li class="masthead__links-sermons"><a href="/sermons/"');
+      expect(html, name).toContain(isPreview ? '<details class="masthead__menu" data-menu data-sermon-menu>' : '<li class="masthead__links-sermons"><a href="/sermons/"');
+      expect(html, name).toContain('<details class="masthead__menu" data-menu>');
       expect(html, name).not.toContain('data-sermon-menu open');
+      expect(html, name).not.toContain('data-menu open');
       expect(html, name).toContain('<nav aria-label="Footer">');
       expect(html, name).toContain('<a class="brand" href="');
       expect(html, name).toContain('<img class="brand__logo" src="/brand/saving-grace-logo.png" width="300" height="178" alt="Saving Grace Bible Church" decoding="async" />');
       expect(html, name).toContain("the Saving Grace Bible Church logo is the church's own.");
       expect(html, name).toContain('<h2 class="footer-col__title" id="footer-contact-heading">Contact Us</h2>');
-      expect(html, name).toContain("<span>Tel: 0450545589</span>");
+      expect(html, name).toContain('<span><a href="tel:+61450545589">Tel: 0450545589</a></span>');
       expect(html, name).toContain('<a class="button masthead__give" href="');
-      if (!isPreview) expect(html.replace(/<details class="refine"[\s\S]*?<\/details>/gu, ""), name).not.toContain("<details");
+      if (!isPreview) expect(html.replace(/<details class="(?:refine|masthead__menu)"[\s\S]*?<\/details>/gu, ""), name).not.toContain("<details");
       expect(html, name).not.toContain(' style="');
       expect(html, name).toContain('<meta name="color-scheme" content="light" />');
       expect(html, name).toContain('lang="en-AU"');
@@ -70,9 +72,10 @@ describe("shared frontend shell", () => {
 
   it("embeds only the canon enhancement on shelf pages and keeps preview pages free of indexable metadata", () => {
     expect(pages.home).toContain('<script data-enhancement="canon">');
-    expect(pages.home.match(/<script /gu)).toHaveLength(1);
-    expect(pages.boundary).not.toContain("<script");
-    expect(pages.churchHome).not.toContain("<script");
+    expect(pages.home.match(/<script /gu)).toHaveLength(2);
+    expect(pages.boundary.match(/<script /gu)).toHaveLength(1);
+    expect(pages.churchHome.match(/<script /gu)).toHaveLength(1);
+    expect(pages.churchHome).not.toContain('<script data-enhancement="canon">');
     expect(pages.previewHome).not.toContain('rel="canonical"');
     expect(pages.previewHome).not.toContain('property="og:');
     expect(pages.previewHome).toContain('<meta name="robots" content="noindex, nofollow, noarchive"');
@@ -83,12 +86,13 @@ describe("shared frontend shell", () => {
     expect(pages.churchHome).toContain('<meta property="og:type" content="website" />');
     expect(pages.home).not.toContain('class="preview-band"');
     for (const html of Object.values(pages)) {
-      expect(html.includes('<script data-enhancement="navigation">')).toBe(html.includes('class="preview-band"'));
+      expect(html).toContain('<script data-enhancement="navigation">');
+      expect(html.includes('data-menu data-sermon-menu>')).toBe(html.includes('class="preview-band"'));
     }
   });
 
   it("ships readable enhancement scripts that parse and hash consistently into the policy", () => {
-    expect(Object.keys(enhancementScripts).sort()).toEqual(["canon", "navigation", "sermon"]);
+    expect(Object.keys(enhancementScripts).sort()).toEqual(["canon", "church", "navigation", "sermon"]);
     for (const [name, source] of Object.entries(enhancementScripts)) {
       expect(() => new Function(source), `${name} parses`).not.toThrow();
       expect(source, `${name} is readable`).toContain("\n");
@@ -101,9 +105,9 @@ describe("shared frontend shell", () => {
       expect(csp).toContain("default-src 'none'");
       expect(csp).toContain("frame-ancestors 'none'");
       expect(csp).not.toContain("unsafe-inline");
-      if (html !== pages.churchHome) expect(csp).toContain("script-src 'sha256-");
+      expect(csp).toContain("script-src 'sha256-");
     }
-    expect(contentSecurityPolicy(pages.boundary)).not.toContain("script-src");
+    expect(contentSecurityPolicy(pages.boundary)).toContain("script-src 'sha256-");
   });
 
   it("renders boundary states in the visitor's own words with the shelf art", () => {

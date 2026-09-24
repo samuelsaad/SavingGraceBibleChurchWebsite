@@ -16,6 +16,7 @@ import {
 import { escapeXml } from "../../frontend/xml";
 import type { PublicSermonRepository } from "../repositories/sermon-repository";
 import { createAlternateArchiveHandlers } from "./alternate-archives";
+import { createChurchSiteHandler, type ChurchSiteOptions } from "./church-site";
 import { loadArchivePage } from "./frontend-archive-loader";
 import { frontendResponse, plainResponseHeaders } from "./frontend-response";
 import type { FrontendRenderContext } from "../../frontend/routes";
@@ -49,14 +50,17 @@ function renderSermonSitemap(entries: Array<{ slug: string; lastModified: string
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.join("")}</urlset>`;
 }
 
-export function createPublicSermonSiteHandler(repository: PublicSermonRepository, context: FrontendRenderContext = publicRenderContext) {
+export function createPublicSermonSiteHandler(repository: PublicSermonRepository, context: FrontendRenderContext = publicRenderContext, churchOptions: ChurchSiteOptions = {}) {
   function errorPage(status: 400 | 404 | 410 | 500, title: string, message: string): Response {
     return frontendResponse(renderFrontendBoundaryPage({ title, message }, context), { status });
   }
   const alternates = createAlternateArchiveHandlers(repository, context);
+  const church = createChurchSiteHandler(repository, context, churchOptions);
   return async (request: Request): Promise<Response | null> => {
     const alternate = await alternates(request);
     if (alternate) return alternate;
+    const churchPage = await church(request);
+    if (churchPage) return churchPage;
     const url = new URL(request.url);
     const isArchiveRoot = url.pathname === archivePath;
     const archivePageMatch = /^\/sermons\/page\/(\d+)\/$/.exec(url.pathname);

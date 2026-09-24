@@ -7,37 +7,9 @@
  * is used, autoplay is never requested, and focus moves into the player so
  * keyboard users are not dropped at the top of the document.
  */
-export const sermonScript = `(function () {
-  var loaders = document.querySelectorAll('[data-load-youtube]');
-  for (var index = 0; index < loaders.length; index += 1) wireLoader(loaders[index]);
+import { videoLoaderSource } from "./video-loader";
 
-  function wireLoader(button) {
-    button.addEventListener('click', function () {
-      var frame = button.closest('[data-video-frame]');
-      var id = button.getAttribute('data-video-id') || '';
-      var title = button.getAttribute('data-video-title') || 'Sermon video';
-      if (!frame || !/^[A-Za-z0-9_-]{11}$/.test(id)) return;
-      var iframe = document.createElement('iframe');
-      iframe.src = 'https://www.youtube-nocookie.com/embed/' + id;
-      iframe.title = title;
-      iframe.allow = 'accelerometer; encrypted-media; gyroscope; picture-in-picture';
-      iframe.allowFullscreen = true;
-      iframe.referrerPolicy = 'strict-origin-when-cross-origin';
-      iframe.tabIndex = 0;
-      var status = document.createElement('p');
-      status.className = 'plate__status';
-      status.setAttribute('role', 'status');
-      status.textContent = 'Loading the video player…';
-      iframe.addEventListener('load', function () {
-        status.remove();
-        frame.setAttribute('data-video-loaded', 'true');
-      });
-      frame.replaceChildren(status, iframe);
-      frame.setAttribute('data-video-loaded', 'loading');
-      iframe.focus();
-    });
-  }
-
+export const sermonScript = `(function () {${videoLoaderSource}
   /* ---- transcript opens for printing, then returns to its previous state ---- */
   var printable = Array.prototype.slice.call(document.querySelectorAll('details[data-open-for-print]'));
   var reopened = [];

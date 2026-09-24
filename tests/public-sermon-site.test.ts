@@ -126,11 +126,15 @@ describe("public sermon site routes", () => {
     expect(html).toContain('aria-label="Active filters"');
     expect(html).toContain('<a class="tokens__clear" href="/sermons/">Clear all</a>');
     const masthead = section(html, '<header class="masthead"', "</header>");
-    expect(masthead).toContain('<ul class="masthead__links"><li><a href="/#about">About Us</a></li><li class="masthead__links-sermons"><a href="/sermons/" aria-current="page">Sermons</a></li><li><a href="/#events">News &amp; Events</a></li><li><a href="/#contact">Contact Us</a></li></ul>');
+    expect(masthead).toContain('<ul class="masthead__links"><li><a href="/">Home</a></li><li class="masthead__links-menu"><details class="masthead__menu" data-menu>');
+    expect(masthead).toContain('<li class="masthead__links-sermons"><a href="/sermons/" aria-current="page">Sermons</a></li>');
+    expect(masthead).toContain('<li><a href="/events/">News &amp; Events</a></li><li><a href="/contact/">Contact Us</a></li></ul>');
+    expect(masthead).toContain('aria-controls="menu-about"');
+    expect(masthead).toContain('<li class="masthead__dropdown-sub"><a href="/what-we-teach/the-gospel/">The Gospel</a></li>');
     expect(masthead).not.toContain("/speakers/");
     expect(masthead).not.toContain("SermonsV");
     expect(masthead).not.toContain("masthead__search");
-    expect(masthead).toContain('<a class="button masthead__give" href="/#give">Give</a>');
+    expect(masthead).toContain('<a class="button masthead__give" href="/support-saving-grace-church-offering/">Give</a>');
     expect(html).not.toContain("<details class=\"book-details\"");
     expect(html).toContain(encodeURIComponent(summary.slug));
     expect(html).not.toContain('id="transcript-heading"');
@@ -372,7 +376,7 @@ describe("public sermon site routes", () => {
     const csp = archive!.headers.get("content-security-policy")!;
     expect(csp).not.toContain("unsafe-inline");
     expect(csp).not.toContain("frame-src");
-    expect(archiveHtml.match(/<script /gu)).toHaveLength(1);
+    expect(archiveHtml.match(/<script /gu)).toHaveLength(2);
     for (const match of archiveHtml.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gu)) {
       expect(csp).toContain(hash(match[1]!));
       expect(() => new Function(match[1]!)).not.toThrow();
@@ -382,7 +386,7 @@ describe("public sermon site routes", () => {
     const boundary = await route(new Request("http://localhost/sermons/not-a-real-sermon/"));
     const boundaryCsp = boundary!.headers.get("content-security-policy")!;
     expect(boundary?.status).toBe(404);
-    expect(boundaryCsp).not.toContain("script-src");
+    expect(boundaryCsp).toContain("script-src 'sha256-");
     expect(boundaryCsp).toContain("style-src 'sha256-");
   });
 
@@ -450,7 +454,7 @@ describe("public sermon site routes", () => {
   });
 
   it("renders an honest static home without invented branding", () => {
-    const html = renderFrontendHomePage({ sermons: [], options: emptyFilterOptions, totalItems: 0 });
+    const html = renderFrontendHomePage({ sermons: [], options: emptyFilterOptions, totalItems: 0, today: "2026-09-24" });
     expect(html).toContain('<h1 id="hero-heading" class="arrive__title"><span class="arrive__name">Saving Grace</span><span class="arrive__name">Bible Church</span></h1>');
     expect(html).toContain("No sermon is available yet. Please check back soon.");
     expect(html).toContain("No sermon is available yet. Please check back soon.");

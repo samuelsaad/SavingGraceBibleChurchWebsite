@@ -11,6 +11,8 @@ npm run development-data:dry-run-project-sermons
 
 The guarded importer is available as `npm run development-data:import-project-sermons-local` only for a uniquely named disposable local PostgreSQL test database with the normal write gate and test-run token. It forces imported sermons to remain private drafts and restores no operational review, acceptance, audit, public or semantic eligibility.
 
+Branch `frontend-church-site` (D-165, continuing `frontend-sermons-v4`) rebuilds the **whole church website** from the WordPress export: every published page at a clean address with verbatim wording (`src/frontend/content/pages/`), the church's menus in the masthead and footer, computed events with an iCalendar feed, the blog, the sitemap, one-hop redirects for legacy addresses, drafts and the private page confined to the authenticated preview, and 45 embedded church images under `/media/`. `website-content-inventory.md` reconciles the export against the site. The static build (`npm run build`) emits every public church page; PostgreSQL-backed verification remains outstanding.
+
 Branch `frontend-sermons-v4` implements D-164 on top of that handoff: **SermonsV4** at `/sermons-v4/` (the SermonsV2 opening section, the shelf collapsed behind a labelled disclosure, equal-size sermon cards with the latest sermon first), **SermonsV1** kept intact at `/sermons-v1/`, the **redesigned church homepage** at `/` with every word from the supplied screenshots, the church logo served from `/brand/saving-grace-logo.png`, church links and a Give button in the masthead, and contact/get-involved/services columns in the footer. Database-backed verification of the branch is still outstanding.
 
 ## D-162 seventh fixed private enrichment and reconciliation

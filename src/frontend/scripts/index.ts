@@ -9,11 +9,13 @@
 import { canonScript } from "./canon";
 import { sermonScript } from "./sermon";
 import { navigationScript } from "./navigation";
+import { churchScript } from "./church";
 
 export const enhancementScripts = {
   canon: canonScript,
   sermon: sermonScript,
-  navigation: navigationScript
+  navigation: navigationScript,
+  church: churchScript
 } as const;
 
 export type EnhancementScriptName = keyof typeof enhancementScripts;

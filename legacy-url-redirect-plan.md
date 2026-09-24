@@ -62,6 +62,10 @@ Phase 3B.1/3B.1a enrichment does not create description, transcript or Q&A URLs.
 
 Yang confirmed that the 12 `ctc_sermon`/`wpfc_sermon`/`wpv_sermon` rows and every `wp_sb_*` row are excluded. No replacement sermon or redirect is generated for them, and WordPress remains untouched. (`database observed`)
 
+## Church page dispositions (D-165)
+
+The whole-site rebuild from the WordPress export of 24 September 2026 gives every published church page, post and event a destination and every discovered legacy address exactly one disposition: unchanged `200` where the clean WordPress address is kept, one direct `301` where the address changed (`/pages/…`, `/contact-us-2/`, Events Calendar event, series and venue addresses, `/church-events/`, `/pages/sitemap/`), `404` for legacy addresses of unpublished drafts and the private Constitution, and `410` for the three theme sample testimonials. The dispositions are data in `src/frontend/content/` (see `website-content-inventory.md`) and are asserted by `tests/church-site.test.ts`; the sermon rules below are unchanged.
+
 ## Compatibility rules
 
 | Legacy request | Compatibility rule |

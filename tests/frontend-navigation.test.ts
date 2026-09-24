@@ -8,16 +8,17 @@ function setup() {
     const events = new Map<string, Handler>();
     return { events, addEventListener: (name: string, handler: Handler) => events.set(name, handler), focus: vi.fn() };
   }
-  const toggle = { ...target(), setAttribute: vi.fn() };
+  const toggle = { ...target(), setAttribute: vi.fn(), getAttribute: () => null };
   const links = ["", "sermons/", "speakers/", "series/", "books/"].map((path) => ({
     ...target(), href: `http://127.0.0.1/frontend-preview/${path}`
   }));
   const menu = {
     ...target(), open: false,
     querySelector: (selector: string) => selector === "summary" ? toggle : links[1], querySelectorAll: () => links,
+    hasAttribute: (name: string) => name === "data-sermon-menu",
     contains: (value: unknown) => value === toggle || links.includes(value as typeof links[number])
   };
-  const document = { ...target(), querySelector: () => menu };
+  const document = { ...target(), querySelector: () => menu, querySelectorAll: () => [menu] };
   const assign = vi.fn();
   runInNewContext(navigationScript, { document, window: { location: { assign } } });
   function fire(element: ReturnType<typeof target>, name: string, fields: Record<string, unknown> = {}) {

@@ -233,15 +233,16 @@ describe("authenticated local frontend preview", () => {
       "/frontend-preview/books/"
     ];
 
-    expect(navigation).toContain('<details class="masthead__menu" data-sermon-menu>');
+    expect(navigation).toContain('<details class="masthead__menu" data-menu data-sermon-menu>');
     expect(navigation).toContain('<ul class="masthead__dropdown" id="sermon-navigation"><li><a href="/frontend-preview/sermons-v1/">SermonsV1</a></li><li><a href="/frontend-preview/sermons/" data-sermon-archive>SermonsV2</a></li><li><a href="/frontend-preview/sermons-v4/">SermonsV4</a></li><li><a href="/frontend-preview/speakers/">Speakers</a></li><li><a href="/frontend-preview/series/">Series</a></li><li><a href="/frontend-preview/books/">Books</a></li></ul>');
     expect(navigation).not.toContain('data-sermon-menu open');
     expect(navigation).toContain('aria-controls="sermon-navigation"');
     expect(html).toContain('<script data-enhancement="navigation">');
-    expect(navigation.match(/aria-current="page"/gu)).toBeNull();
+    expect(navigation.match(/aria-current="page"/gu)).toHaveLength(1);
+    expect(navigation).toContain('<li><a href="/frontend-preview/" aria-current="page">Home</a></li>');
     expect(navigation).toContain('<form class="masthead__search" method="get" action="/frontend-preview/sermons/#results" role="search" aria-label="Search sermons">');
     expect(navigation).toContain('<a class="masthead__search-link" href="/frontend-preview/sermons/#sermon-search">');
-    expect(navigation).toContain('<a class="button masthead__give" href="/frontend-preview/#give">Give</a>');
+    expect(navigation).toContain('<a class="button masthead__give" href="/frontend-preview/support-saving-grace-church-offering/">Give</a>');
     for (const routePath of expectedRoutes) expect(navigation).toContain(`href="${routePath}"`);
     expect(home?.headers.get("content-security-policy")).toContain("script-src 'sha256-");
     expect(html.match(/<h1/gu)).toHaveLength(1);

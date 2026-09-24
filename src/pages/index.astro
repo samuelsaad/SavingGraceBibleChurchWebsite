@@ -4,8 +4,9 @@
 // so it shows the honest "being prepared" state until a production runtime is
 // selected.
 import { emptyFilterOptions, renderFrontendHomePage } from "../frontend";
+import { melbourneToday } from "../frontend/content/events";
 
-const html = renderFrontendHomePage({ sermons: [], options: emptyFilterOptions, totalItems: 0 });
+const html = renderFrontendHomePage({ sermons: [], options: emptyFilterOptions, totalItems: 0, today: melbourneToday() });
 ---
 
 <Fragment set:html={html} />

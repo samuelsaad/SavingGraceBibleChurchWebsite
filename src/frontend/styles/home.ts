@@ -19,7 +19,10 @@ export const homeStyles = `
 .arrive__title { margin-top: var(--space-3); font-size: var(--size-display); line-height: var(--size-line-tight); letter-spacing: 0.005em; max-width: 12ch; }
 .arrive__name { display: block; }
 .arrive__rule { display: block; width: 3rem; height: 2px; margin-top: var(--space-5); background: var(--colour-gilt); }
-.welcome-card { display: grid; gap: var(--space-3); padding: var(--space-6); background: var(--colour-raised); border-top: 4px solid var(--colour-gilt); border-radius: var(--radius-card); box-shadow: var(--shadow-card); }
+.welcome-card { display: grid; grid-template-columns: minmax(7rem, 9rem) minmax(0, 1fr); gap: var(--space-5); align-items: center; padding: var(--space-5); background: var(--colour-raised); border-top: 4px solid var(--colour-gilt); border-radius: var(--radius-card); box-shadow: var(--shadow-card); }
+.welcome-card__picture { min-width: 0; }
+.welcome-card__image { display: block; width: 100%; height: auto; border-radius: var(--radius-control); }
+.welcome-card__body { display: grid; gap: var(--space-3); min-width: 0; }
 .welcome-card__time { font-family: var(--font-signage); font-stretch: 87.5%; font-size: var(--size-card-title); font-weight: 700; letter-spacing: 0.04em; line-height: 1.05; font-variant-numeric: tabular-nums; color: var(--colour-ink); }
 .welcome-card__where { font-family: var(--font-reading); font-size: var(--size-reading); line-height: 1.5; color: var(--colour-ink-soft); }
 .welcome-card__cta { margin-top: var(--space-2); width: 100%; }
@@ -28,6 +31,10 @@ export const homeStyles = `
 .service--morning { border-top: 4px solid var(--colour-gilt); box-shadow: var(--shadow-card); }
 .service--evening { border: 1px solid var(--colour-rule-strong); border-bottom: 0; }
 .service__title { font-family: var(--font-display); font-size: var(--size-h3); line-height: 1.15; }
+.service__title a { color: var(--colour-ink); text-decoration: none; }
+.service__title a:hover { color: var(--colour-gilt); text-decoration: underline; }
+.home__photo { margin: var(--space-7) 0 0; }
+.home__photo-image { display: block; width: 100%; height: auto; max-height: 30rem; object-fit: cover; border-radius: var(--radius-card); box-shadow: var(--shadow-card); }
 .service__text { margin-top: var(--space-3); font-family: var(--font-reading); font-size: var(--size-reading); line-height: 1.55; color: var(--colour-ink-soft); }
 
 /* ---- welcome spread and pillars ---- */
@@ -57,6 +64,7 @@ a.pillar__more:hover { text-decoration: underline; }
 .offering__quote { margin: var(--space-5) 0 0; }
 .offering__quote p { font-family: var(--font-display); font-style: italic; font-size: var(--size-card-title); line-height: 1.25; text-wrap: pretty; }
 .offering__cite { margin-top: var(--space-4); font-family: var(--font-signage); font-stretch: 87.5%; font-size: var(--size-small); letter-spacing: 0.12em; text-transform: uppercase; color: var(--colour-gilt-bright); }
+.offering__link { margin-top: var(--space-5); }
 
 /* ---- events ledger ---- */
 .events { max-width: var(--measure-results); margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--colour-rule); }
@@ -89,6 +97,8 @@ a.pillar__more:hover { text-decoration: underline; }
 }
 @media (max-width: 44rem) {
   .arrive__title { max-width: none; }
+  .welcome-card { grid-template-columns: minmax(0, 1fr); }
+  .welcome-card__image { width: 100%; max-height: 14rem; object-fit: cover; object-position: center 40%; }
   .services { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
   .service--evening { border-bottom: 0; }
   .pillars { grid-template-columns: minmax(0, 1fr); }

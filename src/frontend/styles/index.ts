@@ -6,6 +6,7 @@
  * Policy by the server response builder.
  */
 import { cardStyles } from "./cards";
+import { churchStyles } from "./church";
 import { coreStyles } from "./core";
 import { homeStyles } from "./home";
 import { previewStyles } from "./preview";
@@ -20,6 +21,7 @@ const blocks = {
   cards: cardStyles,
   v4: v4Styles,
   home: homeStyles,
+  church: churchStyles,
   preview: previewStyles
 } as const;
 
@@ -48,7 +50,7 @@ export function siteStyles(extra: StyleBlockName[] = []): string {
 
 /** The complete stylesheet, for the static build and for tests. */
 export function publicSiteStyles(): string {
-  return siteStyles(["shelf", "sermon", "cards", "v4", "home"]);
+  return siteStyles(["shelf", "sermon", "cards", "v4", "home", "church"]);
 }
 
 /** Readable sources, for the stylesheet hygiene test. */

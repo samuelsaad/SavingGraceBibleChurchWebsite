@@ -21,14 +21,14 @@ describe("reviewed discovery presentation",()=>{
    }
  });
  it("delivers the original menu and hashed enhancement only to restricted or authenticated preview contexts",()=>{
-   const input={sermons:[sermon],totalItems:1,options:emptyFilterOptions};
+   const input={sermons:[sermon],totalItems:1,options:emptyFilterOptions,today:"2026-09-24"};
    const html=renderFrontendHomePage(input,restrictedRenderContext),response=frontendResponse(html);
    for(const label of ["SermonsV1","SermonsV2","Speakers","Series","Books"])expect(html).toContain(`>${label}</a>`);
    expect(html).toContain('data-enhancement="navigation"');expect(html).toContain('data-sermon-menu');
    expect(response.headers.get('Content-Security-Policy')).toContain("'sha256-");
    expect(response.headers.get('Content-Security-Policy')).not.toContain("'unsafe-inline'");
    expect(html).not.toContain('rel="canonical"');expect(html).not.toContain('property="og:');
-   expect(renderFrontendHomePage(input)).not.toContain('data-sermon-menu');
+   expect(renderFrontendHomePage(input)).not.toContain('data-menu data-sermon-menu>');
  });
  it("restores sealed taxonomy indexes without enabling private routes or writes",async()=>{
    const repo={listPublishedFilterOptions:async()=>emptyFilterOptions} as PublicSermonRepository;

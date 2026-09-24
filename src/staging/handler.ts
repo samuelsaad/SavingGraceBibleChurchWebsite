@@ -1,7 +1,6 @@
 import type { PublicSermonRepository } from "../server/repositories/sermon-repository";
 import { createPublicApiRouter } from "../server/http/public-api-router";
-import { createPublicSermonSiteHandler, frontendResponse, renderFrontendHomePage } from "../server/http/public-sermon-page";
-import { publicSermonListQuerySchema } from "../api/contracts/public-sermons";
+import { createPublicSermonSiteHandler, frontendResponse } from "../server/http/public-sermon-page";
 import { restrictedRenderContext } from "../frontend/routes";
 import { renderFrontendTaxonomyIndex, type FrontendTaxonomyKind } from "../frontend";
 import { siteAssetResponse } from "../server/http/site-assets";
@@ -36,13 +35,7 @@ export function createSealedStagingHandler(repository: PublicSermonRepository, r
       if (frontendDisabled) return plain("restricted_frontend_temporarily_disabled", 503);
       let response: Response | null = siteAssetResponse(request);
       if (response) {
-        // The church logo: embedded bytes, no filesystem, no database.
-      } else if (path === "/") {
-        const [result, options] = await Promise.all([
-          repository.listPublished(publicSermonListQuerySchema.parse({ page: 1, pageSize: 6 })),
-          repository.listPublishedFilterOptions()
-        ]);
-        response = frontendResponse(renderFrontendHomePage({ sermons: result.data, totalItems: result.totalItems, options }, restrictedRenderContext));
+        // The church logo, icons and images: embedded bytes, no filesystem, no database.
       } else if (/^\/(speakers|series|books)\/$/.test(path)) {
         const kind = path.split('/')[1] as FrontendTaxonomyKind;
         const options = await repository.listPublishedFilterOptions();

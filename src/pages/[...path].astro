@@ -1,0 +1,42 @@
+---
+// Every church page, event page and blog post of the public site, rendered
+// through the same content registry and shell as the server runtimes. The
+// static build has no published sermon data, so sermon sections show their
+// honest empty state until a production runtime is selected.
+import {
+  emptyFilterOptions,
+  renderBlogIndex,
+  renderBlogPost,
+  renderChurchPage,
+  renderEventPage,
+  renderEventsPage,
+  renderSitemapPage,
+  staticChurchPaths
+} from "../frontend";
+import { eventBySlug, eventsPath, melbourneToday } from "../frontend/content/events";
+import { pageByPath, postByPath } from "../frontend/content/registry";
+
+export function getStaticPaths() {
+  return staticChurchPaths().map((path) => ({ params: { path: path.slice(1, -1) } }));
+}
+
+const { path } = Astro.params;
+const canonical = `/${path}/`;
+const data = { today: melbourneToday(), sermons: [], options: emptyFilterOptions };
+
+let html: string;
+const page = pageByPath(canonical);
+const post = postByPath(canonical);
+if (page?.id === "events") html = renderEventsPage(page, data);
+else if (page?.id === "blogs") html = renderBlogIndex(page, data);
+else if (page?.id === "sitemap") html = renderSitemapPage(page, data);
+else if (page) html = renderChurchPage(page, data);
+else if (post) html = renderBlogPost(post, data);
+else {
+  const event = canonical.startsWith(eventsPath) ? eventBySlug(canonical.slice(eventsPath.length, -1)) : null;
+  if (!event) throw new Error(`unknown static church path ${canonical}`);
+  html = renderEventPage(event, data);
+}
+---
+
+<Fragment set:html={html} />
