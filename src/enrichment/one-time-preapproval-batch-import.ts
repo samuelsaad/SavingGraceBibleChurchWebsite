@@ -545,7 +545,7 @@ async function diagnosePrivateBatchPostcondition(
       contentChecksum,
       artifact.content.questionAnswers.length,
       artifact.target.sourceWordPressId,
-      ["D-155", "D-159", "D-160", "D-162"].includes(profile.exceptionId)
+      ["D-155", "D-159", "D-160", "D-162", "D-167"].includes(profile.exceptionId)
         ? fourthBatchReviewFindings(
             transcript,
             sermonId,
@@ -593,7 +593,7 @@ async function verifyPrivateBatchExisting(
   profile: PrivateBatchImportProfile,
   contentChecksum: string,
 ): Promise<boolean> {
-  if (["D-155", "D-159", "D-160", "D-162"].includes(profile.exceptionId)) {
+  if (["D-155", "D-159", "D-160", "D-162", "D-167"].includes(profile.exceptionId)) {
     const findings = fourthBatchReviewFindings(
       transcript,
       sermonId,
@@ -636,7 +636,8 @@ async function verifyPrivateBatchExisting(
     profile.exceptionId !== "D-155" &&
     profile.exceptionId !== "D-159" &&
     profile.exceptionId !== "D-160" &&
-    profile.exceptionId !== "D-162"
+    profile.exceptionId !== "D-162" &&
+    profile.exceptionId !== "D-167"
   )
     return false;
   return (
@@ -847,7 +848,7 @@ export async function importOneTimePreapprovalPrivateDraft(
     metadata,
     profile,
   );
-  const findings = ["D-155", "D-159", "D-160", "D-162"].includes(
+  const findings = ["D-155", "D-159", "D-160", "D-162", "D-167"].includes(
     profile.exceptionId,
   )
     ? fourthBatchReviewFindings(
@@ -1105,7 +1106,8 @@ export async function importOneTimePreapprovalPrivateDraft(
         profile.exceptionId === "D-155" ||
         profile.exceptionId === "D-159" ||
         profile.exceptionId === "D-160" ||
-        profile.exceptionId === "D-162"
+        profile.exceptionId === "D-162" ||
+        profile.exceptionId === "D-167"
           ? await diagnosePrivateBatchPostcondition(
               client,
               artifact,

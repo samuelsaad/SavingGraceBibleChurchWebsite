@@ -30,7 +30,8 @@ export type SchemaMigrationScope =
   | "0018_remaining_private_ai_review"
   | "0019_restricted_bulk_acceptance"
   | "0020_d160_delegated_review_acceptance"
-  | "0021_d162_delegated_review_acceptance";
+  | "0021_d162_delegated_review_acceptance"
+  | "0022_d167_delegated_review_acceptance";
 
 interface SchemaMigrationDefinition {
   id: string;
@@ -303,6 +304,14 @@ export const schemaMigrationDefinitions: readonly SchemaMigrationDefinition[] = 
     addedRelations: ["sermon_d162_restricted_acceptances", "sermon_d162_restricted_acceptance_withdrawals"],
     addedFunctions: ["d162_restricted_acceptance_dependency(uuid)", "protect_d162_restricted_acceptance_history()"],
     addedTriggers: ["sermon_d162_restricted_acceptances_immutable", "sermon_d162_restricted_acceptance_withdrawals_immutable"]
+  },
+  {
+    id: "0022_d167_delegated_review_acceptance", order: 22,
+    upPath: "db/migrations/0022_d167_delegated_review_acceptance.sql",
+    downPath: "db/migrations/0022_d167_delegated_review_acceptance.down.sql",
+    addedRelations: ["sermon_d167_restricted_acceptances", "sermon_d167_restricted_acceptance_withdrawals"],
+    addedFunctions: ["d167_restricted_acceptance_dependency(uuid)", "protect_d167_restricted_acceptance_history()"],
+    addedTriggers: ["sermon_d167_restricted_acceptances_immutable", "sermon_d167_restricted_acceptance_withdrawals_immutable"]
   }
 ] as const;
 

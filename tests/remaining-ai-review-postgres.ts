@@ -213,6 +213,6 @@ export function registerRemainingAiReviewPostgresTests(getPool:()=>Pool,runSchem
     const p=getPool();await expect(runSchema("rollback",migration)).resolves.toMatchObject({outcome:"rolled_back",journalReceiptCount:17});
     expect((await p.query("SELECT to_regclass('public.sermon_ai_component_reviews') AS relation")).rows[0].relation).toBeNull();
     await expect(runSchema("apply",migration)).resolves.toMatchObject({outcome:"applied",journalReceiptCount:18});
-    const before=await snapshot(p);await expect(runSchema("apply",migration)).resolves.toMatchObject({outcome:"no_op",journalReceiptCount:21});expect(await snapshot(p)).toEqual(before);
+    const before=await snapshot(p);await expect(runSchema("apply",migration)).resolves.toMatchObject({outcome:"no_op",journalReceiptCount:22});expect(await snapshot(p)).toEqual(before);
   });
 }

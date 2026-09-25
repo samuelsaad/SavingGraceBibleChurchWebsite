@@ -124,6 +124,7 @@ import { registerRestrictedAcceptancePostgresTests } from "./restricted-acceptan
 import { registerFifthBatchPostgresTests } from "./fifth-batch-postgres";
 import { registerSixthBatchPostgresTests } from "./sixth-batch-postgres";
 import { registerSeventhBatchPostgresTests } from "./seventh-batch-postgres";
+import { registerEighthBatchPostgresTests } from "./eighth-batch-postgres";
 
 const enabled = process.env.RUN_POSTGRES_INTEGRATION === "1";
 const integration = enabled ? describe : describe.skip;
@@ -302,6 +303,11 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     )
       await runSchema("rollback", "0021_d162_delegated_review_acceptance");
     if (
+      scope === "0021_d162_delegated_review_acceptance" &&
+      direction === "rollback"
+    )
+      await runSchema("rollback", "0022_d167_delegated_review_acceptance");
+    if (
       scope === "0018_remaining_private_ai_review" &&
       direction === "rollback"
     )
@@ -326,6 +332,8 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       await runSchema("apply", "0020_d160_delegated_review_acceptance");
     if ((scope === "0019_restricted_bulk_acceptance" || scope === "0020_d160_delegated_review_acceptance") && direction === "apply")
       await runSchema("apply", "0021_d162_delegated_review_acceptance");
+    if (scope === "0021_d162_delegated_review_acceptance" && direction === "apply")
+      await runSchema("apply", "0022_d167_delegated_review_acceptance");
     return result;
   }
 
@@ -390,6 +398,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   registerFifthBatchPostgresTests(() => pool);
   registerSixthBatchPostgresTests(() => pool);
   registerSeventhBatchPostgresTests(() => pool);
+  registerEighthBatchPostgresTests(() => pool);
 
   it("prefills an exact source speaker without approval, preserves concurrent edits and reruns without audit churn", async () => {
     const c = await pool.connect();
@@ -5900,7 +5909,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
          (SELECT count(*)::integer FROM migration_records) AS content_records,
          (SELECT count(*)::integer FROM sermon_enrichment_draft_imports) AS draft_import_receipts`,
     );
-    expect(before.rows[0]?.schema_receipts).toBe(21);
+    expect(before.rows[0]?.schema_receipts).toBe(22);
     expect(before.rows[0]?.content_records).toBe(5);
     expect(before.rows[0]?.draft_import_receipts).toBeGreaterThanOrEqual(0);
     await expect(runSchema("apply")).resolves.toEqual({
@@ -5908,7 +5917,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
       outcome: "no_op",
       appliedMigrationIds: [],
       rolledBackMigrationIds: [],
-      journalReceiptCount: 21,
+      journalReceiptCount: 22,
     });
     expect(
       (
@@ -5970,9 +5979,10 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         "0019_restricted_bulk_acceptance",
         "0020_d160_delegated_review_acceptance",
         "0021_d162_delegated_review_acceptance",
+        "0022_d167_delegated_review_acceptance",
       ],
       rolledBackMigrationIds: [],
-      journalReceiptCount: 21,
+      journalReceiptCount: 22,
     });
   });
 
@@ -6205,7 +6215,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
         (count, result) => count + result.appliedMigrationIds.length,
         0,
       ),
-    ).toBe(21);
+    ).toBe(22);
     expect(
       (
         await pool.query<{ receipts: number; distinct_receipts: number }>(
@@ -6214,7 +6224,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
        FROM schema_migrations`,
         )
       ).rows[0],
-    ).toEqual({ receipts: 21, distinct_receipts: 21 });
+    ).toEqual({ receipts: 22, distinct_receipts: 22 });
 
     await expect(runSchema("rollback")).resolves.toMatchObject({
       outcome: "rolled_back",
@@ -6222,7 +6232,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
     });
     await expect(runSchema("apply")).resolves.toMatchObject({
       outcome: "applied",
-      journalReceiptCount: 21,
+      journalReceiptCount: 22,
     });
   });
 });

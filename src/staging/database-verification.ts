@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import type { PoolClient } from "pg";
 import { loadSchemaMigrations, validateSchemaMigrationJournal } from "../migration/schema-migrations";
 
-export async function verifyReleaseSchema(client: Pick<PoolClient, "query">, expected: 18 | 19 | 20 | 21 = 21) {
+export async function verifyReleaseSchema(client: Pick<PoolClient, "query">, expected: 18 | 19 | 20 | 21 | 22 = 22) {
   const migrations = await loadSchemaMigrations();
   const journal = await client.query("SELECT migration_order, migration_id, checksum_sha256 FROM schema_migrations ORDER BY migration_order");
   const applied = validateSchemaMigrationJournal(migrations, journal.rows);

@@ -10,7 +10,7 @@ import {readD162Snapshot}from"./d162-review-service";
 const fail=(code="d162_acceptance_evidence_or_concurrency_conflict"):never=>{throw new Error(code);};
 async function transaction<T>(pool:Pool,environment:AcceptanceEnvironment,work:(c:PoolClient)=>Promise<T>){const c=await pool.connect();let discard=false;
   try{await verifyAcceptanceTarget(c,environment);await c.query("BEGIN ISOLATION LEVEL SERIALIZABLE");await c.query("SET LOCAL savinggrace.application_request='on'");await c.query("SET LOCAL statement_timeout='120s'");
-    await c.query("SELECT pg_advisory_xact_lock(1397176899,1397111886)");await verifyReleaseSchema(c,21);const result=await work(c);await c.query("COMMIT");return result;
+    await c.query("SELECT pg_advisory_xact_lock(1397176899,1397111886)");await verifyReleaseSchema(c,22);const result=await work(c);await c.query("COMMIT");return result;
   }catch(error){try{await c.query("ROLLBACK");}catch{discard=true;}const code=error instanceof Error&&/^d162_acceptance_[a-z_]+$/u.test(error.message)?error.message:undefined;return fail(code);}
   finally{c.release(discard);}}
 

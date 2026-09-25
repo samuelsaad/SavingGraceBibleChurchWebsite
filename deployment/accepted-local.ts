@@ -23,9 +23,10 @@ async function main() {
     await verifyReleaseSchema(c);await verifyRestrictedPublicationBoundary(c,"local_loopback");
   }finally{await c.query("ROLLBACK");c.release();}};
   await ready();
+  const d167Enabled=process.env.D167_RESTRICTED_ACCEPTANCE_ENABLED==="1";
   const d162Enabled=process.env.D162_RESTRICTED_ACCEPTANCE_ENABLED==="1";
   const d161Enabled=process.env.D161_RESTRICTED_ACCEPTANCE_ENABLED==="1";
-  const scope=d162Enabled?"d162_restricted_accepted":d161Enabled?"d161_restricted_accepted":"restricted_accepted";
+  const scope=d167Enabled?"d167_restricted_accepted":d162Enabled?"d162_restricted_accepted":d161Enabled?"d161_restricted_accepted":"restricted_accepted";
   const handler=createSealedStagingHandler(new PostgresSermonRepository(pool,scope),ready,commit,process.env.RESTRICTED_FRONTEND_DISABLED==="1");
   const server=createServer(async(req,res)=>{try{
     const response=await handler(await toWebRequest(req,`http://127.0.0.1:${port}`,16384));
