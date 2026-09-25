@@ -1,5 +1,23 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
+## D-167 eighth fixed batch frozen — 25 September 2026
+
+In isolated branch `codex/next-36-after-d162`, the next 36 previously
+unattempted source/video pairs were frozen from the preserved authoritative
+mapping order. The canonical private manifest SHA-256 is
+`0218989d1c09224ed301caecb915cefc787a5017f28f6253aee3020a7c3b3ae5`.
+All 267 prior attempts were excluded; 51 clean candidates became 36 fixed
+positions and 15 remaining. Its zero-attempt checkpoint, evidence hashes and
+read-only database baseline are ignored private artifacts. Local PostgreSQL
+contained 261 sermons and migration 0021 at freeze. No caption, transcript,
+candidate, review or import operation has occurred under D-167 yet.
+
+The required protected staging environment is a separate runtime and isolated
+database reached through loopback/SSH, using the integrated D-165 church frontend.
+The existing D-166 public raw-IP runtime/database and its exact 148 accepted
+sermons must not change. See D-167 and `eighth-private-batch-plan.md`; do not
+infer completion of processing or deployment from this scope-freeze milestone.
+
 ## The complete church website — 24 September 2026
 
 Branch `frontend-church-site` (continuation of `frontend-sermons-v4`) carries D-165: the whole church website rebuilt from the supplied WordPress export and media archive on the same Astro/`src/frontend` foundation. Every published WordPress page has a destination with its wording transcribed verbatim (`src/frontend/content/pages/`), the church's main and footer menus drive the masthead and footer, events are computed from the export's recurrence rules with an iCalendar feed, the three posts keep their addresses, legacy addresses redirect in one hop, drafts and the private Constitution render only in the authenticated preview, and 45 reviewed images are embedded and served under `/media/` by every runtime and the static build. `website-content-inventory.md` is the reconciliation record, including the integrations that could not be completed (the Contact Form 7 mail form, the newsletter, the social accounts) and the wording the church may wish to review. The sermon system is unchanged. PostgreSQL was unavailable on the implementing machine, so `npm run test:postgres`, the snapshot import and the database-backed previews are still to be run; the standard suite, check, build, staging bundle and audit passed apart from the two documented pre-existing findings. Nothing is merged, deployed or published. See D-165 and the current entry of `migration-validation-plan.md`.

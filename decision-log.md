@@ -738,6 +738,41 @@ new decision. Preserve the SSH/loopback path and a reversible public-binding
 rollback. No application-source change, other host/port, data synchronization,
 additional sermon, push, merge or production deployment is authorized.
 
+### D-167 — Eighth fixed 36-sermon private enrichment and protected reconciliation
+
+Samuel authorised only the private, integrity-frozen manifest SHA-256
+`0218989d1c09224ed301caecb915cefc787a5017f28f6253aee3020a7c3b3ae5`.
+It contains the first 36 clean, uniquely mapped source/video identities in the
+preserved ascending authoritative mapping order after all 267 prior attempts,
+including earlier failed positions. Fifty-one clean candidates became 36 fixed
+attempts and 15 remaining. Each failure consumes its position. No substitute,
+historical manifest reuse or 37th sermon is allowed.
+
+For this manifest alone, official YouTube caption retrieval and the established
+bounded unknown-audio exception, word-preserving private transcript preparation,
+and complete-transcript-grounded description and ordered Q&A generation may
+precede human transcript approval. Samuel's Sol selection is stored separately
+from actually exposed runtime model metadata. Original candidates, source and
+output hashes, warnings, grounding ranges and at most one focused correction
+per artifact are preserved. Only validated private, unapproved drafts may enter
+the guarded local test database atomically and idempotently. Substantive AI
+review of every description and ordered Q&A is required; exact-version evidence
+governs identity, speaker, passage, findings, retained-caption fidelity and
+media checks. Unsupported or redacted cases remain held, never fabricated as
+accepted or human-approved. D-167 expires after all 36 fixed processing and
+review outcomes are terminal. The normal approved-transcript gate remains
+unchanged outside this manifest.
+
+Eligible outcomes may appear in the authenticated local restricted preview and
+in a separate protected staging runtime using an isolated staging database and
+scoped, recoverable, idempotent synchronization. Claude's current church frontend
+is preserved. The existing public raw-IP runtime, database and exact 148-sermon
+accepted set under D-166 remain unchanged. No new public listener, production
+publication, approval, embeddings, other provider or Git push is authorised.
+Necessary private prose may enter the primary Codex task history and ignored
+storage only, never ordinary messages, logs, tracked files, screenshots, tests
+or another agent/provider. See `eighth-private-batch-plan.md`.
+
 ## Decisions still required
 
 - Final AWS runtime/adapter and production networking.

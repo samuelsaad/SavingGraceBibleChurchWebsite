@@ -1,5 +1,26 @@
 # Private grounding contract
 
+D-167 separately permits `unapproved` source transcripts only for the exact
+36-position manifest SHA-256
+`0218989d1c09224ed301caecb915cefc787a5017f28f6253aee3020a7c3b3ae5`.
+Bind each private candidate, correction and review to D-167, its governance commit,
+fixed sequence, exact source/retained-caption/transcript hashes, immutable grounding
+revision, support ranges, current content/output hashes and truthful generation and
+review provenance. Preserve originals and at most one focused correction per
+artifact; an imported candidate allows only an identical idempotency rerun.
+Unknown audio association retains the bounded warning and false primary-audio
+confirmation. Substantive acceptance requires complete-transcript review of the
+current description and every ordered Q&A plus all independently supported
+identity, speaker, passage, finding, retained-caption and media requirements.
+Unsupported or redacted cases remain held. Restricted acceptance creates neither
+human approval nor public/production/semantic eligibility. Private prose may
+appear only in necessary primary Codex task inputs/results/history and ignored
+artifacts, never ordinary messages, logs, Git, tests, screenshots or another
+agent/provider. The existing public 148-sermon staging runtime and database remain
+untouched; only a separate protected runtime/data store and local restricted
+preview may display newly eligible results. This exception expires after all 36
+fixed processing/review outcomes; the approved-transcript gate remains the default.
+
 D-162 separately permits `unapproved` source transcripts only for manifest
 `e47da706e8b458bed6f8198570cc4a51e4b9604049e394d71a02cc84f79ea17f`.
 Apply every normal support-range, source-hash, editorial, uncertainty, output-
@@ -88,7 +109,7 @@ Required top-level fields:
 
 - `schemaVersion`, `privateContent`, `skillName`, `skillVersion`, `generationMethod`, `generatedAt`
 - `target`: stable private source identifier and application sermon identifier
-- `transcript`: application transcript identifier, immutable grounding revision, approval state, SHA-256, character count, and word count; retain the current row version only as concurrency/audit evidence. The normal state is `approved`; only a result bound to the exact D-151 36-record manifest, its integrity-proven D-152 retry, the exact D-153 second-batch manifest, the exact D-154 third-batch manifest, or the exact D-155 fourth-batch manifest may record `unapproved`.
+- `transcript`: application transcript identifier, immutable grounding revision, approval state, SHA-256, character count, and word count; retain the current row version only as concurrency/audit evidence. The normal state is `approved`; `unapproved` is permitted only under an exact separately authorised, integrity-proven D-151–D-155, D-159, D-160, D-162 or D-167 manifest binding.
 - `original`: superseded private bundle path and SHA-256 plus original description and Q&A body hashes
 - `description`: body, central subject statement, application statement, and one support record per paragraph
 - `questionAnswers`: 5–10 ordered pairs, each with support records

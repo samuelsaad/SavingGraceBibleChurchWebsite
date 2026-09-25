@@ -149,6 +149,48 @@ human approval, production/public eligibility, semantic eligibility or publicati
 authority. Normal approved-transcript, human-administrator, privacy and publication
 rules remain unchanged everywhere else. Read `seventh-private-batch-plan.md`.
 
+### D-167 — eighth fixed private enrichment, review and protected-preview batch
+
+Samuel separately authorises only the integrity-frozen 36-position manifest
+SHA-256 `0218989d1c09224ed301caecb915cefc787a5017f28f6253aee3020a7c3b3ae5`.
+It takes the first 36 clean source/video pairs in preserved ascending mapping
+order after 267 previous attempts, leaving 15; no substitution, retry of a
+terminal failure or thirty-seventh record is authorised. For these records only,
+eligible official captions may be retrieved, complete word-preserving private
+transcripts may remain unapproved, and the current primary Codex session may use
+those transcripts to generate grounded private description and ordered Q&A drafts.
+Samuel's selected Sol label is not proof of runtime identity; record selection
+and actually exposed runtime metadata separately, with unavailable markers rather
+than invented model, revision, session or privacy details. No separately billed
+generative API or other provider is authorised.
+
+Preserve original candidates and at most one focused correction per artifact;
+retain exact source, transcript, support and output hashes, uncertainty and the
+bounded unknown-audio warning with `primary_audio_confirmed: false`. Only
+validated private, unapproved drafts may be atomically imported to the guarded
+local test database. Substantive AI review must examine every current description
+and ordered Q&A against its complete transcript; automated validation alone is
+insufficient. Record truthful AI attribution, exact dependencies and exceptions.
+Evidence-supported identity, speaker, passage, finding, retained-caption and media
+decisions may support private completion and a separate restricted-frontend
+acceptance only when every applicable requirement genuinely passes. Preserve
+unresolved or redacted cases for review; never fabricate human approval.
+
+Necessary private prose may enter only this primary Codex task's tool inputs,
+results and retained session history and ignored private storage, never ordinary
+assistant messages, logs, Git, documentation, tests, screenshots, another agent
+or provider. This exception expires when all 36 fixed positions have terminal
+processing and review outcomes. The normal approved-transcript, primary-audio,
+human authority, privacy and publication gates remain unchanged elsewhere.
+
+Newly eligible sermons may enter the authenticated local restricted preview and
+a separate protected staging runtime backed by an isolated staging database,
+through scoped, recoverable and idempotent synchronization. Preserve Claude's
+current church frontend. The existing public raw-IP listener, its database and
+its exact 148 accepted sermons under D-166 must remain unchanged. No new public
+listener, public selector change, production publication, semantic processing,
+Git push or additional batch is authorised. Read `eighth-private-batch-plan.md`.
+
 ### D-160 — sixth fixed private draft batch
 
 Samuel separately authorises the protected instruction amendments for only manifest
