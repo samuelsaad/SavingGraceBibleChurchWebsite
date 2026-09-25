@@ -126,8 +126,19 @@ OAuth proof document for preservation, testing and continuation requirements.
 
 ## Authority and current checkpoint
 
-Current running code is `60b31a1e18611191f9c751e382a7c2942538db56` locally and on
-sealed Docker staging. Samuel explicitly classified the nine accepted no-primary
+On 25 September 2026 Samuel authorised D-166: plain-HTTP raw-IP public access
+to the existing read-only church-site visitor staging frontend on TCP 8080 for
+only the 148 currently restricted-accepted sermons, including four application
+drafts. This is not a human approval or production publication. The exact
+identity-set fingerprint and stop-on-drift rule are in `AGENTS.md` and
+`decision-log.md`. Administrator, draft-preview and database access remain
+private. Claude's deployed application implementation remains the exact
+`6a51443d117cc9cb20e82f8d50046f77e7a4aa08` commit; this task changes
+staging transport configuration, not application code.
+
+At the earlier Topical classification checkpoint, running code was
+`60b31a1e18611191f9c751e382a7c2942538db56` locally and on sealed Docker
+staging. Samuel explicitly classified the nine accepted no-primary
 sermons as Topical, bound to private manifest
 `b1016476118bb3029a42658c78cc38e97897970b6adc553511f7cae06c7f8b56`.
 Each database has nine versioned editorial extensions and nine separately attributed

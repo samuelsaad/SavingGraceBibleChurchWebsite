@@ -719,6 +719,25 @@ Samuel's 24 September 2026 brief authorises extending the `frontend-sermons-v4` 
 
 **Verification.** Standard checks, the unit suite, the static build, the staging bundle and the offline audit passed on the implementing machine with the two documented pre-existing findings; browser inspection covered representative pages at desktop and phone widths, keyboard operation of the menus and click-to-load plates, and a clean console. PostgreSQL remained unavailable there, so `npm run test:postgres` and the database-backed previews are still to be run on Samuel's machine.
 
+### D-166 — Bounded public raw-IP staging preview
+
+Samuel explicitly authorised amending repository governance to make the existing
+148 restricted-accepted sermons publicly accessible without sign-in over plain
+HTTP at `http://54.253.237.138:8080/`. This includes four application drafts.
+The sorted 148-identity set, one ID per line with a final newline, has SHA-256
+`4bf7dbdb97d7ef98e9dd1aa9153f0e04c977776f08e0ba0a420fb266304f1731`.
+It comprises 144 D-158 and four D-161 restricted acceptances. This decision
+changes only staging transport reachability; it does not create a human approval,
+alter any publication state or authorize production publication.
+
+Only the already deployed read-only visitor runtime may listen on the existing
+public TCP 8080 path. Administrator, draft-preview and database routes stay
+private. Retain no-store/noindex and the existing eligibility selectors. An
+accepted-set or dependency change requires closing the public listener until a
+new decision. Preserve the SSH/loopback path and a reversible public-binding
+rollback. No application-source change, other host/port, data synchronization,
+additional sermon, push, merge or production deployment is authorized.
+
 ## Decisions still required
 
 - Final AWS runtime/adapter and production networking.

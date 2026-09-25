@@ -93,6 +93,31 @@ generation, embeddings, public Related themes, AWS networking or Git push is gra
 All normal approval, publication and privacy rules remain unchanged outside this
 exact cohort/environment exception; D-151 through D-155 remain closed.
 
+### D-166 — bounded public raw-IP staging preview
+
+Samuel separately authorised internet access to the already deployed church-site
+visitor frontend on staging instance `i-0f7abc9421733e79c` at
+`http://54.253.237.138:8080/`. He explicitly chose plain HTTP for this temporary
+raw-IP preview. This exception overrides the loopback/SSH-only transport boundary
+in D-158 and D-161 for the exact 148 currently restricted-accepted staging records:
+the 144-record D-158 manifest plus four D-161 restricted acceptances. The sorted
+148-sermon identity set, one ID per line with a final newline, has SHA-256
+`4bf7dbdb97d7ef98e9dd1aa9153f0e04c977776f08e0ba0a420fb266304f1731`.
+Four of these records remain application drafts; this is an explicit public
+staging-display decision, not administrator approval or production publication.
+
+Expose only the existing read-only visitor runtime on TCP 8080. Keep the database,
+draft-preview, administrator routes and administrator APIs unavailable externally.
+Retain no-store/noindex, current content selectors, provenance, review states and
+publication flags. Do not expose any newly accepted record under this exception:
+if the accepted identity-set hash or eligibility changes, close the public listener
+until separately authorised. Do not change Claude's application code, add a new
+content batch, publish in production, open another port, push, merge or deploy to
+another host. The SSH/loopback access path must continue working and the public
+listener must have a tested reversible removal procedure. This bounded staging
+exception does not relax normal public-launch readiness or any other cohort's
+privacy and approval rules.
+
 ### D-162 — seventh fixed private enrichment and review batch
 
 Samuel separately authorises only manifest SHA-256
