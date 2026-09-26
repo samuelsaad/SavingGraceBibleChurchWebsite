@@ -23,7 +23,10 @@ for (const path of migrations) paths.add(path);
 for (const path of paths) {
   if (!permittedPackagePath(path)) throw new Error("prohibited_package_path");
   if (!(await lstat(path)).isFile()) throw new Error("package_symlink_or_nonfile");
-  const expected = execFileSync("git", ["show", `${commit}:${path}`]);
+  // Claude's committed church imagery is embedded in a large safe source module.
+  // Keep the exact-byte check; the default 1 MiB child buffer is insufficient.
+  const expected = execFileSync("git", ["show", `${commit}:${path}`], { maxBuffer: 128 * 1024 * 1024,
+    stdio: ["ignore", "pipe", "ignore"] });
   const actual = Buffer.from((await readFile(path, "utf8")).replace(/\r\n/g, "\n"));
   if (!expected.equals(actual)) throw new Error("package_uncommitted_drift");
 }
