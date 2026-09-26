@@ -7,7 +7,8 @@ for (const [name, entry] of Object.entries({
   database: "src/staging/database-cli.ts",
   "draft-preview": "src/staging/draft-preview-server.ts",
   "d160-sync": "deployment/d160-sync.ts",
-  "d161-sync": "deployment/d161-sync.ts"
+  "d161-sync": "deployment/d161-sync.ts",
+  "d167-protected-sync": "deployment/d167-protected-sync.ts"
 })) {
   const result = await build({ entryPoints: [entry], outfile: `dist-staging/${name}.cjs`, bundle: true,
     // The minimal archive intentionally excludes the Astro workspace config.

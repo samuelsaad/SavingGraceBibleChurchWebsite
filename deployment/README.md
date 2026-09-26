@@ -1,5 +1,40 @@
 # Sealed staging release
 
+## D-167 isolated protected reconciliation
+
+`deployment/d167-protected-sync.ts` exports only the current, freshness-checked
+restricted-eligible sermon dependency closure, bound to D-167's exact processing
+manifest. It does not export accounts, sessions, raw captions, OAuth material,
+semantic stores or held sermons. The private packet retains source and review
+history; only acceptance-receipt environment coordinates are projected from local
+to sealed staging. Source sermon content, versions and evidence remain unchanged.
+
+Use a distinct Compose project, database volume, internal network and loopback
+socket proxy. Never target or recreate the existing public project's database,
+application, listener or exact 148-record cohort. The initialization command
+requires an empty public schema and records an exact D-167 database marker;
+subsequent operations require that marker and all 22 migration checksums.
+Scoped imports are atomic, refuse differing existing rows and require exact
+post-import eligibility membership. Identical reruns require an unchanged full
+database fingerprint. Private pre-write fingerprint receipts are retained next
+to the verified packet; the original new volume and packet provide recovery
+evidence without overwriting another environment.
+
+The export command is `tsx deployment/d167-protected-sync.ts export`, with
+`D167_SYNC_PACKAGE` pointing to protected ignored storage. The isolated sealed
+maintenance commands are `node d167-protected-sync.cjs initialize` and `import`,
+with `ALLOW_STAGING_D167_SYNC=1` and `D167_ISOLATED_RUNTIME=1`. They also require
+the existing sealed-runtime configuration and secret-file guards. No secret value
+is part of the command, image or repository. The application is read-only and
+denies administrator/private-preview routes; protected access uses pinned SSH
+tunnelling to the host's loopback socket, not a remotely enabled development
+identity. Responses remain no-store and noindex.
+
+Application rollback disables or stops only the new protected app/socket. Preserve
+its named volume, source packet, image and fingerprint receipts. Recovery into a
+fresh isolated volume may replay the matching schema and verified scoped packet;
+never restore it over the public database or erase newer review history.
+
 This deployment is authorized only for the separately identified staging EC2
 instance. It is not production, public-internet publication, a replacement
 authenticator or permission to change AWS networking. D-158 separately permits
