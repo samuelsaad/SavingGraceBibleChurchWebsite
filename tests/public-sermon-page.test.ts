@@ -59,7 +59,7 @@ describe("server-rendered public sermon page", () => {
     expect(html).toContain('<details class="transcript" open data-open-for-print>');
     expect(html).toContain('<summary class="transcript__summary"><span class="transcript__label--closed">Read the transcript</span><span class="transcript__label--open">Hide the transcript</span>');
     expect(html).toContain('<span class="transcript__stats">5 words · about 1 minute</span>');
-    expect(html.replace(/<script[\s\S]*?<\/script>/gu, "")).not.toContain("aria-expanded");
+    expect(html.replace(/<script[\s\S]*?<\/script>/gu, "").replace(/<button[^>]*data-mobile-toggle[^>]*>[\s\S]*?<\/button>/gu, "")).not.toContain("aria-expanded");
     expect(html.indexOf('id="about-heading"')).toBeLessThan(html.indexOf('id="transcript-heading"'));
     expect(html).toContain("First paragraph");
     expect(html).toContain("Second &lt;strong&gt;plain&lt;/strong&gt;");
@@ -153,20 +153,16 @@ describe("server-rendered public sermon page", () => {
     expect(renderPublicSermonPage({ ...sermon, title: "Hope — Romans 8:1-4", primaryPassages: [{ displayText: "Romans 8:1–4", isLead: true }] })).not.toContain(stamp);
   });
 
-  it("pulls the classified book from the shelf as a tab, a strip mark and a rail entry", () => {
+  it("keeps the classified book in the breadcrumb and details rail", () => {
     const html = renderPublicSermonPage(shelved, publicRenderContext, { options });
     expect(html).toContain('<article class="sermon hue--pauline">');
-    expect(html).toContain('<a class="tab hue--pauline" href="/sermons/?passageBook=romans&amp;passageScope=book#canon"><span class="tab__name" aria-hidden="true">Romans</span><span class="tab__count" aria-hidden="true">3</span><span class="sr-only">Romans, 3 sermons</span></a>');
-    expect(html).toContain('<svg class="strip strip--marked"');
-    expect(html.match(/ strip__seg--current"/gu)).toHaveLength(1);
-    expect(html).toContain('<p class="strip__label">Romans on the shelf</p>');
+    expect(html).not.toContain('<div class="sermon__tab">');
     expect(html).toContain('<li><a href="/sermons/?sermon_book=romans">Romans</a></li>');
-    expect(html).toContain('<dt>Shelved under</dt><dd><a href="/sermons/?sermon_book=romans">Romans</a></dd>');
+    expect(html).toContain('<dt>Bible book</dt><dd><a href="/sermons/?sermon_book=romans">Romans</a></dd>');
 
     const unshelved = renderPublicSermonPage(sermon);
     expect(unshelved).toContain('<article class="sermon">');
-    expect(unshelved).toContain('<span class="tab tab--ghost" aria-hidden="true">');
-    expect(unshelved).not.toContain("Shelved under");
+    expect(unshelved).not.toContain("<dt>Bible book</dt>");
     expect(unshelved).not.toContain('class="strip strip--marked"');
   });
 

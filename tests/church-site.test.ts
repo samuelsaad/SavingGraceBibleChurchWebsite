@@ -284,7 +284,7 @@ describe("church page rendering", () => {
       expect(html, page.id).toContain(`<link rel="canonical" href="https://www.savinggrace.org.au${page.path}" />`);
       expect(html, page.id).toContain(`<title>${page.title} — Saving Grace Bible Church</title>`);
       expect(html, page.id).toContain('<meta name="robots" content="index, follow" />');
-      expect(html, page.id).toContain('<nav class="masthead__nav" aria-label="Primary"><ul class="masthead__links">');
+      expect(html, page.id).toContain('<nav class="masthead__nav" id="primary-navigation" aria-label="Primary"><ul class="masthead__links">');
       expect(html, page.id).toContain('<details class="masthead__menu" data-menu>');
       expect(html, page.id).not.toContain("<iframe");
       expect(html, page.id).not.toContain(' style="');
@@ -444,7 +444,7 @@ describe("church site routes", () => {
       expect(about?.headers.get("content-security-policy")).toContain("style-src 'sha256-");
       const home = await route(new Request("http://127.0.0.1/"));
       expect(home?.status).toBe(200);
-      expect(await home!.text()).toContain('<h1 id="hero-heading" class="arrive__title">');
+      expect(await home!.text()).toContain('<h1 id="hero-heading" class="arrival__title">');
       for (const [path, location] of [["/pages/lordsdayservice/", "/lords-day-service/"], ["/contact-us-2/", "/contact/"], ["/church-events/", "/events/"], ["/event/sunday-evening-service-2/", "/events/sunday-evening-service/"], ["/pages/sitemap/", "/sitemap/"], ["/venue/saving-grace-bible-church/", "/contact/"]]) {
         const response = await route(new Request(`http://127.0.0.1${path}?utm=1`));
         expect(response?.status, path).toBe(301);

@@ -1,5 +1,5 @@
 /**
- * The sermon page: a reading room. The book tab at the left, the reading
+ * The sermon page: a reading room. A broad reading
  * column with the description, the video plate, the open transcript and the
  * questions, related sermons at the end, and an "On this page" rail.
  *
@@ -11,18 +11,16 @@ import type { PublicSermonFilterOptions } from "../../server/repositories/sermon
 import { formatCount, readingStats } from "../canon";
 import { entry, passageStamp, primaryBook } from "../components/catalogue";
 import { mediaSection } from "../components/media";
-import { bookTab, canonStrip, topicalTab } from "../components/shelf";
 import { formattedDate, html, plainTextParagraphs, timeElement, when, type Html } from "../html";
-import { archivePath, contextualPath, publicRenderContext, siteLinks, withFilter, type FrontendRenderContext } from "../routes";
+import { archivePath, contextualPath, publicRenderContext, siteLinks, type FrontendRenderContext } from "../routes";
 import { pageShell } from "../shell";
 
 export interface SermonPageOptions {
-  /** Filter options, for the tab count and the canon strip. */
+  /** Filter options shared with the page shell. */
   options?: PublicSermonFilterOptions;
 }
 
 const emptyOptions: PublicSermonFilterOptions = { speakers: [], series: [], passages: [], books: [], passageVerseAvailability: [] };
-const emptyQuery = { order: "DESC" as const, page: 1, pageSize: 9 };
 
 function contents(sermon: SermonDetail): Html | null {
   const entries: Array<[string, string]> = [];
@@ -43,7 +41,6 @@ export function renderPublicSermonPage(
   const options = pageOptions.options ?? emptyOptions;
   const links = siteLinks(context);
   const book = primaryBook(sermon);
-  const bookCount = book ? options.books.find((item) => item.slug === book.slug)?.sermonCount ?? null : null;
   const canonicalPath = `/sermons/${sermon.slug}/`;
   const metadataDescription = sermon.seoDescription ?? sermon.summary ?? undefined;
   const isLongTitle = sermon.title.length > 40;
@@ -56,7 +53,6 @@ export function renderPublicSermonPage(
     ? html`<span class="sermon__note">No single primary passage (reviewed outcome)</span>`
     : null;
   const head = html`<header class="sermon__head">
-    ${canonStrip(options, { current: book?.slug, label: book ? `${book.canonicalName} on the shelf` : undefined })}
     ${trail}
     ${passageStamp(sermon, "sermon__stamp")}
     <h1 class="sermon__title${isLongTitle ? " is-long" : ""}">${sermon.title}</h1>
@@ -122,11 +118,10 @@ export function renderPublicSermonPage(
         ${when(sermon.speaker, () => html`<dt>Speaker</dt><dd><a href="${links.taxonomy("speakers", sermon.speaker!.slug)}">${sermon.speaker!.name}</a></dd>`)}
         ${when(sermon.series.length, () => html`<dt>Series</dt><dd>${sermon.series.map((item, index) => html`${index > 0 ? ", " : ""}<a href="${links.taxonomy("series", item.slug)}">${item.name}</a>`)}</dd>`)}
         ${when(sermon.primaryPassages.length, () => html`<dt>Preached from</dt><dd>${sermon.primaryPassages.map((item) => item.displayText).join(", ")}</dd>`)}
-        ${when(book, () => html`<dt>Shelved under</dt><dd><a href="${links.taxonomy("books", book!.slug)}">${book!.canonicalName}</a></dd>`)}
+        ${when(book, () => html`<dt>Bible book</dt><dd><a href="${links.taxonomy("books", book!.slug)}">${book!.canonicalName}</a></dd>`)}
       </dl>
     </div>
   </aside>`;
-  const tab = html`<div class="sermon__tab">${sermon.isTopical ? topicalTab() : bookTab(book, { href: book ? withFilter({ ...emptyQuery }, { passageBook: book.slug, passageScope: "book" }, context, "canon") : null, count: bookCount, ghost: !book })}</div>`;
   return pageShell({
     title: sermon.title,
     ...(metadataDescription ? { description: metadataDescription } : {}),
@@ -137,7 +132,6 @@ export function renderPublicSermonPage(
     scripts: ["sermon"],
     books: options.books,
     body: html`<article class="sermon${book ? ` hue--${book.category}` : ""}">
-      ${tab}
       <div class="sermon__body">
         ${head}
         ${reviewNotice}

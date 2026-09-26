@@ -7,6 +7,31 @@
  * links remain usable without JavaScript.
  */
 export const navigationScript = `(function () {
+  var masthead = document.querySelector('.masthead');
+  var mobileToggle = document.querySelector('[data-mobile-toggle]');
+  if (masthead && mobileToggle) {
+    document.documentElement.classList.add('navigation-ready');
+    mobileToggle.hidden = false;
+    function closeMobile(returnFocus) {
+      masthead.classList.remove('is-nav-open');
+      mobileToggle.setAttribute('aria-expanded', 'false');
+      if (returnFocus) mobileToggle.focus();
+    }
+    mobileToggle.addEventListener('click', function () {
+      var expanded = masthead.classList.toggle('is-nav-open');
+      mobileToggle.setAttribute('aria-expanded', String(expanded));
+    });
+    masthead.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && masthead.classList.contains('is-nav-open') && !event.defaultPrevented) closeMobile(true);
+    });
+    masthead.addEventListener('click', function (event) {
+      if (event.target.closest && event.target.closest('a[href]')) closeMobile(false);
+    });
+    window.matchMedia('(min-width: 64rem)').addEventListener('change', function (event) {
+      if (event.matches) closeMobile(false);
+    });
+  }
+
   var menus = Array.prototype.slice.call(document.querySelectorAll('[data-menu]'));
   if (!menus.length) return;
   menus.forEach(wireMenu);

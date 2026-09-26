@@ -15,33 +15,33 @@ export const colour = {
   /** Explicit topical sermons: plum cloth, separate from the canonical book palette. */
   spineTopical: "#563650",
   /** Page ground: cool plaster. */
-  ground: "#f5f5f2",
+  ground: "#f6f2e9",
   /** Raised surfaces: inputs, catalogue cards, count stickers. */
-  raised: "#ffffff",
+  raised: "#fffdf8",
   /** Recessed surfaces: the hero band, quiet notes, chips. */
-  recessed: "#e8e8e3",
+  recessed: "#e9e7dc",
   /** Ruler cells without sermons and disabled controls. */
-  tile: "#e3e4df",
+  tile: "#e3e3d7",
   /** Primary text, shelf boards, bookends, primary buttons, footer, video plate. */
-  ink: "#15181c",
+  ink: "#183e35",
   /** Secondary text: metadata, ledes, helper copy. */
-  inkSoft: "#444a53",
+  inkSoft: "#43524b",
   /** Tertiary text: ghost-spine labels, ordinals, disabled text. */
-  inkMuted: "#596069",
+  inkMuted: "#535f55",
   /** Decorative hairlines only; never a control boundary. */
-  rule: "#d3d4cf",
+  rule: "#d5d6c8",
   /** Borders of inputs, ghost spines, tokens and pagination (3:1 non-text). */
-  ruleStrong: "#767b83",
+  ruleStrong: "#758071",
   /** The single accent: eyebrows, section rules, current markers, applied filters. */
-  gilt: "#7d5800",
+  gilt: "#77513b",
   /** Accent tint: active tokens, current chips, the preview banner. */
-  giltSoft: "#f5ecd2",
+  giltSoft: "#eee4d4",
   /** Gilt lettering on dark surfaces. */
-  giltBright: "#e8c170",
+  giltBright: "#e4c6a1",
   /** Text on ink and on every spine hue. */
-  onInk: "#f5f5f2",
+  onInk: "#f6f2e9",
   /** Muted text on ink surfaces. */
-  onInkSoft: "#b9bec7",
+  onInkSoft: "#c9d1c5",
   /** Cloth spine fills by literary group. */
   spineLaw: "#7d2a3a",
   spineHistory: "#7a4a1c",
@@ -53,17 +53,17 @@ export const colour = {
   spineGeneral: "#7d2f6b",
   spineRevelation: "#1f2430",
   /** Print ground and ink. */
-  groundPrint: "#ffffff",
+  groundPrint: "#fffdf8",
   inkPrint: "#000000"
 } as const;
 
 export const font = {
   /** Display voice: large titles. */
-  display: '"Sitka Banner", "Sitka Display", "Big Caslon", Baskerville, "Hoefler Text", "Iowan Old Style", "Book Antiqua", Georgia, ui-serif, serif',
+  display: 'Georgia, "Iowan Old Style", "Palatino Linotype", ui-serif, serif',
   /** Reading voice: descriptions, transcripts, answers, ledes. */
-  reading: '"Sitka Text", "Sitka Small", Charter, "Iowan Old Style", Georgia, "Noto Serif", ui-serif, serif',
+  reading: 'Georgia, "Iowan Old Style", Charter, ui-serif, serif',
   /** Signage voice: condensed caps for labels, spines, counts and navigation. */
-  signage: 'Bahnschrift, "Avenir Next Condensed", "Roboto Condensed", "Arial Narrow", "Helvetica Neue", system-ui, sans-serif',
+  signage: '"Segoe UI", "Helvetica Neue", system-ui, sans-serif',
   /** Interface voice: controls, metadata lines, helper copy. */
   ui: '"Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif'
 } as const;
@@ -79,8 +79,8 @@ export const size = {
   cardTitle: "clamp(1.5rem, 1.2rem + 1vw, 2rem)",
   title: "clamp(2rem, 1.5rem + 2.2vw, 3.25rem)",
   display: "clamp(2.75rem, 1.9rem + 3.6vw, 5rem)",
-  lineTight: "0.98",
-  lineTitle: "1.05",
+  lineTight: "1.06",
+  lineTitle: "1.12",
   lineUi: "1.45",
   lineReading: "1.72"
 } as const;
@@ -99,8 +99,8 @@ export const space = {
 
 export const radius = {
   cell: "0.125rem",
-  control: "0.25rem",
-  card: "0.375rem",
+  control: "0.125rem",
+  card: "0.125rem",
   pill: "999px"
 } as const;
 

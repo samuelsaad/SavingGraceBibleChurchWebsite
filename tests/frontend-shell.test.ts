@@ -34,7 +34,7 @@ describe("shared frontend shell", () => {
       expect(html, name).toContain('<a class="skip-link" href="#main-content">Skip to main content</a>');
       expect(html, name).toContain('<main id="main-content" class="site-main">');
       const isPreview = html.includes('class="preview-band"');
-      expect(html, name).toContain('<nav class="masthead__nav" aria-label="Primary"><ul class="masthead__links">');
+      expect(html, name).toContain('<nav class="masthead__nav" id="primary-navigation" aria-label="Primary"><ul class="masthead__links">');
       expect(html, name).toContain(isPreview ? '<details class="masthead__menu" data-menu data-sermon-menu>' : '<li class="masthead__links-sermons"><a href="/sermons/"');
       expect(html, name).toContain('<details class="masthead__menu" data-menu>');
       expect(html, name).not.toContain('data-sermon-menu open');
@@ -42,7 +42,8 @@ describe("shared frontend shell", () => {
       expect(html, name).toContain('<nav aria-label="Footer">');
       expect(html, name).toContain('<a class="brand" href="');
       expect(html, name).toContain('<img class="brand__logo" src="/brand/saving-grace-logo.png" width="300" height="178" alt="Saving Grace Bible Church" decoding="async" />');
-      expect(html, name).toContain("the Saving Grace Bible Church logo is the church's own.");
+      expect(html, name).toContain('alt="Saving Grace Bible Church"');
+      expect(html, name).toContain('data-mobile-toggle hidden>Menu');
       expect(html, name).toContain('<h2 class="footer-col__title" id="footer-contact-heading">Contact Us</h2>');
       expect(html, name).toContain('<span><a href="tel:+61450545589">Tel: 0450545589</a></span>');
       expect(html, name).toContain('<a class="button masthead__give" href="');
@@ -135,7 +136,7 @@ describe("shared frontend shell", () => {
     expect(pages.previewHome).toContain('<li class="spine spine--genesis spine--law" data-len="mid"><span class="spine__ghost" aria-hidden="true">');
     expect(pages.previewHome).toContain('<ul class="stats hero__stats" role="list"><li>3 sermons</li><li>1 of 66 books</li><li>1 speaker</li><li>1 series</li></ul>');
     expect(pages.previewHome).toContain('<ul class="legend" role="list" aria-label="Literary groups on the shelf">');
-    expect(pages.previewHome).toContain('<svg class="strip"');
+    expect(pages.previewHome).toContain('class="shelf__row"');
   });
 
   it("renders taxonomy links as archive filters in public mode and as pages in preview mode", () => {
@@ -150,7 +151,7 @@ describe("shared frontend shell", () => {
     expect(pages.previewHome).toContain('href="/frontend-preview/series/example-series/"');
     expect(pages.previewHome).toContain('href="/frontend-preview/series/">All series</a>');
     expect(pages.previewHome).toContain('<li><a href="/frontend-preview/books/">Books</a></li>');
-    expect(pages.previewHome).toContain('<li><a href="/frontend-preview/sermons-v1/" aria-current="page">SermonsV1</a></li>');
-    expect(pages.previewHome).toContain('<li><a href="/frontend-preview/sermons-v4/">SermonsV4</a></li>');
+    expect(pages.previewHome).toContain('href="/frontend-preview/sermons/">All sermons</a>');
+    expect(pages.previewHome).not.toContain(">SermonsV4</a>");
   });
 });

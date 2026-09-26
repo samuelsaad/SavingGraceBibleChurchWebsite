@@ -27,7 +27,7 @@ import {
 } from "../content/events";
 import { paragraph } from "../content/markup";
 import { availablePages, blogPosts, breadcrumbs, eventVenue, pageAvailable, pageById, sitemapGroups, type TrailItem } from "../content/registry";
-import type { BlogPost, SitePage } from "../content/types";
+import type { BlogPost, SitePage, Block } from "../content/types";
 import { formattedDate, html, siteName, timeElement, when, type Html } from "../html";
 import { publicRenderContext, siteLinks, type FrontendRenderContext } from "../routes";
 import { pageShell, type PageShellInput } from "../shell";
@@ -82,7 +82,7 @@ function shellInput(page: SitePage, data: ChurchPageData, body: Html, extra: Par
     description: page.description,
     canonicalPath: page.path,
     robots: page.status === "published" ? "index, follow" : "noindex, nofollow",
-    styles: ["cards", "church"],
+    styles: ["cards", "sermon", "church"],
     scripts: hasVideo(page.blocks) ? ["church"] : [],
     books: data.options.books,
     body,
@@ -93,9 +93,17 @@ function shellInput(page: SitePage, data: ChurchPageData, body: Html, extra: Par
 /** A content page: head, optional banner, the blocks, and the section's related links. */
 export function renderChurchPage(page: SitePage, data: ChurchPageData, context: FrontendRenderContext = publicRenderContext): string {
   const env: BlockEnvironment = { context, today: data.today, sermons: data.sermons };
+  const headings = page.blocks.filter((block): block is Extract<Block, { kind: "heading" }> => block.kind === "heading" && block.level === 2);
+  const hasReadingRail = headings.length >= 4 && !page.blocks.some((block) => ["people", "tiles", "giving-methods"].includes(block.kind));
+  const blocks = page.blocks.map((block, index) => block.kind === "heading" && block.level === 2
+    ? { ...block, id: block.id ?? `reading-section-${index + 1}` } : block);
+  const contents = blocks.filter((block): block is Extract<Block, { kind: "heading" }> => block.kind === "heading" && block.level === 2);
   const body = html`<article class="page page--${page.section}">
     ${pageHead(page, context)}
-    <div class="page__body">${renderBlocks(page.blocks, env)}</div>
+    <div class="page__layout${hasReadingRail ? " page__layout--reading" : ""}">
+      ${when(hasReadingRail, () => html`<nav class="page-contents" aria-labelledby="page-contents-heading"><p id="page-contents-heading">On this page</p><ol role="list">${contents.map((block) => html`<li><a href="#${block.id}">${block.text}</a></li>`)}</ol></nav>`)}
+      <div class="page__body">${renderBlocks(blocks, env)}</div>
+    </div>
     ${related(page, context)}
   </article>`;
   return pageShell(shellInput(page, data, body), context);
@@ -201,7 +209,7 @@ export function renderEventPage(event: ChurchEvent, data: ChurchPageData, contex
     description: event.description[0] ?? `${event.title}: ${scheduleLabel(event)} at ${venue.name}.`,
     canonicalPath: event.path,
     robots: "index, follow",
-    styles: ["cards", "church"],
+    styles: ["cards", "sermon", "church"],
     books: data.options.books,
     body
   }, context);
@@ -297,7 +305,7 @@ export function renderBlogPost(post: BlogPost, data: ChurchPageData, context: Fr
     canonicalPath: post.path,
     robots: "index, follow",
     openGraphType: "article",
-    styles: ["cards", "church"],
+    styles: ["cards", "sermon", "church"],
     books: data.options.books,
     body
   }, context);

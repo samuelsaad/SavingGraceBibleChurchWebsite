@@ -118,7 +118,7 @@ describe("public sermon site routes", () => {
     expect(html).toContain('<option value="example-speaker" selected>Example Speaker (10)</option>');
     expect(html).toContain('<details class="refine" data-refine data-active="true" open>');
     expect(html).toContain('<span class="refine__badge">5 filters active</span>');
-    expect(html.replace(/<script[\s\S]*?<\/script>/gu, "")).not.toContain("aria-expanded");
+    expect(html.replace(/<script[\s\S]*?<\/script>/gu, "").replace(/<button[^>]*data-mobile-toggle[^>]*>[\s\S]*?<\/button>/gu, "")).not.toContain("aria-expanded");
     expect(html).toContain('<section class="results" id="results" tabindex="-1" aria-labelledby="results-heading results-status">');
     expect(html).toContain('<h2 id="results-heading" class="section__title">Sermons</h2>');
     expect(html).toContain('<span class="results__status" id="results-status">10 sermons · Page 2 of 2</span>');
@@ -270,8 +270,8 @@ describe("public sermon site routes", () => {
 
     expect(html).toContain('<h1 class="title-page__title">Sermons</h1>');
     expect(html).toContain('<ul class="stats" role="list"><li>4 sermons</li><li>1 of 66 books</li><li>1 speaker</li><li>1 series</li></ul>');
-    expect(html).toContain('<h2 id="shelf-heading" class="section__title">By Bible book</h2>');
-    expect(html).toContain('<nav class="shelf shelf--settle" aria-labelledby="shelf-heading" data-canon-grid data-escape-to="after-shelf">');
+    expect(html).toContain('<summary id="shelf-heading"><span>Browse by Bible book</span>');
+    expect(html).toContain('<nav class="shelf" aria-labelledby="shelf-heading" data-canon-grid data-escape-to="after-shelf">');
     expect(html).toContain('<a class="spine__link" href="/sermons/?sermon_book=romans#canon">');
     expect(html).toContain('<h2 id="latest-heading" class="section__title">Latest sermons</h2>');
     expect(html).toContain('href="/sermons/?view=recent#results">Browse all 4 sermons, newest first</a>');
@@ -314,7 +314,7 @@ describe("public sermon site routes", () => {
     const html = await response!.text();
 
     expect(repository.lastQuery).toMatchObject({ view: "recent", page: 1, pageSize: 9, order: "DESC" });
-    expect(html).toContain('<a class="results__fewer" href="/sermons/">Back to the shelf</a>');
+    expect(html).toContain('<a class="results__fewer" href="/sermons/">Back to sermon discovery</a>');
     expect(html).toContain('<h2 id="results-heading" class="section__title">All sermons, newest first</h2>');
     expect(html).toContain("19 sermons · Page 1 of 3");
     expect(html).toContain('href="/sermons/page/2/#results"');
@@ -331,7 +331,7 @@ describe("public sermon site routes", () => {
     expect(secondHtml).toContain('<ol class="catalogue results__list" role="list" start="10">');
     expect(secondHtml).toContain('rel="prev"');
     expect(secondHtml).toContain('href="/sermons/?view=recent#results"');
-    expect(secondHtml).toContain("Back to the shelf");
+    expect(secondHtml).toContain("Back to sermon discovery");
   });
 
   it("rejects contradictory broad-book and exact-passage filters", async () => {
@@ -447,15 +447,15 @@ describe("public sermon site routes", () => {
     const response = await route(new Request(`http://localhost/sermons/${summary.slug}/`));
     const html = await response!.text();
     expect(response?.status).toBe(200);
-    expect(html).toContain('<a class="tab hue--pauline" href="/sermons/?passageBook=romans&amp;passageScope=book#canon">');
-    expect(html).toContain('<span class="tab__count" aria-hidden="true">10</span>');
-    expect(html).toContain('<p class="strip__label">Romans on the shelf</p>');
+    expect(html).toContain('<dt>Bible book</dt><dd><a href="/sermons/?sermon_book=romans">Romans</a></dd>');
+    expect(html).toContain('<li><a href="/sermons/?sermon_book=romans">Romans</a></li>');
+    expect(html).not.toContain('<div class="sermon__tab">');
     expect(response?.headers.get("content-security-policy")).not.toContain("frame-src");
   });
 
   it("renders an honest static home without invented branding", () => {
     const html = renderFrontendHomePage({ sermons: [], options: emptyFilterOptions, totalItems: 0, today: "2026-09-24" });
-    expect(html).toContain('<h1 id="hero-heading" class="arrive__title"><span class="arrive__name">Saving Grace</span><span class="arrive__name">Bible Church</span></h1>');
+    expect(html).toContain('<h1 id="hero-heading" class="arrival__title"><span>Saving Grace</span><span>Bible Church</span></h1>');
     expect(html).toContain("No sermon is available yet. Please check back soon.");
     expect(html).toContain("No sermon is available yet. Please check back soon.");
     expect(html).toContain('<a class="brand" href="/">');

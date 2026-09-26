@@ -18,7 +18,7 @@ function setup() {
     hasAttribute: (name: string) => name === "data-sermon-menu",
     contains: (value: unknown) => value === toggle || links.includes(value as typeof links[number])
   };
-  const document = { ...target(), querySelector: () => menu, querySelectorAll: () => [menu] };
+  const document = { ...target(), querySelector: () => null, querySelectorAll: () => [menu] };
   const assign = vi.fn();
   runInNewContext(navigationScript, { document, window: { location: { assign } } });
   function fire(element: ReturnType<typeof target>, name: string, fields: Record<string, unknown> = {}) {

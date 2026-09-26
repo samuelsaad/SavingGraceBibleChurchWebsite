@@ -173,6 +173,106 @@ a.tile__more:hover { text-decoration: underline; }
 .sitemap .page__list { list-style: none; padding: 0; }
 .sitemap .page__list a { display: inline-flex; align-items: center; min-height: 2.25rem; }
 
+
+/* ---- Astra: church journal, reading pages and practical information ---- */
+.page__head { padding: 1rem 0 3.5rem; margin-bottom: 3.5rem; border-bottom: 1px solid var(--colour-rule); }
+.page__head--aside { grid-template-columns: 1.1fr 1fr; gap: 5rem; }
+.page__title { max-width: 20ch; letter-spacing: -.045em; font-size: clamp(2.6rem,5.5vw,5rem); line-height: 1.08; }
+.page__head .eyebrow { margin-bottom: 1.2rem; }
+.page__lede { margin-top: 1.75rem; line-height: 1.8; }
+.page__head-image { width: 100%; aspect-ratio: 5 / 4; height: auto; max-height: none; box-shadow: none; border-radius: 0; object-fit: cover; }
+.page__banner-image { max-height: 30rem; border-radius: 0; box-shadow: none; }
+.page__layout { min-width: 0; }
+.page__layout--reading { display: grid; grid-template-columns: 13rem minmax(0,1fr); gap: 5rem; align-items: start; }
+.page-contents { position: sticky; top: 2rem; padding: 1.25rem 0; border-top: 1px solid var(--colour-ink); }
+.page-contents > p { font-size: .75rem; text-transform: uppercase; letter-spacing: .1em; margin-bottom: .8rem; }
+.page-contents ol { list-style: none; padding: 0; margin: 0; }
+.page-contents a { display: flex; align-items: center; min-height: var(--target-size); font-size: .85rem; line-height: 1.5; padding: .5rem 0; text-decoration: none; color: var(--colour-ink-soft); }
+.page-contents a:hover { color: var(--colour-gilt); text-decoration: underline; }
+.page__body { min-width: 0; }
+.page__body > p, .page__body > .page__list { font-size: 1.1rem; line-height: 1.85; }
+.page__h2 { margin-top: 3.5rem; font-size: clamp(1.8rem,3vw,2.5rem); padding: 0; }
+.page__h2::after { display: none; }
+.page__h3 { font-size: 1.5rem; margin-top: 2.5rem; }
+.page__h4 { letter-spacing: .04em; text-transform: none; }
+.verse { background: transparent; border-left: 1px solid var(--colour-gilt); padding: .5rem 0 .5rem 2rem; margin-block: 2.5rem; }
+.verse p { font-size: 1.4rem; line-height: 1.65; }
+.verse__cite { font-family: var(--font-ui); letter-spacing: .02em; text-transform: none; font-weight: 400; }
+.figure__image { box-shadow: none; border-radius: 0; }
+.panel, .callout { border-radius: 0; box-shadow: none; padding: 2rem; border: 1px solid var(--colour-rule); border-top: 2px solid var(--colour-ink); }
+.panel { background: transparent; }
+.callout { margin-block: 3rem; }
+.callout__title { font-family: var(--font-display); font-size: 1.5rem; font-weight: 400; letter-spacing: -.02em; text-transform: none; }
+.tiles { gap: 3rem 2rem; margin-block: 2.5rem; }
+.tile { background: transparent; border: 0; border-radius: 0; box-shadow: none; overflow: visible; }
+.tile--linked:hover { transform: none; box-shadow: none; }
+.tile--linked:not(.tile--pictured) { border-top: 1px solid var(--colour-rule-strong); padding-top: 1rem; }
+.tile__picture { aspect-ratio: 4 / 3; overflow: hidden; }
+.tile__image { transition: transform var(--motion-settle) var(--motion-easing); }
+.tile--linked:hover .tile__image { transform: scale(1.035); }
+.tile__body { padding: 1.5rem 0 0; gap: .8rem; }
+.tile__title { font-size: 1.75rem; }
+.tile__text { font-family: var(--font-ui); font-size: .95rem; line-height: 1.8; }
+.tile__more { font-family: var(--font-ui); letter-spacing: 0; text-transform: none; font-weight: 400; }
+.people { gap: 4rem; }
+.person { grid-template-columns: minmax(10rem,17rem) minmax(0,1fr); gap: 4rem; padding: 2.5rem 0 0; border: 0; border-top: 1px solid var(--colour-rule); border-radius: 0; background: transparent; box-shadow: none; }
+.person__name { font-size: 2.5rem; margin-top: .5rem; }
+.person__role { margin: 1rem 0 1.5rem; }
+.person__image { border-radius: 50% 50% 0 0; }
+.person__text { font-size: 1.05rem; line-height: 1.85; }
+.timeline { max-width: 54rem; margin-block: 3rem; border: 0; padding: 0; }
+.timeline__item { grid-template-columns: 7rem 1fr; gap: .5rem 2rem; padding: 2rem 0; border-top: 1px solid var(--colour-rule); }
+.timeline__item::before { display: none; }
+.timeline__when { grid-row: 1 / 3; font-family: var(--font-display); font-size: 1.6rem; letter-spacing: -.02em; }
+.timeline__title { font-size: 1.6rem; }
+.timeline__text { grid-column: 2; line-height: 1.8; }
+.download, .hymn, .giving__method, .giving__bank, .giving__online, .contact-panel, .event-detail__dates, .event-detail__venue { box-shadow: none; border-radius: 0; border-color: var(--colour-rule); }
+.download, .hymn { background: transparent; border: 0; border-top: 1px solid var(--colour-rule-strong); padding: 1.5rem 0; }
+.index-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0 2rem; }
+.index-grid__link { padding: 1.25rem 0; border: 0; border-top: 1px solid var(--colour-rule); background: transparent; }
+.index-grid__link:hover { box-shadow: none; transform: none; }
+.index-grid__text { font-size: .9rem; }
+.contact-panel { background: var(--colour-recessed); max-width: 100%; padding: 2.5rem; }
+.contact-panel__name { font-size: 2rem; margin-bottom: 1rem; }
+.contact-panel__address { line-height: 1.8; }
+.giving__method { background: transparent; border-width: 1px 0 0; padding: 1.5rem 0; }
+.giving__method-title { text-transform: none; font-family: var(--font-display); letter-spacing: -.02em; font-weight: 400; font-size: 1.6rem; }
+.related-list { gap: 0 2rem; }
+.related-list a { padding: .75rem 0; border: 0; border-radius: 0; border-bottom: 1px solid var(--colour-rule-strong); background: transparent; }
+.related-list a::after { content: "↗"; margin-left: 1.5rem; }
+.events { list-style: none; padding: 0; margin: 0; }
+.event { display: grid; grid-template-columns: 4.5rem minmax(0,1fr); gap: 1.5rem; padding: 1.5rem 0; border-top: 1px solid var(--colour-rule); }
+.event__date { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; color: var(--colour-gilt); }
+.event__month { font-size: .7rem; letter-spacing: .12em; }
+.event__day { font-family: var(--font-display); font-size: 2.75rem; line-height: 1.2; }
+.event__body { display: flex; flex-direction: column; gap: .5rem; }
+.event__time { display: flex; gap: .5rem; align-items: center; font-size: .8rem; color: var(--colour-ink-soft); }
+.event__title { font-family: var(--font-display); font-size: 1.5rem; line-height: 1.25; }
+.event__venue { font-size: .8rem; line-height: 1.6; }
+@media (max-width: 60rem) {
+ .page__head--aside { grid-template-columns: 1fr 1fr; gap: 2rem; }
+ .page__layout--reading { grid-template-columns: 10rem minmax(0,1fr); gap: 2rem; }
+ .person { gap: 2rem; grid-template-columns: 12rem minmax(0,1fr); }
+ .page__title { font-size: clamp(2.5rem,5.5vw,4rem); }
+}
+@media (max-width: 44rem) {
+ .page__head { padding-top: 0; margin-bottom: 2.5rem; padding-bottom: 2.5rem; }
+ .page__head--aside, .page__layout--reading, .person { grid-template-columns: 1fr; }
+ .page__head-image { max-height: none; aspect-ratio: 4 / 3; }
+ .page-contents { position: static; margin-bottom: 1rem; }
+ .page-contents ol { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0 1rem; }
+ .page__body > p, .page__body > .page__list { font-size: 1rem; line-height: 1.8; }
+ .person { gap: 1.5rem; } .person__picture { max-width: 15rem; }
+ .timeline__item { grid-template-columns: 4rem minmax(0,1fr); gap: .75rem 1rem; }
+ .timeline__when { font-size: 1.2rem; }
+ .index-grid { grid-template-columns: 1fr; }
+ .event { grid-template-columns: 3rem minmax(0,1fr); gap: 1rem; }
+ .event__title { font-size: 1.3rem; }
+ .event__time { flex-wrap: wrap; }
+ .contact-panel { padding: 1.5rem; }
+}
+@media print { .page-contents { display: none; } .page__layout--reading { display: block; } }
+
 /* ---- responsive ---- */
 @media (max-width: 76rem) {
   .index-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }

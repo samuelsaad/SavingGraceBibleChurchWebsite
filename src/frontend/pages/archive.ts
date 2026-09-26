@@ -73,16 +73,19 @@ function resultsEyebrow(query: PublicSermonListQuery): string {
 function discoveryView(input: SermonArchivePageInput, context: FrontendRenderContext): Html {
   const links = siteLinks(context);
   const latest = input.sermons.slice(0, 3);
-  return html`<section class="section" aria-labelledby="shelf-heading">
-    ${sectionHead("shelf-heading", "By Bible book", html`<span>Take a book off the shelf to see its sermons.</span>`)}
-    ${shelf(input.options, { href: (book) => withFilter(input.query, { sermon_book: book.slug }, context, "canon"), settle: true, skipTo: "after-shelf", headingId: "shelf-heading" })}
-    <span id="after-shelf" tabindex="-1"></span>
-  </section>
-  <section class="section" aria-labelledby="latest-heading">
+  return html`<section class="section" aria-labelledby="latest-heading">
     ${sectionHead("latest-heading", "Latest sermons", when(input.totalItems > 0, () => html`<a href="${contextualPath(context, archivePath)}?view=recent#results">Browse all ${formatCount(input.totalItems, "sermon")}, newest first</a>`))}
     ${latest.length
       ? catalogue(latest, { variant: "card", headingLevel: 3, links, className: "catalogue catalogue--cards" })
       : sectionNote("No sermons are available yet.")}
+  </section>
+  <section class="section" aria-labelledby="shelf-heading">
+    <details class="library-books">
+      <summary id="shelf-heading"><span>Browse by Bible book</span><span class="library-books__hint">Old &amp; New Testament <span aria-hidden="true">＋</span></span></summary>
+      <p class="library-books__note">Choose a Bible book to explore its sermons.</p>
+      ${shelf(input.options, { href: (book) => withFilter(input.query, { sermon_book: book.slug }, context, "canon"), skipTo: "after-shelf", headingId: "shelf-heading" })}
+    </details>
+    <span id="after-shelf" tabindex="-1"></span>
   </section>
   ${when(input.options.speakers.length, () => html`<section class="section" aria-labelledby="speakers-heading">
     ${sectionHead("speakers-heading", "By speaker")}
@@ -125,8 +128,8 @@ function resultsView(input: SermonArchivePageInput, context: FrontendRenderConte
   const list = input.sermons.length
     ? catalogue(input.sermons, { variant: "row", headingLevel: 3, links, className: "catalogue results__list", ordinalStart: (input.query.page - 1) * input.query.pageSize + 1 })
     : html`<div class="empty">
-        <p class="empty__title">${context.mode === "public" ? "No published sermons matched" : "No sermons on this shelf yet"}</p>
-        <p>Try removing a filter, or take a different book off the shelf.</p>
+        <p class="empty__title">${context.mode === "public" ? "No published sermons matched" : "No sermons matched"}</p>
+        <p>Try removing a filter, or choose a different Bible book.</p>
         <p><a class="button button--outline" href="${contextualPath(context, archivePath)}">Show all sermons</a></p>
         ${canonStrip(input.options, { label: "Where sermons have been preached from" })}
       </div>`;
@@ -139,7 +142,7 @@ function resultsView(input: SermonArchivePageInput, context: FrontendRenderConte
   <section class="results" id="results" tabindex="-1" aria-labelledby="results-heading results-status">
     <div class="section__head">
       <h2 id="results-heading" class="section__title">${filtered ? "Sermons" : "All sermons, newest first"}</h2>
-      <div class="section__aside"><span class="results__status" id="results-status">${status}</span>${when(expandedRecent && !filtered, () => html` <a class="results__fewer" href="${contextualPath(context, archivePath)}">Back to the shelf</a>`)}</div>
+      <div class="section__aside"><span class="results__status" id="results-status">${status}</span>${when(expandedRecent && !filtered, () => html` <a class="results__fewer" href="${contextualPath(context, archivePath)}">Back to sermon discovery</a>`)}</div>
     </div>
     ${list}
     ${pagination(input.query, totalPages, context, expandedRecent)}

@@ -36,13 +36,13 @@ describe("church homepage", () => {
     const html = decode(renderFrontendHomePage({ sermons, options, totalItems: 4, today }, publicRenderContext));
     for (const item of homepageInventory) expect(html, item).toContain(item);
     expect(html.match(/<h1[\s>]/gu)).toHaveLength(1);
-    expect(html).toContain('<h1 id="hero-heading" class="arrive__title"><span class="arrive__name">Saving Grace</span><span class="arrive__name">Bible Church</span></h1>');
-    expect(html).toContain('<p class="eyebrow arrive__eyebrow">Welcome to</p>');
+    expect(html).toContain('<h1 id="hero-heading" class="arrival__title"><span>Saving Grace</span><span>Bible Church</span></h1>');
+    expect(html).toContain('<p class="eyebrow">Welcome to</p>');
     expect(html).toContain('<h2 id="welcome-heading" class="welcome__title">Welcome to Saving Grace Bible Church</h2>');
     expect(html).toContain('<aside class="notice" aria-label="Church notice">');
     expect(html).toContain("© 2023 Saving Grace Bible Church");
-    expect(html).toContain('<img class="welcome-card__image" src="/media/entrance.jpg" width="289" height="510" alt="The entrance to Saving Grace Bible Church');
-    expect(html).toContain('<img class="home__photo-image" src="/media/congregation.jpg"');
+    expect(html).toContain('<img class="visit__image" src="/media/entrance.jpg" width="289" height="510" alt="The entrance to Saving Grace Bible Church');
+    expect(html).toContain('<img class="arrival__image" src="/media/congregation.jpg"');
   });
 
   it("links every label to a real page of this site or a destination the church published, and keeps only the social marks pending", () => {
@@ -57,14 +57,14 @@ describe("church homepage", () => {
     for (const id of ["top", "about", "services", "sermons", "events", "give", "contact", "welcome", "visit", "pillar-our-faith"]) {
       expect(html, id).toContain(`id="${id}"`);
     }
-    expect(html).toContain('<a class="button welcome-card__cta" href="/lords-day-service/">Join Us This Weekend</a>');
-    expect(html).toContain('<a class="pillar__more" href="/our-history/">Read more<span class="sr-only"> about History</span></a>');
-    expect(html).toContain('<a class="pillar__more" href="/what-we-teach/the-gospel/">Read more<span class="sr-only"> about The Gospel</span></a>');
-    expect(html).toContain('<h3 class="service__title"><a href="/lords-day-service/">Sunday Morning 10:30am (Formal)</a></h3>');
-    expect(html).toContain('<a class="pillar__more" href="/about/">Learn more about our church &gt;</a>');
-    expect(html).toContain('<a class="button button--onink" href="/support-saving-grace-church-offering/">Ways to make an offering</a>');
+    expect(html).toContain('<a class="button arrival__cta" href="/lords-day-service/">Join Us This Weekend<span aria-hidden="true">↗</span></a>');
+    expect(html).toContain('<a class="pillar__more" href="/our-history/">Read more<span class="sr-only"> about History</span><span aria-hidden="true"> ↗</span></a>');
+    expect(html).toContain('<a class="pillar__more" href="/what-we-teach/the-gospel/">Read more<span class="sr-only"> about The Gospel</span><span aria-hidden="true"> ↗</span></a>');
+    expect(html).toContain('<h3 class="service__title"><a href="/lords-day-service/">Sunday Morning 10:30am (Formal)<span aria-hidden="true"> ↗</span></a></h3>');
+    expect(html).toContain('<a class="text-link" href="/about/">Learn more about our church &gt;</a>');
+    expect(html).toContain('<a class="button button--onink" href="/support-saving-grace-church-offering/">Ways to make an offering<span aria-hidden="true"> ↗</span></a>');
     expect(html).toContain('<a class="button masthead__give" href="/support-saving-grace-church-offering/">Give</a>');
-    expect(html).toContain('<a class="button button--outline events__calendar" href="/events/">View Calendar</a>');
+    expect(html).toContain('<a class="text-link" href="/events/">View Calendar<span aria-hidden="true"> ↗</span></a>');
     expect(html).toContain('<li><a href="/about/">About Us</a></li>');
     expect(html).toContain('<li><a href="/ministries/">Ministries</a></li>');
     expect(html).toContain('<li><a href="/blogs/">Blogs</a></li>');
@@ -72,7 +72,7 @@ describe("church homepage", () => {
     expect(html).toContain('<a href="tel:+61450545589">Tel: 0450545589</a>');
     expect(html).toContain('<a href="mailto:info@savinggrace.org.au">E-mail: info@savinggrace.org.au</a>');
     expect(html).toContain('<a class="footer-bar__top" href="#top">');
-    expect(html).toContain('<a class="button button--outline" href="/sermons/">View All</a>');
+    expect(html).toContain('<a class="text-link" href="/sermons/">View All<span aria-hidden="true"> ↗</span></a>');
     expect(html.match(/class="(?:[^"]* )?pending(?: [^"]*)?"/gu)).toHaveLength(pendingLabels.length);
     expect(html.match(/ \(link not yet available\)<\/span>/gu)).toHaveLength(pendingLabels.length);
     expect(html).not.toContain("<button disabled");
@@ -144,7 +144,8 @@ describe("church homepage", () => {
       expect(html).toContain('<meta name="robots" content="noindex, nofollow, noarchive"');
       expect(html).toContain('<script data-enhancement="navigation">');
       expect(html).toContain('<details class="masthead__menu" data-menu data-sermon-menu>');
-      expect(html).toContain(">SermonsV4</a>");
+      expect(html).toContain(">All sermons</a>");
+      expect(html).not.toContain(">SermonsV4</a>");
       expect(html).toContain('<details class="masthead__menu" data-menu>');
     }
     const preview = renderFrontendHomePage({ sermons, options, totalItems: 4, today }, previewRenderContext);

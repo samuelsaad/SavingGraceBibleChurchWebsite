@@ -20,10 +20,10 @@ describe("reviewed discovery presentation",()=>{
      expect(render(value)).not.toContain('hue--topical');expect(render(value)).toContain('tab--ghost');
    }
  });
- it("delivers the original menu and hashed enhancement only to restricted or authenticated preview contexts",()=>{
+ it("delivers the Astra menu and hashed enhancement only to restricted or authenticated preview contexts",()=>{
    const input={sermons:[sermon],totalItems:1,options:emptyFilterOptions,today:"2026-09-24"};
    const html=renderFrontendHomePage(input,restrictedRenderContext),response=frontendResponse(html);
-   for(const label of ["SermonsV1","SermonsV2","Speakers","Series","Books"])expect(html).toContain(`>${label}</a>`);
+   for(const label of ["All sermons","Speakers","Series","Books"])expect(html).toContain(`>${label}</a>`);
    expect(html).toContain('data-enhancement="navigation"');expect(html).toContain('data-sermon-menu');
    expect(response.headers.get('Content-Security-Policy')).toContain("'sha256-");
    expect(response.headers.get('Content-Security-Policy')).not.toContain("'unsafe-inline'");

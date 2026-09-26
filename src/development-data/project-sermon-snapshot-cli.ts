@@ -37,8 +37,8 @@ async function main(): Promise<void> {
   try {
     const result = await importTrackedProjectSermonSnapshot(pool, {
       connectionString,
-      writeOptIn: process.env.ALLOW_LOCAL_DB_WRITE,
-      testRunToken: process.env.DISPOSABLE_TEST_DATABASE_TOKEN
+      ...(process.env.ALLOW_LOCAL_DB_WRITE !== undefined ? { writeOptIn: process.env.ALLOW_LOCAL_DB_WRITE } : {}),
+      ...(process.env.DISPOSABLE_TEST_DATABASE_TOKEN !== undefined ? { testRunToken: process.env.DISPOSABLE_TEST_DATABASE_TOKEN } : {})
     });
     process.stdout.write(`${JSON.stringify(result)}\n`);
   } finally { await pool.end(); }

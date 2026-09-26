@@ -102,7 +102,7 @@ describe("SermonsV4 page", () => {
     expect(html.match(/<li class="spine /gu)).toHaveLength(66);
     expect(html).toContain('<a class="spine__link" href="/sermons-v4/?sermon_book=romans#canon">');
     const markup = html.replace(/<script[\s\S]*?<\/script>/gu, "");
-    expect(markup).not.toContain("aria-expanded");
+    expect(markup.replace(/<button[^>]*data-mobile-toggle[^>]*>[\s\S]*?<\/button>/gu, "")).not.toContain("aria-expanded");
     expect(markup).not.toContain("tabindex=\"0\"");
     expect(html).toContain("details[data-fold]");
   });
@@ -155,14 +155,12 @@ describe("SermonsV4 page", () => {
     expect(recent).toContain('<details class="fold" id="v4-shelf" data-fold>');
   });
 
-  it("marks V4 in the Sermons menu while keeping the archive canonical and staying non-indexable", () => {
+  it("marks the Sermons section while preserving alternate-route canonical and noindex rules", () => {
     const html = renderSermonsV4Page(input(), previewRenderContext);
     const menu = section(html, '<ul class="masthead__dropdown"', "</ul>");
-    expect(menu).toContain('<li><a href="/frontend-preview/sermons-v1/">SermonsV1</a></li>');
-    expect(menu).toContain('<li><a href="/frontend-preview/sermons/" data-sermon-archive>SermonsV2</a></li>');
-    expect(menu).toContain('<li><a href="/frontend-preview/sermons-v4/" aria-current="page">SermonsV4</a></li>');
-    expect(menu).not.toContain("V3");
-    expect(menu.match(/aria-current="page"/gu)).toHaveLength(1);
+    expect(menu).toContain('<li><a href="/frontend-preview/sermons/" data-sermon-archive>All sermons</a></li>');
+    expect(menu).not.toContain("SermonsV");
+    expect(menu.match(/aria-current="page"/gu) ?? []).toHaveLength(0);
     expect(html).toContain('class="masthead__menu-toggle is-active"');
     const publicHtml = renderSermonsV4Page(input(), publicRenderContext);
     expect(publicHtml).toContain('<meta name="robots" content="noindex, follow" />');
@@ -212,7 +210,7 @@ describe("alternate archive routes", () => {
     expect(v4?.status).toBe(200);
     expect(v4?.headers.get("x-robots-tag")).toContain("noindex");
     const v4Html = await v4!.text();
-    expect(v4Html).toContain('<a href="/sermons-v4/" aria-current="page">SermonsV4</a>');
+    expect(v4Html).toContain('class="masthead__menu-toggle is-active"');
     expect(v4Html).toContain('<p class="eyebrow">Sermons by</p>');
     expect(repository.lastQuery).toMatchObject({ speaker: "example-speaker", page: 1, pageSize: 9 });
 
@@ -220,7 +218,7 @@ describe("alternate archive routes", () => {
     expect(v1?.status).toBe(200);
     const v1Html = await v1!.text();
     expect(v1Html).toContain('<h1 id="hero-heading" class="hero__title">Sermons, shelved by Scripture.</h1>');
-    expect(v1Html).toContain('<a href="/sermons-v1/" aria-current="page">SermonsV1</a>');
+    expect(v1Html).toContain('class="masthead__menu-toggle is-active"');
     expect(repository.lastQuery).toMatchObject({ page: 1, pageSize: 50 });
     expect(v1Html).toBe(renderSermonsV1Page({ sermons: repository.all, options, totalItems: 12 }, restrictedRenderContext));
 

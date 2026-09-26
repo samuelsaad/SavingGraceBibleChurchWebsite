@@ -84,4 +84,35 @@ export const sermonStyles = `
   .question { grid-template-columns: 2rem minmax(0, 1fr); }
   .question__number { font-size: 1.375rem; }
 }
+/* Astra reading edition. Description, media, transcript and ordered answers stay in source order. */
+.sermon{grid-template-columns:minmax(0,48rem) minmax(12rem,16rem);gap:5rem;justify-content:space-between}
+.sermon__head{padding:1rem 0 2rem;border-bottom:1px solid var(--colour-rule);margin-bottom:2rem}
+.sermon__title,.sermon__title.is-long{max-width:23ch;font:clamp(2.5rem,4.2vw,4.5rem)/1.08 var(--font-display);letter-spacing:-.035em;text-wrap:pretty}
+.sermon__stamp{color:var(--colour-gilt);font-size:.8rem}
+.sermon__meta{border:0;margin-top:1.5rem;padding:0;font:.85rem/1.6 var(--font-signage)}
+.sermon__rail{grid-column:2;grid-row:1;position:sticky;top:2rem;padding-top:2rem;order:initial}
+.sermon__body{grid-column:1;grid-row:1;order:initial}
+.rail__contents{display:block}.rail__list{display:grid;gap:.35rem;margin-top:.8rem}
+.rail__list a{min-height:2.75rem;border:0;border-bottom:1px solid var(--colour-rule);padding:.5rem 0}
+.rail__list a[aria-current="location"]{border-bottom-color:var(--colour-gilt)}
+.rail__meta{display:grid;margin-top:1rem}
+.sermon-section{margin-top:4rem;padding-top:2rem}
+.sermon-section--description{margin-top:0;padding-top:0}
+.sermon-section--description .prose{font-size:1.2rem;line-height:1.75}
+.sermon-section .section__title{font-size:2rem;letter-spacing:-.02em}
+.transcript__summary{display:flex;flex-wrap:wrap;gap:.5rem 1rem;border:1px solid var(--colour-rule-strong);padding:.8rem 1rem;font-size:.8rem;text-transform:none;letter-spacing:0;background:var(--colour-recessed)}
+.transcript__stats{margin-left:auto;letter-spacing:0;font-size:.75rem}
+.transcript__body{font-size:1.1rem;line-height:1.85}
+.transcript__body p::before{display:none}
+.question{padding:2rem 0;grid-template-columns:2rem minmax(0,1fr)}
+.question__number{font:1.5rem var(--font-display);color:var(--colour-gilt)}
+.question__title{font-size:1.45rem}
+.plate{width:100%}
+.plate:not([data-video-loaded="true"]){min-height:20rem;aspect-ratio:auto}
+.plate__consent{padding:1.5rem;grid-template-columns:minmax(0,1fr)}
+.plate .button{border-color:var(--colour-on-ink);background:var(--colour-on-ink);color:var(--colour-ink)}
+@media(max-width:64rem){.sermon{grid-template-columns:minmax(0,1fr);gap:1rem}.sermon__rail{position:static;grid-column:1;grid-row:1;padding:0}.sermon__body{grid-column:1;grid-row:2}.rail__list{display:flex;flex-wrap:wrap;gap:.5rem 1rem}.rail__title,.rail__meta{display:none}.rail__contents{border-bottom:1px solid var(--colour-rule)}}
+@media(max-width:44rem){.sermon__title,.sermon__title.is-long{font-size:2.65rem}.sermon-section{margin-top:3rem}.sermon-section--description{margin-top:0}.sermon-section--description .prose{font-size:1.1rem}.sermon__head{padding-top:.5rem}.transcript__stats{width:100%;margin-left:1.4rem}.plate:not([data-video-loaded="true"]){min-height:22rem}.sermon-section .section__title{font-size:1.75rem}}
+@media print{.sermon{display:block}.sermon__rail{display:none}.sermon__title,.sermon__title.is-long{font-size:2rem}}
+
 `;

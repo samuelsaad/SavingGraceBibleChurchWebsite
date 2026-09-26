@@ -15,8 +15,8 @@ import { logoAlt, logoHeight, logoPath, logoWidth } from "./assets/logo";
 import { faviconPath, siteImage, touchIconPath } from "./assets/media";
 import { searchGlyph, socialGlyph, upGlyph } from "./components/glyphs";
 import { shelfMark } from "./components/marks";
-import { mastheadSearch } from "./components/search";
-import { canonStrip } from "./components/shelf";
+
+
 import {
   bottomBarCopy,
   contactCopy,
@@ -96,8 +96,8 @@ function sermonsMenu(context: FrontendRenderContext, navigationPath: string, act
   const v1Active = sitePath(navigationPath) === sermonsV1Path;
   const v4Active = sitePath(navigationPath) === sermonsV4Path;
   return html`<details class="masthead__menu" data-menu data-sermon-menu>
-      <summary class="masthead__menu-toggle${active || v1Active || v4Active ? " is-active" : ""}" aria-controls="sermon-navigation" title="Open menu; double-click to browse SermonsV2">${navigationCopy.sermons}${chevron}</summary>
-      <ul class="masthead__dropdown" id="sermon-navigation"><li><a href="${links.sermonsV1}"${attribute("aria-current", v1Active ? "page" : null)}>SermonsV1</a></li>${items.map(([section, label]) => html`<li><a href="${section === "sermons" ? links.archive : links.taxonomyIndex(section)}"${when(section === "sermons", () => html` data-sermon-archive`)}${attribute("aria-current", active === section ? "page" : null)}>${section === "sermons" ? "SermonsV2" : label}</a></li>${when(section === "sermons", () => html`<li><a href="${links.sermonsV4}"${attribute("aria-current", v4Active ? "page" : null)}>SermonsV4</a></li>`)}`)}</ul>
+      <summary class="masthead__menu-toggle${active || v1Active || v4Active ? " is-active" : ""}" aria-controls="sermon-navigation" title="Open menu; double-click to browse sermons">${navigationCopy.sermons}${chevron}</summary>
+      <ul class="masthead__dropdown" id="sermon-navigation">${items.map(([section, label]) => html`<li><a href="${section === "sermons" ? links.archive : links.taxonomyIndex(section)}"${when(section === "sermons", () => html` data-sermon-archive`)}${attribute("aria-current", active === section ? "page" : null)}>${section === "sermons" ? "All sermons" : label}</a></li>`)}</ul>
     </details>`;
 }
 
@@ -212,20 +212,19 @@ export function pageShell(input: PageShellInput, context: FrontendRenderContext 
     <header class="masthead" id="${homeSections.top}">
       <div class="masthead__inner">
         ${brand(context)}
-        <nav class="masthead__nav" aria-label="Primary">${navigationLinks(context, input.navigationPath ?? input.canonicalPath)}</nav>
-        <div class="masthead__actions">${when(input.mastheadSearch !== false, () => mastheadSearch(context))}<a class="button masthead__give" href="${links.path("/support-saving-grace-church-offering/")}">${navigationCopy.give}</a></div>
+        <button class="masthead__mobile-toggle" type="button" aria-controls="primary-navigation" aria-expanded="false" data-mobile-toggle hidden>Menu <span aria-hidden="true">☰</span></button>
+        <nav class="masthead__nav" id="primary-navigation" aria-label="Primary">${navigationLinks(context, input.navigationPath ?? input.canonicalPath)}</nav>
+        <div class="masthead__actions">${when(input.mastheadSearch !== false, () => html`<a class="masthead__search-shortcut" href="${links.archive}#sermon-search">${searchGlyph()}<span class="sr-only">Search sermons</span></a>`)}<a class="button masthead__give" href="${links.path("/support-saving-grace-church-offering/")}">${navigationCopy.give}</a></div>
       </div>
     </header>
     <main id="main-content" class="site-main">${input.body}</main>
     <footer class="site-footer">
-      ${canonStrip({ books: input.books ?? [] })}
       <div class="site-footer__band">
         <div class="site-footer__inner">
           ${footerColumns(input, context)}
           <div class="site-footer__imprint">
             ${brand(context, true)}
             <nav aria-label="Footer"><ul class="site-footer__links">${(links.hasTaxonomyRoutes ? sections : sections.slice(0, 1)).map(([section, label]) => html`<li><a href="${section === "sermons" ? links.archive : links.taxonomyIndex(section)}">${label}</a></li>`)}<li><a href="${links.path("/events/")}">${navigationCopy.newsEvents}</a></li><li><a href="${links.path("/contact/")}">${navigationCopy.contactUs}</a></li><li><a href="${links.path("/sitemap/")}">${navigationCopy.sitemap}</a></li></ul></nav>
-            <p class="site-footer__note">Every sermon is shelved under the Bible book it was preached from. The bookshelf mark used in the archive is this website's own device; the Saving Grace Bible Church logo is the church's own.</p>
           </div>
         </div>
       </div>

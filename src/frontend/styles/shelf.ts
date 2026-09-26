@@ -147,4 +147,35 @@ ${perBook}
   .ruler__cell[aria-current="true"] { outline: 3px double Highlight; }
   .tab { outline: 2px solid CanvasText; outline-offset: -2px; }
 }
+/* Astra: a readable Bible index and a compact search desk. */
+.library-books{border-block:1px solid var(--colour-rule-strong)}
+.library-books>summary{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1.5rem 0;cursor:pointer;list-style:none;font:clamp(1.6rem,3vw,2.5rem)/1.15 var(--font-display)}
+.library-books>summary::-webkit-details-marker{display:none}
+.library-books__hint{display:flex;align-items:center;gap:1.5rem;font:.8rem var(--font-signage);color:var(--colour-ink-soft)}
+.library-books__hint span{font-size:1.4rem;transition:transform .18s ease}
+.library-books[open] .library-books__hint span{transform:rotate(45deg)}
+.library-books__note{color:var(--colour-ink-soft);font:.9rem var(--font-signage)}
+.shelf{margin:1rem 0 1.5rem}
+.shelf__row{display:grid;grid-template-columns:repeat(auto-fit,minmax(8.25rem,1fr));gap:.5rem;background:none;padding:0}
+.spine{width:100%;height:auto;min-height:3.5rem;animation:none!important}
+.spine__link,.spine__ghost{flex-direction:row;align-items:center;gap:.6rem;padding:.8rem;border:1px solid var(--colour-rule);border-radius:0;transform:none;box-shadow:none}
+.spine__link{color:var(--colour-ink);background:var(--colour-raised);border-bottom:3px solid var(--colour-ink)}
+.spine__link:hover{transform:none;box-shadow:none;background:var(--colour-ink);color:var(--colour-on-ink)}
+.spine__ghost{background:transparent;color:var(--colour-ink-muted)}
+.spine__name,.spine[data-len="long"] .spine__name{display:block;writing-mode:horizontal-tb;transform:none;white-space:normal;font:.85rem/1.2 var(--font-signage);text-transform:none;letter-spacing:0}
+.spine__abbr,.spine[data-len="long"] .spine__abbr{display:none}
+.spine--revelation .spine__link{color:var(--colour-ink)}
+.spine--revelation .spine__link:hover{color:var(--colour-on-ink)}
+.spine.is-current .spine__link,.spine[aria-current="true"] .spine__link{box-shadow:inset 0 0 0 2px var(--colour-ink)}
+.bookend{grid-column:1/-1;width:auto;height:auto;justify-content:flex-start;margin-top:1.2rem;padding:.7rem 0;background:none;color:var(--colour-ink)}
+.bookend span{writing-mode:horizontal-tb;transform:none;font-size:.8rem;letter-spacing:.1em}
+.bookend__long{display:block}.bookend__short{display:none}
+.finder{padding:1.5rem;background:var(--colour-recessed);border-top:2px solid var(--colour-ink)}
+.open-book{background:var(--colour-recessed);box-shadow:none;border-top:2px solid var(--colour-ink);grid-template-columns:1fr}
+.open-book>.tab{display:none}
+.open-book__title{font-size:2.75rem}
+.ruler__cell{min-width:2.75rem;min-height:2.75rem}
+@media(max-width:44rem){.library-books__hint{font-size:.65rem;gap:.6rem}.library-books__hint span{font-size:1.1rem}.library-books>summary{font-size:1.6rem}.finder{padding:1rem}}
+@media(prefers-reduced-motion:reduce){.library-books__hint span{transition:none}}
+
 `;
