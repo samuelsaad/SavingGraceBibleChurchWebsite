@@ -75,6 +75,12 @@
   external requests or screenshots occurred. Anonymous local access returned 401;
   remote administrator and private-preview routes returned 401/404. The temporary
   headless browser closed. Requested local preview and SSH tunnel remain running.
+- A final direct-route exclusion check returned 404/no-store for every one of the
+  35 held records in both authenticated local and SSH-protected staging contexts.
+  An earlier five-request parallel probe returned safe 500 responses locally;
+  sequential verification passed all records without any selector or content
+  change. This does not certify concurrent-load performance of the bounded
+  two-connection development preview. No private content was exposed by the errors.
 - Credential/key/cloud/prohibited-path, protected-identity, symlink, tracked/staged
   and output scans found no introduced exposure. A private 296-sermon shingle scan
   covered 108 output files: 650 common matches were proved to originate in the
