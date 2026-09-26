@@ -5,6 +5,9 @@
 !package-lock.json
 !deployment/
 !deployment/build.mjs
+!deployment/d160-sync.ts
+!deployment/d161-sync.ts
+!deployment/d167-protected-sync.ts
 !src/
 !src/**/
 !src/**/*.ts
