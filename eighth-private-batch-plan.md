@@ -1,5 +1,54 @@
 # D-167 eighth fixed private enrichment and protected reconciliation
 
+## Executed outcome — 26 September 2026
+
+All 36 positions are terminal; this exception is consumed. The manifest hash
+below and every historical source/candidate/checkpoint remain unchanged.
+Selection excluded 267 prior attempts; 51 clean candidates became 36 fixed
+positions, leaving 15. Selected service dates span 25 May 2025–12 April 2026.
+No later batch or substitution was processed.
+
+All 36 exact English ASR captions used the truthful unknown-audio exception:
+12,209,568 bytes and 77,200 cues were hash-verified. The 35 preserved transcripts
+contain 232,755 words and 1,221,605 characters. Four provider-redacted markers
+remain; no explicit uncertainty marker was removed or replaced. Sequence 24
+retains its word-preservation failure and has no import. The 35 descriptions
+meet 180–220 words and each Q&A set has seven ordered pairs (245 total).
+Nine original candidates required one permitted pre-import correction, at
+sequences 4, 9, 15, 16, 19, 22, 23, 30 and 34; every original remains preserved.
+No imported prose was changed during substantive review.
+
+Each description and Q&A was substantively reviewed against its complete
+transcript. The 280 content decisions passed; source-component review recorded
+162 accepted and 48 held decisions across 210 checks. Explicit speaker evidence
+supported assignments only at sequences 15 and 26. There are no fabricated human
+approvals, audio-verification claims, private completions or new restricted
+acceptances. Selected Sol provenance remains separate from unavailable runtime
+metadata and the limited-reproducibility warning.
+
+| Manifest positions | Actual terminal outcome / remaining evidence |
+| --- | --- |
+| 1–3, 5–10, 12–14, 16–22, 25, 27–30, 33–35 | Imported and content-reviewed; held for canonical speaker evidence |
+| 4 | Imported and content-reviewed; speaker evidence and uncertain closing-prayer wording |
+| 11 | Imported and content-reviewed; speaker and primary-passage evidence |
+| 15 | Imported and content-reviewed; primary-passage evidence |
+| 23 | Imported and content-reviewed; speaker evidence and provider-redacted wording |
+| 24 | Transcript word-preservation failure; not imported |
+| 26 | Imported and content-reviewed; primary-passage evidence and provider-redacted wording |
+| 31 | Imported and content-reviewed; speaker evidence and uncertain instruction wording |
+| 32, 36 | Imported and content-reviewed; speaker evidence and provider-redacted wording |
+
+All 35 atomic imports succeeded; 35 identical imports and both supported speaker
+assignment reruns were unchanged, including versions, timestamps, audit and review
+progress. The local database contains 296 sermons, 282 pending Stage-1 reviews
+and 148 restricted-eligible sermons. All 12,357 previously snapshotted baseline
+rows remain unchanged. The new protected staging database contains the same 148
+eligible sermons, with 8,076 scoped rows and an unchanged idempotency/restart
+fingerprint. All held sermons remain excluded. The original public staging
+database remains at 191 stored sermons with its same 148 accepted identities and
+original application image. See `migration-validation-plan.md` for verification
+and existing unrelated failures; see `deployment/README.md` for rollback.
+
 This is a public-safe execution contract, not a manifest. The private manifest
 SHA-256 is `0218989d1c09224ed301caecb915cefc787a5017f28f6253aee3020a7c3b3ae5`.
 The manifest and checkpoint remain ignored, with opaque names and no identities

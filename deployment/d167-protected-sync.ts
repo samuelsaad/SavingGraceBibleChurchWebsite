@@ -117,4 +117,3 @@ export async function runProtectedSync(operation:string,path:string){
 if(process.argv[1]?.replaceAll("\\","/").endsWith("/d167-protected-sync.ts")||process.argv[1]?.endsWith("d167-protected-sync.cjs")){
  runProtectedSync(process.argv[2]??"",process.env.D167_SYNC_PACKAGE??"").catch(e=>{console.error(JSON.stringify({outcome:"stopped_safely",code:e instanceof Error&&/^d167_protected_[a-z_]+$/.test(e.message)?e.message:"d167_protected_unrecognized_or_unavailable",sqlState:/^[A-Z0-9]{5}$/.test(e?.code??"")?e.code:null,detailsSuppressed:true}));process.exitCode=1;});
 }
-

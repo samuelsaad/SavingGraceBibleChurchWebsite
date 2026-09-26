@@ -773,6 +773,20 @@ Necessary private prose may enter the primary Codex task history and ignored
 storage only, never ordinary messages, logs, tracked files, screenshots, tests
 or another agent/provider. See `eighth-private-batch-plan.md`.
 
+### D-167 execution closure — 26 September 2026
+
+All 36 fixed positions are terminal: 35 private draft imports substantively
+content-reviewed but held for independently unresolved source/metadata evidence,
+and sequence 24 failed transcript word preservation without import. The bounded
+processing/review exception is consumed. Existing historical policy and audit
+evidence above remain unchanged. No new acceptance or publication was fabricated.
+The separate protected runtime contains the existing 148 qualifying sermons;
+its isolated atomic synchronization and identical restart replay passed. The
+original public 148-sermon runtime/database remain unchanged. See
+`eighth-private-batch-plan.md` and `migration-validation-plan.md` for actual
+outcomes, remaining evidence requirements and known unrelated verification failures.
+This closure grants no retry, substitution, next batch, public update or Git push.
+
 ## Decisions still required
 
 - Final AWS runtime/adapter and production networking.

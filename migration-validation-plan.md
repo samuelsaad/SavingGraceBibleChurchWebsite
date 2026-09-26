@@ -1,5 +1,90 @@
 # Migration Validation Plan
 
+## D-167 terminal execution and isolated protected staging — 26 September 2026
+
+- Exact fixed manifest:
+  `0218989d1c09224ed301caecb915cefc787a5017f28f6253aee3020a7c3b3ae5`.
+  Thirty-six official caption files and their source hashes were reconciled;
+  35 word-preserving transcripts and final candidates passed unchanged validators.
+  Sequence 24 retains its preservation failure. Original candidates, nine single
+  pre-import corrections, rejected validation records and prior checkpoints remain
+  private and intact. The terminal checkpoint records 36 outcomes; D-167 is consumed.
+- Thirty-five atomic imports and all 35 identical reruns succeeded without churn.
+  The two evidence-supported speaker assignments also returned unchanged on replay.
+  Full local database fingerprint before/after replay:
+  `fcfcd12e367a207bd5f65741881506f560f0c845383652bf2f81ed16208bf96c`.
+  All 12,357 baseline rows for the original 261 sermons remain unchanged. The local
+  database has 296 sermons, 282 pending Stage-1 reviews and 148 restricted-eligible
+  records. New batch records have zero ordinary public eligibility or acceptance.
+- Complete-transcript substantive review produced 280 accepted artifact decisions
+  and 210 component decisions (162 accepted / 48 held). All 35 imports remain held;
+  no human approval, private completion or restricted acceptance was fabricated.
+  The source-evidence exceptions and all sequence outcomes are listed in
+  `eighth-private-batch-plan.md`. Selected Sol attribution is not substituted for
+  unavailable runtime metadata. No separate generative API or audio/video processing
+  occurred.
+- Focused D-167 policy/review/sync tests: 21 passed; the combined staging/policy
+  verification passed 30 tests. Full standard suite: 787 passed, 126 database-gated
+  skips, one unchanged `admin-dashboard-layout` LF source-shape assertion failure.
+  Full guarded PostgreSQL suite: 913 passed, the same assertion failed, **zero
+  skipped tests**; its disposable database was removed. New code introduced no
+  different failure. The affected admin/test files remain unchanged.
+- Final `npm run check`: one existing `exactOptionalPropertyTypes` error in
+  `src/development-data/project-sermon-snapshot-cli.ts:38`, zero warnings/hints,
+  and no new diagnostics across 420 files. The unrelated snapshot CLI was not
+  altered to hide it. Production build passed (44 pages), sealed bundle passed,
+  anonymised migration dry run passed (five inputs, three included, two excluded),
+  and cached offline audit reported zero vulnerabilities (not a fresh online audit).
+- Safe release packaging now accepts the existing byte-identical embedded church
+  image module without the previous one-megabyte `git show` buffer limit and permits
+  only the audited synchronization entry points in the Docker context. No frontend
+  source, design, content, public selector or dependency changed. The protected
+  served commit is `1f3dc7c72f8fab971c2a358a4e71ce9e4c23999f`, image SHA-256
+  `94ce98be0fddd26f953ae8f09b5c986ced66bcfaba6420314ebeda985f4d0729`;
+  source archive SHA-256:
+  `5bf90decf7a88597c97c0c73b20485361847b5b343e9033c219f80956ca5e326`.
+- Pinned strict SSH verification and exact destination checks preceded isolated
+  deployment. A distinct internal network, named database volume, SELECT-only app
+  role, protected secret files and host-loopback socket were used. PostgreSQL has
+  no published port; remote administrator/private-preview routes remain denied.
+  The scoped package contains only 148 qualifying sermons and dependencies, with
+  canonical SHA-256
+  `80faa06993d6b0c6ecdcdcbdf33af12efbc51d440b1970925aaf4e89a3310702`.
+  Account/session data, held records, raw captions and credentials were excluded.
+  All 22 committed migration checksums matched; no existing staging schema changed.
+- Initial protected import inserted 8,076 scoped rows. Identical and post-restart
+  reruns inserted zero and verified 8,076 unchanged rows. Full protected database
+  fingerprint:
+  `e511c91edd777948969a45bf56ef3b152a7fa471717df25e97f286c227cb2e56`.
+  Local/protected membership SHA-256 matches:
+  `f1257abc8456a0d6098b5a542812181ea4c720591fa8ca48a284785db69c5ce5`.
+  Scoped pre-write fingerprint receipts, packet, image and volume remain preserved.
+- Rollback rehearsal stopped only the new protected socket/app, confirmed denial,
+  restarted its database/app and replayed the verified packet unchanged. The
+  original public image, healthy status, 191 stored sermons and exact 148 accepted
+  identities remained unchanged; before/after membership MD5 independently matched
+  `5186376bb8f5a9f2ec1dd04cf5e8cae4`. No public listener, AWS rule, public-site
+  container or public database was changed. One setup shell ended with a harmless
+  trailing-CR command error after resource creation; subsequent file-based checks
+  and the complete rollback rehearsal exited successfully.
+- Read-only browser verification used the real authenticated local session and
+  pinned-SSH protected runtime, not a fixture or all-record eligibility harness.
+  In each environment, homepage/V4/V1/V2/About and refresh rendered correctly;
+  all 148 eligible detail links returned 200, logo loaded, no-store/noindex held,
+  canonical/structured private metadata was absent, and zero review mutations,
+  external requests or screenshots occurred. Anonymous local access returned 401;
+  remote administrator and private-preview routes returned 401/404. The temporary
+  headless browser closed. Requested local preview and SSH tunnel remain running.
+- Credential/key/cloud/prohibited-path, protected-identity, symlink, tracked/staged
+  and output scans found no introduced exposure. A private 296-sermon shingle scan
+  covered 108 output files: 650 common matches were proved to originate in the
+  unchanged 92 church-page source files at
+  `6a51443d117cc9cb20e82f8d50046f77e7a4aa08`; zero unexplained matches or protected
+  identities remained. This distinguishes existing authorised church page copy
+  from new private sermon content, without weakening a validator. Private evidence
+  remains ignored and unstaged. Nothing was pushed, merged, human-approved,
+  published, deployed to production, or added to the original public cohort.
+
 ## Nine explicit Topical classifications — pre-application verification
 
 The exact nine-record editorial manifest reconciled in both environments. The

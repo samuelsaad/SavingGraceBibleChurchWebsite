@@ -1,5 +1,47 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
+## D-167 complete, with evidence holds — 26 September 2026
+
+All 36 fixed positions in manifest SHA-256
+`0218989d1c09224ed301caecb915cefc787a5017f28f6253aee3020a7c3b3ae5`
+are terminal. D-167 is consumed, not a retry or another batch authority. The
+35 usable transcripts produced validated private descriptions and 245 ordered
+Q&A, followed by complete-transcript substantive AI review: 280 accepted content
+decisions and 210 independently assessed source-component decisions. Nine
+pre-import corrections retained their originals and lineage. Sequence 24 failed
+word preservation and was not imported or silently repaired.
+
+All 35 imported sermons remain private, unapproved and held: 33 lack explicit
+canonical speaker evidence, three lack supported primary-passage classification,
+and six retain unresolved source-wording findings (these groups overlap).
+No private completion or new restricted acceptance was created. Existing reviews
+were reconciled without inventing evidence or repeating valid substantive reviews.
+The local database has 296 sermons, 282 pending Stage-1 reviews and 148 currently
+restricted-eligible sermons. All 12,357 baseline rows for the earlier 261 sermons
+remain unchanged; identical import and speaker-assignment reruns changed nothing.
+
+The separate protected staging database contains only the 148 current eligible
+sermons and their scoped dependencies, not the 35 held imports or account/session
+data. Its atomic import and post-restart replay both verified 8,076 unchanged rows
+and the same full database fingerprint. It uses a distinct volume, internal
+network and EC2-loopback listener; administrator routes remain disabled.
+The existing public application/database and their exact 148-sermon population
+remain unchanged. Claude's church frontend source and pages are byte-preserved.
+
+The authenticated local entry is `http://127.0.0.1:4397/admin`, with preview at
+`http://127.0.0.1:4397/frontend-preview/`. The separately protected staging
+frontend is reached through the pinned SSH tunnel at `http://127.0.0.1:4398/`.
+These are local access coordinates, not new public listeners. The deployed
+protected code commit is `1f3dc7c72f8fab971c2a358a4e71ce9e4c23999f`; subsequent
+completion-documentation commits do not change that image. See the execution
+summary in `eighth-private-batch-plan.md`, verification in
+`migration-validation-plan.md`, and isolated rollback in `deployment/README.md`.
+
+Do not retry terminal positions, infer missing speaker/source wording, approve or
+publish content, start another batch, modify the public cohort, or push Git.
+Private source, candidates, corrections, checkpoints and receipts remain ignored
+and unstaged. All normal approval/publication protections remain in force.
+
 ## D-167 eighth fixed batch frozen — 25 September 2026
 
 In isolated branch `codex/next-36-after-d162`, the next 36 previously
