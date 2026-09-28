@@ -56,8 +56,8 @@ function tiles(block: Extract<Block, { kind: "tiles" }>, env: BlockEnvironment):
     return html`<li class="tile${tile.media ? " tile--pictured" : ""}${linked ? " tile--linked" : ""}">
       ${when(tile.media, () => html`<div class="tile__picture">${picture(tile.media!, { className: "tile__image", alt: "" })}</div>`)}
       <div class="tile__body">
-        ${when(tile.eyebrow, () => html`<p class="eyebrow tile__eyebrow">${tile.eyebrow}</p>`)}
         <h3 class="tile__title">${linked ? html`<a href="${resolveHref(tile.href!, env.context)}">${tile.title}</a>` : tile.title}</h3>
+        ${when(tile.eyebrow && tile.eyebrow !== tile.title, () => html`<p class="tile__metadata">${tile.eyebrow}</p>`)}
         ${when(tile.text, () => html`<p class="tile__text">${inline(tile.text!, env.context)}</p>`)}
         ${when(tile.linkLabel, () => tileLink(tile, env, tile.linkLabel!))}
       </div>

@@ -30,8 +30,8 @@ export function renderFrontendBoundaryPage(
     robots: "noindex, nofollow",
     body: html`<div class="boundary">
       <div>
-        <p class="eyebrow">${kindLabels[kind]}</p>
         <h1>${input.title}</h1>
+        <p class="title-page__category">${kindLabels[kind]}</p>
         <p class="boundary__message lede">${input.message}</p>
         <p><a class="button" href="${contextualPath(context, archivePath)}">Browse sermons</a></p>
       </div>

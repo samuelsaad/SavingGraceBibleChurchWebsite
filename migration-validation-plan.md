@@ -1,5 +1,31 @@
 # Migration Validation Plan
 
+## Isolated visitor-design verification — 28 September 2026
+
+- Separate `codex/impeccable-church-redesign` alternative; no migration,
+  database mutation, sermon processing, review, acceptance or staging change.
+- Three homepage concepts rendered before choosing the Sunday-invitation design.
+  Independent visual critique and technical responsive/accessibility findings
+  were applied and confirmed. Final visual disposition: ship for the named fixes.
+- Four viewport widths across fourteen representative pages: 56 passing render
+  checks. Focused enlarged-text checks and a 4,860-word synthetic transcript with
+  seven ordered synthetic Q&A passed. No real sermon screenshots or media loads.
+- Standard suite: 803 passed, 126 database-gated skips, one unchanged
+  `admin-dashboard-layout` LF source assertion failure. Focused final set: 69
+  passed. Database tests were not run under this frontend-only scope.
+- Production build passed (44 pages). Astro check retained the one existing
+  snapshot-importer `exactOptionalPropertyTypes` error; zero warnings/hints.
+  Neither unrelated implementation/test was changed to conceal a failure.
+- Anonymized dry run: 5 inputs / 3 included / 2 excluded / 0 rejected. Offline
+  cached dependency audit: zero advisories, not fresh online evidence.
+- Real local read-only checks: PostgreSQL 16, authorized loopback target,
+  296 stored sermons, 148 restricted eligible, 15 ordinary-public eligible.
+  Existing selectors, authentication boundaries, no-store/noindex and SEO/public
+  exclusion remain intact. No approvals or data repairs were performed.
+- Safe file/security/build scans and staged-diff review exclude browser captures,
+  private evidence and temporary QA helpers. Full evidence and limitations:
+  `docs/design/verification.md`. Earlier milestones below remain historical.
+
 ## D-167 terminal execution and isolated protected staging — 26 September 2026
 
 - Exact fixed manifest:

@@ -15,7 +15,6 @@ import type { SermonSummary } from "../../domain/sermon";
 import type { PublicSermonFilterOptions } from "../../server/repositories/sermon-repository";
 import { picture } from "../components/blocks";
 import { cardGrid, sermonCard } from "../components/cards";
-import { pillarGlyph } from "../components/glyphs";
 import { sectionHead, sectionNote } from "../components/sections";
 import {
   aboutCopy,
@@ -51,20 +50,19 @@ function hero(context: FrontendRenderContext): Html {
   return html`<section class="arrive" aria-labelledby="hero-heading">
     <div class="arrive__inner">
       <div class="arrive__welcome">
-        <p class="eyebrow arrive__eyebrow">${heroCopy.eyebrow}</p>
         <h1 id="hero-heading" class="arrive__title"><span class="arrive__name">${heroCopy.nameLine1}</span><span class="arrive__name">${heroCopy.nameLine2}</span></h1>
-        <span class="arrive__rule" aria-hidden="true"></span>
+        <p class="arrive__place">Westmeadows, Melbourne</p>
       </div>
       <div class="welcome-card" id="visit">
-        <div class="welcome-card__picture">${picture("entrance", { className: "welcome-card__image", eager: true })}</div>
         <div class="welcome-card__body">
-          <p class="eyebrow">${heroCopy.newHere}</p>
           <p class="welcome-card__time">${heroCopy.serviceTime}</p>
           <p class="welcome-card__where">${heroCopy.address}</p>
           <a class="button welcome-card__cta" href="${links.path(heroCopy.joinHref)}">${heroCopy.join}</a>
+          <a class="welcome-card__more" href="${links.path("/lords-day-service/")}">${heroCopy.newHere} What to expect</a>
         </div>
       </div>
     </div>
+    <figure class="arrive__photograph">${picture("congregation", { className: "arrive__image", eager: true })}</figure>
     <div class="arrive__inner arrive__inner--services" id="${homeSections.services}">
       <section aria-labelledby="services-heading">
         ${sectionHead("services-heading", servicesCopy.heading)}
@@ -85,14 +83,13 @@ function welcome(context: FrontendRenderContext): Html {
       <p class="welcome__lede lede">${welcomeCopy.paragraph}</p>
     </div>
     <ul class="pillars" role="list">${pillars.map((pillar) => html`<li class="pillar">
-      <span class="pillar__spine" aria-hidden="true">${pillarGlyph(pillar.id)}</span>
       <div class="pillar__body">
         <h3 class="pillar__title" id="pillar-${pillar.id}">${pillar.title}</h3>
         <p class="pillar__text">${pillar.text}</p>
         <a class="pillar__more" href="${links.path(pillar.href)}">${pillar.readMore}<span class="sr-only"> about ${pillar.title}</span></a>
       </div>
     </li>`)}</ul>
-    <figure class="home__photo">${picture("congregation", { className: "home__photo-image" })}</figure>
+    <figure class="home__photo">${picture("welcome-door", { className: "home__photo-image" })}</figure>
   </section>`;
 }
 

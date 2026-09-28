@@ -8,7 +8,7 @@ export const cardStyles = `
 .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-5); list-style: none; margin: 0; padding: 0; }
 .cards > li { display: grid; min-width: 0; }
 .card { position: relative; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-width: 0; background: var(--colour-raised); border: 1px solid var(--colour-rule); border-radius: var(--radius-card); box-shadow: var(--shadow-card); overflow: hidden; transition: box-shadow var(--motion-duration) var(--motion-easing), transform var(--motion-duration) var(--motion-easing), border-color var(--motion-duration) var(--motion-easing); }
-.card:hover { border-color: var(--colour-rule-strong); box-shadow: var(--shadow-lift); transform: translateY(-2px); }
+.card:hover { border-color: var(--colour-rule-strong); }
 .card:focus-within { border-color: var(--colour-ink); }
 @supports selector(:has(a)) {
   .card:has(.card__title a:focus-visible) { outline: 3px solid var(--colour-ink); outline-offset: 3px; box-shadow: 0 0 0 3px var(--colour-ground); }
@@ -17,9 +17,7 @@ export const cardStyles = `
 .card--latest { border-color: var(--colour-gilt); }
 
 /* ---- the plate: the book's cover where a photograph would sit ---- */
-.card__plate { position: relative; display: flex; flex-direction: column; justify-content: flex-end; gap: 0.15rem; aspect-ratio: 16 / 7; padding: var(--space-4) var(--space-4) calc(var(--space-4) + 0.375rem); background: var(--hue, var(--colour-ink)); background-image: linear-gradient(to bottom, transparent, var(--colour-ink)); background-blend-mode: soft-light; color: var(--colour-on-ink); }
-.card__plate::before { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, var(--colour-on-ink) 0 1px, transparent 1px 100%); background-size: 1.5rem 100%; opacity: 0.08; transition: opacity var(--motion-duration) var(--motion-easing); }
-.card:hover .card__plate::before { opacity: 0.12; }
+.card__plate { position: relative; display: flex; flex-direction: column; justify-content: flex-end; gap: 0.2rem; min-height: 8rem; padding: var(--space-7) var(--space-5) var(--space-4); background: var(--hue, var(--colour-ink)); color: var(--colour-on-ink); }
 .card__group { position: absolute; top: var(--space-3); left: var(--space-4); font-family: var(--font-signage); font-stretch: 87.5%; font-size: var(--size-small); font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.9; }
 .card__ordinal { position: absolute; top: var(--space-3); right: var(--space-4); font-family: var(--font-signage); font-stretch: 87.5%; font-size: var(--size-small); font-weight: 700; letter-spacing: 0.08em; font-variant-numeric: tabular-nums; opacity: 0.9; }
 .card__bookname { position: relative; font-family: var(--font-signage); font-stretch: 87.5%; font-size: clamp(1.5rem, 1rem + 1.6vw, 2.25rem); font-weight: 700; letter-spacing: 0.05em; line-height: 0.95; text-transform: uppercase; text-wrap: balance; overflow-wrap: anywhere; }
@@ -32,16 +30,16 @@ export const cardStyles = `
 .card__strip .card__strip-here { fill: var(--colour-gilt-bright); opacity: 1; }
 .card__strip--plain rect { fill: var(--colour-rule); opacity: 1; }
 .card--plain .card__plate { background: var(--colour-tile); background-image: none; color: var(--colour-ink-muted); }
-.card--plain .card__plate::before { background: repeating-linear-gradient(90deg, var(--colour-ink) 0 1px, transparent 1px 100%); background-size: 1.5rem 100%; opacity: 0.06; }
 
-/* ---- the latest ribbon: a bookmark hanging from the plate's top edge ---- */
-.card__flag { position: absolute; z-index: 2; top: 0; right: var(--space-4); padding: 0.4rem 0.6rem 0.65rem; background: var(--colour-gilt); color: var(--colour-on-ink); font-family: var(--font-signage); font-stretch: 87.5%; font-size: var(--size-small); font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; line-height: 1; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 0.35rem), 0 100%); }
+/* Latest stays in normal flow so it cannot cover a series or date. */
+.card__flag { display: inline-flex; justify-self: start; padding: 0.4rem 0.6rem; background: var(--colour-gilt); color: var(--colour-on-ink); font-family: var(--font-signage); font-size: var(--size-small); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; line-height: 1; }
 .card--plain .card__flag { background: var(--colour-ink); }
 
 /* ---- the body ---- */
-.card__body { position: relative; display: grid; align-content: start; gap: var(--space-2); padding: var(--space-4) var(--space-4) var(--space-3); min-width: 0; }
+.card__body { position: relative; display: grid; align-content: start; gap: var(--space-3); padding: var(--space-5); min-width: 0; }
 .card__top { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-3); font-family: var(--font-signage); font-stretch: 87.5%; font-size: var(--size-small); letter-spacing: 0.08em; text-transform: uppercase; color: var(--colour-ink-soft); font-variant-numeric: tabular-nums; }
 .card__top a, .card__meta a, .card__booklink { position: relative; z-index: 1; color: inherit; }
+.card__top a, .card__meta a { display: inline-flex; align-items: center; min-height: var(--target-size); }
 .card__top a:hover, .card__meta a:hover, a.card__booklink:hover { color: var(--colour-gilt); }
 .card__series { color: var(--colour-gilt); }
 .card__series a { color: var(--colour-gilt); }
@@ -69,9 +67,9 @@ export const cardStyles = `
 }
 @media (max-width: 44rem) {
   .cards { grid-template-columns: minmax(0, 1fr); }
-  .card__plate { aspect-ratio: 16 / 6; padding: var(--space-3) var(--space-3) calc(var(--space-3) + 0.375rem); }
-  .card__group, .card__flag { left: var(--space-3); }
-  .card__ordinal, .card__flag { right: var(--space-3); left: auto; }
+  .card__plate { min-height: 7.5rem; padding: var(--space-7) var(--space-4) var(--space-4); }
+  .card__group { left: var(--space-3); }
+  .card__ordinal { right: var(--space-3); left: auto; }
   .card__body { padding: var(--space-3) var(--space-3) var(--space-2); }
   .card__foot { padding: 0 var(--space-3); }
   .card__desc { -webkit-line-clamp: 5; line-clamp: 5; }

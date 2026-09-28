@@ -1,5 +1,34 @@
 # Saving Grace Bible Church Website
 
+## Isolated Impeccable visitor redesign
+
+Branch `codex/impeccable-church-redesign` is a separate design exploration,
+preserving all earlier alternatives. The selected Sunday-invitation direction
+uses original church content, photographs and logo across the complete visitor
+site. See [concept comparison](docs/design/homepage-exploration.md),
+[design system](DESIGN.md), and [verification and limits](docs/design/verification.md).
+
+To start its existing read-only, loopback-only restricted visitor runtime in
+PowerShell after installing locked dependencies and configuring the established
+protected local PostgreSQL credentials:
+
+```powershell
+$env:RESTRICTED_LOCAL_PORT = '4401'
+$env:D167_RESTRICTED_ACCEPTANCE_ENABLED = '1'
+node --import tsx deployment/accepted-local.ts
+```
+
+Use an available loopback port; do not replace another listener. The database
+target is `127.0.0.1:5432/savinggrace_sermons_test`. The runtime enforces read-only
+connections and existing restricted acceptance; it neither seeds nor migrates.
+Do not set development identity, dashboard or `DATABASE_URL` options for it.
+Admin routes are intentionally unavailable, and no sign-in is required for this
+computer-local visitor-only preview. Stop this foreground process with Ctrl+C.
+
+Homepage `/`, SermonsV4 `/sermons-v4/`, V1 `/sermons-v1/` and V2 `/sermons/`
+retain their existing routes. All preview pages are non-indexable. The 44-page
+static build is not a substitute for the database-backed sermon runtime.
+
 ## Complete project handoff for SermonsV4
 
 Branch `codex/project-sync-for-sermons-v4` is the complete V4 starting point. It contains SermonsV1 and SermonsV2 and intentionally excludes the V3-only application line. The current sermon collection is tracked at `development-data/project-sermon-snapshot-v1/` under D-163's branch-only authority. This Git handoff does not publish or approve sermon content.

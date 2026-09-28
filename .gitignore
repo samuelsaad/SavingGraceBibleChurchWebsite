@@ -46,6 +46,13 @@ private/
 migration-inputs/
 migration-exports/
 phase-3b2-pilot/
+.impeccable/review/
+.impeccable/capture.mjs
+.impeccable/qa*.mjs
+.impeccable/qa*.ts
+.impeccable/mocks/
+.impeccable/context.json
+.impeccable/concept-seeds/
 *.private.json
 *.production.json
 *.snapshot.json

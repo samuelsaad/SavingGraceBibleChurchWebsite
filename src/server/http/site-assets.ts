@@ -6,11 +6,12 @@
  * bundle contains only src/.
  *
  * Only an explicit allowlist is served (the church logo, its favicon and
- * touch icon under /brand/, and the church website's images under
+ * touch icon and self-hosted fonts under /brand/, and the church website's images under
  * /media/); there is no directory or filesystem lookup, so nothing outside
  * these entries can be reached.
  */
 import { logoBytes, logoPath } from "../../frontend/assets/logo";
+import { siteFontAssetBytes, siteFontAssets } from "../../frontend/assets/fonts";
 import { faviconPath, siteImageBytes, siteImages, touchIconPath, type MediaId } from "../../frontend/assets/media";
 
 interface SiteAsset {
@@ -28,7 +29,10 @@ const mediaAssets: Array<[string, SiteAsset]> = siteImages
   .filter((image) => image.id !== "favicon-32" && image.id !== "icon-192")
   .map((image) => [image.path, { contentType: image.type, bytes: () => siteImageBytes(image.id as MediaId) }]);
 
-const siteAssets: ReadonlyMap<string, SiteAsset> = new Map([...brandAssets, ...mediaAssets]);
+const fontAssets: Array<[string, SiteAsset]> = siteFontAssets
+  .map((asset) => [asset.path, { contentType: asset.type, bytes: () => siteFontAssetBytes(asset.id) }]);
+
+const siteAssets: ReadonlyMap<string, SiteAsset> = new Map([...brandAssets, ...mediaAssets, ...fontAssets]);
 
 const assetHeaders = {
   "Cache-Control": "public, max-age=86400",

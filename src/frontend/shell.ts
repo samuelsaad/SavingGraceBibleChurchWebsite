@@ -179,7 +179,7 @@ function footerColumns(input: PageShellInput, context: FrontendRenderContext): H
       <div class="footer-bar">
         <p class="footer-bar__copyright">${bottomBarCopy.copyright}</p>
         <a class="footer-bar__top" href="#${homeSections.top}">${upGlyph()}<span class="sr-only">${bottomBarCopy.backToTop}</span></a>
-        <p class="footer-bar__follow"><span class="footer-bar__label">${bottomBarCopy.followUs}</span>${socialPlatforms.map((platform) => html`<span class="footer-bar__glyph pending"><span aria-hidden="true">${socialGlyph(platform.id)}</span><span class="sr-only">${platform.name} (link not yet available)</span></span>`)}<a class="footer-bar__glyph footer-bar__glyph--link" href="${links.archive}#sermon-search">${searchGlyph()}<span class="sr-only">Search sermons</span></a></p>
+        <p class="footer-bar__follow"><span class="footer-bar__label">${bottomBarCopy.followUs}</span>${socialPlatforms.map((platform) => html`<span class="footer-bar__glyph pending"><span aria-hidden="true">${socialGlyph(platform.id)}</span><span class="sr-only">${platform.name} (link not yet available)</span></span>`)}<span class="footer-bar__availability">Links not yet available</span><a class="footer-bar__glyph footer-bar__glyph--link" href="${links.archive}#sermon-search">${searchGlyph()}<span class="sr-only">Search sermons</span></a></p>
       </div>`;
 }
 
@@ -191,7 +191,7 @@ export function pageShell(input: PageShellInput, context: FrontendRenderContext 
     ? "Protected D-160 draft preview · Awaiting administrator review · Not public or indexable"
     : "Private local frontend preview · Draft content · Not public or indexable";
   const title = input.suffixTitle === false ? input.title : documentTitle(input.title);
-  const scripts = [...new Set<EnhancementScriptName>([...(input.scripts ?? []), "navigation"])];
+  const scripts = [...new Set<EnhancementScriptName>([...(input.scripts ?? []), "navigation", "mobileNavigation"])];
   const document = html`<!doctype html>
 <html lang="en-AU">
   <head>
@@ -209,10 +209,11 @@ export function pageShell(input: PageShellInput, context: FrontendRenderContext 
     <a class="skip-link" href="#main-content">Skip to main content</a>
     ${when(preview, () => html`<div class="preview-band" role="status">${shelfMark()}<span>${previewLabel}</span></div>`)}
     ${input.notice}
-    <header class="masthead" id="${homeSections.top}">
+    <header class="masthead" id="${homeSections.top}" data-site-header>
       <div class="masthead__inner">
         ${brand(context)}
-        <nav class="masthead__nav" aria-label="Primary">${navigationLinks(context, input.navigationPath ?? input.canonicalPath)}</nav>
+        <button class="masthead__mobile-toggle" type="button" aria-controls="primary-navigation" aria-expanded="false" data-site-toggle hidden>Menu<span class="masthead__chevron" aria-hidden="true"></span></button>
+        <nav class="masthead__nav" id="primary-navigation" aria-label="Primary">${navigationLinks(context, input.navigationPath ?? input.canonicalPath)}</nav>
         <div class="masthead__actions">${when(input.mastheadSearch !== false, () => mastheadSearch(context))}<a class="button masthead__give" href="${links.path("/support-saving-grace-church-offering/")}">${navigationCopy.give}</a></div>
       </div>
     </header>
@@ -225,7 +226,7 @@ export function pageShell(input: PageShellInput, context: FrontendRenderContext 
           <div class="site-footer__imprint">
             ${brand(context, true)}
             <nav aria-label="Footer"><ul class="site-footer__links">${(links.hasTaxonomyRoutes ? sections : sections.slice(0, 1)).map(([section, label]) => html`<li><a href="${section === "sermons" ? links.archive : links.taxonomyIndex(section)}">${label}</a></li>`)}<li><a href="${links.path("/events/")}">${navigationCopy.newsEvents}</a></li><li><a href="${links.path("/contact/")}">${navigationCopy.contactUs}</a></li><li><a href="${links.path("/sitemap/")}">${navigationCopy.sitemap}</a></li></ul></nav>
-            <p class="site-footer__note">Every sermon is shelved under the Bible book it was preached from. The bookshelf mark used in the archive is this website's own device; the Saving Grace Bible Church logo is the church's own.</p>
+            <details class="site-footer__about"><summary>How this archive is organised</summary><p class="site-footer__note">Every sermon is shelved under the Bible book it was preached from. The bookshelf mark used in the archive is this website's own device; the Saving Grace Bible Church logo is the church's own.</p></details>
           </div>
         </div>
       </div>

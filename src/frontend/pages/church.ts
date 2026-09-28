@@ -62,18 +62,17 @@ function related(page: SitePage, context: FrontendRenderContext): Html {
 }
 
 function pageHead(page: SitePage, context: FrontendRenderContext, lede?: Html): Html {
-  const aside = page.hero?.treatment === "aside";
-  return html`<header class="page__head${aside ? " page__head--aside" : ""}">
+  const heading = page.heading ?? page.title;
+  return html`<header class="page__head${page.hero ? " page__head--aside" : ""}">
     <div class="page__head-text">
       ${trail(breadcrumbs(page), context)}
-      ${when(page.eyebrow, () => html`<p class="eyebrow">${page.eyebrow}</p>`)}
-      <h1 class="page__title">${page.heading ?? page.title}</h1>
+      <h1 class="page__title${heading.length > 32 ? " page__title--long" : ""}">${heading}</h1>
+      ${when(page.eyebrow && page.eyebrow !== heading, () => html`<p class="page__category">${page.eyebrow}</p>`)}
       ${lede ?? when(page.lede, () => paragraph(page.lede!, context, "lede page__lede"))}
       ${statusBand(page)}
     </div>
-    ${when(aside, () => html`<div class="page__head-picture">${picture(page.hero!.media, { className: "page__head-image", eager: true })}</div>`)}
-  </header>
-  ${when(page.hero?.treatment === "banner", () => html`<div class="page__banner">${picture(page.hero!.media, { className: "page__banner-image", eager: true })}</div>`)}`;
+    ${when(page.hero, () => html`<div class="page__head-picture">${picture(page.hero!.media, { className: "page__head-image", eager: true })}</div>`)}
+  </header>`;
 }
 
 function shellInput(page: SitePage, data: ChurchPageData, body: Html, extra: Partial<PageShellInput> = {}): PageShellInput {
@@ -128,8 +127,8 @@ function gatheringTile(event: ChurchEvent, context: FrontendRenderContext): Html
   return html`<li class="tile tile--linked${event.media ? " tile--pictured" : ""}">
     ${when(event.media, () => html`<div class="tile__picture">${picture(event.media!, { className: "tile__image", alt: "" })}</div>`)}
     <div class="tile__body">
-      <p class="eyebrow tile__eyebrow">${scheduleLabel(event)}</p>
       <h3 class="tile__title"><a href="${links.path(event.path)}">${event.title}</a></h3>
+      <p class="tile__metadata">${scheduleLabel(event)}</p>
       ${when(event.description[0], () => html`<p class="tile__text tile__text--clamp">${event.description[0]}</p>`)}
     </div>
   </li>`;
@@ -140,17 +139,29 @@ export function renderEventsPage(page: SitePage, data: ChurchPageData, context: 
   const links = siteLinks(context);
   const regular = (events as readonly ChurchEvent[]).filter((event) => isRecurring(event) && occurrencesBetween(event, data.today, `${Number(data.today.slice(0, 4)) + 1}${data.today.slice(4)}`, 1).length > 0);
   const past = pastEvents(data.today);
+  const upcoming = upcomingOccurrences(data.today, { days: 35 });
   const body = html`<article class="page page--events">
     ${pageHead(page, context)}
+    ${when(upcoming.length || regular.length || past.length, () => html`<nav class="events-jumps" aria-label="On this events page">
+      ${when(upcoming.length, () => html`<a href="#upcoming-heading">Upcoming</a>`)}
+      ${when(regular.length, () => html`<a href="#regular-heading">Regular gatherings</a>`)}
+      ${when(past.length, () => html`<a href="#past-heading">Past events</a>`)}
+    </nav>`)}
     <div class="page__body">${renderBlocks(page.blocks.filter((block) => block.kind !== "events-calendar"), env)}</div>
     <section class="section" aria-labelledby="upcoming-heading">
       ${sectionHead("upcoming-heading", "Upcoming", html`<a class="button button--outline" href="${links.path("/events/calendar.ics")}">Subscribe to the calendar</a>`)}
-      ${upcomingList(data.today, context, { days: 35 })}
+      ${upcoming.length
+        ? html`<ol class="events" role="list">${upcoming.slice(0, 6).map((occurrence) => occurrenceRow(occurrence, context))}</ol>
+          ${when(upcoming.length > 6, () => html`<details class="events-more">
+            <summary class="events-more__summary">More upcoming dates <span class="events-more__count">(${upcoming.length - 6})</span></summary>
+            <ol class="events" start="7" role="list">${upcoming.slice(6).map((occurrence) => occurrenceRow(occurrence, context))}</ol>
+          </details>`)}`
+        : sectionNote("No upcoming event is scheduled in the next few weeks.")}
     </section>
-    <section class="section" aria-labelledby="regular-heading">
+    ${when(regular.length, () => html`<section class="section" aria-labelledby="regular-heading">
       ${sectionHead("regular-heading", "Regular gatherings")}
       <ul class="tiles tiles--3" role="list">${regular.map((event) => gatheringTile(event, context))}</ul>
-    </section>
+    </section>`)}
     ${when(past.length, () => html`<section class="section" aria-labelledby="past-heading">
       ${sectionHead("past-heading", "Past events")}
       <ul class="past-events" role="list">${past.map((event) => html`<li><a href="${links.path(event.path)}">${event.title}</a> <span class="past-events__when">${scheduleLabel(event)}</span></li>`)}</ul>
@@ -170,8 +181,8 @@ export function renderEventPage(event: ChurchEvent, data: ChurchPageData, contex
     <header class="page__head${event.media ? " page__head--aside" : ""}">
       <div class="page__head-text">
         ${trail([{ href: "/", label: "Home" }, { href: eventsPath, label: eventsIndex.title }], context)}
-        <p class="eyebrow">${isRecurring(event) ? "Regular gathering" : "Event"}</p>
-        <h1 class="page__title">${event.title}</h1>
+        <h1 class="page__title${event.title.length > 32 ? " page__title--long" : ""}">${event.title}</h1>
+        <p class="page__category">${isRecurring(event) ? "Regular gathering" : "Event"}</p>
         <p class="lede page__lede">${scheduleLabel(event)}</p>
       </div>
       ${when(event.media, () => html`<div class="page__head-picture">${picture(event.media!, { className: "page__head-image", eager: true })}</div>`)}
@@ -259,8 +270,8 @@ function postCard(post: BlogPost, context: FrontendRenderContext): Html {
   return html`<li class="tile tile--linked${post.media ? " tile--pictured" : ""}">
     ${when(post.media, () => html`<div class="tile__picture">${picture(post.media!, { className: "tile__image", alt: "" })}</div>`)}
     <div class="tile__body">
-      <p class="eyebrow tile__eyebrow">${timeElement(post.date)}</p>
       <h2 class="tile__title"><a href="${links.path(post.path)}">${post.title}</a></h2>
+      <p class="tile__metadata">${timeElement(post.date)}</p>
       <p class="tile__text tile__text--clamp">${post.description}</p>
     </div>
   </li>`;
@@ -283,8 +294,8 @@ export function renderBlogPost(post: BlogPost, data: ChurchPageData, context: Fr
     <header class="page__head${post.media ? " page__head--aside" : ""}">
       <div class="page__head-text">
         ${trail([{ href: "/", label: "Home" }, { href: blogs.path, label: blogs.title }], context)}
-        <p class="eyebrow">${timeElement(post.date)}</p>
-        <h1 class="page__title">${post.title}</h1>
+        <h1 class="page__title${post.title.length > 32 ? " page__title--long" : ""}">${post.title}</h1>
+        <p class="page__category">${timeElement(post.date)}</p>
       </div>
       ${when(post.media, () => html`<div class="page__head-picture">${picture(post.media!, { className: "page__head-image", eager: true })}</div>`)}
     </header>

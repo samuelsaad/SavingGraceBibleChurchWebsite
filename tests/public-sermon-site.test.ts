@@ -109,7 +109,7 @@ describe("public sermon site routes", () => {
     });
     expect(html).toContain('<meta name="robots" content="noindex, follow"');
     expect(html).toContain('rel="canonical" href="https://www.savinggrace.org.au/sermons/page/2/"');
-    expect(html).toContain('<p class="eyebrow">Search results</p>');
+    expect(html).toContain('<p class="title-page__category">Search results</p>');
     expect(html).toContain("“grace” · Example Speaker · Example Series · Romans · Romans 8:1-4</h1>");
     expect(html).toContain('<label class="field__label" for="sermon-search">Search sermons</label>');
     expect(html).toContain('<label class="field__label" for="speaker-filter">Speaker</label>');
@@ -118,7 +118,7 @@ describe("public sermon site routes", () => {
     expect(html).toContain('<option value="example-speaker" selected>Example Speaker (10)</option>');
     expect(html).toContain('<details class="refine" data-refine data-active="true" open>');
     expect(html).toContain('<span class="refine__badge">5 filters active</span>');
-    expect(html.replace(/<script[\s\S]*?<\/script>/gu, "")).not.toContain("aria-expanded");
+    expect(html).not.toMatch(/<summary\b[^>]*aria-expanded/u);
     expect(html).toContain('<section class="results" id="results" tabindex="-1" aria-labelledby="results-heading results-status">');
     expect(html).toContain('<h2 id="results-heading" class="section__title">Sermons</h2>');
     expect(html).toContain('<span class="results__status" id="results-status">10 sermons · Page 2 of 2</span>');
@@ -167,7 +167,7 @@ describe("public sermon site routes", () => {
     expect(html).toContain('<script data-enhancement="canon">');
     expect(html).toContain("dateFrom=2026-08-01&amp;order=ASC");
     expect(html).toContain('action="/sermons/#results"');
-    expect(html).toContain('<p class="eyebrow">Search results</p>');
+    expect(html).toContain('<p class="title-page__category">Search results</p>');
     expect(html).toContain("Sermons by service date</h1>");
   });
 
@@ -201,7 +201,7 @@ describe("public sermon site routes", () => {
       passageVerse: 1,
       passageScope: "verse"
     });
-    expect(html).toContain('<p class="eyebrow">Preached from</p>');
+    expect(html).toContain('<p class="title-page__category">Preached from</p>');
     expect(html).toContain('<section class="open-book hue--pauline" id="canon" aria-labelledby="open-book-heading">');
     expect(html).toContain('<h2 class="open-book__title" id="open-book-heading">Romans 8:1</h2>');
     expect(html).toContain('<input type="hidden" name="passageBook" value="romans" />');
@@ -243,7 +243,7 @@ describe("public sermon site routes", () => {
 
     const book = await route(new Request("http://localhost/sermons/?sermon_book=romans"));
     const bookHtml = await book!.text();
-    expect(bookHtml).toContain('<p class="eyebrow">Sermons filed under</p>');
+    expect(bookHtml).toContain('<p class="title-page__category">Sermons filed under</p>');
     expect(bookHtml).toContain('<h2 class="open-book__title" id="open-book-heading">Romans</h2>');
     expect(bookHtml).toContain('<span class="tab hue--pauline"><span class="tab__name" aria-hidden="true">Romans</span><span class="tab__count" aria-hidden="true">10</span>');
     expect(bookHtml).toContain('href="/sermons/?passageBook=romans&amp;passageScope=book#canon">Search all of Romans</a>');
@@ -376,7 +376,7 @@ describe("public sermon site routes", () => {
     const csp = archive!.headers.get("content-security-policy")!;
     expect(csp).not.toContain("unsafe-inline");
     expect(csp).not.toContain("frame-src");
-    expect(archiveHtml.match(/<script /gu)).toHaveLength(2);
+    expect(archiveHtml.match(/<script /gu)).toHaveLength(3);
     for (const match of archiveHtml.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gu)) {
       expect(csp).toContain(hash(match[1]!));
       expect(() => new Function(match[1]!)).not.toThrow();

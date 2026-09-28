@@ -58,8 +58,8 @@ export function renderPublicSermonPage(
   const head = html`<header class="sermon__head">
     ${canonStrip(options, { current: book?.slug, label: book ? `${book.canonicalName} on the shelf` : undefined })}
     ${trail}
-    ${passageStamp(sermon, "sermon__stamp")}
     <h1 class="sermon__title${isLongTitle ? " is-long" : ""}">${sermon.title}</h1>
+    ${passageStamp(sermon, "sermon__stamp")}
     <p class="sermon__meta">
       <span>${timeElement(sermon.serviceDate)}</span>
       ${when(sermon.speaker, () => html`<span><a href="${links.taxonomy("speakers", sermon.speaker!.slug)}">${sermon.speaker!.name}</a></span>`)}

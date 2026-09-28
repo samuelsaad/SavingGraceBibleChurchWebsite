@@ -29,8 +29,8 @@ export function titlePage(input: TitlePageInput): Html {
   const isLong = input.title.length > (input.longThreshold ?? 40);
   return html`<header class="title-page">
     ${when(input.trail?.length, () => html`<ol class="trail" role="list">${input.trail!.map((item) => html`<li><a href="${item.href}">${item.label}</a></li>`)}</ol>`)}
-    <p class="eyebrow">${input.eyebrow}</p>
     <h1 class="title-page__title${isLong ? " is-long" : ""}">${input.title}</h1>
+    <p class="title-page__category">${input.eyebrow}</p>
     ${when(input.meta, () => html`<div class="title-page__meta">${input.meta}</div>`)}
   </header>`;
 }

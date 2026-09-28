@@ -188,7 +188,7 @@ describe("authenticated local frontend preview", () => {
     const speakerHtml = await speaker!.text();
     expect(speaker?.status).toBe(200);
     expect(repository.lastQuery).toMatchObject({ speaker: "example-speaker", pageSize: 50 });
-    expect(speakerHtml).toContain('<p class="eyebrow">Speaker</p>');
+    expect(speakerHtml).toContain('<p class="title-page__category">Speaker</p>');
     expect(speakerHtml).toContain('<h1 class="title-page__title">Example Speaker</h1>');
     expect(speakerHtml).toContain("1 sermon");
     expect(speakerHtml).toContain('<p class="strip__label">The book preached from in this sermon</p>');

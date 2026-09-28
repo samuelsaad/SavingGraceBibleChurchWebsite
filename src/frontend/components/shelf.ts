@@ -150,8 +150,8 @@ export function openBook(input: OpenBookInput): Html {
   return html`<section class="open-book hue--${book.category}" id="canon" aria-labelledby="open-book-heading">
     ${bookTab(book, { href: input.broad ? null : wholeBook, count: input.count })}
     <div class="open-book__body">
-      <p class="eyebrow">${input.broad ? "Sermons filed under" : "Preached from"}</p>
       <${heading} class="open-book__title" id="open-book-heading">${scopeLabel}</${heading}>
+      <p class="title-page__category">${input.broad ? "Sermons filed under" : "Preached from"}</p>
       <p class="open-book__meta">
         ${when(input.count !== null, () => html`<span>${formatCount(input.count!, "sermon")} in ${book.canonicalName}</span>`)}
         ${when(markedChapters.length, () => html`<span>Chapters with sermons: ${markedChapters.join(", ")}</span>`)}

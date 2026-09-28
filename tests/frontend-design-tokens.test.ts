@@ -68,7 +68,7 @@ describe("frontend design tokens", () => {
     }
     expect(css).toContain("--size-display:");
     expect(css).toContain("--space-1:0.25rem");
-    expect(css).toContain("--font-signage:Bahnschrift");
+    expect(css).toContain('--font-signage:"Bitstream Vera Sans"');
     expect(css).not.toMatch(/@font-face|url\(/u);
     expect(Number.parseFloat(size.small) * 16).toBeGreaterThanOrEqual(13);
   });

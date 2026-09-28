@@ -1,5 +1,25 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
+## Isolated visitor redesign alternative — 28 September 2026
+
+`codex/impeccable-church-redesign` contains a fresh Sunday-invitation design,
+selected after three rendered homepage concepts. Claude's implementation and
+previous alternatives remain on their original branches. This branch changes
+visitor presentation, accessible navigation, self-hosted type and safe tests/docs
+only; it does not change sermon data, eligibility, review decisions or deployment.
+
+The local read-only restricted preview is `http://127.0.0.1:4401/`, with
+SermonsV4 at `http://127.0.0.1:4401/sermons-v4/`. It uses the existing eligible
+selector: 148 of 296 stored sermons. Admin routes remain disabled and preview
+responses remain private/no-store/noindex. No database writes or migrations ran.
+
+Design context is in `PRODUCT.md`, `DESIGN.md`, and
+`docs/design/homepage-exploration.md`; verification and honest limitations are in
+`docs/design/verification.md`. Build and rendered checks pass. The standard suite
+retains its existing admin-layout assertion failure, and Astro check retains the
+existing snapshot-importer type error. Neither unrelated file was modified.
+This alternative is not merged, pushed, deployed or approved for production.
+
 ## D-167 complete, with evidence holds — 26 September 2026
 
 All 36 fixed positions in manifest SHA-256

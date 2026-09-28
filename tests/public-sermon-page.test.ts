@@ -59,7 +59,7 @@ describe("server-rendered public sermon page", () => {
     expect(html).toContain('<details class="transcript" open data-open-for-print>');
     expect(html).toContain('<summary class="transcript__summary"><span class="transcript__label--closed">Read the transcript</span><span class="transcript__label--open">Hide the transcript</span>');
     expect(html).toContain('<span class="transcript__stats">5 words · about 1 minute</span>');
-    expect(html.replace(/<script[\s\S]*?<\/script>/gu, "")).not.toContain("aria-expanded");
+    expect(html).not.toMatch(/<summary\b[^>]*aria-expanded/u);
     expect(html.indexOf('id="about-heading"')).toBeLessThan(html.indexOf('id="transcript-heading"'));
     expect(html).toContain("First paragraph");
     expect(html).toContain("Second &lt;strong&gt;plain&lt;/strong&gt;");
@@ -67,9 +67,10 @@ describe("server-rendered public sermon page", () => {
     expect(html).toContain("Because &lt;script&gt;bad()&lt;/script&gt;.");
     expect(html).toContain("Grace &lt;script&gt;alert(1)&lt;/script&gt;");
     expect(html).not.toContain("<script>alert");
-    expect(html.match(/<script /gu)).toHaveLength(2);
+    expect(html.match(/<script /gu)).toHaveLength(3);
     expect(html).toContain('<script data-enhancement="sermon">');
     expect(html).toContain('<script data-enhancement="navigation">');
+    expect(html).toContain('<script data-enhancement="mobileNavigation">');
     expect(html).not.toContain("application/ld+json");
     expect(html).toContain('rel="canonical" href="https://www.savinggrace.org.au/sermons/grace-alone/"');
     expect(html).toContain('<meta property="og:type" content="article" />');

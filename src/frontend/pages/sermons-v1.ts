@@ -35,8 +35,8 @@ export function renderSermonsV1Page(
   const hero: Html = html`<section class="hero" aria-labelledby="hero-heading">
     <div class="hero__inner">
       <div class="hero__copy">
-        <p class="eyebrow">Sermon archive</p>
         <h1 id="hero-heading" class="hero__title">Sermons, shelved by Scripture.</h1>
+        <p class="title-page__category">Sermon archive</p>
         <p class="hero__lede lede">Every sermon is filed under the passage it was preached from. Take a book off the shelf, or search the archive.</p>
         ${stats
           ? html`<ul class="stats hero__stats" role="list">${stats.map((item) => html`<li>${item}</li>`)}</ul>`

@@ -1,47 +1,47 @@
 /**
- * Design tokens for "The Canon", the sermon frontend's visual system.
+ * Design tokens for the Sunday invitation visitor system.
  *
- * Cool plaster ground, black-steel shelf boards, cloth-coloured book spines
- * and one gilt accent. Every colour, type, spacing, radius, elevation and
+ * Mineral-blue ink, sky and white surfaces, with meaningful Bible-book hues.
+ * Every colour, type, spacing, radius, elevation and
  * motion value in the stylesheet comes from here and is emitted once as
  * custom properties on `:root`; tests/frontend-design-tokens.test.ts checks
  * every text/surface and control pairing computed from these values.
  *
- * The site is light-only on purpose. Fonts are system stacks only: no font
- * file is downloaded or shipped.
+ * The site is light-only on purpose. Original licensed Vera font bytes are
+ * self-hosted; visitors make no third-party font requests.
  */
 
 export const colour = {
   /** Explicit topical sermons: plum cloth, separate from the canonical book palette. */
   spineTopical: "#563650",
   /** Page ground: cool plaster. */
-  ground: "#f5f5f2",
+  ground: "#ffffff",
   /** Raised surfaces: inputs, catalogue cards, count stickers. */
   raised: "#ffffff",
   /** Recessed surfaces: the hero band, quiet notes, chips. */
-  recessed: "#e8e8e3",
+  recessed: "#eef3f4",
   /** Ruler cells without sermons and disabled controls. */
-  tile: "#e3e4df",
+  tile: "#e0e9ec",
   /** Primary text, shelf boards, bookends, primary buttons, footer, video plate. */
-  ink: "#15181c",
+  ink: "#183d50",
   /** Secondary text: metadata, ledes, helper copy. */
-  inkSoft: "#444a53",
+  inkSoft: "#3e5360",
   /** Tertiary text: ghost-spine labels, ordinals, disabled text. */
-  inkMuted: "#596069",
+  inkMuted: "#53616a",
   /** Decorative hairlines only; never a control boundary. */
-  rule: "#d3d4cf",
+  rule: "#ccd7dc",
   /** Borders of inputs, ghost spines, tokens and pagination (3:1 non-text). */
-  ruleStrong: "#767b83",
+  ruleStrong: "#6b7b84",
   /** The single accent: eyebrows, section rules, current markers, applied filters. */
-  gilt: "#7d5800",
+  gilt: "#90411f",
   /** Accent tint: active tokens, current chips, the preview banner. */
-  giltSoft: "#f5ecd2",
+  giltSoft: "#dbe8ec",
   /** Gilt lettering on dark surfaces. */
-  giltBright: "#e8c170",
+  giltBright: "#edc697",
   /** Text on ink and on every spine hue. */
-  onInk: "#f5f5f2",
+  onInk: "#ffffff",
   /** Muted text on ink surfaces. */
-  onInkSoft: "#b9bec7",
+  onInkSoft: "#c5d9e2",
   /** Cloth spine fills by literary group. */
   spineLaw: "#7d2a3a",
   spineHistory: "#7a4a1c",
@@ -59,27 +59,27 @@ export const colour = {
 
 export const font = {
   /** Display voice: large titles. */
-  display: '"Sitka Banner", "Sitka Display", "Big Caslon", Baskerville, "Hoefler Text", "Iowan Old Style", "Book Antiqua", Georgia, ui-serif, serif',
+  display: '"Bitstream Vera Sans", sans-serif',
   /** Reading voice: descriptions, transcripts, answers, ledes. */
-  reading: '"Sitka Text", "Sitka Small", Charter, "Iowan Old Style", Georgia, "Noto Serif", ui-serif, serif',
+  reading: '"Bitstream Vera Sans", "Segoe UI", sans-serif',
   /** Signage voice: condensed caps for labels, spines, counts and navigation. */
-  signage: 'Bahnschrift, "Avenir Next Condensed", "Roboto Condensed", "Arial Narrow", "Helvetica Neue", system-ui, sans-serif',
+  signage: '"Bitstream Vera Sans", "Segoe UI", sans-serif',
   /** Interface voice: controls, metadata lines, helper copy. */
-  ui: '"Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif'
+  ui: '"Bitstream Vera Sans", "Segoe UI", sans-serif'
 } as const;
 
 export const size = {
   small: "0.8125rem",
   ui: "0.9375rem",
-  reading: "1.0625rem",
+  reading: "1.125rem",
   lede: "1.25rem",
-  h3: "1.375rem",
+  h3: "1.625rem",
   /** Card titles: between the h3 and the card-title sizes, for three lines at three columns. */
   cardHeading: "1.625rem",
   cardTitle: "clamp(1.5rem, 1.2rem + 1vw, 2rem)",
   title: "clamp(2rem, 1.5rem + 2.2vw, 3.25rem)",
   display: "clamp(2.75rem, 1.9rem + 3.6vw, 5rem)",
-  lineTight: "0.98",
+  lineTight: "1.05",
   lineTitle: "1.05",
   lineUi: "1.45",
   lineReading: "1.72"
@@ -100,12 +100,12 @@ export const space = {
 export const radius = {
   cell: "0.125rem",
   control: "0.25rem",
-  card: "0.375rem",
+  card: "0.75rem",
   pill: "999px"
 } as const;
 
 export const shadow = {
-  card: "0 1px 0 rgba(21, 24, 28, 0.06), 0 0.75rem 1.75rem rgba(21, 24, 28, 0.08)",
+  card: "none",
   lift: "0 0.5rem 1rem rgba(21, 24, 28, 0.18)"
 } as const;
 

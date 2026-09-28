@@ -191,7 +191,7 @@ describe("shelf, strip, tab and open book", () => {
 
     const broad = openBook({ book: bibleBookBySlug("romans")!, query, options, context: previewRenderContext, count: null, headingLevel: 1, broad: true }).toString();
     expect(broad).toContain('<h1 class="open-book__title" id="open-book-heading">Romans</h1>');
-    expect(broad).toContain('<p class="eyebrow">Sermons filed under</p>');
+    expect(broad).toContain('<p class="title-page__category">Sermons filed under</p>');
     expect(broad).toContain('<span class="tab hue--pauline"><span class="tab__name" aria-hidden="true">Romans</span>');
     expect(broad).not.toContain("Verses of");
     expect(broad).toContain('href="/frontend-preview/sermons/?passageBook=romans&amp;passageScope=book#canon">Search all of Romans</a>');

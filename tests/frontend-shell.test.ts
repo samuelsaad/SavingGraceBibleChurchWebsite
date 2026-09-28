@@ -34,7 +34,7 @@ describe("shared frontend shell", () => {
       expect(html, name).toContain('<a class="skip-link" href="#main-content">Skip to main content</a>');
       expect(html, name).toContain('<main id="main-content" class="site-main">');
       const isPreview = html.includes('class="preview-band"');
-      expect(html, name).toContain('<nav class="masthead__nav" aria-label="Primary"><ul class="masthead__links">');
+      expect(html, name).toContain('<nav class="masthead__nav" id="primary-navigation" aria-label="Primary"><ul class="masthead__links">');
       expect(html, name).toContain(isPreview ? '<details class="masthead__menu" data-menu data-sermon-menu>' : '<li class="masthead__links-sermons"><a href="/sermons/"');
       expect(html, name).toContain('<details class="masthead__menu" data-menu>');
       expect(html, name).not.toContain('data-sermon-menu open');
@@ -46,7 +46,7 @@ describe("shared frontend shell", () => {
       expect(html, name).toContain('<h2 class="footer-col__title" id="footer-contact-heading">Contact Us</h2>');
       expect(html, name).toContain('<span><a href="tel:+61450545589">Tel: 0450545589</a></span>');
       expect(html, name).toContain('<a class="button masthead__give" href="');
-      if (!isPreview) expect(html.replace(/<details class="(?:refine|masthead__menu)"[\s\S]*?<\/details>/gu, ""), name).not.toContain("<details");
+      if (!isPreview) expect(html.replace(/<details class="(?:refine|masthead__menu|site-footer__about)"[\s\S]*?<\/details>/gu, ""), name).not.toContain("<details");
       expect(html, name).not.toContain(' style="');
       expect(html, name).toContain('<meta name="color-scheme" content="light" />');
       expect(html, name).toContain('lang="en-AU"');
@@ -70,11 +70,11 @@ describe("shared frontend shell", () => {
     expect(siteStyles()).toContain("@media (forced-colors:active)");
   });
 
-  it("embeds only the canon enhancement on shelf pages and keeps preview pages free of indexable metadata", () => {
+  it("adds the canon enhancement only on shelf pages and keeps preview pages free of indexable metadata", () => {
     expect(pages.home).toContain('<script data-enhancement="canon">');
-    expect(pages.home.match(/<script /gu)).toHaveLength(2);
-    expect(pages.boundary.match(/<script /gu)).toHaveLength(1);
-    expect(pages.churchHome.match(/<script /gu)).toHaveLength(1);
+    expect(pages.home.match(/<script /gu)).toHaveLength(3);
+    expect(pages.boundary.match(/<script /gu)).toHaveLength(2);
+    expect(pages.churchHome.match(/<script /gu)).toHaveLength(2);
     expect(pages.churchHome).not.toContain('<script data-enhancement="canon">');
     expect(pages.previewHome).not.toContain('rel="canonical"');
     expect(pages.previewHome).not.toContain('property="og:');
@@ -87,18 +87,19 @@ describe("shared frontend shell", () => {
     expect(pages.home).not.toContain('class="preview-band"');
     for (const html of Object.values(pages)) {
       expect(html).toContain('<script data-enhancement="navigation">');
+      expect(html).toContain('<script data-enhancement="mobileNavigation">');
       expect(html.includes('data-menu data-sermon-menu>')).toBe(html.includes('class="preview-band"'));
     }
   });
 
   it("ships readable enhancement scripts that parse and hash consistently into the policy", () => {
-    expect(Object.keys(enhancementScripts).sort()).toEqual(["canon", "church", "navigation", "sermon"]);
+    expect(Object.keys(enhancementScripts).sort()).toEqual(["canon", "church", "mobileNavigation", "navigation", "sermon"]);
     for (const [name, source] of Object.entries(enhancementScripts)) {
       expect(() => new Function(source), `${name} parses`).not.toThrow();
       expect(source, `${name} is readable`).toContain("\n");
       expect(source).not.toMatch(/innerHTML|eval\(|fetch\(|XMLHttpRequest|document\.write|autoplay/u);
     }
-    for (const html of [pages.home, pages.previewHome, pages.churchHome]) {
+    for (const html of Object.values(pages)) {
       const csp = contentSecurityPolicy(html);
       for (const scriptHash of embeddedScriptHashes(html)) expect(csp).toContain(scriptHash);
       for (const styleHash of embeddedStyleHashes(html)) expect(csp).toContain(styleHash);
@@ -111,11 +112,11 @@ describe("shared frontend shell", () => {
   });
 
   it("renders boundary states in the visitor's own words with the shelf art", () => {
-    expect(pages.boundary).toContain('<p class="eyebrow">Not found</p>');
+    expect(pages.boundary).toContain('<p class="title-page__category">Not found</p>');
     expect(pages.boundary).toContain("<h1>Page not found</h1>");
     expect(pages.boundary).toContain('href="/sermons/">Browse sermons</a>');
     expect(pages.boundary).toContain('<svg class="boundary__art"');
-    expect(pages.privateBoundary).toContain('<p class="eyebrow">Private content</p>');
+    expect(pages.privateBoundary).toContain('<p class="title-page__category">Private content</p>');
     expect(pages.privateBoundary).toContain('href="/frontend-preview/sermons/">Browse sermons</a>');
     expect(pages.taxonomyIndex).toContain('<h1 class="title-page__title">Series</h1>');
     expect(pages.taxonomyIndex).toContain('<a href="/frontend-preview/series/example-series/"><span>Example Series</span><span class="index__count">2 sermons</span></a>');

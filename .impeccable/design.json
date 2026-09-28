@@ -1,0 +1,589 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-28T10:12:29Z",
+  "title": "Design System: Saving Grace Bible Church",
+  "extensions": {
+    "colorMeta": {
+      "ink": {
+        "role": "primary",
+        "displayName": "Mineral Blue Ink",
+        "tonalRamp": [
+          "oklch(15.0% 0.0536 233.77)",
+          "oklch(26.4% 0.0536 233.77)",
+          "oklch(37.9% 0.0536 233.77)",
+          "oklch(49.3% 0.0536 233.77)",
+          "oklch(60.7% 0.0536 233.77)",
+          "oklch(72.1% 0.0536 233.77)",
+          "oklch(83.6% 0.0536 233.77)",
+          "oklch(95.0% 0.0536 233.77)"
+        ]
+      },
+      "ink-soft": {
+        "role": "neutral",
+        "displayName": "Slate Text",
+        "tonalRamp": [
+          "oklch(15.0% 0.0337 235.76)",
+          "oklch(26.4% 0.0337 235.76)",
+          "oklch(37.9% 0.0337 235.76)",
+          "oklch(49.3% 0.0337 235.76)",
+          "oklch(60.7% 0.0337 235.76)",
+          "oklch(72.1% 0.0337 235.76)",
+          "oklch(83.6% 0.0337 235.76)",
+          "oklch(95.0% 0.0337 235.76)"
+        ]
+      },
+      "ink-muted": {
+        "role": "neutral",
+        "displayName": "Muted Slate",
+        "tonalRamp": [
+          "oklch(15.0% 0.0225 236.16)",
+          "oklch(26.4% 0.0225 236.16)",
+          "oklch(37.9% 0.0225 236.16)",
+          "oklch(49.3% 0.0225 236.16)",
+          "oklch(60.7% 0.0225 236.16)",
+          "oklch(72.1% 0.0225 236.16)",
+          "oklch(83.6% 0.0225 236.16)",
+          "oklch(95.0% 0.0225 236.16)"
+        ]
+      },
+      "ground": {
+        "role": "neutral",
+        "displayName": "White Ground",
+        "tonalRamp": [
+          "oklch(15.0% 0.0000 0.00)",
+          "oklch(26.4% 0.0000 0.00)",
+          "oklch(37.9% 0.0000 0.00)",
+          "oklch(49.3% 0.0000 0.00)",
+          "oklch(60.7% 0.0000 0.00)",
+          "oklch(72.1% 0.0000 0.00)",
+          "oklch(83.6% 0.0000 0.00)",
+          "oklch(95.0% 0.0000 0.00)"
+        ]
+      },
+      "raised": {
+        "role": "neutral",
+        "displayName": "White Control Surface",
+        "tonalRamp": [
+          "oklch(15.0% 0.0000 0.00)",
+          "oklch(26.4% 0.0000 0.00)",
+          "oklch(37.9% 0.0000 0.00)",
+          "oklch(49.3% 0.0000 0.00)",
+          "oklch(60.7% 0.0000 0.00)",
+          "oklch(72.1% 0.0000 0.00)",
+          "oklch(83.6% 0.0000 0.00)",
+          "oklch(95.0% 0.0000 0.00)"
+        ]
+      },
+      "recessed": {
+        "role": "neutral",
+        "displayName": "Cool Plaster",
+        "tonalRamp": [
+          "oklch(15.0% 0.0055 211.04)",
+          "oklch(26.4% 0.0055 211.04)",
+          "oklch(37.9% 0.0055 211.04)",
+          "oklch(49.3% 0.0055 211.04)",
+          "oklch(60.7% 0.0055 211.04)",
+          "oklch(72.1% 0.0055 211.04)",
+          "oklch(83.6% 0.0055 211.04)",
+          "oklch(95.0% 0.0055 211.04)"
+        ]
+      },
+      "tile": {
+        "role": "neutral",
+        "displayName": "Quiet Blue Tile",
+        "tonalRamp": [
+          "oklch(15.0% 0.0105 219.59)",
+          "oklch(26.4% 0.0105 219.59)",
+          "oklch(37.9% 0.0105 219.59)",
+          "oklch(49.3% 0.0105 219.59)",
+          "oklch(60.7% 0.0105 219.59)",
+          "oklch(72.1% 0.0105 219.59)",
+          "oklch(83.6% 0.0105 219.59)",
+          "oklch(95.0% 0.0105 219.59)"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Pale Blue Divider",
+        "tonalRamp": [
+          "oklch(15.0% 0.0138 226.58)",
+          "oklch(26.4% 0.0138 226.58)",
+          "oklch(37.9% 0.0138 226.58)",
+          "oklch(49.3% 0.0138 226.58)",
+          "oklch(60.7% 0.0138 226.58)",
+          "oklch(72.1% 0.0138 226.58)",
+          "oklch(83.6% 0.0138 226.58)",
+          "oklch(95.0% 0.0138 226.58)"
+        ]
+      },
+      "rule-strong": {
+        "role": "neutral",
+        "displayName": "Slate Control Boundary",
+        "tonalRamp": [
+          "oklch(15.0% 0.0235 232.44)",
+          "oklch(26.4% 0.0235 232.44)",
+          "oklch(37.9% 0.0235 232.44)",
+          "oklch(49.3% 0.0235 232.44)",
+          "oklch(60.7% 0.0235 232.44)",
+          "oklch(72.1% 0.0235 232.44)",
+          "oklch(83.6% 0.0235 232.44)",
+          "oklch(95.0% 0.0235 232.44)"
+        ]
+      },
+      "gilt": {
+        "role": "secondary",
+        "displayName": "Copper Accent",
+        "tonalRamp": [
+          "oklch(15.0% 0.1169 42.19)",
+          "oklch(26.4% 0.1169 42.19)",
+          "oklch(37.9% 0.1169 42.19)",
+          "oklch(49.3% 0.1169 42.19)",
+          "oklch(60.7% 0.1169 42.19)",
+          "oklch(72.1% 0.1169 42.19)",
+          "oklch(83.6% 0.1169 42.19)",
+          "oklch(95.0% 0.1169 42.19)"
+        ]
+      },
+      "gilt-soft": {
+        "role": "secondary",
+        "displayName": "Light Sky",
+        "tonalRamp": [
+          "oklch(15.0% 0.0149 218.05)",
+          "oklch(26.4% 0.0149 218.05)",
+          "oklch(37.9% 0.0149 218.05)",
+          "oklch(49.3% 0.0149 218.05)",
+          "oklch(60.7% 0.0149 218.05)",
+          "oklch(72.1% 0.0149 218.05)",
+          "oklch(83.6% 0.0149 218.05)",
+          "oklch(95.0% 0.0149 218.05)"
+        ]
+      },
+      "gilt-bright": {
+        "role": "secondary",
+        "displayName": "Warm Light Accent",
+        "tonalRamp": [
+          "oklch(15.0% 0.0758 71.73)",
+          "oklch(26.4% 0.0758 71.73)",
+          "oklch(37.9% 0.0758 71.73)",
+          "oklch(49.3% 0.0758 71.73)",
+          "oklch(60.7% 0.0758 71.73)",
+          "oklch(72.1% 0.0758 71.73)",
+          "oklch(83.6% 0.0758 71.73)",
+          "oklch(95.0% 0.0758 71.73)"
+        ]
+      },
+      "on-ink": {
+        "role": "neutral",
+        "displayName": "White on Ink",
+        "tonalRamp": [
+          "oklch(15.0% 0.0000 0.00)",
+          "oklch(26.4% 0.0000 0.00)",
+          "oklch(37.9% 0.0000 0.00)",
+          "oklch(49.3% 0.0000 0.00)",
+          "oklch(60.7% 0.0000 0.00)",
+          "oklch(72.1% 0.0000 0.00)",
+          "oklch(83.6% 0.0000 0.00)",
+          "oklch(95.0% 0.0000 0.00)"
+        ]
+      },
+      "on-ink-soft": {
+        "role": "neutral",
+        "displayName": "Pale Sky on Ink",
+        "tonalRamp": [
+          "oklch(15.0% 0.0248 226.51)",
+          "oklch(26.4% 0.0248 226.51)",
+          "oklch(37.9% 0.0248 226.51)",
+          "oklch(49.3% 0.0248 226.51)",
+          "oklch(60.7% 0.0248 226.51)",
+          "oklch(72.1% 0.0248 226.51)",
+          "oklch(83.6% 0.0248 226.51)",
+          "oklch(95.0% 0.0248 226.51)"
+        ]
+      },
+      "spine-law": {
+        "role": "secondary",
+        "displayName": "Law",
+        "tonalRamp": [
+          "oklch(15.0% 0.1152 12.15)",
+          "oklch(26.4% 0.1152 12.15)",
+          "oklch(37.9% 0.1152 12.15)",
+          "oklch(49.3% 0.1152 12.15)",
+          "oklch(60.7% 0.1152 12.15)",
+          "oklch(72.1% 0.1152 12.15)",
+          "oklch(83.6% 0.1152 12.15)",
+          "oklch(95.0% 0.1152 12.15)"
+        ]
+      },
+      "spine-history": {
+        "role": "secondary",
+        "displayName": "History",
+        "tonalRamp": [
+          "oklch(15.0% 0.0885 60.87)",
+          "oklch(26.4% 0.0885 60.87)",
+          "oklch(37.9% 0.0885 60.87)",
+          "oklch(49.3% 0.0885 60.87)",
+          "oklch(60.7% 0.0885 60.87)",
+          "oklch(72.1% 0.0885 60.87)",
+          "oklch(83.6% 0.0885 60.87)",
+          "oklch(95.0% 0.0885 60.87)"
+        ]
+      },
+      "spine-wisdom": {
+        "role": "secondary",
+        "displayName": "Wisdom",
+        "tonalRamp": [
+          "oklch(15.0% 0.0902 118.09)",
+          "oklch(26.4% 0.0902 118.09)",
+          "oklch(37.9% 0.0902 118.09)",
+          "oklch(49.3% 0.0902 118.09)",
+          "oklch(60.7% 0.0902 118.09)",
+          "oklch(72.1% 0.0902 118.09)",
+          "oklch(83.6% 0.0902 118.09)",
+          "oklch(95.0% 0.0902 118.09)"
+        ]
+      },
+      "spine-major-prophets": {
+        "role": "secondary",
+        "displayName": "Major Prophets",
+        "tonalRamp": [
+          "oklch(15.0% 0.0707 172.16)",
+          "oklch(26.4% 0.0707 172.16)",
+          "oklch(37.9% 0.0707 172.16)",
+          "oklch(49.3% 0.0707 172.16)",
+          "oklch(60.7% 0.0707 172.16)",
+          "oklch(72.1% 0.0707 172.16)",
+          "oklch(83.6% 0.0707 172.16)",
+          "oklch(95.0% 0.0707 172.16)"
+        ]
+      },
+      "spine-minor-prophets": {
+        "role": "secondary",
+        "displayName": "Minor Prophets",
+        "tonalRamp": [
+          "oklch(15.0% 0.0649 226.13)",
+          "oklch(26.4% 0.0649 226.13)",
+          "oklch(37.9% 0.0649 226.13)",
+          "oklch(49.3% 0.0649 226.13)",
+          "oklch(60.7% 0.0649 226.13)",
+          "oklch(72.1% 0.0649 226.13)",
+          "oklch(83.6% 0.0649 226.13)",
+          "oklch(95.0% 0.0649 226.13)"
+        ]
+      },
+      "spine-gospels-acts": {
+        "role": "secondary",
+        "displayName": "Gospels and Acts",
+        "tonalRamp": [
+          "oklch(15.0% 0.1122 262.66)",
+          "oklch(26.4% 0.1122 262.66)",
+          "oklch(37.9% 0.1122 262.66)",
+          "oklch(49.3% 0.1122 262.66)",
+          "oklch(60.7% 0.1122 262.66)",
+          "oklch(72.1% 0.1122 262.66)",
+          "oklch(83.6% 0.1122 262.66)",
+          "oklch(95.0% 0.1122 262.66)"
+        ]
+      },
+      "spine-pauline": {
+        "role": "secondary",
+        "displayName": "Pauline Epistles",
+        "tonalRamp": [
+          "oklch(15.0% 0.1277 290.65)",
+          "oklch(26.4% 0.1277 290.65)",
+          "oklch(37.9% 0.1277 290.65)",
+          "oklch(49.3% 0.1277 290.65)",
+          "oklch(60.7% 0.1277 290.65)",
+          "oklch(72.1% 0.1277 290.65)",
+          "oklch(83.6% 0.1277 290.65)",
+          "oklch(95.0% 0.1277 290.65)"
+        ]
+      },
+      "spine-general": {
+        "role": "secondary",
+        "displayName": "General Epistles",
+        "tonalRamp": [
+          "oklch(15.0% 0.1311 337.65)",
+          "oklch(26.4% 0.1311 337.65)",
+          "oklch(37.9% 0.1311 337.65)",
+          "oklch(49.3% 0.1311 337.65)",
+          "oklch(60.7% 0.1311 337.65)",
+          "oklch(72.1% 0.1311 337.65)",
+          "oklch(83.6% 0.1311 337.65)",
+          "oklch(95.0% 0.1311 337.65)"
+        ]
+      },
+      "spine-revelation": {
+        "role": "secondary",
+        "displayName": "Revelation",
+        "tonalRamp": [
+          "oklch(15.0% 0.0238 267.11)",
+          "oklch(26.4% 0.0238 267.11)",
+          "oklch(37.9% 0.0238 267.11)",
+          "oklch(49.3% 0.0238 267.11)",
+          "oklch(60.7% 0.0238 267.11)",
+          "oklch(72.1% 0.0238 267.11)",
+          "oklch(83.6% 0.0238 267.11)",
+          "oklch(95.0% 0.0238 267.11)"
+        ]
+      },
+      "spine-topical": {
+        "role": "secondary",
+        "displayName": "Topical",
+        "tonalRamp": [
+          "oklch(15.0% 0.0604 333.68)",
+          "oklch(26.4% 0.0604 333.68)",
+          "oklch(37.9% 0.0604 333.68)",
+          "oklch(49.3% 0.0604 333.68)",
+          "oklch(60.7% 0.0604 333.68)",
+          "oklch(72.1% 0.0604 333.68)",
+          "oklch(83.6% 0.0604 333.68)",
+          "oklch(95.0% 0.0604 333.68)"
+        ]
+      },
+      "ground-print": {
+        "role": "neutral",
+        "displayName": "Print Paper",
+        "tonalRamp": [
+          "oklch(15.0% 0.0000 0.00)",
+          "oklch(26.4% 0.0000 0.00)",
+          "oklch(37.9% 0.0000 0.00)",
+          "oklch(49.3% 0.0000 0.00)",
+          "oklch(60.7% 0.0000 0.00)",
+          "oklch(72.1% 0.0000 0.00)",
+          "oklch(83.6% 0.0000 0.00)",
+          "oklch(95.0% 0.0000 0.00)"
+        ]
+      },
+      "ink-print": {
+        "role": "neutral",
+        "displayName": "Print Ink",
+        "tonalRamp": [
+          "oklch(15.0% 0.0000 0.00)",
+          "oklch(26.4% 0.0000 0.00)",
+          "oklch(37.9% 0.0000 0.00)",
+          "oklch(49.3% 0.0000 0.00)",
+          "oklch(60.7% 0.0000 0.00)",
+          "oklch(72.1% 0.0000 0.00)",
+          "oklch(83.6% 0.0000 0.00)",
+          "oklch(95.0% 0.0000 0.00)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Archive display",
+        "purpose": "Archive and taxonomy page titles."
+      },
+      "headline": {
+        "displayName": "Section heading",
+        "purpose": "Shared section headings."
+      },
+      "title": {
+        "displayName": "Sermon card title",
+        "purpose": "Default sermon-card titles."
+      },
+      "body": {
+        "displayName": "Reading text",
+        "purpose": "Church prose and transcript reading."
+      },
+      "lede": {
+        "displayName": "Lead paragraph",
+        "purpose": "Short introductory prose."
+      },
+      "ui": {
+        "displayName": "Interface text",
+        "purpose": "Controls and metadata."
+      },
+      "label": {
+        "displayName": "Field label",
+        "purpose": "Visible uppercase field labels."
+      }
+    },
+    "shadows": [
+      {
+        "name": "card",
+        "value": "none",
+        "purpose": "Flat cards and library disclosure surfaces."
+      },
+      {
+        "name": "lift",
+        "value": "0 0.5rem 1rem rgba(21, 24, 28, 0.18)",
+        "purpose": "Existing book-tab hover."
+      },
+      {
+        "name": "focus-separator",
+        "value": "0 0 0 3px var(--colour-ground)",
+        "purpose": "Separates the 3px ink focus outline from the surface; outline offset is 3px."
+      }
+    ],
+    "motion": [
+      {
+        "name": "duration",
+        "value": "160ms",
+        "purpose": "Button, chevron, card and logo state transitions."
+      },
+      {
+        "name": "settle",
+        "value": "480ms",
+        "purpose": "Existing shelf settling and folded-library opening."
+      },
+      {
+        "name": "easing",
+        "value": "cubic-bezier(0.2, 0, 0, 1)",
+        "purpose": "Shared state-transition easing."
+      },
+      {
+        "name": "invitation-duration",
+        "value": "700ms",
+        "purpose": "One homepage photograph opening when reduced motion is not requested."
+      },
+      {
+        "name": "invitation-easing",
+        "value": "cubic-bezier(.16, 1, .3, 1)",
+        "purpose": "Homepage opening clip transition from inset(0 0 5% 0) to inset(0)."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "narrow",
+        "value": "38rem"
+      },
+      {
+        "name": "mobile",
+        "value": "44rem"
+      },
+      {
+        "name": "tablet",
+        "value": "60rem"
+      },
+      {
+        "name": "wide",
+        "value": "76rem"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Shared button variant from core.ts; native hover, focus and disabled states.",
+      "html": "<button class=\"ds-button-primary\" type=\"button\">Plan your visit</button>",
+      "css": ".ds-button-primary { overflow-wrap: anywhere; display: inline-flex; align-items: center; justify-content: center; gap: 0.5em; min-height: 3rem; padding: 0.6rem 1.25rem; border: 1px solid var(--colour-ink, #183d50); border-radius: var(--radius-control, 0.25rem); background: var(--colour-ink, #183d50); color: var(--colour-on-ink, #ffffff); font-family: var(--font-ui, \"Bitstream Vera Sans\", \"Segoe UI\", sans-serif); font-size: var(--size-ui, 0.9375rem); line-height: var(--size-line-ui, 1.45); font-weight: 600; text-decoration: none; cursor: pointer; transition: background-color var(--motion-duration, 160ms) var(--motion-easing, cubic-bezier(0.2, 0, 0, 1)), color var(--motion-duration, 160ms) var(--motion-easing, cubic-bezier(0.2, 0, 0, 1)), border-color var(--motion-duration, 160ms) var(--motion-easing, cubic-bezier(0.2, 0, 0, 1)); } .ds-button-primary:hover { background: var(--colour-gilt, #90411f); color: var(--colour-on-ink, #ffffff); border-color: var(--colour-gilt, #90411f); } .ds-button-primary:disabled { background: var(--colour-tile, #e0e9ec); border-color: var(--colour-tile, #e0e9ec); color: var(--colour-ink-muted, #53616a); cursor: not-allowed; } .ds-button-primary:focus-visible { outline: 3px solid var(--colour-ink, #183d50); outline-offset: 3px; box-shadow: 0 0 0 3px var(--colour-ground, #ffffff); } @media (prefers-reduced-motion: reduce) { .ds-button-primary { transition-duration: 0s !important; animation-duration: 0s !important; } }"
+    },
+    {
+      "name": "Outline button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Shared button variant from core.ts; native hover, focus and disabled states.",
+      "html": "<button class=\"ds-button-outline\" type=\"button\">Apply filters</button>",
+      "css": ".ds-button-outline { overflow-wrap: anywhere; display: inline-flex; align-items: center; justify-content: center; gap: 0.5em; min-height: 3rem; padding: 0.6rem 1.25rem; border: 1px solid var(--colour-ink, #183d50); border-radius: var(--radius-control, 0.25rem); background: transparent; color: var(--colour-ink, #183d50); font-family: var(--font-ui, \"Bitstream Vera Sans\", \"Segoe UI\", sans-serif); font-size: var(--size-ui, 0.9375rem); line-height: var(--size-line-ui, 1.45); font-weight: 600; text-decoration: none; cursor: pointer; transition: background-color var(--motion-duration, 160ms) var(--motion-easing, cubic-bezier(0.2, 0, 0, 1)), color var(--motion-duration, 160ms) var(--motion-easing, cubic-bezier(0.2, 0, 0, 1)), border-color var(--motion-duration, 160ms) var(--motion-easing, cubic-bezier(0.2, 0, 0, 1)); } .ds-button-outline:hover { background: var(--colour-ink, #183d50); color: var(--colour-on-ink, #ffffff); border-color: var(--colour-ink, #183d50); } .ds-button-outline:disabled { background: var(--colour-tile, #e0e9ec); border-color: var(--colour-tile, #e0e9ec); color: var(--colour-ink-muted, #53616a); cursor: not-allowed; } .ds-button-outline:focus-visible { outline: 3px solid var(--colour-ink, #183d50); outline-offset: 3px; box-shadow: 0 0 0 3px var(--colour-ground, #ffffff); } @media (prefers-reduced-motion: reduce) { .ds-button-outline { transition-duration: 0s !important; animation-duration: 0s !important; } }"
+    },
+    {
+      "name": "Button on ink",
+      "kind": "button",
+      "refersTo": "button-on-ink",
+      "description": "Shared button variant from core.ts; native hover, focus and disabled states.",
+      "html": "<div class=\"ds-ink-context\"><button class=\"ds-button-on-ink\" type=\"button\">Give</button></div>",
+      "css": ".ds-ink-context { overflow-wrap: anywhere; padding: var(--space-7, 3rem); background: var(--colour-ink, #183d50); } .ds-button-on-ink { display: inline-flex; align-items: center; justify-content: center; gap: 0.5em; min-height: 3rem; padding: 0.6rem 1.25rem; border: 1px solid var(--colour-on-ink, #ffffff); border-radius: var(--radius-control, 0.25rem); background: transparent; color: var(--colour-on-ink, #ffffff); font-family: var(--font-ui, \"Bitstream Vera Sans\", \"Segoe UI\", sans-serif); font-size: var(--size-ui, 0.9375rem); line-height: var(--size-line-ui, 1.45); font-weight: 600; text-decoration: none; cursor: pointer; transition: background-color var(--motion-duration, 160ms) var(--motion-easing, cubic-bezier(0.2, 0, 0, 1)), color var(--motion-duration, 160ms) var(--motion-easing, cubic-bezier(0.2, 0, 0, 1)), border-color var(--motion-duration, 160ms) var(--motion-easing, cubic-bezier(0.2, 0, 0, 1)); } .ds-button-on-ink:hover { background: var(--colour-on-ink, #ffffff); color: var(--colour-ink, #183d50); border-color: var(--colour-on-ink, #ffffff); } .ds-button-on-ink:disabled { background: var(--colour-tile, #e0e9ec); border-color: var(--colour-tile, #e0e9ec); color: var(--colour-ink-muted, #53616a); cursor: not-allowed; } .ds-button-on-ink:focus-visible { outline: 3px solid var(--colour-ink, #183d50); outline-offset: 3px; box-shadow: 0 0 0 3px var(--colour-ground, #ffffff); } @media (prefers-reduced-motion: reduce) { .ds-button-on-ink { transition-duration: 0s !important; animation-duration: 0s !important; } }"
+    },
+    {
+      "name": "Search field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Visible label and search control from search.ts and core.ts.",
+      "html": "<div class=\"ds-field\"><label class=\"ds-field-label\" for=\"ds-sermon-search\">Search sermons</label><input id=\"ds-sermon-search\" class=\"ds-control\" name=\"s\" type=\"search\" maxlength=\"120\" autocomplete=\"off\" placeholder=\"A word, a name, a passage\"></div>",
+      "css": ".ds-field { overflow-wrap: anywhere; display: grid; gap: var(--space-1, 0.25rem); min-width: 0; color: var(--colour-ink, #183d50); } .ds-field-label { font-family: var(--font-signage, \"Bitstream Vera Sans\", \"Segoe UI\", sans-serif); font-stretch: 87.5%; font-size: var(--size-small, 0.8125rem); font-weight: 600; line-height: 1.45; letter-spacing: 0.08em; text-transform: uppercase; color: var(--colour-ink-soft, #3e5360); } .ds-control { width: 100%; min-height: var(--target-size, 2.75rem); padding: 0.5rem 0.75rem; border: 1px solid var(--colour-rule-strong, #6b7b84); border-radius: var(--radius-control, 0.25rem); background: var(--colour-raised, #ffffff); color: var(--colour-ink, #183d50); font-family: var(--font-ui, \"Bitstream Vera Sans\", \"Segoe UI\", sans-serif); font-size: 1rem; line-height: 1.45; appearance: none; caret-color: var(--colour-ink, #183d50); } .ds-control:disabled { background: var(--colour-tile, #e0e9ec); color: var(--colour-ink-muted, #53616a); } .ds-control:focus-visible { outline: 3px solid var(--colour-ink, #183d50); outline-offset: 3px; box-shadow: 0 0 0 3px var(--colour-ground, #ffffff); }"
+    },
+    {
+      "name": "Masthead navigation",
+      "kind": "nav",
+      "refersTo": "navigation-link",
+      "description": "Native details submenu with sentence-case links; a compact specimen of the masthead.",
+      "html": "<nav aria-label=\"Example navigation\"><ul class=\"ds-nav\"><li><a href=\"#\" aria-current=\"page\">Home</a></li><li><details class=\"ds-menu\"><summary class=\"ds-menu-toggle\">About Us <span class=\"ds-chevron\" aria-hidden=\"true\"></span></summary><ul class=\"ds-dropdown\"><li><a href=\"#\">Our Beliefs</a></li><li><a href=\"#\">Our Leadership</a></li></ul></details></li><li><a href=\"#\">Contact Us</a></li></ul></nav>",
+      "css": ".ds-nav { overflow-wrap: anywhere; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-1, 0.25rem) var(--space-2, 0.5rem); list-style: none; margin: 0; padding: 0; font-family: var(--font-ui, \"Bitstream Vera Sans\", \"Segoe UI\", sans-serif); font-size: var(--size-ui, 0.9375rem); line-height: var(--size-line-ui, 1.45); color: var(--colour-ink, #183d50); } .ds-nav a { display: inline-flex; align-items: center; min-height: var(--target-size, 2.75rem); padding: 0 var(--space-2, 0.5rem); font-weight: 600; text-decoration: none; color: var(--colour-ink, #183d50); white-space: nowrap; } .ds-nav a:hover, .ds-menu-toggle:hover { color: var(--colour-gilt, #90411f); } .ds-nav a[aria-current=\"page\"] { box-shadow: inset 0 -2px 0 var(--colour-gilt, #90411f); color: var(--colour-gilt, #90411f); } .ds-menu { position: relative; width: max-content; } .ds-menu-toggle { display: flex; align-items: center; gap: var(--space-2, 0.5rem); min-height: var(--target-size, 2.75rem); padding: 0 var(--space-2, 0.5rem); list-style: none; cursor: pointer; font-weight: 600; white-space: nowrap; } .ds-menu-toggle::-webkit-details-marker { display: none; } .ds-chevron { width: 0.45em; height: 0.45em; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); } .ds-menu[open] .ds-chevron { transform: rotate(225deg); } .ds-dropdown { position: absolute; z-index: 20; top: 100%; left: 0; min-width: 12rem; margin: 0; padding: var(--space-3, 0.75rem); list-style: none; background: var(--colour-raised, #ffffff); border: 1px solid var(--colour-rule-strong, #6b7b84); } .ds-dropdown a { display: flex; padding: var(--space-2, 0.5rem) var(--space-3, 0.75rem); font-weight: 500; } .ds-dropdown a:hover { background: var(--colour-recessed, #eef3f4); } .ds-nav a:focus-visible { outline: 3px solid var(--colour-ink, #183d50); outline-offset: 3px; box-shadow: 0 0 0 3px var(--colour-ground, #ffffff); } .ds-menu-toggle:focus-visible { outline: 3px solid var(--colour-ink, #183d50); outline-offset: 3px; box-shadow: 0 0 0 3px var(--colour-ground, #ffffff); } @media (max-width: 44rem) { .ds-dropdown { position: static; margin-top: var(--space-1, 0.25rem); } }"
+    },
+    {
+      "name": "Taxonomy chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "An ordinary taxonomy link with count; selected filter tokens use a separate copper-and-sky treatment.",
+      "html": "<a class=\"ds-chip\" href=\"#\">Bible book <span class=\"ds-chip-count\">12</span></a>",
+      "css": ".ds-chip { overflow-wrap: anywhere; display: inline-flex; align-items: center; gap: 0.5em; min-height: var(--target-size, 2.75rem); padding: 0 0.9rem; border: 1px solid var(--colour-rule-strong, #6b7b84); border-radius: var(--radius-pill, 999px); background: var(--colour-raised, #ffffff); color: var(--colour-ink, #183d50); font-family: var(--font-ui, \"Bitstream Vera Sans\", \"Segoe UI\", sans-serif); font-size: var(--size-ui, 0.9375rem); line-height: var(--size-line-ui, 1.45); text-decoration: none; } .ds-chip:hover { border-color: var(--colour-ink, #183d50); color: var(--colour-ink, #183d50); background: var(--colour-recessed, #eef3f4); } .ds-chip-count { font-family: var(--font-signage, \"Bitstream Vera Sans\", \"Segoe UI\", sans-serif); font-variant-numeric: tabular-nums; color: var(--colour-ink-muted, #53616a); } .ds-chip:focus-visible { outline: 3px solid var(--colour-ink, #183d50); outline-offset: 3px; box-shadow: 0 0 0 3px var(--colour-ground, #ffffff); }"
+    },
+    {
+      "name": "Sermon card",
+      "kind": "card",
+      "refersTo": "sermon-card",
+      "description": "Source card plate, title, excerpt and footer with illustrative placeholder content, not a sermon record.",
+      "html": "<article class=\"ds-card\"><div class=\"ds-card-plate\"><span class=\"ds-card-bookname\">Bible book</span><span class=\"ds-card-ref\">Chapter:verse</span></div><div class=\"ds-card-body\"><h3 class=\"ds-card-title\"><a href=\"#\">Sermon title</a></h3><p class=\"ds-card-meta\">Speaker · Service date</p><p class=\"ds-card-desc\">The approved sermon description appears here.</p></div><div class=\"ds-card-foot\"><span class=\"ds-card-booklink\">Bible book</span><span class=\"ds-card-cta\">Read sermon</span></div></article>",
+      "css": ".ds-card { overflow-wrap: anywhere; position: relative; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-width: 0; background: var(--colour-raised, #ffffff); border: 1px solid var(--colour-rule, #ccd7dc); border-radius: var(--radius-card, 0.75rem); box-shadow: var(--shadow-card, none); overflow: hidden; font-family: var(--font-ui, \"Bitstream Vera Sans\", \"Segoe UI\", sans-serif); font-size: var(--size-ui, 0.9375rem); line-height: var(--size-line-ui, 1.45); color: var(--colour-ink, #183d50); transition: box-shadow var(--motion-duration, 160ms) var(--motion-easing, cubic-bezier(0.2, 0, 0, 1)), transform var(--motion-duration, 160ms) var(--motion-easing, cubic-bezier(0.2, 0, 0, 1)), border-color var(--motion-duration, 160ms) var(--motion-easing, cubic-bezier(0.2, 0, 0, 1)); } .ds-card:hover { border-color: var(--colour-rule-strong, #6b7b84); } .ds-card:focus-within { border-color: var(--colour-ink, #183d50); } .ds-card-plate { position: relative; display: flex; flex-direction: column; justify-content: flex-end; gap: 0.2rem; min-height: 8rem; padding: var(--space-7, 3rem) var(--space-5, 1.5rem) var(--space-4, 1rem); background: var(--hue, var(--colour-ink, #183d50)); color: var(--colour-on-ink, #ffffff); } .ds-card-bookname { font-family: var(--font-signage, \"Bitstream Vera Sans\", \"Segoe UI\", sans-serif); font-stretch: 87.5%; font-size: clamp(1.5rem, 1rem + 1.6vw, 2.25rem); font-weight: 700; letter-spacing: 0.05em; line-height: 0.95; text-transform: uppercase; text-wrap: balance; overflow-wrap: anywhere; } .ds-card-ref { font-family: var(--font-display, \"Bitstream Vera Sans\", sans-serif); font-size: var(--size-h3, 1.625rem); line-height: 1.1; font-variant-numeric: tabular-nums; } .ds-card-body { position: relative; display: grid; align-content: start; gap: var(--space-3, 0.75rem); padding: var(--space-5, 1.5rem); min-width: 0; } .ds-card-title { margin: 0; font-family: var(--font-display, \"Bitstream Vera Sans\", sans-serif); font-size: var(--size-card-heading, 1.625rem); font-weight: 700; line-height: 1.12; letter-spacing: -0.01em; text-wrap: pretty; overflow-wrap: anywhere; } .ds-card-title a { color: var(--colour-ink, #183d50); text-decoration: none; } .ds-card-title a::after { content: \"\"; position: absolute; inset: 0; } .ds-card:hover .ds-card-title a { color: var(--colour-gilt, #90411f); text-decoration: underline; text-decoration-color: var(--colour-gilt, #90411f); text-decoration-thickness: 0.06em; text-underline-offset: 0.16em; } .ds-card-meta { display: flex; flex-wrap: wrap; gap: var(--space-1, 0.25rem) var(--space-2, 0.5rem); margin: 0; color: var(--colour-ink-soft, #3e5360); } .ds-card-desc { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; overflow: hidden; margin: var(--space-1, 0.25rem) 0 0; font-family: var(--font-reading, \"Bitstream Vera Sans\", \"Segoe UI\", sans-serif); font-size: var(--size-reading, 1.125rem); line-height: 1.5; color: var(--colour-ink-soft, #3e5360); } .ds-card-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3, 0.75rem); min-height: 2.75rem; padding: 0 var(--space-4, 1rem); border-top: 1px solid var(--colour-rule, #ccd7dc); font-family: var(--font-signage, \"Bitstream Vera Sans\", \"Segoe UI\", sans-serif); font-stretch: 87.5%; font-size: var(--size-small, 0.8125rem); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--colour-ink-soft, #3e5360); } .ds-card-booklink { display: inline-flex; align-items: center; min-height: 2.75rem; } .ds-card-booklink::before { content: \"\"; width: 0.45rem; height: 1rem; margin-right: 0.45rem; border-radius: var(--radius-cell, 0.125rem); background: var(--hue, var(--colour-ink-muted, #53616a)); } .ds-card-cta { color: var(--colour-gilt, #90411f); } .ds-card-cta::after { content: \" →\"; } .ds-card-title a:focus-visible { outline: 3px solid var(--colour-ink, #183d50); outline-offset: 3px; box-shadow: 0 0 0 3px var(--colour-ground, #ffffff); } @supports selector(:has(a)) { .ds-card:has(.ds-card-title a:focus-visible) { outline: 3px solid var(--colour-ink, #183d50); outline-offset: 3px; box-shadow: 0 0 0 3px var(--colour-ground, #ffffff); } .ds-card-title a:focus-visible { outline: none; box-shadow: none; } } @media (max-width: 44rem) { .ds-card-plate { min-height: 7.5rem; padding: var(--space-7, 3rem) var(--space-4, 1rem) var(--space-4, 1rem); } .ds-card-body { padding: var(--space-3, 0.75rem) var(--space-3, 0.75rem) var(--space-2, 0.5rem); } .ds-card-foot { padding: 0 var(--space-3, 0.75rem); } .ds-card-desc { -webkit-line-clamp: 5; line-clamp: 5; } } @media (prefers-reduced-motion: reduce) { .ds-card { transition-duration: 0s !important; } }"
+    },
+    {
+      "name": "Reading callout",
+      "kind": "custom",
+      "refersTo": "callout",
+      "description": "An unrounded recessed reading panel from church.ts.",
+      "html": "<aside class=\"ds-callout\"><h3 class=\"ds-callout-title\">Church information</h3><p class=\"ds-callout-text\">A supporting note appears alongside the page content.</p></aside>",
+      "css": ".ds-callout { overflow-wrap: anywhere; clear: both; max-width: var(--measure-prose, 68ch); margin: var(--space-7, 3rem) 0; padding: clamp(1.5rem, 3vw, 2.5rem); background: var(--colour-recessed, #eef3f4); color: var(--colour-ink, #183d50); font-family: var(--font-reading, \"Bitstream Vera Sans\", \"Segoe UI\", sans-serif); font-size: var(--size-reading, 1.125rem); line-height: var(--size-line-reading, 1.72); } .ds-callout-title { margin: 0 0 var(--space-3, 0.75rem); font-family: var(--font-display, \"Bitstream Vera Sans\", sans-serif); font-size: 2rem; font-weight: 700; line-height: 1.1; text-transform: uppercase; text-wrap: balance; } .ds-callout-text { margin: 0; } @media (forced-colors: active) { .ds-callout { border: 1px solid CanvasText; } }"
+    },
+    {
+      "name": "Event row",
+      "kind": "custom",
+      "refersTo": "event-row",
+      "description": "The date-and-content row from church.ts with illustrative placeholder labels.",
+      "html": "<div class=\"ds-event\"><div class=\"ds-event-date\"><span class=\"ds-event-month\">Month</span><span class=\"ds-event-day\">DD</span></div><div class=\"ds-event-body\"><h3 class=\"ds-event-title\"><a href=\"#\">Event title</a></h3><p class=\"ds-event-time\">Event time</p><p class=\"ds-event-venue\">Venue</p></div></div>",
+      "css": ".ds-event { overflow-wrap: anywhere; display: grid; grid-template-columns: 5rem minmax(0, 1fr); gap: var(--space-5, 1.5rem); padding: var(--space-5, 1.5rem) 0; border-bottom: 1px solid var(--colour-rule, #ccd7dc); color: var(--colour-ink, #183d50); font-family: var(--font-ui, \"Bitstream Vera Sans\", \"Segoe UI\", sans-serif); font-size: var(--size-ui, 0.9375rem); line-height: var(--size-line-ui, 1.45); } .ds-event-date { display: grid; align-content: start; font-family: var(--font-ui, \"Bitstream Vera Sans\", \"Segoe UI\", sans-serif); } .ds-event-month { font-size: var(--size-small, 0.8125rem); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; } .ds-event-day { font-family: var(--font-display, \"Bitstream Vera Sans\", sans-serif); font-size: 2.5rem; font-weight: 600; line-height: 1.05; font-variant-numeric: tabular-nums; } .ds-event-body { display: grid; min-width: 0; gap: var(--space-1, 0.25rem); } .ds-event-title { display: flex; align-items: center; min-height: var(--target-size, 2.75rem); margin: 0; font-family: var(--font-display, \"Bitstream Vera Sans\", sans-serif); font-size: var(--size-h3, 1.625rem); font-weight: 700; line-height: 1.15; text-wrap: balance; } .ds-event-title a { display: inline-flex; align-items: center; min-height: var(--target-size, 2.75rem); color: var(--colour-ink, #183d50); text-decoration: none; } .ds-event-title a:hover { text-decoration: underline; text-decoration-color: var(--colour-gilt, #90411f); text-decoration-thickness: 0.09em; text-underline-offset: 0.18em; } .ds-event-time { display: inline-flex; flex-wrap: wrap; align-items: center; min-width: 0; gap: var(--space-2, 0.5rem); margin: 0; color: var(--colour-ink-soft, #3e5360); } .ds-event-venue { margin: 0; color: var(--colour-ink-soft, #3e5360); } .ds-event-title a:focus-visible { outline: 3px solid var(--colour-ink, #183d50); outline-offset: 3px; box-shadow: 0 0 0 3px var(--colour-ground, #ffffff); } @media (max-width: 44rem) { .ds-event { grid-template-columns: 3.5rem minmax(0, 1fr); gap: var(--space-3, 0.75rem); } } .ds-event-time > * { min-width: 0; } .ds-event-time time { min-width: 0; overflow-wrap: anywhere; }"
+    },
+    {
+      "name": "Transcript disclosure",
+      "kind": "custom",
+      "refersTo": "transcript-disclosure",
+      "description": "Native details with the implemented wrapping summary and open/closed labels; placeholder content only.",
+      "html": "<details class=\"ds-transcript\"><summary class=\"ds-transcript-summary\"><span class=\"ds-transcript-closed\">Read the transcript</span><span class=\"ds-transcript-open\">Hide the transcript</span><span class=\"ds-transcript-stats\">Reading details</span></summary><div class=\"ds-transcript-body\"><p>The approved transcript is rendered here.</p></div></details>",
+      "css": ".ds-transcript { overflow-wrap: anywhere; max-width: var(--measure-transcript, 64ch); color: var(--colour-ink, #183d50); font-family: var(--font-ui, \"Bitstream Vera Sans\", \"Segoe UI\", sans-serif); font-size: var(--size-ui, 0.9375rem); line-height: var(--size-line-ui, 1.45); } .ds-transcript-summary { display: inline-flex; align-items: center; flex-wrap: wrap; gap: var(--space-3, 0.75rem); max-width: 100%; min-height: var(--target-size, 2.75rem); padding: 0 var(--space-4, 1rem); border: 2px solid var(--colour-ink, #183d50); border-radius: var(--radius-control, 0.25rem); list-style: none; cursor: pointer; font-family: var(--font-signage, \"Bitstream Vera Sans\", \"Segoe UI\", sans-serif); font-stretch: 87.5%; font-size: var(--size-ui, 0.9375rem); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; } .ds-transcript-summary::-webkit-details-marker { display: none; } .ds-transcript-summary span { min-width: 0; overflow-wrap: anywhere; } .ds-transcript-summary::before { content: \"\"; flex: none; width: 0.45em; height: 0.45em; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(-45deg); transition: transform var(--motion-duration, 160ms) var(--motion-easing, cubic-bezier(0.2, 0, 0, 1)); } .ds-transcript[open] > .ds-transcript-summary::before { transform: rotate(45deg); } .ds-transcript-open, .ds-transcript[open] .ds-transcript-closed { display: none; } .ds-transcript[open] .ds-transcript-open { display: inline; } .ds-transcript-stats { font-weight: 400; letter-spacing: 0.04em; color: var(--colour-ink-soft, #3e5360); } .ds-transcript-body { margin-top: var(--space-5, 1.5rem); font-family: var(--font-reading, \"Bitstream Vera Sans\", \"Segoe UI\", sans-serif); font-size: var(--size-reading, 1.125rem); line-height: var(--size-line-reading, 1.72); } .ds-transcript-body p { margin: 0; } .ds-transcript-summary:focus-visible { outline: 3px solid var(--colour-ink, #183d50); outline-offset: 3px; box-shadow: 0 0 0 3px var(--colour-ground, #ffffff); } @media (max-width: 44rem) { .ds-transcript-stats { flex-basis: 100%; padding-bottom: var(--space-2, 0.5rem); } } @media (prefers-reduced-motion: reduce) { .ds-transcript-summary::before { transition-duration: 0s !important; } }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Sunday Invitation",
+    "overview": "The visual language comes from the church's own service sign, gathered hall and welcome at the door. Mineral-blue lettering, pale sky surfaces and clear white space make the information direct and welcoming. Original congregation photographs and the official logo give the website its local identity.\n\nThe system uses large, plain lettering for orientation and quieter, generously spaced text for reading. Content pages use open rows and restrained rules; sermon discovery retains its meaningful Bible-book colors and compact controls. This documents the implemented frontend in `src/frontend/tokens.ts` and `src/frontend/styles/`, with component behavior in `src/frontend/components/`. The homepage composition belongs to `.impeccable/surfaces/church-visitor-site.md`, not to every page.",
+    "keyCharacteristics": [
+      "Mineral-blue text with white and pale sky surfaces.",
+      "One self-hosted sans-serif family for display, reading and controls.",
+      "Authentic church photographs and the unchanged official logo.",
+      "Flat reading surfaces, fine rules and visible interactive boundaries.",
+      "Responsive layouts with native disclosures and readable server-rendered content."
+    ],
+    "rules": [
+      {
+        "name": "The Boundary Rule",
+        "body": "Use `rule` for content separation and `rule-strong` for interactive outlines; a pale divider is not a control boundary.",
+        "section": "colors"
+      },
+      {
+        "name": "The Reading Measure Rule",
+        "body": "Keep ordinary prose within 68ch and transcripts within 64ch; use the interface size for controls and metadata, not for long-form reading.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat Surface Rule",
+        "body": "Keep content surfaces flat; use border, tone and text state before adding elevation.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** use the existing token roles and preserve the Bible-book color mapping.",
+      "**Do** preserve the official logo and use the church's supplied photographs with accurate alt text.",
+      "**Do** keep strong control boundaries, visible keyboard focus and wrapping interactive labels.",
+      "**Do** retain native disclosures, readable server-rendered content and reduced-motion behavior.",
+      "**Do** keep font and image provenance alongside the assets; the image inventory is `src/frontend/assets/media/README.md` with its manifest."
+    ],
+    "donts": [
+      "**Don't** turn church reading pages into repeated floating card grids.",
+      "**Don't** tint photographs or invent people, testimony, event facts or imagery.",
+      "**Don't** turn the homepage composition into a mandatory template for every page.",
+      "**Don't** use tiny uppercase introductory labels as decorative replacements for a clear heading.",
+      "**Don't** infer content approval, accessibility certification or production readiness from this visual system."
+    ]
+  }
+}

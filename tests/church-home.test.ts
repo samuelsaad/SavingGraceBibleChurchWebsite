@@ -37,12 +37,12 @@ describe("church homepage", () => {
     for (const item of homepageInventory) expect(html, item).toContain(item);
     expect(html.match(/<h1[\s>]/gu)).toHaveLength(1);
     expect(html).toContain('<h1 id="hero-heading" class="arrive__title"><span class="arrive__name">Saving Grace</span><span class="arrive__name">Bible Church</span></h1>');
-    expect(html).toContain('<p class="eyebrow arrive__eyebrow">Welcome to</p>');
+    expect(html).not.toContain('class="eyebrow arrive__eyebrow"');
     expect(html).toContain('<h2 id="welcome-heading" class="welcome__title">Welcome to Saving Grace Bible Church</h2>');
     expect(html).toContain('<aside class="notice" aria-label="Church notice">');
     expect(html).toContain("© 2023 Saving Grace Bible Church");
-    expect(html).toContain('<img class="welcome-card__image" src="/media/entrance.jpg" width="289" height="510" alt="The entrance to Saving Grace Bible Church');
-    expect(html).toContain('<img class="home__photo-image" src="/media/congregation.jpg"');
+    expect(html).toContain('<img class="arrive__image" src="/media/congregation.jpg"');
+    expect(html).toContain('<img class="home__photo-image" src="/media/welcome-door.jpg"');
   });
 
   it("links every label to a real page of this site or a destination the church published, and keeps only the social marks pending", () => {
@@ -125,15 +125,19 @@ describe("church homepage", () => {
     expect(html).not.toContain("SermonsV1");
     expect(html).toContain('<img class="brand__logo" src="/brand/saving-grace-logo.png" width="300" height="178" alt="Saving Grace Bible Church" decoding="async" />');
     expect(html).not.toContain(' style="');
-    expect(html).not.toMatch(/url\(/u);
+    for (const match of html.matchAll(/url\(["']?([^"')]+)["']?\)/gu)) {
+      expect(match[1]).toMatch(/^\/brand\/fonts\/[a-z0-9.-]+$/u);
+    }
     for (const item of homepageInventory) {
       if (item === "Recent Sermon" || item === "Home") continue;
       expect(decode(html), item).toContain(item);
     }
     const csp = contentSecurityPolicy(html);
     for (const styleHash of embeddedStyleHashes(html)) expect(csp).toContain(styleHash);
-    expect(embeddedScriptHashes(html)).toHaveLength(1);
+    expect(embeddedScriptHashes(html)).toHaveLength(2);
+    for (const scriptHash of embeddedScriptHashes(html)) expect(csp).toContain(scriptHash);
     expect(html).toContain('<script data-enhancement="navigation">');
+    expect(html).toContain('<script data-enhancement="mobileNavigation">');
     expect(csp).not.toContain("frame-src");
   });
 

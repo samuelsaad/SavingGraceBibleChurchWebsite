@@ -1,2 +1,3 @@
 development-data/preview-sermons-v1/*.json text eol=lf
 development-data/project-sermon-snapshot-v1/*.json text eol=lf
+src/frontend/assets/fonts/bitstream-vera-license.txt -text

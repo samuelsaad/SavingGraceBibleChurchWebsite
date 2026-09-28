@@ -279,16 +279,18 @@ describe("church page rendering", () => {
     for (const page of published) {
       const html = decode(render(page));
       expect(html.match(/<h1[\s>]/gu), page.id).toHaveLength(1);
-      expect(html, page.id).toContain(`<h1 class="page__title">${page.heading ?? page.title}`);
+      expect(html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/u)?.[1], page.id).toBe(page.heading ?? page.title);
       expect(html, page.id).toContain('<nav aria-label="Breadcrumb"><ol class="trail" role="list"><li><a href="/">Home</a></li>');
       expect(html, page.id).toContain(`<link rel="canonical" href="https://www.savinggrace.org.au${page.path}" />`);
       expect(html, page.id).toContain(`<title>${page.title} — Saving Grace Bible Church</title>`);
       expect(html, page.id).toContain('<meta name="robots" content="index, follow" />');
-      expect(html, page.id).toContain('<nav class="masthead__nav" aria-label="Primary"><ul class="masthead__links">');
+      expect(html, page.id).toContain('<nav class="masthead__nav" id="primary-navigation" aria-label="Primary"><ul class="masthead__links">');
       expect(html, page.id).toContain('<details class="masthead__menu" data-menu>');
       expect(html, page.id).not.toContain("<iframe");
       expect(html, page.id).not.toContain(' style="');
-      expect(html, page.id).not.toMatch(/url\(/u);
+      for (const match of html.matchAll(/url\(["']?([^"')]+)["']?\)/gu)) {
+        expect(match[1], page.id).toMatch(/^\/brand\/fonts\/[a-z0-9.-]+$/u);
+      }
       expect(html, page.id).not.toMatch(/\[(?:column|push|blank|icon|button)\b/u);
       expect(html, page.id).not.toContain("wp-content/uploads/2023/09");
       expect(html, page.id).not.toContain('class="pending page__status');
@@ -398,13 +400,33 @@ describe("church page rendering", () => {
     expect(renderSitemapPage(pageById("sitemap"), data, previewRenderContext)).toContain('href="/frontend-preview/constitution/"');
   });
 
+  it("keeps six upcoming dates visible and every remaining date in a closed native disclosure", () => {
+    const calendar = decode(renderEventsPage(pageById("events"), data));
+    const upcoming = upcomingOccurrences(today, { days: 35 });
+    expect(upcoming.length).toBeGreaterThan(6);
+    const section = calendar.match(/<section class="section" aria-labelledby="upcoming-heading">([\s\S]*?)<\/section>/u)![1]!;
+    const disclosure = section.match(/<details class="events-more">([\s\S]*?)<\/details>/u)![1]!;
+    expect(disclosure).toContain('<summary class="events-more__summary">More upcoming dates');
+    expect(section.slice(0, section.indexOf('<details class="events-more">')).match(/<li class="event">/gu)).toHaveLength(6);
+    expect(disclosure.match(/<li class="event">/gu)).toHaveLength(upcoming.length - 6);
+    const rows = [...section.matchAll(/<li class="event">([\s\S]*?)<\/li>/gu)].map((match) => ({
+      datetime: match[1]!.match(/<time datetime="([^"]+)"/u)![1],
+      href: match[1]!.match(/<a href="([^"]+)"/u)![1]
+    }));
+    expect(rows).toEqual(upcoming.map((occurrence) => ({ datetime: `${occurrence.date}T${occurrence.start}`, href: occurrence.event.path })));
+    expect(calendar).toContain('<a href="#upcoming-heading">Upcoming</a>');
+    expect(calendar).toContain('<a href="#regular-heading">Regular gatherings</a>');
+    expect(calendar).toContain('<a href="#past-heading">Past events</a>');
+    expect(calendar).toContain('href="/events/calendar.ics"');
+  });
+
   it("renders the events calendar, event pages, blog and history timeline", () => {
     const calendar = decode(renderEventsPage(pageById("events"), data));
     expect(calendar).toContain('<h1 class="page__title">Church Events</h1>');
     expect(calendar).toContain('<a href="/events/calendar.ics">subscribe to our calendar</a>');
     expect(calendar).toContain('<h2 id="upcoming-heading" class="section__title">Upcoming</h2>');
     expect(calendar).toContain('<time datetime="2026-09-27T16:30">Sunday 27 September 2026, 4:30 pm – 5:30 pm</time>');
-    expect(calendar).toContain('<p class="eyebrow tile__eyebrow">First Saturday of the month, 3:30 pm – 5:00 pm</p>');
+    expect(calendar).toContain('<p class="tile__metadata">First Saturday of the month, 3:30 pm – 5:00 pm</p>');
     expect(calendar).toContain('<a href="/events/sgbc-picnic-rye/">SGBC Picnic - Rye</a>');
     expect(calendar).toContain("Street Evangelism | Outreach");
     const event = decode(renderEventPage(pageEvent("street-evangelism-outreach"), data));
@@ -418,7 +440,7 @@ describe("church page rendering", () => {
     expect(tuesday).toContain("Everyone is welcome—no registration needed.");
 
     const post = decode(renderBlogPost(blogPosts[2]!, data));
-    expect(post).toContain('<h1 class="page__title">Understanding Dispensationalism: Unveiling God’s Plan Through the Ages</h1>');
+    expect(post.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/u)?.[1]).toBe("Understanding Dispensationalism: Unveiling God’s Plan Through the Ages");
     expect(post).toContain('<meta property="og:type" content="article" />');
     expect(post).toContain('<time datetime="2024-01-09">9 January 2024</time>');
     expect(post).toContain('<a href="/what-we-teach/mandated-church/">Church</a>');
@@ -428,7 +450,7 @@ describe("church page rendering", () => {
     const history = decode(renderChurchPage(pageById("our-history"), data));
     expect(history).toContain('<span class="timeline__when">1945</span>');
     expect(history).toContain("The providential merger with East Keilor Evangelical Christian Church, guided by God's purpose");
-    expect(history).toContain('<img class="page__banner-image" src="/media/early-church.jpg"');
+    expect(history).toMatch(/<img\b[^>]*src="\/media\/early-church\.jpg"/u);
     expect(history.match(/<li class="timeline__item">/gu)).toHaveLength(8);
   });
 });
@@ -440,7 +462,7 @@ describe("church site routes", () => {
       const route = createPublicSermonSiteHandler(repository, context, { today: () => today });
       const about = await route(new Request("http://127.0.0.1/about/"));
       expect(about?.status).toBe(200);
-      expect(await about!.text()).toContain('<h1 class="page__title">Embrace Reformed Truths at Saving Grace Bible Church, Melbourne</h1>');
+      expect((await about!.text()).match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/u)?.[1]).toBe("Embrace Reformed Truths at Saving Grace Bible Church, Melbourne");
       expect(about?.headers.get("content-security-policy")).toContain("style-src 'sha256-");
       const home = await route(new Request("http://127.0.0.1/"));
       expect(home?.status).toBe(200);
