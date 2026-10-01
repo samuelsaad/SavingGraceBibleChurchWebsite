@@ -7,6 +7,7 @@
  */
 import { cardStyles } from "./cards";
 import { churchStyles } from "./church";
+import { claudeSermonStyles } from "./claude-sermons";
 import { coreStyles } from "./core";
 import { homeStyles } from "./home";
 import { previewStyles } from "./preview";
@@ -22,6 +23,7 @@ const blocks = {
   v4: v4Styles,
   home: homeStyles,
   church: churchStyles,
+  claudeSermons: claudeSermonStyles,
   preview: previewStyles
 } as const;
 
@@ -50,7 +52,7 @@ export function siteStyles(extra: StyleBlockName[] = []): string {
 
 /** The complete stylesheet, for the static build and for tests. */
 export function publicSiteStyles(): string {
-  return siteStyles(["shelf", "sermon", "cards", "v4", "home", "church"]);
+  return siteStyles(["shelf", "sermon", "cards", "v4", "home", "church", "claudeSermons"]);
 }
 
 /** Readable sources, for the stylesheet hygiene test. */

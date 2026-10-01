@@ -58,8 +58,8 @@ export function renderPublicSermonPage(
   const head = html`<header class="sermon__head">
     ${canonStrip(options, { current: book?.slug, label: book ? `${book.canonicalName} on the shelf` : undefined })}
     ${trail}
-    <h1 class="sermon__title${isLongTitle ? " is-long" : ""}">${sermon.title}</h1>
     ${passageStamp(sermon, "sermon__stamp")}
+    <h1 class="sermon__title${isLongTitle ? " is-long" : ""}">${sermon.title}</h1>
     <p class="sermon__meta">
       <span>${timeElement(sermon.serviceDate)}</span>
       ${when(sermon.speaker, () => html`<span><a href="${links.taxonomy("speakers", sermon.speaker!.slug)}">${sermon.speaker!.name}</a></span>`)}
@@ -133,10 +133,10 @@ export function renderPublicSermonPage(
     canonicalPath,
     robots: "index, follow",
     openGraphType: "article",
-    styles: ["shelf", "sermon"],
+    styles: ["shelf", "sermon", "claudeSermons"],
     scripts: ["sermon"],
     books: options.books,
-    body: html`<article class="sermon${book ? ` hue--${book.category}` : ""}">
+    body: html`<div class="claude-sermons"><article class="sermon${book ? ` hue--${book.category}` : ""}">
       ${tab}
       <div class="sermon__body">
         ${head}
@@ -148,6 +148,6 @@ export function renderPublicSermonPage(
         ${related}
       </div>
       ${rail}
-    </article>`
+    </article></div>`
   }, context);
 }

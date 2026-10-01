@@ -127,7 +127,7 @@ describe("public sermon site routes", () => {
     expect(html).toContain('<a class="tokens__clear" href="/sermons/">Clear all</a>');
     const masthead = section(html, '<header class="masthead"', "</header>");
     expect(masthead).toContain('<ul class="masthead__links"><li><a href="/">Home</a></li><li class="masthead__links-menu"><details class="masthead__menu" data-menu>');
-    expect(masthead).toContain('<li class="masthead__links-sermons"><a href="/sermons/" aria-current="page">Sermons</a></li>');
+    expect(masthead).toContain('<li class="masthead__links-sermons"><a href="/sermons-v4/" aria-current="page">Sermons</a></li>');
     expect(masthead).toContain('<li><a href="/events/">News &amp; Events</a></li><li><a href="/contact/">Contact Us</a></li></ul>');
     expect(masthead).toContain('aria-controls="menu-about"');
     expect(masthead).toContain('<li class="masthead__dropdown-sub"><a href="/what-we-teach/the-gospel/">The Gospel</a></li>');

@@ -74,11 +74,11 @@ function section(html: string, start: string, end: string): string {
 }
 
 describe("SermonsV4 page", () => {
-  it("carries the complete V2 opening section: title, category, library summary and the finder, targeted at V4", () => {
+  it("uses Claude's V4 opening while preserving library data and the complete existing finder", () => {
     const v4 = renderSermonsV4Page(input(), previewRenderContext);
     const v2 = renderPublicSermonArchivePage(input(), previewRenderContext);
     const opening = (html: string) => section(html, '<header class="title-page">', "</section>");
-    expect(opening(v4)).toContain('<p class="title-page__category">Sermon archive</p>');
+    expect(opening(v4)).toContain('<p class="eyebrow">Sermon archive</p>');
     expect(opening(v4)).toContain('<h1 class="title-page__title">Sermons</h1>');
     expect(opening(v4)).toContain('<ul class="stats" role="list"><li>12 sermons</li><li>1 of 66 books</li><li>1 speaker</li><li>1 series</li></ul>');
     expect(opening(v4)).toContain('<label class="field__label" for="sermon-search">Search sermons</label>');
@@ -86,8 +86,9 @@ describe("SermonsV4 page", () => {
     expect(opening(v4)).toContain('<label class="field__label" for="series-filter">Series</label>');
     expect(opening(v4)).toContain('<details class="refine" data-refine data-active="false">');
     expect(opening(v4)).toContain('<label class="field__label" for="book-filter">Bible book</label>');
-    // Identical composition to V2 apart from where the form submits.
-    expect(opening(v4).replace(/\/sermons-v4\/#v4-results/gu, "/sermons/#results")).toBe(opening(v2).replace(/\/frontend-preview\/sermons\/#results/gu, "/frontend-preview/sermons/#results"));
+    // The existing finder remains identical apart from its V4 destination.
+    const finder = (page: string) => section(page, '<section class="finder"', "</section>");
+    expect(finder(v4).replace(/\/sermons-v4\/#v4-results/gu, "/sermons/#results")).toBe(finder(v2));
     expect(v4).toContain('action="/frontend-preview/sermons-v4/#v4-results"');
     expect(v4.match(/<h1/gu)).toHaveLength(1);
   });
@@ -129,7 +130,7 @@ describe("SermonsV4 page", () => {
 
   it("keeps searching, filtering and paging inside V4 with continuous ordinals and the open book", () => {
     const filtered = renderSermonsV4Page(input({ query: "grace", book: "romans", page: 2 }, [sermon(3), sermon(2), sermon(1)], 12), publicRenderContext);
-    expect(filtered).toContain('<p class="title-page__category">Search results</p>');
+    expect(filtered).toContain('<p class="eyebrow">Search results</p>');
     expect(filtered).toContain("“grace” · Romans</h1>");
     expect(filtered).toContain('<section class="open-book hue--pauline" id="canon" aria-labelledby="open-book-heading">');
     expect(filtered).toContain('href="/sermons-v4/?s=grace&amp;passageBook=romans&amp;passageChapter=8&amp;passageScope=chapter#canon"');
@@ -159,8 +160,8 @@ describe("SermonsV4 page", () => {
     const html = renderSermonsV4Page(input(), previewRenderContext);
     const menu = section(html, '<ul class="masthead__dropdown"', "</ul>");
     expect(menu).toContain('<li><a href="/frontend-preview/sermons-v1/">SermonsV1</a></li>');
-    expect(menu).toContain('<li><a href="/frontend-preview/sermons/" data-sermon-archive>SermonsV2</a></li>');
-    expect(menu).toContain('<li><a href="/frontend-preview/sermons-v4/" aria-current="page">SermonsV4</a></li>');
+    expect(menu).toContain('<li><a href="/frontend-preview/sermons/">SermonsV2</a></li>');
+    expect(menu).toContain('<li><a href="/frontend-preview/sermons-v4/" data-sermon-archive aria-current="page">SermonsV4</a></li>');
     expect(menu).not.toContain("V3");
     expect(menu.match(/aria-current="page"/gu)).toHaveLength(1);
     expect(html).toContain('class="masthead__menu-toggle is-active"');
@@ -212,8 +213,8 @@ describe("alternate archive routes", () => {
     expect(v4?.status).toBe(200);
     expect(v4?.headers.get("x-robots-tag")).toContain("noindex");
     const v4Html = await v4!.text();
-    expect(v4Html).toContain('<a href="/sermons-v4/" aria-current="page">SermonsV4</a>');
-    expect(v4Html).toContain('<p class="title-page__category">Sermons by</p>');
+    expect(v4Html).toContain('<a href="/sermons-v4/" data-sermon-archive aria-current="page">SermonsV4</a>');
+    expect(v4Html).toContain('<p class="eyebrow">Sermons by</p>');
     expect(repository.lastQuery).toMatchObject({ speaker: "example-speaker", page: 1, pageSize: 9 });
 
     const v1 = await route(new Request("http://127.0.0.1/sermons-v1/"));

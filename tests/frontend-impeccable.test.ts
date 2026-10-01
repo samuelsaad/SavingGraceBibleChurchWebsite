@@ -92,7 +92,7 @@ describe("visitor redesign preservation", () => {
     expect(header).not.toContain("masthead--compact");
     expect(header).not.toMatch(/<nav\b[^>]*\bhidden(?:\s|>)/u);
     for (const item of primaryMenu.flatMap((item) => [item, ...(item.children ?? [])])) {
-      expect(header, item.label).toContain(`href="${item.href}"`);
+      expect(header, item.label).toContain(`href="${item.href === "/sermons/" ? "/sermons-v4/" : item.href}"`);
     }
     // Hiding the navigation must depend on the JS-added enhancement class.
     const hidingRules = [...siteStyles().matchAll(/([^{}]+)\{[^{}]*display:\s*none\s*;?[^{}]*\}/gu)]

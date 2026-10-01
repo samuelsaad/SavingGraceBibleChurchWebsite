@@ -1,5 +1,17 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
+## Selective Claude sermon presentation integration — 1 October 2026
+
+The existing clean `frontend/astra-impeccable-staging` worktree is integrating
+Claude's final V4 and sermon-detail presentation from
+`6a51443d117cc9cb20e82f8d50046f77e7a4aa08` into Astra's selected site.
+Astra's homepage, all church pages and shared shell styling remain unchanged.
+The main Sermons destination points to V4; stable alternative/detail URLs remain.
+No backend, selector, data, review or database changes are part of this task.
+Scope, verification, known pre-existing failures and the preserved application
+rollback release are recorded in
+`docs/design/claude-sermon-integration.md`.
+
 ## Selected Impeccable staging handoff — 1 October 2026
 
 Samuel selected the completed Sunday-invitation frontend from

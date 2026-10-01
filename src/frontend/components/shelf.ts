@@ -120,6 +120,8 @@ export interface OpenBookInput {
   broad?: boolean;
   /** The presentation that receives chapter and verse searches; the archive by default. */
   target?: ArchiveTarget;
+  /** Opt-in sermon presentation; every other caller keeps Astra's composition. */
+  presentation?: "claude";
 }
 
 /** The open book: tab, chapter ruler and, once a chapter is chosen, the verse ruler. */
@@ -150,8 +152,9 @@ export function openBook(input: OpenBookInput): Html {
   return html`<section class="open-book hue--${book.category}" id="canon" aria-labelledby="open-book-heading">
     ${bookTab(book, { href: input.broad ? null : wholeBook, count: input.count })}
     <div class="open-book__body">
+      ${when(input.presentation === "claude", () => html`<p class="eyebrow">${input.broad ? "Sermons filed under" : "Preached from"}</p>`)}
       <${heading} class="open-book__title" id="open-book-heading">${scopeLabel}</${heading}>
-      <p class="title-page__category">${input.broad ? "Sermons filed under" : "Preached from"}</p>
+      ${when(input.presentation !== "claude", () => html`<p class="title-page__category">${input.broad ? "Sermons filed under" : "Preached from"}</p>`)}
       <p class="open-book__meta">
         ${when(input.count !== null, () => html`<span>${formatCount(input.count!, "sermon")} in ${book.canonicalName}</span>`)}
         ${when(markedChapters.length, () => html`<span>Chapters with sermons: ${markedChapters.join(", ")}</span>`)}

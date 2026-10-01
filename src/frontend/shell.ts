@@ -91,13 +91,13 @@ function sermonsMenu(context: FrontendRenderContext, navigationPath: string, act
   const items = links.hasTaxonomyRoutes ? sections : sections.slice(0, 1);
   const current = activeMenuItem(navigationPath)?.id === "sermons";
   if (!links.hasTaxonomyRoutes) {
-    return html`<a href="${links.archive}"${attribute("aria-current", current ? "page" : null)}>${navigationCopy.sermons}</a>`;
+    return html`<a href="${links.sermonsV4}"${attribute("aria-current", current ? "page" : null)}>${navigationCopy.sermons}</a>`;
   }
   const v1Active = sitePath(navigationPath) === sermonsV1Path;
   const v4Active = sitePath(navigationPath) === sermonsV4Path;
   return html`<details class="masthead__menu" data-menu data-sermon-menu>
-      <summary class="masthead__menu-toggle${active || v1Active || v4Active ? " is-active" : ""}" aria-controls="sermon-navigation" title="Open menu; double-click to browse SermonsV2">${navigationCopy.sermons}${chevron}</summary>
-      <ul class="masthead__dropdown" id="sermon-navigation"><li><a href="${links.sermonsV1}"${attribute("aria-current", v1Active ? "page" : null)}>SermonsV1</a></li>${items.map(([section, label]) => html`<li><a href="${section === "sermons" ? links.archive : links.taxonomyIndex(section)}"${when(section === "sermons", () => html` data-sermon-archive`)}${attribute("aria-current", active === section ? "page" : null)}>${section === "sermons" ? "SermonsV2" : label}</a></li>${when(section === "sermons", () => html`<li><a href="${links.sermonsV4}"${attribute("aria-current", v4Active ? "page" : null)}>SermonsV4</a></li>`)}`)}</ul>
+      <summary class="masthead__menu-toggle${active || v1Active || v4Active ? " is-active" : ""}" aria-controls="sermon-navigation" title="Open menu; double-click to browse SermonsV4">${navigationCopy.sermons}${chevron}</summary>
+      <ul class="masthead__dropdown" id="sermon-navigation"><li><a href="${links.sermonsV1}"${attribute("aria-current", v1Active ? "page" : null)}>SermonsV1</a></li>${items.map(([section, label]) => html`<li><a href="${section === "sermons" ? links.archive : links.taxonomyIndex(section)}"${attribute("aria-current", active === section ? "page" : null)}>${section === "sermons" ? "SermonsV2" : label}</a></li>${when(section === "sermons", () => html`<li><a href="${links.sermonsV4}" data-sermon-archive${attribute("aria-current", v4Active ? "page" : null)}>SermonsV4</a></li>`)}`)}</ul>
     </details>`;
 }
 

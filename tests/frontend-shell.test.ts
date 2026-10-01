@@ -35,7 +35,7 @@ describe("shared frontend shell", () => {
       expect(html, name).toContain('<main id="main-content" class="site-main">');
       const isPreview = html.includes('class="preview-band"');
       expect(html, name).toContain('<nav class="masthead__nav" id="primary-navigation" aria-label="Primary"><ul class="masthead__links">');
-      expect(html, name).toContain(isPreview ? '<details class="masthead__menu" data-menu data-sermon-menu>' : '<li class="masthead__links-sermons"><a href="/sermons/"');
+      expect(html, name).toContain(isPreview ? '<details class="masthead__menu" data-menu data-sermon-menu>' : '<li class="masthead__links-sermons"><a href="/sermons-v4/"');
       expect(html, name).toContain('<details class="masthead__menu" data-menu>');
       expect(html, name).not.toContain('data-sermon-menu open');
       expect(html, name).not.toContain('data-menu open');
@@ -152,6 +152,6 @@ describe("shared frontend shell", () => {
     expect(pages.previewHome).toContain('href="/frontend-preview/series/">All series</a>');
     expect(pages.previewHome).toContain('<li><a href="/frontend-preview/books/">Books</a></li>');
     expect(pages.previewHome).toContain('<li><a href="/frontend-preview/sermons-v1/" aria-current="page">SermonsV1</a></li>');
-    expect(pages.previewHome).toContain('<li><a href="/frontend-preview/sermons-v4/">SermonsV4</a></li>');
+    expect(pages.previewHome).toContain('<li><a href="/frontend-preview/sermons-v4/" data-sermon-archive>SermonsV4</a></li>');
   });
 });

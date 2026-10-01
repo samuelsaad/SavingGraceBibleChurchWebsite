@@ -234,7 +234,7 @@ describe("authenticated local frontend preview", () => {
     ];
 
     expect(navigation).toContain('<details class="masthead__menu" data-menu data-sermon-menu>');
-    expect(navigation).toContain('<ul class="masthead__dropdown" id="sermon-navigation"><li><a href="/frontend-preview/sermons-v1/">SermonsV1</a></li><li><a href="/frontend-preview/sermons/" data-sermon-archive>SermonsV2</a></li><li><a href="/frontend-preview/sermons-v4/">SermonsV4</a></li><li><a href="/frontend-preview/speakers/">Speakers</a></li><li><a href="/frontend-preview/series/">Series</a></li><li><a href="/frontend-preview/books/">Books</a></li></ul>');
+    expect(navigation).toContain('<ul class="masthead__dropdown" id="sermon-navigation"><li><a href="/frontend-preview/sermons-v1/">SermonsV1</a></li><li><a href="/frontend-preview/sermons/">SermonsV2</a></li><li><a href="/frontend-preview/sermons-v4/" data-sermon-archive>SermonsV4</a></li><li><a href="/frontend-preview/speakers/">Speakers</a></li><li><a href="/frontend-preview/series/">Series</a></li><li><a href="/frontend-preview/books/">Books</a></li></ul>');
     expect(navigation).not.toContain('data-sermon-menu open');
     expect(navigation).toContain('aria-controls="sermon-navigation"');
     expect(html).toContain('<script data-enhancement="navigation">');
@@ -264,9 +264,9 @@ describe("authenticated local frontend preview", () => {
 
     const archive = await route(new Request("http://127.0.0.1/frontend-preview/sermons/", { headers: { cookie } }));
     const archiveNavigation = masthead(await archive!.text());
-    expect(archiveNavigation).toContain('<a href="/frontend-preview/sermons/" data-sermon-archive aria-current="page">SermonsV2</a>');
+    expect(archiveNavigation).toContain('<a href="/frontend-preview/sermons/" aria-current="page">SermonsV2</a>');
     expect(archiveNavigation).toContain('<a href="/frontend-preview/sermons-v1/">SermonsV1</a>');
-    expect(archiveNavigation).toContain('<a href="/frontend-preview/sermons-v4/">SermonsV4</a>');
+    expect(archiveNavigation).toContain('<a href="/frontend-preview/sermons-v4/" data-sermon-archive>SermonsV4</a>');
     expect(archiveNavigation.match(/aria-current="page"/gu)).toHaveLength(1);
   });
 

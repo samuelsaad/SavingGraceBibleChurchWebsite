@@ -1,6 +1,6 @@
 /**
- * SermonsV4: the V2 opening section (title page and finder) carried over
- * whole, the bookshelf folded behind a labelled disclosure and collapsed on
+ * SermonsV4: Claude's final opening presentation with the current finder,
+ * the bookshelf folded behind a labelled disclosure and collapsed on
  * first load, and the sermon list as an equal-size card grid whose first
  * card is the latest sermon. Searches, filters and pagination stay inside
  * V4; every control is a server link or form so the page works without
@@ -10,8 +10,9 @@ import type { PublicSermonListQuery } from "../../api/contracts/public-sermons";
 import { bibleBookBySlug } from "../../domain/bible-passage";
 import { formatCount, librarySummary } from "../canon";
 import { cardGrid } from "../components/cards";
+import { claudeSermonTitle as titlePage } from "../components/claude-sermon-title";
 import { finder } from "../components/search";
-import { pagination, sectionHead, sectionNote, titlePage } from "../components/sections";
+import { pagination, sectionHead, sectionNote } from "../components/sections";
 import { canonStrip, openBook, shelf } from "../components/shelf";
 import { html, when, type Html } from "../html";
 import type { SermonArchivePageInput } from "./archive";
@@ -93,7 +94,8 @@ function bookPanel(input: SermonArchivePageInput, context: FrontendRenderContext
     verse: input.query.passageVerse,
     headingLevel: 2,
     broad: !input.query.passageBook,
-    target: sermonsV4Target
+    target: sermonsV4Target,
+    presentation: "claude"
   });
 }
 
@@ -152,10 +154,10 @@ export function renderSermonsV4Page(
     canonicalPath: archivePagePath(input.query.page, publicRenderContext),
     navigationPath: sermonsV4Path,
     robots: "noindex, follow",
-    styles: ["shelf", "cards", "v4"],
+    styles: ["shelf", "cards", "v4", "claudeSermons"],
     scripts: ["canon"],
     books: input.options.books,
     mastheadSearch: false,
-    body: html`<div class="v4">${head}${finder({ query: input.query, options: input.options, context, target: sermonsV4Target })}${discovery ? discoveryView(input, context) : resultsView(input, context, totalPages)}</div>`
+    body: html`<div class="claude-sermons"><div class="v4">${head}${finder({ query: input.query, options: input.options, context, target: sermonsV4Target })}${discovery ? discoveryView(input, context) : resultsView(input, context, totalPages)}</div></div>`
   }, context);
 }

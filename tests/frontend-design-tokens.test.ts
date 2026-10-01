@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { claudeSermonTokens } from "../src/frontend/styles/claude-sermon-tokens";
 import { colour, size, tokensCss } from "../src/frontend/tokens";
 import { publicSiteStyles, styleSources } from "../src/frontend/styles";
 
@@ -75,7 +76,8 @@ describe("frontend design tokens", () => {
 
   it("uses tokens rather than colour literals in the stylesheet partials", () => {
     for (const [name, source] of Object.entries(styleSources)) {
-      const body = name === "core" ? source.replace(tokensCss(), "") : source;
+      const body = name === "core" ? source.replace(tokensCss(), "")
+        : name === "claudeSermons" ? source.replace(claudeSermonTokens, "") : source;
       expect(body, `${name} contains a colour literal`).not.toMatch(/#[0-9a-f]{3,8}\b|rgba?\(/iu);
     }
     const compiled = publicSiteStyles();
