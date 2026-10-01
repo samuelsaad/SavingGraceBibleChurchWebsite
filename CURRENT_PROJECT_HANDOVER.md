@@ -21,8 +21,33 @@ emitted 44 church pages. Standard tests reproduced only the existing admin-layou
 newline assertion (803 passed, 126 gated PostgreSQL cases skipped), and Astro
 check reproduced the existing snapshot-importer optional-property error. The
 initial simultaneous check/build cache race was resolved by running them serially.
-No database-write test or production readiness is claimed. Deployment outcome
-and final preservation evidence are recorded after the application replacement.
+No database-write test or production readiness is claimed.
+
+Both visitor apps now run release `ba52ae3c96a5f0cc093c50b0117b1a702635c84f`,
+image SHA-256 `143af5e00890347a8a953e01de2017205ae1d24e421e049991262989e92802f8`.
+Public staging remains `http://54.253.237.138:8080/`; protected staging remains
+EC2 loopback 8082 through the existing pinned SSH mechanism. Both retain exactly
+148 eligible identities with set hash
+`4bf7dbdb97d7ef98e9dd1aa9153f0e04c977776f08e0ba0a420fb266304f1731`.
+Whole-database fingerprints, publication states, database container identities,
+original configuration files and listeners are unchanged. No migration, sermon
+transfer, content/acceptance edit, production access or proxy change occurred.
+
+Actual Chrome checks passed 64 rendered page cases at 1440, 390 and 320 pixels,
+plus navigation/search/filter/detail and asset checks on each runtime, with zero
+console errors or failed requests. Private routes and unpublished church pages
+remain denied; no-store/noindex and robots exclusion remain. Application-only
+rollback to each previous image was rehearsed successfully, then the selected
+image was restored. Final standard tests were 806 passed, one unchanged existing
+failure and 126 gated PostgreSQL skips. The outgoing history/build audit found
+no prohibited paths, symlinks, detected keys or sermon-content build leakage.
+Detailed safe evidence is in `docs/design/staging-verification.md`.
+
+GitHub publication remains incomplete: execution review rejected the requested
+push because it did not recognize trusted authorization for the full
+dataset-bearing history and destination. No push occurred and no alternate
+publication route was attempted. The dedicated local branch and reviewed history
+are preserved for explicit resolution of that control.
 
 ## Isolated visitor redesign alternative — 28 September 2026
 

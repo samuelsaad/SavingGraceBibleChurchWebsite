@@ -8,6 +8,13 @@ the official logo, embedded imagery, self-hosted licensed fonts, and the existin
 SermonsV1, V2 and V4 routes are included. Privileged backend and content selectors
 remain server-side.
 
+Delivery status: both staging apps are updated and verified. The dedicated branch
+is prepared locally, but its first GitHub push was rejected by execution review.
+The checkout commands below become usable remotely once that exact reviewed
+history is authorized through the execution control and the push is verified.
+See `staging-verification.md` for actual results; do not assume a remote branch
+exists from these setup instructions alone.
+
 ## Checkout and local church-page preview
 
 Use Node.js 24 or later and npm with the committed lockfile:
