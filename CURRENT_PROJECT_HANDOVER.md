@@ -2,7 +2,7 @@
 
 ## Selective Claude sermon presentation integration — 1 October 2026
 
-The existing clean `frontend/astra-impeccable-staging` worktree is integrating
+The existing `frontend/astra-impeccable-staging` worktree has integrated
 Claude's final V4 and sermon-detail presentation from
 `6a51443d117cc9cb20e82f8d50046f77e7a4aa08` into Astra's selected site.
 Astra's homepage, all church pages and shared shell styling remain unchanged.
@@ -11,6 +11,20 @@ No backend, selector, data, review or database changes are part of this task.
 Scope, verification, known pre-existing failures and the preserved application
 rollback release are recorded in
 `docs/design/claude-sermon-integration.md`.
+
+Both staging visitor apps now serve
+`2245fa7f11f3b342d11d81258182c6c20854ef0e`,
+image ID `sha256:b2c61df39b958774e0c2eaf02d1bf82e4ed4c0ecc267cd46026322608821d308`.
+All 64 live rendered cases and 16 church/shell preservation comparisons passed.
+Both retain exactly the same 148 eligible identities, whole-database fingerprints,
+container identities, publication states, ports and private-route denial.
+Focused checks: 86 passed; network checks: seven passed. Standard checks: 811
+passed, one unchanged admin-layout failure and 126 gated PostgreSQL cases.
+The existing snapshot-importer type error remains; static and staging builds,
+offline audit and history/staged/build scans passed.
+Rollback is the retained `ba52ae3c96a5f0cc093c50b0117b1a702635c84f` application.
+GitHub publication remains pending the explicit AGENTS dataset-branch amendment;
+no push or alternate history publication was attempted.
 
 ## Selected Impeccable staging handoff — 1 October 2026
 

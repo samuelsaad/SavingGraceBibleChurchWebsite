@@ -1,5 +1,20 @@
 # Selected frontend staging validation — 1 October 2026
 
+## Subsequent selective sermon integration
+
+The next frontend-only milestone serves Claude's final V4/detail presentation
+inside Astra's unchanged church website and shared shell. Deployed implementation:
+`2245fa7f11f3b342d11d81258182c6c20854ef0e`. Full sources, package/image hashes,
+86 focused tests, seven network tests, 811 standard passes/known failures,
+64 live browser cases, 16 unchanged-page comparisons and preservation evidence
+are in `claude-sermon-integration.md` alongside this record.
+The previous selected release below is now its retained application rollback
+target, not the current served implementation. Both databases and the exact
+148-record eligible inventory remain unchanged. GitHub publication is still
+pending the explicitly required dataset-branch governance amendment.
+
+## Preserved earlier handoff evidence
+
 Source: `codex/impeccable-church-redesign`,
 `5d737e2f3522efd02e0c96d5cc31b8b37912e3b3`, clean.
 Handoff branch: `frontend/astra-impeccable-staging`.
