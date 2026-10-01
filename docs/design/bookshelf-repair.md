@@ -46,8 +46,54 @@ membership must match before and after. No new public cohort is authorised.
   uses the existing 13px label floor, preserves meaningful colour contrast and
   keyboard focus, and does not introduce another font.
 
-Live rendering, preservation, package/image hashes and GitHub outcome are to be
-recorded after execution. Builds alone do not prove live layout correctness.
-GitHub publication remains blocked at this checkpoint: execution review did not
-accept the question-prompt response as a trusted protected-file amendment.
-No AGENTS amendment or alternative publication route has been applied.
+## Actual staging rollout
+
+Both visitor apps serve repair commit
+`a992448f0dfcc96c32b795efb89ea2ba5f4af74f` and image
+`sha256:46b1cdfd7e00fd39ca8917ecc0553b4addcd7d84df1f5fa1484644192c0fc349`.
+The 210-path application-only archive was independently hash-verified after
+pinned SSH transfer:
+`ce4d86e65359044bd5a4972448ac7c9432ff3f0756e3bb5c70b19ac7fb8a4afb`.
+No dataset, credential, local configuration or private artifact is packaged.
+
+Both health checks are healthy. The public 191-sermon database fingerprint
+remains `7a6a1e2022e7971ab5401d2b21d27c826f9f06e535fb93b58021c48a64349ecf`;
+the protected 148-sermon database fingerprint remains
+`88723be3b21d75e0efd0affff285e702cbd5c46d7fdb3d107af3fae0dc36fce9`.
+Container identities, migration ledgers, configuration hashes, publication states
+and exact 148-identity eligible membership are unchanged. Admin, private API,
+draft/frontend-preview and private-file routes remain denied with no-store/noindex.
+Only application containers were replaced; original ports/proxies remain.
+The retained rollback is the previous `2245fa7` release with root-only resolved
+configurations and baseline evidence under the existing handoff convention.
+
+All 16 live homepage/church/shell DOM/style/geometry preservation comparisons
+passed. Live bookshelf diagnostics checked 820 visible labels/counts over both
+archive families at five widths: zero glyphs or boxes outside their spines,
+miscentered labels, font mismatches or overlapping labels/badges. An initial
+browser assertion incorrectly compared rotated glyphs with their narrow CSS line
+boxes. It was corrected to measure ink against the actual containing spine; the
+demonstrated geometry is not concealed by clipping or a relaxed page-bound test.
+The comprehensive live Chrome rerun passed: 32 rendered page cases per runtime
+at 1440/390/320px, with 492 spine label/count checks each, zero console errors,
+failed requests or erroneous responses. Navigation, keyword search, speaker
+filtering, book/chapter links, pagination, eligible detail, ordered Q&A and
+transcript toggles passed. The V4 shelf still starts collapsed. Five representative
+assets passed per runtime. Media interaction used an inert locally fulfilled
+iframe, without audio/video playback or any provider request. Real-content
+checks returned only aggregate status/geometry, never screenshots or prose.
+
+History/build audit: 1,730 existing blobs, 60 build text files, zero prohibited
+paths, detected key/cloud/Google secrets, symlinks or protected-content matches
+against 7,419 shingles. The five-file repair delta separately passed staged
+secret/token/key/private-content scans. Source alternatives remain clean at their
+original commits. No database write or production access occurred.
+
+GitHub publication remains blocked: the scoped AGENTS amendment was rejected,
+then rejected separately because execution review treated the question-prompt
+approval as an untrusted tool record instead of a trusted user message.
+No AGENTS amendment, push or alternative publication route has been applied.
+The exact dedicated branch remains absent remotely. A directly typed protected-
+file amendment approval is needed before this dataset-bearing history is pushed.
+Only this task's anonymous fixture server, headless browser contexts and temporary
+verification tunnel were closed. Both updated staging applications remain running.

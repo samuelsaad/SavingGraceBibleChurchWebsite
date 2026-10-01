@@ -1,5 +1,29 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
+## Bookshelf containment repair — 1 October 2026
+
+Both staging visitor applications now serve frontend-only repair commit
+`a992448f0dfcc96c32b795efb89ea2ba5f4af74f`. One shared measured shelf layout
+reserves label/count rows, prevents badge wrapping and uses the delivered church
+font consistently across V1/V2 and scoped V4. Homepage/church presentation,
+sermon content, selectors, reviews, databases and eligible membership are unchanged.
+Both health checks and whole-database/private-route preservation passed; each
+runtime still exposes exactly the same 148 eligible sermons. Public access remains
+`http://54.253.237.138:8080/`; protected access remains the pinned loopback tunnel.
+Rollback is the retained `2245fa7f11f3b342d11d81258182c6c20854ef0e` app release.
+
+Ninety focused tests, seven network tests, both builds, offline audit and scans
+passed. Standard checks retain the existing admin-layout assertion and gated
+database cases; Astro check retains only the existing snapshot-importer type error.
+All 16 church/shell preservation checks and live five-width spine containment
+checks passed. The final live Chrome rerun passed all 64 rendered cases and 984
+spine label/count checks with zero console/network errors; navigation, filters,
+eligible detail and privacy checks passed on both runtimes.
+See `docs/design/bookshelf-repair.md` for exact evidence and limitations.
+GitHub publication remains blocked by execution review's rejection of the
+question-prompt approval for the required AGENTS dataset-branch amendment.
+No governance amendment or bypass publication has occurred.
+
 ## Selective Claude sermon presentation integration — 1 October 2026
 
 The existing `frontend/astra-impeccable-staging` worktree has integrated
