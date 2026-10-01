@@ -1,5 +1,29 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
+## Selected Impeccable staging handoff — 1 October 2026
+
+Samuel selected the completed Sunday-invitation frontend from
+`codex/impeccable-church-redesign` at
+`5d737e2f3522efd02e0c96d5cc31b8b37912e3b3` for the dedicated
+`frontend/astra-impeccable-staging` handoff. The source worktree was clean.
+Claude's alternatives and unrelated work remain on their existing branches.
+Developer setup and deployment boundaries are in `docs/design/staging-handoff.md`.
+
+Read-only live staging reconciliation found 191 sermons and 21 migrations in
+public staging, and 148 sermons and 22 migrations in protected staging. This
+frontend-only task preserves each database, its selectors and access controls;
+it does not synchronize sermons or apply migrations. The narrow public-runtime
+compatibility opt-in checks the exact existing 21-migration ledger and is not
+available with D-162/D-167 selectors. The default remains exact 22.
+
+Focused frontend/staging tests and the sealed bundle passed. The static build
+emitted 44 church pages. Standard tests reproduced only the existing admin-layout
+newline assertion (803 passed, 126 gated PostgreSQL cases skipped), and Astro
+check reproduced the existing snapshot-importer optional-property error. The
+initial simultaneous check/build cache race was resolved by running them serially.
+No database-write test or production readiness is claimed. Deployment outcome
+and final preservation evidence are recorded after the application replacement.
+
 ## Isolated visitor redesign alternative — 28 September 2026
 
 `codex/impeccable-church-redesign` contains a fresh Sunday-invitation design,

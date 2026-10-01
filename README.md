@@ -1,5 +1,10 @@
 # Saving Grace Bible Church Website
 
+The selected Astra + Impeccable frontend handoff is documented in
+[docs/design/staging-handoff.md](docs/design/staging-handoff.md), including
+checkout, locked installation, local previews, development data and staging
+compatibility. Existing sermon acceptance and publication protections remain intact.
+
 ## Isolated Impeccable visitor redesign
 
 Branch `codex/impeccable-church-redesign` is a separate design exploration,

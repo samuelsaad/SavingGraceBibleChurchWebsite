@@ -3,19 +3,20 @@ import { Pool } from "pg";
 import { PostgresSermonRepository } from "../server/repositories/postgres-sermon-repository";
 import { toWebRequest } from "../server/http/node-request-adapter";
 import { stagingConfiguration, stagingPassword, verifyStagingIdentity } from "./guard";
-import { verifyReleaseSchema } from "./database-verification";
+import { stagingSchemaExpectation, verifyReleaseSchema } from "./database-verification";
 import { createSealedStagingHandler } from "./handler";
 import { verifyRestrictedPublicationBoundary } from "./restricted-publication-boundary";
 
 async function main() {
   const config = stagingConfiguration(process.env);
+  const expectedSchema = stagingSchemaExpectation(process.env);
   const pool = new Pool({ ...config, password: stagingPassword(config.passwordFile) });
   const ready = async () => {
     const client = await pool.connect();
     try {
       await client.query("BEGIN READ ONLY");
       await verifyStagingIdentity(client);
-      await verifyReleaseSchema(client);
+      await verifyReleaseSchema(client, expectedSchema);
       await verifyRestrictedPublicationBoundary(client,"sealed_staging");
     } finally { await client.query("ROLLBACK"); client.release(); }
   };

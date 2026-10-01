@@ -2,6 +2,18 @@ import { createHash } from "node:crypto";
 import type { PoolClient } from "pg";
 import { loadSchemaMigrations, validateSchemaMigrationJournal } from "../migration/schema-migrations";
 
+/** Frontend-only replacement of the existing D-161 public runtime must not
+ * migrate its database. The older ledger is an explicit exact-prefix choice,
+ * never a minimum-version or unknown-migration compatibility bypass. */
+export function stagingSchemaExpectation(env: NodeJS.ProcessEnv): 21 | 22 {
+  if (env.STAGING_SCHEMA_MIGRATIONS === undefined || env.STAGING_SCHEMA_MIGRATIONS === "22") return 22;
+  if (env.STAGING_SCHEMA_MIGRATIONS === "21"
+    && env.D161_RESTRICTED_ACCEPTANCE_ENABLED === "1"
+    && env.D162_RESTRICTED_ACCEPTANCE_ENABLED !== "1"
+    && env.D167_RESTRICTED_ACCEPTANCE_ENABLED !== "1") return 21;
+  throw new Error("staging_schema_configuration_refused");
+}
+
 export async function verifyReleaseSchema(client: Pick<PoolClient, "query">, expected: 18 | 19 | 20 | 21 | 22 = 22) {
   const migrations = await loadSchemaMigrations();
   const journal = await client.query("SELECT migration_order, migration_id, checksum_sha256 FROM schema_migrations ORDER BY migration_order");
