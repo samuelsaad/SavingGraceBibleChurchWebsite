@@ -4,6 +4,7 @@
  * No global font/token overrides or new runtime dependency.
  */
 import { claudeSermonTokens } from "./claude-sermon-tokens";
+import { bookshelfLayoutStyles } from "./bookshelf-layout";
 
 export const claudeSermonStyles = `
 
@@ -611,4 +612,5 @@ ${claudeSermonTokens}
 @media (max-width: 76rem) { .claude-sermons .sermon__body { grid-column: 2; } }
 @media (max-width: 60rem) { .claude-sermons .sermon__body { grid-column: auto; } }
 @media (max-width: 44rem) { .claude-sermons .transcript__stats { flex-basis: 100%; padding-bottom: var(--space-2); } }
+${bookshelfLayoutStyles(".claude-sermons ")}
 `;

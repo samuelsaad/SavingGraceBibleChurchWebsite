@@ -6,6 +6,7 @@
  */
 import { bibleBooks } from "../../domain/bible-passage";
 import { spineWidthFactor } from "../canon";
+import { bookshelfLayoutStyles } from "./bookshelf-layout";
 
 const categoryTokens: Record<string, string> = {
   law: "spine-law",
@@ -147,4 +148,5 @@ ${perBook}
   .ruler__cell[aria-current="true"] { outline: 3px double Highlight; }
   .tab { outline: 2px solid CanvasText; outline-offset: -2px; }
 }
+${bookshelfLayoutStyles()}
 `;
