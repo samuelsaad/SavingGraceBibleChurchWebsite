@@ -1,5 +1,36 @@
 # Migration Validation Plan
 
+## SermonAudio media integration — 4 October 2026
+
+- Actual read-only inventory: 311 local records, 279 restricted eligible, zero
+  structured SermonAudio rows. Exact source joins cover 308 records; synthetic
+  pilot and production source namespaces remain distinct. Live source: 464
+  sermons, 432 explicit audio references, 156 outside local joins. No source writes.
+- Final reconciliation: 271 verified proposals, 25 unmatched in inspected
+  evidence, one conflicting, 14 unavailable, zero ambiguous. All 271 are pending
+  immutable media-review dependencies; zero application database updates.
+- Strict ID/canonical URL, source identity, ownership, ambiguity/conflict,
+  upload-date separation, imported-markup rejection, activation and CSP tests
+  pass. The focused rerun passed 15 cases. Disposable PostgreSQL covers atomic
+  addition, unchanged rerun, optimistic concurrency, audit/provenance retention
+  and immutable acceptance guards. All 127 database tests passed with zero skips;
+  the full combined run was 973 passed / one known admin-layout assertion failed.
+- `npm run check`: only existing snapshot-importer TS2379, no new diagnostics.
+  `npm run build`: passed, 45 pages. `npm run staging:bundle`: six entries passed
+  prohibited-input checks. Anonymized importer dry run: five inputs, three included,
+  two excluded, zero rejected. `npm audit --offline`: zero cached vulnerabilities.
+- Rendered fixture checks at 1440/390 pixels: no external requests or iframe
+  before deliberate activation; keyboard activation, accessible iframe title,
+  responsive fit, ordinary fallback and retained YouTube control passed. The
+  official player identified the verified church recording. No autoplay or media
+  playback/processing occurred; temporary browser and fixture listener were closed.
+- Database preservation is checked by a full table-and-sequence fingerprint,
+  not counts alone. Existing review/acceptance evidence and content remain intact.
+  Private report and intermediate evidence remain ignored and unstaged. Existing
+  V5 changes are preserved and excluded from the media implementation commit.
+- Staging rollout evidence must be appended only after the app-only operation,
+  readiness, route/privacy and database-preservation checks actually succeed.
+
 ## Isolated visitor-design verification — 28 September 2026
 
 - Separate `codex/impeccable-church-redesign` alternative; no migration,

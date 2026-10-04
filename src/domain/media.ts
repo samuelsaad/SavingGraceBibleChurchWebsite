@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import type { PublicMedia } from "./sermon";
 import { canonicalYouTubeUrl, youtubeVideoIdFromUrl } from "./youtube";
+import {canonicalSermonAudioUrl, sermonAudioIdFromUrl} from './sermonaudio';
 export {
   canonicalYouTubeUrl,
   resolveYouTubeIdentity,
@@ -50,7 +51,8 @@ export function normalizeYouTube(
 function extractIframeSource(value: string): string | null {
   if (!value.includes("<")) return value.trim();
   if (/<script\b/i.test(value)) return null;
-  const match = /<iframe\b[^>]*\bsrc\s*=\s*(["'])(.*?)\1/i.exec(value);
+  if ((value.match(/<iframe\b/gi) ?? []).length !== 1) return null;
+  const match = /<iframe\b[^>]*\ssrc\s*=\s*(["'])(.*?)\1/i.exec(value);
   return match?.[2]?.trim() ?? null;
 }
 
@@ -61,31 +63,15 @@ export function normalizeSermonAudio(
   const source = extractIframeSource(originalValue);
   if (!source) return null;
 
-  let url: URL;
-  try {
-    url = new URL(source);
-  } catch {
-    return null;
-  }
-
-  const hostname = url.hostname.toLowerCase();
-  if (url.protocol !== "https:" || !(hostname === "sermonaudio.com" || hostname.endsWith(".sermonaudio.com"))) {
-    return null;
-  }
-
-  const externalId =
-    url.searchParams.get("SID") ??
-    url.searchParams.get("sid") ??
-    url.searchParams.get("sermon") ??
-    url.pathname.split("/").filter(Boolean).at(-1) ??
-    null;
+  const externalId = sermonAudioIdFromUrl(source.replaceAll('&amp;', '&'));
+  if (!externalId) return null;
 
   return {
     media: {
       provider: "sermonaudio",
       mediaType: "audio",
       externalId,
-      canonicalUrl: url.toString(),
+      canonicalUrl: canonicalSermonAudioUrl(externalId)!,
       title: `Audio: ${title}`
     },
     sourceAudit: audit("asp_sermon_audio_embed", originalValue)

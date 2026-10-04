@@ -57,7 +57,7 @@ const preservedSources = [
   ],
   [
     "src/frontend/scripts/sermon.ts",
-    "2f31d16c98648d6dc20aa4e518f65599415fd7601e655dc3fd7f95c77c197929"
+    "4941b691d054e2afe570b4436bfbfbc581c3a5ddbfc033fc1e30be6d73f3abad"
   ],
   [
     "src/frontend/routes.ts",

@@ -125,6 +125,7 @@ import { registerFifthBatchPostgresTests } from "./fifth-batch-postgres";
 import { registerSixthBatchPostgresTests } from "./sixth-batch-postgres";
 import { registerSeventhBatchPostgresTests } from "./seventh-batch-postgres";
 import { registerEighthBatchPostgresTests } from "./eighth-batch-postgres";
+import { registerSermonAudioPostgresTests } from './sermonaudio-postgres';
 
 const enabled = process.env.RUN_POSTGRES_INTEGRATION === "1";
 const integration = enabled ? describe : describe.skip;
@@ -393,6 +394,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   });
 
   registerDelegatedAiReviewPostgresTests(() => pool, runSchema);
+  registerSermonAudioPostgresTests(() => pool);
   registerRemainingAiReviewPostgresTests(() => pool, runSchema);
   registerRestrictedAcceptancePostgresTests(() => pool, runSchema);
   registerFifthBatchPostgresTests(() => pool);

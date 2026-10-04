@@ -45,7 +45,11 @@ export function contentSecurityPolicy(html: string): string {
   const scriptHashes = embeddedScriptHashes(html);
   const styleHashes = embeddedStyleHashes(html);
   // Only real plate markup (not the enhancement script's selector text) opens the frame source.
-  const frame = /<[a-z][^>]*\sdata-video-frame[\s>]/u.test(html) ? " frame-src https://www.youtube-nocookie.com;" : "";
+  const frameOrigins = [
+    /<[a-z][^>]*\sdata-video-frame[\s>]/u.test(html) ? 'https://www.youtube-nocookie.com' : null,
+    /<[a-z][^>]*\sdata-audio-frame[\s>]/u.test(html) ? 'https://embed.sermonaudio.com' : null
+  ].filter(Boolean);
+  const frame = frameOrigins.length ? ` frame-src ${frameOrigins.join(' ')};` : '';
   return `default-src 'none'; style-src ${styleHashes.length ? styleHashes.join(" ") : "'none'"};${scriptHashes.length ? ` script-src ${scriptHashes.join(" ")};` : ""} img-src 'self' data:; font-src 'self';${frame} base-uri 'none'; frame-ancestors 'none'; form-action 'self'`;
 }
 

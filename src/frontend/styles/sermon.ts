@@ -41,6 +41,11 @@ export const sermonStyles = `
 .plate[data-video-loaded="true"] .plate__status { display: none; }
 .plate iframe { display: block; width: 100%; height: 100%; border: 0; }
 .media-links { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-4); }
+.audio-plate { margin-top: var(--space-4); padding: var(--space-5); border-radius: var(--radius-control); background: var(--colour-ink); color: var(--colour-on-ink); }
+.audio-plate__title { font-weight: 700; margin-bottom: var(--space-2); }
+.audio-plate__note { max-width: 50ch; margin-bottom: var(--space-3); font-size: var(--size-ui); color: var(--colour-on-ink-soft); }
+.audio-plate iframe { display: block; width: 100%; min-width: 0; height: 180px; border: 0; background: var(--colour-ground); }
+.audio-plate[data-audio-loaded] { padding: var(--space-3); }
 .transcript { max-width: var(--measure-transcript); }
 .transcript__summary { display: inline-flex; align-items: center; gap: var(--space-3); min-height: var(--target-size); padding: 0 var(--space-4); border: 2px solid var(--colour-ink); border-radius: var(--radius-control); list-style: none; cursor: pointer; font-family: var(--font-signage); font-stretch: 87.5%; font-size: var(--size-ui); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
 .transcript__summary::-webkit-details-marker { display: none; }

@@ -1,5 +1,36 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
+## Controlled SermonAudio integration — 4 October 2026
+
+The media section now supports a validated, single-sermon SermonAudio player,
+loaded only after explicit activation, with a normal fallback link. YouTube,
+church pages, sermon layouts, content selectors and privacy controls are retained.
+No new dependency, schema, content generation or publication decision is involved.
+
+Read-only reconciliation checked the actual 311 local sermons and 464 WordPress
+source sermons. Outcomes are 271 verified proposed recordings, 25 unmatched in
+inspected evidence, one conflicting and 14 unavailable; none is ambiguous.
+All 271 verified proposals remain pending: current immutable media-review or
+restricted-acceptance dependencies would be invalidated by attachment. No media
+link, review, acceptance or content row was changed, and no recording is yet
+activated on a real eligible page. The private metadata-only report preserves
+record-level evidence and earlier extraction versions. The official public feed
+is limited to 100 entries; a full-catalogue coverage claim is not justified.
+
+The 55-table local fingerprint remains unchanged with 311 stored / 279 eligible.
+Disposable PostgreSQL tests passed all 127 database cases with zero skips. The
+combined suite passed 973 cases and retains only the unchanged admin-layout
+newline assertion. Astro check retains only the unchanged snapshot-importer
+TS2379. Build, six staging bundles, anonymized dry run and offline audit passed.
+Desktop/mobile browser checks confirmed inert initial media, keyboard activation,
+correct official recording metadata and no autoplay; no audio was processed.
+
+Application rollout and GitHub publication are separate, verified operations;
+do not infer completion from this implementation entry. GitHub publication of
+this branch's existing dataset-bearing history still requires its recorded
+protected-file exception. See `docs/sermonaudio-integration.md` for the contracts,
+coverage limits, preserved-review boundary and rollback procedure.
+
 ## Bookshelf containment repair — 1 October 2026
 
 Both staging visitor applications now serve frontend-only repair commit

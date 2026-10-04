@@ -1,16 +1,18 @@
 /**
  * Controlled media for the sermon page: a click-to-load video plate that
- * makes no request until the visitor activates it, and plain links for
- * controlled audio.
+ * makes no request until the visitor activates it, plus a controlled,
+ * click-to-load single-sermon audio player and ordinary fallback links.
  */
 import type { SermonDetail } from "../../domain/sermon";
 import { resolveYouTubeIdentity } from "../../domain/youtube";
+import {canonicalSermonAudioUrl, resolveSermonAudioIdentity} from '../../domain/sermonaudio';
 import { html, when, type Html } from "../html";
 import { shelfMark } from "./marks";
 
 export interface SermonMedia {
   video: Html | null;
   audioLinks: Html[];
+  audio: Html[];
 }
 
 export function sermonMedia(sermon: SermonDetail): SermonMedia {
@@ -29,10 +31,16 @@ export function sermonMedia(sermon: SermonDetail): SermonMedia {
         </div>
       </div>`
     : null;
-  const audioLinks = sermon.media
-    .filter((item) => item.provider !== "youtube")
-    .map((item) => html`<a class="button button--outline" href="${item.canonicalUrl}" target="_blank" rel="noopener noreferrer">Open audio <span aria-hidden="true">↗</span><span class="sr-only">(opens in a new tab)</span></a>`);
-  return { video, audioLinks };
+  const recordings = sermon.media.filter(item => item.provider === 'sermonaudio')
+    .map(item => ({item, id:resolveSermonAudioIdentity(item)})).filter(item => item.id);
+  const audio = recordings.map(({id}) => html`<div class="audio-plate" data-audio-frame>
+    <p class="audio-plate__title">Listen to this sermon</p>
+    <p class="audio-plate__note">Loading the audio player connects to SermonAudio. Nothing plays until you press play.</p>
+    <button class="button button--onink" type="button" data-load-sermonaudio data-sermonaudio-id="${id}" data-audio-title="${`Audio: ${sermon.title}`}">Load audio player<span class="sr-only"> for ${sermon.title}</span></button>
+    <noscript><p class="audio-plate__note">Use the SermonAudio link below to listen without JavaScript.</p></noscript>
+  </div>`);
+  const audioLinks = recordings.map(({id}) => html`<a class="button button--outline" href="${canonicalSermonAudioUrl(id!)}" target="_blank" rel="noopener noreferrer">Listen on SermonAudio <span aria-hidden="true">↗</span><span class="sr-only">(opens in a new tab)</span></a>`);
+  return { video, audioLinks, audio };
 }
 
 export function mediaSection(sermon: SermonDetail): Html | null {
@@ -42,6 +50,7 @@ export function mediaSection(sermon: SermonDetail): Html | null {
   return html`<section class="sermon-section sermon-section--media" id="watch" aria-labelledby="media-heading">
     <h2 id="media-heading" class="section__title">${heading}</h2>
     ${media.video ?? when(!media.audioLinks.length, html`<p class="note">The sermon media is currently unavailable.</p>`)}
+    ${media.audio}
     ${when(media.audioLinks.length, () => html`<p class="media-links">${media.audioLinks}</p>`)}
   </section>`;
 }

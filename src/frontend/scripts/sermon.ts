@@ -8,8 +8,9 @@
  * keyboard users are not dropped at the top of the document.
  */
 import { videoLoaderSource } from "./video-loader";
+import { audioLoaderSource } from './audio-loader';
 
-export const sermonScript = `(function () {${videoLoaderSource}
+export const sermonScript = `(function () {${videoLoaderSource}${audioLoaderSource}
   /* ---- transcript opens for printing, then returns to its previous state ---- */
   var printable = Array.prototype.slice.call(document.querySelectorAll('details[data-open-for-print]'));
   var reopened = [];

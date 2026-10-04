@@ -65,7 +65,7 @@ describe("media normalisation", () => {
 
   it("extracts SermonAudio as inert text and never exposes raw iframe markup", () => {
     const source =
-      '<iframe src="https://embed.sermonaudio.com/player/example-sermon" width="100"></iframe>';
+      '<iframe src="https://embed.sermonaudio.com/player/a/101012345678/" width="100"></iframe>';
     const normalized = normalizeSermonAudio(source, "Example");
 
     expect(normalized?.media.provider).toBe("sermonaudio");
