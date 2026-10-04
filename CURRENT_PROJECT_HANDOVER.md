@@ -25,11 +25,15 @@ TS2379. Build, six staging bundles, anonymized dry run and offline audit passed.
 Desktop/mobile browser checks confirmed inert initial media, keyboard activation,
 correct official recording metadata and no autoplay; no audio was processed.
 
-Application rollout and GitHub publication are separate, verified operations;
-do not infer completion from this implementation entry. GitHub publication of
-this branch's existing dataset-bearing history still requires its recorded
-protected-file exception. See `docs/sermonaudio-integration.md` for the contracts,
-coverage limits, preserved-review boundary and rollback procedure.
+Both staging visitor apps now serve implementation commit
+`78e4b904f6a8bc115e90d46001948912e1d245ee`. Public staging remains 191 stored /
+148 eligible; protected staging remains 148 stored / 148 eligible. App-only
+rollback and restoration passed with unchanged database fingerprints/listeners.
+Six church-page HTML hashes match the prior release; private-route denial,
+no-store/noindex and YouTube checks passed. No media mapping was applied.
+GitHub publication remains blocked by the branch-specific dataset-history rule;
+no AGENTS exception or push was made. See `docs/sermonaudio-integration.md` for
+release/image/package hashes, coverage limits and the retained rollback procedure.
 
 ## Bookshelf containment repair — 1 October 2026
 

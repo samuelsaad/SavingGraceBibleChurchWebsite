@@ -28,8 +28,25 @@
   not counts alone. Existing review/acceptance evidence and content remain intact.
   Private report and intermediate evidence remain ignored and unstaged. Existing
   V5 changes are preserved and excluded from the media implementation commit.
-- Staging rollout evidence must be appended only after the app-only operation,
-  readiness, route/privacy and database-preservation checks actually succeed.
+- Staging rollout: both apps healthy on `78e4b904f6a8bc115e90d46001948912e1d245ee`.
+  Independent package hash verification passed. Only apps were replaced; database
+  containers, volumes, migrations and listeners were unchanged. Actual app-only
+  rollback and restoration passed; complete database fingerprints matched at
+  every phase. Public 191/148 and protected 148/148 stored/eligible totals persist.
+- Corrected live browser checks passed local and both staging runtimes: one h1,
+  no horizontal overflow at 1440/390, no initial external player request, retained
+  YouTube, transcript and privacy controls. All six non-sermon page HTML hashes
+  match the prior release. The initial nonexistent giving-path probe was replaced
+  with the actual registry route; no route implementation was modified.
+- Final metadata reconciliation rerun reproduced every outcome and the exact
+  saved plan hash twice. All 271 verified recordings have matching requested-ID
+  official audio initializers. No real media write was eligible. Credential/key,
+  private-content/identity, prohibited-path, symlink, staged-file and output scans
+  passed against 2,196,860 protected shingles; overlaps in old public church copy
+  were traced to unchanged tracked public source, not excused as new sermon text.
+- The branch remains absent on GitHub because the current protected instruction
+  confines its existing dataset history to another branch. No workaround push or
+  protected instruction change was made. Unrelated V5 work remains untouched.
 
 ## Isolated visitor-design verification — 28 September 2026
 

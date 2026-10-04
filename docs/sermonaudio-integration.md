@@ -39,3 +39,42 @@ Browser verification at 1440 and 390 pixels confirmed zero initial external requ
 Database rollback is unnecessary for this reconciliation because no application media writes were eligible. The full database fingerprint must remain unchanged. For a future permitted write, rollback must compare the current media and version with its receipt, preserve intervening edits and append compensating audit history rather than delete history. Application rollback uses the prior exact staging image and unchanged Compose configuration, with an app-only restart; never recreate a database or volume.
 
 Official references: [single-sermon embed instructions](https://sermonaudiotips.com/embedding-singlesermon/), [embed editor](https://sermonaudiotips.com/embed-codes/), [church broadcaster](https://www.sermonaudio.com/broadcasters/savinggrace/), [API documentation](https://api.sermonaudio.com/v2/docs).
+
+## Verified staging rollout
+
+Both visitor runtimes serve implementation commit
+`78e4b904f6a8bc115e90d46001948912e1d245ee`, image
+`sha256:08f447640c43460ac7f3cf7b801b86cfc5ce104ecc9c489711fe92bc5bb8fd78`.
+The 212-path, committed dependency-closure package has SHA-256
+`de27d17e42a9bbb9028adcccf1d84a0e5e75ec7e925978a7c64197d9e0a22868`.
+It excludes datasets, private mappings, local configuration and credentials.
+Pre-existing uncommitted V5 work was not shipped or committed.
+
+The public database remains 191 sermons / 148 eligible; the protected database
+remains 148 sermons / 148 eligible. Full table/sequence fingerprints matched
+before deployment, during the successful app-only rollback, and after restoration.
+No migration, scoped media write, data synchronization or publication change was
+performed. Rollback configurations, the prior exact image and the guarded helper
+are retained under the established release-directory convention. The helper's
+`rollback` operation restores only the prior applications; `deploy` restores this
+release. Both operations check readiness and unchanged databases/listeners.
+
+Real local and staging page checks passed at 1440/390 pixels. Six church-page
+HTML hashes match the prior release, eligible details retain YouTube and private
+routes remain denied with no-store/noindex. Both staging APIs still report the
+exact 148 eligible records. A first browser test used a nonexistent `/giving/`
+path; inspection identified the actual giving route, and the corrected check
+passed without changing any page or route.
+
+Public staging remains <http://54.253.237.138:8080/sermons-v4/>. Protected visitor
+staging remains on EC2 loopback 8082 via the existing pinned SSH mechanism.
+There are no active SermonAudio-linked page URLs to claim: verified mappings are
+still pending the preserved media-review boundary. The wider WordPress inventory
+has 156 records outside the local joins, including 149 explicit audio references;
+these were neither individually verified against the full catalogue nor imported.
+
+GitHub publication is not completed. Current AGENTS.md confines dataset-bearing
+history publication to the original project-sync branch; the requested integrated
+branch is absent remotely. A separately recorded, narrowly scoped protected-file
+exception is required before this existing history can be pushed. No alternate
+branch, replacement history or private-data upload was used.
