@@ -15,7 +15,7 @@ export async function applyReviewedSermonAudioLink(client:PoolClient,raw:unknown
  await client.query("SELECT pg_advisory_xact_lock(hashtextextended('sermonaudio:'||$1,0))",[p.sermonAudioId]);
  const s=(await client.query('SELECT * FROM sermons WHERE id=$1 FOR UPDATE',[p.sermonId])).rows[0];
  if(!s||Number(s.source_wordpress_id)!==p.sourceWordPressId)return{outcome:'conflicting',reason:'source_identity_changed'};
- const media=(await client.query('SELECT * FROM sermon_media WHERE sermon_id=$1 ORDER BY display_order,id FOR UPDATE',[p.sermonId])).rows;
+ const media=(await client.query('SELECT to_jsonb(m) row FROM sermon_media m WHERE sermon_id=$1 ORDER BY display_order,id FOR UPDATE',[p.sermonId])).rows.map(r=>r.row);
  const audio=media.filter(m=>m.provider==='sermonaudio');
  const existing=(await client.query('SELECT namespace,payload FROM sermon_extensions WHERE sermon_id=$1 AND namespace=ANY($2::text[]) FOR UPDATE',[p.sermonId,[audioReviewNamespace,audioAcceptanceNamespace]])).rows;
  if(audio.length){

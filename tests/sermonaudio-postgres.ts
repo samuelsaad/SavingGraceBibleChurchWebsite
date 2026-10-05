@@ -9,11 +9,13 @@ export function registerSermonAudioPostgresTests(getPool:()=>Pool){
  it('refreshes current media acceptance atomically; retains history, stale/withdrawn/held gates, audits and idempotency',async()=>{
   const c=await getPool().connect();try{await c.query('BEGIN');await c.query("SET LOCAL savinggrace.application_request='on'");
    const id=randomUUID();await c.query("INSERT INTO sermons(id,title,slug,status,service_date,source_wordpress_id,summary,summary_status) VALUES($1,'Synthetic accepted media fixture',$2,'draft','2024-01-07',987653001,'Preserved fixture','draft')",[id,'review-audio-'+id]);
+   await c.query("INSERT INTO sermon_media(sermon_id,media_type,provider,external_id,canonical_url,title,is_primary,display_order,availability_status) VALUES($1,'video','youtube','abcdefghijk','https://www.youtube.com/watch?v=abcdefghijk','Synthetic existing video',true,0,'available')",[id]);
+   const mediaBefore=(await c.query('SELECT to_jsonb(m) row FROM sermon_media m WHERE sermon_id=$1 ORDER BY display_order,id',[id])).rows.map(r=>r.row);
    const dep=(await c.query('SELECT d161_restricted_acceptance_dependency($1) hash',[id])).rows[0].hash;
    await c.query(`INSERT INTO sermon_d161_restricted_acceptances(sermon_id,decision,source_manifest_sha256,acceptance_manifest_sha256,evidence_sha256,content_dependency_sha256,fingerprint_format,accepted_row_version,authorized_by,executed_by,manual_review_claimed,passage_basis,environment)
     VALUES($1,'D-161',$2,$2,$2,$3,'d161-utc-jsonb-v1',1,'samuel-saad-d161-authorization','codex-d161-d160-private-review',false,'primary_passage','local_loopback')`,[id,'0390f2b94252270821f9079159482a18e17051399cad654818905b1f1de20c94',dep]);
    const old=(await c.query('SELECT * FROM sermon_d161_restricted_acceptances WHERE sermon_id=$1',[id])).rows[0];
-   const p={sermonId:id,sourceWordPressId:987653001,expectedVersion:1,sermonAudioId:'101012345679',sourceSha256:'a'.repeat(64),planSha256:audioReviewPlanSha256,evidence:['explicit_source_identity','official_broadcaster_verified'],mediaBeforeSha256:mediaSnapshotHash([])};
+   const p={sermonId:id,sourceWordPressId:987653001,expectedVersion:1,sermonAudioId:'101012345679',sourceSha256:'a'.repeat(64),planSha256:audioReviewPlanSha256,evidence:['explicit_source_identity','official_broadcaster_verified'],mediaBeforeSha256:mediaSnapshotHash(mediaBefore)};
    const assessment={planSha256:audioReviewPlanSha256,evidenceSha256:'c'.repeat(64),sourceIdentityVerified:true,explicitRecordingReferenceVerified:true,officialBroadcaster:'savinggrace',serviceDateVerified:true,titleCorroborated:true,speakerCorroborated:true,singleRecordingVerified:true,audioAvailable:true,audioQualityVerified:false,humanApprovalClaimed:false,provider:'OpenAI',executionSurface:'Codex',model:'not_exposed_by_runtime',immutableRevision:'not_exposed_by_runtime',reviewMethod:'explicit-source-reference-and-official-recording-metadata'};
    await expect(applyReviewedSermonAudioLink(c,p,{...assessment,humanApprovalClaimed:true})).rejects.toThrow();
    expect((await applyReviewedSermonAudioLink(c,{...p,expectedVersion:2},assessment)).reason).toBe('concurrent_metadata_change');
@@ -29,7 +31,7 @@ export function registerSermonAudioPostgresTests(getPool:()=>Pool){
    await c.query('SAVEPOINT altered_receipt');await c.query("UPDATE sermon_extensions SET payload=payload||'{\"humanApprovalClaimed\":true}'::jsonb WHERE sermon_id=$1 AND namespace='website.sermonaudio-acceptance'",[id]);expect(await eligible()).toBe(false);await c.query('ROLLBACK TO altered_receipt');
    await c.query('SAVEPOINT status');await c.query("UPDATE sermons SET status='archived' WHERE id=$1",[id]);expect(await eligible()).toBe(false);await c.query('ROLLBACK TO status');
    await c.query('SAVEPOINT withdrawn');await c.query("INSERT INTO sermon_d161_restricted_acceptance_withdrawals(sermon_id,authorization_reference,reason,executed_by) VALUES($1,'synthetic-withdrawal','Synthetic withdrawal','codex-d161-d160-private-review')",[id]);expect(await eligible()).toBe(false);await c.query('ROLLBACK TO withdrawn');
-   await c.query('ROLLBACK TO atomic_audio');expect((await c.query('SELECT count(*)::int n FROM sermon_media WHERE sermon_id=$1',[id])).rows[0].n).toBe(0);
+   await c.query('ROLLBACK TO atomic_audio');expect((await c.query("SELECT count(*)::int n FROM sermon_media WHERE sermon_id=$1 AND provider='sermonaudio'",[id])).rows[0].n).toBe(0);
    expect((await c.query('SELECT count(*)::int n FROM sermon_extensions WHERE sermon_id=$1',[id])).rows[0].n).toBe(0);
    // A stale original receipt permits attachment, never a replacement acceptance.
    await c.query("UPDATE sermons SET summary='Intervening fixture change' WHERE id=$1",[id]);

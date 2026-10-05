@@ -3,12 +3,15 @@ import type {PoolClient} from 'pg';
 import {z} from 'zod';
 import {canonicalSermonAudioUrl,sermonAudioIdPattern} from '../domain/sermonaudio';
 import {PostgresAdminSermonTransaction} from '../server/repositories/postgres-admin-sermon-repository';
+import {canonicalReviewJson} from '../domain/delegated-ai-review';
 const hash=(s:string)=>createHash('sha256').update(s).digest('hex');
 export const sermonAudioLinkSchema=z.object({sermonId:z.uuid(),sourceWordPressId:z.number().int().positive(),expectedVersion:z.number().int().positive(),
  sermonAudioId:z.string().regex(sermonAudioIdPattern),sourceSha256:z.string().regex(/^[a-f0-9]{64}$/u),planSha256:z.string().regex(/^[a-f0-9]{64}$/u),
  evidence:z.array(z.string().regex(/^[a-z_]+$/u)).min(2),mediaBeforeSha256:z.string().regex(/^[a-f0-9]{64}$/u)}).strict();
 export type SermonAudioLink=z.infer<typeof sermonAudioLinkSchema>;
-export const mediaSnapshotHash=(rows:unknown)=>hash(JSON.stringify(rows));
+/** JSONB and driver rows differ in object key order and Date representation.
+ * Canonicalize values, never omit a field or reorder the media sequence. */
+export const mediaSnapshotHash=(rows:unknown)=>hash(canonicalReviewJson(JSON.parse(JSON.stringify(rows))));
 /** Same transactional/audited primitives as metadata repairs, with an extra
  * media-freshness guard. This task must not silently stale immutable review or
  * restricted acceptance dependencies. Such links remain private proposals. */
@@ -16,7 +19,7 @@ export async function applyVerifiedSermonAudioLink(client:PoolClient,raw:unknown
  const p=sermonAudioLinkSchema.parse(raw);
  const row=(await client.query('SELECT source_wordpress_id,row_version,status,deleted_at FROM sermons WHERE id=$1 FOR UPDATE',[p.sermonId])).rows[0];
  if(!row||Number(row.source_wordpress_id)!==p.sourceWordPressId)return{outcome:'conflicting' as const,reason:'source_identity_changed'};
- const media=(await client.query('SELECT * FROM sermon_media WHERE sermon_id=$1 ORDER BY display_order,id FOR UPDATE',[p.sermonId])).rows;
+ const media=(await client.query('SELECT to_jsonb(m) row FROM sermon_media m WHERE sermon_id=$1 ORDER BY display_order,id FOR UPDATE',[p.sermonId])).rows.map(r=>r.row);
  const canonical=canonicalSermonAudioUrl(p.sermonAudioId)!;
  const audio=media.filter(m=>m.provider==='sermonaudio');
  if(audio.length){if(audio.length===1&&audio[0].external_id===p.sermonAudioId&&audio[0].canonical_url===canonical)return{outcome:'unchanged' as const,reason:'already_correct'};
