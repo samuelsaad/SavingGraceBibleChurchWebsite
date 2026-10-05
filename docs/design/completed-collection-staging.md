@@ -86,3 +86,18 @@ The actual curated 279-record import and identical rerun passed in a guarded
 disposable database, with zero public, completed-preview or semantic eligibility.
 The disposable database was removed; the application database was not written.
 Record deployment/idempotency/rollback results separately after execution.
+
+## Statement-local eligibility performance
+
+Concurrent staging detail-page checks exposed a 15-second filter-query timeout:
+the same full acceptance predicate was evaluated again for joined Bible verses.
+For D-171 only, a materialized CTE now evaluates exact membership and the complete
+current dependency/version/withdrawal predicate once within that SQL statement.
+All filter joins consume that guarded relation. This is not a cross-request
+cache; no freshness, status, authentication or publication gate is relaxed.
+Ordinary public and other restricted scopes are unchanged.
+
+A read-only comparison on the actual staging database returned identical result
+hashes: the previous single query took 9.1 seconds; three concurrent optimized
+queries took 2.8–3.3 seconds. All 130 database tests passed again with zero skips;
+the same unrelated admin-layout newline assertion remained the only failure.

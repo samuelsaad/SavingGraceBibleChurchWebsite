@@ -694,9 +694,14 @@ export function buildPublishedSermonFilterOptionsQuery(
   input: PublicSermonListQuery = {page:1,pageSize:9,order:"DESC"}
 ): ParameterizedQuery {
   const state = buildPublishedConditions(input, scope);
+  // The fixed D-171 cohort is fully freshness-checked in this statement's
+  // materialized relation. Repeating the same expensive dependency guard after
+  // every joined verse multiplies its work without providing another boundary.
+  // This is statement-local evaluation, never an acceptance cache.
+  const matchedEligibility = scope === "d171_completed" ? "true" : frontendSermonEligibilitySql("sermon", scope);
   return {
     text: `
-      WITH matching_sermons AS (
+      WITH matching_sermons AS ${scope === "d171_completed" ? "MATERIALIZED " : ""}(
         SELECT s.* FROM sermons s WHERE ${state.conditions.join(" AND ")}
       )
       SELECT
@@ -707,7 +712,7 @@ export function buildPublishedSermonFilterOptionsQuery(
             SELECT speaker.name, speaker.slug, count(DISTINCT sermon.id)::integer AS sermon_count
             FROM speakers speaker
             JOIN matching_sermons sermon ON sermon.speaker_id = speaker.id
-            WHERE ${frontendSermonEligibilitySql("sermon", scope)}
+            WHERE ${matchedEligibility}
             GROUP BY speaker.name, speaker.slug
           ) options
         ), '[]'::jsonb) AS speakers,
@@ -719,7 +724,7 @@ export function buildPublishedSermonFilterOptionsQuery(
             FROM series sermon_series
             JOIN sermon_series_map series_map ON series_map.series_id = sermon_series.id
             JOIN matching_sermons sermon ON sermon.id = series_map.sermon_id
-            WHERE ${frontendSermonEligibilitySql("sermon", scope)}
+            WHERE ${matchedEligibility}
             GROUP BY sermon_series.name, sermon_series.slug
           ) options
         ), '[]'::jsonb) AS series,
@@ -733,7 +738,7 @@ export function buildPublishedSermonFilterOptionsQuery(
               ON source_map.source_taxonomy_term_id = source_term.id
             JOIN matching_sermons sermon ON sermon.id = source_map.sermon_id
             WHERE source_term.taxonomy = 'sermon_topics'
-              AND ${frontendSermonEligibilitySql("sermon", scope)}
+              AND ${matchedEligibility}
           ) options
         ), '[]'::jsonb) AS passages,
         COALESCE((
@@ -771,7 +776,7 @@ export function buildPublishedSermonFilterOptionsQuery(
               AND primary_passage.start_chapter = primary_passage.end_chapter
               AND primary_passage.start_verse IS NOT NULL
               AND primary_passage.end_verse IS NOT NULL
-              AND ${frontendSermonEligibilitySql("sermon", scope)}
+              AND ${matchedEligibility}
             GROUP BY canonical_book.slug, canonical_book.canonical_order,
                      primary_passage.start_chapter
           ) availability
