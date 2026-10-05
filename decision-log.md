@@ -787,6 +787,40 @@ original public 148-sermon runtime/database remain unchanged. See
 outcomes, remaining evidence requirements and known unrelated verification failures.
 This closure grants no retry, substitution, next batch, public update or Git push.
 
+### D-171 — Exact 279 completed-sermon staging and curated GitHub handoff
+
+On 5 October 2026 Samuel explicitly authorized the corresponding AGENTS.md and
+staging/export amendment. The source contains 311 sermons: 279 current restricted
+acceptances and 32 held records. The current public-stage set is an exact subset
+of 148; 131 completed local records are not currently displayed there. The new
+sorted 279-UUID set (one per line, final newline) has SHA-256
+`4e3455c92d604f4e44999e56922e15359dc7bfa8a6d912c6d36e2a39a9f048c3`.
+Bind a private snapshot to current content hashes, versions and acceptance
+dependencies before transfer; any membership drift requires reconciliation.
+
+This decision narrowly supersedes D-166's population limit for the existing
+plain-HTTP public staging visitor listener, and permits the same eligible set on
+the local frontend plus a curated current GitHub export on
+`frontend/astra-impeccable-staging`. Preserve held records, all existing reviews,
+publication states, uncertainty, current frontend designs and historical evidence.
+No approval, re-review, generated content, next batch or production publication
+is authorized. Necessary schema/runtime compatibility must retain exact migration
+checksums, source evidence, freshness, concurrency and no-clobber checks.
+
+Capture protected recovery evidence before scoped staging writes. Verify the
+destination, append/update only the authorized dependency closure, preserve newer
+staging edits and prove identical reruns are unchanged. Never replace a database
+or expose PostgreSQL/admin/draft-preview. Public staging remains no-store/noindex;
+restricted acceptance creates neither human approval nor production eligibility.
+
+The current curated export is limited to the approved 279 identities and the
+existing project-snapshot path. Exclude raw captions, held sermons, secrets,
+accounts/sessions, administrator identities and operational audit/review authority.
+Existing authorized Git history remains intact. A normal push to Samuel's existing
+repository is permitted after verification; no force-push, visibility change,
+default-branch merge or unrelated changes. Rollback must preserve history and use
+the retained app release plus protected, version-checked recovery evidence.
+
 ## Decisions still required
 
 ### D-170 — Verified SermonAudio media-review refresh and bounded handoff

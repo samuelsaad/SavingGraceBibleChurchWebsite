@@ -1,5 +1,42 @@
 # Repository Operating Rules
 
+## D-171 — Exact completed-collection staging and export (5 October 2026)
+
+Samuel separately authorizes this protected-file amendment for exactly the 279
+currently completed, freshness-verified local sermons. Their sorted UUIDs, one per
+line with a final newline, have SHA-256
+`4e3455c92d604f4e44999e56922e15359dc7bfa8a6d912c6d36e2a39a9f048c3`.
+Freeze and recheck their current content/review dependencies before execution.
+The other 32 local records remain held and excluded. Do not invent approval,
+repeat substantive reviews, change publication states or start another batch.
+
+For this exact set, D-171 supersedes D-166's 148-member staging-display limit and
+the earlier branch/content-export limits. It permits scoped recoverable staging
+synchronization, necessary matching backend/schema compatibility, the existing
+public HTTP visitor listener at `http://54.253.237.138:8080/`, the local restricted
+frontend, and a curated export on `frontend/astra-impeccable-staging` to the
+existing SavingGraceBibleChurchWebsite GitHub repository through a normal push.
+Do not change repository visibility, force-push, merge a protected branch, expose
+another listener or deploy production. Current church/sermon designs are retained.
+Existing public/protected databases and newer edits must be reconciled, not reset.
+Retain verified pre-write recovery material; identical synchronization must be
+a no-op. Acceptance remains dependent on exact current content and evidence.
+
+The new curated current export is confined to
+`development-data/project-sermon-snapshot-v1/` and these 279 members. It contains
+only allowlisted church-owned display content, metadata, relationships, non-secret
+provenance and warnings; no operational administrator/review authority is restored
+by a development import. Preserve the separately authorized historical datasets
+in Git history without rewriting history. Exclude held sermons from the new
+export and all display additions. Raw captions, credentials, keys, OAuth, accounts,
+sessions, administrator subject data, unrestricted audits, database dumps and
+private checkpoints/reconciliation files remain prohibited in Git/images/public
+responses. Necessary private synchronization evidence remains protected outside
+Git and is not a GitHub export. Admin, draft-preview and database access remain
+private; no-store/noindex, authentication, concurrency, uncertainty and production
+publication/semantic protections remain unchanged. All other permanent rules and
+historical decisions continue to apply outside this exact exception.
+
 ## Bounded SermonAudio follow-through (5 October 2026)
 
 Samuel separately authorized this protected-file amendment after the earlier
