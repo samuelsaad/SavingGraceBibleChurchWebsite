@@ -24,7 +24,7 @@ CSP permits only `https://embed.sermonaudio.com` as an additional frame origin, 
 
 Any later authority to refresh affected media evidence must use a separately guarded workflow that preserves history. Until then, a proposed mapping is not an active recording on the sermon page.
 
-## Current reconciliation
+## Original reconciliation checkpoint
 
 ## Authorized media-only follow-through
 
@@ -65,7 +65,7 @@ Database rollback is unnecessary for this reconciliation because no application 
 
 Official references: [single-sermon embed instructions](https://sermonaudiotips.com/embedding-singlesermon/), [embed editor](https://sermonaudiotips.com/embed-codes/), [church broadcaster](https://www.sermonaudio.com/broadcasters/savinggrace/), [API documentation](https://api.sermonaudio.com/v2/docs).
 
-## Verified staging rollout
+## Original player-only staging rollout
 
 Both visitor runtimes serve implementation commit
 `78e4b904f6a8bc115e90d46001948912e1d245ee`, image
@@ -103,3 +103,72 @@ history publication to the original project-sync branch; the requested integrate
 branch is absent remotely. A separately recorded, narrowly scoped protected-file
 exception is required before this existing history can be pushed. No alternate
 branch, replacement history or private-data upload was used.
+
+## D-170 completed attachment and reviewed follow-through — 5 October 2026
+
+This section supersedes the pending totals and player-only release above. The
+original evidence and failed attempts remain preserved. Primary-context review
+of all 271 proposed mappings found three copied WordPress links identifying
+different sermons; these were held rather than attached. Of the 311 local
+records, **268** now have verified structured audio links and separately recorded
+AI media reviews. **241** have audited replacement restricted receipts;
+**27** linked records retain unrelated review holds. Eligibility remains **279**
+with the identical membership. Final mapping outcomes are 268 linked, 25 unmatched,
+4 conflicting, 14 unavailable and 0 ambiguous. The three newly identified
+conflicts are included in the four, not silently substituted. One correctly
+identified recording is under five minutes; identity/availability review is not
+listening or a claim of recording completeness or audio quality.
+
+The media snapshot comparator now uses canonical JSON and locked JSONB row
+serialization, retaining all fields, array order and timestamp precision. The
+initial comparison-only attempt wrote nothing. The successful 268 writes and
+268 identical unchanged reruns preserve every original content, approval, review,
+acceptance and media row, all unrelated tables and the eligible identity set.
+New reviews and receipts use the existing allowlisted extension/audit mechanism;
+there is no schema migration or ordinary public-selector amendment.
+
+Both staging visitor applications serve commit
+`29f062731ad4020121f9cc1391ce455bb51396e8`, image
+`sha256:d2196335e1573d3258e8018af2ac52f7bcc22b609d4bf7e29449a1c47b264c5e`.
+The 217-path committed dependency-closure package has SHA-256
+`da85e274ffd67256951dca184fc97167a4c55dbaf499cdd85ef31edb6c3cbcf0`.
+It excludes private evidence, datasets, credentials and pre-existing uncommitted
+V5 work. Source membership, migrations, publication flags and access boundaries
+are unchanged: public staging has **191 stored / 148 eligible / 179 linked**, and
+protected staging has **148 stored / 148 eligible / 140 linked**. In each runtime,
+**140 eligible pages** have audio and 140 replacement receipts. The other linked
+public records remain held. Thirty-one older public-stage versions were freshly
+checked against source identity, exact title/date/slug and previous media before
+updating; no newer edit was overwritten. The final identical passes returned
+179 and 140 unchanged respectively, with identical full database fingerprints.
+
+Real eligible pages passed recording/broadcaster identification, zero initial
+player requests, keyboard activation, accessible/responsive framing, no autoplay,
+fallback and retained YouTube-control checks at 1440/390 pixels. Audio/video
+processing was blocked. Six church pages load in each runtime; committed frontend
+sources are unchanged. Historical whole-HTML hashes were not reproduced and are
+not represented as byte-identical; current route/render checks and preserved
+source evidence are recorded separately. Administrator routes remain denied on
+staging; private cache, anti-indexing and public/protected boundaries are intact.
+
+Linked eligible pages are discoverable from the existing public archive:
+<http://54.253.237.138:8080/sermons-v4/>.
+Protected staging uses the established pinned SSH tunnel to EC2 loopback 8082.
+The existing 156 outside-join WordPress records were not imported or individually
+verified against a complete catalogue.
+
+The prior exact image/configuration and scoped before-media recovery evidence
+remain protected outside Git. App-only rollback to the prior image and restoration
+of this release were rehearsed before media writes, without database/listener
+changes. After writes, do not expose rows using an old selector: keep a fail-closed
+frontend while performing any separately authorized, version-checked compensating
+media/acceptance operation; preserve audit history and never restore an old whole
+database over newer decisions. No destructive data rollback was performed.
+
+Focused tests, all 128 guarded PostgreSQL cases (zero skips), production and seven
+staging bundles, anonymous import dry run, offline audit and outgoing/private-file
+scans pass. The full suite retains the unchanged administrator-dashboard source-
+shape assertion failure; Astro/type checking retains the existing snapshot CLI
+optional-property error. These are reported separately, not hidden or repaired
+by changing unrelated work. Git publication is limited to the explicitly
+authorized integrated branch and existing reviewed dataset-bearing history.

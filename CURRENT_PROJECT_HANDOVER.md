@@ -838,3 +838,56 @@ tests executed with zero skips, and the disposable test database was removed.
 Private artifacts remain ignored and unstaged; no sermon prose, credential, token,
 manifest identity or database artifact entered Git. Nothing was pushed, merged,
 deployed publicly, approved by a human or published on the internet.
+
+## D-170 SermonAudio attachment and refreshed media evidence — 5 October 2026
+
+This completion supersedes the earlier player-only pending checkpoint. Primary
+review of the preserved 271 proposals rejected three copied links to different
+sermons. Local outcomes are **268 attached and AI media-reviewed**, **241 audited
+replacement restricted acceptances**, and **27 linked records still held** for
+unrelated requirements. The 311-record inventory and exact 279-member eligible
+set are unchanged. Unresolved mappings: 25 unmatched, 4 conflicting, 14 unavailable,
+0 ambiguous. No recording substitution, listening/audio-quality claim, content
+regeneration, new sermon or human approval occurred.
+
+The existing versioned extension/audit mechanism retains all original reviews,
+acceptances, media, source evidence and content. The media-only transaction
+requires exact source identity, canonical prior-media hash, concurrency/version
+checks, supported recording evidence and a current original restricted receipt
+before writing any replacement acceptance. Held records receive a verified link
+without acceptance. Locked JSONB serialization preserves timestamp precision.
+There is no schema change or ordinary public-selector change.
+
+Both staging apps serve commit `29f062731ad4020121f9cc1391ce455bb51396e8`, image
+`sha256:d2196335e1573d3258e8018af2ac52f7bcc22b609d4bf7e29449a1c47b264c5e`.
+Public staging remains **191 stored / 148 eligible**, with 179 audio attachments;
+protected staging remains **148 stored / 148 eligible**, with 140 attachments.
+Each has 140 eligible audio pages and 140 replacement receipts. Thirty-one older
+public-stage versions passed fresh source/title/date/slug/prior-media checks;
+no newer edit was overwritten. Public eligible membership remains D-166's exact
+hash `4bf7dbdb97d7ef98e9dd1aa9153f0e04c977776f08e0ba0a420fb266304f1731`.
+Identical reruns returned 268 local, 179 public and 140 protected unchanged,
+with no version, timestamp, audit, review or fingerprint churn.
+
+Public archive: <http://54.253.237.138:8080/sermons-v4/>. Protected access retains
+the pinned SSH tunnel to EC2 loopback 8082. Staging admin/private-preview denial,
+database isolation, no-store/noindex and publication boundaries remain intact.
+App rollback and restoration were rehearsed before media writes with unchanged
+databases/listeners. Protected scoped recovery snapshots and prior images are
+retained; do not overwrite newer data or expose stale acceptance on rollback.
+
+Real linked pages passed recording identity, deliberate keyboard loading, mobile
+fit, fallback, no autoplay and YouTube-control checks. Eighteen church-page route
+checks at two widths passed without overflow or script errors. No media was
+downloaded or processed. Source trees/design and all pre-existing V5 work remain
+preserved; V5 changes are not included in these commits or the staging package.
+All 128 guarded database tests passed with zero skips. Standard verification
+retains one unchanged admin-dashboard-layout assertion; Astro retains the existing
+snapshot-CLI optional-property error. Builds, focused checks, dry run, offline
+audit and outgoing/private-content scans passed. Details and rollback limits are
+in [the integration contract](docs/sermonaudio-integration.md).
+
+Only safe D-170 implementation and completion documentation are included in the
+authorized integrated-branch handoff. Existing dataset-bearing history is covered
+by Samuel's explicit push exception; no additional private content, credentials,
+reconciliation, dumps, raw captions, accounts or sessions are included.

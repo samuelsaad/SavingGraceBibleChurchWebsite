@@ -1702,3 +1702,68 @@ corrections, privacy qualifications and final state are recorded in
 - Final `npm run check` covered 333 files with one pre-existing error in the untouched `src/development-data/project-sermon-snapshot-cli.ts` (an `exactOptionalPropertyTypes` mismatch present before this branch) and zero warnings or hints. Final `npm test` ran 84 files and 873 tests: 747 passed, 125 intentionally gated PostgreSQL cases skipped, and one pre-existing, unrelated `admin-dashboard-layout` source-shape assertion failed as documented on the base branch. New suites `sermons-v4`, `church-home` and `site-assets` cover the carried-over opening section, the closed fold, the equal-card latest treatment, ordinals and pagination inside V4, alternate-route redirects and errors, preview authentication, the verbatim homepage inventory, the pending-label policy, the empty static state, CSP consistency and the byte-identical logo in every runtime; the shell, preview, site and design-token suites were updated for the church links, the logo brand and the V1 route. `npm run build` produced three pages plus `/brand/saving-grace-logo.png` (SHA-256 `b617726b47e7456936246af30bdcd35ae31a4660aaa72e52637cd29f9f971c8f`) and `npm audit --offline --audit-level=low` found zero vulnerabilities.
 - The candidate scan found zero eight-word fragments from the 4,312 dataset description, transcript and Q&A fields (1,839,609 distinct shingles across both tracked datasets) in the 37 changed files and the three static pages, zero dataset slugs, seed markers, preview or alternate-route references in the static build, zero credential, private-key, cloud-key, JWT, credentialed-URL or absolute-user-path patterns, zero prohibited filenames, no raster file (the logo is an embedded module) and no symlink or reparse point; `git diff --check` passed. No sermon content, approval, relationship, lifecycle, publication or search state, embedding, semantic relationship, production system or external service changed.
 - Outstanding on a PostgreSQL-equipped computer: `npm run test:postgres` with zero skips, the guarded snapshot import twice (`imported`, then `unchanged`) into a disposable `savinggrace_test_run_*` database, the real authenticated `/frontend-preview/` and sealed local runtime showing `/`, `/sermons-v1/`, `/sermons-v4/` and `/brand/saving-grace-logo.png` from the database-backed repository, and the church's decisions on the dated events, the pending labels' destinations and the double welcome heading. The branch is a candidate only: nothing was merged, deployed, published or released.
+
+## D-170 verified SermonAudio follow-through — 5 October 2026
+
+- Exact preserved mapping SHA-256:
+  `778d7935819f395936eeabf142da2defdc32e59fc45f7162de5676c89bfa7927`.
+  All 271 proposals received primary-context recording-identity review; three
+  copied links to different sermons were rejected. Actual persisted local result:
+  268 links/reviews, 241 replacement restricted receipts, 27 linked-but-held;
+  311 stored and the same 279 eligible. Unresolved: 25 unmatched, 4 conflicting,
+  14 unavailable, 0 ambiguous. Quality/completeness was not verified by listening.
+- An initial comparator-only pass returned conflicts and wrote nothing. Canonical
+  JSON comparison and locked JSONB row reads retain full fields/array order and
+  microsecond timestamps. Regression cases include pre-existing YouTube media,
+  timestamp precision, source identity, stale acceptance, current dependencies,
+  rollback atomicity, concurrent versions, unchanged reruns and honest attribution.
+  No schema or migration change was necessary.
+- Every original local content, approval, review, acceptance, media and audit row
+  is preserved; unrelated table hashes/counts match. Identical 268-record rerun
+  retained final full fingerprint
+  `42fb2510360938086451639d4deee18b3050c4dc487b318e89e2892ab321e2ac`.
+- Staging package: 217 committed closure paths, SHA-256
+  `da85e274ffd67256951dca184fc97167a4c55dbaf499cdd85ef31edb6c3cbcf0`.
+  Running commit `29f062731ad4020121f9cc1391ce455bb51396e8`, image
+  `sha256:d2196335e1573d3258e8018af2ac52f7bcc22b609d4bf7e29449a1c47b264c5e`.
+  Public: 191 stored / 148 eligible / 179 attached; protected: 148 / 148 / 140.
+  Each runtime has 140 eligible audio pages and 140 refreshed restricted receipts.
+  Thirty-one older public versions passed independent exact source/title/date/
+  slug/media revalidation; no newer edit was overwritten. Identical repeats
+  returned 179 and 140 unchanged. Final fingerprints:
+  public `82e2e0d5d81859c826af92fd55111beb1651dd3e8f82a806e11de2ce27a11523`;
+  protected `d9951b865eeeb961ee22f7db9d859cf3f3d8e0821614c07fcd44ed90fbbc784a`.
+- App-only rollback to the prior exact image and restoration were rehearsed before
+  media writes; database/listener fingerprints were unchanged. Scoped before-media
+  recovery receipts remain protected. After writes, old selectors must not expose
+  stale acceptance; any data recovery must be compensating and version-checked,
+  preserve audit history and refuse intervening edits. No whole-database restore
+  or destructive rollback occurred. A maintenance-user secret-read issue was
+  corrected by using the secret's existing UID/GID, without changing permissions
+  or adding capabilities; the failed attempt made no database writes.
+- `npm run test:postgres`: 978 passed / 1 unchanged admin-dashboard-layout failure,
+  979 total; all 128 PostgreSQL cases passed with zero skips. The uniquely named
+  disposable runner database was removed. Final `npm test`: 850 passed / that same
+  1 failure / 128 intentionally database-gated cases. Relevant admin files were
+  not changed by these commits. Final focused media/review tests: 8 passed.
+- `npm run check` retains the existing TS2379 optional-property mismatch at
+  `src/development-data/project-sermon-snapshot-cli.ts:38`; no new task error.
+  Production build: 45 pages; clean committed staging bundle: seven bundles.
+  Anonymous importer dry run: 5 records, 3 included, 2 excluded, 0 rejected.
+  Offline dependency audit: zero cached vulnerabilities; this is not a live audit.
+- Real local/public/protected eligible detail checks passed at 1440/390: exact
+  official recording/broadcaster, zero iframe/external request before activation,
+  keyboard load, accessible title/focus, responsive frame, canonical fallback,
+  no autoplay and retained YouTube control. Playback/media-processing requests
+  were blocked. All 18 church pages passed at both widths with zero overflow or
+  script errors. Historical whole-HTML hashes were not reproduced; unchanged
+  committed frontend source and fresh rendered checks are separate evidence.
+  Remote admin/API requests returned 401; draft/private paths returned 404, with
+  no-store/noindex. Health checks identify the exact running commit.
+- Private-body shingle, protected-identity, secret/key/token/AWS, prohibited-path,
+  symlink, production-output and outgoing-history scans passed. Private evidence
+  remains ignored/unstaged; pre-existing tracked/untracked V5 work remains
+  unchanged and excluded from the handoff. The only authorized Git publication
+  is this existing integrated branch/history to Samuel's named GitHub repository.
+  No production, WordPress, content regeneration, new sermon, human approval,
+  publication-state, access-boundary or frontend-design change occurred.

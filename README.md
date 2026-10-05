@@ -5,6 +5,12 @@ The selected Astra + Impeccable frontend handoff is documented in
 checkout, locked installation, local previews, development data and staging
 compatibility. Existing sermon acceptance and publication protections remain intact.
 
+Verified individual SermonAudio recordings are now attached through the audited
+media-only workflow. Players load only after deliberate activation, retain the
+YouTube option, and do not change sermon content or publication eligibility.
+See [the media integration contract](docs/sermonaudio-integration.md) and the
+latest D-170 handover/validation entries for actual totals, holds and recovery.
+
 ## Isolated Impeccable visitor redesign
 
 Branch `codex/impeccable-church-redesign` is a separate design exploration,
