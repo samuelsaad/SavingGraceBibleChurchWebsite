@@ -29,7 +29,7 @@ restore frontend acceptance or change actual local/staging decisions. Exact
 ## Local preview
 
 Set `D171_COHORT_FILE` to the absolute private verified cohort file, optionally
-set `D171_LOCAL_PORT=4407`, and run `npx tsx deployment/completed-local.ts`.
+set `D171_LOCAL_PORT=4408`, and run `npx tsx deployment/completed-local.ts`.
 It binds only loopback, reads the existing protected local PostgreSQL test
 database with read-only connections, and uses no development identity. No local
 application import, migration or review write is performed. Visitor routes are
@@ -85,7 +85,9 @@ zero vulnerabilities. Exact-scope outgoing scans found no prohibited material.
 The actual curated 279-record import and identical rerun passed in a guarded
 disposable database, with zero public, completed-preview or semantic eligibility.
 The disposable database was removed; the application database was not written.
-Record deployment/idempotency/rollback results separately after execution.
+The final clean query-fix release has 830 passing standard tests and 960 passing
+full-runner tests, with the same single unrelated assertion failure and all 130
+database cases passing. Its production build contains 44 static church pages.
 
 ## Statement-local eligibility performance
 
@@ -101,3 +103,40 @@ A read-only comparison on the actual staging database returned identical result
 hashes: the previous single query took 9.1 seconds; three concurrent optimized
 queries took 2.8–3.3 seconds. All 130 database tests passed again with zero skips;
 the same unrelated admin-layout newline assertion remained the only failure.
+
+## Executed release and preservation
+
+Application commit: `d5b772f3dacb3678d73478abdf72bbf70030c72d`.
+Image: `sha256:f7c5889b417ffcb5894e18808334fae71a1c595ff729e8bf1d326393aa29de68`.
+Code package: `6bbf681b8f2c694efd0d5aa495108659cd6f4263e437cbdce31f12430b6d5600`.
+Retained pre-write logical backup:
+`f481c619bb5d17b2b478413e184f92995cd33805e23b41a89e199f9548d9d99b`.
+
+The isolated completed store now has 279 sermons: 131 appended to the preserved
+148. All 5,522 inserted dependency rows were scoped; the identical second import
+inserted zero and preserved fingerprint
+`56906d8490cb9a69463471f1810e3c4c587f0845e8e4ed31d8d7e290764c18b2`.
+All 279 content hashes matched the frozen source. The separate original public
+database retains its 191 records unchanged. The full local database retains 311
+records with its original fingerprint; 32 held records are not exported or shown.
+
+Both visitor apps use the read-only completed selector. Public staging remains
+`http://54.253.237.138:8080/`; local visitor preview is
+`http://127.0.0.1:4408/`. Admin, draft-preview and database ports remain private.
+The temporary no-port canary was removed; existing administrator services were
+not restarted. Query-fix deployment changed only app images/configuration, with
+both database fingerprints verified unchanged before and after each operation.
+
+The versioned protected release directory retains `public-previous.json` and
+`public-candidate.json`. The former selects the compatible 3c624ae application,
+the latter selects the optimized d5b772f application, both against the same
+unchanged completed store. Operator rollback uses `docker compose -f` with the
+chosen exact file followed by `up -d --no-deps app`; require healthy readiness
+and exact membership after either direction. Never use `down --volumes`, restore
+over current history, or down-migrate the completed database. The older original
+public image/database pair and the logical backup are additionally retained.
+
+This application rollback and reactivation were executed successfully. The
+optimized release finished healthy with 279 members, three concurrent detail
+pages passing and both database fingerprints unchanged. Recovery requires no
+sermon, review, acceptance or publication-state edits.

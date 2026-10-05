@@ -8,9 +8,27 @@ held. Membership hash: `4e3455c92d604f4e44999e56922e15359dc7bfa8a6d912c6d36e2a39
 The scoped transfer adds 131 to the existing 148-member protected store without
 overwriting the original public database or changing review/publication states.
 See `docs/design/completed-collection-staging.md` for gates and rollback.
-Implementation and curated disposable-import checks are verified; deployment
-outcomes must be reconciled from the operator receipt, not inferred from this plan.
+Execution: the completed staging store contains exactly 279 members; the original
+191-record public database remains unchanged as recovery material. Both visitor
+runtimes display the exact completed cohort. An identical scoped import inserted
+zero rows and changed no data, versions, reviews or audit history. The entire
+311-record local database fingerprint remained unchanged.
 
+Running application commit: `d5b772f3dacb3678d73478abdf72bbf70030c72d`.
+Public visitor URL: `http://54.253.237.138:8080/sermons-v4/`.
+Read-only local visitor URL: `http://127.0.0.1:4408/sermons-v4/`; the existing
+administrator server is unchanged. All 32 held records remain excluded from
+both visitor runtimes and the curated current export. No publication or review
+state changed. Current GitHub export: 279 sermons and 1,952 ordered Q&A; no
+operational administrator/review authority. Unrelated V5 work remains uncommitted.
+
+The exact release passed type/Astro, builds, focused checks, offline audit and
+privacy scans. All 130 PostgreSQL tests passed without skips; the full suite's
+only failure remains the unrelated admin-layout newline assertion. Read-only
+HTTP checks verified all 279 list identities, 13 representative detail pages,
+all 32 held exclusions and eight church/archive pages on each frontend.
+The application rollback rehearsal restored the previous compatible release and
+then the optimized release successfully; both database fingerprints were unchanged.
 
 ## Controlled SermonAudio integration — 4 October 2026
 

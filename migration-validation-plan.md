@@ -2,16 +2,45 @@
 
 ## D-171 exact completed collection — 5 October 2026
 
-Frozen scope: 279 completed/32 held; staging additions: 131. Focused cohort,
-freshness, mutation-preservation and schema tests pass. All 130 PostgreSQL cases
-pass with zero skips; full runner 985 pass/one pre-existing admin-layout newline
-assertion failure. Standard suite 855 pass/the same unrelated failure.
-Type/Astro and production/staging builds pass; offline audit zero vulnerabilities;
-scope/private-content scans clean. Actual curated export import and identical
-rerun in a removed disposable test database: 279 transcripts, 1,952 Q&A, zero
-public/completed-preview/semantic eligibility and no idempotency churn.
-Remote execution, preservation and rollback evidence are pending execution.
+Frozen scope: 279 completed/32 held; staging additions: 131. Application commit
+`d5b772f3dacb3678d73478abdf72bbf70030c72d`; all 130 PostgreSQL cases pass with zero
+skips. Exact clean-release standard suite: 830 passed/one pre-existing admin-layout
+newline assertion/130 gated tests skipped. Complete guarded PostgreSQL runner:
+960 passed/the same unrelated failure/zero skipped. Its disposable database was
+removed. Focused cohort/query tests: 6 passed. Type/Astro: zero errors, warnings
+or hints. Production build: 44 pages. Staging bundle/package passed. Offline
+audit: zero reported vulnerabilities; no fresh advisory lookup was claimed.
 
+Anonymized importer: 3 included/2 excluded/0 rejected. Curated export validation:
+279 transcripts, 1,952 ordered Q&A, zero operational review/acceptance/admin rows.
+Actual disposable import and identical rerun passed with zero public,
+completed-preview or semantic eligibility. Initial dry-run invocation omitted
+its required fixture argument; the documented fixture invocation then passed.
+
+Staging: retained hash-verified logical backup; exact compatibility migrations
+22 to 25; appended 131 members/5,522 dependency rows. Identical second import:
+zero inserted, unchanged fingerprint. All 279 source content hashes matched and
+original staging rows/sequences remained unchanged. The separate original
+191-record public database and the full 311-record local database stayed intact.
+Scope/private-content/secret scans: zero findings; private artifacts ignored and
+unstaged. Only deliberate scope/implementation/documentation files were committed.
+
+The initial public activation was rejected because the older protected image
+expected 22 migrations. Read-only diagnosis and an isolated compatible canary
+established the cause; the protected app was updated and verified before public
+activation through execution review. Concurrent detail checks then identified a
+filter-query timeout from repeated acceptance checks after verse joins. A
+statement-local materialized guarded relation fixed it without caching or
+weakening eligibility. Identical filter-result hashes were verified on staging.
+
+Final local/public HTTP checks: 279 exact identities per frontend, 13 sampled
+detail/API content and ordered-Q&A comparisons, all 32 held identities excluded,
+eight church/archive pages each, admin denial, draft-preview denial, no-store,
+noindex, no eager player, no sitemap/feed/structured-data exposure. No failures.
+Application rollback rehearsal: prior compatible image restored successfully;
+optimized image reactivated, healthy with 279 members and three concurrent detail
+pages passing. Both database fingerprints unchanged throughout. No database
+restore or history deletion was performed for the rehearsal.
 
 ## SermonAudio media integration — 4 October 2026
 
