@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import {completedDevelopmentProjection} from '../src/development-data/import-project-sermon-snapshot';
+import {validateCompletedIds} from '../src/domain/completed-staging';
 import {
   loadTrackedProjectSermonSnapshot,
   sha256,
@@ -6,6 +8,16 @@ import {
 } from "../src/development-data/project-sermon-snapshot";
 
 describe("tracked project sermon snapshot", () => {
+  it('D-171 includes only the exact completed cohort and restores no review authority',async()=>{
+    const {snapshot}=await loadTrackedProjectSermonSnapshot();
+    expect(validateCompletedIds(snapshot.tables.sermons.map(r=>r.id)).length).toBe(279);
+    const projection=completedDevelopmentProjection(snapshot);
+    expect(projection.tables.sermons.every(r=>r.summary_status==='draft'&&r.summary_approved_at===null)).toBe(true);
+    expect([...projection.tables.transcripts,...projection.tables.questionAnswers].every(r=>r.status==='draft'&&r.approved_at===null)).toBe(true);
+    expect(projection.tables.scriptureReferences.every(r=>r.review_status!=='confirmed')).toBe(true);
+    for(const key of ['guidedReviews','guidedReviewItems','primaryPassageReviews','aiContentReviews','aiComponentReviews','aiMetadataAssignments','restrictedAcceptances'] as const)expect(projection.tables[key].length).toBe(0);
+    expect(snapshot.tables.sermons.some(r=>r.summary_status!=='draft')).toBe(true);
+  });
   it("has a complete, hash-bound collection with contiguous ordered Q&A", async () => {
     const loaded = await loadTrackedProjectSermonSnapshot();
     expect(loaded.snapshot.tables.sermons.length).toBeGreaterThan(15);

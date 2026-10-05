@@ -1,4 +1,6 @@
 import type { Pool, PoolClient } from "pg";
+import {completedSchemaMigrations} from '../staging/completed-schema';
+import {validateCompletedIds} from '../domain/completed-staging';
 import { assertDisposableIntegrationTestDatabase } from "../migration/local-database-safety";
 import { loadSchemaMigrations, validateSchemaMigrationJournal, type SchemaMigrationJournalRow } from "../migration/schema-migrations";
 import { frontendSermonEligibilitySql } from "../server/queries/public-sermons";
@@ -15,6 +17,19 @@ export interface ProjectSnapshotImportOptions {
   connectionString: string;
   writeOptIn?: string;
   testRunToken?: string;
+}
+
+/** D-171's Git export is display data, not portable administrator authority.
+ * Only the fresh disposable development projection is demoted; source records
+ * and the actual staging synchronization preserve every original decision. */
+export function completedDevelopmentProjection(snapshot: ProjectSermonSnapshot): ProjectSermonSnapshot {
+  validateCompletedIds(snapshot.tables.sermons.map(r=>r.id));
+  const copy=structuredClone(snapshot);
+  for(const r of copy.tables.sermons)Object.assign(r,{summary_status:'draft',summary_reviewed_at:null,summary_approved_at:null});
+  for(const r of [...copy.tables.transcripts,...copy.tables.questionAnswers])Object.assign(r,{status:'draft',reviewed_at:null,approved_at:null});
+  for(const r of copy.tables.scriptureReferences)Object.assign(r,{review_status:r.review_status==='confirmed'?'unreviewed':r.review_status,reviewed_at:null});
+  for(const k of ['guidedReviews','guidedReviewItems','primaryPassageReviews','aiContentReviews','aiComponentReviews','aiMetadataAssignments','restrictedAcceptances'] as const)if(copy.tables[k].length)throw new Error('d171_export_contains_review_authority');
+  return copy;
 }
 
 const tableColumns = {
@@ -50,8 +65,8 @@ async function verifyTarget(client: PoolClient, expectedDatabase: string): Promi
     inet_server_port() = 5432 AS port_5432,
     current_database() = $1 AS target_database`, [expectedDatabase]);
   if (!Object.values(identity.rows[0] ?? {}).every(Boolean)) throw new Error("Project snapshot importer refused the PostgreSQL target identity");
-  const migrations = await loadSchemaMigrations();
   const journal = await client.query<SchemaMigrationJournalRow>("SELECT migration_order, migration_id, checksum_sha256, applied_at FROM schema_migrations ORDER BY migration_order");
+  const migrations = journal.rows.length === 25 ? await completedSchemaMigrations() : await loadSchemaMigrations();
   if (validateSchemaMigrationJournal(migrations, journal.rows) !== migrations.length) throw new Error("Project snapshot importer requires every current schema migration");
 }
 
@@ -208,7 +223,8 @@ export async function importTrackedProjectSermonSnapshot(pool: Pool, options: Pr
     const existing = await client.query<{ id: string }>("SELECT id FROM sermons WHERE id = ANY($1::uuid[]) ORDER BY id", [ids]);
     if (existing.rows.length !== 0 && existing.rows.length !== ids.length) throw new Error("Project snapshot importer refused a partial existing dataset");
     if (existing.rows.length === 0) {
-      await importRows(client, tracked.snapshot);
+      const displayOnly=(tracked.manifest as {decision?:string}).decision==='D-171';
+      await importRows(client, displayOnly?completedDevelopmentProjection(tracked.snapshot):tracked.snapshot);
       outcome = "imported";
     }
     const state = await verifyImported(client, tracked.snapshot);

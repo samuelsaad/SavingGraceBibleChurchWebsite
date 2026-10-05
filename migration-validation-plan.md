@@ -1,5 +1,18 @@
 # Migration Validation Plan
 
+## D-171 exact completed collection — 5 October 2026
+
+Frozen scope: 279 completed/32 held; staging additions: 131. Focused cohort,
+freshness, mutation-preservation and schema tests pass. All 130 PostgreSQL cases
+pass with zero skips; full runner 985 pass/one pre-existing admin-layout newline
+assertion failure. Standard suite 855 pass/the same unrelated failure.
+Type/Astro and production/staging builds pass; offline audit zero vulnerabilities;
+scope/private-content scans clean. Actual curated export import and identical
+rerun in a removed disposable test database: 279 transcripts, 1,952 Q&A, zero
+public/completed-preview/semantic eligibility and no idempotency churn.
+Remote execution, preservation and rollback evidence are pending execution.
+
+
 ## SermonAudio media integration — 4 October 2026
 
 - Actual read-only inventory: 311 local records, 279 restricted eligible, zero

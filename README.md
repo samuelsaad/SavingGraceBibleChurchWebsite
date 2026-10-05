@@ -1,5 +1,9 @@
 # Saving Grace Bible Church Website
 
+The exact 279-completed-sermon D-171 staging and curated-export update is documented
+in [docs/design/completed-collection-staging.md](docs/design/completed-collection-staging.md).
+The 32 held records stay excluded; development imports grant no acceptance.
+
 The selected Astra + Impeccable frontend handoff is documented in
 [docs/design/staging-handoff.md](docs/design/staging-handoff.md), including
 checkout, locked installation, local previews, development data and staging

@@ -205,7 +205,7 @@ export class PostgresSermonRepository implements PublicSermonRepository {
   }
 
   async listPublishedTopicalSermons(): Promise<SermonSummary[]> {
-    if (this.scope !== "restricted_accepted" && this.scope !== "d161_restricted_accepted" && this.scope !== "d162_restricted_accepted" && this.scope !== "d167_restricted_accepted") return [];
+    if (this.scope !== "restricted_accepted" && this.scope !== "d161_restricted_accepted" && this.scope !== "d162_restricted_accepted" && this.scope !== "d167_restricted_accepted" && this.scope !== "d171_completed") return [];
     const statement = buildPublishedTopicalSermonsQuery(this.scope);
     return (await this.database.query(statement.text, statement.values)).rows.map(row => summaryFromRow(row as PublicSermonRow));
   }

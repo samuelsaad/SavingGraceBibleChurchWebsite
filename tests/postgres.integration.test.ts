@@ -126,6 +126,7 @@ import { registerSixthBatchPostgresTests } from "./sixth-batch-postgres";
 import { registerSeventhBatchPostgresTests } from "./seventh-batch-postgres";
 import { registerEighthBatchPostgresTests } from "./eighth-batch-postgres";
 import { registerSermonAudioPostgresTests } from './sermonaudio-postgres';
+import { registerCompletedStagingPostgresTests } from './completed-staging-postgres';
 
 const enabled = process.env.RUN_POSTGRES_INTEGRATION === "1";
 const integration = enabled ? describe : describe.skip;
@@ -401,6 +402,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   registerSixthBatchPostgresTests(() => pool);
   registerSeventhBatchPostgresTests(() => pool);
   registerEighthBatchPostgresTests(() => pool);
+  registerCompletedStagingPostgresTests(() => pool);
 
   it("prefills an exact source speaker without approval, preserves concurrent edits and reruns without audit churn", async () => {
     const c = await pool.connect();

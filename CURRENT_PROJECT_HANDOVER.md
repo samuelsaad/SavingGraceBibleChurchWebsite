@@ -1,5 +1,17 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
+## D-171 completed collection — 5 October 2026
+
+Samuel authorized exactly 279 current completed sermons for the existing public
+staging visitor frontend, local frontend and curated GitHub export; 32 remain
+held. Membership hash: `4e3455c92d604f4e44999e56922e15359dc7bfa8a6d912c6d36e2a39a9f048c3`.
+The scoped transfer adds 131 to the existing 148-member protected store without
+overwriting the original public database or changing review/publication states.
+See `docs/design/completed-collection-staging.md` for gates and rollback.
+Implementation and curated disposable-import checks are verified; deployment
+outcomes must be reconciled from the operator receipt, not inferred from this plan.
+
+
 ## Controlled SermonAudio integration — 4 October 2026
 
 The media section now supports a validated, single-sermon SermonAudio player,

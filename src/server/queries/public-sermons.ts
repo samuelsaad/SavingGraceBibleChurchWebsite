@@ -3,6 +3,7 @@ import { bibleBookBySlug, resolveBibleBook } from "../../domain/bible-passage";
 import { previewDatasetSourceStatus } from "../../domain/development-seed-source";
 import { d161CombinedRestrictedEligibilitySql, d162CombinedRestrictedEligibilitySql, d167CombinedRestrictedEligibilitySql, restrictedEligibilitySql, restrictedPassageAcceptanceSql } from "../../domain/restricted-acceptance";
 import { topicalClassificationSql } from "../../domain/topical-classification";
+import {completedEligibilitySql,completedPassageAcceptanceSql} from "../../domain/completed-staging";
 
 export interface ParameterizedQuery {
   text: string;
@@ -22,8 +23,9 @@ export type FrontendSermonScope =
   | "d161_restricted_accepted"
   | "d162_restricted_accepted"
   | "d167_restricted_accepted"
+  | "d171_completed"
   | "d160_draft_preview";
-const restrictedScope=(scope:FrontendSermonScope)=>scope==="restricted_accepted"||scope==="d161_restricted_accepted"||scope==="d162_restricted_accepted"||scope==="d167_restricted_accepted";
+const restrictedScope=(scope:FrontendSermonScope)=>scope==="restricted_accepted"||scope==="d161_restricted_accepted"||scope==="d162_restricted_accepted"||scope==="d167_restricted_accepted"||scope==="d171_completed";
 
 export const d160DraftSourceStatus = "phase3b2c_evaluation_36_batch_6_private" as const;
 export const d160DraftProcessingVersion = "phase3b2c-evaluation-36-d160-v1" as const;
@@ -41,7 +43,7 @@ function searchVector(scope: FrontendSermonScope): string {
 }
 function acceptedPrimary(alias: string, scope: FrontendSermonScope): string {
   return restrictedScope(scope)
-    ? `${alias}.review_status IN ('confirmed','proposed') AND ${restrictedPassageAcceptanceSql(`${alias}.sermon_id`,"primary_passage")}`
+    ? `${alias}.review_status IN ('confirmed','proposed') AND (${restrictedPassageAcceptanceSql(`${alias}.sermon_id`,"primary_passage")}${scope === "d171_completed" ? ` OR ${completedPassageAcceptanceSql(`${alias}.sermon_id`)}` : ""})`
     : scope === "d160_draft_preview"
       ? `${alias}.review_status IN ('unreviewed','proposed','confirmed')`
     : `${alias}.review_status = 'confirmed'`;
@@ -98,6 +100,7 @@ export function frontendSermonEligibilitySql(
   sermonAlias: string,
   scope: FrontendSermonScope
 ): string {
+  if (scope === "d171_completed") return completedEligibilitySql(sermonAlias);
   if (scope === "restricted_accepted") return restrictedEligibilitySql(sermonAlias);
   if (scope === "d161_restricted_accepted") return d161CombinedRestrictedEligibilitySql(sermonAlias);
   if (scope === "d162_restricted_accepted") return d162CombinedRestrictedEligibilitySql(sermonAlias);
