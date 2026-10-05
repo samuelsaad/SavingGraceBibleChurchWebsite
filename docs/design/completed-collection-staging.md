@@ -58,7 +58,15 @@ appended transactionally. Preserve all original rows, sequences and review
 history. Verify all 279 current acceptances before committing. An identical
 second import must change no data, version, timestamp, review or audit record.
 
-`activate` replaces only the two visitor applications. The public app keeps its
+Verify the exact new image in an isolated read-only canary with no published
+ports first. An older protected image expecting 22 migrations becomes unhealthy
+after the 25-migration upgrade; this is not permission to bypass readiness.
+Diagnose its exact schema mismatch and replace only that protected visitor app
+through execution review. Require healthy readiness, all 279 eligible members,
+admin denial and no-store behavior before the public switch. The operator now
+enforces that compatible protected-image readiness as a public-activation gate.
+
+`activate` selects only the verified visitor applications. The public app keeps its
 existing listener and uses the completed database over a private network. No
 new listener, exposed database port, AWS change or production action is required.
 `rollback-public` restores the earlier public image/config/database pair;
@@ -69,7 +77,8 @@ added; use the compatible image with its existing fail-closed setting if needed.
 ## Implementation verification
 
 Focused cohort/privacy tests passed. All 130 PostgreSQL cases passed with zero
-database skips. Standard suite: 855 passed; full PostgreSQL runner: 985 passed.
+database skips. On the clean release, standard suite: 829 passed; full PostgreSQL
+runner: 959 passed.
 Both reported the same pre-existing admin-layout newline assertion failure.
 Type/Astro checks and production/staging builds passed; offline audit reported
 zero vulnerabilities. Exact-scope outgoing scans found no prohibited material.

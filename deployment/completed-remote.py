@@ -167,6 +167,11 @@ def main():
         recovery=json.loads((root/"recovery.json").read_text())
         if database_hash('savinggrace-staging-db-1') != recovery['originalPublicHash']:
             fail("original_public_database_changed")
+        if operation != "rollback-public":
+            protected=inspect(PROTECTED)
+            if protected['Image'] != recovery['newImage'] or protected['State'].get('Health',{}).get('Status') != 'healthy':
+                fail("verified_protected_readiness_required")
+            ready(8082,commit)
         if operation == "activate":
             compose(root/"protected-candidate.json");ready(8082,commit)
             compose(root/"public-candidate.json");ready(8080,commit)
