@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { remainingDependencyHash } from "./remaining-ai-review";
+import {audioRefreshedEligibilitySql} from './sermonaudio-review';
 
 export const restrictedAcceptanceManifest = "4759449bbbaed97238968d2fd4621d4137b8b4e41b73a20aeda319dc1212617c";
 export const restrictedAcceptanceExecutor = "codex-d158-restricted-acceptance";
@@ -38,7 +39,7 @@ export function parseRestrictedManifest(raw: unknown, disposableFixture = false)
  * Normal public and administrator publication selectors are not weakened. */
 export function restrictedEligibilitySql(alias: string): string {
   if (!/^[a-z][a-z_]*$/.test(alias)) throw new Error("invalid_sql_alias");
-  return `(${alias}.status='published' AND ${alias}.deleted_at IS NULL AND EXISTS (
+  return `((${alias}.status='published' AND ${alias}.deleted_at IS NULL AND EXISTS (
     SELECT 1 FROM sermon_restricted_acceptances accepted
     WHERE accepted.sermon_id=${alias}.id AND accepted.decision='D-158'
       AND accepted.manifest_sha256='${restrictedAcceptanceManifest}'
@@ -47,14 +48,14 @@ export function restrictedEligibilitySql(alias: string): string {
       AND accepted.accepted_at=${alias}.published_at
       AND accepted.content_dependency_sha256=restricted_acceptance_dependency(${alias}.id)
       AND NOT EXISTS (SELECT 1 FROM sermon_restricted_acceptance_withdrawals withdrawn WHERE withdrawn.sermon_id=${alias}.id)
-  ))`;
+  )) OR ${audioRefreshedEligibilitySql(alias,'d158')})`;
 }
 
 /** D-161 is intentionally a separate selector. Callers must opt into the
  * guarded loopback/sealed-staging runtime; no public/default scope uses it. */
 export function d161RestrictedEligibilitySql(alias:string):string{
   if(!/^[a-z][a-z_]*$/.test(alias))throw new Error("invalid_sql_alias");
-  return `(${alias}.status='draft' AND ${alias}.published_at IS NULL AND ${alias}.deleted_at IS NULL AND EXISTS (
+  return `((${alias}.status='draft' AND ${alias}.published_at IS NULL AND ${alias}.deleted_at IS NULL AND EXISTS (
     SELECT 1 FROM sermon_d161_restricted_acceptances accepted
     WHERE accepted.sermon_id=${alias}.id AND accepted.decision='D-161'
       AND accepted.source_manifest_sha256='${d161SourceManifest}'
@@ -62,7 +63,7 @@ export function d161RestrictedEligibilitySql(alias:string):string{
       AND accepted.accepted_row_version=${alias}.row_version
       AND accepted.content_dependency_sha256=d161_restricted_acceptance_dependency(${alias}.id)
       AND NOT EXISTS (SELECT 1 FROM sermon_d161_restricted_acceptance_withdrawals withdrawn WHERE withdrawn.sermon_id=${alias}.id)
-  ))`;
+  )) OR ${audioRefreshedEligibilitySql(alias,'d161')})`;
 }
 export function d161CombinedRestrictedEligibilitySql(alias:string):string{
   return `(${restrictedEligibilitySql(alias)} OR ${d161RestrictedEligibilitySql(alias)})`;
@@ -72,7 +73,7 @@ export function d161CombinedRestrictedEligibilitySql(alias:string):string{
  * through the explicitly enabled loopback/sealed-staging selector. */
 export function d162RestrictedEligibilitySql(alias:string):string{
   if(!/^[a-z][a-z_]*$/.test(alias))throw new Error("invalid_sql_alias");
-  return `(${alias}.status='draft' AND ${alias}.published_at IS NULL AND ${alias}.deleted_at IS NULL AND EXISTS (
+  return `((${alias}.status='draft' AND ${alias}.published_at IS NULL AND ${alias}.deleted_at IS NULL AND EXISTS (
     SELECT 1 FROM sermon_d162_restricted_acceptances accepted
     WHERE accepted.sermon_id=${alias}.id AND accepted.decision='D-162'
       AND accepted.source_manifest_sha256='${d162SourceManifest}'
@@ -80,7 +81,7 @@ export function d162RestrictedEligibilitySql(alias:string):string{
       AND accepted.accepted_row_version=${alias}.row_version
       AND accepted.content_dependency_sha256=d162_restricted_acceptance_dependency(${alias}.id)
       AND NOT EXISTS (SELECT 1 FROM sermon_d162_restricted_acceptance_withdrawals withdrawn WHERE withdrawn.sermon_id=${alias}.id)
-  ))`;
+  )) OR ${audioRefreshedEligibilitySql(alias,'d162')})`;
 }
 export function d162CombinedRestrictedEligibilitySql(alias:string):string{
   return `(${d161CombinedRestrictedEligibilitySql(alias)} OR ${d162RestrictedEligibilitySql(alias)})`;
@@ -89,7 +90,7 @@ export function d162CombinedRestrictedEligibilitySql(alias:string):string{
 /** D-167 is excluded from all ordinary public/default selectors. */
 export function d167RestrictedEligibilitySql(alias:string):string{
   if(!/^[a-z][a-z_]*$/.test(alias))throw new Error("invalid_sql_alias");
-  return `(${alias}.status='draft' AND ${alias}.published_at IS NULL AND ${alias}.deleted_at IS NULL AND EXISTS (
+  return `((${alias}.status='draft' AND ${alias}.published_at IS NULL AND ${alias}.deleted_at IS NULL AND EXISTS (
     SELECT 1 FROM sermon_d167_restricted_acceptances accepted
     WHERE accepted.sermon_id=${alias}.id AND accepted.decision='D-167'
       AND accepted.source_manifest_sha256='${d167SourceManifest}'
@@ -97,7 +98,7 @@ export function d167RestrictedEligibilitySql(alias:string):string{
       AND accepted.accepted_row_version=${alias}.row_version
       AND accepted.content_dependency_sha256=d167_restricted_acceptance_dependency(${alias}.id)
       AND NOT EXISTS (SELECT 1 FROM sermon_d167_restricted_acceptance_withdrawals withdrawn WHERE withdrawn.sermon_id=${alias}.id)
-  ))`;
+  )) OR ${audioRefreshedEligibilitySql(alias,'d167')})`;
 }
 export function d167CombinedRestrictedEligibilitySql(alias:string):string{
   return `(${d162CombinedRestrictedEligibilitySql(alias)} OR ${d167RestrictedEligibilitySql(alias)})`;

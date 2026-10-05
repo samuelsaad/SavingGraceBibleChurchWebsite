@@ -789,6 +789,36 @@ This closure grants no retry, substitution, next batch, public update or Git pus
 
 ## Decisions still required
 
+### D-170 — Verified SermonAudio media-review refresh and bounded handoff
+
+On 5 October 2026 Samuel authorized completing the existing 271 proposed verified
+recording mappings, bound to private reconciliation SHA-256
+`778d7935819f395936eeabf142da2defdc32e59fc45f7162de5676c89bfa7927`.
+Revalidate exact preserved source identity, version, previous media and recording
+evidence. Substantive media review is separate from structural validation; reused
+recordings with contradictory sermon evidence remain unresolved.
+
+Use the existing guarded local test database and scoped existing staging members.
+Preserve original media, reviews, acceptances and audit history. Independently
+review the recording's explicit source reference, official church broadcaster,
+service identity and corroborating metadata; do not claim listening or human
+approval. Existing whole-dependency acceptance must be current before reuse.
+Only media changes; independent content/source/finding decisions are preserved.
+Append versioned allowlisted media-review and replacement-acceptance extensions
+with immutable audit payload hashes. Link and eligible replacement are atomic;
+held records can receive a correct recording without acceptance. Current version,
+complete dependency, original receipt, status and withdrawal gates remain required.
+No schema, content, approval, publication, eligibility-population or design change
+is authorized. D-168 and D-169 numbers remain occupied historical decisions on
+the current backend; this integrated handoff does not reopen either task.
+
+Samuel separately authorizes this branch's reviewed existing dataset-bearing
+history and safe implementation/documentation to be pushed normally on
+`frontend/astra-impeccable-staging` to the existing named GitHub repository.
+No visibility change, force push, default-branch merge, private artifacts or secrets
+are authorized. Existing public/protected staging inventories and boundaries
+remain intact; scoped media updates have recovery evidence and idempotency checks.
+
 - Final AWS runtime/adapter and production networking.
 - Whether privately retained legacy view counts should ever be displayed publicly.
 - Church approval of any term merge/reclassification and the 49 scripture reconciliation cases.

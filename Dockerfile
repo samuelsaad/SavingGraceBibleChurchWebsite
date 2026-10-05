@@ -18,6 +18,7 @@ ENV NODE_ENV=production
 WORKDIR /app
 COPY --from=build --chown=node:node /build/dist-staging/server.cjs ./server.cjs
 COPY --from=build --chown=node:node /build/dist-staging/database.cjs ./database.cjs
+COPY --from=build --chown=node:node /build/dist-staging/sermonaudio-sync.cjs ./sermonaudio-sync.cjs
 COPY --from=build --chown=node:node /build/dist-staging/draft-preview.cjs ./draft-preview.cjs
 COPY --from=build --chown=node:node /build/dist-staging/d160-sync.cjs ./d160-sync.cjs
 COPY --from=build --chown=node:node /build/dist-staging/d161-sync.cjs ./d161-sync.cjs

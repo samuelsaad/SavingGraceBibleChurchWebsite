@@ -30,6 +30,12 @@ export async function applyVerifiedSermonAudioLink(client:PoolClient,raw:unknown
  let acceptance=false;for(const t of tables){if(!/^sermon_([a-z0-9]+_)?restricted_acceptances$/u.test(t.tablename))throw Error('sermonaudio_table_refused');
  if((await client.query(`SELECT 1 FROM "${t.tablename}" WHERE sermon_id=$1 LIMIT 1`,[p.sermonId])).rows.length)acceptance=true;}
  if(acceptance||review?.human_completed||review?.reviewed_dependency)return{outcome:'pending' as const,reason:'immutable_media_review_dependency'};
+ return insertVerifiedSermonAudioLink(client,p,media);
+}
+/** Internal persistence primitive. Callers must lock and validate the source,
+ * media, version and review dependencies in the same transaction first. */
+export async function insertVerifiedSermonAudioLink(client:PoolClient,p:SermonAudioLink,media:Record<string,any>[]){
+ const canonical=canonicalSermonAudioUrl(p.sermonAudioId)!;
  const original=JSON.stringify({policy:'source-identity-and-official-recording-v1',sourceSha256:p.sourceSha256,planSha256:p.planSha256,evidence:p.evidence,previousMedia:media});
  const inserted=(await client.query(`INSERT INTO sermon_media(sermon_id,media_type,provider,external_id,source_url,canonical_url,title,is_primary,display_order,availability_status)
  VALUES($1,'audio','sermonaudio',$2,$3,$3,'Sermon audio',false,$4,'available') RETURNING id`,[p.sermonId,p.sermonAudioId,canonical,Math.max(-1,...media.map(m=>m.display_order))+1])).rows[0];

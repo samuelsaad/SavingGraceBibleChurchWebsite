@@ -1,5 +1,31 @@
 # Repository Operating Rules
 
+## Bounded SermonAudio follow-through (5 October 2026)
+
+Samuel separately authorized this protected-file amendment after the earlier
+media-freshness and Git-publication boundary. The private reconciliation is bound
+to SHA-256 `778d7935819f395936eeabf142da2defdc32e59fc45f7162de5676c89bfa7927`.
+Revalidate each source/version and independently review recording identity and
+church evidence before media-only writes. Preserve immutable prior decisions;
+only current prior acceptance plus a separately supported media review may create
+an audited replacement restricted receipt in the same transaction. Unrelated holds
+stay held. This does not authorize content regeneration or human approval.
+The versioned, application-allowlisted SermonAudio review/acceptance extensions
+are bound to immutable audit payload hashes and full current dependencies; no
+schema change or ordinary public-selector change is required. D-166's exact
+148-member staging set and existing access boundaries remain mandatory; the
+explicit current task permits verified media dependency refresh for those same
+members, not population expansion or stale display.
+
+For this task only, `frontend/astra-impeccable-staging` may publish its reviewed
+existing dataset-bearing history and safe integration changes to Samuel's named
+SavingGraceBibleChurchWebsite GitHub repository through a normal push. This
+includes its already tracked development datasets/snapshot, not additional
+private material. Visibility stays unchanged. Raw captions, credentials, OAuth,
+keys, accounts/sessions, dumps and private reconciliation remain prohibited.
+All permanent rules outside this bounded exception remain unchanged. See the
+SermonAudio follow-through entry in the decision log and integration contract.
+
 ## 1. Authority and startup
 
 Before repository-changing or state-dependent work, read this file, `CURRENT_PROJECT_HANDOVER.md`, `README.md`, `church-website-architecture-plan.md`, `decision-log.md`, and relevant plans/contracts; inspect relevant Git state. Do not rely on prior-chat memory. Higher-priority instructions govern; this file cannot expand authority.

@@ -26,6 +26,31 @@ Any later authority to refresh affected media evidence must use a separately gua
 
 ## Current reconciliation
 
+## Authorized media-only follow-through
+
+The 5 October authorization supplies the formerly missing media-refresh and
+branch-history permissions. The ordinary `applyVerifiedSermonAudioLink` guard is
+retained. The separate `applyReviewedSermonAudioLink` requires an affirmative,
+bounded source/recording assessment, exact source/version/prior-media checks and
+the same guarded caller-owned transaction. It appends, never rewrites, previous
+media provenance, a truthful AI media assessment and immutable audit hashes.
+
+Description/Q&A/transcript/identity/speaker/passage/finding evidence is unaffected
+by a media-only write. Existing media/completion dependencies do change and their
+old receipts remain historical. A replacement restricted receipt is possible only
+when the complete original acceptance was current immediately before this change.
+It binds the original receipt, old/new dependency and version, and the new media
+review. Current dependency, version, status, publication timestamp and withdrawal
+checks stay mandatory in the opt-in restricted selector. Missing/stale prior
+acceptance leaves attachment separate from eligibility. No human review or audio
+quality verification is claimed; no new content is generated.
+
+Existing application-allowlisted `sermon_extensions` support these two versioned
+receipts, so the task needs no database migration. Staging synchronization is
+media-only for existing members, with preserved source evidence, atomic current
+receipt refresh, recovery snapshots and an identical no-op verification pass.
+The public/default selector, inventories, design and non-sermon pages are unchanged.
+
 The actual local inventory contains **311** sermons, of which **279** retain restricted-frontend eligibility. The read-only live WordPress source contains **464** sermon records, **432** with explicit valid single-sermon audio references. Exact WordPress joins cover **308** local records; the three historical local pilot identifiers are not treated as interchangeable with production WordPress identifiers. There are **156** source records outside those joins; no new sermons are created.
 
 Local outcomes: **271 verified**, **25 unmatched in the inspected evidence**, **1 conflicting**, **14 unavailable**, and **0 ambiguous**. All 271 verified proposals are pending due to existing immutable media-review or acceptance dependencies. There are **0 already-correct structured SermonAudio links** and **0 newly attached links**. Wider catalogue access was unavailable through the public web interface, and the RSS feed covered 100 entries; these totals are not a claim that every recording in the full archive was inspected. The metadata-only, per-record report and earlier extraction/reconciliation versions remain private and ignored.

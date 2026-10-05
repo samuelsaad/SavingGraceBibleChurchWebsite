@@ -6,6 +6,7 @@ for (const [name, entry] of Object.entries({
   server: "src/staging/server.ts",
   database: "src/staging/database-cli.ts",
   "draft-preview": "src/staging/draft-preview-server.ts",
+  "sermonaudio-sync": "src/staging/sermonaudio-sync.ts",
   "d160-sync": "deployment/d160-sync.ts",
   "d161-sync": "deployment/d161-sync.ts",
   "d167-protected-sync": "deployment/d167-protected-sync.ts"
