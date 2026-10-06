@@ -116,3 +116,21 @@ review writes or external player requests; later records still need coverage.
 Final complete processing, source verification, portable handoff verification,
 frontend membership/browser checks, secure scoped transfer, release deployment,
 remote idempotency, rollback rehearsal and normal GitHub push remain required.
+
+Checkpoint continuation: 105 records imported and AI/Samuel-accepted, each with
+seven reviewed ordered Q&A. Through position 100, identical replay preserved the
+full database fingerprint; all 19,164 prior rows across 55 tables remain unchanged.
+Position 106 is generated and validated, awaiting review/import after the narrow
+chapter-range repair. This is progress, not delivery completion.
+
+A retained single-book verse range may have its chapter corrected only when a
+unique complete reading announcement expressly states the new chapter and both
+unchanged endpoints. No range expansion, book change, absent-range inference,
+ambiguous anchor, larger-number prefix or human passage approval is permitted.
+Original metadata, source bytes and the unreviewed correction evidence remain.
+Seven focused tests and type checking pass. The latest full guarded PostgreSQL
+suite passes 1,055 tests with zero skips and removes only its verified disposable
+database. Its fixture proves original-range preservation, honest acceptance and
+an identical replay with no relationship, version, review or audit changes.
+The three changed implementation/test files pass the scoped outgoing-content,
+credential and symlink scan; final dataset/history scans are still required.

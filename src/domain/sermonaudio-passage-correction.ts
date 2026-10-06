@@ -23,10 +23,20 @@ export function applySermonAudioPassageCorrection(original:string[],transcript:s
  if(!after||(correction.originalText===null?original.length!==0:original.length!==1||original[0]!==correction.originalText||(!placeholder&&(!before||before.passage.canonicalBookId!==after.passage.canonicalBookId))))throw Error('d175_passage_correction_identity_refused');
  const start=transcript.indexOf(correction.sourceAnchor);
  if(start<0||transcript.indexOf(correction.sourceAnchor,start+1)>=0)throw Error('d175_passage_correction_support_refused');
- const match=/^(.+) ([1-9][0-9]*)(?::([1-9][0-9]*))?$/u.exec(correction.correctedText);
+ const match=/^(.+) ([1-9][0-9]*)(?::([1-9][0-9]*)(?:-([1-9][0-9]*))?)?$/u.exec(correction.correctedText);
  if(!match)throw Error('d175_passage_correction_coordinate_refused');
- const [,book,chapter,verse]=match;
+ const [,book,chapter,verse,endVerse]=match;
  if(correction.originalText!==null&&!placeholder&&!verse)throw Error('d175_passage_correction_coordinate_refused');
+ // Repair only a chapter typo within an existing same-book verse range. The
+ // complete reading announcement must expressly supply both exact endpoints;
+ // do not expand/shorten a range or infer verses from a chapter-only statement.
+ if(endVerse){
+  if(!before||placeholder||before.passage.startVerse!==Number(verse)||before.passage.endVerse!==Number(endVerse)||before.passage.startChapter!==before.passage.endChapter)throw Error('d175_passage_correction_coordinate_refused');
+  const escaped=book!.toLowerCase().replace(/[.*+?^${}()|[\]\\]/gu,'\\$&');
+  const announced=new RegExp(`(?<![\\p{L}\\p{N}])${escaped},?\\s+chapter ${chapter}(?![\\p{L}\\p{N}])[^0-9]{0,100}?verse ${verse}(?![\\p{L}\\p{N}])\\s+to\\s+verse ${endVerse}(?![\\p{L}\\p{N}])`,'u');
+  if(!containsExactReference(correction.sourceAnchor.toLowerCase(),correction.correctedText.toLowerCase())&&!announced.test(correction.sourceAnchor.toLowerCase()))throw Error('d175_passage_correction_explicit_reference_required');
+  return{passageTexts:[correction.correctedText],evidence:{...correction,start,end:start+correction.sourceAnchor.length,sha256:createHash('sha256').update(correction.sourceAnchor).digest('hex')}};
+ }
  const anchor=correction.sourceAnchor.toLowerCase(),linear=`${book!.toLowerCase()} chapter ${chapter}${verse?` verse ${verse}`:''}`,reverse=verse?`verse ${verse} of ${book!.toLowerCase()} chapter ${chapter}`:linear;
  // A spoken chapter name is evidence only for that exact chapter, never a verse.
  const spoken=!verse&&spokenChapters[Number(chapter)]&&containsExactReference(anchor,`${book!.toLowerCase()} chapter ${spokenChapters[Number(chapter)]}`);

@@ -8,16 +8,17 @@ All 119 source hashes were reverified, including the preserved sequence-96 retry
 The isolated delivery branch integrates the current deployed D-171 release with
 committed D-172/D-173/D-174 backend work; unrelated dirty V5/dashboard work stays
 outside this branch. See `sermonaudio-119-completion-plan.md`.
-All 119 preparations pass full lexical/marker preservation. Sequences 1–87 have
-validated descriptions and 609 ordered Q&A plus separately saved complete-source
+All 119 preparations pass full lexical/marker preservation. Sequences 1–105 have
+validated descriptions and 735 ordered Q&A plus separately saved complete-source
 substantive AI reviews, including Arabic sequence 4. Focused evidence-locator,
 description-concision and substantive answer-clarity revisions preserve originals
-and rejected versions. Eighty-seven atomic local
+and rejected versions. One hundred five atomic local
 imports and audited AI/Samuel acceptances are saved as unpublished drafts through
-sequence 87. Resume the next unfinished record, 88. The
-first eighty-seven identical reruns returned unchanged, with identical full-database
+sequence 105. Sequence 106 is generated/validated; save its current complete-source
+review and guarded chapter-coordinate correction, then import. The
+first one hundred identical reruns returned unchanged, with identical full-database
 fingerprints, and all 19,164 pre-existing rows across 55 tables retained their
-hashes. Current stored count: 398. No staging
+hashes. Current stored count: 416. No staging
 change, dataset export or push has occurred at this checkpoint.
 The safe governance/integration commit is
 `e791071900e1a51362553108da8d347017c96a3d`.
@@ -59,6 +60,14 @@ passage tests and type checking pass after this amendment. The last Astro check
 covered 484 files with zero diagnostics;
 staging bundle passed; outgoing scan: no findings. See
 `docs/sermonaudio-staging-transfer.md` for transfer and rollback boundaries.
+The latest seven focused passage tests and type checking pass. Full guarded
+PostgreSQL suite: 1,055 passed, zero skips; exact disposable target removed.
+A same-book range chapter typo may be repaired only from a unique full reading
+announcement naming the corrected chapter and both unchanged verse endpoints.
+No range expansion, different book, chapter-only verse inference or human approval
+is permitted. Anonymous integration coverage preserves the original range and
+proves identical replay without relationship, version, review or audit churn.
+Final source/dataset/browser/delivery verification and push remain outstanding.
 Delivery remains in progress.
 
 ## D-171 completed collection — 5 October 2026
