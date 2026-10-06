@@ -77,10 +77,12 @@ Generation, dry runs and local import alone are not completed delivery.
 ## Preserved implementation checkpoint
 
 All 119 source preparations are word/marker-preserving. The current substantive
-review covers sequences 1–45 and all 315 ordered pairs. Forty-four local imports
-are accepted unpublished drafts; the next record is reviewed awaiting this safe
-implementation commit. All 19,164 pre-existing rows remain unchanged. Thirty-three
-identical replays made no database changes through sequence 42. No remote data/app writes or push has
+review covers sequences 1–61 and all 427 ordered pairs. Sixty-one local imports
+are accepted unpublished drafts; resume at record 62. All 19,164 pre-existing
+rows remain unchanged. All sixty-one identical replays made no database changes.
+One description-concision correction and twenty-two locator-only revisions
+preserve their original candidates. One coordinate correction and one assignment
+from an explicit source reading preserve original metadata. No remote data/app writes or push has
 occurred. These are progress counts, not task-completion claims.
 
 The scoped staging helper preserves exact rows and genuine system attribution,
@@ -96,6 +98,11 @@ parser version. Nonempty metadata cannot be overwritten through this path; topic
 inference, unsupported verses and ambiguous anchors are refused.
 Latest full guarded suite: 1,051 passed, zero skips; disposable database removed.
 Type/Astro: zero diagnostics across 484 files. Bundle and outgoing scan pass.
+Latest standard runner: 917 passed and 134 guarded database skips; the separate
+full PostgreSQL run above has zero skips. Production build passes with the two
+existing font-resolution warnings and 44 generated pages. Browser verification
+passed for the first 40 real records at desktop/mobile widths without screenshots,
+review writes or external player requests; later records still need coverage.
 Final complete processing, source verification, portable handoff verification,
 frontend membership/browser checks, secure scoped transfer, release deployment,
 remote idempotency, rollback rehearsal and normal GitHub push remain required.

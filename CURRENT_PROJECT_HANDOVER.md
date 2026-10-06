@@ -8,16 +8,16 @@ All 119 source hashes were reverified, including the preserved sequence-96 retry
 The isolated delivery branch integrates the current deployed D-171 release with
 committed D-172/D-173/D-174 backend work; unrelated dirty V5/dashboard work stays
 outside this branch. See `sermonaudio-119-completion-plan.md`.
-All 119 preparations pass full lexical/marker preservation. Sequences 1–45 have
-validated descriptions and 315 ordered Q&A plus separately saved complete-source
-substantive AI reviews, including Arabic sequence 4. Fifteen support-locator revisions
+All 119 preparations pass full lexical/marker preservation. Sequences 1–61 have
+validated descriptions and 427 ordered Q&A plus separately saved complete-source
+substantive AI reviews, including Arabic sequence 4. Twenty-two support-locator revisions
 preserve rejected originals without changing generated prose. One description was
-shortened and re-reviewed with its Q&A unchanged. Forty-four atomic local
-imports and audited AI/Samuel acceptances are saved as unpublished drafts; 45
-is reviewed and ready for import after this implementation checkpoint. The
-first forty-two identical reruns returned unchanged, with identical full-database
+shortened and re-reviewed with its Q&A unchanged. Sixty-one atomic local
+imports and audited AI/Samuel acceptances are saved as unpublished drafts through
+sequence 61. Resume the next unfinished record, 62. The
+first sixty-one identical reruns returned unchanged, with identical full-database
 fingerprints, and all 19,164 pre-existing rows across 55 tables retained their
-hashes. Current stored count: 355. No staging
+hashes. Current stored count: 372. No staging
 change, dataset export or push has occurred at this checkpoint.
 The safe governance/integration commit is
 `e791071900e1a51362553108da8d347017c96a3d`.
@@ -34,7 +34,7 @@ including Arabic RTL and encoded-route handling, without screenshots or review
 writes. Twenty-one focused preview/gate tests passed. A separate staging opt-in
 retains the exact existing cohort gate and adds only current audited D-175
 acceptances; three focused gate tests pass. Read-only staging inspection confirms
-279 stored sermons and ledger through 0025. Standard suite: 901 passed / 133
+279 stored sermons and ledger through 0025. Latest standard suite: 917 passed / 134
 database tests skipped by that runner; Astro diagnostics: zero; build passed.
 The latest guarded suite passed all 1,051 tests with zero skips, including the
 new display-only portable Unicode import, unchanged replay and concurrent-edit
