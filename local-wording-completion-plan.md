@@ -38,6 +38,10 @@ media. Normal publication, public/search/feed/SEO/build/embedding selectors and
 all existing restricted/staging acceptance records remain unchanged. No local
 completion record may be synchronized or included in a tracked sermon dataset.
 
+The local presentation omits literal provider-redaction placeholders without
+supplying replacement speech. Full stored transcripts, retained sources and
+internal evidence preserve those markers and source limitations unchanged.
+
 Test scope, concurrency, stale dependencies, authentication, audit attribution,
 idempotency and presentation isolation. Verify every selected live dashboard row
 and page without screenshots/prose output or real review submissions. Check all

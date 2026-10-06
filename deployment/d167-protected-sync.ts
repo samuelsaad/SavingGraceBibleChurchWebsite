@@ -41,6 +41,8 @@ export function validateProtectedPacket(raw:unknown):ProtectedPacket{
  for(const t of protectedTables){const x=p.tables[t];if(!x||!Array.isArray(x.rows)||!x.primaryKey.length||x.primaryKey.some(k=>!identifier.safeParse(k).success))throw Error("d167_protected_package_invalid");
   if(t==="sermons"&&(x.rows.length!==ids.size||x.rows.some(r=>!ids.has(r.id))))throw Error("d167_protected_package_invalid");
   if(x.rows.some(r=>r.sermon_id!==undefined&&!ids.has(r.sermon_id)))throw Error("d167_protected_scope_invalid");
+  if(t==="sermon_extensions"&&x.rows.some(r=>r.namespace==="website.d172-local-completion"))throw Error("d167_protected_local_completion_refused");
+  if(t==="audit_events"&&x.rows.some(r=>r.action==="sermon.d172_local_completion"))throw Error("d167_protected_local_completion_refused");
  }
  return p;
 }
@@ -55,7 +57,8 @@ function clause(t:Table):string{
  if(t==="media_assets")return "id IN(SELECT featured_asset_id FROM sermons WHERE id=ANY($1::uuid[]) UNION SELECT thumbnail_asset_id FROM sermon_media WHERE sermon_id=ANY($1::uuid[]) UNION SELECT asset_id FROM sermon_resources WHERE sermon_id=ANY($1::uuid[]) UNION SELECT image_asset_id FROM speakers WHERE id IN(SELECT speaker_id FROM sermons WHERE id=ANY($1::uuid[])) UNION SELECT image_asset_id FROM series WHERE id IN(SELECT series_id FROM sermon_series_map WHERE sermon_id=ANY($1::uuid[])))";
  if(t.endsWith("_scopes"))return "id IN(SELECT scope_id FROM "+(t.startsWith("delegated")?"delegated":"remaining")+"_ai_review_members WHERE sermon_id=ANY($1::uuid[]))";
  if(t==="sermon_media_source_audit")return "sermon_media_id IN(SELECT id FROM sermon_media WHERE sermon_id=ANY($1::uuid[]))";
- if(t==="audit_events")return "entity_type='sermon' AND entity_id=ANY($1::uuid[])";
+ if(t==="sermon_extensions")return "sermon_id=ANY($1::uuid[]) AND namespace<>'website.d172-local-completion'";
+ if(t==="audit_events")return "entity_type='sermon' AND entity_id=ANY($1::uuid[]) AND action<>'sermon.d172_local_completion'";
  return "sermon_id=ANY($1::uuid[])";
 }
 async function exportLocal(path:string){

@@ -1581,6 +1581,11 @@ export class PostgresAdminSermonTransaction implements AdminSermonTransaction {
 export class PostgresAdminSermonRepository implements AdminSermonRepository {
   constructor(private readonly pool: Pool) {}
 
+  async readWorkbench() {
+    const { readAdminWorkbench } = await import("../queries/admin-workbench");
+    return readAdminWorkbench(this.pool);
+  }
+
   listDelegatedAiReviews(sermonIds?: readonly string[]) {
     return listDelegatedReviews(this.pool,sermonIds);
   }

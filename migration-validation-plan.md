@@ -1,5 +1,73 @@
 # Migration Validation Plan
 
+## D-172 local-only completion implementation — 6 October 2026
+
+- The exact 23-record finding-code scope remains immutable. All complete available
+  transcripts, descriptions and 161 ordered Q&A were read substantively in the
+  primary Codex context; private reading/correction evidence is ignored, unstaged.
+- A guarded local-only receipt requires the exact scope, private draft status,
+  no publication timestamp, current version/dependencies and a hash-bound system
+  audit. Human approvals and source accuracy are not fabricated. Current local
+  presentation says Complete without source-wording warnings; uncertainty remains
+  internal. Public/restricted/semantic predicates are unchanged, and protected
+  transfer refuses the local-only extension and audit action.
+- Five proposed correction records passed exact source preservation or support-
+  range/mechanical checks. Nineteen caption hashes verified; four unresolved
+  locators stay internally unavailable, not asserted deleted or audio-verified.
+- Standard suite: 837 passed, 129 expected database-gated skips. Separate guarded
+  PostgreSQL run: 966 passed with zero skips; its disposable database was removed.
+  Extra export-isolation regression: 14 focused tests passed. Build: 44 pages.
+  Anonymous dry run passed; offline cached dependency audit returned zero
+  vulnerabilities. Scoped outgoing/private-content, identity, credential/token/
+  private-key/AWS, prohibited-file, symlink and production-output scans passed.
+- Astro check retains only the existing TS2379 at the unchanged snapshot-import
+  CLI. No task file has a type error. No schema, dependency, staging or public
+  content change is authorized. Final application/idempotency/live evidence will
+  be added after verification, without sermon excerpts or protected identifiers.
+
+## Local administrator workbench — 5 October 2026
+
+- Read-only full-collection status: 311 stored, 279 current restricted
+  acceptances, 32 attention records. Existing D-158/D-161/D-162/D-167 selectors
+  and equivalent bounded D-168/D-169 predicates retain version/dependency,
+  manifest, environment, withdrawal and audit-bound media-refresh checks.
+  No public selector, mutation handler, completion gate or migration changed.
+- Authenticated GET `/api/v1/admin/workbench` returns `no-store` and
+  `noindex,nofollow,noarchive`; anonymous access is denied, unauthorized access
+  is rejected and mutation methods are not supported. The runtime listens only
+  on `127.0.0.1:4406`, using the existing local development identity.
+- `npm test -- --reporter=dot`: 96 files / 835 cases passed; the standard
+  runner skipped its one PostgreSQL file / 128 cases. The separate mutating
+  PostgreSQL suite was not run in this task. Actual database checks used only
+  read-only transactions; no schema or application-data mutation was needed.
+- `npm run build`: passed, 44 pages. `npm run check`: the existing TS2379 in
+  unchanged `src/development-data/project-sermon-snapshot-cli.ts:38` remains;
+  no changed-file diagnostic. Anonymized importer dry run: five inputs, three
+  included, two excluded, zero rejected. `npm audit --offline --omit=dev`:
+  zero cached vulnerabilities; this is not a fresh online advisory lookup.
+- Synthetic browser checks cover five routes at 320/390/768/1024/1440 pixels,
+  six review stages, mobile keyboard navigation, filters and 200% zoom. They
+  made no mutation or external request. Synthetic screenshots were inspected,
+  critiqued and refined; the independent Impeccable finish review returned ship.
+- Live browser checks at 1440/390 pixels verified the 279/32 split, Complete
+  filtering, pagination and four existing evidence forms (speaker, identity,
+  transcript and description). No client errors or review writes occurred.
+  Six non-GET preview-bootstrap requests were deliberately blocked by the
+  read-only test harness. No real sermon screenshots or prose were captured.
+- Before/after row fingerprints match for 15 content, review, audit, extension
+  and acceptance tables, including all 311 sermons, 2,176 Q&A, 2,369 AI content
+  reviews, 2,220 AI component reviews and 6,510 audit events. No data was altered
+  to demonstrate saving; existing validation/concurrency/audit gates remain.
+- Scoped scans checked changed files and 99 build artifacts for credentials,
+  keys, cloud tokens, private identities, sermon-text shingles, prohibited paths
+  and symlinks. No changed-file finding remains. The 232 build phrase matches
+  were independently traced to 51 unchanged public church-page source files;
+  zero unresolved private-output findings remain. No files are staged.
+- Impeccable documentation is scoped to the admin surface. Visitor design,
+  earlier alternatives, unrelated modified/untracked work and running services
+  remain intact. The requested local preview remains running; no staging,
+  production, Git publication or substantive sermon review was performed.
+
 ## SermonAudio media integration — 4 October 2026
 
 - Actual read-only inventory: 311 local records, 279 restricted eligible, zero

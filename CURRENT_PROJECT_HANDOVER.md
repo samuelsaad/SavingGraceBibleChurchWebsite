@@ -1,5 +1,64 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
+## D-172 — bounded local source-wording completion, 6 October 2026
+
+The frozen 23-record scope is documented in `local-wording-completion-plan.md`.
+The primary Codex session has substantively read all 23 complete available
+transcripts, descriptions and 161 ordered Q&A pairs. Nineteen retained caption
+files were integrity-verified; four exact source locators remain unavailable.
+Five supported correction proposals preserve original versions: four retained-
+source restorations and one focused answer correction. Missing speech is not
+invented, and no audio or human approval is claimed.
+
+The implementation records Samuel-authorized completion in a separate local-only
+extension plus a hash-bound system audit. The authenticated dashboard presents a
+current receipt as ordinary Complete, with existing content and controlled media.
+Underlying source limitations and historical decisions remain preserved. It
+grants no restricted/public/staging/semantic eligibility; relevant changes make
+the local receipt stale. Protected transfer explicitly refuses these receipts.
+Database application and final live delivery are recorded only once verified.
+
+Focused tests and the guarded PostgreSQL suite passed (966 tests, zero skips),
+as did the production build, anonymous importer dry run, offline cached audit and
+outgoing-content/security scan. Astro check reports only the existing TS2379 in
+the unchanged snapshot-import CLI. No migration or new dependency was required.
+The previous admin/visitor services and other worktrees remain preserved.
+
+## Local administrator workbench — 5 October 2026
+
+The isolated `codex/admin-review-workbench` branch adds a current, collection-wide
+administrator queue. The older dashboard mixed historical D-156/D-157 review
+scopes with human publication readiness, so its summaries did not describe the
+current collection. The new authenticated, read-only snapshot checks current
+restricted acceptance, including dependency freshness, withdrawals and valid
+SermonAudio media-refresh receipts. Publication remains separate.
+
+Live verification found 311 records: 279 with current restricted acceptance and
+32 needing attention. These are observed counts, not configured targets. The
+queue offers counted status tabs, title/speaker search, reason filters, saved
+evidence explanations and direct navigation to existing guarded correction forms.
+Viewing a review stage does not save progress or submit a decision. Human and AI
+attribution remain distinct, and accepted records do not need another completion
+click. This task made no sermon, review, acceptance or publication changes.
+
+The running local preview is `http://127.0.0.1:4406/admin`, using the existing
+loopback-only development identity `local-admin-0001`, not personal sign-in.
+From this worktree, build with `npm run build`, then start with
+`node --import tsx scripts/start-admin-workbench-local.ts`. The launcher reads
+protected local PostgreSQL credentials and verifies the existing PostgreSQL 16
+test target; it never imports, seeds or migrates data. Do not start a second
+listener while this preview is running. Other worktrees, listeners, visitor
+designs and staging were preserved. No commit, push or deployment was performed.
+
+Verification: 835 standard tests passed; 128 PostgreSQL cases remain skipped in
+the standard runner and the separate mutating suite was not run for this read-only
+dashboard change. Build, anonymized importer dry run, offline production audit,
+five-width synthetic browser checks, live read-only form checks and scoped safety
+scans passed. All 15 fingerprinted content/review/audit/acceptance tables remained
+unchanged. Astro check still reports the pre-existing snapshot-importer TS2379;
+no changed workbench file has a type diagnostic. See the validation plan and
+`docs/design/admin-workbench.md` for scope and design evidence.
+
 ## Controlled SermonAudio integration — 4 October 2026
 
 The media section now supports a validated, single-sermon SermonAudio player,
