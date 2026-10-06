@@ -1,5 +1,34 @@
 # Repository Operating Rules
 
+## D-172 — Samuel-authorized local source-wording completion
+
+Samuel separately authorizes this amendment only for the 23 current local sermons
+selected by saved source-wording finding codes on 6 October 2026. Their sorted
+UUIDs, one per line with a final newline, have SHA-256
+`1d04a65dad79c2f5b0489382a94423f7e2341ce8cd9433e8c81ffdea73573259`.
+Read `local-wording-completion-plan.md`. The primary current Codex runtime may
+read their complete available retained source, transcript, description, ordered
+Q&A and review evidence; perform evidence-supported focused corrections; and
+record private, audited local completion even when source wording remains
+unresolved. This narrowly supersedes prior human-only, post-import correction
+and source-wording completion gates only for this frozen local scope.
+
+Never invent missing/redacted speech or claim audio verification, human review,
+source accuracy or publication approval. Preserve source bytes, original versions,
+human approvals, historical decisions, unresolved evidence and generation lineage.
+Retain uncertainty privately in provenance/audits. The normal authenticated local
+dashboard presents these current records as Complete, without wording-warning
+badges, banners, suffixes or a separate category. A separate local receipt must
+not grant restricted/public/staging/semantic eligibility or modify publication.
+Guard exact local PostgreSQL 16 coordinates, versions, dependencies, scope and
+idempotency. Relevant later edits invalidate the receipt; stale history is retained.
+
+Necessary private prose may enter only this primary task's authorized tool inputs,
+results/history and ignored persistence. It remains excluded from ordinary logs,
+chat, Git, screenshots, reports, fixtures and other providers. No new batch,
+external source retrieval, staging synchronization, push or production action is
+authorized. All existing safeguards remain in force outside this exact exception.
+
 ## Bounded SermonAudio follow-through (5 October 2026)
 
 Samuel separately authorized this protected-file amendment after the earlier

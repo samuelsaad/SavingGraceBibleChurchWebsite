@@ -789,6 +789,29 @@ This closure grants no retry, substitution, next batch, public update or Git pus
 
 ## Decisions still required
 
+### D-172 — Samuel-authorized local completion of source-wording reviews
+
+On 6 October 2026 Samuel separately authorizes protected instruction/skill changes,
+complete private source/content review, supported corrections and ordinary local
+Complete presentation for the 23 current source-wording cases. The exact sorted
+UUID scope hash is `1d04a65dad79c2f5b0489382a94423f7e2341ce8cd9433e8c81ffdea73573259`.
+The read-only baseline is 311 stored, 279 restricted-accepted and 32 held. Nine
+other held sermons remain outside this task. Preserve all prior decisions and
+original source bytes. Never invent redacted speech or claim human/audio approval.
+
+Samuel accepts unresolved wording for this local workflow. Save truthful private
+review evidence and a separately audited local completion receipt, bound to current
+versions/dependencies. Its normal dashboard presentation has Complete status and
+no source-wording warning banner, badge, suffix or separate category. Source
+uncertainty remains underlying provenance/audit evidence, not fabricated resolution.
+This is not a restricted acceptance or publication decision; staging, public and
+semantic eligibility remain unchanged. Exact local-target, concurrency, privacy,
+idempotency and preservation checks are mandatory. Necessary private source and
+corrective prose may enter only primary task inputs/results/history and ignored
+storage. Safe local implementation commits are authorized; no push, new batch,
+external source retrieval, staging change or production action is authorized.
+Read `local-wording-completion-plan.md` for the bounded execution contract.
+
 ### D-170 — Verified SermonAudio media-review refresh and bounded handoff
 
 On 5 October 2026 Samuel authorized completing the existing 271 proposed verified

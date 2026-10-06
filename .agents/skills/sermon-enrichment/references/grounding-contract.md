@@ -1,5 +1,16 @@
 # Private grounding contract
 
+D-172 separately authorizes evidence-supported source/content corrections and
+Samuel-authorized local completion for only the 23-record sorted-ID scope hash
+`1d04a65dad79c2f5b0489382a94423f7e2341ce8cd9433e8c81ffdea73573259`.
+Read `../../../../local-wording-completion-plan.md`. Complete available source and
+current artifact reading, actual coverage, exact hashes, versions and preserved
+correction lineage are required. Do not invent missing/redacted speech or relabel
+source limitations as verified. Residual uncertainty may coexist with normal local
+Complete presentation through its separate audited receipt. Retain uncertainty in
+underlying provenance/audit history; create no human approval, public/staging or
+semantic eligibility. All normal grounding and publication rules remain unchanged.
+
 D-167 separately permits `unapproved` source transcripts only for the exact
 36-position manifest SHA-256
 `0218989d1c09224ed301caecb915cefc787a5017f28f6253aee3020a7c3b3ae5`.

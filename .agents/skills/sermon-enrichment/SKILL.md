@@ -5,6 +5,22 @@ description: Create, regenerate, review, or validate private sermon descriptions
 
 # Sermon Enrichment
 
+## D-172 local source-wording review
+
+For the separately authorized 23-record scope SHA-256
+`1d04a65dad79c2f5b0489382a94423f7e2341ce8cd9433e8c81ffdea73573259`,
+follow `../../../local-wording-completion-plan.md`. Review complete available
+retained captions/transcripts and every description and ordered Q&A in the primary
+current Codex context. A focused evidence-supported correction may follow import;
+preserve all originals and human approvals. Missing/redacted speech must never be
+invented. Record actual reading coverage and unavailable evidence honestly.
+Samuel accepts residual source-wording uncertainty for this local completion.
+Retain that uncertainty internally; normally display current selected records as
+Complete in the authenticated local dashboard. This is a separate local receipt,
+not verified source accuracy, human approval or restricted/public/staging/semantic
+acceptance. Source, grounding, attribution, version, idempotency, privacy and
+publication protections remain mandatory; normal rules apply outside this scope.
+
 ## Purpose
 
 Produce coherent, transcript-grounded private drafts for later human review. Treat the approved transcript as the sole content authority and keep theological, editorial, and publication decisions with the administrator.
