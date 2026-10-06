@@ -2,6 +2,53 @@
 
 ## D-172 local-only completion implementation — 6 October 2026
 
+### Final application and delivery
+
+- Actual application: 23 local completions, five corrected sermons, zero conflicts.
+  Four transcripts received only exact retained-source restorations; one answer
+  received a focused supported correction. Originals, source bytes, existing
+  approvals, finding decisions and generation history remain preserved. All 23
+  local receipts accept residual uncertainty without claiming source accuracy,
+  audio verification, human approval or restricted/public/staging eligibility.
+- Identical rerun: 23 unchanged, zero extra content/version/timestamp/review/audit
+  updates. Final full database hash
+  `b7103bb169700efae0ffc9b7bc87617181c55e0c4fcf49d7c9fa9116d827bcfb`
+  also remained unchanged after browser inspection. All 288 unrelated sermons and
+  all original audit rows match. Retained caption files: 19 hashes unchanged;
+  four exact locators remain internally unavailable. Counts: 311 stored, 302
+  locally Complete, nine attention; existing restricted membership stays 279.
+- Final `npm test`: 839 passed, 129 database-gated skips. Final separate
+  `npm run test:postgres`: 968 passed, zero skips, disposable database removed.
+  `npm run build`: 44 pages. Anonymized importer dry run passed. Offline cached
+  dependency audit: zero vulnerabilities, not a current network audit.
+  Final Astro check: only the pre-existing unchanged snapshot CLI TS2379.
+- Five-width synthetic checks passed (1440, 1024, 768, 390, 320), including
+  keyboard drawer/focus, filtering, six stage views and text scaling. Real queue
+  checks passed at 1440/390. Every selected page opened and refreshed as ordinary
+  Complete, displayed the full description/transcript and all ordered Q&A,
+  preserved media links, and showed no wording warning or completion gate.
+  Authentication denial and no-store/noindex passed. No real review submissions,
+  external requests or screenshots were made.
+- Readiness-check repairs: an internal read-only verifier initially held its sole
+  connection while requesting another; only that helper was stopped and fixed.
+  Browser testing exposed a real HTTP 400 for existing `ai_transcript_proposal`
+  and `retained_transcript` response labels. The read schema now recognizes these
+  exact values; strict write inputs still reject fabricated provenance. No saved
+  passage or review record changed. A separate browser postcondition initially
+  counted the existing frontend-session bootstrap as a review write. The final
+  harness classified and blocked all 48 bootstrap attempts; zero unexpected
+  writes or client errors remained. These failures were not hidden or attributed
+  to sermon content.
+- Impeccable context/detector and scoped responsive inspection preserved the
+  existing operational surface. One rounded-control border warning was a tab
+  selection indicator, not a new accented card; 49 color advisories concerned
+  documented local admin tokens/inherited declarations, not visitor design drift.
+  No broad restyling was performed. Private-content, protected-identity, credential/
+  token/key/AWS, prohibited-file, symlink, staged-file and production-output scans
+  passed. Private receipts are excluded from protected transfer and the tracked
+  snapshot's existing extension allowlist. No frontend visitor, staging or public
+  selector source was changed. Existing local listeners remain running.
+
 - The exact 23-record finding-code scope remains immutable. All complete available
   transcripts, descriptions and 161 ordered Q&A were read substantively in the
   primary Codex context; private reading/correction evidence is ignored, unstaged.

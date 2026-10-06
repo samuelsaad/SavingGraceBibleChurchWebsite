@@ -16,13 +16,34 @@ current receipt as ordinary Complete, with existing content and controlled media
 Underlying source limitations and historical decisions remain preserved. It
 grants no restricted/public/staging/semantic eligibility; relevant changes make
 the local receipt stale. Protected transfer explicitly refuses these receipts.
-Database application and final live delivery are recorded only once verified.
+Actual persisted result: 23 reviewed and locally completed, five corrected,
+zero conflicts. An identical second operation returned 23 unchanged and retained
+full database SHA-256
+`b7103bb169700efae0ffc9b7bc87617181c55e0c4fcf49d7c9fa9116d827bcfb`.
+All 288 unrelated sermons, original human/AI decisions and historical audits were
+preserved. There are 311 stored, 302 locally Complete and nine attention records;
+the existing 279-member restricted population and publication states are unchanged.
 
-Focused tests and the guarded PostgreSQL suite passed (966 tests, zero skips),
-as did the production build, anonymous importer dry run, offline cached audit and
-outgoing-content/security scan. Astro check reports only the existing TS2379 in
-the unchanged snapshot-import CLI. No migration or new dependency was required.
-The previous admin/visitor services and other worktrees remain preserved.
+Use `http://127.0.0.1:4409/admin?view=complete`. This is the existing loopback-only
+development identity `local-admin-0001`, not personal sign-in. The previous admin
+and visitor listeners remain available. From this worktree, set `API_PORT=4409`
+and run `node --import tsx scripts/start-admin-workbench-local.ts` if a restart is
+needed; do not start another listener on an occupied port.
+
+All 23 real pages opened and refreshed normally, with complete descriptions,
+transcripts and ordered Q&A, keyboard disclosure and no wording-warning display.
+Authenticated API denial, no-store/noindex and desktop/mobile checks passed with
+no external requests, review writes or screenshots. Browser testing caught and
+fixed an existing response-contract gap for stored AI passage-proposal provenance;
+strict write inputs and saved passage decisions remain unchanged.
+
+Final standard suite: 839 passed with 129 database-gated skips; the separate
+guarded PostgreSQL suite passed all 968 tests with zero skips and removed its
+disposable database. Build (44 pages), anonymous importer dry run, offline cached
+audit, synthetic five-width/keyboard/zoom checks and scoped safety scans passed.
+Astro check retains only the existing TS2379 in the unchanged snapshot-import CLI.
+No migration or dependency was added. Private evidence is ignored and unstaged;
+no push, staging synchronization, publication or production action occurred.
 
 ## Local administrator workbench — 5 October 2026
 

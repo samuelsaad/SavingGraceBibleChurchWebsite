@@ -4,10 +4,21 @@ import {renderCompletedSermon} from '../src/admin/completed-sermon';
 import {protectedTables,protectedPacketHash,validateProtectedPacket,type ProtectedPacket} from '../deployment/d167-protected-sync';
 import {d167SourceManifest} from '../src/domain/d167-review';
 import {canonicalReviewJson,reviewHash} from '../src/domain/delegated-ai-review';
+import {scriptureReferenceProvenanceResponseSchema,primaryPassageEvidenceResponseSchema,scriptureReferenceInputSchema,primaryPassageDecisionInputSchema} from '../src/api/contracts/admin-sermons';
 describe('bounded local source-wording completion',()=>{
+ it('reads existing AI passage provenance honestly without permitting forged provenance in human write inputs',()=>{
+  expect(scriptureReferenceProvenanceResponseSchema.parse('ai_transcript_proposal')).toBe('ai_transcript_proposal');
+  expect(primaryPassageEvidenceResponseSchema.parse('retained_transcript')).toBe('retained_transcript');
+  expect(scriptureReferenceProvenanceResponseSchema.safeParse('human_approved_by_ai').success).toBe(false);
+  expect(primaryPassageEvidenceResponseSchema.safeParse('unverified_guess').success).toBe(false);
+  expect(scriptureReferenceInputSchema.safeParse({displayText:'Romans 8',provenance:'ai_transcript_proposal'}).success).toBe(false);
+  expect(primaryPassageDecisionInputSchema.safeParse({sermonRowVersion:1,reviewRowVersion:1,action:'confirm_no_primary_passage',evidenceSource:'retained_transcript'}).success).toBe(false);
+ });
  it('excludes local completion evidence from protected staging transfer',()=>{
   const id='10000000-0000-4000-8000-000000000001';
-  const packet={schemaVersion:1,decision:'D-167',processingManifestSha256:d167SourceManifest,exportedAt:'2026-10-06T00:00:00.000Z',eligibleIds:[id],membershipSha256:reviewHash(canonicalReviewJson([id])),tables:Object.fromEntries(protectedTables.map(table=>[table,{primaryKey:['id'],rows:table==='sermons'?[{id}]:[]}])),packageSha256:''} as ProtectedPacket;
+  const tables={} as ProtectedPacket['tables'];
+  for(const table of protectedTables)tables[table]={primaryKey:['id'],rows:table==='sermons'?[{id}]:[]};
+  const packet:ProtectedPacket={schemaVersion:1,decision:'D-167',processingManifestSha256:d167SourceManifest,exportedAt:'2026-10-06T00:00:00.000Z',eligibleIds:[id],membershipSha256:reviewHash(canonicalReviewJson([id])),tables,packageSha256:''};
   packet.packageSha256=protectedPacketHash(packet);expect(()=>validateProtectedPacket(packet)).not.toThrow();
   packet.tables.sermon_extensions.rows=[{id,sermon_id:id,namespace:'website.d172-local-completion'}];packet.packageSha256=protectedPacketHash(packet);
   expect(()=>validateProtectedPacket(packet)).toThrow('local_completion_refused');
