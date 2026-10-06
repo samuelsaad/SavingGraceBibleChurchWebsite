@@ -1,5 +1,40 @@
 # Repository Operating Rules
 
+## D-173 — bounded corrective review and local frontend delivery
+
+Samuel separately authorizes this corrective review for only the nine currently
+held records frozen in private manifest SHA-256
+`97e682024a9a7aec9bb727d7c75ac8992f86672383c4a649289eaa2c5889e21e`.
+Read `local-corrective-review-plan.md`. Complete available retained captions,
+transcript, description, ordered Q&A, metadata and review evidence may enter the
+primary Codex tool/session context and ignored artifacts. Review substantively;
+one additional focused correction per affected artifact is authorized even if a
+historical allowance was used. Preserve original source bytes, prior versions,
+approvals, decisions and fingerprints. Strong contextual inference may support a
+minimal reconstructed wording correction, but must be recorded internally as
+inference, never verified verbatim speech or audio verification. Do not invent
+material teaching. Preserve uncertainty and truthful current runtime provenance.
+
+Samuel's three supplied speaker assignments are authoritative only for their
+exact reconciled existing records. Reuse canonical identities, corroborate
+spelling variants and retain explicit Samuel-supplied provenance; create no
+duplicate speaker. Inspect retained WordPress/source evidence first; this task
+also permits configured WordPress/MariaDB sermon/speaker metadata read-only when
+needed for these nine identities. No source mutation, Google API or media
+processing is authorized.
+
+Guard atomic local PostgreSQL 16 writes, exact versions, dependency freshness,
+correction lineage, idempotency and audit attribution. Record Samuel-authorized
+local completion and separate local frontend acceptance, including version-bound
+replacement receipts after corrections. Residual listed uncertainty is accepted
+for this local scope, not fabricated as resolved evidence. Normally display these
+records as Complete without warning badges, banners, suffixes or holding gates.
+Local frontend selectors must require these current receipts and exact database
+coordinates; ordinary public, staging, export and semantic selectors must exclude
+them. No human approval, publication-state change, staging synchronization,
+production change, GitHub push or new batch is authorized. Preserve unrelated
+work and the existing frontend design. All normal rules remain outside this scope.
+
 ## D-172 — Samuel-authorized local source-wording completion
 
 Samuel separately authorizes this amendment only for the 23 current local sermons

@@ -1,5 +1,20 @@
 # Private grounding contract
 
+D-173 separately authorizes complete-source corrective review and local frontend
+acceptance for only the nine records bound to manifest SHA-256
+`97e682024a9a7aec9bb727d7c75ac8992f86672383c4a649289eaa2c5889e21e`.
+Read `../../../../local-corrective-review-plan.md`. A current unapproved transcript
+may ground this review and one additional focused correction per affected artifact.
+Retain exact source/current/output hashes, grounding revision, full reading coverage,
+paragraph/per-Q&A support and correction lineage. Context-supported reconstruction
+must remain an explicitly inferred correction with original wording preserved;
+it is never verified verbatim source, audio accuracy or a human approval. Missing
+material teaching is not invented. Dependent artifacts must be re-reviewed and
+rebound after relevant changes. Residual listed uncertainty may coexist with normal
+local completion and local-only frontend display through current audited receipts;
+all public/staging/export/semantic protections remain unchanged. Historical policies
+and correction allowances are preserved, not retroactively rewritten or renewed.
+
 D-172 separately authorizes evidence-supported source/content corrections and
 Samuel-authorized local completion for only the 23-record sorted-ID scope hash
 `1d04a65dad79c2f5b0489382a94423f7e2341ce8cd9433e8c81ffdea73573259`.

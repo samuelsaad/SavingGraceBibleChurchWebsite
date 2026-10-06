@@ -789,6 +789,37 @@ This closure grants no retry, substitution, next batch, public update or Git pus
 
 ## Decisions still required
 
+### D-173 — Existing held-sermon corrective review and local frontend acceptance
+
+Samuel's 6 October 2026 attachment separately authorizes the nine current held
+records selected by the saved source-negation, description, identity and speaker
+finding codes. Their frozen private manifest SHA-256 is
+`97e682024a9a7aec9bb727d7c75ac8992f86672383c4a649289eaa2c5889e21e`;
+sorted membership SHA-256 is
+`2640b3e2015b30ef854cd451e05edde0c20377e64d8691d8a161181f34979f1f`.
+The read-only starting database has 311 sermons, 302 local completions and nine
+attention records. The earlier 23 D-172 completions remain outside this selection.
+Existing intervening human work is preserved at its freshly frozen versions.
+
+Read complete available source/transcript/description/ordered Q&A and metadata.
+One additional focused correction per affected artifact is authorized despite a
+used historical allowance. Preserve every original, approval, decision and source
+hash; record inference as inference, never verified verbatim speech or human review.
+Samuel's three supplied speaker assignments may be reconciled to existing canonical
+identities with explicit source attribution. Search retained exports and permitted
+configured read-only WordPress/MariaDB sermon/speaker metadata before claiming
+source evidence unavailable. Do not mutate those sources or retrieve new captions.
+
+Use guarded, versioned, atomic and audited local writes. Residual listed uncertainty
+is accepted by Samuel for normal local completion and a distinct local-only frontend
+receipt, including current replacement receipts after content/metadata changes.
+Verify actual local discovery/detail delivery and identical rerun idempotency.
+Preserve private provenance internally without normal warning badges, banners,
+status suffixes or acknowledgment gates. No human approval, public/staging/export/
+semantic eligibility, new sermon, staging/production change or GitHub push is
+authorized. Safe necessary local implementation commits and verification are
+authorized; unrelated uncommitted work remains preserved and excluded.
+
 ### D-172 — Samuel-authorized local completion of source-wording reviews
 
 On 6 October 2026 Samuel separately authorizes protected instruction/skill changes,

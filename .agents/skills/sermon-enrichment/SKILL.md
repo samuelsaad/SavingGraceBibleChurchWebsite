@@ -5,6 +5,25 @@ description: Create, regenerate, review, or validate private sermon descriptions
 
 # Sermon Enrichment
 
+## D-173 corrective review and local acceptance
+
+For Samuel's nine-record private manifest SHA-256
+`97e682024a9a7aec9bb727d7c75ac8992f86672383c4a649289eaa2c5889e21e`,
+read `../../../local-corrective-review-plan.md`. This is corrective review of
+existing content, not another ingestion/generation batch. Read complete available
+source, current transcript, description and every ordered Q&A in the primary
+Codex context. Use retained source identities and Samuel-supplied speaker evidence.
+One additional focused correction per affected artifact is permitted under this
+new authority, preserving all previous allowances and versions. A minimal
+context-supported reconstruction must carry explicit internal inference provenance;
+never call it verified speech, invent material teaching or fabricate human approval.
+Revalidate grounding and every affected dependency after any transcript change.
+Samuel accepts residual listed uncertainty only for local completion and local
+frontend inclusion. Current audited local receipts may display normal Complete
+without visible wording gates; public/staging/semantic eligibility is unchanged.
+Preserve original captions, historical decisions, private provenance, honest
+runtime metadata and all normal safeguards outside the exact manifest.
+
 ## D-172 local source-wording review
 
 For the separately authorized 23-record scope SHA-256
