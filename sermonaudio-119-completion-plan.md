@@ -77,12 +77,13 @@ Generation, dry runs and local import alone are not completed delivery.
 ## Preserved implementation checkpoint
 
 All 119 source preparations are word/marker-preserving. The current substantive
-review covers sequences 1–61 and all 427 ordered pairs. Sixty-one local imports
-are accepted unpublished drafts; resume at record 62. All 19,164 pre-existing
-rows remain unchanged. All sixty-one identical replays made no database changes.
-One description-concision correction and twenty-two locator-only revisions
-preserve their original candidates. One coordinate correction and one assignment
-from an explicit source reading preserve original metadata. No remote data/app writes or push has
+review covers sequences 1–87 and all 609 ordered pairs. Eighty-seven local imports
+are accepted unpublished drafts; resume at record 88. All 19,164 pre-existing
+rows remain unchanged. All eighty-seven identical replays made no database changes.
+Focused description-concision, answer-clarity and locator revisions preserve all
+original/rejected candidates. One coordinate correction, three assignments from
+absent fields and one exact-placeholder assignment preserve original metadata.
+No remote data/app writes or push has
 occurred. These are progress counts, not task-completion claims.
 
 The scoped staging helper preserves exact rows and genuine system attribution,
