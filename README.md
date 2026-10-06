@@ -1,8 +1,22 @@
 # Saving Grace Bible Church Website
 
+The active exact SermonAudio completion/delivery task is governed by
+[sermonaudio-119-completion-plan.md](sermonaudio-119-completion-plan.md).
+This is not a new download batch or permission to restore review authority from
+a development snapshot. Ordinary production/publication gates remain unchanged.
+
 The exact 279-completed-sermon D-171 staging and curated-export update is documented
 in [docs/design/completed-collection-staging.md](docs/design/completed-collection-staging.md).
 The 32 held records stay excluded; development imports grant no acceptance.
+## Existing SermonAudio transcript sources
+
+The source-only retrieval CLI and its exact D-174 scope are documented in
+[sermonaudio-transcript-retrieval-plan.md](sermonaudio-transcript-retrieval-plan.md).
+It retrieves existing official original-language downloads into ignored storage;
+it does not create transcripts, generate content, import sermons or approve them.
+Credentials stay in protected owner-local storage outside repositories. Completed
+sources are hash-verified and reused without new requests. A fresh/different
+inventory or subsequent enrichment needs separate current-task authority.
 
 The selected Astra + Impeccable frontend handoff is documented in
 [docs/design/staging-handoff.md](docs/design/staging-handoff.md), including

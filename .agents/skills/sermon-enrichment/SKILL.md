@@ -5,6 +5,72 @@ description: Create, regenerate, review, or validate private sermon descriptions
 
 # Sermon Enrichment
 
+## D-175 complete SermonAudio delivery
+
+Read `../../../sermonaudio-119-completion-plan.md` for the exact 119-source
+manifest `a4fa3627682043c4b06aa65ddbebdab75f1fc29aec93e2d250bda537d9b0cd2b`.
+Complete prepared unapproved original-language transcripts may ground drafts in
+the primary current Codex session. Necessary source/candidate/corrective prose may
+enter private tool/session history. Read each complete source; synthesize rather
+than assemble excerpts. Separately review the complete current transcript,
+description and every ordered Q&A; record support hashes, actual coverage and
+truthful runtime metadata. Further supported correction rounds are authorized
+only here, with originals, lineage, revalidation and review. Arabic stays Arabic.
+Samuel accepts residual non-fatal uncertainty for normal local completion and
+existing staging inclusion, not fabricated evidence, audio or human approval.
+Audited acceptance binds exact delivered dependencies. The designated curated
+dataset path/branch alone may contain prepared content; original downloads and
+operational review authority remain private. No new retrieval, another provider,
+production launch or change to ordinary safeguards outside this scope.
+
+## D-174 source-only retrieval
+
+For Samuel's separately authorized existing SermonAudio transcript retrieval,
+read `../../../sermonaudio-transcript-retrieval-plan.md`. Retrieve existing complete
+original-language text only after exact source/recording and church verification.
+Keep exact downloaded bytes separate from future prepared text and retain hashes,
+provider auto-generation/approval metadata and uncertainty. This mode creates no
+approved transcript or generated description/Q&A; the normal grounding and human
+approval rules remain unchanged. It uses its newly frozen complete inventory, not
+an expired YouTube-only or fixed-36 permission. Necessary private verification text
+may enter primary tool/session history only; credentials and ordinary-log, Git,
+report, screenshot, other-provider and publication prohibitions remain intact.
+
+## D-173 corrective review and local acceptance
+
+For Samuel's nine-record private manifest SHA-256
+`97e682024a9a7aec9bb727d7c75ac8992f86672383c4a649289eaa2c5889e21e`,
+read `../../../local-corrective-review-plan.md`. This is corrective review of
+existing content, not another ingestion/generation batch. Read complete available
+source, current transcript, description and every ordered Q&A in the primary
+Codex context. Use retained source identities and Samuel-supplied speaker evidence.
+One additional focused correction per affected artifact is permitted under this
+new authority, preserving all previous allowances and versions. A minimal
+context-supported reconstruction must carry explicit internal inference provenance;
+never call it verified speech, invent material teaching or fabricate human approval.
+Revalidate grounding and every affected dependency after any transcript change.
+Samuel accepts residual listed uncertainty only for local completion and local
+frontend inclusion. Current audited local receipts may display normal Complete
+without visible wording gates; public/staging/semantic eligibility is unchanged.
+Preserve original captions, historical decisions, private provenance, honest
+runtime metadata and all normal safeguards outside the exact manifest.
+
+## D-172 local source-wording review
+
+For the separately authorized 23-record scope SHA-256
+`1d04a65dad79c2f5b0489382a94423f7e2341ce8cd9433e8c81ffdea73573259`,
+follow `../../../local-wording-completion-plan.md`. Review complete available
+retained captions/transcripts and every description and ordered Q&A in the primary
+current Codex context. A focused evidence-supported correction may follow import;
+preserve all originals and human approvals. Missing/redacted speech must never be
+invented. Record actual reading coverage and unavailable evidence honestly.
+Samuel accepts residual source-wording uncertainty for this local completion.
+Retain that uncertainty internally; normally display current selected records as
+Complete in the authenticated local dashboard. This is a separate local receipt,
+not verified source accuracy, human approval or restricted/public/staging/semantic
+acceptance. Source, grounding, attribution, version, idempotency, privacy and
+publication protections remain mandatory; normal rules apply outside this scope.
+
 ## Purpose
 
 Produce coherent, transcript-grounded private drafts for later human review. Treat the approved transcript as the sole content authority and keep theological, editorial, and publication decisions with the administrator.

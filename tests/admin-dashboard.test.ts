@@ -106,8 +106,9 @@ describe("Phase 3B administration dashboard", () => {
     expect(client).toContain("Permanently delete sermon");
     expect(client).toContain("This action cannot be undone");
     expect(client).toContain("Unsaved changes");
-    expect(client).toContain("Private local review only");
-    expect(client).toContain("Private administrator work queue");
+    const workbench = await readFile("src/admin/workbench.ts", "utf8");
+    expect(workbench).toContain("Local private workspace");
+    expect(workbench).toContain("Completion does not publish content");
     expect(client).toContain("remainingPrivateReviewRequirements(sermon)");
     expect(client).toContain("Primary Bible book");
     expect(client).toContain("Primary preaching passage");
@@ -160,7 +161,8 @@ describe("Phase 3B administration dashboard", () => {
     expect(client).toContain("Confirm inspection of no flagged items");
     expect(client).toContain("requiresEmptyItemSetAcknowledgement");
     expect(client).toContain("stageCompletion.findings");
-    expect(client).toContain("Complete earlier stage first");
+    expect(client).toContain("data-review-view");
+    expect(service).toContain("Complete the earliest incomplete review stage before moving forward");
     expect(client).toContain("Generated description and Q&A quarantined.");
     expect(client).toContain("Superseded defective generation — replacement required.");
     expect(client).toContain("Transcript-grounded replacement draft.");

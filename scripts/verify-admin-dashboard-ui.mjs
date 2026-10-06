@@ -59,14 +59,15 @@ try {
     const url = new URL(route.request().url());
     if (url.origin !== origin) { blockedExternal++; return route.abort(); }
     if (route.request().method() !== "GET") { mutations++; return route.fulfill({ status: 403, json: {} }); }
-    if (url.pathname.startsWith("/_astro/")) {
+    if (url.pathname.startsWith("/_astro/") || url.pathname.startsWith("/brand/fonts/")) {
       const path = resolve("dist", `.${url.pathname}`);
       assert(path.startsWith(resolve("dist") + "/") || path.startsWith(resolve("dist") + "\\"));
-      return route.fulfill({ body: await readFile(path), contentType: extname(path) === ".css" ? "text/css" : "text/javascript" });
+      return route.fulfill({ body: await readFile(path), contentType: extname(path) === ".css" ? "text/css" : extname(path) === ".ttf" ? "font/ttf" : "text/javascript" });
     }
     if (url.pathname.startsWith("/admin")) return route.fulfill({ body: html, contentType: "text/html" });
     let json;
-    if (url.pathname.endsWith("/remaining-reviews")) json = { data: sermons.map(s => ({ sermonId: s.id, title: s.title, review: s.remainingReview })) };
+    if (url.pathname.endsWith("/workbench")) json = { checkedAt: stamp, counts: {total:3,complete:2,attention:1}, data: sermons.map((s,i)=>({id:s.id,title:s.title,serviceDate:s.serviceDate,speaker:s.speaker.name,publicationStatus:s.status,rowVersion:1,complete:i<2,previouslyAccepted:i<2,concerns:i<2?[]:[{component:'passage',code:'explicit_passage_unavailable',label:'Confirm the primary passage',informationNeeded:'The retained evidence does not establish a primary passage. Check the original source before choosing a book or passage; otherwise leave it unresolved.',scope:'D-169',recordedAt:stamp}]})) };
+    else if (url.pathname.endsWith("/remaining-reviews")) json = { data: sermons.map(s => ({ sermonId: s.id, title: s.title, review: s.remainingReview })) };
     else if (url.pathname.endsWith("/ai-reviews")) json = { data: decisions };
     else if (url.pathname.includes("/taxonomies/")) json = { data: url.pathname.endsWith("speakers") ? [speaker] : url.pathname.endsWith("books") ? [book] : [] };
     else if (url.pathname.endsWith("/review")) {
@@ -98,7 +99,8 @@ try {
     for (const path of ["/admin", "/admin/sermons", "/admin/remaining-reviews", "/admin/ai-reviews?all=1", `/admin/sermons/${fixtureId(1)}/review`]) {
       await open(path); await geometry();
       if (path === "/admin") {
-        assert.deepEqual(await page.locator(".overview-stats strong").allTextContents(), ["3", "2", "1", "3 / 3"]);
+        assert.equal(await page.locator(".wb-summary strong").textContent(), "2 of 3 sermons complete");
+        await page.locator('.wb-item summary').first().click();
         if (process.env.ADMIN_UI_SCREENSHOT_DIR && [1440,390].includes(width)) {
           await mkdir(process.env.ADMIN_UI_SCREENSHOT_DIR, { recursive: true });
           await page.screenshot({ path: resolve(process.env.ADMIN_UI_SCREENSHOT_DIR, `admin-overview-${width}.png`), fullPage: true });
@@ -133,19 +135,34 @@ try {
   assert.equal(await page.locator('.sidebar [data-nav="remaining-reviews"]').getAttribute("aria-current"), "page");
   assert.equal(await page.locator(".workspace").evaluate(el => el.inert), false);
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await open("/admin/sermons?passageBook=45&passageChapter=8&passageVerse=1&passageReviewState=proposed_passage&seriesId=fixture-series");
+  await open("/admin/sermons?legacy=1&passageBook=45&passageChapter=8&passageVerse=1&passageReviewState=proposed_passage&seriesId=fixture-series");
   assert.equal(await page.locator(".filter-more").getAttribute("open"), "");
   assert.equal(await page.locator('[name="passageBook"]').inputValue(), "45");
   await page.locator('[name="query"]').fill("absent");
   await page.getByRole("button", { name: "Search sermons", exact: true }).click();
   await page.locator(".empty-state").waitFor();
   assert(queries.at(-1).includes("passageBook=45"));
-  await open("/admin/sermons");
+  await open("/admin/sermons?legacy=1");
   await page.locator(".review-status-details summary").first().click();
   assert(await page.locator(".review-status-details").first().getByText("AI reviewed and accepted", { exact: true }).isVisible());
   for (stage of [1,2,4,5,6]) { await open(`/admin/sermons/${fixtureId(1)}/review`); await geometry(); }
   stage = 3; await open(`/admin/sermons/${fixtureId(3)}/review`);
-  assert(await page.locator('.review-stage-nav [data-review-stage="4"]').isDisabled());
+  assert(await page.locator('.review-stage-nav [data-review-view="4"]').isEnabled());
+  await page.locator('[data-review-view="4"]').click();
+  await page.locator('#admin-main[aria-busy="false"]').waitFor();
+  assert(new URL(page.url()).searchParams.get('viewStage')==='4', 'view_only_component_navigation');
+  await open('/admin');
+  await page.locator('[data-wb-view="complete"]').click();
+  assert.equal(await page.locator('.wb-item').count(),2,'complete_filter');
+  await page.locator('[data-wb-view="all"]').click();
+  assert.equal(await page.locator('.wb-item').count(),3,'all_filter');
+  await page.locator('[name="q"]').fill('does not exist');
+  await page.locator('.wb-tools button[type="submit"]').click();
+  assert.equal(await page.locator('.wb-empty').count(),1,'empty_state');
+  await page.locator('[data-wb-empty-clear]').click();
+  assert.equal(await page.locator('.wb-item').count(),3,'clear_filter');
+  await page.locator('[name="reason"]').selectOption('passage');
+  assert.equal(await page.locator('.wb-item').count(),1,'reason_filter');
   // 200% browser-equivalent CSS viewport reflow, plus explicit zoom geometry.
   await page.setViewportSize({ width: 720, height: 500 }); await open("/admin/sermons"); await geometry();
   await page.setViewportSize({ width: 1440, height: 1000 }); await open("/admin");

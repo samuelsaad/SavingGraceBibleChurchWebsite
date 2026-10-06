@@ -1,5 +1,38 @@
 # Repository Operating Rules
 
+## D-175 — exact 119-record SermonAudio completion and delivery
+
+Samuel separately authorizes `sermonaudio-119-completion-plan.md` for only manifest
+`a4fa3627682043c4b06aa65ddbebdab75f1fc29aec93e2d250bda537d9b0cd2b`.
+Reuse its 119 preserved sources; exclude all ten unresolved mappings. The retained
+4 October WordPress capture is expressly accepted as selection evidence. Do not
+refresh WordPress, bypass its privilege guard, retrieve media or add replacements.
+Complete source/candidate/correction/review prose may enter necessary primary
+Codex tool inputs/results, retained task history and designated private storage.
+Prepare complete original-language transcripts, generate description/ordered Q&A,
+then separately review every complete artifact against its complete source.
+Further supported corrections are permitted with immutable originals, lineage,
+revalidation and actual-version review. Arabic remains Arabic. Runtime fields
+unavailable to this session remain `not_exposed_by_runtime`.
+
+Guard exact local PostgreSQL 16 coordinates, source identities, approved versions,
+concurrency, dependencies, atomicity and truthful system audits. Samuel accepts
+residual non-fatal uncertainty after AI review for normal Complete and local/
+existing public and protected staging frontend inclusion. Retain it internally,
+never fabricate verified audio, human approval or resolved missing evidence.
+Separate current D-175 acceptance supersedes earlier staging population limits
+only for this scope. Scoped synchronization requires conflict protection, recovery
+and idempotency. Preserve existing eligible records, designs and access boundaries.
+Only `codex/sermonaudio-119-complete` may normally push safe implementation,
+existing authorized dataset-bearing history and the curated 119-record projection
+at `development-data/sermonaudio-119-v1/` to the named existing GitHub repository.
+Sanitized summaries never confer operational acceptance in snapshot imports.
+Original private downloads, keys, credentials, local configuration, accounts,
+sessions, administrator identities/audits and media files remain excluded.
+Content scans remain enabled and path/scope bounded. No production launch,
+semantic eligibility, force-push, protected-branch merge or another batch.
+All normal safeguards remain outside this exact exception.
+
 ## D-171 — Exact completed-collection staging and export (5 October 2026)
 
 Samuel separately authorizes this protected-file amendment for exactly the 279
@@ -36,6 +69,91 @@ Git and is not a GitHub export. Admin, draft-preview and database access remain
 private; no-store/noindex, authentication, concurrency, uncertainty and production
 publication/semantic protections remain unchanged. All other permanent rules and
 historical decisions continue to apply outside this exact exception.
+## D-174 — existing SermonAudio source-transcript retrieval only
+
+Samuel separately authorizes `sermonaudio-transcript-retrieval-plan.md`: read-only
+configured WordPress sermon metadata and official SermonAudio API/download access
+for all eligible source sermons without valid YouTube mappings and with exact
+verified church recordings. Freeze the complete private inventory and hash before
+transcript downloads. This is not a fixed 36-sermon run or an expired YouTube
+exception. Use the supplied key only from protected owner-local storage outside
+repositories; keep it out of logs, arguments, browser code and Git. Retrieve only
+existing complete original-language transcripts; preserve exact bytes, provenance,
+warnings, counts and hashes privately with no-clobber receipts and checkpoints.
+Necessary transcript text may enter primary private verification tool/session
+results, never ordinary messages/logs, tracked files, screenshots or other providers.
+Bound read-only retries and independently verify broadcaster and source/recording
+identity. No audio/video processing, new transcription, generation, approval,
+application import, staging synchronization, push or publication is authorized.
+All normal safeguards and historical decisions remain unchanged.
+The verified 119-target private manifest has SHA-256
+`a4fa3627682043c4b06aa65ddbebdab75f1fc29aec93e2d250bda537d9b0cd2b`.
+Ten other source mappings remain individually unresolved. The retained source
+snapshot is not represented as a fresh live inventory after its grant guard failed.
+
+## D-173 — bounded corrective review and local frontend delivery
+
+Samuel separately authorizes this corrective review for only the nine currently
+held records frozen in private manifest SHA-256
+`97e682024a9a7aec9bb727d7c75ac8992f86672383c4a649289eaa2c5889e21e`.
+Read `local-corrective-review-plan.md`. Complete available retained captions,
+transcript, description, ordered Q&A, metadata and review evidence may enter the
+primary Codex tool/session context and ignored artifacts. Review substantively;
+one additional focused correction per affected artifact is authorized even if a
+historical allowance was used. Preserve original source bytes, prior versions,
+approvals, decisions and fingerprints. Strong contextual inference may support a
+minimal reconstructed wording correction, but must be recorded internally as
+inference, never verified verbatim speech or audio verification. Do not invent
+material teaching. Preserve uncertainty and truthful current runtime provenance.
+
+Samuel's three supplied speaker assignments are authoritative only for their
+exact reconciled existing records. Reuse canonical identities, corroborate
+spelling variants and retain explicit Samuel-supplied provenance; create no
+duplicate speaker. Inspect retained WordPress/source evidence first; this task
+also permits configured WordPress/MariaDB sermon/speaker metadata read-only when
+needed for these nine identities. No source mutation, Google API or media
+processing is authorized.
+
+Guard atomic local PostgreSQL 16 writes, exact versions, dependency freshness,
+correction lineage, idempotency and audit attribution. Record Samuel-authorized
+local completion and separate local frontend acceptance, including version-bound
+replacement receipts after corrections. Residual listed uncertainty is accepted
+for this local scope, not fabricated as resolved evidence. Normally display these
+records as Complete without warning badges, banners, suffixes or holding gates.
+Local frontend selectors must require these current receipts and exact database
+coordinates; ordinary public, staging, export and semantic selectors must exclude
+them. No human approval, publication-state change, staging synchronization,
+production change, GitHub push or new batch is authorized. Preserve unrelated
+work and the existing frontend design. All normal rules remain outside this scope.
+
+## D-172 — Samuel-authorized local source-wording completion
+
+Samuel separately authorizes this amendment only for the 23 current local sermons
+selected by saved source-wording finding codes on 6 October 2026. Their sorted
+UUIDs, one per line with a final newline, have SHA-256
+`1d04a65dad79c2f5b0489382a94423f7e2341ce8cd9433e8c81ffdea73573259`.
+Read `local-wording-completion-plan.md`. The primary current Codex runtime may
+read their complete available retained source, transcript, description, ordered
+Q&A and review evidence; perform evidence-supported focused corrections; and
+record private, audited local completion even when source wording remains
+unresolved. This narrowly supersedes prior human-only, post-import correction
+and source-wording completion gates only for this frozen local scope.
+
+Never invent missing/redacted speech or claim audio verification, human review,
+source accuracy or publication approval. Preserve source bytes, original versions,
+human approvals, historical decisions, unresolved evidence and generation lineage.
+Retain uncertainty privately in provenance/audits. The normal authenticated local
+dashboard presents these current records as Complete, without wording-warning
+badges, banners, suffixes or a separate category. A separate local receipt must
+not grant restricted/public/staging/semantic eligibility or modify publication.
+Guard exact local PostgreSQL 16 coordinates, versions, dependencies, scope and
+idempotency. Relevant later edits invalidate the receipt; stale history is retained.
+
+Necessary private prose may enter only this primary task's authorized tool inputs,
+results/history and ignored persistence. It remains excluded from ordinary logs,
+chat, Git, screenshots, reports, fixtures and other providers. No new batch,
+external source retrieval, staging synchronization, push or production action is
+authorized. All existing safeguards remain in force outside this exact exception.
 
 ## Bounded SermonAudio follow-through (5 October 2026)
 

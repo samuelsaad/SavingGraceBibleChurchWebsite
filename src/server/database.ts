@@ -2,7 +2,7 @@ import { Pool } from "pg";
 
 export function createPostgresPool(
   connectionString: string,
-  options: { readOnly?: boolean; max?: number } = {}
+  options: { readOnly?: boolean; max?: number; utc?: boolean } = {}
 ): Pool {
   return new Pool({
     connectionString,
@@ -12,6 +12,6 @@ export function createPostgresPool(
     application_name: options.readOnly
       ? "saving-grace-frontend-preview-read-only"
       : "saving-grace-website",
-    ...(options.readOnly ? { options: "-c default_transaction_read_only=on" } : {})
+    ...(options.readOnly || options.utc ? { options: [options.readOnly ? '-c default_transaction_read_only=on' : '',options.utc ? '-c timezone=UTC' : ''].filter(Boolean).join(' ') } : {})
   });
 }

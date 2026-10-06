@@ -12,6 +12,7 @@ import { PostgresAdminSermonRepository } from "./repositories/postgres-admin-ser
 import { PostgresSermonRepository } from "./repositories/postgres-sermon-repository";
 import { assertLoopbackApiHost } from "./local-api-safety";
 import { LocalFrontendPreviewSession } from "./auth/local-frontend-preview-session";
+import {localFrontendPreviewScope} from './restricted-preview-scope';
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) throw new Error("DATABASE_URL is required");
@@ -26,7 +27,9 @@ if (!Number.isInteger(port) || port < 1 || port > 65_535) {
 
 const pool = createPostgresPool(connectionString);
 const publicRepository = new PostgresSermonRepository(pool);
-const previewRepository = new PostgresSermonRepository(pool, "completed_preview");
+const previewScope = process.env.D173_LOCAL_FRONTEND_ENABLED===undefined ? "completed_preview" : localFrontendPreviewScope(process.env);
+const previewPool=previewScope==='local_corrective_accepted'?createPostgresPool(connectionString,{readOnly:true,utc:true}):pool;
+const previewRepository = new PostgresSermonRepository(previewPool,previewScope);
 const identityProvider = new LocalTestIdentityProvider(process.env.ENABLE_LOCAL_TEST_IDENTITIES === "1");
 const route = createApplicationApiRouter(
   publicRepository,
@@ -73,6 +76,7 @@ server.listen(port, hostname, () => {
 async function shutdown(): Promise<void> {
   server.close();
   await pool.end();
+  if(previewPool!==pool)await previewPool.end();
 }
 
 process.once("SIGINT", shutdown);

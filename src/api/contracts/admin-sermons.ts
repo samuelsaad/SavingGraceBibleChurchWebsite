@@ -491,6 +491,16 @@ const enrichmentSourceResponseSchema = z.object({
   accuracyReviewStatus: z.literal("required")
 });
 
+// Read-only provenance includes retained-transcript proposals already stored by
+// bounded delegated workflows. These labels grant no approval and are not
+// accepted by the strict administrator write-input schemas.
+export const scriptureReferenceProvenanceResponseSchema = z.enum([
+  "legacy_import", "administrator", "title_proposal", "administrator_correction", "ai_transcript_proposal"
+]);
+export const primaryPassageEvidenceResponseSchema = z.enum([
+  "local_youtube_title", "administrator", "retained_transcript"
+]);
+
 export const adminSermonDetailSchema = adminSermonSummarySchema.extend({
   summary: z.string().nullable(),
   summaryStatus: descriptionStatusSchema,
@@ -511,7 +521,7 @@ export const adminSermonDetailSchema = adminSermonSummarySchema.extend({
       id: z.uuid(),
       parseStatus: z.enum(["unparsed", "exact", "partial", "unresolved", "curated"]),
       originalReferenceText: z.string().nullable(),
-      provenance: z.enum(["legacy_import", "administrator", "title_proposal", "administrator_correction"]),
+      provenance: scriptureReferenceProvenanceResponseSchema,
       reviewStatus: z.enum(["unreviewed", "proposed", "confirmed", "rejected"]),
       reviewerSubject: z.string().nullable(),
       reviewedAt: z.iso.datetime().nullable(),
@@ -521,7 +531,7 @@ export const adminSermonDetailSchema = adminSermonSummarySchema.extend({
   ),
   primaryPassageReview: z.object({
     proposalOutcome: z.enum(["proposed", "no_reference", "manual_review_required", "administrator_entered"]),
-    evidenceSource: z.enum(["local_youtube_title", "administrator"]),
+    evidenceSource: primaryPassageEvidenceResponseSchema,
     parserVersion: z.string(),
     reviewStatus: z.enum(["pending", "confirmed_passage", "confirmed_none", "rejected"]),
     reviewedBySubject: z.string().nullable(),

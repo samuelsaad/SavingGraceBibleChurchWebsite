@@ -4,6 +4,7 @@ import { previewDatasetSourceStatus } from "../../domain/development-seed-source
 import { d161CombinedRestrictedEligibilitySql, d162CombinedRestrictedEligibilitySql, d167CombinedRestrictedEligibilitySql, restrictedEligibilitySql, restrictedPassageAcceptanceSql } from "../../domain/restricted-acceptance";
 import { topicalClassificationSql } from "../../domain/topical-classification";
 import {completedEligibilitySql,completedPassageAcceptanceSql} from "../../domain/completed-staging";
+import {localCorrectiveFrontendSql} from './local-corrective-frontend';
 
 export interface ParameterizedQuery {
   text: string;
@@ -24,8 +25,9 @@ export type FrontendSermonScope =
   | "d162_restricted_accepted"
   | "d167_restricted_accepted"
   | "d171_completed"
+  | "local_corrective_accepted"
   | "d160_draft_preview";
-const restrictedScope=(scope:FrontendSermonScope)=>scope==="restricted_accepted"||scope==="d161_restricted_accepted"||scope==="d162_restricted_accepted"||scope==="d167_restricted_accepted"||scope==="d171_completed";
+const restrictedScope=(scope:FrontendSermonScope)=>scope==="restricted_accepted"||scope==="d161_restricted_accepted"||scope==="d162_restricted_accepted"||scope==="d167_restricted_accepted"||scope==="d171_completed"||scope==="local_corrective_accepted";
 
 export const d160DraftSourceStatus = "phase3b2c_evaluation_36_batch_6_private" as const;
 export const d160DraftProcessingVersion = "phase3b2c-evaluation-36-d160-v1" as const;
@@ -42,6 +44,7 @@ function searchVector(scope: FrontendSermonScope): string {
       FROM sermon_question_answers q WHERE q.sermon_id=s.id),'')))`;
 }
 function acceptedPrimary(alias: string, scope: FrontendSermonScope): string {
+  if(scope==='local_corrective_accepted')return `${alias}.review_status IN ('confirmed','proposed') AND EXISTS(SELECT 1 FROM sermons local_passage_sermon WHERE local_passage_sermon.id=${alias}.sermon_id AND ${localCorrectiveFrontendSql('local_passage_sermon')})`;
   return restrictedScope(scope)
     ? `${alias}.review_status IN ('confirmed','proposed') AND (${restrictedPassageAcceptanceSql(`${alias}.sermon_id`,"primary_passage")}${scope === "d171_completed" ? ` OR ${completedPassageAcceptanceSql(`${alias}.sermon_id`)}` : ""})`
     : scope === "d160_draft_preview"
@@ -101,6 +104,7 @@ export function frontendSermonEligibilitySql(
   scope: FrontendSermonScope
 ): string {
   if (scope === "d171_completed") return completedEligibilitySql(sermonAlias);
+  if(scope==='local_corrective_accepted')return localCorrectiveFrontendSql(sermonAlias);
   if (scope === "restricted_accepted") return restrictedEligibilitySql(sermonAlias);
   if (scope === "d161_restricted_accepted") return d161CombinedRestrictedEligibilitySql(sermonAlias);
   if (scope === "d162_restricted_accepted") return d162CombinedRestrictedEligibilitySql(sermonAlias);

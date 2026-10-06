@@ -1,5 +1,36 @@
 # Project Decision Log
 
+## D-175 — exact SermonAudio 119 completion and frontend delivery
+
+Samuel's current 6 October 2026 instruction authorizes full preparation, primary
+Codex generation, separate substantive AI review, supported further correction
+rounds, atomic local draft imports and honest Samuel-authorized acceptance for
+only D-174 manifest SHA-256
+`a4fa3627682043c4b06aa65ddbebdab75f1fc29aec93e2d250bda537d9b0cd2b`.
+The 119 downloaded sources include 118 English and one Arabic; ten excluded
+mappings remain outside scope. The retained 4 October WordPress capture is
+expressly accepted as selection evidence; no live refresh or grant bypass.
+
+Necessary complete source/candidate/corrective prose and private evidence may
+enter primary command/review tools and retained history. Preserve exact provider
+bytes, original versions, actual reading coverage, support and runtime provenance.
+Arabic remains Arabic. Samuel accepts remaining non-fatal uncertainty internally;
+normal Complete/display does not fabricate human approval or verified audio.
+Current dependency-bound separate acceptance may admit targets to local and the
+configured public/protected staging frontends, superseding older fixed staging
+limits only for this cohort. Preserve existing eligibility and publication states.
+
+Use guarded PostgreSQL 16 loopback application writes and disposable test runner,
+transactional/audited/idempotent imports and scoped staging recovery/conflict
+checks. Preserve current designs, dirty worktrees and prior decisions. Only branch
+`codex/sermonaudio-119-complete` may push safe implementation and the exact portable
+curated projection at `development-data/sermonaudio-119-v1/` to the existing named
+repository, with existing authorized dataset history retained. Exclude original
+private downloads, secrets, local config, administrator/accounts/session/audit
+data and media. Snapshot summaries are not acceptance authority. No production
+launch, semantic inclusion, force-push, another record or replacement is authorized.
+Read `sermonaudio-119-completion-plan.md`; execution outcomes remain pending.
+
 **Status:** Approved decisions through D-165; restricted acceptance is not internet-publication authority
 **Authority:** `church-website-architecture-plan.md` plus Yang’s confirmed migration decisions and Samuel Saad’s recorded project-owner decisions
 
@@ -822,6 +853,112 @@ default-branch merge or unrelated changes. Rollback must preserve history and us
 the retained app release plus protected, version-checked recovery evidence.
 
 ## Decisions still required
+
+### D-174 — Existing SermonAudio transcripts for eligible unmapped WordPress sermons
+
+Samuel's 6 October 2026 current-task authority permits the isolated, source-only
+workflow in `sermonaudio-transcript-retrieval-plan.md`. Build and freeze the complete
+current eligible source inventory; bind its canonical file SHA-256 and exact
+source/recording pairs privately before downloading. Read configured WordPress
+metadata and official SermonAudio broadcaster/recording metadata, then retrieve
+existing complete original-language transcript downloads only. This is neither
+a renewed historical batch nor a new generation or application-import authority.
+
+Use the supplied owner-local protected key via the documented header, verify the
+church broadcaster and exact title/date/available-speaker evidence, and preserve
+conflicts/unavailability rather than guess. All bytes, provenance, version fields,
+warnings, receipts and checkpoints remain private and ignored. Necessary complete
+text may enter primary Codex tool/history for verification only. Bounded retries,
+no-clobber persistence, independent hashes, source eligibility and idempotency are
+mandatory. No provider mutation, paid transcription, audio/video processing,
+description/Q&A generation, database writes, content approval, staging changes,
+GitHub push or publication is authorized. Existing decisions and protections are
+unchanged. Record actual execution totals and frozen hash after verification.
+
+The retained 464-record source inventory excluded 332 records with valid YouTube
+links and three ineligible source records. Of 129 remaining records, current
+official identity checks verified 119 targets; ten mappings remained unresolved.
+The frozen exact private inventory SHA-256 is
+`a4fa3627682043c4b06aa65ddbebdab75f1fc29aec93e2d250bda537d9b0cd2b`.
+Live WordPress refresh was stopped because the configured account exposes PROCESS,
+EVENT and TRIGGER privileges; retained metadata timestamps/hashes and this freshness
+limitation are preserved. No broader grant was used or weakened. These are source
+selection results, not transcript-download or completeness outcomes.
+
+Execution completed for all 119 frozen targets: 119 original-language sources,
+3,672,779 bytes and 688,388 lexical words, with 118 English and one Arabic transcript.
+All source hashes and an identical no-download replay verified. Four conflicting
+mappings and six unavailable recording identities remain recorded separately.
+One original generic failure was preserved and recovered by a single controlled
+retry; its original cause remains unknown. All sources remain provider-labelled
+auto-generated, private and unapproved. This retrieval scope is consumed; no
+generation, application import, review acceptance, publication or staging authority
+is created. The retained-source freshness limitation and all prior decisions remain.
+
+### D-173 — Existing held-sermon corrective review and local frontend acceptance
+
+Samuel's 6 October 2026 attachment separately authorizes the nine current held
+records selected by the saved source-negation, description, identity and speaker
+finding codes. Their frozen private manifest SHA-256 is
+`97e682024a9a7aec9bb727d7c75ac8992f86672383c4a649289eaa2c5889e21e`;
+sorted membership SHA-256 is
+`2640b3e2015b30ef854cd451e05edde0c20377e64d8691d8a161181f34979f1f`.
+The read-only starting database has 311 sermons, 302 local completions and nine
+attention records. The earlier 23 D-172 completions remain outside this selection.
+Existing intervening human work is preserved at its freshly frozen versions.
+
+Read complete available source/transcript/description/ordered Q&A and metadata.
+One additional focused correction per affected artifact is authorized despite a
+used historical allowance. Preserve every original, approval, decision and source
+hash; record inference as inference, never verified verbatim speech or human review.
+Samuel's three supplied speaker assignments may be reconciled to existing canonical
+identities with explicit source attribution. Search retained exports and permitted
+configured read-only WordPress/MariaDB sermon/speaker metadata before claiming
+source evidence unavailable. Do not mutate those sources or retrieve new captions.
+
+Use guarded, versioned, atomic and audited local writes. Residual listed uncertainty
+is accepted by Samuel for normal local completion and a distinct local-only frontend
+receipt, including current replacement receipts after content/metadata changes.
+Verify actual local discovery/detail delivery and identical rerun idempotency.
+Preserve private provenance internally without normal warning badges, banners,
+status suffixes or acknowledgment gates. No human approval, public/staging/export/
+semantic eligibility, new sermon, staging/production change or GitHub push is
+authorized. Safe necessary local implementation commits and verification are
+authorized; unrelated uncommitted work remains preserved and excluded.
+
+Execution completed on 6 October 2026: nine full-source/content reviews and 63
+ordered Q&A reviews, three content-corrected records and six metadata-corrected
+records, nine local completions and nine separate local frontend acceptances.
+Zero conflicts. Identical replay returned nine unchanged; originals, human
+attribution, prior decisions and all historical audits remain preserved.
+The protected local collection is 288 eligible (279 unchanged plus nine), while
+the local dashboard is 311 Complete/zero attention. All selected real desktop/
+mobile details and relevant discovery filters verify. Public/staging/semantic
+eligibility remains unchanged. This completes the bounded corrective operation;
+valid receipts persist, but no additional task or correction round is implied.
+
+### D-172 — Samuel-authorized local completion of source-wording reviews
+
+On 6 October 2026 Samuel separately authorizes protected instruction/skill changes,
+complete private source/content review, supported corrections and ordinary local
+Complete presentation for the 23 current source-wording cases. The exact sorted
+UUID scope hash is `1d04a65dad79c2f5b0489382a94423f7e2341ce8cd9433e8c81ffdea73573259`.
+The read-only baseline is 311 stored, 279 restricted-accepted and 32 held. Nine
+other held sermons remain outside this task. Preserve all prior decisions and
+original source bytes. Never invent redacted speech or claim human/audio approval.
+
+Samuel accepts unresolved wording for this local workflow. Save truthful private
+review evidence and a separately audited local completion receipt, bound to current
+versions/dependencies. Its normal dashboard presentation has Complete status and
+no source-wording warning banner, badge, suffix or separate category. Source
+uncertainty remains underlying provenance/audit evidence, not fabricated resolution.
+This is not a restricted acceptance or publication decision; staging, public and
+semantic eligibility remain unchanged. Exact local-target, concurrency, privacy,
+idempotency and preservation checks are mandatory. Necessary private source and
+corrective prose may enter only primary task inputs/results/history and ignored
+storage. Safe local implementation commits are authorized; no push, new batch,
+external source retrieval, staging change or production action is authorized.
+Read `local-wording-completion-plan.md` for the bounded execution contract.
 
 ### D-170 — Verified SermonAudio media-review refresh and bounded handoff
 

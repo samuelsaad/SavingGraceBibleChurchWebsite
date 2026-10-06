@@ -1,5 +1,45 @@
 # Private grounding contract
 
+## D-175 bounded original-language source basis
+
+For manifest `a4fa3627682043c4b06aa65ddbebdab75f1fc29aec93e2d250bda537d9b0cd2b`
+only, follow the root `sermonaudio-119-completion-plan.md`. Complete hash-verified
+SermonAudio transcripts may ground unapproved original-language drafts. Preserve
+exact provider bytes separately, lexical wording during mechanical preparation,
+support locations, uncertainty and every revision. Preservation is not audio
+verification. Separately review every complete delivered artifact with actual
+hashes. Supported corrections preserve originals, reasons and lineage and require
+revalidation/current-version review. Samuel's accepted non-fatal uncertainty stays
+internally recorded, not falsely resolved. Separate audited AI/Samuel acceptance
+may satisfy this scope's local/staging display requirements without human approval.
+Ordinary production-publication and semantic gates remain unchanged.
+
+D-173 separately authorizes complete-source corrective review and local frontend
+acceptance for only the nine records bound to manifest SHA-256
+`97e682024a9a7aec9bb727d7c75ac8992f86672383c4a649289eaa2c5889e21e`.
+Read `../../../../local-corrective-review-plan.md`. A current unapproved transcript
+may ground this review and one additional focused correction per affected artifact.
+Retain exact source/current/output hashes, grounding revision, full reading coverage,
+paragraph/per-Q&A support and correction lineage. Context-supported reconstruction
+must remain an explicitly inferred correction with original wording preserved;
+it is never verified verbatim source, audio accuracy or a human approval. Missing
+material teaching is not invented. Dependent artifacts must be re-reviewed and
+rebound after relevant changes. Residual listed uncertainty may coexist with normal
+local completion and local-only frontend display through current audited receipts;
+all public/staging/export/semantic protections remain unchanged. Historical policies
+and correction allowances are preserved, not retroactively rewritten or renewed.
+
+D-172 separately authorizes evidence-supported source/content corrections and
+Samuel-authorized local completion for only the 23-record sorted-ID scope hash
+`1d04a65dad79c2f5b0489382a94423f7e2341ce8cd9433e8c81ffdea73573259`.
+Read `../../../../local-wording-completion-plan.md`. Complete available source and
+current artifact reading, actual coverage, exact hashes, versions and preserved
+correction lineage are required. Do not invent missing/redacted speech or relabel
+source limitations as verified. Residual uncertainty may coexist with normal local
+Complete presentation through its separate audited receipt. Retain uncertainty in
+underlying provenance/audit history; create no human approval, public/staging or
+semantic eligibility. All normal grounding and publication rules remain unchanged.
+
 D-167 separately permits `unapproved` source transcripts only for the exact
 36-position manifest SHA-256
 `0218989d1c09224ed301caecb915cefc787a5017f28f6253aee3020a7c3b3ae5`.

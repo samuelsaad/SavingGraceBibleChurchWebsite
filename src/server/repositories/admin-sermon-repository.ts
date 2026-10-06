@@ -364,6 +364,7 @@ export interface AdminSermonTransaction {
 }
 
 export interface AdminSermonRepository {
+  readWorkbench?(): Promise<import("../../domain/admin-workbench").WorkbenchSnapshot>;
   listDelegatedAiReviews?(sermonIds?: readonly string[]): Promise<CurrentDelegatedDecision[]>;
   listRemainingAiReviews?(): Promise<Array<{ sermonId: string; title: string; review: RemainingReviewStatus }>>;
   transaction<T>(work: (transaction: AdminSermonTransaction) => Promise<T>): Promise<T>;

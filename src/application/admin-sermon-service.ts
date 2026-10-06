@@ -33,7 +33,7 @@ import {
   assertMayViewAudit,
   type ApplicationIdentity
 } from "./authorization";
-import { conflict, invalid, invalidMany, notFound } from "./errors";
+import { ApplicationError, conflict, invalid, invalidMany, notFound } from "./errors";
 import { isFutureSchedule, transitionSermonStatus } from "./sermon-lifecycle";
 import {
   applyAssociatedTranscriptCorrection,
@@ -362,6 +362,12 @@ export class AdminSermonService {
   async delegatedAiReviews(identity: ApplicationIdentity) {
     assertAdminAccess(identity);
     return { data: await this.repository.listDelegatedAiReviews?.() ?? [] };
+  }
+
+  async workbench(identity: ApplicationIdentity) {
+    assertAdminAccess(identity);
+    if (!this.repository.readWorkbench) throw new ApplicationError(503, "workbench_unavailable", "Review overview unavailable");
+    return this.repository.readWorkbench();
   }
 
   async remainingAiReviews(identity: ApplicationIdentity) {
