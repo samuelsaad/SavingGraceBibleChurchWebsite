@@ -5,6 +5,19 @@ description: Create, regenerate, review, or validate private sermon descriptions
 
 # Sermon Enrichment
 
+## D-174 source-only retrieval
+
+For Samuel's separately authorized existing SermonAudio transcript retrieval,
+read `../../../sermonaudio-transcript-retrieval-plan.md`. Retrieve existing complete
+original-language text only after exact source/recording and church verification.
+Keep exact downloaded bytes separate from future prepared text and retain hashes,
+provider auto-generation/approval metadata and uncertainty. This mode creates no
+approved transcript or generated description/Q&A; the normal grounding and human
+approval rules remain unchanged. It uses its newly frozen complete inventory, not
+an expired YouTube-only or fixed-36 permission. Necessary private verification text
+may enter primary tool/session history only; credentials and ordinary-log, Git,
+report, screenshot, other-provider and publication prohibitions remain intact.
+
 ## D-173 corrective review and local acceptance
 
 For Samuel's nine-record private manifest SHA-256

@@ -789,6 +789,37 @@ This closure grants no retry, substitution, next batch, public update or Git pus
 
 ## Decisions still required
 
+### D-174 — Existing SermonAudio transcripts for eligible unmapped WordPress sermons
+
+Samuel's 6 October 2026 current-task authority permits the isolated, source-only
+workflow in `sermonaudio-transcript-retrieval-plan.md`. Build and freeze the complete
+current eligible source inventory; bind its canonical file SHA-256 and exact
+source/recording pairs privately before downloading. Read configured WordPress
+metadata and official SermonAudio broadcaster/recording metadata, then retrieve
+existing complete original-language transcript downloads only. This is neither
+a renewed historical batch nor a new generation or application-import authority.
+
+Use the supplied owner-local protected key via the documented header, verify the
+church broadcaster and exact title/date/available-speaker evidence, and preserve
+conflicts/unavailability rather than guess. All bytes, provenance, version fields,
+warnings, receipts and checkpoints remain private and ignored. Necessary complete
+text may enter primary Codex tool/history for verification only. Bounded retries,
+no-clobber persistence, independent hashes, source eligibility and idempotency are
+mandatory. No provider mutation, paid transcription, audio/video processing,
+description/Q&A generation, database writes, content approval, staging changes,
+GitHub push or publication is authorized. Existing decisions and protections are
+unchanged. Record actual execution totals and frozen hash after verification.
+
+The retained 464-record source inventory excluded 332 records with valid YouTube
+links and three ineligible source records. Of 129 remaining records, current
+official identity checks verified 119 targets; ten mappings remained unresolved.
+The frozen exact private inventory SHA-256 is
+`a4fa3627682043c4b06aa65ddbebdab75f1fc29aec93e2d250bda537d9b0cd2b`.
+Live WordPress refresh was stopped because the configured account exposes PROCESS,
+EVENT and TRIGGER privileges; retained metadata timestamps/hashes and this freshness
+limitation are preserved. No broader grant was used or weakened. These are source
+selection results, not transcript-download or completeness outcomes.
+
 ### D-173 — Existing held-sermon corrective review and local frontend acceptance
 
 Samuel's 6 October 2026 attachment separately authorizes the nine current held

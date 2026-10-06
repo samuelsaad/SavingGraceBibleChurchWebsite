@@ -1,5 +1,27 @@
 # Repository Operating Rules
 
+## D-174 — existing SermonAudio source-transcript retrieval only
+
+Samuel separately authorizes `sermonaudio-transcript-retrieval-plan.md`: read-only
+configured WordPress sermon metadata and official SermonAudio API/download access
+for all eligible source sermons without valid YouTube mappings and with exact
+verified church recordings. Freeze the complete private inventory and hash before
+transcript downloads. This is not a fixed 36-sermon run or an expired YouTube
+exception. Use the supplied key only from protected owner-local storage outside
+repositories; keep it out of logs, arguments, browser code and Git. Retrieve only
+existing complete original-language transcripts; preserve exact bytes, provenance,
+warnings, counts and hashes privately with no-clobber receipts and checkpoints.
+Necessary transcript text may enter primary private verification tool/session
+results, never ordinary messages/logs, tracked files, screenshots or other providers.
+Bound read-only retries and independently verify broadcaster and source/recording
+identity. No audio/video processing, new transcription, generation, approval,
+application import, staging synchronization, push or publication is authorized.
+All normal safeguards and historical decisions remain unchanged.
+The verified 119-target private manifest has SHA-256
+`a4fa3627682043c4b06aa65ddbebdab75f1fc29aec93e2d250bda537d9b0cd2b`.
+Ten other source mappings remain individually unresolved. The retained source
+snapshot is not represented as a fresh live inventory after its grant guard failed.
+
 ## D-173 — bounded corrective review and local frontend delivery
 
 Samuel separately authorizes this corrective review for only the nine currently
