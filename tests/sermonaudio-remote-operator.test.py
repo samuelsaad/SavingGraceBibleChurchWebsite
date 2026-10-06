@@ -65,5 +65,25 @@ class OperatorTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, '^previous_cohort_refused$'):
                     operator.cohort_bytes(path)
 
+    def test_code_followup_reuses_only_baseline_and_requires_new_verification(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root, prior = pathlib.Path(directory) / 'next', pathlib.Path(directory) / 'prior'
+            for path in [root, prior]:
+                (path / 'output').mkdir(parents=True)
+                (path / 'source.private.json').write_text('{"anonymous":true}')
+                (path / 'cohort.private.json').write_text('{"anonymous":true}')
+            baseline = {'decision': 'D-175', 'manifestSha256': operator.MANIFEST, 'anonymous': True}
+            (prior / 'output' / 'baseline.private.json').write_text(json.dumps(baseline))
+            with self.assertRaisesRegex(RuntimeError, '^previous_verified_data_required$'):
+                operator.reuse_baseline(root, prior)
+            (prior / 'output' / 'verify-fixture.receipt.json').write_text(json.dumps([{'outcome': 'verified', 'targets': 119, 'ready': 119, 'failed': 0, 'conflicted': 0}]))
+            operator.reuse_baseline(root, prior)
+            self.assertEqual(json.loads((root / 'output' / 'baseline.private.json').read_text()), baseline)
+            self.assertEqual(list((root / 'output').glob('verify-*.receipt.json')), [])
+            self.assertTrue(json.loads((root / 'output' / 'baseline-reuse.receipt.json').read_text())['freshTargetVerificationRequired'])
+            (root / 'source.private.json').write_text('{"anonymous":false}')
+            with self.assertRaisesRegex(RuntimeError, '^baseline_scope_changed$'):
+                operator.reuse_baseline(root, prior)
+
 if __name__ == '__main__':
     unittest.main()

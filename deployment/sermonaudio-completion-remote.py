@@ -94,6 +94,28 @@ def safe_archive(archive):
         if any(part in path.parts for part in ['private', 'development-data', '.git', 'youtube-oath']):
             fail('private_archive_member')
 
+def reuse_baseline(root, prior):
+    # Code-only followup: reuse preservation evidence, never acceptance of current
+    # rows. The NEW helper must still verify every target before activation.
+    for name in ['source.private.json', 'cohort.private.json']:
+        if sha(root / name) != sha(prior / name):
+            fail('baseline_scope_changed')
+    verified = []
+    for path in (prior / 'output').glob('verify-*.receipt.json'):
+        values = json.loads(path.read_text())
+        last = values[-1]
+        if last.get('outcome') == 'verified' and last.get('targets') == 119 and last.get('ready') == 119 and not last.get('failed') and not last.get('conflicted'):
+            verified.append(path)
+    if not verified:
+        fail('previous_verified_data_required')
+    source = prior / 'output' / 'baseline.private.json'
+    value = json.loads(source.read_text())
+    if value.get('decision') != 'D-175' or value.get('manifestSha256') != MANIFEST:
+        fail('baseline_scope_changed')
+    with (root / 'output' / 'baseline.private.json').open('xb') as stream:
+        stream.write(source.read_bytes())
+    save(root / 'output' / 'baseline-reuse.receipt.json', {'outcome': 'preservation_baseline_reused', 'freshTargetVerificationRequired': True, 'dataWrites': 0})
+
 def main():
     if os.geteuid() != 0 or len(sys.argv) < 3:
         fail('operator_arguments_refused')
@@ -178,6 +200,11 @@ def main():
             save(root / (name + '-candidate.json'), candidate)
         save(root / 'recovery.json', {'commit': commit, 'previousCommit': PRIOR_COMMIT, 'previousImage': PRIOR_IMAGE, 'newImage': inspect(image)['Id'], 'beforeDatabaseHash': before, 'packetFileSha256': sha(root / 'source.private.json'), 'packetSha256': packet['sha256'], 'releaseSha256': sha(root / 'release.tar'), 'cohortSha256': sha(root / 'cohort.private.json'), 'rollback': 'prior_application_images_and_selectors_retain_all_audited_rows'})
         print(json.dumps({'outcome': 'prepared', 'image': inspect(image)['Id'], 'databaseUnchanged': True, 'packetTargets': 119}))
+    elif operation == 'reuse-baseline':
+        if len(sys.argv) != 4 or sys.argv[3] != 'c8c3012decf91c70bdb2bab14ca11cf50a370e83':
+            fail('baseline_predecessor_refused')
+        reuse_baseline(root, pathlib.Path('/opt/savinggrace-d175') / sys.argv[3])
+        print(json.dumps({'outcome': 'preservation_baseline_reused', 'freshTargetVerificationRequired': True, 'dataWrites': 0}))
     elif operation in ['baseline', 'plan', 'import', 'verify']:
         output = run(['docker', 'compose', '-f', str(root / 'maintenance.json'), 'run', '--rm', '--no-deps', 'maintenance', operation])
         values = []

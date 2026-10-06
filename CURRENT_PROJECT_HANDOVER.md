@@ -81,6 +81,26 @@ remote-operator tests pass; no real remote deployment is implied by these tests.
 Final full browser/delivery verification and push remain outstanding.
 Delivery remains in progress.
 
+Delivery checkpoint: all 119 staged rows were appended and all 119 identical
+replays returned unchanged, with prior rows and sequences preserved. The initial
+release `c8c3012decf91c70bdb2bab14ca11cf50a370e83` activated at 398 eligible records;
+rollback/reactivation restored 279/398 without database changes. Post-deployment
+HTML checks exposed a real discovery-query timeout, not missing content: API
+content remained correct, but repeated joined acceptance checks exceeded the
+existing 15-second staging deadline. Both runtimes are restored to the previous
+working release while the new data remains intact. The scoped fix materializes
+fully guarded matching rows once per statement, as the incumbent D-171 path
+already does. No status/freshness predicate, timeout, authentication or publication
+guard is weakened. New unit tests and real disposable PostgreSQL checks cover
+fresh and changed-content exclusion. Latest guarded suite: 1,057 passed, zero
+skips; disposable target removed. Standard suite: 923 passed / 134 guarded skips.
+Actual local staging/local-scope discovery queries pass the unchanged deadline
+in approximately two/three seconds. Full local browser coverage passed all 119
+records at desktop/mobile widths (238 checks); exact initial-HTML transcript,
+description and ordered-answer comparisons passed for every record. Current
+Astro/type checks and builds pass. Final fixed-release activation and staged
+HTTP/browser verification remain outstanding; do not claim completed delivery yet.
+
 ## D-171 completed collection — 5 October 2026
 
 Samuel authorized exactly 279 current completed sermons for the existing public

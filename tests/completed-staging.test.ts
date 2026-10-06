@@ -50,4 +50,14 @@ describe('D-171 bounded completed collection',()=>{
   expect(ordinary.includes('MATERIALIZED')).toBe(false);
   expect(ordinary.includes('d169_restricted_acceptance_dependency')).toBe(false);
  });
+ for(const scope of ['d175_completed','d175_local_completed'] as const)it(`checks every ${scope} acceptance predicate before materialized discovery joins`,async()=>{
+  const {snapshot}=await loadTrackedProjectSermonSnapshot();configureCompletedCohort(snapshot.tables.sermons.map(r=>r.id));
+  const q=buildPublishedSermonFilterOptionsQuery(scope).text,guard=frontendSermonEligibilitySql('s',scope);
+  expect(q).toContain('WITH matching_sermons AS MATERIALIZED (');
+  expect(q).toContain('SELECT s.* FROM sermons s WHERE '+guard);
+  expect(q.split(guard).length-1).toBe(1);
+  expect((q.match(/JOIN matching_sermons sermon|FROM matching_sermons sermon/gu)??[]).length).toBe(5);
+  for(const predicate of ["s.status='draft'",'s.published_at IS NULL',"a.payload->>'rowVersion'=s.row_version::text","a.payload->>'dependencySha256'",'restricted_acceptance_dependency(s.id)',"e.actor_role='system'","a.payload->>'humanApprovalClaimed'='false'"])expect(guard).toContain(predicate);
+  expect(buildPublishedSermonFilterOptionsQuery('public').text).not.toContain('MATERIALIZED');
+ });
 });

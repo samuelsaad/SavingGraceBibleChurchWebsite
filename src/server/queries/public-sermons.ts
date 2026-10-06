@@ -705,14 +705,15 @@ export function buildPublishedSermonFilterOptionsQuery(
   input: PublicSermonListQuery = {page:1,pageSize:9,order:"DESC"}
 ): ParameterizedQuery {
   const state = buildPublishedConditions(input, scope);
-  // The fixed D-171 cohort is fully freshness-checked in this statement's
+  // Completed scopes are fully freshness-checked in this statement's
   // materialized relation. Repeating the same expensive dependency guard after
   // every joined verse multiplies its work without providing another boundary.
   // This is statement-local evaluation, never an acceptance cache.
-  const matchedEligibility = scope === "d171_completed" ? "true" : frontendSermonEligibilitySql("sermon", scope);
+  const materializedCompleted = scope === "d171_completed" || scope === "d175_completed" || scope === "d175_local_completed";
+  const matchedEligibility = materializedCompleted ? "true" : frontendSermonEligibilitySql("sermon", scope);
   return {
     text: `
-      WITH matching_sermons AS ${scope === "d171_completed" ? "MATERIALIZED " : ""}(
+      WITH matching_sermons AS ${materializedCompleted ? "MATERIALIZED " : ""}(
         SELECT s.* FROM sermons s WHERE ${state.conditions.join(" AND ")}
       )
       SELECT

@@ -74,3 +74,11 @@ Five anonymous offline tests cover archive scope, symlinks, secret/error exclusi
 no-clobber recovery, exact cohort validation and instance drift. These do not
 replace real staging checks. The incumbent cohort is discovered from its actual
 read-only runtime mount, not inferred from the currently running image's directory.
+
+A code-only followup after the verified initial transfer may use `reuse-baseline`
+with the exact recorded predecessor. Source-packet and cohort byte hashes must
+match, and a completed predecessor verification must exist. This copies only the
+preservation baseline, never a verification receipt. Fresh exact-row verification
+by the new helper is still mandatory before activation. No data is imported again
+merely to deploy a read-query repair. A sixth anonymous operator test covers this
+boundary and scope-conflict refusal.
