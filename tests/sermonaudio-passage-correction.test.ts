@@ -15,4 +15,14 @@ describe('D-175 explicit passage correction, originals preserved',()=>{
   expect(()=>applySermonAudioPassageCorrection(['Matthew 5:3'],source,{...correction,correctedText:'Matthew 5:6'})).toThrow('explicit_reference_required');
   expect(()=>applySermonAudioPassageCorrection(['Matthew 5:3'],source,{...correction,sourceAnchor:'An unavailable synthetic source anchor.'})).toThrow('support_refused');
  });
+ it('fills only absent metadata from a unique explicit reading, without fabricating an original reference',()=>{
+  const source='Synthetic reading: please turn to Psalm 127. Synthetic closing.';
+  const evidence={originalText:null,correctedText:'Psalm 127',sourceAnchor:'Synthetic reading: please turn to Psalm 127.',assessment:'An explicit synthetic source reading establishes the absent primary passage; no topic inference.'};
+  const result=applySermonAudioPassageCorrection([],source,evidence);
+  expect(result.passageTexts).toEqual(['Psalm 127']);expect(result.evidence?.originalText).toBeNull();
+  expect(()=>applySermonAudioPassageCorrection(['Psalm 126'],source,evidence)).toThrow('identity_refused');
+  expect(()=>applySermonAudioPassageCorrection([],source+source,evidence)).toThrow('support_refused');
+  expect(()=>applySermonAudioPassageCorrection([],source,{...evidence,correctedText:'Psalm 128'})).toThrow('explicit_reference_required');
+  expect(()=>applySermonAudioPassageCorrection([],source,{...evidence,correctedText:'Psalm 127:2'})).toThrow('explicit_reference_required');
+ });
 });

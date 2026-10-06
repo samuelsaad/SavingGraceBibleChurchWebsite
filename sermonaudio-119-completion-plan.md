@@ -77,10 +77,10 @@ Generation, dry runs and local import alone are not completed delivery.
 ## Preserved implementation checkpoint
 
 All 119 source preparations are word/marker-preserving. The current substantive
-review covers sequences 1–36 and all 252 ordered pairs. Thirty-four local imports
-are accepted unpublished drafts; the next two are reviewed awaiting this safe
+review covers sequences 1–45 and all 315 ordered pairs. Forty-four local imports
+are accepted unpublished drafts; the next record is reviewed awaiting this safe
 implementation commit. All 19,164 pre-existing rows remain unchanged. Thirty-three
-identical replays made no database changes. No remote data/app writes or push has
+identical replays made no database changes through sequence 42. No remote data/app writes or push has
 occurred. These are progress counts, not task-completion claims.
 
 The scoped staging helper preserves exact rows and genuine system attribution,
@@ -89,7 +89,12 @@ imports accounts/sessions or unrelated review scopes. Its anonymous PostgreSQL
 fixture proves empty-target exact copy, no-op rerun and conflict preservation.
 The explicit pre-import passage-coordinate correction retains the original field,
 unique full-source anchor and parser version; no human passage approval is created.
-Latest full guarded suite: 1,050 passed, zero skips; disposable database removed.
+Where both retained metadata sources have no passage, the same guarded mechanism
+may record a uniquely anchored explicit source reading. It retains the empty
+original metadata and a null original-reference field with a distinct assignment
+parser version. Nonempty metadata cannot be overwritten through this path; topic
+inference, unsupported verses and ambiguous anchors are refused.
+Latest full guarded suite: 1,051 passed, zero skips; disposable database removed.
 Type/Astro: zero diagnostics across 484 files. Bundle and outgoing scan pass.
 Final complete processing, source verification, portable handoff verification,
 frontend membership/browser checks, secure scoped transfer, release deployment,

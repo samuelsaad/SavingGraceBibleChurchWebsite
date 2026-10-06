@@ -13,7 +13,7 @@ import {appendSermonAudioTarget,captureSermonAudioTransferState,assertSermonAudi
 export function registerSermonAudioCompletionPostgresTests(getPool:()=>Pool){
  it('atomically imports anonymous SermonAudio content, records honest acceptance, preserves publication and replays without churn',async()=>{
   assertDisposableIntegrationTestDatabase(process.env.TEST_DATABASE_URL!,process.env.DISPOSABLE_TEST_DATABASE_TOKEN,process.env.ALLOW_LOCAL_DB_WRITE);
-  const pool=getPool(),sourceId=887751001,id=deterministicSourceUuid('wordpress-sermon',sourceId),speakerId=randomUUID();
+  const pool=getPool(),sourceId=887751001,id=deterministicSourceUuid('wordpress-sermon',sourceId),missingId=deterministicSourceUuid('wordpress-sermon',sourceId+1),speakerId=randomUUID();
   const transcript='Unique synthetic supporting evidence for anonymous examples. The synthetic focus is verse 4 of Matthew chapter 5. '+Array(120).fill('Additional synthetic context has no actual sermon wording.').join(' ');
   const sentence='This anonymous description explains a synthetic subject with supporting context and practical reasoning while preserving the limited scope of the fictional sample.';
   const description=Array(9).fill(sentence).join(' ');
@@ -67,10 +67,17 @@ export function registerSermonAudioCompletionPostgresTests(getPool:()=>Pool){
     expect(copiedState.sha256).toBe(unchangedState.sha256);
     expect((await appendSermonAudioTarget(transferClient,transfer,id,true)).outcome).toBe('unchanged');expect((await captureSermonAudioTransferState(transferClient)).sha256).toBe(copiedState.sha256);
    }finally{await transferClient.query('ROLLBACK');transferClient.release();}
+   const absentReviewBody={...reviewBody,sequence:2,primaryPassageCorrection:{...primaryPassageCorrection,originalText:null}};
+   const absentReviewHash=hash(JSON.stringify(absentReviewBody));
+   const absentPacket={...packet,sequence:2,sourceWordPressId:sourceId+1,slug:'anonymous-d175-absent-passage',passageTexts:[],candidate:{...candidate,sequence:2},review:{...absentReviewBody,reviewHash:absentReviewHash},reviewHash:absentReviewHash};
+   expect((await applySermonAudioCompletion(pool,[sourceId+1],absentPacket)).outcome).toBe('imported_and_ai_accepted');
+   expect((await pool.query('SELECT display_text,original_reference_text,parser_version,review_status FROM scripture_references WHERE sermon_id=$1',[missingId])).rows).toEqual([{display_text:'Matthew 5:4',original_reference_text:null,parser_version:'d175-explicit-source-passage-assignment-v1',review_status:'unreviewed'}]);
+   expect((await applySermonAudioCompletion(pool,[sourceId+1],absentPacket)).outcome).toBe('unchanged');
+   expect((await pool.query('SELECT '+d175AcceptanceSql('s')+' accepted FROM sermons s WHERE id=$1',[missingId])).rows[0].accepted).toBe(true);
    await pool.query("UPDATE sermon_question_answers SET answer_text='Concurrent synthetic edit.' WHERE sermon_id=$1 AND display_order=1",[id]);
    expect((await pool.query('SELECT '+d175AcceptanceSql('s')+' accepted FROM sermons s WHERE id=$1',[id])).rows[0].accepted).toBe(false);
    await expect(applySermonAudioCompletion(pool,[sourceId],packet)).rejects.toThrow('receipt_conflict');
    await pool.query("UPDATE sermons SET status='archived' WHERE id=$1",[id]);await expect(applySermonAudioCompletion(pool,[sourceId],packet)).rejects.toThrow('private_status');
-  }finally{await pool.query('DELETE FROM audit_events WHERE entity_id=$1',[id]);await pool.query('DELETE FROM sermons WHERE id=$1',[id]);await pool.query('DELETE FROM speakers WHERE id=$1',[speakerId]);}
+  }finally{await pool.query('DELETE FROM audit_events WHERE entity_id=ANY($1::uuid[])',[[id,missingId]]);await pool.query('DELETE FROM sermons WHERE id=ANY($1::uuid[])',[[id,missingId]]);await pool.query('DELETE FROM speakers WHERE id=$1',[speakerId]);}
  });
 }

@@ -8,15 +8,16 @@ All 119 source hashes were reverified, including the preserved sequence-96 retry
 The isolated delivery branch integrates the current deployed D-171 release with
 committed D-172/D-173/D-174 backend work; unrelated dirty V5/dashboard work stays
 outside this branch. See `sermonaudio-119-completion-plan.md`.
-All 119 preparations pass full lexical/marker preservation. Sequences 1–36 have
-validated descriptions and 252 ordered Q&A plus separately saved complete-source
-substantive AI reviews, including Arabic sequence 4. Eleven support-locator revisions
-preserve rejected originals without changing generated prose. Thirty-four atomic local
-imports and audited AI/Samuel acceptances are saved as unpublished drafts; 35–36
-are reviewed and ready for import after this implementation checkpoint. The
-first thirty-three identical reruns returned unchanged, with identical full-database
+All 119 preparations pass full lexical/marker preservation. Sequences 1–45 have
+validated descriptions and 315 ordered Q&A plus separately saved complete-source
+substantive AI reviews, including Arabic sequence 4. Fifteen support-locator revisions
+preserve rejected originals without changing generated prose. One description was
+shortened and re-reviewed with its Q&A unchanged. Forty-four atomic local
+imports and audited AI/Samuel acceptances are saved as unpublished drafts; 45
+is reviewed and ready for import after this implementation checkpoint. The
+first forty-two identical reruns returned unchanged, with identical full-database
 fingerprints, and all 19,164 pre-existing rows across 55 tables retained their
-hashes. Current stored count: 345. No staging
+hashes. Current stored count: 355. No staging
 change, dataset export or push has occurred at this checkpoint.
 The safe governance/integration commit is
 `e791071900e1a51362553108da8d347017c96a3d`.
@@ -27,15 +28,15 @@ is preserved without double encoding. Full guarded PostgreSQL suite: 1,032 passe
 zero skips; disposable target removed. New capture/read-path defects were repaired,
 not reported as unrelated baseline failures. Continue from the next unfinished
 operation; do not regenerate saved completed artifacts. The loopback preview explicitly
-opts in to the D-175 selector; ordinary public eligibility is unchanged. Eight
-real imported detail/admin records passed 16 desktop/mobile browser checks,
+opts in to the D-175 selector; ordinary public eligibility is unchanged. Forty
+real imported detail/admin records passed 80 desktop/mobile browser checks,
 including Arabic RTL and encoded-route handling, without screenshots or review
 writes. Twenty-one focused preview/gate tests passed. A separate staging opt-in
 retains the exact existing cohort gate and adds only current audited D-175
 acceptances; three focused gate tests pass. Read-only staging inspection confirms
 279 stored sermons and ledger through 0025. Standard suite: 901 passed / 133
 database tests skipped by that runner; Astro diagnostics: zero; build passed.
-The latest guarded suite passed all 1,050 tests with zero skips, including the
+The latest guarded suite passed all 1,051 tests with zero skips, including the
 new display-only portable Unicode import, unchanged replay and concurrent-edit
 protection. The exact disposable target was removed. Portable summaries cannot
 restore AI/human review authority; the exporter requires all 119 current audited
@@ -48,7 +49,10 @@ prove exact copy, unchanged replay and preservation without deleting review rows
 A 33-record private packet was frozen and reverified locally, not transferred.
 One reviewed retained-metadata coordinate mismatch is repaired only by an explicit
 unique transcript anchor; both original and delivered coordinates remain recorded.
-No human passage decision is created. Type/Astro check: 484 files, zero diagnostics;
+No human passage decision is created. Explicit source reading may also fill a
+genuinely absent passage: preserve empty source fields and a null original
+reference with a separate assignment parser version. Tests refuse nonempty-field
+overwrite and unsupported or ambiguous evidence. Type/Astro check: 484 files, zero diagnostics;
 staging bundle passed; outgoing scan: no findings. See
 `docs/sermonaudio-staging-transfer.md` for transfer and rollback boundaries.
 Delivery remains in progress.
