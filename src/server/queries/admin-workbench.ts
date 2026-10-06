@@ -3,6 +3,7 @@ import { audioCohorts, audioRefreshedEligibilitySql, type AudioCohort } from "..
 import { restrictedEligibilitySql, d161RestrictedEligibilitySql, d162RestrictedEligibilitySql, d167RestrictedEligibilitySql } from "../../domain/restricted-acceptance";
 import { concernLabel, summarizeWorkbench, type ReviewConcern, type WorkbenchSermon } from "../../domain/admin-workbench";
 import {localWordingCompletionSql} from '../../domain/local-wording-completion';
+import {correctiveCompletionSql} from '../../domain/local-corrective-review';
 
 const laterManifests = {
   d168: "87e2d08e592a089cd7bfe1fcc42c5e8399f1bbd78b83d49de8e2933c1b8df21a",
@@ -11,19 +12,21 @@ const laterManifests = {
 
 /** Uses the same version, dependency, withdrawal and media-refresh gates as the
  * restricted selectors. This function is never used by public routes. */
-export function workbenchEligibilitySql(cohort: AudioCohort): string {
+export function workbenchEligibilitySql(cohort: AudioCohort,alias='s'): string {
+  if(!/^[a-z][a-z_]*$/u.test(alias))throw Error('sql_alias_refused');
   const existing = { d158: restrictedEligibilitySql, d161: d161RestrictedEligibilitySql,
     d162: d162RestrictedEligibilitySql, d167: d167RestrictedEligibilitySql };
-  if (cohort in existing) return existing[cohort as keyof typeof existing]("s");
+  if (cohort in existing) return existing[cohort as keyof typeof existing](alias);
   const key = cohort as keyof typeof laterManifests;
   const c = audioCohorts[key];
-  return `((s.status='draft' AND s.published_at IS NULL AND s.deleted_at IS NULL AND EXISTS (
+  const sql = `((s.status='draft' AND s.published_at IS NULL AND s.deleted_at IS NULL AND EXISTS (
     SELECT 1 FROM ${c.table} a WHERE a.sermon_id=s.id AND a.decision='D-${key.slice(1)}'
     AND a.source_manifest_sha256='${laterManifests[key]}' AND a.environment='local_loopback'
     AND a.fingerprint_format='${key}-utc-jsonb-v1' AND a.accepted_row_version=s.row_version
     AND a.content_dependency_sha256=${c.dependency}(s.id)
     AND NOT EXISTS(SELECT 1 FROM ${c.withdrawals} w WHERE w.sermon_id=s.id)))
     OR ${audioRefreshedEligibilitySql("s", key)})`;
+  return sql.replace(/\bs\./gu,alias+'.');
 }
 
 export async function readAdminWorkbench(pool: Pool) {
@@ -35,8 +38,8 @@ export async function readAdminWorkbench(pool: Pool) {
     await db.query("SET LOCAL TIME ZONE 'UTC'");
     const installed = (await db.query<{name:string}>("SELECT tablename AS name FROM pg_tables WHERE schemaname='public'")).rows.map(r => r.name);
     const cohorts = (Object.keys(audioCohorts) as AudioCohort[]).filter(key => installed.includes(audioCohorts[key].table));
-    const accepted = cohorts.map(workbenchEligibilitySql).join(" OR ") || "false";
-    const localComplete = installed.includes('sermon_extensions') ? localWordingCompletionSql('s') : 'false';
+    const accepted = cohorts.map(c=>workbenchEligibilitySql(c)).join(" OR ") || "false";
+    const localComplete = installed.includes('sermon_extensions') ? `(${localWordingCompletionSql('s')} OR ${correctiveCompletionSql('s')})` : 'false';
     const prior = cohorts.map(key => `EXISTS(SELECT 1 FROM ${audioCohorts[key].table} a WHERE a.sermon_id=s.id)`).join(" OR ") || "false";
     const rows = (await db.query(`SELECT s.id,s.title,to_char(s.service_date,'YYYY-MM-DD') service_date,
       s.status,s.row_version,sp.name speaker,((${accepted}) OR ${localComplete}) complete,(${localComplete}) local_complete,(${prior}) previously_accepted

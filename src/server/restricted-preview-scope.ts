@@ -1,6 +1,8 @@
 import type { FrontendSermonScope } from "./queries/public-sermons";
 
 export function localFrontendPreviewScope(env: NodeJS.ProcessEnv): FrontendSermonScope {
+  const corrective=env.D173_LOCAL_FRONTEND_ENABLED;
+  if(corrective!==undefined){if(corrective==='1')return 'local_corrective_accepted';throw Error('d173_local_preview_configuration_refused');}
   const d167 = env.D167_RESTRICTED_ACCEPTANCE_ENABLED;
   if (d167 !== undefined) {
     if (d167 === "1") return "d167_restricted_accepted";

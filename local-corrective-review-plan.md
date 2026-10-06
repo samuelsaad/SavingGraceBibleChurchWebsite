@@ -52,3 +52,36 @@ discovery, details, metadata and media controls. Run applicable standard and
 guarded PostgreSQL tests, type/Astro/build checks and outgoing/private-content
 scans. Preserve unchanged baseline failures separately. Commit only necessary
 safe code/tests/governance/documentation, with no private artifact or unrelated edit.
+
+Implementation uses two separate `sermon_extensions` namespaces:
+`website.d173-local-completion` preserves complete original versions, truthful
+review evidence, source comparison and contextual-inference lineage;
+`website.d173-local-acceptance` binds that receipt's exact hash and full current
+dependencies. Each has its own system audit. No migration is necessary.
+Human approval of an original transcript remains preserved in its archived
+version; a corrected transcript and dependent grounding start as draft, never
+inheriting that approval. Existing passage decisions, findings and prior AI rows
+remain unchanged. Identical packets must return unchanged without receipt churn.
+
+`D173_LOCAL_FRONTEND_ENABLED=1` opts the existing authenticated loopback preview
+into current legacy restricted cohorts plus these exact current local receipts.
+It does not include D-172's dashboard-only completions. Ordinary public and all
+existing staging selectors are unchanged. Protected transfer explicitly rejects
+D-173 receipt/audit namespaces; curated dataset export has a distinct namespace
+allowlist and does not export them. Semantic eligibility remains publication-based.
+The visitor frontend tree is byte-identical to the currently running optimized
+release; no design file was changed. Start an available loopback port using
+`node --import tsx scripts/start-local-corrective-preview.ts` (default 4410), then
+open `/admin` and its existing **Frontend preview** link. Authentication remains
+the existing truthful `local-admin-0001` development mode, not personal sign-in.
+
+Pre-application verification: nine full-source/content reviews and 63 ordered
+Q&A reviews have version-bound private packets with exact support hashes. All
+original VTT bytes and original transcript word/marker sequences verify. Final
+focused preview/scope tests pass; the guarded PostgreSQL suite passes all 999
+tests with zero skips, including correction, archived human approval, speaker
+assignment, strict source identity, concurrent changes and identical replay.
+The uniquely named disposable database is removed. No application write has
+occurred at this milestone. Standard tests/build/dry-run/offline audit and
+outgoing secret/private-content/symlink scans pass. Type/Astro checks retain the
+existing TS2379 only in the unchanged snapshot-import CLI; no new error remains.
