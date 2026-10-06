@@ -1,4 +1,5 @@
 import type { Pool, PoolClient } from "pg";
+import {loadSermonAudioPortableDataset,validatePortableSermonAudioProjection} from './sermonaudio-portable-dataset';
 import {completedSchemaMigrations} from '../staging/completed-schema';
 import {validateCompletedIds} from '../domain/completed-staging';
 import { assertDisposableIntegrationTestDatabase } from "../migration/local-database-safety";
@@ -10,13 +11,15 @@ import {
   projectSermonSnapshotSyntheticSubject,
   sha256,
   type JsonRow,
-  type ProjectSermonSnapshot
+  type ProjectSermonSnapshot,
+  type ProjectSermonSnapshotManifest
 } from "./project-sermon-snapshot";
 
 export interface ProjectSnapshotImportOptions {
   connectionString: string;
   writeOptIn?: string;
   testRunToken?: string;
+  datasetKind?: 'sermonaudio119';
 }
 
 /** D-171's Git export is display data, not portable administrator authority.
@@ -211,8 +214,18 @@ async function verifyImported(client: PoolClient, snapshot: ProjectSermonSnapsho
 
 export async function importTrackedProjectSermonSnapshot(pool: Pool, options: ProjectSnapshotImportOptions) {
   if (!options.testRunToken) throw new Error("Project snapshot import is restricted to guarded disposable PostgreSQL databases");
+  assertDisposableIntegrationTestDatabase(options.connectionString,options.testRunToken,options.writeOptIn);
+  const tracked = options.datasetKind==='sermonaudio119' ? await loadSermonAudioPortableDataset() : await loadTrackedProjectSermonSnapshot();
+  return importProjectSnapshotProjection(pool,options,tracked);
+}
+
+/** Shared transport for verified display data and anonymized integration
+ * fixtures. Every caller is restricted to an authorized disposable database;
+ * the tracked D-175 loader independently enforces the exact 119-source scope. */
+export async function importProjectSnapshotProjection(pool:Pool,options:ProjectSnapshotImportOptions,tracked:{snapshot:ProjectSermonSnapshot;manifest:ProjectSermonSnapshotManifest;contentSha256:string;manifestSha256:string}) {
+  if (!options.testRunToken) throw new Error("Project snapshot import is restricted to guarded disposable PostgreSQL databases");
   const expectedDatabase = assertDisposableIntegrationTestDatabase(options.connectionString, options.testRunToken, options.writeOptIn);
-  const tracked = await loadTrackedProjectSermonSnapshot();
+  if(options.datasetKind==='sermonaudio119')validatePortableSermonAudioProjection(tracked.snapshot,tracked.snapshot.tables.sermons.map(r=>Number(r.source_wordpress_id)));
   const client = await pool.connect();
   let outcome: "imported" | "unchanged" = "unchanged";
   try {

@@ -8,9 +8,11 @@ import { createSealedStagingHandler } from "./handler";
 import { verifyRestrictedPublicationBoundary } from "./restricted-publication-boundary";
 import {loadCompletedCohort} from './completed-cohort';
 import {verifyCompletedSchema} from './completed-schema';
+import {stagingFrontendScope} from './frontend-scope';
 
 async function main() {
   const config = stagingConfiguration(process.env);
+  const scope=stagingFrontendScope(process.env);
   const completed = process.env.D171_COMPLETED_ENABLED === '1';
   if(completed)await loadCompletedCohort(process.env.D171_COHORT_FILE??'');
   const expectedSchema = completed ? 25 : stagingSchemaExpectation(process.env);
@@ -26,10 +28,6 @@ async function main() {
     } finally { await client.query("ROLLBACK"); client.release(); }
   };
   await ready();
-  const d167Enabled=process.env.D167_RESTRICTED_ACCEPTANCE_ENABLED==="1";
-  const d162Enabled=process.env.D162_RESTRICTED_ACCEPTANCE_ENABLED==="1";
-  const d161Enabled=process.env.D161_RESTRICTED_ACCEPTANCE_ENABLED==="1";
-  const scope=completed?"d171_completed":d167Enabled?"d167_restricted_accepted":d162Enabled?"d162_restricted_accepted":d161Enabled?"d161_restricted_accepted":"restricted_accepted";
   const handler = createSealedStagingHandler(new PostgresSermonRepository(pool,scope), ready,
     process.env.RELEASE_COMMIT!, process.env.RESTRICTED_FRONTEND_DISABLED === "1");
   const server = createServer(async (incoming, outgoing) => {

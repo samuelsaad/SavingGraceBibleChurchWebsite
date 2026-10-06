@@ -5,6 +5,8 @@ export const d175SourceMembershipSha256='00dcc94e2ffff5db065ab83060fe7d79a4d8787
 export const d175SourceNamespace='website.d175-sermonaudio-source';
 export const d175ReviewNamespace='website.d175-ai-review';
 export const d175AcceptanceNamespace='website.d175-frontend-acceptance';
+/** Informational development data only; never a receipt namespace. */
+export const d175PortableSummaryNamespace='website.d175-portable-summary';
 export const d175Actor='codex-d175-sermonaudio-review';
 export const d175AcceptanceAction='sermon.d175_frontend_acceptance';
 export function assertD175SourceMembership(ids:number[]){

@@ -5,7 +5,7 @@ import { d161CombinedRestrictedEligibilitySql, d162CombinedRestrictedEligibility
 import { topicalClassificationSql } from "../../domain/topical-classification";
 import {completedEligibilitySql,completedPassageAcceptanceSql} from "../../domain/completed-staging";
 import {localCorrectiveFrontendSql} from './local-corrective-frontend';
-import {d175AcceptanceSql,d175SourceNamespace} from '../../domain/sermonaudio-completion';
+import {d175AcceptanceSql,d175SourceNamespace,d175PortableSummaryNamespace} from '../../domain/sermonaudio-completion';
 
 export interface ParameterizedQuery {
   text: string;
@@ -321,7 +321,7 @@ function buildPublishedConditions(
 
 export function publicRelationshipProjection(alias = "s", scope: FrontendSermonScope = "public"): string {
   return `
-  (SELECT CASE WHEN payload->>'language' IN ('en','ar') THEN payload->>'language' ELSE NULL END FROM sermon_extensions WHERE sermon_id=${alias}.id AND namespace='${d175SourceNamespace}') AS language,
+  (SELECT CASE WHEN payload->>'language' IN ('en','ar') THEN payload->>'language' ELSE NULL END FROM sermon_extensions WHERE sermon_id=${alias}.id AND namespace IN ('${d175SourceNamespace}','${d175PortableSummaryNamespace}') ORDER BY CASE WHEN namespace='${d175SourceNamespace}' THEN 0 ELSE 1 END LIMIT 1) AS language,
   ${scope === "d160_draft_preview" ? "'draft_awaiting_review'" : "NULL"} AS review_state,
   ${restrictedScope(scope) ? topicalClassificationSql(alias) : "false"} AS is_topical,
   (
