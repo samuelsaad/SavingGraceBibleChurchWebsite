@@ -100,9 +100,12 @@ receive an expressly announced source passage, while the original placeholder
 remains in evidence and the unreviewed reference field. Other nonempty metadata
 cannot be overwritten through this assignment path; topic inference, conflicting
 canonical assignments, unsupported verses and ambiguous anchors are refused.
-Latest full guarded suite: 1,052 passed, zero skips; disposable database removed.
+Exact English spoken chapter names one through twenty may identify a chapter,
+but never infer a verse. Reference boundaries reject prefixes of a larger chapter,
+verse or fictional book name; the retained source bytes and anchors are unchanged.
+Latest full guarded suite: 1,054 passed, zero skips; disposable database removed.
 The added anonymous fixture proves placeholder preservation and an identical
-rerun without content, version, relationship, review or audit churn. Four focused
+rerun without content, version, relationship, review or audit churn. Six focused
 passage tests and type checking also pass. This adds no schema or publication gate.
 Type/Astro: zero diagnostics across 484 files. Bundle and outgoing scan pass.
 Latest standard runner: 917 passed and 134 guarded database skips; the separate

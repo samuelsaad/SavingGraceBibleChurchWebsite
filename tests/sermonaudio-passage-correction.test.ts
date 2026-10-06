@@ -36,4 +36,22 @@ describe('D-175 explicit passage correction, originals preserved',()=>{
   expect(()=>applySermonAudioPassageCorrection(['Selected Text'],source,{...evidence,correctedText:'Luke 5'})).toThrow('explicit_reference_required');
   expect(()=>applySermonAudioPassageCorrection(['Selected Text'],source+source,evidence)).toThrow('support_refused');
  });
+ it('recognizes an exact spoken chapter without inferring a verse or changing source bytes',()=>{
+  const source='Anonymous reading: please turn to Matthew chapter five. Anonymous ending.';
+  const evidence={originalText:null,correctedText:'Matthew 5',sourceAnchor:'Anonymous reading: please turn to Matthew chapter five.',assessment:'The anonymous source explicitly names this chapter using a spoken number; no verse is inferred.'};
+  const result=applySermonAudioPassageCorrection([],source,evidence);
+  expect(result.passageTexts).toEqual(['Matthew 5']);expect(source.slice(result.evidence!.start,result.evidence!.end)).toBe(evidence.sourceAnchor);
+  expect(()=>applySermonAudioPassageCorrection([],source,{...evidence,correctedText:'Matthew 6'})).toThrow('explicit_reference_required');
+  expect(()=>applySermonAudioPassageCorrection([],source,{...evidence,correctedText:'Matthew 5:1'})).toThrow('explicit_reference_required');
+  expect(()=>applySermonAudioPassageCorrection([],source,{...evidence,correctedText:'Luke 5'})).toThrow('explicit_reference_required');
+  expect(()=>applySermonAudioPassageCorrection(['Matthew 4'],source,evidence)).toThrow('identity_refused');
+ });
+ it('does not accept a prefix of a longer chapter or verse as explicit evidence',()=>{
+  const evidence={originalText:null,correctedText:'Matthew 5',sourceAnchor:'Anonymous reading: Matthew chapter 50.',assessment:'An anonymous boundary fixture must not shorten a larger coordinate to a smaller one.'};
+  expect(()=>applySermonAudioPassageCorrection([],evidence.sourceAnchor,evidence)).toThrow('explicit_reference_required');
+  const verse={...evidence,correctedText:'Matthew 5:4',sourceAnchor:'Anonymous reading: Matthew 5:40.'};
+  expect(()=>applySermonAudioPassageCorrection([],verse.sourceAnchor,verse)).toThrow('explicit_reference_required');
+  const suffix={...evidence,sourceAnchor:'Anonymous fictional book NotMatthew chapter 5.'};
+  expect(()=>applySermonAudioPassageCorrection([],suffix.sourceAnchor,suffix)).toThrow('explicit_reference_required');
+ });
 });
