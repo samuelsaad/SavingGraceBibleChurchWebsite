@@ -9,6 +9,7 @@ import {canonicalSermonAudioUrl} from '../domain/sermonaudio';
 import {assessSermonTitle} from '../domain/sermon-title';
 import {resolveExplicitPassage} from '../domain/primary-book-resolution';
 import {validateLegacySlug} from '../domain/slug';
+import {applySermonAudioPassageCorrection} from '../domain/sermonaudio-passage-correction';
 
 const sha=z.string().regex(/^[a-f0-9]{64}$/u);
 const inputSchema=z.object({
@@ -52,6 +53,7 @@ export async function applySermonAudioCompletion(pool:Pool,scope:FrozenInventory
  if(storedReviewHash!==input.reviewHash||hash(JSON.stringify(reviewBody))!==input.reviewHash)throw Error('d175_review_hash_mismatch');
  const keys=Object.keys(substantiveReviewInputSchema.shape),review=substantiveReviewInputSchema.parse(Object.fromEntries(keys.map(k=>[k,reviewBody[k]])));
  if(review.outcome!=='accepted'||review.sequence!==input.sequence||review.candidateHash!==input.candidateHash||review.transcriptCharactersRead!==input.transcript.length||review.questionAssessments.length!==validated.candidate.questionAnswers.length||reviewBody.transcriptSha256!==input.transcriptSha256||reviewBody.descriptionSha256!==hash(validated.candidate.description)||reviewBody.questionAnswersSha256!==hash(JSON.stringify(pairs(validated.candidate.questionAnswers)))||reviewBody.sourceSha256!==input.sourceSha256)throw Error('d175_review_stale_or_failed');
+ const passage=applySermonAudioPassageCorrection(input.passageTexts,input.transcript,review.primaryPassageCorrection);
  const id=deterministicSourceUuid('wordpress-sermon',input.sourceWordPressId),db=await pool.connect();
  try{
   await db.query('BEGIN ISOLATION LEVEL SERIALIZABLE');await db.query("SET LOCAL TIME ZONE 'UTC'");await db.query("SET LOCAL savinggrace.application_request='on'");
@@ -81,10 +83,10 @@ export async function applySermonAudioCompletion(pool:Pool,scope:FrozenInventory
    else{seriesId=deterministicSourceUuid('wordpress-series-slug',series.slug);await db.query('INSERT INTO series(id,name,slug)VALUES($1,$2,$3)',[seriesId,series.name,series.slug]);}
    await db.query('INSERT INTO sermon_series_map(sermon_id,series_id,display_order,is_primary)VALUES($1,$2,$3,$4)',[id,seriesId,i,i===0]);
   }
-  for(const [i,text] of input.passageTexts.entries()){
+  for(const [i,text] of passage.passageTexts.entries()){
    const parsed=resolveExplicitPassage(text);if(!parsed)continue;const p=parsed.passage;
-   await db.query(`INSERT INTO scripture_references(sermon_id,display_text,canonical_book_id,start_chapter,start_verse,end_chapter,end_verse,parse_status,relationship_role,is_lead,original_reference_text,provenance,review_status)
- VALUES($1,$2,$3,$4,$5,$6,$7,'exact','primary',$8,$2,'legacy_import','unreviewed')`,[id,text,p.canonicalBookId,p.startChapter,p.startVerse,p.endChapter,p.endVerse,i===0]);
+   await db.query(`INSERT INTO scripture_references(sermon_id,display_text,canonical_book_id,start_chapter,start_verse,end_chapter,end_verse,parse_status,relationship_role,is_lead,original_reference_text,parser_version,provenance,review_status)
+ VALUES($1,$2,$3,$4,$5,$6,$7,'exact','primary',$8,$9,$10,'legacy_import','unreviewed')`,[id,text,p.canonicalBookId,p.startChapter,p.startVerse,p.endChapter,p.endVerse,i===0,passage.evidence?.originalText??text,passage.evidence?'d175-explicit-source-coordinate-correction-v1':null]);
    const classification=(await db.query("SELECT id FROM book_classifications WHERE canonical_book_id=$1 AND classification_type='canonical' AND review_status='approved'",[p.canonicalBookId])).rows;
    if(classification.length!==1)throw Error('d175_canonical_book_missing');
    await db.query('INSERT INTO sermon_book_classifications(sermon_id,book_classification_id,display_order)VALUES($1,$2,$3) ON CONFLICT DO NOTHING',[id,classification[0].id,i]);
@@ -92,12 +94,13 @@ export async function applySermonAudioCompletion(pool:Pool,scope:FrozenInventory
   const url=canonicalSermonAudioUrl(input.sermonAudioId);if(!url)throw Error('d175_media_id_refused');
   await db.query("INSERT INTO sermon_media(id,sermon_id,provider,media_type,external_id,canonical_url,title,is_primary,display_order)VALUES($1,$2,'sermonaudio','audio',$3,$4,$5,true,0)",[deterministicSourceUuid('wordpress-sermonaudio',input.sourceWordPressId),id,input.sermonAudioId,url,'Audio: '+title]);
   const sourcePayload={decision:'D-175',manifestSha256:d175ManifestSha256,sourceMembershipSha256:d175SourceMembershipSha256,sourceWordPressId:input.sourceWordPressId,sermonAudioId:input.sermonAudioId,broadcaster:input.broadcaster,sourceSha256:input.sourceSha256,metadataSha256:input.metadataSha256,sourceCaptureSha256:input.sourceCaptureSha256,sourceCaptureDate:'2026-10-04T07:17:50.567Z',sourceRetrievedAt:input.sourceRetrievedAt,sourceVersion:input.sourceVersion,language:input.language,transcriptSha256:input.transcriptSha256,originalTitle:input.title,governanceCommit:input.governanceCommit,audioVerified:false,providerApprovalClaimed:false};
-  await db.query('INSERT INTO sermon_extensions(sermon_id,namespace,schema_version,payload)VALUES($1,$2,1,$3::jsonb)',[id,d175SourceNamespace,JSON.stringify(sourcePayload)]);
+  const preservedSource=passage.evidence?{...sourcePayload,originalPassageTexts:input.passageTexts,deliveredPassageTexts:passage.passageTexts,passageCorrection:passage.evidence}:sourcePayload;
+  await db.query('INSERT INTO sermon_extensions(sermon_id,namespace,schema_version,payload)VALUES($1,$2,1,$3::jsonb)',[id,d175SourceNamespace,JSON.stringify(preservedSource)]);
   const provenance={sourceKind:'generated_draft',sourceReference:'d175:'+input.transcriptSha256+':'+input.candidateHash};
   const content={schemaVersion:2,sourceWordPressId:input.sourceWordPressId,targetSermonId:id,expectedRowVersion:1,description:{bodyText:validated.candidate.description,provenance},transcript:{bodyText:input.transcript,provenance:{sourceKind:'imported',sourceReference:'sermonaudio:'+input.sermonAudioId+':'+input.sourceSha256}},questionAnswers:validated.candidate.questionAnswers.map(q=>({question:q.question,answer:q.answer,provenance}))};
   await importEnrichmentDraftBundle(pool,content,d175Actor,db);
   await db.query('INSERT INTO sermon_extensions(sermon_id,namespace,schema_version,payload)VALUES($1,$2,1,$3::jsonb)',[id,d175ReviewNamespace,JSON.stringify(reviewRaw)]);
-  await audit(db,id,'sermon.d175_source_import',sourcePayload,['identity','speaker','passage','media','source']);
+  await audit(db,id,'sermon.d175_source_import',preservedSource,['identity','speaker','passage','media','source']);
   await audit(db,id,'sermon.d175_ai_review',reviewRaw,['aiReview']);
   const current=(await db.query('SELECT row_version,'+d175DependencySql('s')+' dependency FROM sermons s WHERE id=$1',[id])).rows[0];
   const receipt={decision:'D-175',manifestSha256:d175ManifestSha256,sourceMembershipSha256:d175SourceMembershipSha256,outcome:'accepted',authorizedBy:'Samuel',humanApprovalClaimed:false,publicationAuthority:false,audioVerified:false,rowVersion:current.row_version,dependencySha256:current.dependency,reviewSha256:await jsonHash(db,reviewRaw),reviewArtifactHash:input.reviewHash,candidateHash:input.candidateHash};

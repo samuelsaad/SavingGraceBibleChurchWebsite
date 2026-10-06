@@ -4,6 +4,7 @@ import {join} from 'node:path';
 import {z} from 'zod';
 import {inspectGeneratedText} from '../enrichment/generated-text-mechanical-qa';
 import {verifyRecording,verifyBroadcaster,originalLanguage} from './transcript-retrieval';
+import {sermonAudioPassageCorrectionSchema} from '../domain/sermonaudio-passage-correction';
 
 export const completionDecision='D-175';
 export const completionManifestSha256='a4fa3627682043c4b06aa65ddbebdab75f1fc29aec93e2d250bda537d9b0cd2b';
@@ -79,5 +80,6 @@ export const substantiveReviewInputSchema=z.object({
  outcome:z.enum(['accepted','failed']),completeSourceRead:z.literal(true),completeTranscriptRead:z.literal(true),completeDescriptionRead:z.literal(true),everyOrderedQuestionAnswerRead:z.literal(true),
  transcriptCharactersRead:z.number().int().positive(),transcriptAssessment:plain(2500),descriptionAssessment:plain(2500),questionAssessments:z.array(plain(2000)).min(5).max(10),
  identityAssessment:plain(2000),speakerAssessment:plain(2000),passageAssessment:plain(2000),mediaAssessment:plain(2000),residualUncertainty:z.array(plain(2000)).max(100),
- audioVerified:z.literal(false),humanApprovalClaimed:z.literal(false),uncertaintyAcceptedBy:z.literal('Samuel')
+ audioVerified:z.literal(false),humanApprovalClaimed:z.literal(false),uncertaintyAcceptedBy:z.literal('Samuel'),
+ primaryPassageCorrection:sermonAudioPassageCorrectionSchema.optional()
 }).strict();

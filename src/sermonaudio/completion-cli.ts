@@ -8,6 +8,7 @@ import {persistImmutable,persistCheckpoint,readCheckpoint} from './private-artif
 import {applySermonAudioCompletion} from '../application/sermonaudio-completion-service';
 import {primaryKeys,quoted,digest} from '../staging/completed-packet';
 import {d175AcceptanceSql} from '../domain/sermonaudio-completion';
+import {applySermonAudioPassageCorrection} from '../domain/sermonaudio-passage-correction';
 const sourceRoot=resolve('../sermonaudio-transcript-retrieval/private/sermonaudio-transcript-retrieval');
 const artifactRoot=resolve('private/sermonaudio-119-completion');
 async function main(){
@@ -156,6 +157,7 @@ async function main(){
   for(const ranges of [artifact.descriptionSupport,...artifact.questionAnswers.map((q:any)=>q.support)])for(const r of ranges)if(r.start<0||r.end<=r.start||r.end>transcript.length||hash(transcript.slice(r.start,r.end))!==r.sha256)throw Error('d175_review_support_stale');
   if(command==='read-candidate'){console.log(JSON.stringify({sequence,candidateHash,description:artifact.description,questionAnswers:artifact.questionAnswers,internalUncertainty:artifact.internalUncertainty,mechanicalProofread:artifact.mechanicalProofread},null,2));return;}
   if(!input||input.candidateHash!==candidateHash||input.transcriptCharactersRead!==transcript.length||input.questionAssessments.length!==artifact.questionAnswers.length)throw Error('d175_review_coverage_or_version_refused');
+  applySermonAudioPassageCorrection(t.source.passageTexts.length?t.source.passageTexts:[t.recording.bibleText].filter((v):v is string=>typeof v==='string'&&v.length>0),transcript,input.primaryPassageCorrection);
   if(record.reviewHash)throw Error('d175_existing_review_requires_explicit_revision');
   const review={decision:completionDecision,manifestSha256:completionManifestSha256,sourceSha256:source.receipt.sha256,transcriptSha256:hash(transcript),descriptionSha256:hash(artifact.description),questionAnswersSha256:hash(JSON.stringify(artifact.questionAnswers.map((q:any)=>({displayOrder:q.displayOrder,question:q.question,answer:q.answer})))),reviewedAt:new Date().toISOString(),reviewer:runtimeProvenance,independentReviewer:false,samuelAuthorizedAcceptance:true,publicationAuthority:false,...input};
   const reviewHash=hash(JSON.stringify(review));await persistImmutable(join(artifactRoot,`review-${tag}-v${String(record.version).padStart(3,'0')}.private.json`),JSON.stringify({...review,reviewHash},null,2));

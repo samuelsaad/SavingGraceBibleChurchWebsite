@@ -8,6 +8,7 @@ for (const [name, entry] of Object.entries({
   "draft-preview": "src/staging/draft-preview-server.ts",
   "sermonaudio-sync": "src/staging/sermonaudio-sync.ts",
   "completed-sync": "src/staging/completed-sync.ts",
+  "sermonaudio-completion-sync": "src/staging/sermonaudio-completion-sync.ts",
   "d160-sync": "deployment/d160-sync.ts",
   "d161-sync": "deployment/d161-sync.ts",
   "d167-protected-sync": "deployment/d167-protected-sync.ts"

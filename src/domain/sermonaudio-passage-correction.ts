@@ -1,0 +1,23 @@
+import {createHash} from 'node:crypto';
+import {z} from 'zod';
+import {resolveExplicitPassage} from './primary-book-resolution';
+export const sermonAudioPassageCorrectionSchema=z.object({
+ originalText:z.string().min(1).max(500),correctedText:z.string().min(1).max(100),
+ sourceAnchor:z.string().min(20).max(600),assessment:z.string().min(30).max(2000)
+}).strict();
+/** D-175-only, before import. A current substantive review may repair a single
+ * retained primary coordinate using an explicit statement of sermon focus.
+ * Never infer a passage from topics, change a book, or edit original metadata. */
+export function applySermonAudioPassageCorrection(original:string[],transcript:string,raw:unknown){
+ if(raw===undefined)return{passageTexts:[...original],evidence:undefined};
+ const correction=sermonAudioPassageCorrectionSchema.parse(raw),before=resolveExplicitPassage(correction.originalText),after=resolveExplicitPassage(correction.correctedText);
+ if(original.length!==1||original[0]!==correction.originalText||!before||!after||before.passage.canonicalBookId!==after.passage.canonicalBookId)throw Error('d175_passage_correction_identity_refused');
+ const start=transcript.indexOf(correction.sourceAnchor);
+ if(start<0||transcript.indexOf(correction.sourceAnchor,start+1)>=0)throw Error('d175_passage_correction_support_refused');
+ const match=/^(.+) ([1-9][0-9]*):([1-9][0-9]*)$/u.exec(correction.correctedText);
+ if(!match)throw Error('d175_passage_correction_coordinate_refused');
+ const [,book,chapter,verse]=match;
+ const anchor=correction.sourceAnchor.toLowerCase(),linear=`${book!.toLowerCase()} chapter ${chapter} verse ${verse}`,reverse=`verse ${verse} of ${book!.toLowerCase()} chapter ${chapter}`;
+ if(!anchor.includes(correction.correctedText.toLowerCase())&&!anchor.includes(linear)&&!anchor.includes(reverse))throw Error('d175_passage_correction_explicit_reference_required');
+ return{passageTexts:[correction.correctedText],evidence:{...correction,start,end:start+correction.sourceAnchor.length,sha256:createHash('sha256').update(correction.sourceAnchor).digest('hex')}};
+}
