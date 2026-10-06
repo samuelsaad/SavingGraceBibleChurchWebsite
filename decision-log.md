@@ -820,6 +820,16 @@ EVENT and TRIGGER privileges; retained metadata timestamps/hashes and this fresh
 limitation are preserved. No broader grant was used or weakened. These are source
 selection results, not transcript-download or completeness outcomes.
 
+Execution completed for all 119 frozen targets: 119 original-language sources,
+3,672,779 bytes and 688,388 lexical words, with 118 English and one Arabic transcript.
+All source hashes and an identical no-download replay verified. Four conflicting
+mappings and six unavailable recording identities remain recorded separately.
+One original generic failure was preserved and recovered by a single controlled
+retry; its original cause remains unknown. All sources remain provider-labelled
+auto-generated, private and unapproved. This retrieval scope is consumed; no
+generation, application import, review acceptance, publication or staging authority
+is created. The retained-source freshness limitation and all prior decisions remain.
+
 ### D-173 — Existing held-sermon corrective review and local frontend acceptance
 
 Samuel's 6 October 2026 attachment separately authorizes the nine current held

@@ -1,7 +1,7 @@
 import {readFile,mkdir,open,unlink,lstat} from 'node:fs/promises';
 import {join,resolve,relative,isAbsolute} from 'node:path';
 import {execFileSync} from 'node:child_process';
-import {SermonAudioReader,SafeRetrievalError,sha256,verifyBroadcaster,inventoryCandidate,verifyRecording,originalLanguage,transcriptDownloadUrl,inspectTranscriptBytes,type WordPressTranscriptSource,type RecordingTranscriptMetadata} from './transcript-retrieval';
+import {SermonAudioReader,SafeRetrievalError,sha256,assertAuthorizedTranscriptManifest,verifyBroadcaster,inventoryCandidate,verifyRecording,originalLanguage,transcriptDownloadUrl,inspectTranscriptBytes,type WordPressTranscriptSource,type RecordingTranscriptMetadata} from './transcript-retrieval';
 import {retrieveWordPressMetadata,retainedWordPressMetadata} from './wordpress-transcript-inventory';
 import {persistImmutable,persistCheckpoint,readCheckpoint} from './private-artifacts';
 
@@ -35,7 +35,7 @@ async function main(){
  try{
  const manifestPath=join(privateRoot,'manifest.private.json');
  if(mode==='inventory'){
-  if(await exists(manifestPath)){const bytes=await readFile(manifestPath);const inv=JSON.parse(bytes.toString()) as Inventory;await loadCheckpoint(sha256(bytes));console.log(JSON.stringify({status:'frozen_inventory_reused',targetCount:inv.targets.length,manifestSha256:sha256(bytes)}));return;}
+  if(await exists(manifestPath)){const bytes=await readFile(manifestPath);assertAuthorizedTranscriptManifest(bytes);const inv=JSON.parse(bytes.toString()) as Inventory;await loadCheckpoint(sha256(bytes));console.log(JSON.stringify({status:'frozen_inventory_reused',targetCount:inv.targets.length,manifestSha256:sha256(bytes)}));return;}
   const key=(await readFile(credentialPath,'utf8')).trim(),api=new SermonAudioReader(key);
   const broadcaster=await api.metadata<unknown>('/v2/node/broadcasters/savinggrace');if(!verifyBroadcaster(broadcaster.value))throw new SafeRetrievalError('church_broadcaster_identity_conflict');
   await immutable(join(privateRoot,'broadcaster.private.json'),broadcaster.bytes);
@@ -66,21 +66,24 @@ async function main(){
   const bytes=JSON.stringify(inv);await immutable(manifestPath,bytes);await checkpoint(await loadCheckpoint(sha256(bytes)));
   console.log(JSON.stringify({status:'inventory_frozen',sourceCount:inv.sourceCount,targetCount:inv.targets.length,validYouTubeExcluded:inv.validYouTubeExcluded,ineligibleExcluded:inv.ineligibleExcluded,unresolved:inv.unresolved.length,manifestSha256:sha256(bytes),broadcasterVerified:true}));return;
  }
- const bytes=await readFile(manifestPath);const inv=JSON.parse(bytes.toString()) as Inventory;const state=await loadCheckpoint(sha256(bytes));
+ const bytes=await readFile(manifestPath);assertAuthorizedTranscriptManifest(bytes);const inv=JSON.parse(bytes.toString()) as Inventory;const state=await loadCheckpoint(sha256(bytes));
  if(inv.decision!=='D-174'||inv.privateContent!==true||sha256(await readFile(join(privateRoot,'wordpress-source.private.json')))!==inv.sourceSha256)throw new SafeRetrievalError('frozen_inventory_source_conflict');
  if(new Set(inv.targets.map(t=>t.source.sourceWordPressId)).size!==inv.targets.length||new Set(inv.targets.map(t=>t.recording.sermonID)).size!==inv.targets.length||inv.targets.some((t,i)=>t.sequence!==i+1||!verifyRecording(t.source,t.recording).valid))throw new SafeRetrievalError('manifest_membership_conflict');
  if(new Set(state.receipts.map(r=>r.sequence)).size!==state.receipts.length||state.receipts.some(r=>!inv.targets.some(t=>t.sequence===r.sequence&&t.source.sourceWordPressId===r.wordpressId&&t.recording.sermonID===r.sermonAudioId)))throw new SafeRetrievalError('checkpoint_membership_conflict');
  for(const t of inv.targets){if(sha256(await readFile(join(privateRoot,'metadata-'+t.source.sourceWordPressId+'.private.json')))!==t.metadataSha256)throw new SafeRetrievalError('recording_metadata_integrity_conflict');}
  const priorCount=state.receipts.filter(r=>r.outcome==='downloaded').length;let newDownloads=0;
+ const retryIndex=process.argv.indexOf('--retry-sequence');const retrySequence=retryIndex>=0?Number(process.argv[retryIndex+1]):null;
+ if(retrySequence!==null){const old=state.receipts.find(r=>r.sequence===retrySequence);if(mode!=='retrieve'||!Number.isInteger(retrySequence)||!old||old.outcome!=='failed'||!['verification_failed','transport_failure','response_body_transport_failure','temporary_provider_failure'].includes(old.reason)||state.history.some(h=>h.sequence===retrySequence&&h.operation==='focused_retry'))throw new SafeRetrievalError('focused_retry_not_eligible');}
  let api:SermonAudioReader|undefined;
- if(mode==='retrieve'&&inv.targets.some(t=>!state.receipts.some(r=>r.sequence===t.sequence))){
-  api=new SermonAudioReader((await readFile(credentialPath,'utf8')).trim());
+ if(mode==='retrieve'&&(retrySequence!==null||inv.targets.some(t=>!state.receipts.some(r=>r.sequence===t.sequence)))){
+  api=new SermonAudioReader((await readFile(credentialPath,'utf8')).trim(),fetch,ms=>new Promise(r=>setTimeout(r,ms)),1000,retrySequence!==null?1:3);
   const b=await api.metadata<unknown>('/v2/node/broadcasters/savinggrace');if(!verifyBroadcaster(b.value))throw new SafeRetrievalError('church_broadcaster_identity_conflict');
  }
  const firstOnly=mode==='retrieve'&&process.argv.includes('--first');
  for(const target of firstOnly?inv.targets.slice(0,1):inv.targets){
   const saved=state.receipts.find(r=>r.sequence===target.sequence);
-  if(saved){if(saved.wordpressId!==target.source.sourceWordPressId||saved.sermonAudioId!==target.recording.sermonID)throw new SafeRetrievalError('receipt_manifest_identity_conflict');await verifiedReceipt(saved);continue;}
+  if(saved){if(saved.wordpressId!==target.source.sourceWordPressId||saved.sermonAudioId!==target.recording.sermonID)throw new SafeRetrievalError('receipt_manifest_identity_conflict');await verifiedReceipt(saved);if(target.sequence!==retrySequence)continue;
+   state.history.push({sequence:target.sequence,time:new Date().toISOString(),operation:'focused_retry',previousReceiptSha256:sha256(JSON.stringify(saved)),priorFailureReason:saved.reason,additionalRequestLimit:1,originalFailureDetailsUnavailable:true});await checkpoint(state);}
   if(mode==='verify')throw new SafeRetrievalError('inventory_not_fully_attempted');
   const r=target.recording;const receipt:Receipt={sequence:target.sequence,wordpressId:target.source.sourceWordPressId,sermonAudioId:r.sermonID,outcome:'unavailable',reason:'transcript_not_available',retrievedAt:new Date().toISOString()};
   try{
@@ -95,8 +98,9 @@ async function main(){
    }
   }catch(e){if(e instanceof SafeRetrievalError&&['authentication_or_permission_failure','rate_limited'].includes(e.classification)){state.history.push({sequence:target.sequence,time:new Date().toISOString(),classification:e.classification,httpStatus:e.httpStatus});await checkpoint(state);throw e;}
    receipt.outcome='failed';receipt.reason=e instanceof SafeRetrievalError?e.classification:'verification_failed';}
-  state.receipts.push(receipt);state.history.push({sequence:receipt.sequence,time:receipt.retrievedAt,outcome:receipt.outcome,reason:receipt.reason});
-  await immutable(join(privateRoot,'receipt-'+String(receipt.sequence).padStart(3,'0')+'.private.json'),JSON.stringify(receipt));await checkpoint(state);
+  if(saved)state.receipts[state.receipts.indexOf(saved)]=receipt;else state.receipts.push(receipt);
+  state.history.push({sequence:receipt.sequence,time:receipt.retrievedAt,outcome:receipt.outcome,reason:receipt.reason});
+  await immutable(join(privateRoot,'receipt-'+String(receipt.sequence).padStart(3,'0')+(saved?'-retry-01':'')+'.private.json'),JSON.stringify(receipt));await checkpoint(state);
   console.log(JSON.stringify({sequence:receipt.sequence,outcome:receipt.outcome,reason:receipt.reason,bytes:receipt.byteCount??0,words:receipt.wordCount??0}));
  }
  const successes=state.receipts.filter(r=>r.outcome==='downloaded');
@@ -106,6 +110,7 @@ async function main(){
  // A no-op replay reports newDownloads=0 but must not overwrite its original
  // completion evidence or turn an idempotent operation into a file conflict.
  if(mode==='retrieve'&&complete&&!await exists(join(privateRoot,'completion.private.json')))await immutable(join(privateRoot,'completion.private.json'),JSON.stringify({...report,completedAt:new Date().toISOString()}));
+ if(retrySequence!==null)await immutable(join(privateRoot,'completion-retry-'+retrySequence+'.private.json'),JSON.stringify({...report,completedAt:new Date().toISOString(),originalCompletionPreserved:true}));
  }finally{await release();}
 }
 main().catch(e=>{console.error(JSON.stringify({status:'stopped',classification:e instanceof SafeRetrievalError?e.classification:'details_suppressed',httpStatus:e instanceof SafeRetrievalError?e.httpStatus:null,rawDiagnosticsSuppressed:true}));process.exitCode=1;});

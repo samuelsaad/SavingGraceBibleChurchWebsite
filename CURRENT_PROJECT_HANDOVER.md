@@ -1,5 +1,32 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
+## D-174 — existing SermonAudio source transcripts retrieved, 6 October 2026
+
+The isolated source-only workflow in `sermonaudio-transcript-retrieval-plan.md`
+verified 119 church recordings from 129 eligible WordPress sources without valid
+YouTube mappings. Frozen private inventory SHA-256:
+`a4fa3627682043c4b06aa65ddbebdab75f1fc29aec93e2d250bda537d9b0cd2b`.
+All 119 complete original-language downloads are preserved privately: 118 English
+and one Arabic, 3,672,779 bytes and 688,388 lexical words. All are provider-labelled
+auto-generated and remain unapproved. Every saved hash was independently rechecked.
+Four conflicting source mappings and six unavailable recordings remain excluded.
+
+The configured WordPress account failed the read-only grant guard. No subsequent
+live sermon extraction occurred. Selection therefore used the retained 4 October
+metadata capture/export plus current official recording identity checks; current
+WordPress changes are not claimed verified. One generic download failure was
+preserved and recovered by one retry with automatic retries disabled. The original
+cause remains unavailable; later success is not proof of that cause.
+
+Identical replay made no requests or source/receipt/checkpoint/timestamp changes.
+The implementation enforces the exact manifest, scoped GET requests, protected
+owner-local credentials, original language, bounded retries, no-clobber persistence
+and hash-bound checkpoints. No source text or credentials are tracked. Existing
+application records, frontends, review/publication states, staging and listeners
+were not changed. No audio/video, generation, import, approval or push occurred.
+The frozen retrieval is complete; a different inventory or further processing
+requires new current-task authority. Verification limitations are in the plan.
+
 ## D-173 — corrective local completion and frontend delivery, 6 October 2026
 
 Nine current attention records were frozen under private manifest SHA-256

@@ -1,5 +1,36 @@
 # Migration Validation Plan
 
+## D-174 source-only SermonAudio retrieval — 6 October 2026
+
+- Scope: retained 464-source WordPress metadata/export; 332 valid YouTube mappings
+  and three ineligible records excluded. Of 129 remaining, 119 exact church
+  recordings verified, four conflicting and six unavailable (metadata HTTP 404).
+- Frozen private inventory SHA-256:
+  `a4fa3627682043c4b06aa65ddbebdab75f1fc29aec93e2d250bda537d9b0cd2b`.
+- All 119 original-language transcript downloads saved with independently verified
+  hashes: 3,672,779 bytes, 688,388 lexical words, 118 English and one Arabic.
+  All are provider-labelled auto-generated; no local approval or audio claim.
+- Initial sequence-96 generic failure and initial completion report preserved.
+  One retry with automatic retries disabled succeeded; original cause unavailable.
+  Checkpoint has 121 history entries and 119 current successes, no remaining failure.
+- Repeated verification and identical retrieval replay reused all 119 with zero
+  requests/new downloads and unchanged file bytes, sizes, timestamps and history.
+- Focused anonymized tests: 27 pass. Final standard suite: 873 pass, 130 database-
+  gated skips; no PostgreSQL mutations or database tests were needed or authorized.
+  Type/Astro retains only the unchanged snapshot-CLI TS2379. Build (44 pages),
+  five-record anonymized dry run and offline audit (zero cached vulnerabilities)
+  pass. Initial command without dry-run input was corrected, not claimed passed.
+- Outgoing and 99 build-file credential/private-source/key/prohibited-path/symlink
+  scans pass. Private source and credentials remain ignored/outside Git; no
+  frontend/admin/server/database/deployment/dataset file changed from the base.
+- Existing four loopback listeners and process IDs remain unchanged. Worker lock
+  is released. No generation, import, review/publication update, audio/video,
+  staging sync, production mutation or GitHub push occurred.
+- Limitation: live WordPress grant guard found PROCESS/EVENT/TRIGGER, so no live
+  extraction followed. Retained source capture is 4 October 2026; current
+  WordPress changes are not claimed verified. A read-only source account is
+  required before a fresh authoritative source refresh. See the retrieval plan.
+
 ## D-173 corrective local delivery — 6 October 2026
 
 - Scope: nine frozen current attention records; all complete available source,

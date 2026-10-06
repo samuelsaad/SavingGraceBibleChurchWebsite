@@ -4,6 +4,10 @@ import {youtubeVideoIdFromUrl, youtubeVideoIdPattern} from '../domain/youtube';
 import {matchSourceRecording, officialChurchBroadcasterId, type SourceMediaEvidence} from '../metadata/sermonaudio-matching';
 
 export const sha256 = (bytes: string | Uint8Array): string => createHash('sha256').update(bytes).digest('hex');
+export const authorizedTranscriptManifestSha256='a4fa3627682043c4b06aa65ddbebdab75f1fc29aec93e2d250bda537d9b0cd2b';
+export function assertAuthorizedTranscriptManifest(bytes:Uint8Array):void {
+  if(sha256(bytes)!==authorizedTranscriptManifestSha256)throw new SafeRetrievalError('authorized_manifest_hash_conflict');
+}
 export interface WordPressTranscriptSource extends SourceMediaEvidence {
   status: string;
   sourceModifiedAt: string | null;
@@ -102,17 +106,18 @@ export class SafeRetrievalError extends Error {
 export type FetchFunction=(url:string, init:RequestInit)=>Promise<Response>;
 export class SermonAudioReader {
   private lastRequest=0;
-  constructor(private readonly key:string, private readonly fetcher:FetchFunction=fetch, private readonly delay:(ms:number)=>Promise<void>=ms=>new Promise(r=>setTimeout(r,ms)), private readonly spacingMs=1000) {
+  constructor(private readonly key:string, private readonly fetcher:FetchFunction=fetch, private readonly delay:(ms:number)=>Promise<void>=ms=>new Promise(r=>setTimeout(r,ms)), private readonly spacingMs=1000, private readonly maxAttempts=3) {
     if(!key.trim() || /\s/.test(key.trim())) throw new SafeRetrievalError('credential_format_invalid');
+    if(!Number.isInteger(maxAttempts)||maxAttempts<1||maxAttempts>3)throw new SafeRetrievalError('retry_limit_invalid');
   }
   async get(url:URL, authenticated:boolean):Promise<{bytes:Uint8Array;contentType:string;etag:string|null;lastModified:string|null}> {
     if(authenticated && (url.origin!=='https://api.sermonaudio.com' || !/^\/v2\/node\/(?:broadcasters\/savinggrace|sermons\/\d{1,24})$/.test(url.pathname) || url.search)) throw new SafeRetrievalError('api_request_scope_rejected');
     if(!authenticated) transcriptDownloadUrl(url.href);
-    for(let attempt=0;attempt<3;attempt++) {
+    for(let attempt=0;attempt<this.maxAttempts;attempt++) {
       await this.delay(Math.max(0,this.lastRequest+this.spacingMs-Date.now()));this.lastRequest=Date.now();
       let r:Response;
       try {r=await this.fetcher(url.href,{method:'GET',headers:authenticated?{'X-Api-Key':this.key}:{},redirect:'manual',signal:AbortSignal.timeout(25000)});}catch{
-        if(attempt===2)throw new SafeRetrievalError('transport_failure');await this.delay(1000*2**attempt);continue;
+        if(attempt===this.maxAttempts-1)throw new SafeRetrievalError('transport_failure');await this.delay(1000*2**attempt);continue;
       }
       if(r.status===401 || r.status===403) {await r.body?.cancel();throw new SafeRetrievalError('authentication_or_permission_failure',r.status);}
       if(r.status===429 || [500,502,503,504].includes(r.status)) {
@@ -120,7 +125,7 @@ export class SermonAudioReader {
         const date=header && seconds===null?Date.parse(header):NaN;
         const wait=seconds!==null?seconds*1000:Number.isFinite(date)?Math.max(0,date-Date.now()):1000*2**attempt;
         await r.body?.cancel();
-        if(attempt===2 || wait>60000)throw new SafeRetrievalError(r.status===429?'rate_limited':'temporary_provider_failure',r.status);
+        if(attempt===this.maxAttempts-1 || wait>60000)throw new SafeRetrievalError(r.status===429?'rate_limited':'temporary_provider_failure',r.status);
         await this.delay(wait);continue;
       }
       if(!r.ok){await r.body?.cancel();throw new SafeRetrievalError(r.status>=300&&r.status<400?'redirect_refused':r.status===404?'resource_unavailable':'provider_response_failure',r.status);}
@@ -129,7 +134,8 @@ export class SermonAudioReader {
       const chunks:Uint8Array[]=[];let length=0;
       if(!r.body)throw new SafeRetrievalError('response_body_missing');
       const reader=r.body.getReader();
-      for(;;){const part=await reader.read();if(part.done)break;length+=part.value.byteLength;if(length>20_000_000){await reader.cancel();throw new SafeRetrievalError('response_too_large');}chunks.push(part.value);}
+      try{for(;;){const part=await reader.read();if(part.done)break;length+=part.value.byteLength;if(length>20_000_000){await reader.cancel();throw new SafeRetrievalError('response_too_large');}chunks.push(part.value);}}
+      catch(e){if(e instanceof SafeRetrievalError)throw e;await reader.cancel().catch(()=>{});if(attempt===this.maxAttempts-1)throw new SafeRetrievalError('response_body_transport_failure',r.status);await this.delay(1000*2**attempt);continue;}
       const bytes=new Uint8Array(length);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length;}
       const bounded=(value:string|null)=>value && value.length<256&&!/[\r\n]/.test(value)?value:null;
       return {bytes,contentType:r.headers.get('content-type')??'',etag:bounded(r.headers.get('etag')),lastModified:bounded(r.headers.get('last-modified'))};

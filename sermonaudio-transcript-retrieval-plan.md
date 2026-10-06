@@ -66,6 +66,13 @@ atomic integrity-bound checkpoint replacement preserve previous attempts. Never
 overwrite a conflicting source or reset history. Resume the exact frozen inventory.
 Identical verification/reruns reuse successful bytes without another download.
 
+An individually failed transport/verification operation may receive one explicit
+`retrieve --retry-sequence <position>` recovery, only within the unchanged frozen
+inventory. Preserve its original immutable failed receipt and original completion
+report; append focused-retry lineage and a new receipt. The recovery performs at
+most one download request with automatic retries disabled and cannot be repeated.
+Success does not establish the earlier failure's cause when detail was unavailable.
+
 Commands after locked dependency installation:
 
 ```text
@@ -80,3 +87,50 @@ independent targets. Systemic authentication/identity failures stop safely.
 Relevant anonymized tests, type checks, build and outgoing credential/private-file
 scans precede safe local commits. No database tests or migrations are needed for
 this source-only implementation; no database write is authorized by D-174.
+
+## Actual execution and verification — 6 October 2026
+
+Every one of the 119 frozen targets has a successful original-source receipt.
+No transcript was previously retrieved before this task. First-download test,
+the remaining pass and one focused recovery saved 119 unique sources: 118 English
+and one Arabic, 3,672,779 bytes and 688,388 lexical words. All 119 provider records
+label their transcripts auto-generated; provider approval timestamps are absent.
+No audio fidelity, human approval or theological verification is claimed.
+
+Four source mappings are conflicting because recording IDs are reused by multiple
+source records. Six recording metadata requests returned 404 and are unavailable
+in this evidence; neither group is silently replaced. They are not failed downloads
+from the 119 verified targets. One initial sequence-96 generic failure remains
+historical; its original details are unavailable. Exactly one controlled recovery
+download, with automatic retries disabled, succeeded. Original failure receipt,
+first completion report, focused-retry lineage and replacement receipt remain
+preserved, with 121 history entries. Success does not diagnose the original cause.
+
+Independent verification and identical retrieval replay returned 119 reused,
+zero new downloads. Whole private-file hash/size/timestamp fingerprint was unchanged:
+`282f9ef7a382bd6dd20e8120c715621c5a07112f7113021ff4c6432e890cbc4a`.
+The worker lock is released. All four prior application listeners retain their
+exact loopback ports and process IDs; no frontend, administrator, server, database,
+deployment or tracked development-dataset file changed from the implementation base.
+
+Twenty-seven focused anonymized cases pass, including strict source identity,
+date/speaker/title checks, duplicate/conflicting links, original language, fixed
+manifest enforcement, usable text/error exclusion, no credential forwarding,
+redirect denial, bounded retries/body errors, no-clobber persistence, checkpoint
+history and integrity. The final standard suite passes 873 with 130 database tests gated;
+no mutating PostgreSQL suite was run because this task makes no database changes.
+Build (44 pages), the supported five-record anonymized dry run and offline audit
+pass. Type/Astro checks retain only the unchanged snapshot-CLI TS2379. Initial
+fixture mock-type diagnostics were fixed and rerun; the plain TSC invocation also
+reported the existing TypeScript-6 baseUrl deprecation, so diagnostic reruns used
+the CLI ignoreDeprecations flag without modifying project configuration.
+
+Outgoing credential/key/private-source/prohibited-file/symlink and all 99 build-file
+scans pass. The supplied key remains outside every repository and build context,
+with Samuel/SYSTEM/Administrators access only; broad read grants are absent.
+Private sources, manifests, receipts, metadata, checkpoints and reports are ignored
+and unstaged. No generation, import, provider mutation, staging sync, publication
+or GitHub push occurred. Source freshness limitation remains: live WordPress was
+not refreshed after its PROCESS/EVENT/TRIGGER grant failure; the source capture is
+dated 4 October 2026. A genuinely read-only source account is needed for a new live
+refresh. The completed frozen inventory is not authority for later source changes.
