@@ -56,3 +56,6 @@ phase-3b2-pilot/
 *.private.json
 *.production.json
 *.snapshot.json
+
+# Python operator/test bytecode is never release source.
+__pycache__/

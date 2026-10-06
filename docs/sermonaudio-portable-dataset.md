@@ -10,7 +10,10 @@ The exporter reads only the authorized loopback PG16 database, in a repeatable-r
 read-only transaction. It requires all 119 current audited acceptances and exact
 source membership before writing. Existing output is preserved: an identical
 export is unchanged; a different projection is refused rather than overwritten.
-No export has been performed at the current processing checkpoint.
+The completed projection contains 119 sermons and transcripts, 833 ordered Q&A,
+three canonical speakers, 14 series and 119 structured media entries. It has been
+verified and dry-run validated; an identical re-export returned unchanged. No
+operational review, acceptance or administrator audit rows are exported.
 
 Commands, from the delivery worktree:
 

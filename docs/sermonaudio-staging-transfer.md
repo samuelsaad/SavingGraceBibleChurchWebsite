@@ -59,3 +59,18 @@ version; `review_status` remains unreviewed. This is not human passage approval.
 Prepared does not mean deployed. Report actual remote outcomes only after secure
 transfer, exact-row verification, identical rerun, release activation, browser/HTTP
 inspection and rollback rehearsal have actually succeeded.
+
+## Bounded remote operator
+
+`deployment/sermonaudio-completion-remote.py` checks the exact authorized instance,
+existing runtime/image identities, private database network and independently
+verified package/packet hashes. It captures previous application configurations
+and database integrity before building. `prepare`, `baseline`, `plan`, `import`,
+`verify`, an identical `import` and `verify` precede `activate`. `rollback` and
+`reactivate` rehearse image/selector recovery while proving the database unchanged.
+The source packet is maintenance-only. No credential, account/session data or raw
+download enters the image. Errors emit fixed codes, not raw command output.
+Five anonymous offline tests cover archive scope, symlinks, secret/error exclusion,
+no-clobber recovery, exact cohort validation and instance drift. These do not
+replace real staging checks. The incumbent cohort is discovered from its actual
+read-only runtime mount, not inferred from the currently running image's directory.

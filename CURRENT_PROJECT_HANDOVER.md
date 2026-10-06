@@ -8,18 +8,18 @@ All 119 source hashes were reverified, including the preserved sequence-96 retry
 The isolated delivery branch integrates the current deployed D-171 release with
 committed D-172/D-173/D-174 backend work; unrelated dirty V5/dashboard work stays
 outside this branch. See `sermonaudio-119-completion-plan.md`.
-All 119 preparations pass full lexical/marker preservation. Sequences 1–105 have
-validated descriptions and 735 ordered Q&A plus separately saved complete-source
-substantive AI reviews, including Arabic sequence 4. Focused evidence-locator,
-description-concision and substantive answer-clarity revisions preserve originals
-and rejected versions. One hundred five atomic local
-imports and audited AI/Samuel acceptances are saved as unpublished drafts through
-sequence 105. Sequence 106 is generated/validated; save its current complete-source
-review and guarded chapter-coordinate correction, then import. The
-first one hundred identical reruns returned unchanged, with identical full-database
-fingerprints, and all 19,164 pre-existing rows across 55 tables retained their
-hashes. Current stored count: 416. No staging
-change, dataset export or push has occurred at this checkpoint.
+All 119 preparations pass full lexical/marker preservation. All 119 descriptions
+and 833 ordered Q&A have passed validation and a separately recorded complete-source
+substantive AI review, including Arabic sequence 4. Nine records received supported
+prose corrections; 34 others received evidence-locator-only revisions. All 43
+revised records retain their originals and rejected versions (45 validated revision
+versions). Eight source-supported passage assignments/coordinate repairs retain
+original metadata. No source wording, human passage decision or publication state
+was fabricated. All 119 atomic local imports and audited AI/Samuel acceptances are
+saved as unpublished drafts. Every identical import replay returned unchanged,
+with identical full-database fingerprints. All 19,164 pre-existing rows across 55
+tables retain their hashes. Current stored count: 430. Staging transfer, activation,
+full frontend verification and push are still outstanding at this checkpoint.
 The safe governance/integration commit is
 `e791071900e1a51362553108da8d347017c96a3d`.
 The provider-independent atomic importer and separate audited D-175 acceptance
@@ -42,7 +42,12 @@ new display-only portable Unicode import, unchanged replay and concurrent-edit
 protection. The exact disposable target was removed. Portable summaries cannot
 restore AI/human review authority; the exporter requires all 119 current audited
 acceptances and confines prepared content to the authorized dataset directory.
-No dataset has been exported yet. The full suite must be rerun if later delivery
+The exact 119-record portable dataset is exported, verified, dry-run valid and
+unchanged on identical re-export. Its content SHA-256 is
+`26a5e4a7e259f7b6f327cece9422bcf58a760ea7c45f4134d487383a8f3b44ea`;
+dataset-manifest SHA-256 is
+`ca03bd4aeb44cb7ab3a0df29074bebf19f220aff272ff9986c13e184de50f917`.
+These are distinct from the frozen processing manifest. The full suite must be rerun if later delivery
 implementation changes affect it. The new append-only D-175 transfer uses exact
 source identities, isolated dependency closure, current acceptance verification,
 per-record transactions and conflict reporting. Anonymous real PostgreSQL checks
@@ -67,7 +72,13 @@ announcement naming the corrected chapter and both unchanged verse endpoints.
 No range expansion, different book, chapter-only verse inference or human approval
 is permitted. Anonymous integration coverage preserves the original range and
 proves identical replay without relationship, version, review or audit churn.
-Final source/dataset/browser/delivery verification and push remain outstanding.
+Latest standard suite: 921 passed / 134 guarded PostgreSQL skips; the separate
+full PostgreSQL runner passed 1,055 with zero skips. Astro: 485 files, zero
+diagnostics. Production build: 44 pages, two pre-existing font-resolution warnings.
+Offline dependency audit: zero cached production vulnerabilities (not an online
+fresh audit). Anonymized importer dry run and dataset dry run pass. Five offline
+remote-operator tests pass; no real remote deployment is implied by these tests.
+Final full browser/delivery verification and push remain outstanding.
 Delivery remains in progress.
 
 ## D-171 completed collection — 5 October 2026

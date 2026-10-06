@@ -76,6 +76,16 @@ Generation, dry runs and local import alone are not completed delivery.
 
 ## Preserved implementation checkpoint
 
+Current checkpoint supersedes the historical progress paragraphs below: all 119
+positions are prepared, generated, validated, separately substantively reviewed,
+atomically imported and AI/Samuel-accepted as unpublished drafts. All 119 identical
+replays were unchanged. The 311 prior sermons and 19,164 prior rows are preserved.
+Nine records have supported prose revisions, 34 have locator-only revisions, and
+eight have independently supported passage metadata repairs/assignments. The
+portable dataset is verified, dry-run valid and unchanged on re-export. Delivery
+still requires secure transfer, staging append verification/replay, image activation,
+rollback rehearsal, full frontend checks and normal GitHub push.
+
 All 119 source preparations are word/marker-preserving. The current substantive
 review covers sequences 1–87 and all 609 ordered pairs. Eighty-seven local imports
 are accepted unpublished drafts; resume at record 88. All 19,164 pre-existing
