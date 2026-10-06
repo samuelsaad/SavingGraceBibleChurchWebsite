@@ -134,13 +134,18 @@ async function currentImportReceipt(
 export async function importEnrichmentDraftBundle(
   pool: Pool,
   input: unknown,
-  actorSubject = "local-enrichment-importer"
+  actorSubject = "local-enrichment-importer",
+  transactionClient?: PoolClient
 ): Promise<EnrichmentImportResult> {
   const bundle = enrichmentDraftBundleSchema.parse(input);
   const checksum = bundleChecksum(bundle);
-  const client = await pool.connect();
+  // Scoped application workflows may include metadata, content and a separate
+  // audited acceptance in one caller-owned transaction. Ordinary callers retain
+  // the original transaction boundary and all existing conflict protections.
+  const client = transactionClient ?? await pool.connect();
+  const ownsTransaction = transactionClient === undefined;
   try {
-    await client.query("BEGIN");
+    if (ownsTransaction) await client.query("BEGIN");
     const sermonResult = await client.query<{
       id: string;
       source_wordpress_id: string | null;
@@ -183,7 +188,7 @@ export async function importEnrichmentDraftBundle(
 
     const receipt = await currentImportReceipt(client, bundle.targetSermonId);
     if (receipt?.content_checksum === checksum) {
-      await client.query("COMMIT");
+      if (ownsTransaction) await client.query("COMMIT");
       return {
         sourceWordPressId: bundle.sourceWordPressId,
         targetSermonId: bundle.targetSermonId,
@@ -392,7 +397,7 @@ export async function importEnrichmentDraftBundle(
          '["summary","transcript","questionAnswers"]'::jsonb, $3, 'succeeded')`,
       [actorSubject, bundle.targetSermonId, `enrichment-${checksum.slice(0, 16)}`]
     );
-    await client.query("COMMIT");
+    if (ownsTransaction) await client.query("COMMIT");
     return {
       sourceWordPressId: bundle.sourceWordPressId,
       targetSermonId: bundle.targetSermonId,
@@ -409,9 +414,9 @@ export async function importEnrichmentDraftBundle(
       ]
     };
   } catch (error) {
-    await client.query("ROLLBACK");
+    if (ownsTransaction) await client.query("ROLLBACK");
     throw error;
   } finally {
-    client.release();
+    if (ownsTransaction) client.release();
   }
 }

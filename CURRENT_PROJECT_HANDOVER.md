@@ -7,8 +7,21 @@ The active completion/delivery task is bound to D-174's unchanged private manife
 All 119 source hashes were reverified, including the preserved sequence-96 retry.
 The isolated delivery branch integrates the current deployed D-171 release with
 committed D-172/D-173/D-174 backend work; unrelated dirty V5/dashboard work stays
-outside this branch. See `sermonaudio-119-completion-plan.md`. No new preparation,
-generation, import, acceptance, staging change or push is claimed by this setup.
+outside this branch. See `sermonaudio-119-completion-plan.md`.
+All 119 preparations pass full lexical/marker preservation. Sequences 1–7 have
+validated descriptions and 49 ordered Q&A plus separately saved complete-source
+substantive AI reviews, including Arabic sequence 4. Two support-locator revisions
+preserve rejected originals without changing generated prose. No working-database
+import, staging change, dataset export or push has occurred at this checkpoint.
+The safe governance/integration commit is
+`e791071900e1a51362553108da8d347017c96a3d`.
+The provider-independent atomic importer and separate audited D-175 acceptance
+reuse the installed UTC-stable dependency function; publication remains unchanged.
+Arabic reading content has scoped language/direction and its retained encoded URL
+is preserved without double encoding. Full guarded PostgreSQL suite: 1,032 passed,
+zero skips; disposable target removed. New capture/read-path defects were repaired,
+not reported as unrelated baseline failures. Continue from the next unfinished
+operation; do not regenerate the saved seven. Delivery remains in progress.
 
 ## D-171 completed collection — 5 October 2026
 

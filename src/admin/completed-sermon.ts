@@ -2,12 +2,13 @@
  * never feeds a public or restricted visitor selector. */
 interface CompletedSermon {
  title:string;serviceDate:string;speaker:{name:string}|null;summary:string|null;
+ language?:'en'|'ar'|undefined;
  transcript:{bodyText:string}|null;
  questionAnswers:Array<{question:string;answer:string;displayOrder:number}>;
  media:Array<{provider:string;canonicalUrl:string}>;
 }
 const escape=(x:unknown)=>String(x??'').replace(/[&<>"']/gu,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!));
-const paragraphs=(s:string)=>s.split(/\n\s*\n/gu).filter(Boolean).map(p=>'<p>'+escape(p)+'</p>').join('');
+const paragraphs=(s:string,language?:'en'|'ar')=>s.split(/\n\s*\n/gu).filter(Boolean).map(p=>'<p'+(language==='ar'?' lang="ar" dir="rtl"':'')+'>'+escape(p)+'</p>').join('');
 function mediaLink(provider:string,url:string){
  try{const u=new URL(url);if(u.protocol!=='https:'||u.username||u.password)return '';
  if(provider==='youtube'&&u.hostname==='www.youtube.com'&&u.pathname==='/watch'&&/^[A-Za-z0-9_-]{11}$/u.test(u.searchParams.get('v')??''))return `<a class="button" href="${escape(u.href)}" target="_blank" rel="noopener noreferrer">Watch on YouTube</a>`;
@@ -15,11 +16,12 @@ function mediaLink(provider:string,url:string){
  }catch{/* omit invalid reference */}return '';
 }
 export function renderCompletedSermon(s:CompletedSermon){
+ const attrs=s.language==='ar'?' lang="ar" dir="rtl"':'';
  const links=s.media.map(m=>mediaLink(m.provider,m.canonicalUrl)).filter(Boolean);
  const date=new Intl.DateTimeFormat('en-AU',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(s.serviceDate));
- return `<header class="review-record-header"><div><a href="/admin?view=complete" data-route>Back to completed sermons</a><h1>${escape(s.title)}</h1><p>${escape(date)}${s.speaker?' · '+escape(s.speaker.name):''}</p></div><div class="review-record-status"><strong>Complete</strong></div></header>
- <article class="stack" data-completed-sermon><section class="panel"><h2>Sermon description</h2>${paragraphs(s.summary??'')}</section>
+ return `<header class="review-record-header"><div><a href="/admin?view=complete" data-route>Back to completed sermons</a><h1${attrs}>${escape(s.title)}</h1><p>${escape(date)}${s.speaker?' · '+escape(s.speaker.name):''}</p></div><div class="review-record-status"><strong>Complete</strong></div></header>
+ <article class="stack" data-completed-sermon><section class="panel"><h2>Sermon description</h2>${paragraphs(s.summary??'',s.language)}</section>
  ${links.length?`<section class="panel"><h2>Watch or listen</h2><div class="action-row">${links.join('')}</div></section>`:''}
- <section class="panel"><details><summary><strong>Transcript</strong></summary><div class="disclosure-body">${paragraphs((s.transcript?.bodyText??'').replace(/\[\s*__\s*\]/gu,'').replace(/[\t ]{2,}/gu,' '))}</div></details></section>
- <section class="panel"><h2>Questions &amp; answers</h2>${[...s.questionAnswers].sort((a,b)=>a.displayOrder-b.displayOrder).map(q=>`<section class="review-qa-card"><h3>${escape(q.question)}</h3>${paragraphs(q.answer)}</section>`).join('')}</section></article>`;
+ <section class="panel"><details><summary><strong>Transcript</strong></summary><div class="disclosure-body">${paragraphs((s.transcript?.bodyText??'').replace(/\[\s*__\s*\]/gu,'').replace(/[\t ]{2,}/gu,' '),s.language)}</div></details></section>
+ <section class="panel"><h2>Questions &amp; answers</h2>${[...s.questionAnswers].sort((a,b)=>a.displayOrder-b.displayOrder).map(q=>`<section class="review-qa-card"><h3${attrs}>${escape(q.question)}</h3>${paragraphs(q.answer,s.language)}</section>`).join('')}</section></article>`;
 }

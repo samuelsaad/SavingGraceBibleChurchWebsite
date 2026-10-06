@@ -67,6 +67,10 @@ export const sermonStyles = `
 .question__number { font-family: var(--font-signage); font-stretch: 87.5%; font-size: 1.75rem; font-weight: 700; line-height: 1; color: var(--hue, var(--colour-gilt)); font-variant-numeric: tabular-nums; }
 .question__title { font-family: var(--font-display); font-size: var(--size-lede); line-height: 1.25; margin-bottom: var(--space-2); }
 .question__answer { grid-column: 2; }
+.sermon__title[lang="ar"], .prose[lang="ar"], .questions[lang="ar"] { letter-spacing: normal; font-stretch: normal; text-align: start; }
+.sermon__title[lang="ar"], .questions[lang="ar"] .question__title { font-family: var(--font-ui); line-height: 1.5; }
+.prose[lang="ar"], .questions[lang="ar"] .prose { line-height: 1.9; }
+.transcript__body[dir="rtl"] p::before { left: auto; right: -3rem; text-align: left; }
 @media (max-width: 76rem) {
   .sermon { grid-template-columns: 3.5rem minmax(0, 1fr); }
   .sermon__rail { position: static; grid-column: 2; order: 2; }

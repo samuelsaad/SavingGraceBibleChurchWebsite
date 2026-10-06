@@ -74,3 +74,10 @@ export function validateCandidate(text:string,raw:unknown,language:'en'|'ar'){
  if(proofread.outcome==='failed')throw Error('d175_mechanical_validation_failed');
  return {candidate:c,descriptionWords,descriptionSupport,questionSupport,proofread};
 }
+export const substantiveReviewInputSchema=z.object({
+ sequence:z.number().int().min(1).max(119),candidateHash:z.string().regex(/^[a-f0-9]{64}$/u),
+ outcome:z.enum(['accepted','failed']),completeSourceRead:z.literal(true),completeTranscriptRead:z.literal(true),completeDescriptionRead:z.literal(true),everyOrderedQuestionAnswerRead:z.literal(true),
+ transcriptCharactersRead:z.number().int().positive(),transcriptAssessment:plain(2500),descriptionAssessment:plain(2500),questionAssessments:z.array(plain(2000)).min(5).max(10),
+ identityAssessment:plain(2000),speakerAssessment:plain(2000),passageAssessment:plain(2000),mediaAssessment:plain(2000),residualUncertainty:z.array(plain(2000)).max(100),
+ audioVerified:z.literal(false),humanApprovalClaimed:z.literal(false),uncertaintyAcceptedBy:z.literal('Samuel')
+}).strict();

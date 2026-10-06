@@ -16,6 +16,7 @@ export interface WorkbenchSermon {
   rowVersion: number;
   complete: boolean;
   localCompletion?: boolean;
+  language?: 'en'|'ar';
   previouslyAccepted: boolean;
   concerns: ReviewConcern[];
 }

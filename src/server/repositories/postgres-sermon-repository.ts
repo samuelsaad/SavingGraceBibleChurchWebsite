@@ -38,6 +38,7 @@ type PublicSermonRow = QueryResultRow & {
   title: string;
   slug: string;
   service_date: string;
+  language?: unknown;
   summary: string | null;
   speaker: unknown;
   series: unknown;
@@ -98,6 +99,7 @@ function summaryFromRow(row: PublicSermonRow): SermonSummary {
     title: row.title,
     slug: row.slug,
     serviceDate: row.service_date,
+    language: row.language === 'ar' ? 'ar' : undefined,
     summary: row.summary,
     speaker: row.speaker,
     series: row.series,
@@ -205,7 +207,7 @@ export class PostgresSermonRepository implements PublicSermonRepository {
   }
 
   async listPublishedTopicalSermons(): Promise<SermonSummary[]> {
-    if (this.scope !== "restricted_accepted" && this.scope !== "d161_restricted_accepted" && this.scope !== "d162_restricted_accepted" && this.scope !== "d167_restricted_accepted" && this.scope !== "d171_completed" && this.scope !== 'local_corrective_accepted') return [];
+    if (this.scope !== "restricted_accepted" && this.scope !== "d161_restricted_accepted" && this.scope !== "d162_restricted_accepted" && this.scope !== "d167_restricted_accepted" && this.scope !== "d171_completed" && this.scope !== 'local_corrective_accepted' && this.scope!=='d175_completed' && this.scope!=='d175_local_completed') return [];
     const statement = buildPublishedTopicalSermonsQuery(this.scope);
     return (await this.database.query(statement.text, statement.values)).rows.map(row => summaryFromRow(row as PublicSermonRow));
   }

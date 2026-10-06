@@ -4,6 +4,7 @@
  * contract; nothing here changes a URL shape.
  */
 import type { PublicSermonListQuery } from "../api/contracts/public-sermons";
+import {sermonSlugPathSegment} from '../domain/slug';
 
 export const canonicalOrigin = "https://www.savinggrace.org.au";
 export const archivePath = "/sermons/";
@@ -39,7 +40,7 @@ export function contextualPath(context: FrontendRenderContext, path: string): st
 }
 
 export function sermonPath(context: FrontendRenderContext, slug: string): string {
-  return contextualPath(context, `/sermons/${encodeURIComponent(slug)}/`);
+  return contextualPath(context, `/sermons/${sermonSlugPathSegment(slug)}/`);
 }
 
 export function archivePagePath(page: number, context = publicRenderContext, base: ArchiveBasePath = archivePath): string {

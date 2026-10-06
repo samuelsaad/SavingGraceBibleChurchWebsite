@@ -5,6 +5,7 @@ import { d161CombinedRestrictedEligibilitySql, d162CombinedRestrictedEligibility
 import { topicalClassificationSql } from "../../domain/topical-classification";
 import {completedEligibilitySql,completedPassageAcceptanceSql} from "../../domain/completed-staging";
 import {localCorrectiveFrontendSql} from './local-corrective-frontend';
+import {d175AcceptanceSql,d175SourceNamespace} from '../../domain/sermonaudio-completion';
 
 export interface ParameterizedQuery {
   text: string;
@@ -25,9 +26,11 @@ export type FrontendSermonScope =
   | "d162_restricted_accepted"
   | "d167_restricted_accepted"
   | "d171_completed"
+  | "d175_completed"
+  | "d175_local_completed"
   | "local_corrective_accepted"
   | "d160_draft_preview";
-const restrictedScope=(scope:FrontendSermonScope)=>scope==="restricted_accepted"||scope==="d161_restricted_accepted"||scope==="d162_restricted_accepted"||scope==="d167_restricted_accepted"||scope==="d171_completed"||scope==="local_corrective_accepted";
+const restrictedScope=(scope:FrontendSermonScope)=>scope==="restricted_accepted"||scope==="d161_restricted_accepted"||scope==="d162_restricted_accepted"||scope==="d167_restricted_accepted"||scope==="d171_completed"||scope==="local_corrective_accepted"||scope==='d175_completed'||scope==='d175_local_completed';
 
 export const d160DraftSourceStatus = "phase3b2c_evaluation_36_batch_6_private" as const;
 export const d160DraftProcessingVersion = "phase3b2c-evaluation-36-d160-v1" as const;
@@ -44,6 +47,7 @@ function searchVector(scope: FrontendSermonScope): string {
       FROM sermon_question_answers q WHERE q.sermon_id=s.id),'')))`;
 }
 function acceptedPrimary(alias: string, scope: FrontendSermonScope): string {
+  if(scope==='d175_completed'||scope==='d175_local_completed')return `((${alias}.review_status IN ('confirmed','proposed') AND (${restrictedPassageAcceptanceSql(`${alias}.sermon_id`,'primary_passage')} OR ${completedPassageAcceptanceSql(`${alias}.sermon_id`)}${scope==='d175_local_completed'?` OR EXISTS(SELECT 1 FROM sermons previous_local WHERE previous_local.id=${alias}.sermon_id AND ${localCorrectiveFrontendSql('previous_local')})`:''})) OR (${alias}.review_status IN ('unreviewed','proposed','confirmed') AND EXISTS(SELECT 1 FROM sermons sa_accepted WHERE sa_accepted.id=${alias}.sermon_id AND ${d175AcceptanceSql('sa_accepted')})))`;
   if(scope==='local_corrective_accepted')return `${alias}.review_status IN ('confirmed','proposed') AND EXISTS(SELECT 1 FROM sermons local_passage_sermon WHERE local_passage_sermon.id=${alias}.sermon_id AND ${localCorrectiveFrontendSql('local_passage_sermon')})`;
   return restrictedScope(scope)
     ? `${alias}.review_status IN ('confirmed','proposed') AND (${restrictedPassageAcceptanceSql(`${alias}.sermon_id`,"primary_passage")}${scope === "d171_completed" ? ` OR ${completedPassageAcceptanceSql(`${alias}.sermon_id`)}` : ""})`
@@ -103,6 +107,8 @@ export function frontendSermonEligibilitySql(
   sermonAlias: string,
   scope: FrontendSermonScope
 ): string {
+  if(scope==='d175_completed')return `(${completedEligibilitySql(sermonAlias)} OR ${d175AcceptanceSql(sermonAlias)})`;
+  if(scope==='d175_local_completed')return `(${localCorrectiveFrontendSql(sermonAlias)} OR ${d175AcceptanceSql(sermonAlias)})`;
   if (scope === "d171_completed") return completedEligibilitySql(sermonAlias);
   if(scope==='local_corrective_accepted')return localCorrectiveFrontendSql(sermonAlias);
   if (scope === "restricted_accepted") return restrictedEligibilitySql(sermonAlias);
@@ -315,6 +321,7 @@ function buildPublishedConditions(
 
 export function publicRelationshipProjection(alias = "s", scope: FrontendSermonScope = "public"): string {
   return `
+  (SELECT CASE WHEN payload->>'language' IN ('en','ar') THEN payload->>'language' ELSE NULL END FROM sermon_extensions WHERE sermon_id=${alias}.id AND namespace='${d175SourceNamespace}') AS language,
   ${scope === "d160_draft_preview" ? "'draft_awaiting_review'" : "NULL"} AS review_state,
   ${restrictedScope(scope) ? topicalClassificationSql(alias) : "false"} AS is_topical,
   (

@@ -4,6 +4,7 @@
  * package; this module re-exports its render functions for existing callers.
  */
 import { ZodError } from "zod";
+import {validateLegacySlug} from '../../domain/slug';
 import { InvalidLegacySermonQueryError } from "../../api/legacy-sermon-query";
 import {
   archivePath,
@@ -64,10 +65,12 @@ export function createPublicSermonSiteHandler(repository: PublicSermonRepository
     const url = new URL(request.url);
     const isArchiveRoot = url.pathname === archivePath;
     const archivePageMatch = /^\/sermons\/page\/(\d+)\/$/.exec(url.pathname);
-    const detailMatch = /^\/sermons\/([a-z0-9]+(?:-[a-z0-9]+)*)\/$/.exec(url.pathname);
+    const detailMatchRaw = /^\/sermons\/([^/]+)\/$/.exec(url.pathname);
+    const detailMatch = detailMatchRaw && validateLegacySlug(detailMatchRaw[1]) ? detailMatchRaw : null;
     const isSitemap = url.pathname === "/sitemap-sermons.xml";
     const needsTrailingSlash = url.pathname === "/sermons"
-      || /^\/sermons\/(?:page\/\d+|[a-z0-9]+(?:-[a-z0-9]+)*)$/.test(url.pathname);
+      || /^\/sermons\/page\/\d+$/.test(url.pathname)
+      || Boolean(/^\/sermons\/([^/]+)$/.exec(url.pathname)?.[1] && validateLegacySlug(/^\/sermons\/([^/]+)$/.exec(url.pathname)![1]));
     const isSermonRoute = isArchiveRoot || Boolean(archivePageMatch || detailMatch || isSitemap || needsTrailingSlash || url.pathname.startsWith("/sermons/"));
     if (!isSermonRoute) return null;
     if (request.method !== "GET") {

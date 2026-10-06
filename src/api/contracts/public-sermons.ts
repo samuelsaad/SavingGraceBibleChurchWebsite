@@ -1,4 +1,5 @@
 import { z } from "zod";
+import {canonicalStoredSermonSlug} from '../../domain/slug';
 import { isoDateSchema, sermonDetailSchema, sermonSummarySchema } from "../../domain/sermon";
 import { bibleBookBySlug, validateBiblePassage } from "../../domain/bible-passage";
 
@@ -106,7 +107,7 @@ export const sermonListResponseSchema = z.object({
 });
 
 export const publicSermonDetailParamsSchema = z.object({
-  slug: z.string().min(1).max(200).regex(/^[a-z0-9-]+$/)
+  slug: z.string().min(1).max(200).refine(value=>canonicalStoredSermonSlug(value)!==null,'Expected a safe canonical sermon slug').transform(value=>canonicalStoredSermonSlug(value)!)
 });
 
 export const publicSermonApiContracts = {

@@ -64,6 +64,7 @@ export const sermonSummarySchema = z.object({
   title: z.string().min(1),
   slug: z.string().min(1),
   serviceDate: isoDateSchema,
+  language: z.enum(['en','ar']).optional(),
   summary: z.string().min(80).max(2_000).nullable(),
   speaker: z.object({ name: z.string(), slug: z.string() }).nullable(),
   series: z.array(z.object({ name: z.string(), slug: z.string() })),

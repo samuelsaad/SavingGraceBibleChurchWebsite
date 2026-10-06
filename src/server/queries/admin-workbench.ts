@@ -4,6 +4,7 @@ import { restrictedEligibilitySql, d161RestrictedEligibilitySql, d162RestrictedE
 import { concernLabel, summarizeWorkbench, type ReviewConcern, type WorkbenchSermon } from "../../domain/admin-workbench";
 import {localWordingCompletionSql} from '../../domain/local-wording-completion';
 import {correctiveCompletionSql} from '../../domain/local-corrective-review';
+import {d175AcceptanceSql,d175SourceNamespace} from '../../domain/sermonaudio-completion';
 
 const laterManifests = {
   d168: "87e2d08e592a089cd7bfe1fcc42c5e8399f1bbd78b83d49de8e2933c1b8df21a",
@@ -39,10 +40,11 @@ export async function readAdminWorkbench(pool: Pool) {
     const installed = (await db.query<{name:string}>("SELECT tablename AS name FROM pg_tables WHERE schemaname='public'")).rows.map(r => r.name);
     const cohorts = (Object.keys(audioCohorts) as AudioCohort[]).filter(key => installed.includes(audioCohorts[key].table));
     const accepted = cohorts.map(c=>workbenchEligibilitySql(c)).join(" OR ") || "false";
-    const localComplete = installed.includes('sermon_extensions') ? `(${localWordingCompletionSql('s')} OR ${correctiveCompletionSql('s')})` : 'false';
+    const localComplete = installed.includes('sermon_extensions') ? `(${localWordingCompletionSql('s')} OR ${correctiveCompletionSql('s')} OR ${d175AcceptanceSql('s')})` : 'false';
     const prior = cohorts.map(key => `EXISTS(SELECT 1 FROM ${audioCohorts[key].table} a WHERE a.sermon_id=s.id)`).join(" OR ") || "false";
     const rows = (await db.query(`SELECT s.id,s.title,to_char(s.service_date,'YYYY-MM-DD') service_date,
-      s.status,s.row_version,sp.name speaker,((${accepted}) OR ${localComplete}) complete,(${localComplete}) local_complete,(${prior}) previously_accepted
+      s.status,s.row_version,sp.name speaker,((${accepted}) OR ${localComplete}) complete,(${localComplete}) local_complete,(${prior}) previously_accepted,
+      (SELECT payload->>'language' FROM sermon_extensions WHERE sermon_id=s.id AND namespace='${d175SourceNamespace}') language
       FROM sermons s LEFT JOIN speakers sp ON sp.id=s.speaker_id WHERE s.deleted_at IS NULL
       ORDER BY s.service_date DESC,s.id`)).rows;
     // Last recorded exceptions are evidence to inspect, not fresh AI judgments.
@@ -90,7 +92,7 @@ export async function readAdminWorkbench(pool: Pool) {
           : "No current restricted acceptance is recorded. Inspect the existing review stages for the remaining requirements; this does not mean content must be regenerated.", scope: null, recordedAt: null });
       }
       return { id: r.id, title: r.title, serviceDate: r.service_date, speaker: r.speaker, publicationStatus: r.status,
-        rowVersion: r.row_version, complete: r.complete, ...(r.local_complete ? {localCompletion:true} : {}), previouslyAccepted: r.previously_accepted, concerns: r.complete ? [] : issues };
+        rowVersion: r.row_version, complete: r.complete, ...(r.local_complete ? {localCompletion:true} : {}), ...(r.language==='ar'?{language:'ar' as const}:{}), previouslyAccepted: r.previously_accepted, concerns: r.complete ? [] : issues };
     });
     await db.query("COMMIT");
     return summarizeWorkbench(data, new Date().toISOString());

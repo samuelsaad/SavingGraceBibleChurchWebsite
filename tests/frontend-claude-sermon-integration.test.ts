@@ -59,10 +59,6 @@ const preservedSources = [
     "src/frontend/scripts/sermon.ts",
     "4941b691d054e2afe570b4436bfbfbc581c3a5ddbfc033fc1e30be6d73f3abad"
   ],
-  [
-    "src/frontend/routes.ts",
-    "a3b6eedf10f1a2575837b6955f54835ab18a4e83ba4ae9fc281de24c83741bc7"
-  ]
 ] as const;
 export const fixture: SermonDetail = {
   id: "00000000-0000-4000-8000-000000000071", title: "An example of steady faith",
@@ -86,11 +82,27 @@ const input = {
 };
 
 describe("Claude sermon integration inside the preserved Astra shell", () => {
-  it("keeps church pages, global typography, home cards, sermon interactions and routes byte-identical", () => {
+  it("keeps church pages, global typography, home cards and sermon interactions byte-identical", () => {
     for (const [path, expected] of preservedSources) {
       const actual = readFileSync(path, "utf8").replace(/\r\n/g, "\n");
       expect(createHash("sha256").update(actual).digest("hex"), path).toBe(expected);
     }
+  });
+
+  it('preserves existing route shapes while allowing validated WordPress Unicode sermon slugs', async()=>{
+    const {sermonPath}=await import('../src/frontend/routes');
+    expect(sermonPath(publicRenderContext,'example-steady-faith')).toBe('/sermons/example-steady-faith/');
+    expect(sermonPath(previewRenderContext,'example-steady-faith')).toBe('/frontend-preview/sermons/example-steady-faith/');
+    const encoded=encodeURIComponent('مثال-تجريبي').toLowerCase();
+    expect(sermonPath(publicRenderContext,encoded)).toBe('/sermons/'+encoded+'/');
+  });
+
+  it('adds Arabic language/direction only to original-language reading content without redesigning the chrome',()=>{
+    const page=renderPublicSermonPage({...fixture,language:'ar',title:'مثال تجريبي',summary:'نص عربي تجريبي لا يتضمن مادة وعظ حقيقية.',transcript:{bodyText:'فقرة تجريبية أولى.\n\nفقرة تجريبية ثانية.'},questionAnswers:[{question:'سؤال تجريبي؟',answer:'جواب تجريبي.',displayOrder:1}]});
+    expect(page).toContain('<ol class="questions" role="list" lang="ar" dir="rtl">');
+    expect(page).toContain('class="prose transcript__body" lang="ar" dir="rtl"');
+    expect(page).toContain('data-site-header');expect(page).not.toContain('<html lang="ar"');
+    const english=renderPublicSermonPage(fixture);expect(english).toContain('<ol class="questions" role="list">');expect(english).not.toContain('class="prose transcript__body" lang="ar"');
   });
 
   it("anchors every Claude selector and all its tokens inside the sermon wrapper", () => {

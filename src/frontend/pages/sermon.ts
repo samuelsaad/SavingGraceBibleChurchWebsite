@@ -47,6 +47,8 @@ export function renderPublicSermonPage(
   const canonicalPath = `/sermons/${sermon.slug}/`;
   const metadataDescription = sermon.seoDescription ?? sermon.summary ?? undefined;
   const isLongTitle = sermon.title.length > 40;
+  const contentLanguage=sermon.language??'en';
+  const contentAttributes=contentLanguage==='ar'?html` lang="ar" dir="rtl"`:null;
   const stats = sermon.transcript ? readingStats(sermon.transcript.bodyText) : null;
   const trail = html`<ol class="trail" role="list">
     <li><a href="${contextualPath(context, archivePath)}">Sermons</a></li>
@@ -59,7 +61,7 @@ export function renderPublicSermonPage(
     ${canonStrip(options, { current: book?.slug, label: book ? `${book.canonicalName} on the shelf` : undefined })}
     ${trail}
     ${passageStamp(sermon, "sermon__stamp")}
-    <h1 class="sermon__title${isLongTitle ? " is-long" : ""}">${sermon.title}</h1>
+    <h1 class="sermon__title${isLongTitle ? " is-long" : ""}"${contentAttributes}>${sermon.title}</h1>
     <p class="sermon__meta">
       <span>${timeElement(sermon.serviceDate)}</span>
       ${when(sermon.speaker, () => html`<span><a href="${links.taxonomy("speakers", sermon.speaker!.slug)}">${sermon.speaker!.name}</a></span>`)}
@@ -70,7 +72,7 @@ export function renderPublicSermonPage(
   const description = sermon.summary
     ? html`<section class="sermon-section sermon-section--description" id="about" aria-labelledby="about-heading">
         <h2 id="about-heading" class="sr-only">About this sermon</h2>
-        <div class="prose prose--lede">${plainTextParagraphs(sermon.summary)}</div>
+        <div class="prose prose--lede"${contentAttributes}>${plainTextParagraphs(sermon.summary)}</div>
       </section>`
     : null;
   const reviewNotice = sermon.reviewState === "draft_awaiting_review"
@@ -93,7 +95,7 @@ export function renderPublicSermonPage(
         <h2 id="transcript-heading" class="section__title">Transcript</h2>
         <details class="transcript" open data-open-for-print>
           <summary class="transcript__summary"><span class="transcript__label--closed">Read the transcript</span><span class="transcript__label--open">Hide the transcript</span>${when(stats, () => html`<span class="transcript__stats">${formatCount(stats!.words, "word")} · about ${formatCount(stats!.minutes, "minute")}</span>`)}</summary>
-          <div class="prose transcript__body">${plainTextParagraphs(sermon.transcript.bodyText)}</div>
+          <div class="prose transcript__body"${contentAttributes}>${plainTextParagraphs(sermon.transcript.bodyText)}</div>
           <p class="transcript__back"><a href="#transcript-heading">Back to the top of the transcript</a></p>
         </details>
       </section>`
@@ -101,7 +103,7 @@ export function renderPublicSermonPage(
   const questions = sermon.questionAnswers.length
     ? html`<section class="sermon-section" id="questions" aria-labelledby="questions-heading">
         <h2 id="questions-heading" class="section__title">Questions for reflection</h2>
-        <ol class="questions" role="list">${sermon.questionAnswers.map((item, index) => html`<li class="question">
+        <ol class="questions" role="list"${contentAttributes}>${sermon.questionAnswers.map((item, index) => html`<li class="question">
           <span class="question__number" aria-hidden="true">${index + 1}</span>
           <h3 class="question__title"><span class="sr-only">Question ${index + 1}: </span>${item.question}</h3>
           <div class="prose question__answer">${plainTextParagraphs(item.answer)}</div>

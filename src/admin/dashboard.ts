@@ -1222,6 +1222,16 @@ function wireQuestionReview(
 }
 
 async function renderGuidedSermonReview(id: string, readOnlyStage?: number): Promise<void> {
+  const collection = await api<WorkbenchSnapshot>("/api/v1/admin/workbench");
+  const current = collection.data.find(row => row.id === id);
+  // Completed provider-independent records need no fabricated YouTube source
+  // or human guided-review row. Use the existing authenticated detail endpoint.
+  if(current?.localCompletion){
+    const sermon=await api<SermonDetail>(`/api/v1/admin/sermons/${id}`);
+    dirty=false;
+    main.innerHTML=renderCompletedSermon({...sermon,language:current.language});
+    return;
+  }
   const [review, taxonomies] = await Promise.all([
     api<EnrichmentReviewResponse>(`/api/v1/admin/sermons/${id}/review`),
     loadTaxonomies()
@@ -1233,13 +1243,6 @@ async function renderGuidedSermonReview(id: string, readOnlyStage?: number): Pro
   // still enforce their requirements when Samuel deliberately saves a decision.
   const requestedView = Number(new URLSearchParams(location.search).get("viewStage"));
   if (Number.isInteger(requestedView) && requestedView >= 1 && requestedView <= 6) review.review.currentStage = requestedView;
-  const collection = await api<WorkbenchSnapshot>("/api/v1/admin/workbench");
-  const current = collection.data.find(row => row.id === id);
-  if(current?.localCompletion){
-    dirty=false;
-    main.innerHTML=renderCompletedSermon(review.sermon);
-    return;
-  }
   dirty = false;
   const hasQuarantinedDescription = isSupersededWave1SourceReference(review.sermon.summarySourceReference);
   const hasQuarantinedQuestions = review.sermon.questionAnswers.some((item) =>

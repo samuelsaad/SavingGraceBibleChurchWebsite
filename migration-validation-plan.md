@@ -13,7 +13,28 @@ review code without touching dirty original worktrees. All conflict markers remo
 Focused preparation/retrieval/completed-selector tests: 38 passed. `npm run check`:
 465 files, zero errors/warnings/hints, including the integrated snapshot-CLI fix.
 Outgoing scan: 56 implementation/governance files, zero findings; private storage
-ignored. Full database/build/delivery verification remains pending, not inferred.
+ignored. Full database/build/delivery verification remained pending at setup.
+
+### Preparation and atomic-import implementation checkpoint
+
+All 119 transcripts pass complete word/marker preservation. Seven validated
+original-language descriptions and 49 ordered Q&A are separately substantively
+reviewed; Arabic sequence 4 stays Arabic. Two support-locator corrections retain
+rejected originals, with zero generated-prose corrections so far. The working
+database remains 311 records/zero target imports. A private pre-write hash baseline
+covers every existing row in 55 tables without exporting record bodies.
+
+Full guarded PostgreSQL rerun: 103 files/1,032 tests passed, zero skips, exact
+disposable database removed. Earlier implementation failures were a misplaced
+new-scope branch, changed English markup, a broad CSS-string assertion and the
+new write-gate assertion; these were fixed and rerun. A cross-timezone freshness
+defect was repaired by reusing the installed UTC-stable dependency function,
+preserving status/version/current-content/system-audit gates. Synthetic timezone
+reads, stale content, unchanged replay, atomic failure, canonical speaker and
+publication protection verify. TypeScript passes after the completed dashboard
+detail-path correction. Outgoing implementation scan: 22 files, no findings,
+private artifacts ignored. Final standard/build/export/real-import/browser/staging
+verification remains outstanding; no delivered population is claimed yet.
 
 ## D-171 exact completed collection — 5 October 2026
 
