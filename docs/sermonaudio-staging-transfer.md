@@ -1,5 +1,38 @@
 # D-175 scoped transfer
 
+## Verified delivered release
+
+All 119 scoped targets were imported and then replayed unchanged, with zero
+conflicts/failures and all incumbent rows/sequences preserved. The existing public
+and protected runtimes each expose 398 (279 incumbent + 119); earlier local-only
+records were not copied. Serving commit:
+`c919ae038d0bbcefff31eb10e3013d61cc27ca82`; image:
+`sha256:df751abeb61bf162bac2bc0d898faae2d57b02a2db4f52b77480281052d0247d`.
+Release package SHA-256:
+`cee89e7918844abf7ce83052511a40779e804487260d2eb401e0e16318d18386`.
+Scoped packet SHA-256:
+`6b586def9098b0b55ac51453e2507886521eb66dc9e20f2d0446ab9318d087ae`.
+The packet stays maintenance-only and out of Git/images/public responses.
+
+After full exact-content checks, desktop/mobile samples and activation, rollback
+and reactivation were rehearsed against both actual runtimes: eligible count
+279 then 398, both healthy, entire database unchanged. Use the existing pinned
+SSH connection and protected operator, substituting the full serving commit:
+
+```text
+sudo -n python3 /home/ec2-user/.d175-transfer/<serving-commit>/operator.py rollback <serving-commit>
+sudo -n python3 /home/ec2-user/.d175-transfer/<serving-commit>/operator.py reactivate <serving-commit>
+```
+
+Rollback selects prior commit `d5b772f3dacb3678d73478abdf72bbf70030c72d` and its
+recorded configuration/image. It retains all 119 new rows, draft states, audit
+history and verified recovery material; it does not delete or restore a database.
+Current materialized discovery preserves every acceptance/version/dependency/status
+guard and the original timeout. Serial page checks pass; concurrent synthetic
+verification timeouts are not a capacity guarantee. Private admin/database access,
+no-store/noindex and the existing public/protected network boundaries remain intact.
+The final Git handover may be documentation-only after this exact serving release.
+
 This transfer is exclusively the existing D-175 frozen 119-record manifest.
 It never replaces the incumbent database or changes publication states. Source
 identifiers, exact recording associations and current audited acceptances must

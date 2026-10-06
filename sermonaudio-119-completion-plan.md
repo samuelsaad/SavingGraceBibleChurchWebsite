@@ -74,7 +74,45 @@ tool/session prose is authorized; ordinary messages/logs/reports/fixtures are no
 Report actual outcomes, counts, URLs, commits, remaining failures and verification.
 Generation, dry runs and local import alone are not completed delivery.
 
-## Preserved implementation checkpoint
+## Verified final outcome
+
+All fixed positions 1–119 completed preparation, generation, validation, separate
+complete-source substantive review, atomic draft import and audited AI/Samuel
+acceptance. There are 833 ordered pairs, 118 English records and one Arabic record.
+Nine prose-corrected records and 34 locator-only revised records retain originals
+and rejected versions; eight evidence-supported metadata repairs/assignments
+retain the source fields. All source/transcript/marker hashes and current review
+bindings were reverified. No failed, held, substituted or additional target remains.
+
+The local database has 430 records, dashboard 430 Complete, frontend 407 eligible.
+Both staged visitor runtimes expose 398 (279 incumbent + 119 new); all 32 older
+local-only records are preserved and excluded from this scoped transfer. All 119
+local imports and scoped staging imports have identical unchanged replays. The
+311 prior local sermons/19,164 prior rows and all incumbent staging rows/sequences
+remain unchanged. No new human approval or publication state is created.
+
+Serving release `c919ae038d0bbcefff31eb10e3013d61cc27ca82` fixes the measured staged
+discovery timeout without removing any predicate or raising its deadline. Exact
+content/ordered-answer/media HTTP checks pass for all 119 on both staging runtimes;
+desktop/mobile browser checks pass locally for all 119 and on both staged runtimes
+for six samples. Arabic RTL, deferred media, discovery, private-route denial,
+no-store/noindex and semantic/ordinary-production exclusions pass. Rollback to
+279 and reactivation to 398 preserve the entire staging database. Overlapping
+synthetic checks exceeded the small staging runtime's deadline; no load capacity
+claim is made. An initial restart-check stale socket was corrected in the private
+verification client, without changing application or access controls.
+
+Standard suite: 923 passed / 134 guarded skips; separate complete PostgreSQL suite:
+1,057 passed, zero skips, disposable target removed. Twenty-four focused selector
+tests, six anonymous operator tests, type/Astro (zero diagnostics), production/
+staging builds, both dry runs, cached offline audit and outgoing scans pass. Two
+pre-existing font build warnings remain. The portable exact-119 dataset verifies
+and re-exports unchanged without restoring sanitized summaries as review authority.
+Implementation/dataset and fixed release are normally pushed on the authorized
+delivery branch; the final handover is documentation-only. No production change.
+This bounded processing authorization is consumed, not renewed for another target.
+
+## Preserved implementation checkpoints (historical, not active blockers)
 
 Current checkpoint supersedes the historical progress paragraphs below: all 119
 positions are prepared, generated, validated, separately substantively reviewed,

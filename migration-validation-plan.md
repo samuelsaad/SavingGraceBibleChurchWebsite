@@ -1,5 +1,63 @@
 # Migration Validation Plan
 
+## D-175 final delivery verification — 7 October 2026 Australia/Sydney
+
+- Frozen manifest `a4fa3627682043c4b06aa65ddbebdab75f1fc29aec93e2d250bda537d9b0cd2b`:
+  119 preserved sources/preparations, 119 generated/validated/substantively reviewed
+  descriptions, 833 ordered Q&A, 119 atomic imports and genuine AI/Samuel acceptances.
+  Arabic stays Arabic. Complete reading coverage and exact version/support hashes
+  are recorded separately from automated validation; no independent/audio/human
+  review is claimed. Nine prose revisions, 34 locator-only revisions and eight
+  passage metadata repairs preserve their original evidence and lineage.
+- Final local verify-imports: 430 stored, 119 imported/accepted unpublished drafts,
+  all 311 earlier sermons and 19,164 earlier rows in 55 tables unchanged. All 119
+  identical imports leave fingerprint
+  `d947078e424c2954affc30933d80eb2383a99cb5ccaf10e0916aac660e874861` unchanged.
+  Actual local frontend: 407; dashboard: 430 Complete; ordinary public: 15.
+- Staging: pinned hostname/address/ED25519 and exact instance verified. Scoped
+  serializable append: 119 imported, zero conflicts/failures; identical replay:
+  119 unchanged. Existing rows and sequences preserved. Both visitor selectors:
+  398 eligible (279 incumbent + 119), not forced whole-database parity. The 32
+  older local-only records remain outside transfer. Ledger through 0025 unchanged.
+  All new targets remain draft/null publication timestamp; 144 incumbent published
+  statuses remain untouched. New human artifact approvals and semantic eligibility: 0.
+- Both actual running images match `c919ae038d0bbcefff31eb10e3013d61cc27ca82` and
+  `sha256:df751abeb61bf162bac2bc0d898faae2d57b02a2db4f52b77480281052d0247d`.
+  Health/private database/internal network/loopback app bindings and disabled remote
+  admin/development identity pass. Public staging retains its existing authorized
+  HTTP proxy; protected staging remains tunnel-only. No AWS/DNS/production change.
+- All 119 local exact HTML/API comparisons pass; all 119 staged API/detail comparisons
+  pass on both origins (238). Stored complete transcript/description, ordered answers,
+  recording IDs/links, discovery and permitted normal display match. Browser: 238
+  local record/width checks plus 24 staged sample/width/origin checks; Arabic RTL,
+  no overflow/client errors, media fallback and no initial iframe pass. No screenshots,
+  real review writes or external media requests. Local anonymous/private and staging
+  administrator routes remain denied; no-store/noindex/robots exclusion pass.
+- Final fixed-release rollback selects prior release/279, reactivation selects
+  current release/398 on both runtimes, preserving full database fingerprint
+  `db9553c6f3990b5ed0932be50deff6bee668b0df7562ffe00ff8997c8ea2d81e`.
+  Post-restart health/detail/access checks pass. Recovery retains verified packet,
+  volume, image/configuration and all audit history; no destructive data rollback.
+- Final standard suite: 923 passed / 134 database-gated skips. Separate complete
+  PostgreSQL suite: 1,057 passed, zero skips; uniquely named disposable target removed.
+  Focused selector tests: 24 pass; offline remote-operator tests: 6 pass. Type/Astro:
+  493 files, zero errors/warnings/hints. Production (44 pages) and staging builds pass;
+  two existing font-resolution warnings remain. Anonymized importer dry run: three
+  included/two excluded/zero rejected; exact dataset verify/dry run/unchanged export
+  pass. Cached offline dependency audit: zero production vulnerabilities, not a
+  fresh online advisory claim. Outgoing history/credential/private-content/symlink
+  scans pass with exact authorized dataset path/scope confinement.
+- Defects preserved honestly: initial deployed discovery query exceeded the unchanged
+  15-second deadline; API data was correct. Application restored to the prior release
+  while a full-guard materialized-CTE repair was tested and deployed. New fixture
+  needed rollback-only suffix migrations before fresh-acceptance testing; final full
+  runner has zero skips. Simultaneous synthetic staged checks still caused timeouts;
+  serial full checks pass, not a load test. A private restart-check socket failed once;
+  fresh connections passed without relaxing guards. No per-target failure remains.
+- All 119 ordinary local public API requests return 404; new slugs remain absent from
+  production sitemap, human approvals and semantic relationships. Accepted staging
+  visibility is D-175 display authority, not production church publication.
+
 ## D-175 prerequisite checkpoint — 6 October 2026
 
 Exact 119-source manifest/hash and all original download bytes reverified. Guarded

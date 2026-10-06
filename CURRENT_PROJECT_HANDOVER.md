@@ -1,6 +1,82 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
-## D-175 in progress — exact SermonAudio 119 delivery
+## D-175 complete — exact SermonAudio 119 delivery
+
+Final verification on 6 October UTC / 7 October Australia/Sydney supersedes the
+historical checkpoints below. Manifest SHA-256:
+`a4fa3627682043c4b06aa65ddbebdab75f1fc29aec93e2d250bda537d9b0cd2b`.
+All 119 fixed positions are prepared, generated, validated, separately substantively
+AI-reviewed, atomically imported and AI/Samuel-accepted. The delivered population
+has 118 English sermons and one Arabic sermon, 833 ordered Q&A, and descriptions
+of 197–220 lexical words. Original source bytes, lexical/marker sequences, original
+candidates, rejected versions, correction lineage and review hashes are preserved.
+Nine records have supported prose revisions; 34 have locator-only revisions
+(43 revised records / 45 validated revision versions). Eight supported passage
+assignments/repairs retain the original metadata. No source wording was invented.
+The accepted WordPress capture is 2026-10-04T07:17:50.567Z, approximately 61 hours
+old at final verification, not a fresh live source refresh. All ten excluded
+recording mappings remain outside this task.
+
+Actual local counts are 430 stored, 430 normally Complete on the local dashboard,
+407 eligible in the authenticated local frontend and 15 ordinarily public-eligible.
+All 311 prior sermons and 19,164 prior rows across 55 tables remain unchanged.
+All 119 identical local imports returned unchanged, preserving full database hash
+`d947078e424c2954affc30933d80eb2383a99cb5ccaf10e0916aac660e874861`.
+Public and protected staging now each expose 398 eligible sermons: all 279
+incumbent members plus these 119. Scoped synchronization reports 119 imports,
+zero conflicts/failures, followed by 119 unchanged identical replays. Incumbent
+rows and sequences are preserved. The 32 older local-only records were not copied;
+nine of those are local-frontend eligible and 23 are dashboard-only. No whole-
+database transfer, account/session copy or production operation occurred.
+
+Both staging runtimes serve
+`c919ae038d0bbcefff31eb10e3013d61cc27ca82`, image
+`sha256:df751abeb61bf162bac2bc0d898faae2d57b02a2db4f52b77480281052d0247d`.
+Public staging remains `http://54.253.237.138:8080/`; protected staging is reached
+through the pinned loopback tunnel at `http://127.0.0.1:4396/` on the operator's PC.
+The local dashboard is `http://127.0.0.1:4411/admin`; use its Frontend preview link
+for `http://127.0.0.1:4411/frontend-preview/`. Local authentication is the existing
+loopback-only development identity, not personal sign-in. Remote development
+identity/admin routes are disabled. Database ports remain private; no-store,
+noindex and robots exclusion remain intact. Working preview/tunnel stay running.
+
+Every new staged detail/API was checked against exact stored transcript,
+description, ordered Q&A and recording identity on both runtimes (238 checks).
+All 119 local records passed desktop/mobile inspection (238 checks); six staged
+samples passed both widths/origins (24 checks), including Arabic RTL and media
+fallbacks. No screenshots, review writes, external player requests or autoplay.
+Post-restart pages and 279/398 rollback/reactivation passed on both runtimes with
+the complete staging database unchanged. Recovery retains the prior release,
+scoped preservation baseline, packet, volume and current audit history.
+
+Final standard suite: 923 pass / 134 database-gated skips. The separate complete
+guarded PostgreSQL suite passes 1,057 tests with zero skips; its uniquely named
+disposable database was removed. Twenty-four focused selector tests, six offline
+remote-operator tests, type/Astro (493 files, zero diagnostics), production and
+staging builds, anonymized importer/portable dry runs, offline dependency audit
+and credential/private-content/history scans pass. The two existing font-resolution
+build warnings remain. A real staged discovery timeout was fixed by materializing
+fully guarded matches once per statement, not weakening freshness/status gates
+or increasing the 15-second deadline. Ordinary serial checks pass; overlapping
+synthetic verification still caused timeouts and is not a passed load test.
+One restart-check stale connection was eliminated with fresh HTTP connections.
+No per-sermon processing/delivery failure remains.
+
+The authorized curated dataset is `development-data/sermonaudio-119-v1/`; content
+SHA-256 `26a5e4a7e259f7b6f327cece9422bcf58a760ea7c45f4134d487383a8f3b44ea`.
+Its verified, unchanged projection contains no operational acceptance authority,
+credentials, original downloads, administrator/accounts/session data or media files.
+Implementation/dataset commit `c8c3012decf91c70bdb2bab14ca11cf50a370e83` and the
+fixed serving release above were normally pushed to
+`codex/sermonaudio-119-complete` in the existing repository; final handover changes
+are documentation-only. All 119 remain unpublished drafts with zero fabricated
+human artifact approvals or semantic eligibility. Earlier human/publication states
+and current Astra/Claude designs are unchanged. The bounded processing is consumed;
+no additional record, batch, production launch or publication is authorized.
+
+## D-175 preserved historical checkpoints — superseded by completion above
+
+The following paragraphs record earlier progress, not remaining work.
 
 The active completion/delivery task is bound to D-174's unchanged private manifest
 `a4fa3627682043c4b06aa65ddbebdab75f1fc29aec93e2d250bda537d9b0cd2b`.
