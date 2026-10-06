@@ -94,9 +94,15 @@ unique full-source anchor and parser version; no human passage approval is creat
 Where both retained metadata sources have no passage, the same guarded mechanism
 may record a uniquely anchored explicit source reading. It retains the empty
 original metadata and a null original-reference field with a distinct assignment
-parser version. Nonempty metadata cannot be overwritten through this path; topic
-inference, unsupported verses and ambiguous anchors are refused.
-Latest full guarded suite: 1,051 passed, zero skips; disposable database removed.
+parser version. The exact non-specific `Selected Text` placeholder may likewise
+receive an expressly announced source passage, while the original placeholder
+remains in evidence and the unreviewed reference field. Other nonempty metadata
+cannot be overwritten through this assignment path; topic inference, conflicting
+canonical assignments, unsupported verses and ambiguous anchors are refused.
+Latest full guarded suite: 1,052 passed, zero skips; disposable database removed.
+The added anonymous fixture proves placeholder preservation and an identical
+rerun without content, version, relationship, review or audit churn. Four focused
+passage tests and type checking also pass. This adds no schema or publication gate.
 Type/Astro: zero diagnostics across 484 files. Bundle and outgoing scan pass.
 Latest standard runner: 917 passed and 134 guarded database skips; the separate
 full PostgreSQL run above has zero skips. Production build passes with the two

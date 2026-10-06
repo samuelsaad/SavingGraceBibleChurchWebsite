@@ -86,7 +86,7 @@ export async function applySermonAudioCompletion(pool:Pool,scope:FrozenInventory
   for(const [i,text] of passage.passageTexts.entries()){
    const parsed=resolveExplicitPassage(text);if(!parsed)continue;const p=parsed.passage;
    await db.query(`INSERT INTO scripture_references(sermon_id,display_text,canonical_book_id,start_chapter,start_verse,end_chapter,end_verse,parse_status,relationship_role,is_lead,original_reference_text,parser_version,provenance,review_status)
- VALUES($1,$2,$3,$4,$5,$6,$7,'exact','primary',$8,$9,$10,'legacy_import','unreviewed')`,[id,text,p.canonicalBookId,p.startChapter,p.startVerse,p.endChapter,p.endVerse,i===0,passage.evidence?passage.evidence.originalText:text,passage.evidence?(passage.evidence.originalText===null?'d175-explicit-source-passage-assignment-v1':'d175-explicit-source-coordinate-correction-v1'):null]);
+ VALUES($1,$2,$3,$4,$5,$6,$7,'exact','primary',$8,$9,$10,'legacy_import','unreviewed')`,[id,text,p.canonicalBookId,p.startChapter,p.startVerse,p.endChapter,p.endVerse,i===0,passage.evidence?passage.evidence.originalText:text,passage.evidence?(passage.evidence.originalText===null||passage.evidence.originalText==='Selected Text'?'d175-explicit-source-passage-assignment-v1':'d175-explicit-source-coordinate-correction-v1'):null]);
    const classification=(await db.query("SELECT id FROM book_classifications WHERE canonical_book_id=$1 AND classification_type='canonical' AND review_status='approved'",[p.canonicalBookId])).rows;
    if(classification.length!==1)throw Error('d175_canonical_book_missing');
    await db.query('INSERT INTO sermon_book_classifications(sermon_id,book_classification_id,display_order)VALUES($1,$2,$3) ON CONFLICT DO NOTHING',[id,classification[0].id,i]);

@@ -25,4 +25,15 @@ describe('D-175 explicit passage correction, originals preserved',()=>{
   expect(()=>applySermonAudioPassageCorrection([],source,{...evidence,correctedText:'Psalm 128'})).toThrow('explicit_reference_required');
   expect(()=>applySermonAudioPassageCorrection([],source,{...evidence,correctedText:'Psalm 127:2'})).toThrow('explicit_reference_required');
  });
+ it('replaces only the exact non-specific placeholder, preserving it and requiring explicit source evidence',()=>{
+  const source='Anonymous source: turn to Matthew chapter 5. Anonymous conclusion.';
+  const evidence={originalText:'Selected Text',correctedText:'Matthew 5',sourceAnchor:'Anonymous source: turn to Matthew chapter 5.',assessment:'The anonymous source expressly announces this chapter. The placeholder contains no prior canonical assignment.'};
+  const result=applySermonAudioPassageCorrection(['Selected Text'],source,evidence);
+  expect(result.passageTexts).toEqual(['Matthew 5']);expect(result.evidence?.originalText).toBe('Selected Text');
+  expect(()=>applySermonAudioPassageCorrection(['Unknown'],source,{...evidence,originalText:'Unknown'})).toThrow('identity_refused');
+  expect(()=>applySermonAudioPassageCorrection(['Matthew 4'],source,evidence)).toThrow('identity_refused');
+  expect(()=>applySermonAudioPassageCorrection(['Selected Text','Luke 1'],source,evidence)).toThrow('identity_refused');
+  expect(()=>applySermonAudioPassageCorrection(['Selected Text'],source,{...evidence,correctedText:'Luke 5'})).toThrow('explicit_reference_required');
+  expect(()=>applySermonAudioPassageCorrection(['Selected Text'],source+source,evidence)).toThrow('support_refused');
+ });
 });

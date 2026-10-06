@@ -7,18 +7,19 @@ export const sermonAudioPassageCorrectionSchema=z.object({
 }).strict();
 /** D-175-only, before import. A current substantive review may repair a single
  * retained primary coordinate using an explicit statement of sermon focus.
- * A null original permits filling only genuinely absent metadata from an explicit
+ * A null original or exact Selected Text placeholder permits filling only absent metadata from an explicit
  * source reading. Never infer topics, change an existing book, or edit source metadata. */
 export function applySermonAudioPassageCorrection(original:string[],transcript:string,raw:unknown){
  if(raw===undefined)return{passageTexts:[...original],evidence:undefined};
  const correction=sermonAudioPassageCorrectionSchema.parse(raw),before=correction.originalText===null?null:resolveExplicitPassage(correction.originalText),after=resolveExplicitPassage(correction.correctedText);
- if(!after||(correction.originalText===null?original.length!==0:original.length!==1||original[0]!==correction.originalText||!before||before.passage.canonicalBookId!==after.passage.canonicalBookId))throw Error('d175_passage_correction_identity_refused');
+ const placeholder=correction.originalText==='Selected Text';
+ if(!after||(correction.originalText===null?original.length!==0:original.length!==1||original[0]!==correction.originalText||(!placeholder&&(!before||before.passage.canonicalBookId!==after.passage.canonicalBookId))))throw Error('d175_passage_correction_identity_refused');
  const start=transcript.indexOf(correction.sourceAnchor);
  if(start<0||transcript.indexOf(correction.sourceAnchor,start+1)>=0)throw Error('d175_passage_correction_support_refused');
  const match=/^(.+) ([1-9][0-9]*)(?::([1-9][0-9]*))?$/u.exec(correction.correctedText);
  if(!match)throw Error('d175_passage_correction_coordinate_refused');
  const [,book,chapter,verse]=match;
- if(correction.originalText!==null&&!verse)throw Error('d175_passage_correction_coordinate_refused');
+ if(correction.originalText!==null&&!placeholder&&!verse)throw Error('d175_passage_correction_coordinate_refused');
  const anchor=correction.sourceAnchor.toLowerCase(),linear=`${book!.toLowerCase()} chapter ${chapter}${verse?` verse ${verse}`:''}`,reverse=verse?`verse ${verse} of ${book!.toLowerCase()} chapter ${chapter}`:linear;
  if(!anchor.includes(correction.correctedText.toLowerCase())&&!anchor.includes(linear)&&!anchor.includes(reverse))throw Error('d175_passage_correction_explicit_reference_required');
  return{passageTexts:[correction.correctedText],evidence:{...correction,start,end:start+correction.sourceAnchor.length,sha256:createHash('sha256').update(correction.sourceAnchor).digest('hex')}};
