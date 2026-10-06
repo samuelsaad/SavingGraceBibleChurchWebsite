@@ -70,10 +70,8 @@ existing staging selectors are unchanged. Protected transfer explicitly rejects
 D-173 receipt/audit namespaces; curated dataset export has a distinct namespace
 allowlist and does not export them. Semantic eligibility remains publication-based.
 The visitor frontend tree is byte-identical to the currently running optimized
-release; no design file was changed. Start an available loopback port using
-`node --import tsx scripts/start-local-corrective-preview.ts` (default 4410), then
-open `/admin` and its existing **Frontend preview** link. Authentication remains
-the existing truthful `local-admin-0001` development mode, not personal sign-in.
+release; no design file was changed. Existing authentication and loopback access
+protections remain intact; no personal-authentication claim is made.
 
 Pre-application verification: nine full-source/content reviews and 63 ordered
 Q&A reviews have version-bound private packets with exact support hashes. All
@@ -85,3 +83,15 @@ The uniquely named disposable database is removed. No application write has
 occurred at this milestone. Standard tests/build/dry-run/offline audit and
 outgoing secret/private-content/symlink scans pass. Type/Astro checks retain the
 existing TS2379 only in the unchanged snapshot-import CLI; no new error remains.
+
+Final result: nine successful completions and separate local frontend acceptances,
+zero conflicts. Content corrections affect three records; title/speaker repairs
+affect six others. Identical reruns return nine unchanged and retain the whole
+database fingerprint. Original captions/versions, human attribution, passage
+decisions and older AI/audit records are preserved. Dashboard: 311 Complete/zero
+attention; protected local frontend: 288 (279 unchanged plus nine), not all 311.
+D-172 remains dashboard-only. All selected desktop/mobile detail/refresh views,
+literal archive/book searches and assigned-speaker filters pass. Public/anonymous
+denial, private-cache/noindex, production and semantic exclusion verify. No
+staging/GitHub change occurred. The public-safe completion handover deliberately
+omits administrator identity and access configuration.

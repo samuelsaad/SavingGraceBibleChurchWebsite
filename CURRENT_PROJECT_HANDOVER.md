@@ -1,5 +1,41 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
+## D-173 — corrective local completion and frontend delivery, 6 October 2026
+
+Nine current attention records were frozen under private manifest SHA-256
+`97e682024a9a7aec9bb727d7c75ac8992f86672383c4a649289eaa2c5889e21e`.
+Their complete retained source/transcript, descriptions and all 63 ordered Q&A
+were substantively reviewed through the sermon-enrichment contract. Two
+transcripts received three explicitly contextual inferred clauses; one description
+received a source-supported clarification. Three exact source-title repairs and
+three source-corroborated canonical speaker assignments were saved. Original
+captions, complete prior versions/approval attribution and historical decisions
+remain preserved. Inference is not audio/verbatim verification or human review.
+
+Actual outcome: nine local completions and nine separate local frontend
+acceptances, zero conflicts. All nine identical reruns returned unchanged,
+retaining full database SHA-256
+`108b8028a38a959608de9969b9b1f9d5c00b48b1017071d5e2228da61b148795`.
+All 302 unrelated records, existing passage decisions and 6,546 earlier audit
+events remain unchanged. A corrected version never inherits its original approval.
+The local dashboard is 311 Complete/zero attention; the protected local frontend
+is 288 eligible (279 unchanged plus nine). D-172's earlier 23 dashboard-only
+completions remain outside this frontend addition. Publication, staging, curated
+datasets and semantics are unchanged. The visitor design tree is unchanged.
+
+All nine admin/detail pages and refreshes passed at desktop/mobile widths without
+source-warning presentation, external requests, screenshots or review writes.
+All nine literal-title/book filters and three new speaker filters passed.
+Private-cache/noindex, unauthenticated denial, ordinary public-route denial and
+production/semantic exclusions passed. Standard tests: 869 passed with 130
+database-gated skips; guarded PostgreSQL: all 999 passed with zero skips and its
+disposable target removed. Build (44 pages), anonymized dry run, offline audit and
+scoped safety scans passed. Type/Astro checks retain only unchanged snapshot-
+import CLI TS2379. No dependency or migration was added. Governance commit:
+`6901e38c2f7412ce71f3cb6c42e17677bcfa24d2`; implementation:
+`e835d91e2d547f4199d7faf2914b4a97021c066b`. Prior uncommitted UI work is preserved
+and excluded from D-173 commits. Nothing was pushed, synchronized or published.
+
 ## D-172 — bounded local source-wording completion, 6 October 2026
 
 The frozen 23-record scope is documented in `local-wording-completion-plan.md`.

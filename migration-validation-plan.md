@@ -1,5 +1,47 @@
 # Migration Validation Plan
 
+## D-173 corrective local delivery — 6 October 2026
+
+- Scope: nine frozen current attention records; all complete available source,
+  transcripts and descriptions, and all 63 ordered Q&A, substantively reviewed.
+  Original complete word/marker sequences verify; three inferred transcript
+  clauses are explicitly distinguished internally from verified speech.
+- Persisted: nine completion and nine separate local-frontend receipts, three
+  content-corrected records (two transcripts/one description), six metadata-
+  corrected records (three source titles/three canonical speaker assignments).
+  Zero application conflicts or failures; no human approval fabricated.
+- Preservation: 302 unrelated records, original captions/versions/approval
+  attribution, all existing passage and AI decisions, and 6,546 historical audits
+  are unchanged. The corrected approved transcript's original row is archived;
+  its successor is draft and does not inherit that approval.
+- Identical replay: nine unchanged; complete database digest remains
+  `108b8028a38a959608de9969b9b1f9d5c00b48b1017071d5e2228da61b148795`.
+  Browser activity leaves it unchanged. Dashboard: 311 Complete/zero attention;
+  protected local frontend: 288 eligible (279 unchanged plus nine). Earlier
+  D-172 dashboard-only receipts are not promoted. Visitor design is unchanged.
+- Browser: 18 admin/detail inspections and refreshes at 1440/390px; nine literal
+  keyword/book checks and three assigned-speaker filters pass. Full transcript,
+  description, ordered Q&A, saved metadata, controlled deferred media and normal
+  warning-free Complete display pass. No external requests, screenshots or review
+  writes. Two test assertions were corrected: ordinary Related-by metadata is
+  not a warning, and hyphenated titles require literal websearch phrase syntax.
+- Boundaries: selected public detail requests return 404, anonymous private
+  requests return 401; private-cache/noindex/authentication are retained. Selected
+  semantic eligibility is zero. Production's 44 built pages contain no selected
+  identity/transcript/description. Staging was not contacted.
+- Tests: standard 869 pass with 130 gated skips; complete guarded PostgreSQL 999
+  pass, zero skips, disposable database removed. Fixtures caught DATE/bigint
+  representation issues before real writes and retain the full normal caption
+  completeness safeguard. A transient old concurrency-test timeout during
+  overlapping verification did not recur in the final isolated suite.
+- Final type/Astro checks retain unchanged TS2379 in the snapshot-import CLI;
+  no new diagnostic remains. Build (44 pages), anonymized dry run (three included/
+  two excluded), offline cached audit (zero vulnerabilities) and outgoing secret,
+  key, private-content, identity, prohibited-file and symlink scans pass. Existing
+  font build warnings remain; actual assets load. Private evidence is ignored.
+- No schema, dependency, frontend design, provider, ingestion, GitHub, staging,
+  production or publication changes. Prior uncommitted UI work is excluded.
+
 ## D-172 local-only completion implementation — 6 October 2026
 
 ### Final application and delivery
