@@ -27,8 +27,8 @@ if (!Number.isInteger(port) || port < 1 || port > 65_535) {
 
 const pool = createPostgresPool(connectionString);
 const publicRepository = new PostgresSermonRepository(pool);
-const previewScope = process.env.D173_LOCAL_FRONTEND_ENABLED===undefined ? "completed_preview" : localFrontendPreviewScope(process.env);
-const previewPool=previewScope==='local_corrective_accepted'?createPostgresPool(connectionString,{readOnly:true,utc:true}):pool;
+const previewScope = process.env.D173_LOCAL_FRONTEND_ENABLED===undefined&&process.env.D175_LOCAL_FRONTEND_ENABLED===undefined ? "completed_preview" : localFrontendPreviewScope(process.env);
+const previewPool=previewScope==='local_corrective_accepted'||previewScope==='d175_local_completed'?createPostgresPool(connectionString,{readOnly:true,utc:true}):pool;
 const previewRepository = new PostgresSermonRepository(previewPool,previewScope);
 const identityProvider = new LocalTestIdentityProvider(process.env.ENABLE_LOCAL_TEST_IDENTITIES === "1");
 const route = createApplicationApiRouter(

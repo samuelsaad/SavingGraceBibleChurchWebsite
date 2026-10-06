@@ -7,11 +7,28 @@ import {readFrozenInventory,readVerifiedSource,prepareSource,hash,completionDeci
 import {persistImmutable,persistCheckpoint,readCheckpoint} from './private-artifacts';
 import {applySermonAudioCompletion} from '../application/sermonaudio-completion-service';
 import {primaryKeys,quoted,digest} from '../staging/completed-packet';
+import {d175AcceptanceSql} from '../domain/sermonaudio-completion';
 const sourceRoot=resolve('../sermonaudio-transcript-retrieval/private/sermonaudio-transcript-retrieval');
 const artifactRoot=resolve('private/sermonaudio-119-completion');
 async function main(){
  const inventory=await readFrozenInventory(sourceRoot);
  const command=process.argv[2];
+ if(command==='verify-imports'){
+  const prior=JSON.parse(await readFile(join(artifactRoot,'prior-row-fingerprints.private.json'),'utf8'));
+  if(prior.manifestSha256!==completionManifestSha256||prior.fingerprint!==digest(Object.fromEntries(Object.entries(prior).filter(([key])=>key!=='fingerprint'))))throw Error('d175_preservation_baseline_conflict');
+  const p=new Pool({host:'127.0.0.1',port:5432,database:'savinggrace_sermons_test',user:protectedLocalPostgresUser,password:protectedLocalPostgresPassword,options:'-c default_transaction_read_only=on -c timezone=UTC'}),c=await p.connect();
+  try{await c.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY');
+   const target=(await c.query("SELECT current_database() db,host(inet_server_addr()) host,inet_server_port() port,current_setting('server_version_num')::int version")).rows[0];if(target.db!=='savinggrace_sermons_test'||target.host!=='127.0.0.1'||target.port!==5432||target.version<160000||target.version>=170000)throw Error('d175_local_target_refused');
+   let preserved=0;const currentTables:Record<string,unknown>={};
+   for(const [table,old] of Object.entries(prior.tables) as Array<[string,{keys:string[];rows:Array<{key:string;hash:string}>}]>){const keys=await primaryKeys(c,table);if(JSON.stringify(keys)!==JSON.stringify(old.keys))throw Error('d175_prior_key_changed');
+    const rows=(await c.query('SELECT jsonb_build_array('+keys.map(quoted).join(',')+") pk,encode(digest(to_jsonb(t)::text,'sha256'),'hex') hash FROM "+quoted(table)+' t')).rows.map(r=>({key:digest(r.pk),hash:r.hash})).sort((a,b)=>a.key.localeCompare(b.key));
+    const hashes=new Map(rows.map(r=>[r.key,r.hash]));if(old.rows.some(r=>hashes.get(r.key)!==r.hash))throw Error('d175_unrelated_row_changed');preserved+=old.rows.length;currentTables[table]={keys,rows};
+   }
+   const records=(await c.query('SELECT s.id,s.source_wordpress_id,s.status,s.published_at,'+d175AcceptanceSql('s')+' accepted FROM sermons s WHERE source_wordpress_id=ANY($1::bigint[]) ORDER BY source_wordpress_id',[inventory.targets.map(t=>t.source.sourceWordPressId)])).rows;
+   const report={decision:completionDecision,manifestSha256:completionManifestSha256,totalSermons:(await c.query('SELECT count(*)::int n FROM sermons')).rows[0].n,imported:records.length,accepted:records.filter(r=>r.accepted).length,allDraftUnpublished:records.every(r=>r.status==='draft'&&r.published_at===null),priorSermons:prior.sermons,priorRowsPreserved:preserved,tables:Object.keys(currentTables).length,databaseFingerprint:digest(currentTables)};
+   console.log(JSON.stringify(report));await persistImmutable(join(artifactRoot,`verification-${records.length}-${report.databaseFingerprint}.private.json`),JSON.stringify(report,null,2));
+  }finally{await c.query('ROLLBACK');c.release();await p.end();}return;
+ }
  if(command==='preservation-baseline'){
   const p=new Pool({host:'127.0.0.1',port:5432,database:'savinggrace_sermons_test',user:protectedLocalPostgresUser,password:protectedLocalPostgresPassword,options:'-c default_transaction_read_only=on -c timezone=UTC'}),c=await p.connect();
   try{await c.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY');const target=(await c.query("SELECT current_database() db,host(inet_server_addr()) host,inet_server_port() port,current_setting('server_version_num')::int version")).rows[0];if(target.db!=='savinggrace_sermons_test'||target.host!=='127.0.0.1'||target.port!==5432||target.version<160000||target.version>=170000)throw Error('d175_local_target_refused');

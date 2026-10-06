@@ -1,4 +1,5 @@
 import { ZodError } from "zod";
+import {validateLegacySlug} from '../../domain/slug';
 import {
   publicSermonListQuerySchema,
   type PublicSermonListQuery
@@ -97,6 +98,8 @@ export function createLocalFrontendPreviewHandler(
     if (churchPage) return churchPage;
     if (
       url.pathname === root
+      || Boolean(new RegExp(`^${root}/sermons/([^/]+)$`, 'u').exec(url.pathname)?.[1]
+        && validateLegacySlug(new RegExp(`^${root}/sermons/([^/]+)$`, 'u').exec(url.pathname)![1]))
       || new RegExp(`^${root}/(?:sermons(?:/page/\\d+|/[a-z0-9]+(?:-[a-z0-9]+)*)?|(?:speakers|series|books)(?:/[a-z0-9]+(?:-[a-z0-9]+)*)?)$`, "u").test(url.pathname)
     ) {
       return new Response(null, {
@@ -123,10 +126,11 @@ export function createLocalFrontendPreviewHandler(
         return response(renderPublicSermonArchivePage(loaded.input, context));
       }
 
-      const detailMatch = /^\/sermons\/([a-z0-9]+(?:-[a-z0-9]+)*)\/$/u.exec(relativePath);
+      const rawDetailMatch = /^\/sermons\/([^/]+)\/$/u.exec(relativePath);
+      const detailMatch = rawDetailMatch && validateLegacySlug(rawDetailMatch[1]) ? rawDetailMatch : null;
       if (detailMatch) {
         const [sermon, options] = await Promise.all([
-          repository.findPublishedBySlug(detailMatch[1]!),
+          repository.findPublishedBySlug(validateLegacySlug(detailMatch[1])!),
           repository.listPublishedFilterOptions()
         ]);
         if (!sermon) {

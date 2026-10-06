@@ -97,6 +97,22 @@ function masthead(html: string): string {
 }
 
 describe("authenticated local frontend preview", () => {
+  it('serves a safely encoded Unicode detail through the same authenticated selector', async () => {
+    const {repository,route,cookie}=await authorisedRoute();
+    const slug=encodeURIComponent('مثال').toLowerCase();
+    let lookedUp='';
+    repository.findPublishedBySlug=async value=>{lookedUp=value;return {...detail,slug,language:'ar'};};
+    const result=await route(new Request(`http://127.0.0.1/frontend-preview/sermons/${slug}/`,{headers:{cookie}}));
+    expect(result?.status).toBe(200);expect(lookedUp).toBe(slug);
+    expect(await result!.text()).toContain('lang="ar"');
+    const redirect=await route(new Request(`http://127.0.0.1/frontend-preview/sermons/${slug}`,{headers:{cookie}}));
+    expect(redirect?.status).toBe(307);expect(redirect?.headers.get('location')).toBe(`/frontend-preview/sermons/${slug}/`);
+    const denied=await route(new Request(`http://127.0.0.1/frontend-preview/sermons/${slug}/`));
+    expect(denied?.status).toBe(401);
+    lookedUp='';
+    const unsafe=await route(new Request('http://127.0.0.1/frontend-preview/sermons/%2fsecret/',{headers:{cookie}}));
+    expect(unsafe?.status).toBe(404);expect(lookedUp).toBe('');
+  });
   it("requires an issued administrator session and does not query on denial", async () => {
     const repository = new PreviewRepository();
     const session = new LocalFrontendPreviewSession();
