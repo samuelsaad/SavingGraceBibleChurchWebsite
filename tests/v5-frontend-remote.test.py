@@ -35,5 +35,17 @@ class V5OperatorTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, 'remote_identity_refused'):
                 operator.candidate_config(original, 'a' * 40, 'anonymous-image')
 
+    def test_canary_does_not_reuse_public_ports_or_reserved_addresses(self):
+        original = self.fixture()
+        original['services']['app']['container_name'] = 'anonymous-public'
+        original['services']['app']['networks'] = {'private': {'ipv4_address': '192.0.2.7', 'ipv6_address': '2001:db8::7'}}
+        candidate = operator.candidate_config(original, 'a' * 40, 'anonymous-image')
+        canary = operator.canary_config(candidate, 'a' * 40)
+        self.assertNotIn('ports', canary['services']['app'])
+        self.assertNotIn('container_name', canary['services']['app'])
+        self.assertEqual(canary['services']['app']['networks']['private'], {})
+        self.assertEqual(candidate['services']['app']['networks'], original['services']['app']['networks'])
+        self.assertEqual(candidate['services']['app']['ports'], original['services']['app']['ports'])
+
 if __name__ == '__main__':
     unittest.main()

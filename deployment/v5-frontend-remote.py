@@ -59,6 +59,20 @@ def retained_helper():
     helper.verify_host()
     return helper
 
+def canary_config(candidate, commit):
+    result = json.loads(json.dumps(candidate))
+    result['name'] = 'savinggrace-v5-canary-' + commit[:12]
+    app = result['services']['app']
+    for key in ['ports', 'container_name']:
+        app.pop(key, None)
+    # Public/proxy addresses belong exclusively to the incumbent runtime.
+    # Only this unpublished temporary canary gets an automatic private address.
+    for value in app.get('networks', {}).values():
+        if isinstance(value, dict):
+            value.pop('ipv4_address', None)
+            value.pop('ipv6_address', None)
+    return result
+
 def probe(container, commit):
     script = """(async()=>{const assert=require('node:assert/strict');const get=async p=>{const r=await fetch('http://127.0.0.1:8080'+p,{headers:{connection:'close'},signal:AbortSignal.timeout(60000)});return r;};const h=await get('/health/ready');assert.equal(h.status,200);assert((await h.text()).includes(process.argv[1]));const list=await get('/api/v1/sermons?pageSize=1');assert.equal(list.status,200);assert.equal((await list.json()).pagination.totalItems,398);const page=await get('/sermons-v5/');assert.equal(page.status,200);assert.match(page.headers.get('cache-control'),/no-store/);assert.match(page.headers.get('x-robots-tag'),/noindex/);const html=await page.text();assert(html.includes('id=\"v5-shelf\"'));assert(!html.includes('id=\"v5-shelf\" data-fold open'));assert.equal((html.match(/<article class=\"journal__entry/g)||[]).length,9);assert(!/<iframe[^>]*\\ssrc=/.test(html));for(const p of ['/admin','/frontend-preview/','/draft-preview/'])assert([401,403,404].includes((await get(p)).status));console.log(JSON.stringify({outcome:'verified',eligible:398,v5:true,privateRoutesDenied:true,noStoreNoindex:true}));})().catch(()=>{console.log(JSON.stringify({outcome:'failed',code:'runtime_probe_failed'}));process.exitCode=1;});"""
     value = json.loads(run(['docker', 'exec', container, 'node', '-e', script, commit]))
@@ -108,11 +122,7 @@ def main():
             fail('database_changed_during_build')
         save(root / 'public-previous.json', original)
         save(root / 'public-candidate.json', candidate)
-        canary = json.loads(json.dumps(candidate))
-        canary['name'] = 'savinggrace-v5-canary-' + commit[:12]
-        app = canary['services']['app']
-        for key in ['ports', 'container_name']:
-            app.pop(key, None)
+        canary = canary_config(candidate, commit)
         if run(['docker', 'ps', '-aq', '--filter', 'label=com.docker.compose.project=' + canary['name']]).strip():
             fail('canary_project_occupied')
         save(root / 'canary.json', canary)
@@ -121,9 +131,9 @@ def main():
     elif operation == 'canary':
         recovery = json.loads((root / 'recovery.json').read_text())
         before = helper.database_hash()
-        run(['docker', 'compose', '-f', str(root / 'canary.json'), 'up', '-d', '--no-deps', '--wait', '--wait-timeout', '120', 'app'])
-        container = run(['docker', 'compose', '-f', str(root / 'canary.json'), 'ps', '-q', 'app']).decode().strip()
         try:
+            run(['docker', 'compose', '-f', str(root / 'canary.json'), 'up', '-d', '--no-deps', '--wait', '--wait-timeout', '120', 'app'])
+            container = run(['docker', 'compose', '-f', str(root / 'canary.json'), 'ps', '-q', 'app']).decode().strip()
             if helper.inspect(container)['HostConfig']['PortBindings']:
                 fail('canary_exposed_port')
             result = probe(container, commit)
