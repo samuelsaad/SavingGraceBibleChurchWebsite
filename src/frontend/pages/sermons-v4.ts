@@ -27,6 +27,7 @@ import {
   sermonsV4Target,
   siteLinks,
   withFilter,
+  type ArchiveTarget,
   type FrontendRenderContext
 } from "../routes";
 import { pageShell } from "../shell";
@@ -45,19 +46,19 @@ function resultsEyebrow(query: PublicSermonListQuery): string {
 }
 
 /** The bookshelf folded behind a compact, labelled disclosure; closed on first load. */
-export function shelfFold(input: SermonArchivePageInput, context: FrontendRenderContext, skipTo: string): Html {
+export function shelfFold(input: SermonArchivePageInput, context: FrontendRenderContext, skipTo: string, target: ArchiveTarget = sermonsV4Target, prefix = "v4"): Html {
   const preached = input.options.books.length;
   const shelfHtml = shelf(input.options, {
-    href: (book) => withFilter(input.query, { sermon_book: book.slug, passageBook: null, passageChapter: null, passageVerse: null, passageEndVerse: null, passageScope: null }, context, "canon", sermonsV4Path),
+    href: (book) => withFilter(input.query, { sermon_book: book.slug, passageBook: null, passageChapter: null, passageVerse: null, passageEndVerse: null, passageScope: null }, context, "canon", target.path),
     settle: true,
     skipTo,
-    headingId: "v4-shelf-heading"
+    headingId: `${prefix}-shelf-heading`
   });
-  return html`<section class="fold-section" aria-labelledby="v4-shelf-heading">
-    <details class="fold" id="v4-shelf" data-fold>
+  return html`<section class="fold-section" aria-labelledby="${prefix}-shelf-heading">
+    <details class="fold" id="${prefix}-shelf" data-fold>
       <summary class="fold__summary">
         <span class="fold__chevron" aria-hidden="true"></span>
-        <span class="fold__label"><span class="fold__title" id="v4-shelf-heading">Browse by Bible book</span><span class="fold__hint">${preached ? `${formatCount(preached, "book")} with sermons · take one off the shelf` : "No sermons have been shelved yet"}</span></span>
+        <span class="fold__label"><span class="fold__title" id="${prefix}-shelf-heading">Browse by Bible book</span><span class="fold__hint">${preached ? `${formatCount(preached, "book")} with sermons · take one off the shelf` : "No sermons have been shelved yet"}</span></span>
         <span class="fold__strip">${canonStrip(input.options)}</span>
       </summary>
       <div class="fold__body">

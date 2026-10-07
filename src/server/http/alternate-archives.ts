@@ -1,8 +1,8 @@
 /**
  * Alternate archive presentations reached from the Sermons menu:
- * SermonsV1 (the original landing page) at /sermons-v1/ and SermonsV4 at
- * /sermons-v4/ with its own pagination. Both reuse the caller's eligible
- * repository and render context, so a preview caller authenticates first
+ * SermonsV1 (the original landing page) at /sermons-v1/, SermonsV4 at
+ * /sermons-v4/ and SermonsV5 at /sermons-v5/, with pagination on V4 and V5.
+ * All reuse the caller's eligible repository and render context, so a preview caller authenticates first
  * and the sealed runtime keeps its restricted scope. The routes are
  * non-indexable comparison surfaces; the archive canonical is unchanged.
  */
@@ -12,12 +12,13 @@ import { InvalidLegacySermonQueryError } from "../../api/legacy-sermon-query";
 import { renderFrontendBoundaryPage } from "../../frontend/pages/boundary";
 import { renderSermonsV1Page } from "../../frontend/pages/sermons-v1";
 import { renderSermonsV4Page } from "../../frontend/pages/sermons-v4";
-import { contextualPath, sermonsV1Path, sermonsV4Path, type FrontendRenderContext } from "../../frontend/routes";
+import { renderSermonsV5Page } from "../../frontend/pages/sermons-v5";
+import { contextualPath, sermonsV1Path, sermonsV4Path, sermonsV5Path, type FrontendRenderContext } from "../../frontend/routes";
 import type { PublicSermonRepository } from "../repositories/sermon-repository";
 import { loadArchivePage } from "./frontend-archive-loader";
 import { frontendResponse } from "./frontend-response";
 
-export type AlternateArchive = "v1" | "v4";
+export type AlternateArchive = "v1" | "v4" | "v5";
 
 const landingPageSize = 50;
 
@@ -26,7 +27,7 @@ export function createAlternateArchiveHandler(
   context: FrontendRenderContext,
   presentation: AlternateArchive
 ) {
-  const path = presentation === "v1" ? sermonsV1Path : sermonsV4Path;
+  const path = presentation === "v1" ? sermonsV1Path : presentation === "v4" ? sermonsV4Path : sermonsV5Path;
   const root = contextualPath(context, path);
   const privatePreview = context.mode !== "public";
   const robots = { "X-Robots-Tag": privatePreview ? "noindex, nofollow, noarchive" : "noindex, follow" };
@@ -64,7 +65,9 @@ export function createAlternateArchiveHandler(
       if (page === 1) return redirect(`${root}${url.search}`);
       const loaded = await loadArchivePage(repository, url.searchParams, page);
       if (loaded.kind === "not-found") return error(404, "Page not found", "That archive page does not exist.");
-      return frontendResponse(renderSermonsV4Page(loaded.input, context), { privatePreview, headers: robots });
+      // Eligible summaries already contain the complete description used by V5.
+      const render = presentation === "v4" ? renderSermonsV4Page : renderSermonsV5Page;
+      return frontendResponse(render(loaded.input, context), { privatePreview, headers: robots });
     } catch (cause) {
       if (cause instanceof ZodError || cause instanceof InvalidLegacySermonQueryError) {
         return error(400, "Check the sermon filters", "One or more filter values are invalid.");
@@ -74,9 +77,9 @@ export function createAlternateArchiveHandler(
   };
 }
 
-/** Both alternates, tried in order; null when the request is for neither. */
+/** All alternates, tried in order; null when the request is for none. */
 export function createAlternateArchiveHandlers(repository: PublicSermonRepository, context: FrontendRenderContext) {
-  const handlers = (["v1", "v4"] as const).map((presentation) => createAlternateArchiveHandler(repository, context, presentation));
+  const handlers = (["v1", "v4", "v5"] as const).map((presentation) => createAlternateArchiveHandler(repository, context, presentation));
   return async (request: Request): Promise<Response | null> => {
     for (const handler of handlers) {
       const response = await handler(request);

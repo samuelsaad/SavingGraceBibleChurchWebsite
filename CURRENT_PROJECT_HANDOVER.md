@@ -1,5 +1,30 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
+## D-176 — preserved SermonsV5 integration, 7 October 2026
+
+Samuel authorizes delivering the saved V5 design to the current local frontend,
+public staging and GitHub delivery branch. The original dirty frontend worktree
+remains unchanged (25 modified/untracked files hash-verified). Only V5 code,
+navigation, anonymous tests and safe documentation are carried across. No sermon,
+dataset, acceptance, publication, source, migration or eligibility change occurs.
+The current optimized D-175 discovery predicates remain intact; stored media
+duration projection and scoped Arabic title/description direction are compatible
+additions. See `docs/design/sermons-v5.md` for original design and new checks.
+
+Focused checks: 51 pass. Full standard suite: 951 pass / 134 database-gated skips.
+Type/Astro: 507 files, zero diagnostics. Production build: 45 pages; staging bundle
+passes. Anonymous dry run and cached offline audit pass. Four offline code-only
+deployment tests pass. The local candidate passes desktop/tablet/mobile at
+1440/768/390/320px, mobile-menu V5 navigation, keyboard description expansion,
+full description without JavaScript, detail/older routes and no-overflow checks.
+No screenshots, external media request or real review write. Impeccable reports
+zero antipatterns and twelve existing compact-type advisories documented by the
+V5 surface brief. No global design drift repair or redesign was performed.
+Local database fingerprint and 430 stored / 407 eligible counts are preserved.
+No database changes or disposable PostgreSQL writes belong to this task. Public
+staging retains its existing 398 eligible members; protected staging is unchanged.
+Code-only public activation and final GitHub/URL verification remain pending.
+
 ## D-175 complete — exact SermonAudio 119 delivery
 
 Final verification on 6 October UTC / 7 October Australia/Sydney supersedes the

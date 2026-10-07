@@ -93,7 +93,7 @@ describe("shared frontend shell", () => {
   });
 
   it("ships readable enhancement scripts that parse and hash consistently into the policy", () => {
-    expect(Object.keys(enhancementScripts).sort()).toEqual(["canon", "church", "mobileNavigation", "navigation", "sermon"]);
+    expect(Object.keys(enhancementScripts).sort()).toEqual(["canon", "church", "journal", "mobileNavigation", "navigation", "sermon"]);
     for (const [name, source] of Object.entries(enhancementScripts)) {
       expect(() => new Function(source), `${name} parses`).not.toThrow();
       expect(source, `${name} is readable`).toContain("\n");

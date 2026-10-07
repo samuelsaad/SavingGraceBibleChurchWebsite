@@ -25,7 +25,9 @@ export const publicMediaSchema = z.object({
   mediaType: z.enum(["video", "audio"]),
   externalId: z.string().min(1).nullable(),
   canonicalUrl: z.url().max(2_000),
-  title: z.string().min(1)
+  title: z.string().min(1),
+  /** Existing media metadata only; absence never implies a recording length. */
+  durationSeconds: z.number().int().nonnegative().nullable().optional()
 }).strict().superRefine((value, context) => {
   const url = new URL(value.canonicalUrl);
   const host = url.hostname.toLowerCase().replace(/^www\./, "");

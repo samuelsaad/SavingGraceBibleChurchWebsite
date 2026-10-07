@@ -1,0 +1,19 @@
+---
+// Static comparison surface only. Eligible sermons are supplied exclusively by
+// the existing server runtimes; no development or private dataset enters builds.
+import { publicSermonListQuerySchema } from "../../api/contracts/public-sermons";
+import { emptyFilterOptions, renderSermonsV5Page } from "../../frontend";
+
+const html = renderSermonsV5Page({
+  sermons: [],
+  totalItems: 0,
+  query: publicSermonListQuerySchema.parse({ page: 1, pageSize: 9 }),
+  options: emptyFilterOptions,
+  topicalSermons: [],
+  seriesRepresentatives: [],
+  hasQueryParameters: false
+});
+---
+
+<Fragment set:html={html} />
+

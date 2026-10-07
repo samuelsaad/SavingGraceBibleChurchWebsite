@@ -1,5 +1,21 @@
 # Project Decision Log
 
+## D-176 — deliver the existing SermonsV5 implementation
+
+Samuel's 7 October 2026 instruction authorizes integration, a normal GitHub push
+and code-only deployment of preserved V5 to the current local frontend and existing
+public staging runtime. Use current delivery branch `codex/sermonaudio-119-complete`;
+do not force-push or alter the original dirty frontend worktree. Existing authorized
+dataset-bearing history is unchanged; no new dataset/content export is performed.
+Retain selectors, acceptances, content/publication states, authentication,
+no-store/noindex and every production protection. No database write, migration,
+synchronization, source retrieval or sermon processing is authorized by this task.
+Preserve Astra church pages, Claude detail/media controls and earlier versions.
+Only V5 routing, stored-duration projection and original-language compatibility
+accompany the saved design. Public staging reuses its listener/database/configuration
+with prior-image recovery. Protected staging and unrelated listeners are unchanged.
+Actual execution outcomes are recorded in the handover, not inferred from this plan.
+
 ## D-175 — exact SermonAudio 119 completion and frontend delivery
 
 Samuel's current 6 October 2026 instruction authorizes full preparation, primary

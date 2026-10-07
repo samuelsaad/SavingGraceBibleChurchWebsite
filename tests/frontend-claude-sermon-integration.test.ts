@@ -53,7 +53,7 @@ const preservedSources = [
   ],
   [
     "src/frontend/scripts/canon.ts",
-    "545d26e4b1efac58d57bd44f98d065d5bb1d32f548c7f25fc551b5f182698197"
+    "ab5124d684a32561265c9d0707e6eedf960c14561004eb03fec3f5b5a1dd618a"
   ],
   [
     "src/frontend/scripts/sermon.ts",
@@ -82,7 +82,7 @@ const input = {
 };
 
 describe("Claude sermon integration inside the preserved Astra shell", () => {
-  it("keeps church pages, global typography, home cards and sermon interactions byte-identical", () => {
+  it("preserves church pages, typography, cards and interactions plus additive V5 results focus", () => {
     for (const [path, expected] of preservedSources) {
       const actual = readFileSync(path, "utf8").replace(/\r\n/g, "\n");
       expect(createHash("sha256").update(actual).digest("hex"), path).toBe(expected);

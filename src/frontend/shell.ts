@@ -29,7 +29,7 @@ import {
 } from "./content/home-content";
 import { activeMenuItem, footerMenu, primaryMenu, sitePath, type MenuItem } from "./content/navigation";
 import { attribute, documentTitle, html, raw, type Html, when } from "./html";
-import { canonicalOrigin, sermonsV1Path, sermonsV4Path, siteLinks, type FrontendRenderContext, type FrontendTaxonomyKind, publicRenderContext } from "./routes";
+import { canonicalOrigin, sermonsV1Path, sermonsV4Path, sermonsV5Path, siteLinks, type FrontendRenderContext, type FrontendTaxonomyKind, publicRenderContext } from "./routes";
 import { enhancementScripts, type EnhancementScriptName } from "./scripts";
 import { siteStyles, type StyleBlockName } from "./styles";
 
@@ -95,9 +95,10 @@ function sermonsMenu(context: FrontendRenderContext, navigationPath: string, act
   }
   const v1Active = sitePath(navigationPath) === sermonsV1Path;
   const v4Active = sitePath(navigationPath) === sermonsV4Path;
+  const v5Active = sitePath(navigationPath) === sermonsV5Path;
   return html`<details class="masthead__menu" data-menu data-sermon-menu>
-      <summary class="masthead__menu-toggle${active || v1Active || v4Active ? " is-active" : ""}" aria-controls="sermon-navigation" title="Open menu; double-click to browse SermonsV4">${navigationCopy.sermons}${chevron}</summary>
-      <ul class="masthead__dropdown" id="sermon-navigation"><li><a href="${links.sermonsV1}"${attribute("aria-current", v1Active ? "page" : null)}>SermonsV1</a></li>${items.map(([section, label]) => html`<li><a href="${section === "sermons" ? links.archive : links.taxonomyIndex(section)}"${attribute("aria-current", active === section ? "page" : null)}>${section === "sermons" ? "SermonsV2" : label}</a></li>${when(section === "sermons", () => html`<li><a href="${links.sermonsV4}" data-sermon-archive${attribute("aria-current", v4Active ? "page" : null)}>SermonsV4</a></li>`)}`)}</ul>
+      <summary class="masthead__menu-toggle${active || v1Active || v4Active || v5Active ? " is-active" : ""}" aria-controls="sermon-navigation" title="Open menu; double-click to browse SermonsV4">${navigationCopy.sermons}${chevron}</summary>
+      <ul class="masthead__dropdown" id="sermon-navigation"><li><a href="${links.sermonsV1}"${attribute("aria-current", v1Active ? "page" : null)}>SermonsV1</a></li>${items.map(([section, label]) => html`<li><a href="${section === "sermons" ? links.archive : links.taxonomyIndex(section)}"${attribute("aria-current", active === section ? "page" : null)}>${section === "sermons" ? "SermonsV2" : label}</a></li>${when(section === "sermons", () => html`<li><a href="${links.sermonsV4}" data-sermon-archive${attribute("aria-current", v4Active ? "page" : null)}>SermonsV4</a></li><li><a href="${links.sermonsV5}"${attribute("aria-current", v5Active ? "page" : null)}>SermonsV5</a></li>`)}`)}</ul>
     </details>`;
 }
 

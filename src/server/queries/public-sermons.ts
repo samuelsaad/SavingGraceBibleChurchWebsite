@@ -385,7 +385,8 @@ export function publicRelationshipProjection(alias = "s", scope: FrontendSermonS
       'mediaType', media.media_type,
       'externalId', media.external_id,
       'canonicalUrl', media.canonical_url,
-      'title', media.title
+      'title', media.title,
+      'durationSeconds', media.duration_seconds
     )
     FROM sermon_media media
     WHERE media.sermon_id = ${alias}.id
@@ -532,7 +533,8 @@ export function buildPublishedSermonDetailQuery(
                    'mediaType', media.media_type,
                    'externalId', media.external_id,
                    'canonicalUrl', media.canonical_url,
-                   'title', media.title
+                   'title', media.title,
+                   'durationSeconds', media.duration_seconds
                  ) ORDER BY media.display_order, media.id
                )
                FROM sermon_media media

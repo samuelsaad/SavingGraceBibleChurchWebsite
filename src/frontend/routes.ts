@@ -17,7 +17,8 @@ export const archivePageSize = 9;
  */
 export const sermonsV1Path = "/sermons-v1/";
 export const sermonsV4Path = "/sermons-v4/";
-export type ArchiveBasePath = typeof archivePath | typeof sermonsV1Path | typeof sermonsV4Path;
+export const sermonsV5Path = "/sermons-v5/";
+export type ArchiveBasePath = typeof archivePath | typeof sermonsV1Path | typeof sermonsV4Path | typeof sermonsV5Path;
 
 export interface FrontendRenderContext {
   mode: "public" | "preview" | "restricted" | "draft-preview";
@@ -158,6 +159,7 @@ export interface ArchiveTarget {
 
 export const archiveTarget: ArchiveTarget = Object.freeze({ path: archivePath, fragment: "results" });
 export const sermonsV4Target: ArchiveTarget = Object.freeze({ path: sermonsV4Path, fragment: "v4-results" });
+export const sermonsV5Target: ArchiveTarget = Object.freeze({ path: sermonsV5Path, fragment: "v5-results" });
 
 export const resultsAnchor = "results";
 export const recentAnchor = "most-recent-sermons";
@@ -169,6 +171,7 @@ export interface SiteLinks {
   readonly archive: string;
   readonly sermonsV1: string;
   readonly sermonsV4: string;
+  readonly sermonsV5: string;
   readonly hasTaxonomyRoutes: boolean;
   archivePage(page: number): string;
   sermon(slug: string): string;
@@ -185,6 +188,7 @@ export function siteLinks(context: FrontendRenderContext): SiteLinks {
     archive: contextualPath(context, archivePath),
     sermonsV1: contextualPath(context, sermonsV1Path),
     sermonsV4: contextualPath(context, sermonsV4Path),
+    sermonsV5: contextualPath(context, sermonsV5Path),
     hasTaxonomyRoutes: context.mode !== "public",
     archivePage: (page) => archivePagePath(page, context),
     sermon: (slug) => sermonPath(context, slug),

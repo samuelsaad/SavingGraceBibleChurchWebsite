@@ -58,7 +58,7 @@ export const canonScript = `(function () {
 
   /* ---- focus placement after a search or passage step ---- */
   var hash = window.location.hash;
-  if (hash === '#results' || hash === '#v4-results') {
+  if (hash === '#results' || hash === '#v4-results' || hash === '#v5-results') {
     var results = document.getElementById(hash.slice(1));
     if (results) results.focus({ preventScroll: true });
   } else if (hash === '#canon') {

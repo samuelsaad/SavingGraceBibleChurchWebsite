@@ -1,5 +1,26 @@
 # Migration Validation Plan
 
+## D-176 V5 frontend-only integration — 7 October 2026
+
+The original dirty V5 worktree's 25 changed/untracked files are hash-preserved.
+Delivery uses focused patches, not an older backend replacement. Current materialized
+acceptance/status/freshness gates remain. V5 uses eligible summaries only, without
+transcript/detail lookups; duration uses stored values without estimation. Arabic
+title/description retain scoped direction and Unicode. Focused tests: 51 pass;
+standard suite: 951 pass / 134 database-gated skips; offline deployment guards:
+four pass. No database changes or disposable runner in this task. Type/Astro:
+507 files, zero diagnostics. Static/staging builds, anonymous dry run and cached
+offline audit pass. Two existing font build warnings remain.
+Local 1440/768/390/320px checks pass: closed shelf, pale heading, compact journal,
+semantic tables, keyboard description toggle/preserved hash, normal detail/older
+links, mobile-menu V5 access, full no-JS description, no overflow/client error/
+external request/review write. An initial harness did not open the existing mobile
+menu; the corrected normal flow passes without changing the interface. Impeccable:
+zero antipatterns and twelve documented compact-type advisories. Read-only local
+database hash `ab0b4421292b9e2b91eecb85bdc1049c9ee5b7ccfff26cf21749cd5f94605cb5`,
+430 stored / 407 eligible. Final public activation, rollback and GitHub checks
+remain pending until actually performed; no remote outcome is claimed yet.
+
 ## D-175 final delivery verification — 7 October 2026 Australia/Sydney
 
 - Frozen manifest `a4fa3627682043c4b06aa65ddbebdab75f1fc29aec93e2d250bda537d9b0cd2b`:

@@ -9,6 +9,7 @@ export { renderPublicSermonPage, type SermonPageOptions } from "./pages/sermon";
 export { emptyFilterOptions, renderFrontendHomePage, type FrontendHomePageInput } from "./pages/home";
 export { renderSermonsV1Page, type SermonLandingInput } from "./pages/sermons-v1";
 export { renderSermonsV4Page } from "./pages/sermons-v4";
+export { renderSermonsV5Page } from "./pages/sermons-v5";
 export {
   renderFrontendTaxonomyDetail,
   renderFrontendTaxonomyIndex,
@@ -42,6 +43,8 @@ export {
   sermonsV1Path,
   sermonsV4Path,
   sermonsV4Target,
+  sermonsV5Path,
+  sermonsV5Target,
   siteLinks,
   withFilter,
   type FrontendRenderContext,

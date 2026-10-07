@@ -244,13 +244,14 @@ describe("authenticated local frontend preview", () => {
       "/frontend-preview/sermons-v1/",
       "/frontend-preview/sermons/",
       "/frontend-preview/sermons-v4/",
+      "/frontend-preview/sermons-v5/",
       "/frontend-preview/speakers/",
       "/frontend-preview/series/",
       "/frontend-preview/books/"
     ];
 
     expect(navigation).toContain('<details class="masthead__menu" data-menu data-sermon-menu>');
-    expect(navigation).toContain('<ul class="masthead__dropdown" id="sermon-navigation"><li><a href="/frontend-preview/sermons-v1/">SermonsV1</a></li><li><a href="/frontend-preview/sermons/">SermonsV2</a></li><li><a href="/frontend-preview/sermons-v4/" data-sermon-archive>SermonsV4</a></li><li><a href="/frontend-preview/speakers/">Speakers</a></li><li><a href="/frontend-preview/series/">Series</a></li><li><a href="/frontend-preview/books/">Books</a></li></ul>');
+    expect(navigation).toContain('<ul class="masthead__dropdown" id="sermon-navigation"><li><a href="/frontend-preview/sermons-v1/">SermonsV1</a></li><li><a href="/frontend-preview/sermons/">SermonsV2</a></li><li><a href="/frontend-preview/sermons-v4/" data-sermon-archive>SermonsV4</a></li><li><a href="/frontend-preview/sermons-v5/">SermonsV5</a></li><li><a href="/frontend-preview/speakers/">Speakers</a></li><li><a href="/frontend-preview/series/">Series</a></li><li><a href="/frontend-preview/books/">Books</a></li></ul>');
     expect(navigation).not.toContain('data-sermon-menu open');
     expect(navigation).toContain('aria-controls="sermon-navigation"');
     expect(html).toContain('<script data-enhancement="navigation">');
