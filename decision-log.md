@@ -1,5 +1,32 @@
 # Project Decision Log
 
+## D-177 — verified recording-duration delivery
+
+Samuel's 7 October 2026 instruction authorizes verified duration metadata for
+the existing local collection, including the already-completed D-175 records,
+without repeating generation or review. Initial read-only discovery found 430
+local records, 407 frontend eligible, 387 SermonAudio mappings and no positive
+stored duration. The private inventory snapshot is SHA-256
+`7c412fdb8d6d579bd5f9c03d17c5320d14efc75bf01c14648dd15848f9c833c3`.
+Reuse official cached recording metadata before new requests. Provider identity,
+recording ID, numeric value, documented units, source hash and honest retrieval
+time basis are mandatory. Never infer recording duration from transcript timing.
+
+Authorized writes are guarded metadata-only local updates and scoped synchronization
+to records already present in the existing public/protected staging environments.
+Preserve content, media identities, publication and exact eligible populations.
+Current acceptance may be refreshed transactionally only with proof of its prior
+validity and unchanged non-duration dependencies, including cross-record speaker
+evidence dependencies. Preserve original decisions and immutable audit history.
+No new approval, public/semantic eligibility or production authority is created.
+
+Necessary adapters, anonymous tests, safe governance/documentation, duration-only
+curated dataset updates and the prior intentional local V5 refinement may be
+committed and normally pushed on `codex/sermonaudio-119-complete`. Staging changes
+require destination verification, protected scoped recovery, idempotency, builds
+and checks. Preserve all unrelated work. Raw provider evidence and keys stay
+ignored and outside deployment images. Execution results follow in the handover.
+
 ## D-176 — deliver the existing SermonsV5 implementation
 
 Samuel's 7 October 2026 instruction authorizes integration, a normal GitHub push

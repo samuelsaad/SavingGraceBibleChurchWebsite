@@ -6,7 +6,7 @@ export function permittedPackagePath(path) {
   return ["Dockerfile", ".dockerignore", "package.json", "package-lock.json", "deployment/build.mjs",
     "deployment/compose.yaml", "deployment/acceptance-compose.yaml", "deployment/topical-compose.yaml", "deployment/d160-draft-preview-compose.yaml", "deployment/d160-sync.ts", "deployment/d161-sync-compose.yaml", "deployment/d161-sync.ts", "deployment/restore.py", "deployment/README.md",
     "deployment/savinggrace-staging.socket", "deployment/savinggrace-staging.service",
-    "deployment/savinggrace-d160-db.socket", "deployment/savinggrace-d160-db.service", "deployment/d167-protected-sync.ts"].includes(path)
+    "deployment/savinggrace-d160-db.socket", "deployment/savinggrace-d160-db.service", "deployment/d167-protected-sync.ts", "deployment/sermon-durations-sync.ts"].includes(path)
     || /^src\/[a-zA-Z0-9_/-]+\.ts$/.test(path)
     || /^db\/migrations\/[0-9]{4}_[a-z0-9_]+(?:\.down)?\.sql$/.test(path);
 }

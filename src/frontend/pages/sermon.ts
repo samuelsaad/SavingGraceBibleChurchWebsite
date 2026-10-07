@@ -11,6 +11,7 @@ import type { PublicSermonFilterOptions } from "../../server/repositories/sermon
 import { formatCount, readingStats } from "../canon";
 import { entry, passageStamp, primaryBook } from "../components/catalogue";
 import { mediaSection } from "../components/media";
+import { recordingDurationLabel, sermonRecordingDuration } from "../components/recording-duration";
 import { bookTab, canonStrip, topicalTab } from "../components/shelf";
 import { formattedDate, html, plainTextParagraphs, timeElement, when, type Html } from "../html";
 import { archivePath, contextualPath, publicRenderContext, siteLinks, withFilter, type FrontendRenderContext } from "../routes";
@@ -64,6 +65,7 @@ export function renderPublicSermonPage(
     <h1 class="sermon__title${isLongTitle ? " is-long" : ""}"${contentAttributes}>${sermon.title}</h1>
     <p class="sermon__meta">
       <span>${timeElement(sermon.serviceDate)}</span>
+      ${when(sermonRecordingDuration(sermon), () => html`<span>${recordingDurationLabel(sermonRecordingDuration(sermon))}</span>`)}
       ${when(sermon.speaker, () => html`<span><a href="${links.taxonomy("speakers", sermon.speaker!.slug)}">${sermon.speaker!.name}</a></span>`)}
       ${when(sermon.series.length, () => html`<span>${sermon.series.map((item, index) => html`${index > 0 ? ", " : ""}<a href="${links.taxonomy("series", item.slug)}">${item.name}</a>`)}</span>`)}
       ${noPrimaryNote}
@@ -121,6 +123,7 @@ export function renderPublicSermonPage(
       ${contents(sermon)}
       <dl class="rail__meta">
         <dt>Preached</dt><dd>${formattedDate(sermon.serviceDate)}</dd>
+        ${when(sermonRecordingDuration(sermon), () => html`<dt>Recording length</dt><dd>${recordingDurationLabel(sermonRecordingDuration(sermon))}</dd>`)}
         ${when(sermon.speaker, () => html`<dt>Speaker</dt><dd><a href="${links.taxonomy("speakers", sermon.speaker!.slug)}">${sermon.speaker!.name}</a></dd>`)}
         ${when(sermon.series.length, () => html`<dt>Series</dt><dd>${sermon.series.map((item, index) => html`${index > 0 ? ", " : ""}<a href="${links.taxonomy("series", item.slug)}">${item.name}</a>`)}</dd>`)}
         ${when(sermon.primaryPassages.length, () => html`<dt>Preached from</dt><dd>${sermon.primaryPassages.map((item) => item.displayText).join(", ")}</dd>`)}

@@ -1,5 +1,6 @@
 import {createHash} from 'node:crypto';
 import {z} from 'zod';
+import {durationRefreshedEligibilitySql} from './recording-duration-receipt';
 export const localWordingScopeSha256='1d04a65dad79c2f5b0489382a94423f7e2341ce8cd9433e8c81ffdea73573259';
 export const localWordingNamespace='website.d172-local-completion';
 export const localWordingActor='codex-d172-local-wording-review';
@@ -35,7 +36,7 @@ export function localWordingDependencySql(alias='s'){
  * imports this predicate. Exact database coordinates are an additional boundary. */
 export function localWordingCompletionSql(alias='s',testDatabaseName?:string){
  const target=testDatabaseName&&/^savinggrace_test_run_[a-z0-9]{24,48}$/u.test(testDatabaseName)?testDatabaseName:'savinggrace_sermons_test';
- return `(current_database()='${target}' AND host(inet_server_addr())='127.0.0.1' AND inet_server_port()=5432
+ const original=`(current_database()='${target}' AND host(inet_server_addr())='127.0.0.1' AND inet_server_port()=5432
  AND ${alias}.status='draft' AND ${alias}.published_at IS NULL AND ${alias}.deleted_at IS NULL
  AND EXISTS(SELECT 1 FROM sermon_extensions lc WHERE lc.sermon_id=${alias}.id
  AND lc.namespace='${localWordingNamespace}' AND lc.schema_version=1
@@ -48,4 +49,6 @@ export function localWordingCompletionSql(alias='s',testDatabaseName?:string){
  AND EXISTS(SELECT 1 FROM audit_events a WHERE a.entity_id=${alias}.id AND a.entity_type='sermon'
  AND a.action='${localWordingAction}' AND a.actor_subject='${localWordingActor}' AND a.actor_role='system' AND a.outcome='succeeded'
  AND a.request_correlation_id='${localWordingScopeSha256}:'||encode(digest(lc.payload::text,'sha256'),'hex'))))`;
+ const guard=`current_database()='${target}' AND host(inet_server_addr())='127.0.0.1' AND inet_server_port()=5432 AND ${alias}.status='draft' AND ${alias}.published_at IS NULL AND ${alias}.deleted_at IS NULL`;
+ return `(${original} OR ${durationRefreshedEligibilitySql(alias,'d172',localWordingDependencySql(alias),guard)})`;
 }

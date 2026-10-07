@@ -47,6 +47,7 @@ type PublicSermonRow = QueryResultRow & {
   primary_passage_state: unknown;
   books: unknown;
   primary_media: unknown;
+  recording_duration?: unknown;
   review_state?: unknown;
   total_items?: number;
   is_topical?: boolean;
@@ -108,6 +109,7 @@ function summaryFromRow(row: PublicSermonRow): SermonSummary {
     primaryPassageState: row.primary_passage_state,
     books: row.books,
     primaryMedia: row.primary_media,
+    recordingDuration: row.recording_duration,
     reviewState: row.review_state ?? undefined,
     isTopical: row.is_topical || undefined
   });

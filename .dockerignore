@@ -8,6 +8,7 @@
 !deployment/d160-sync.ts
 !deployment/d161-sync.ts
 !deployment/d167-protected-sync.ts
+!deployment/sermon-durations-sync.ts
 !src/
 !src/**/
 !src/**/*.ts

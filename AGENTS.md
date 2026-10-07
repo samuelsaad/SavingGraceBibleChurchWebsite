@@ -1,5 +1,27 @@
 # Repository Operating Rules
 
+## D-177 — verified recording durations, existing inventory only
+
+Samuel explicitly authorizes the duration-only task in `docs/sermon-durations.md`:
+reuse verified retained provider metadata, and if necessary use read-only official
+SermonAudio metadata with the existing protected key. No audio/video retrieval,
+transcription, new sermon processing or YouTube request is authorized. Guard local
+PostgreSQL 16 and the existing public/protected staging targets. Change only
+recording durations and necessary version/provenance/audit metadata. Preserve
+valid values; conflicting evidence remains unresolved. A scoped audited refresh
+may preserve an already-current acceptance after this metadata-only change; it
+must not admit another record, fabricate human approval or change publication.
+Keep earlier decisions and all content intact. Preserve the current integrated
+frontend and its intentional V5 refinement. Both staging inventories and access
+boundaries remain unchanged; use scoped recovery and idempotent synchronization.
+This task may normally push the current `codex/sermonaudio-119-complete` branch,
+its already-authorized history and duration-only updates to its existing curated
+dataset paths to the existing repository. No additional sermon content, private
+source evidence, credentials, account/session/audit exports or configuration enters
+Git or images. No production operation or force-push is authorized. Necessary
+anonymous disposable PostgreSQL tests remain restricted to the guarded runner.
+All permanent protections remain outside this exact metadata extension.
+
 ## D-175 — exact 119-record SermonAudio completion and delivery
 
 Samuel separately authorizes `sermonaudio-119-completion-plan.md` for only manifest

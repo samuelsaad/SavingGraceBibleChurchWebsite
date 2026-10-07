@@ -1,5 +1,21 @@
 # SermonsV5 design and verification
 
+## Latest-sermon emphasis — 7 October 2026
+
+The local refinement uses the existing mineral-blue heading band, pale-blue
+surface and semantic Bible-book tab. On fine-pointer hover, only the feature's
+tab rises 4px with the existing soft lift shadow; its opening arrow moves 0.2rem.
+The panel deepens and the title takes the existing copper accent. Content and
+neighbouring entries remain stationary. Keyboard focus preserves outlines and
+gets the same colour emphasis. Motion runs only with no reduced-motion preference;
+touch devices retain the static emphasis. Print restores dark type on white.
+
+Anonymous renders at 1440/768/390/320px and the actual authenticated local preview
+verify hover, touch, keyboard description expansion, reduced motion and no overflow.
+An independent read-only finish review found no concrete defect. No real sermon
+screenshots were taken. No backend, content, eligibility or remote runtime changed.
+The local working-tree refinement is separate from the deployed D-176 commit below.
+
 ## D-176 integration into the current release
 
 The original V5 visual world and interactions are retained. Only additive route,

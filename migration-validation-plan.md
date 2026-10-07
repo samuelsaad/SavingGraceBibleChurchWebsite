@@ -1,5 +1,62 @@
 # Migration Validation Plan
 
+## D-177 verified recording durations — 7 October 2026
+
+- Read-only discovery: 430 local sermons / 407 eligible, zero stored positive
+  durations. No active processing worker; all 119 D-175 imports already complete.
+- Hash/identity revalidation: 387 retained SermonAudio audio lengths and 38
+  retained official YouTube video lengths; five unavailable. No new authenticated
+  provider requests. Five one-second alternate-encoding observations investigated:
+  documented recording-level value matches every highest-bitrate audio rendition.
+  Original values/units and honest timestamp basis remain in private provenance.
+- Atomic local apply: 425 updated, zero conflicts/failures; exact content,
+  identities, publication, old audits/reviews and eligible membership preserved.
+  Identical apply: 425 unchanged; independent verify passes with the same complete
+  database fingerprint, including versions and audits.
+- `npm run test:postgres`: 1,127 passed, zero skips. The runner created/removed
+  only its uniquely named disposable database. Initial failures were anonymous
+  summary/media fixture omissions and a preservation hash for the intentional
+  card duration field; fixed without changing validation or weakening the guard.
+- `npm test`: 989 passed / 138 database-gated skips, covered by the full PG run.
+- Build: 45 pages; staging bundle passes. Two existing build-time font warnings
+  retain working runtime asset routes. Anonymous importer dry-run: 5 inputs,
+  3 included, 2 excluded, 0 rejected. Cached offline audit: zero vulnerabilities.
+- Eight direct Python operator tests pass. Outgoing scoped scan: 49 paths,
+  four existing curated dataset files, zero credential/private-content findings.
+  Dataset verification proves only 393 duration values plus required hashes change;
+  identical dataset rerun makes zero writes. The provider-mismatched 15-record
+  YouTube seed stays byte-identical rather than inheriting an audio duration.
+- Recovery: immutable precommit scoped evidence; compensating metadata rollback
+  preserves history and current receipt validity. Old-image rollback is rehearsed
+  before staging metadata writes, not falsely advertised as compatible afterward.
+  Staging and final browser results are pending at this implementation checkpoint.
+
+## Local V5 featured-sermon emphasis — 7 October 2026
+
+- Scoped CSS only: existing blue heading/panel, book-tab lift and opening-arrow
+  feedback for the latest entry. No schema, data, content, eligibility or remote
+  changes. Working-tree implementation remains uncommitted.
+- Anonymous desktop/tablet/mobile renders at 1440/768/390/320px pass without
+  overflow/errors. Mouse hover raises the feature's tab 4px; ordinary rows stay
+  still. Touch and reduced-motion have no tab transform. Keyboard description
+  expansion/collapse and visible focus remain intact. Independent finish review
+  found no concrete defect.
+- Actual authenticated local candidate passes heading/hover checks, responsive
+  layout, description toggle, reduced motion, no external requests/iframes,
+  no-store/noindex and anonymous denial (401). No real-content screenshots or
+  review writes. The preview is refreshed on loopback 4411.
+- Existing standard suite: 951 pass, 134 database-gated skips. Type/Astro: 511
+  files, zero diagnostics. Production build: 45 pages; two unchanged runtime-font
+  resolution warnings. No database suite is claimed for this CSS-only change.
+- Existing anonymous migration fixture: five input, three included, two excluded,
+  zero rejected. The first dry-run command named a nonexistent fixture; rerunning
+  with `tests/fixtures/dry-run.json` passed. Live reduced-motion automation initially
+  sampled an in-flight browser transition; waiting for the applied media state
+  passed without changing the stylesheet.
+- Cached offline production-dependency audit: zero vulnerabilities. Impeccable:
+  zero anti-patterns, 13 existing compact-type advisory locations (no type sizes
+  changed). Diff hygiene passes. Design details remain in the scoped V5 brief.
+
 ## D-176 V5 frontend-only integration — 7 October 2026
 
 The original dirty V5 worktree's 25 changed/untracked files are hash-preserved.

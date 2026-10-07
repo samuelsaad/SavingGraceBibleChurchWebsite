@@ -45,7 +45,8 @@ const preservedSources = [
   ],
   [
     "src/frontend/components/cards.ts",
-    "8cb4200dd6ed718014117cc0b1f9fe3efc3c935485e09167a039225eb0ce11e9"
+    // D-177 adds only optional recording metadata to the existing date line.
+    "5d26580a9280ac6b7d593c46f8dcec0166ad9d2e76abb804c08d7ae3df1384ab"
   ],
   [
     "src/frontend/components/search.ts",

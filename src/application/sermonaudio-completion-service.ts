@@ -10,6 +10,7 @@ import {assessSermonTitle} from '../domain/sermon-title';
 import {resolveExplicitPassage} from '../domain/primary-book-resolution';
 import {validateLegacySlug} from '../domain/slug';
 import {applySermonAudioPassageCorrection} from '../domain/sermonaudio-passage-correction';
+import {verifiedDurationEvidenceSchema} from '../metadata/sermon-duration-update';
 
 const sha=z.string().regex(/^[a-f0-9]{64}$/u);
 const inputSchema=z.object({
@@ -19,7 +20,8 @@ const inputSchema=z.object({
  passageTexts:z.array(z.string().min(1).max(500)).max(20),sermonAudioId:z.string().regex(/^\d+$/u),broadcaster:z.literal('savinggrace'),language:z.enum(['en','ar']),
  sourceSha256:sha,metadataSha256:sha,sourceCaptureSha256:sha,transcript:z.string().min(1).max(500000),transcriptSha256:sha,
  candidate:z.unknown(),candidateArtifact:z.unknown(),candidateHash:sha,review:z.unknown(),reviewHash:sha,expectedRowVersion:z.number().int().positive().nullable(),
- sourceRetrievedAt:z.iso.datetime(),sourceVersion:z.record(z.string(),z.unknown()),governanceCommit:z.string().regex(/^[a-f0-9]{40}$/u)
+ sourceRetrievedAt:z.iso.datetime(),sourceVersion:z.record(z.string(),z.unknown()),governanceCommit:z.string().regex(/^[a-f0-9]{40}$/u),
+ recordingDuration:verifiedDurationEvidenceSchema.optional()
 }).strict();
 export type SermonAudioCompletionInput=z.infer<typeof inputSchema>;
 async function jsonHash(db:PoolClient,value:unknown){return (await db.query("SELECT encode(digest($1::jsonb::text,'sha256'),'hex') hash",[JSON.stringify(value)])).rows[0].hash as string;}
@@ -41,6 +43,7 @@ export async function applySermonAudioCompletion(pool:Pool,scope:FrozenInventory
   if(!selected||selected.source.sourceWordPressId!==input.sourceWordPressId||selected.source.title!==input.title||selected.source.serviceDate!==input.serviceDate||selected.recording.sermonID!==input.sermonAudioId||selected.metadataSha256!==input.metadataSha256||selected.source.speakerNames.length!==1||selected.source.speakerNames[0]!==input.canonicalSpeaker)throw Error('d175_frozen_metadata_conflict');
  }
  if(!sourceIds.includes(input.sourceWordPressId))throw Error('d175_source_out_of_scope');
+ if(input.recordingDuration&&(input.recordingDuration.provider!=='sermonaudio'||input.recordingDuration.recordingId!==input.sermonAudioId||input.recordingDuration.metadataSha256!==input.metadataSha256||input.recordingDuration.broadcasterId!==input.broadcaster))throw Error('d175_recording_duration_identity_conflict');
  const slug=validateLegacySlug(input.slug);if(!slug)throw Error('d175_slug_refused');
  if(hash(input.transcript)!==input.transcriptSha256)throw Error('d175_transcript_hash_mismatch');
  const validated=validateCandidate(input.transcript,input.candidate,input.language);
@@ -92,9 +95,10 @@ export async function applySermonAudioCompletion(pool:Pool,scope:FrozenInventory
    await db.query('INSERT INTO sermon_book_classifications(sermon_id,book_classification_id,display_order)VALUES($1,$2,$3) ON CONFLICT DO NOTHING',[id,classification[0].id,i]);
   }
   const url=canonicalSermonAudioUrl(input.sermonAudioId);if(!url)throw Error('d175_media_id_refused');
-  await db.query("INSERT INTO sermon_media(id,sermon_id,provider,media_type,external_id,canonical_url,title,is_primary,display_order)VALUES($1,$2,'sermonaudio','audio',$3,$4,$5,true,0)",[deterministicSourceUuid('wordpress-sermonaudio',input.sourceWordPressId),id,input.sermonAudioId,url,'Audio: '+title]);
+  await db.query("INSERT INTO sermon_media(id,sermon_id,provider,media_type,external_id,canonical_url,title,is_primary,display_order,duration_seconds)VALUES($1,$2,'sermonaudio','audio',$3,$4,$5,true,0,$6)",[deterministicSourceUuid('wordpress-sermonaudio',input.sourceWordPressId),id,input.sermonAudioId,url,'Audio: '+title,input.recordingDuration?.durationSeconds??null]);
   const sourcePayload={decision:'D-175',manifestSha256:d175ManifestSha256,sourceMembershipSha256:d175SourceMembershipSha256,sourceWordPressId:input.sourceWordPressId,sermonAudioId:input.sermonAudioId,broadcaster:input.broadcaster,sourceSha256:input.sourceSha256,metadataSha256:input.metadataSha256,sourceCaptureSha256:input.sourceCaptureSha256,sourceCaptureDate:'2026-10-04T07:17:50.567Z',sourceRetrievedAt:input.sourceRetrievedAt,sourceVersion:input.sourceVersion,language:input.language,transcriptSha256:input.transcriptSha256,originalTitle:input.title,governanceCommit:input.governanceCommit,audioVerified:false,providerApprovalClaimed:false};
-  const preservedSource=passage.evidence?{...sourcePayload,originalPassageTexts:input.passageTexts,deliveredPassageTexts:passage.passageTexts,passageCorrection:passage.evidence}:sourcePayload;
+  const durationSource=input.recordingDuration?{...sourcePayload,recordingDuration:input.recordingDuration}:sourcePayload;
+  const preservedSource=passage.evidence?{...durationSource,originalPassageTexts:input.passageTexts,deliveredPassageTexts:passage.passageTexts,passageCorrection:passage.evidence}:durationSource;
   await db.query('INSERT INTO sermon_extensions(sermon_id,namespace,schema_version,payload)VALUES($1,$2,1,$3::jsonb)',[id,d175SourceNamespace,JSON.stringify(preservedSource)]);
   const provenance={sourceKind:'generated_draft',sourceReference:'d175:'+input.transcriptSha256+':'+input.candidateHash};
   const content={schemaVersion:2,sourceWordPressId:input.sourceWordPressId,targetSermonId:id,expectedRowVersion:1,description:{bodyText:validated.candidate.description,provenance},transcript:{bodyText:input.transcript,provenance:{sourceKind:'imported',sourceReference:'sermonaudio:'+input.sermonAudioId+':'+input.sourceSha256}},questionAnswers:validated.candidate.questionAnswers.map(q=>({question:q.question,answer:q.answer,provenance}))};

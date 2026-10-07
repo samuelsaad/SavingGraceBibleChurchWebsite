@@ -5,6 +5,7 @@ import {z} from 'zod';
 import {inspectGeneratedText} from '../enrichment/generated-text-mechanical-qa';
 import {verifyRecording,verifyBroadcaster,originalLanguage} from './transcript-retrieval';
 import {sermonAudioPassageCorrectionSchema} from '../domain/sermonaudio-passage-correction';
+import {extractSermonAudioRecordingDuration} from './recording-duration';
 
 export const completionDecision='D-175';
 export const completionManifestSha256='a4fa3627682043c4b06aa65ddbebdab75f1fc29aec93e2d250bda537d9b0cd2b';
@@ -12,6 +13,18 @@ export const hash=(v:string|Uint8Array)=>createHash('sha256').update(v).digest('
 export const runtimeProvenance={provider:'OpenAI',product:'Codex',mode:'current interactive session',model:'not_exposed_by_runtime',immutableRevision:'not_exposed_by_runtime',sessionIdentifier:'not_exposed_by_runtime',separatelyBilledApiUsed:false} as const;
 export interface FrozenTarget {sequence:number;source:{sourceWordPressId:number;title:string;serviceDate:string;status:string;sourceModifiedAt:string;speakerNames:string[];passageTexts:string[]};recording:{sermonID:string;fullTitle:string;preachDate:string;languageCode:string;languageCode3:string;broadcaster:{broadcasterID:string};speaker:{displayName:string};bibleText?:string;series?:unknown};metadataSha256:string;}
 export interface FrozenInventory {targets:FrozenTarget[];sourceSha256:string;}
+/** D-174 preserved exact metadata bytes but not a per-response timestamp. The
+ * later transcript receipt bounds when those metadata had already been retained;
+ * it must not be described as a fresh provider request or exact response time. */
+export function retainedRecordingDuration(metadata:Uint8Array,target:Pick<FrozenTarget,'recording'|'metadataSha256'>,transcriptRetrievedAt:string){
+ if(hash(metadata)!==target.metadataSha256)throw Error('d175_metadata_hash_mismatch');
+ if(!z.iso.datetime().safeParse(transcriptRetrievedAt).success)throw Error('d175_source_receipt_time_refused');
+ const parsed=extractSermonAudioRecordingDuration(JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(metadata)),target.recording.sermonID);
+ if(!parsed)return null;
+ const {corroboratingAudioRenditions,...evidence}=parsed;
+ return {...evidence,retrievedAt:transcriptRetrievedAt,retrievalTimeBasis:'retained_transcript_receipt_upper_bound' as const,
+  metadataSha256:target.metadataSha256,identityVerified:true as const,broadcasterVerified:true as const,sourceKind:'cached_official_api' as const};
+}
 async function regularFile(path:string){const s=await lstat(path);if(!s.isFile()||s.isSymbolicLink())throw Error('d175_file_type_refused');return readFile(path);}
 export async function readFrozenInventory(root:string):Promise<FrozenInventory>{
  const raw=await regularFile(join(root,'manifest.private.json'));
@@ -36,7 +49,8 @@ export async function readVerifiedSource(root:string,t:FrozenTarget){
  if(!text.trim()||/<(?:html|script|iframe)\b/iu.test(text))throw Error('d175_source_text_refused');
  const language=originalLanguage(t.recording as Parameters<typeof originalLanguage>[0]);
  if(!language||language!==receipt.language||!['en','eng','ar','ara'].includes(language))throw Error('d175_source_language_refused');
- return {raw,text,receipt,language:(language==='ar'||language==='ara'?'ar':'en') as 'en'|'ar',providerLanguage:language};
+ return {raw,text,receipt,language:(language==='ar'||language==='ara'?'ar':'en') as 'en'|'ar',providerLanguage:language,
+  recordingDuration:retainedRecordingDuration(metadata,t,receipt.retrievedAt)};
 }
 export const lexicalWords=(s:string)=>s.match(/[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*/gu)??[];
 /** Whitespace-only readability preparation; never synthesize source wording. */

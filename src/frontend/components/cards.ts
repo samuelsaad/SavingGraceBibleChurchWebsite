@@ -17,6 +17,7 @@ import { attribute, html, raw, timeElement, when, type Html } from "../html";
 import type { SiteLinks } from "../routes";
 import { primaryBook, titleCarriesPassage } from "./catalogue";
 import { shelfMark } from "./marks";
+import { recordingDurationLabel, sermonRecordingDuration } from "./recording-duration";
 
 export interface SermonCardOptions {
   links: SiteLinks;
@@ -88,7 +89,7 @@ export function sermonCard(sermon: SermonSummary, options: SermonCardOptions): H
     <div class="card__body">
       ${when(options.latest, () => html`<span class="card__flag">Latest<span class="sr-only"> sermon.</span></span>`)}
       ${when(options.ordinal !== undefined, () => html`<span class="sr-only">Result ${options.ordinal}.</span>`)}
-      <p class="card__top"><span>${timeElement(sermon.serviceDate)}</span>${when(sermon.series.length, () => html`<span class="card__series"><span class="sr-only">Series: </span>${sermon.series.map((item, index) => html`${index > 0 ? ", " : ""}<a href="${links.taxonomy("series", item.slug)}">${item.name}</a>`)}</span>`)}${when(sermon.reviewState === "draft_awaiting_review", () => html`<span class="card__pill">Draft · awaiting administrator review</span>`)}</p>
+      <p class="card__top"><span>${timeElement(sermon.serviceDate)}</span>${when(sermonRecordingDuration(sermon), () => html`<span>${recordingDurationLabel(sermonRecordingDuration(sermon))}</span>`)}${when(sermon.series.length, () => html`<span class="card__series"><span class="sr-only">Series: </span>${sermon.series.map((item, index) => html`${index > 0 ? ", " : ""}<a href="${links.taxonomy("series", item.slug)}">${item.name}</a>`)}</span>`)}${when(sermon.reviewState === "draft_awaiting_review", () => html`<span class="card__pill">Draft · awaiting administrator review</span>`)}</p>
       <${heading} class="card__title${titleSize(sermon.title)}"><a href="${links.sermon(sermon.slug)}">${sermon.title}</a></${heading}>
       ${when(sermon.speaker || showPassages, () => html`<p class="card__meta">${when(sermon.speaker, () => html`<span><span class="sr-only">Preacher: </span><a href="${links.taxonomy("speakers", sermon.speaker!.slug)}">${sermon.speaker!.name}</a></span>`)}${when(sermon.speaker && showPassages, () => html`<span class="card__dot" aria-hidden="true">·</span>`)}${when(showPassages, () => html`<span><span class="sr-only">Passage: </span>${passages}</span>`)}</p>`)}
       ${when(description, () => html`<p class="card__desc">${description}</p>`)}

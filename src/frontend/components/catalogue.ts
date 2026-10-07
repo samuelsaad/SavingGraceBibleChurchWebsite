@@ -13,6 +13,7 @@ import { formatCount } from "../canon";
 import { attribute, html, singleLine, timeElement, when, type Html } from "../html";
 import type { SiteLinks } from "../routes";
 import { bookTab, topicalTab } from "./shelf";
+import { recordingDurationLabel, sermonRecordingDuration } from "./recording-duration";
 
 export type EntryVariant = "card" | "row" | "related";
 
@@ -66,6 +67,7 @@ export function sermonTab(sermon: SermonSummary, links: SiteLinks): Html {
 function metaLine(sermon: SermonSummary, links: SiteLinks): Html {
   return html`<p class="entry__meta">
     <span>${timeElement(sermon.serviceDate)}</span>
+    ${when(sermonRecordingDuration(sermon), () => html`<span>${recordingDurationLabel(sermonRecordingDuration(sermon))}</span>`)}
     ${when(sermon.speaker, () => html`<span><a href="${links.taxonomy("speakers", sermon.speaker!.slug)}">${sermon.speaker!.name}</a></span>`)}
     ${when(sermon.series.length, () => html`<span>${sermon.series.map((item, index) => html`${index > 0 ? ", " : ""}<a href="${links.taxonomy("series", item.slug)}">${item.name}</a>`)}</span>`)}
   </p>`;

@@ -8,6 +8,7 @@ import { resolveYouTubeIdentity } from "../../domain/youtube";
 import {canonicalSermonAudioUrl, resolveSermonAudioIdentity} from '../../domain/sermonaudio';
 import { html, when, type Html } from "../html";
 import { shelfMark } from "./marks";
+import { recordingDurationLabel } from "./recording-duration";
 
 export interface SermonMedia {
   video: Html | null;
@@ -25,6 +26,7 @@ export function sermonMedia(sermon: SermonDetail): SermonMedia {
         <div class="plate__consent">
           ${shelfMark("plate__mark")}
           <p class="plate__title">${youtube.item.title}</p>
+          ${when(recordingDurationLabel(youtube.item), () => html`<p class="plate__note">Video length: ${recordingDurationLabel(youtube.item)}</p>`)}
           <p class="plate__note">Loading the player connects to YouTube (youtube-nocookie.com). Nothing plays until you press play.</p>
           <button class="button button--onink" type="button" data-load-youtube data-video-id="${youtube.identity.videoId}" data-video-title="${`Video: ${sermon.title}`}">Load the video<span class="sr-only"> for ${sermon.title} from youtube-nocookie.com</span></button>
           <noscript><p class="plate__note">The video player needs JavaScript.</p></noscript>
@@ -33,8 +35,9 @@ export function sermonMedia(sermon: SermonDetail): SermonMedia {
     : null;
   const recordings = sermon.media.filter(item => item.provider === 'sermonaudio')
     .map(item => ({item, id:resolveSermonAudioIdentity(item)})).filter(item => item.id);
-  const audio = recordings.map(({id}) => html`<div class="audio-plate" data-audio-frame>
+  const audio = recordings.map(({id, item}) => html`<div class="audio-plate" data-audio-frame>
     <p class="audio-plate__title">Listen to this sermon</p>
+    ${when(recordingDurationLabel(item), () => html`<p class="audio-plate__note">Audio length: ${recordingDurationLabel(item)}</p>`)}
     <p class="audio-plate__note">Loading the audio player connects to SermonAudio. Nothing plays until you press play.</p>
     <button class="button button--onink" type="button" data-load-sermonaudio data-sermonaudio-id="${id}" data-audio-title="${`Audio: ${sermon.title}`}">Load audio player<span class="sr-only"> for ${sermon.title}</span></button>
     <noscript><p class="audio-plate__note">Use the SermonAudio link below to listen without JavaScript.</p></noscript>

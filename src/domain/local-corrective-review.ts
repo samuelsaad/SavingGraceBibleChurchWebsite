@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
 import { localWordingDependencySql } from './local-wording-completion';
+import {durationRefreshedEligibilitySql} from './recording-duration-receipt';
 
 export const correctiveManifestSha256 = '97e682024a9a7aec9bb727d7c75ac8992f86672383c4a649289eaa2c5889e21e';
 export const correctiveMembershipSha256 = '2640b3e2015b30ef854cd451e05edde0c20377e64d8691d8a161181f34979f1f';
@@ -56,7 +57,7 @@ function targetName(testDatabaseName?:string) {
 }
 export function correctiveCompletionSql(alias='s',testDatabaseName?:string):string {
  if(!/^[a-z][a-z_]*$/u.test(alias))throw Error('sql_alias_refused');
- return `(current_database()='${targetName(testDatabaseName)}' AND host(inet_server_addr())='127.0.0.1' AND inet_server_port()=5432
+ const original=`(current_database()='${targetName(testDatabaseName)}' AND host(inet_server_addr())='127.0.0.1' AND inet_server_port()=5432
  AND ${alias}.status='draft' AND ${alias}.published_at IS NULL AND ${alias}.deleted_at IS NULL AND ${alias}.speaker_id IS NOT NULL
  AND EXISTS(SELECT 1 FROM sermon_extensions lc WHERE lc.sermon_id=${alias}.id AND lc.namespace='${correctiveCompletionNamespace}' AND lc.schema_version=1
  AND lc.payload->>'decision'='D-173' AND lc.payload->>'environment'='local_loopback' AND lc.payload->>'manifestSha256'='${correctiveManifestSha256}'
@@ -66,10 +67,12 @@ export function correctiveCompletionSql(alias='s',testDatabaseName?:string):stri
  AND EXISTS(SELECT 1 FROM audit_events a WHERE a.entity_id=${alias}.id AND a.entity_type='sermon' AND a.action='${correctiveCompletionAction}'
  AND a.actor_subject='${correctiveActor}' AND a.actor_role='system' AND a.outcome='succeeded'
  AND a.request_correlation_id='${correctiveManifestSha256}:'||encode(digest(lc.payload::text,'sha256'),'hex'))))`;
+ const guard=`current_database()='${targetName(testDatabaseName)}' AND host(inet_server_addr())='127.0.0.1' AND inet_server_port()=5432 AND ${alias}.status='draft' AND ${alias}.published_at IS NULL AND ${alias}.deleted_at IS NULL AND ${alias}.speaker_id IS NOT NULL`;
+ return `(${original} OR ${durationRefreshedEligibilitySql(alias,'d173_completion',correctiveDependencySql(alias),guard)})`;
 }
 /** Used ONLY by the explicitly opted-in authenticated loopback frontend. */
 export function correctiveAcceptanceSql(alias='s',testDatabaseName?:string):string {
- return `(${correctiveCompletionSql(alias,testDatabaseName)} AND EXISTS(SELECT 1 FROM sermon_extensions la
+ const original=`(${correctiveCompletionSql(alias,testDatabaseName)} AND EXISTS(SELECT 1 FROM sermon_extensions la
  JOIN sermon_extensions lc ON lc.sermon_id=la.sermon_id AND lc.namespace='${correctiveCompletionNamespace}'
  WHERE la.sermon_id=${alias}.id AND la.namespace='${correctiveAcceptanceNamespace}' AND la.schema_version=1
  AND la.payload->>'decision'='D-173' AND la.payload->>'environment'='local_loopback' AND la.payload->>'manifestSha256'='${correctiveManifestSha256}'
@@ -80,4 +83,5 @@ export function correctiveAcceptanceSql(alias='s',testDatabaseName?:string):stri
  AND EXISTS(SELECT 1 FROM audit_events a WHERE a.entity_id=${alias}.id AND a.entity_type='sermon' AND a.action='${correctiveAcceptanceAction}'
  AND a.actor_subject='${correctiveActor}' AND a.actor_role='system' AND a.outcome='succeeded'
  AND a.request_correlation_id='${correctiveManifestSha256}:'||encode(digest(la.payload::text,'sha256'),'hex'))))`;
+ return `(${original} OR ${durationRefreshedEligibilitySql(alias,'d173_acceptance',correctiveDependencySql(alias),correctiveCompletionSql(alias,testDatabaseName))})`;
 }

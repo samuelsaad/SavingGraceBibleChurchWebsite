@@ -36,7 +36,11 @@ portrait/byline rails. Open sermon is a separate action below the speaker on
 the wide layout. No false portrait, invented duration or visible numbering.
 
 FORM: User-specified refinement within the existing visual world. The feature
-uses the same row structure with pale-blue emphasis. Row hover/focus uses a
+uses the same row structure, a mineral-blue heading band and pale-blue reading
+surface. Fine-pointer hover lifts only its semantic book tab by 4px, shifts the
+opening arrow and strengthens the panel/title colours. The reading surface stays
+steady. Keyboard focus gets the same colour emphasis; reduced-motion and touch
+keep the tab still. Ordinary row hover/focus uses a
 quiet tone change; a progressively enabled native button controls the full
 description with See more/See less and `aria-expanded`. YouTube, audio and
 transcript shortcut icons remain inert, using existing burgundy, green and blue

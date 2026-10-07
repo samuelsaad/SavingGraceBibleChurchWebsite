@@ -1,7 +1,7 @@
 {
   "schemaVersion": "project-sermon-snapshot-v1",
   "contentFile": "sermons.json",
-  "contentSha256": "54b6860f95acf912e268ce32ad2d424d7e3ba0e21192473152a1b2e15e95d4cd",
+  "contentSha256": "4bfb54e729841c89b6af87387768236d64839df845c5456e613559198d0f463d",
   "counts": {
     "sermons": 279,
     "transcripts": 279,

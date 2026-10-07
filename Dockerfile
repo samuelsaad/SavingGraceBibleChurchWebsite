@@ -9,6 +9,7 @@ COPY deployment/build.mjs ./deployment/build.mjs
 COPY deployment/d160-sync.ts ./deployment/d160-sync.ts
 COPY deployment/d161-sync.ts ./deployment/d161-sync.ts
 COPY deployment/d167-protected-sync.ts ./deployment/d167-protected-sync.ts
+COPY deployment/sermon-durations-sync.ts ./deployment/sermon-durations-sync.ts
 RUN node deployment/build.mjs
 
 FROM ${NODE_IMAGE} AS runtime
@@ -21,6 +22,7 @@ COPY --from=build --chown=node:node /build/dist-staging/database.cjs ./database.
 COPY --from=build --chown=node:node /build/dist-staging/sermonaudio-sync.cjs ./sermonaudio-sync.cjs
 COPY --from=build --chown=node:node /build/dist-staging/completed-sync.cjs ./completed-sync.cjs
 COPY --from=build --chown=node:node /build/dist-staging/sermonaudio-completion-sync.cjs ./sermonaudio-completion-sync.cjs
+COPY --from=build --chown=node:node /build/dist-staging/sermon-durations-sync.cjs ./sermon-durations-sync.cjs
 COPY --from=build --chown=node:node /build/dist-staging/draft-preview.cjs ./draft-preview.cjs
 COPY --from=build --chown=node:node /build/dist-staging/d160-sync.cjs ./d160-sync.cjs
 COPY --from=build --chown=node:node /build/dist-staging/d161-sync.cjs ./d161-sync.cjs

@@ -10,10 +10,16 @@ export const v5Styles = `
 .v5 .fold__title { font-family: var(--font-ui); text-transform: none; letter-spacing: 0; }
 .v5__recent { margin-top: 3.5rem; scroll-margin-top: 2rem; }
 .v5__featured { margin-top: 3rem; }
+.v5__featured .section__head { margin-bottom: 0; padding: 1.1rem 1.5rem; background: var(--colour-ink); color: var(--colour-on-ink); }
+.v5__featured .section__title { color: inherit; }
+.v5__featured .section__aside { color: var(--colour-on-ink-soft); }
 .v5__featured .journal { background: var(--colour-recessed); }
-.v5__featured .journal > li { border-top: 2px solid var(--colour-ink); border-bottom: 1px solid var(--colour-rule); }
-.v5__featured .journal__entry { padding-right: 1.5rem; }
+.v5__featured .journal > li { border-top: 0; border-bottom: 1px solid var(--colour-rule); }
+.v5__featured .journal__entry { padding-inline: 1.5rem; }
+.v5__featured .journal__entry:focus-within { background: var(--colour-gilt-soft); }
 .v5__featured .journal__title { font-size: clamp(1.5rem, 2.3vw, 2rem); }
+.v5__featured .journal__title a { transition: color var(--motion-duration) var(--motion-easing); }
+.v5__featured .journal__entry:focus-within .journal__title a { color: var(--colour-gilt); }
 .v5__recent:focus { outline: none; }
 .v5 .section__title { font-size: clamp(1.5rem, 2.3vw, 2rem); }
 .v5 .section__aside { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; }
@@ -101,7 +107,8 @@ export const v5Styles = `
   .v5__heading p { max-width: none; }
   .v5__recent { margin-top: 2.5rem; }
   .journal__entry { grid-template-columns: var(--journal-tab-width) minmax(0, 1fr); grid-template-areas: "tab dateline" "tab body" "tab rail"; gap: 0.8rem; padding: 1.25rem 0; }
-  .v5__featured .journal__entry { padding-right: 1rem; }
+  .v5__featured .section__head { padding: 1rem; }
+  .v5__featured .journal__entry { padding-inline: 0.75rem; }
   .journal__tab { grid-area: tab; }
   .journal__body { grid-area: body; }
   .journal__dateline { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.3rem 0.75rem; }
@@ -124,7 +131,22 @@ export const v5Styles = `
   .v5-directory__name { font-size: 0.9375rem; }
   .v5-directory td { padding: 0.85rem 1rem; }
 }
+/* The lead recording picks up the shelf's book-tab gesture. Keep the reading
+   surface steady; only its tab and the opening arrow move, without a loop. */
+@media (hover: hover) and (pointer: fine) {
+  .v5__featured .journal__entry:hover { background: var(--colour-gilt-soft); }
+  .v5__featured .journal__entry:hover .journal__title a { color: var(--colour-gilt); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .v5__featured .journal__tab .tab { transition: transform 240ms var(--motion-easing), box-shadow 240ms var(--motion-easing); }
+  .v5__featured .journal__open .journal__arrow { transition: transform var(--motion-duration) var(--motion-easing); }
+  .v5__featured .journal__open:focus-visible .journal__arrow { transform: translateX(0.2rem); }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .v5__featured .journal__entry:hover .journal__tab .tab { transform: translateY(-0.25rem); box-shadow: var(--shadow-lift); }
+  .v5__featured .journal__entry:hover .journal__open .journal__arrow { transform: translateX(0.2rem); }
+}
 @media (prefers-reduced-motion: reduce) { .journal__entry { transition: none; } }
 @media (forced-colors: active) { .journal__tab .tab { border: 1px solid CanvasText; } }
-@media print { .journal__description.is-collapsed { display: block; overflow: visible; -webkit-line-clamp: unset; line-clamp: unset; } .journal__toggle, .journal__formats { display: none; } }
+@media print { .journal__description.is-collapsed { display: block; overflow: visible; -webkit-line-clamp: unset; line-clamp: unset; } .journal__toggle, .journal__formats { display: none; } .v5__featured .section__head { background: var(--colour-ground-print); color: var(--colour-ink-print); } .v5__featured .section__aside { color: inherit; } }
 `;

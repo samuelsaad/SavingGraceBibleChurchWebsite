@@ -56,6 +56,18 @@ export const publicMediaSchema = z.object({
 
 export type PublicMedia = z.infer<typeof publicMediaSchema>;
 
+/** Duration belongs to this recording, which need not be the primary player. */
+export const recordingDurationSchema = z.object({
+  provider: z.enum(["youtube", "sermonaudio"]),
+  mediaType: z.enum(["video", "audio"]),
+  externalId: z.string().min(1).nullable(),
+  durationSeconds: z.number().int().positive()
+}).strict().refine(value => value.provider === "sermonaudio" ? value.mediaType === "audio" : value.mediaType === "video", {
+  message: "Recording duration must retain its provider and media type"
+});
+
+export type RecordingDuration = z.infer<typeof recordingDurationSchema>;
+
 export const scriptureReferenceDtoSchema = z.object({
   displayText: z.string().min(1),
   parseStatus: z.enum(["unparsed", "exact", "partial", "unresolved", "curated"])
@@ -81,6 +93,7 @@ export const sermonSummarySchema = z.object({
   isTopical: z.boolean().optional(),
   books: z.array(z.object({ name: z.string(), slug: z.string() })),
   primaryMedia: publicMediaSchema.nullable(),
+  recordingDuration: recordingDurationSchema.nullable().optional(),
   reviewState: z.enum(["draft_awaiting_review"]).optional()
 });
 

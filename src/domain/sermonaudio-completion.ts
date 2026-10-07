@@ -1,4 +1,5 @@
 import {createHash} from 'node:crypto';
+import {durationRefreshedEligibilitySql} from './recording-duration-receipt';
 
 export const d175ManifestSha256='a4fa3627682043c4b06aa65ddbebdab75f1fc29aec93e2d250bda537d9b0cd2b';
 export const d175SourceMembershipSha256='00dcc94e2ffff5db065ab83060fe7d79a4d8787310b120479446c9563f9eb818';
@@ -24,7 +25,7 @@ export function d175DependencySql(alias='s'){
  * semantic eligibility. A portable dataset cannot reproduce system audit authority. */
 export function d175AcceptanceSql(alias='s'){
  aliasName(alias);
- return `(${alias}.status='draft' AND ${alias}.published_at IS NULL AND ${alias}.deleted_at IS NULL AND ${alias}.speaker_id IS NOT NULL
+ const original=`(${alias}.status='draft' AND ${alias}.published_at IS NULL AND ${alias}.deleted_at IS NULL AND ${alias}.speaker_id IS NOT NULL
  AND EXISTS(SELECT 1 FROM sermon_extensions a
  JOIN sermon_extensions r ON r.sermon_id=a.sermon_id AND r.namespace='${d175ReviewNamespace}'
  JOIN sermon_extensions p ON p.sermon_id=a.sermon_id AND p.namespace='${d175SourceNamespace}'
@@ -44,4 +45,6 @@ export function d175AcceptanceSql(alias='s'){
  AND EXISTS(SELECT 1 FROM audit_events e WHERE e.entity_id=${alias}.id AND e.entity_type='sermon' AND e.action='${d175AcceptanceAction}'
  AND e.actor_subject='${d175Actor}' AND e.actor_role='system' AND e.outcome='succeeded'
  AND e.request_correlation_id='${d175ManifestSha256}:'||encode(digest(a.payload::text,'sha256'),'hex'))))`;
+ const guard=`${alias}.status='draft' AND ${alias}.published_at IS NULL AND ${alias}.deleted_at IS NULL AND ${alias}.speaker_id IS NOT NULL`;
+ return `(${original} OR ${durationRefreshedEligibilitySql(alias,'d175',d175DependencySql(alias),guard)})`;
 }

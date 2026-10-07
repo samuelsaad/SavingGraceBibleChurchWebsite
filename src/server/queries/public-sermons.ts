@@ -395,7 +395,25 @@ export function publicRelationshipProjection(alias = "s", scope: FrontendSermonS
       AND media.title IS NOT NULL
     ORDER BY media.is_primary DESC, media.display_order, media.id
     LIMIT 1
-  ) AS primary_media`;
+  ) AS primary_media,
+  (
+    SELECT jsonb_build_object(
+      'provider', recording.provider,
+      'mediaType', recording.media_type,
+      'externalId', recording.external_id,
+      'durationSeconds', recording.duration_seconds
+    )
+    FROM sermon_media recording
+    WHERE recording.sermon_id = ${alias}.id
+      AND ((recording.provider = 'sermonaudio' AND recording.media_type = 'audio')
+        OR (recording.provider = 'youtube' AND recording.media_type = 'video'))
+      AND recording.canonical_url IS NOT NULL
+      AND recording.title IS NOT NULL
+      AND recording.duration_seconds > 0
+    ORDER BY CASE WHEN recording.provider = 'sermonaudio' THEN 0 ELSE 1 END,
+      recording.is_primary DESC, recording.display_order, recording.id
+    LIMIT 1
+  ) AS recording_duration`;
 }
 
 export function buildPublishedSermonListQuery(

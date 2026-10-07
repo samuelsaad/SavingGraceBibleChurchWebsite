@@ -21,6 +21,8 @@ export interface RecordingTranscriptMetadata {
   languageCode: string;
   languageCode3: string;
   hasAudio: boolean;
+  audioDurationSeconds?: number | null;
+  media?: {audio?: Array<{duration?: number | null;bitrate?: number | null}> | null} | null;
   updateDate: number | null;
   broadcaster: {broadcasterID: string};
   speaker: {displayName: string};
