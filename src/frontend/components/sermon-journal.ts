@@ -59,4 +59,3 @@ export function sermonJournal(sermons: SermonSummary[], links: SiteLinks, featur
     </article></li>`;
   })}</ul>`;
 }
-

@@ -154,4 +154,3 @@ describe("stored media duration projection", () => {
     expect(full.text).toContain("transcript.status = 'approved'");
   });
 });
-

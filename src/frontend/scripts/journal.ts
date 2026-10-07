@@ -30,4 +30,3 @@ export const journalScript = `(function () {
     resizeTimer = setTimeout(refreshAll, 100);
   });
 })();`;
-

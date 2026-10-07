@@ -69,4 +69,3 @@ export function renderSermonsV5Page(input: SermonsV5PageInput, context: Frontend
     robots: "noindex, follow", styles: ["shelf", "v4", "v5"], scripts: ["canon", "journal"],
     books: input.options.books, mastheadSearch: false, body }, context);
 }
-

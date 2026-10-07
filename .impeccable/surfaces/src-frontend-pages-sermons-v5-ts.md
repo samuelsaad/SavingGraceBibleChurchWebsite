@@ -63,4 +63,3 @@ known repository limitations and existing raster provenance are recorded in
 `docs/design/sermons-v5.md`.
 Preserve the global `DESIGN.md`, `.impeccable/design.json` and `PRODUCT.md`;
 this scoped extension does not establish a new design system.
-

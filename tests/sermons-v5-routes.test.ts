@@ -142,4 +142,3 @@ describe("SermonsV5 route integration", () => {
     expect(await response.text()).not.toContain('rel="canonical"');
   });
 });
-

@@ -123,4 +123,3 @@ describe("SermonsV5 presentation", () => {
     expect(empty).toContain('href="/sermons-v5/">Clear filters');
   });
 });
-

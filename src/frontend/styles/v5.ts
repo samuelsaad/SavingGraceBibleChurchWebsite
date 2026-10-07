@@ -128,4 +128,3 @@ export const v5Styles = `
 @media (forced-colors: active) { .journal__tab .tab { border: 1px solid CanvasText; } }
 @media print { .journal__description.is-collapsed { display: block; overflow: visible; -webkit-line-clamp: unset; line-clamp: unset; } .journal__toggle, .journal__formats { display: none; } }
 `;
-
