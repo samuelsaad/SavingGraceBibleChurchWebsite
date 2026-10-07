@@ -93,11 +93,12 @@ describe("shared frontend shell", () => {
   });
 
   it("ships readable enhancement scripts that parse and hash consistently into the policy", () => {
-    expect(Object.keys(enhancementScripts).sort()).toEqual(["canon", "church", "journal", "mobileNavigation", "navigation", "sermon"]);
+    expect(Object.keys(enhancementScripts).sort()).toEqual(["canon", "church", "journal", "journalPagination", "mobileNavigation", "navigation", "sermon"]);
     for (const [name, source] of Object.entries(enhancementScripts)) {
       expect(() => new Function(source), `${name} parses`).not.toThrow();
       expect(source, `${name} is readable`).toContain("\n");
-      expect(source).not.toMatch(/innerHTML|eval\(|fetch\(|XMLHttpRequest|document\.write|autoplay/u);
+      expect(source).not.toMatch(/innerHTML|eval\(|XMLHttpRequest|document\.write|autoplay/u);
+      if (name !== "journalPagination") expect(source).not.toContain("fetch(");
     }
     for (const html of Object.values(pages)) {
       const csp = contentSecurityPolicy(html);

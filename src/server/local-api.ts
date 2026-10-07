@@ -13,6 +13,9 @@ import { PostgresSermonRepository } from "./repositories/postgres-sermon-reposit
 import { assertLoopbackApiHost } from "./local-api-safety";
 import { LocalFrontendPreviewSession } from "./auth/local-frontend-preview-session";
 import {localFrontendPreviewScope} from './restricted-preview-scope';
+import {PostgresAcceptedSemanticRepository} from './repositories/postgres-accepted-semantic-repository';
+import {createRelatedThemesRuntime} from '../semantic/related-themes-runtime';
+import {createRelatedThemesEvaluationHandler} from './http/related-themes-evaluation';
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) throw new Error("DATABASE_URL is required");
@@ -29,7 +32,8 @@ const pool = createPostgresPool(connectionString);
 const publicRepository = new PostgresSermonRepository(pool);
 const previewScope = process.env.D173_LOCAL_FRONTEND_ENABLED===undefined&&process.env.D175_LOCAL_FRONTEND_ENABLED===undefined ? "completed_preview" : localFrontendPreviewScope(process.env);
 const previewPool=previewScope==='local_corrective_accepted'||previewScope==='d175_local_completed'?createPostgresPool(connectionString,{readOnly:true,utc:true}):pool;
-const previewRepository = new PostgresSermonRepository(previewPool,previewScope);
+const semanticRuntime=previewScope==='d175_local_completed'?await createRelatedThemesRuntime(new PostgresAcceptedSemanticRepository(previewPool,{environment:'local',scope:previewScope}),process.env):{};
+const previewRepository = new PostgresSermonRepository(previewPool,previewScope,semanticRuntime.reader);
 const identityProvider = new LocalTestIdentityProvider(process.env.ENABLE_LOCAL_TEST_IDENTITIES === "1");
 const route = createApplicationApiRouter(
   publicRepository,
@@ -38,7 +42,7 @@ const route = createApplicationApiRouter(
 );
 const publicSermonPage = createPublicSermonPageHandler(publicRepository);
 const previewSession = new LocalFrontendPreviewSession();
-const frontendPreview = createLocalFrontendPreviewHandler(previewRepository, previewSession);
+const frontendPreview = createLocalFrontendPreviewHandler(previewRepository, previewSession,{relatedThemesEvaluation:createRelatedThemesEvaluationHandler(semanticRuntime,'/frontend-preview')});
 const server = createServer(async (incoming, outgoing) => {
   try {
     const originHostname = hostname.includes(":") ? `[${hostname}]` : hostname;

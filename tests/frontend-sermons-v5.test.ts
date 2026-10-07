@@ -5,6 +5,8 @@ import { emptyFilterOptions, renderSermonsV5Page } from "../src/frontend";
 import { recordingDuration, verifiedSpeakerPortrait } from "../src/frontend/components/sermon-journal";
 import { finder } from "../src/frontend/components/search";
 import { previewRenderContext, publicRenderContext, sermonsV5Target } from "../src/frontend/routes";
+import { contentSecurityPolicy } from "../src/server/http/frontend-response";
+import { journalPaginationScript } from "../src/frontend/scripts/journal-pagination";
 
 const sermon: SermonSummary = {
   id: "00000000-0000-4000-8000-000000000051", slug: "anonymous-v5", title: "An anonymous presentation example",
@@ -22,6 +24,54 @@ const input = {
 };
 
 describe("SermonsV5 presentation", () => {
+  it("places progressive More sermons and numbered links before the directories on discovery", () => {
+    const page = renderSermonsV5Page(input, previewRenderContext);
+    expect(page).toContain('data-v5-more href="/frontend-preview/sermons-v5/page/2/#v5-results"');
+    expect(page).toContain('data-page="1" data-total="20"');
+    expect(page).toContain('data-v5-progress>Showing 1 of 20 sermons');
+    expect(page).toContain('role="status" aria-live="polite" aria-atomic="true" data-v5-load-status');
+    expect(page.indexOf('data-v5-more href=')).toBeLessThan(page.indexOf('<nav class="pagination"'));
+    expect(page.indexOf('<nav class="pagination"')).toBeLessThan(page.indexOf('<div class="v5__indexes"'));
+    expect(page).toContain('data-sermon-id="' + sermon.id + '"');
+  });
+  it("keeps query filters, order and preview context in the next-page URL", () => {
+    const query = publicSermonListQuerySchema.parse({page: 2, pageSize: 9, speaker: "example-speaker", query: "synthetic", order: "ASC"});
+    const page = renderSermonsV5Page({...input, query, totalItems: 30}, previewRenderContext);
+    const href = page.match(/data-v5-more href="([^"]+)"/u)?.[1]?.replaceAll("&amp;", "&");
+    expect(href).toContain("/frontend-preview/sermons-v5/page/3/?");
+    const params = new URL(href!, "http://127.0.0.1").searchParams;
+    expect(params.get("sermon_speaker")).toBe("example-speaker");
+    expect(params.get("s")).toBe("synthetic");
+    expect(params.get("order")).toBe("ASC");
+    expect(page).not.toContain("Last Week’s Sermon</h2>");
+    expect(page).not.toContain(" · Page 2 of ");
+  });
+  it("keeps direct page links at the end and no load control on final or empty pages", () => {
+    const last = renderSermonsV5Page({...input, query: {...input.query, page: 3}});
+    expect(last).not.toContain('data-v5-more href=');
+    expect(last).toContain("You’ve reached the end of these sermons.");
+    expect(last).toContain('href="/sermons-v5/page/2/#v5-results"');
+    const empty = renderSermonsV5Page({...input, sermons: [], totalItems: 0});
+    expect(empty).not.toContain('<div class="v5__browse"');
+    expect(empty).not.toContain('<nav class="pagination"');
+  });
+  it("opens only same-origin fetch permission for real continuation markup", () => {
+    expect(contentSecurityPolicy(renderSermonsV5Page(input))).toContain("connect-src 'self'");
+    expect(contentSecurityPolicy(renderSermonsV5Page({...input, totalItems: 1}))).not.toContain("connect-src");
+    expect(contentSecurityPolicy(`<script>${journalPaginationScript}</script>`)).not.toContain("connect-src");
+    expect(contentSecurityPolicy(renderSermonsV5Page(input))).not.toContain("frame-src");
+    expect(journalPaginationScript).toContain("credentials: 'same-origin'");
+    expect(journalPaginationScript).toContain("redirect: 'error'");
+    expect(journalPaginationScript).toContain("cache: 'no-store'");
+    expect(journalPaginationScript).not.toMatch(/localStorage|sessionStorage|innerHTML|console\./u);
+  });
+  it("adds book-coloured emphasis only to a verified duration, retaining provider labels", () => {
+    const known = renderSermonsV5Page({...input, sermons: [{...sermon, recordingDuration: {provider: "sermonaudio", mediaType: "audio", externalId: "123456789", durationSeconds: 4328}}]});
+    expect(known).toContain('class="journal__duration journal__duration--known"');
+    expect(known).toContain('aria-label="SermonAudio audio duration: 1 hour, 12 minutes, 8 seconds"');
+    expect(known).toContain('>1:12:08</time>');
+    expect(renderSermonsV5Page(input)).not.toContain('class="journal__duration journal__duration--known"');
+  });
   it("preserves original Arabic content with scoped right-to-left language attributes", () => {
     const record: SermonSummary = {...sermon, language: "ar", title: "عنوان تجريبي", summary: "وصف مصطنع لأغراض الاختبار فقط."};
     const page = renderSermonsV5Page({...input, sermons: [record]}, previewRenderContext);

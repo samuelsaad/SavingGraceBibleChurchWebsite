@@ -34,6 +34,7 @@ export interface ProtectedFrontendPreviewOptions {
   root?: "/frontend-preview" | "/draft-preview";
   context?: FrontendRenderContext;
   church?: ChurchSiteOptions;
+  relatedThemesEvaluation?:(request:Request)=>Promise<Response|null>;
 }
 
 function response(html: string, status = 200): Response {
@@ -92,6 +93,8 @@ export function createLocalFrontendPreviewHandler(
         context
       );
     }
+    const evaluation=await options.relatedThemesEvaluation?.(request);
+    if(evaluation)return evaluation;
     const alternate = await alternates(request);
     if (alternate) return alternate;
     const churchPage = await church(request);

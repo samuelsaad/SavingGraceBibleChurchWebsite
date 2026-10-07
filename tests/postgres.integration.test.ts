@@ -132,6 +132,7 @@ import {registerLocalCorrectiveReviewPostgresTests} from './local-corrective-rev
 import {registerSermonAudioCompletionPostgresTests} from './sermonaudio-completion-postgres';
 import {registerSermonAudioPortablePostgresTests} from './sermonaudio-portable-postgres';
 import {registerSermonDurationPostgresTests} from './sermon-duration-postgres';
+import {registerAcceptedDescriptionPostgresTests} from './accepted-description-postgres';
 
 const enabled = process.env.RUN_POSTGRES_INTEGRATION === "1";
 const integration = enabled ? describe : describe.skip;
@@ -406,6 +407,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   registerSermonAudioCompletionPostgresTests(()=>pool);
   registerSermonAudioPortablePostgresTests(()=>pool);
   registerSermonDurationPostgresTests(()=>pool);
+  registerAcceptedDescriptionPostgresTests(()=>pool);
   registerRemainingAiReviewPostgresTests(() => pool, runSchema);
   registerRestrictedAcceptancePostgresTests(() => pool, runSchema);
   registerFifthBatchPostgresTests(() => pool);

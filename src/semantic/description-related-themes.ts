@@ -4,8 +4,8 @@ import { z } from "zod";
 const sha256Schema = z.string().regex(/^[a-f0-9]{64}$/);
 
 export const descriptionSemanticPipelineSchema = z.object({
-  pipelineVersion: z.literal("description-only-semantic-v1"),
-  inputField: z.literal("approved_public_description"),
+  pipelineVersion: z.enum(["description-only-semantic-v1", "accepted-description-semantic-v2"]),
+  inputField: z.enum(["approved_public_description", "accepted_description"]),
   inputMode: z.literal("symmetric_document"),
   queryPrefix: z.null(),
   documentPrefix: z.null(),
@@ -22,7 +22,7 @@ export const descriptionSemanticPipelineSchema = z.object({
   normalisation: z.literal("l2_float32"),
   truncationMaxTokens: z.number().int().min(1).max(65_536),
   dimensions: z.number().int().min(1).max(4_096)
-}).strict();
+}).strict().refine(value => (value.pipelineVersion === "description-only-semantic-v1") === (value.inputField === "approved_public_description"), "Semantic pipeline and input scope must agree");
 
 export type DescriptionSemanticPipeline = z.infer<typeof descriptionSemanticPipelineSchema>;
 
@@ -192,6 +192,7 @@ export async function buildDescriptionSemanticPlan(input: {
   generatedAt?: Date | undefined;
 }): Promise<DescriptionSemanticBuildPlan> {
   const pipeline = descriptionSemanticPipelineSchema.parse(input.pipeline);
+  if(pipeline.pipelineVersion!=="description-only-semantic-v1")throw new DescriptionSemanticError("source_integrity_failure","The historical published-description builder requires its original v1 pipeline");
   const policy = descriptionSemanticBuildPolicySchema.parse(input.policy);
   const sources = validatedSources(input.sources);
   const pipelineFingerprint = descriptionSemanticPipelineFingerprint(pipeline);

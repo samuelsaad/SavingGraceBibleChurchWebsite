@@ -12,6 +12,7 @@ import { navigationScript } from "./navigation";
 import { churchScript } from "./church";
 import { mobileNavigationScript } from "./mobile-navigation";
 import { journalScript } from "./journal";
+import { journalPaginationScript } from "./journal-pagination";
 
 export const enhancementScripts = {
   canon: canonScript,
@@ -19,7 +20,8 @@ export const enhancementScripts = {
   navigation: navigationScript,
   church: churchScript,
   mobileNavigation: mobileNavigationScript,
-  journal: journalScript
+  journal: journalScript,
+  journalPagination: journalPaginationScript
 } as const;
 
 export type EnhancementScriptName = keyof typeof enhancementScripts;

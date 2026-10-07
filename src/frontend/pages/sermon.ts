@@ -32,6 +32,7 @@ function contents(sermon: SermonDetail): Html | null {
   if (sermon.transcript) entries.push(["transcript", "Transcript"]);
   if (sermon.questionAnswers.length) entries.push(["questions", "Questions"]);
   if (sermon.relatedSermons.length) entries.push(["related", "Related sermons"]);
+  if (sermon.relatedThemes) entries.push(["related-themes", "Related themes"]);
   if (entries.length < 2) return null;
   return html`<nav class="rail__contents" aria-labelledby="contents-heading" data-contents><p id="contents-heading" class="rail__title">On this page</p><ul class="rail__list" role="list">${entries.map(([id, label]) => html`<li><a href="#${id}">${label}</a></li>`)}</ul></nav>`;
 }
@@ -118,6 +119,17 @@ export function renderPublicSermonPage(
         <ul class="catalogue catalogue--related" role="list">${sermon.relatedSermons.map((item) => html`<li>${entry(item, { variant: "related", headingLevel: 3, links, reasons: item.relationshipReasons })}</li>`)}</ul>
       </section>`
     : null;
+  const relatedThemes = sermon.relatedThemes
+    ? html`<section class="sermon-section" id="related-themes" aria-labelledby="related-themes-heading">
+        <h2 id="related-themes-heading" class="section__title">Related themes</h2>
+        <p>${sermon.relatedThemes.mode === "evaluation"
+          ? "Evaluation preview: these provisional connections are based only on sermon descriptions. Independent human usefulness review is still required."
+          : "Explore thematic connections found in the sermon descriptions, separately from the passage, series and speaker links above."}</p>
+        ${sermon.relatedThemes.sermons.length
+          ? html`<ul class="catalogue catalogue--related" role="list">${sermon.relatedThemes.sermons.map((item) => html`<li>${entry(item, { variant: "related", headingLevel: 3, links })}</li>`)}</ul>`
+          : html`<p>No related themes are available for this sermon right now. You can still browse the sermon archive or use the existing passage, series and speaker links.</p>`}
+      </section>`
+    : null;
   const rail = html`<aside class="sermon__rail" aria-label="Sermon details">
     <div class="rail">
       ${contents(sermon)}
@@ -151,6 +163,7 @@ export function renderPublicSermonPage(
         ${transcript}
         ${questions}
         ${related}
+        ${relatedThemes}
       </div>
       ${rail}
     </article></div>`

@@ -114,6 +114,7 @@ export class LocalDescriptionEmbeddingError extends Error {
       | "runtime_integrity_failure"
       | "pipeline_fingerprint_mismatch"
       | "runtime_load_failure"
+      | "input_too_long"
       | "runtime_output_failure",
     message: string
   ) {
@@ -394,6 +395,12 @@ export function approvedDescriptionSemanticPipeline(
   });
 }
 
+/** Same verified model bytes; distinct fingerprint for bounded accepted input. */
+export function acceptedDescriptionSemanticPipeline(manifest: ApprovedLocalModelManifest): DescriptionSemanticPipeline {
+  return descriptionSemanticPipelineSchema.parse({ ...approvedDescriptionSemanticPipeline(manifest),
+    pipelineVersion: "accepted-description-semantic-v2", inputField: "accepted_description" });
+}
+
 export function assertApprovedDescriptionSemanticPipeline(
   received: Readonly<DescriptionSemanticPipeline>,
   approved: Readonly<DescriptionSemanticPipeline>
@@ -415,6 +422,7 @@ interface FeatureTensor {
 
 export interface LocalFeatureExtractor {
   run(texts: readonly string[]): Promise<FeatureTensor>;
+  tokenCount?(text: string): number;
   dispose(): Promise<void>;
 }
 
@@ -422,6 +430,15 @@ export type LocalFeatureExtractorLoader = (
   root: string,
   manifest: ApprovedLocalModelManifest
 ) => Promise<LocalFeatureExtractor>;
+
+export function assertCompleteAcceptedDescriptionInput(texts:readonly string[],maxTokens:number,tokenCount:((text:string)=>number)|undefined):void {
+  if(!tokenCount)fail("runtime_output_failure","Complete-description token verification is unavailable");
+  for(const text of texts){
+    const count=tokenCount(text);
+    if(!Number.isInteger(count)||count<=0)fail("runtime_output_failure","The tokenizer returned an invalid token count");
+    if(count>maxTokens)fail("input_too_long","Complete description exceeds the verified model token limit; no truncated embedding was generated");
+  }
+}
 
 export const loadTransformersFeatureExtractor: LocalFeatureExtractorLoader = async (root, manifest) => {
   try {
@@ -444,6 +461,7 @@ export const loadTransformersFeatureExtractor: LocalFeatureExtractorLoader = asy
       fail("runtime_load_failure", "The local embedding runtime did not retain remote-disable controls");
     }
     return {
+      tokenCount(text) { return extractor.tokenizer.encode(text, { add_special_tokens: true }).length; },
       async run(texts) {
         const output = await extractor([...texts], {
           pooling: "cls",
@@ -500,16 +518,24 @@ export class ApprovedLocalDescriptionEmbeddingModel implements DescriptionEmbedd
     return descriptionSemanticPipelineFingerprint(this.approvedPipeline);
   }
 
+  get acceptedPipeline(): Readonly<DescriptionSemanticPipeline> {
+    return { ...this.approvedPipeline, pipelineVersion: "accepted-description-semantic-v2", inputField: "accepted_description" };
+  }
+
   async embedApprovedDescriptions(
     approvedDescriptions: readonly string[],
     pipeline: Readonly<DescriptionSemanticPipeline>
   ): Promise<readonly Float32Array[]> {
-    assertApprovedDescriptionSemanticPipeline(pipeline, this.approvedPipeline);
+    const accepted = pipeline.pipelineVersion === "accepted-description-semantic-v2";
+    assertApprovedDescriptionSemanticPipeline(pipeline, accepted ? this.acceptedPipeline : this.approvedPipeline);
     const output: Float32Array[] = [];
     for (let start = 0; start < approvedDescriptions.length; start += this.batchSize) {
       const batch = approvedDescriptions.slice(start, start + this.batchSize);
       if (batch.some((description) => typeof description !== "string" || description.length === 0)) {
         fail("runtime_output_failure", "The local embedding input is not an approved description string");
+      }
+      if (accepted) {
+        assertCompleteAcceptedDescriptionInput(batch,pipeline.truncationMaxTokens,this.extractor.tokenCount?.bind(this.extractor));
       }
       const tensor = await this.extractor.run(batch);
       if (

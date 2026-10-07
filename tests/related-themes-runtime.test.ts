@@ -1,0 +1,17 @@
+import {describe,it,expect,vi} from 'vitest';
+import {relatedThemesConfiguration,createRelatedThemesRuntime} from '../src/semantic/related-themes-runtime';
+import {createRelatedThemesEvaluationHandler} from '../src/server/http/related-themes-evaluation';
+import {createLocalFrontendPreviewHandler} from '../src/server/http/local-frontend-preview';
+import {buildEligibleSemanticCardsQuery} from '../src/server/queries/public-sermons';
+import type {PostgresAcceptedSemanticRepository} from '../src/server/repositories/postgres-accepted-semantic-repository';
+import type {PublicSermonRepository} from '../src/server/repositories/sermon-repository';
+describe('separate Related themes runtime gates',()=>{
+ it('defaults off without querying the semantic tables',async()=>{const store={target:{environment:'local'},activePlan:vi.fn()} as unknown as PostgresAcceptedSemanticRepository;expect(await createRelatedThemesRuntime(store,{})).toEqual({});expect(store.activePlan).not.toHaveBeenCalled();});
+ it('never enables private evaluation on a public staging runtime',()=>{expect(()=>relatedThemesConfiguration({RELATED_THEMES_EVALUATION_ENABLED:'1'},'staging_public')).toThrow('semantic_public_evaluation_refused');});
+ it('requires explicit protected transport configuration',()=>{expect(()=>relatedThemesConfiguration({RELATED_THEMES_EVALUATION_ENABLED:'1'},'staging_protected')).toThrow();expect(relatedThemesConfiguration({RELATED_THEMES_EVALUATION_ENABLED:'1',RELATED_THEMES_ACCESS:'protected_tunnel'},'staging_protected').evaluation).toBe(true);});
+ it('rejects mixed gates and malformed flags',()=>{expect(()=>relatedThemesConfiguration({RELATED_THEMES_EVALUATION_ENABLED:'yes'},'local')).toThrow();expect(()=>relatedThemesConfiguration({RELATED_THEMES_EVALUATION_ENABLED:'1',RELATED_THEMES_VISITOR_ENABLED:'1'},'local')).toThrow();});
+ it('a visitor flag alone cannot grant release without genuine evidence',async()=>{const store={target:{environment:'local'}} as unknown as PostgresAcceptedSemanticRepository;await expect(createRelatedThemesRuntime(store,{RELATED_THEMES_VISITOR_ENABLED:'1'})).rejects.toThrow();});
+ it('local evaluation checks session authorization before any private pack is read',async()=>{const evaluate=vi.fn();const handler=createLocalFrontendPreviewHandler({} as PublicSermonRepository,{authorizes:()=>false},{relatedThemesEvaluation:evaluate});const response=await handler(new Request('http://127.0.0.1/frontend-preview/related-themes-evaluation/'));expect(response?.status).toBe(401);expect(evaluate).not.toHaveBeenCalled();expect(response?.headers.get('X-Robots-Tag')).toContain('noindex');});
+ it('disabled and stale evaluation routes expose no frozen description',async()=>{const disabled=createRelatedThemesEvaluationHandler({},'');expect((await disabled(new Request('http://127.0.0.1/related-themes-evaluation/')))?.status).toBe(404);const stale=createRelatedThemesEvaluationHandler({evaluation:async()=>null},'');const response=await stale(new Request('http://127.0.0.1/related-themes-evaluation/'));expect(response?.status).toBe(409);expect(response?.headers.get('Cache-Control')).toContain('no-store');});
+ it('hydrates cards through the existing eligibility rules, without reranking or metadata boosts',()=>{const query=buildEligibleSemanticCardsQuery(['00000000-0000-4000-8000-000000000001'],'d175_local_completed');expect(query.text).toContain('s.id=ANY($1::uuid[])');expect(query.text).not.toContain('ORDER BY cosine');expect(query.text).not.toContain('ts_rank');expect(query.text).toContain('d175');});
+});

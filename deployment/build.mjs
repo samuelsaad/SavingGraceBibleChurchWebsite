@@ -10,6 +10,7 @@ for (const [name, entry] of Object.entries({
   "completed-sync": "src/staging/completed-sync.ts",
   "sermonaudio-completion-sync": "src/staging/sermonaudio-completion-sync.ts",
   "sermon-durations-sync": "deployment/sermon-durations-sync.ts",
+  "related-themes-sync": "src/staging/related-themes-sync.ts",
   "d160-sync": "deployment/d160-sync.ts",
   "d161-sync": "deployment/d161-sync.ts",
   "d167-protected-sync": "deployment/d167-protected-sync.ts"

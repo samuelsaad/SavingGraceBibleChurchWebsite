@@ -133,7 +133,13 @@ export const sermonDetailSchema = sermonSummarySchema.extend({
     descriptionStatus: z.literal("draft"),
     questionAnswerStatus: z.literal("draft")
   }).optional(),
-  relatedSermons: z.array(relatedSermonSummarySchema).max(6).default([])
+  relatedSermons: z.array(relatedSermonSummarySchema).max(6).default([]),
+  /** Server-selected description-only suggestions. Absent unless the separate
+   * evaluation/release gate and current environment eligibility both pass. */
+  relatedThemes: z.object({
+    mode: z.enum(["evaluation", "released"]),
+    sermons: z.array(sermonSummarySchema).max(5)
+  }).strict().optional()
 });
 
 export type SermonDetail = z.infer<typeof sermonDetailSchema>;

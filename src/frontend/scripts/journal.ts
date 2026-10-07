@@ -1,12 +1,17 @@
 /** V5 description-only enhancement. Full descriptions remain readable without JS. */
 export const journalScript = `(function () {
-  var buttons = document.querySelectorAll('.v5 .journal__toggle');
   var refreshers = [];
-  for (var index = 0; index < buttons.length; index += 1) wire(buttons[index]);
+  var wired = new WeakSet();
+  function wireAll() {
+    var buttons = document.querySelectorAll('.v5 .journal__toggle');
+    for (var index = 0; index < buttons.length; index += 1) wire(buttons[index]);
+  }
   function wire(button) {
+    if (wired.has(button)) return;
     var description = document.getElementById(button.getAttribute('aria-controls'));
     var label = button.querySelector('[data-description-label]');
     if (!description || !label) return;
+    wired.add(button);
     function refresh() {
       if (button.getAttribute('aria-expanded') === 'true') return;
       description.classList.add('is-collapsed');
@@ -22,6 +27,8 @@ export const journalScript = `(function () {
     refreshers.push(refresh);
     refresh();
   }
+  wireAll();
+  document.addEventListener('v5:appended', wireAll);
   function refreshAll() { for (var i = 0; i < refreshers.length; i += 1) refreshers[i](); }
   if (document.fonts) document.fonts.ready.then(refreshAll);
   var resizeTimer;

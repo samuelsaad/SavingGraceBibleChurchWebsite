@@ -137,7 +137,11 @@ ${perBook}
 }
 @media (max-width: 38rem) {
   .finder__row { grid-template-columns: minmax(0, 1fr); }
+  .finder__submit { justify-content: stretch; }
   .finder__submit .button { width: 100%; }
+}
+@media (pointer: coarse) {
+  .ruler__cell { min-width: 44px; min-height: 44px; }
 }
 @media (forced-colors: active) {
   .shelf__row { border-bottom: var(--board) solid CanvasText; }

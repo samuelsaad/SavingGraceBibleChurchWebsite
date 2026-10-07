@@ -13,7 +13,7 @@ export const mobileNavigationScript = `(function () {
   }
   toggle.addEventListener('click', function () { setOpen(toggle.getAttribute('aria-expanded') !== 'true', false); });
   header.addEventListener('keydown', function (event) {
-    if (event.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
+    if (event.key === 'Escape' && !event.defaultPrevented && toggle.getAttribute('aria-expanded') === 'true') {
       event.preventDefault(); setOpen(false, true);
     }
   });

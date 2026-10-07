@@ -20,6 +20,8 @@ import {
   buildRelatedPublishedSermonsQuery
 } from "../queries/public-sermons";
 import type { FrontendSermonScope } from "../queries/public-sermons";
+import {buildEligibleSemanticCardsQuery} from '../queries/public-sermons';
+import type {RelatedThemesReader} from '../../semantic/related-themes-runtime';
 import type {
   PaginatedSermons,
   PublicSermonFilterOptions,
@@ -142,7 +144,8 @@ function relatedFromRow(row: RelatedSermonRow) {
 export class PostgresSermonRepository implements PublicSermonRepository {
   constructor(
     private readonly database: SqlExecutor,
-    private readonly scope: FrontendSermonScope = "public"
+    private readonly scope: FrontendSermonScope = "public",
+    private readonly relatedThemes?:RelatedThemesReader
   ) {}
 
   async listPublished(query: PublicSermonListQuery): Promise<PaginatedSermons> {
@@ -179,10 +182,19 @@ export class PostgresSermonRepository implements PublicSermonRepository {
       relatedStatement.text,
       relatedStatement.values
     );
-    return detailFromRow(
+    const detail=detailFromRow(
       row,
       (relatedResult.rows as RelatedSermonRow[]).map(relatedFromRow)
     );
+    if(this.relatedThemes){
+      const selected=await this.relatedThemes.select(row.id);
+      const ids=selected.map(item=>z.uuid().parse(item.neighbourSermonId));
+      const cards=ids.length?buildEligibleSemanticCardsQuery(ids,this.scope):null;
+      const rows=cards?(await this.database.query(cards.text,cards.values)).rows as PublicSermonRow[]:[];
+      const byId=new Map(rows.map(item=>[item.id,summaryFromRow(item)]));
+      detail.relatedThemes={mode:this.relatedThemes.mode,sermons:ids.flatMap(id=>byId.has(id)?[byId.get(id)!]:[])};
+    }
+    return detail;
   }
 
   async listPublishedFilterOptions(query?: PublicSermonListQuery): Promise<PublicSermonFilterOptions> {

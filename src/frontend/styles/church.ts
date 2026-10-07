@@ -204,11 +204,11 @@ a.tile__more { color: var(--colour-ink); }
   .page__h2, .page__h3, .page__h4 { margin-top: var(--space-7); }
   .page__h2 { font-size: 1.85rem; }
   .page__h3 { font-size: 1.6rem; }
-  .page--contact .page__head { grid-template-columns: minmax(0, 1fr) 5rem; gap: var(--space-4); margin-bottom: var(--space-5); padding: var(--space-4); }
+  .page--contact .page__head { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); margin-bottom: var(--space-5); padding: min(1rem, 4vw); }
   .page--contact .page__head .trail { margin-bottom: var(--space-2); }
   .page--contact .page__title { font-size: 2rem; text-transform: none; }
-  .page--contact .page__head-image { max-height: 7rem; }
-  .page--contact .contact-panel { padding: var(--space-5); gap: var(--space-5); }
+  .page--contact .page__head-image { max-height: 7rem; max-width: 7rem; }
+  .page--contact .contact-panel { padding: min(1.5rem, 5vw); gap: var(--space-5); }
   .page--contact .contact-panel__name { font-size: 1.65rem; }
   .tile--pictured { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
   .tile__picture { max-width: 26rem; }

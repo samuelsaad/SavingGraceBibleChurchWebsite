@@ -379,7 +379,11 @@ ${claudeSermonTokens}
 }
 @media (max-width: 38rem) {
   .claude-sermons .finder__row { grid-template-columns: minmax(0, 1fr); }
+  .claude-sermons .finder__submit { justify-content: stretch; }
   .claude-sermons .finder__submit .button { width: 100%; }
+}
+@media (pointer: coarse) {
+  .claude-sermons .ruler__cell { min-width: 44px; min-height: 44px; }
 }
 @media (forced-colors: active) {
   .claude-sermons .shelf__row { border-bottom: var(--board) solid CanvasText; }

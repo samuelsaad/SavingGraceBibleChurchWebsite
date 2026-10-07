@@ -21,7 +21,8 @@ const preservedSources = [
   ],
   [
     "src/frontend/styles/core.ts",
-    "ad288f8eaa48887cec4225f438e422fa46f47c47fd54e1eff4d871412fad34f8"
+    // Authorized mobile adaptation: contained no-JS menus and text-scaled gutters.
+    "1f12349f226180706458727a2b6a4e8a6e46297d4d4cbef1e76687a318a7df9b"
   ],
   [
     "src/frontend/styles/home.ts",
@@ -29,7 +30,8 @@ const preservedSources = [
   ],
   [
     "src/frontend/styles/church.ts",
-    "8e5178cc1df7fbd1eb069607bf1bde180a7236ef345b9b9038cd5824bcf1b1b1"
+    // Authorized mobile adaptation: contact heading stacks instead of squeezing.
+    "6b1e4d9ea734e5ffe872104f7cd1d2a591a63aef4546e6b3da57bdb1f14aefdb"
   ],
   [
     "src/frontend/styles/cards.ts",

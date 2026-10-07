@@ -42,6 +42,7 @@ export const sermonStyles = `
 .plate iframe { display: block; width: 100%; height: 100%; border: 0; }
 .media-links { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-4); }
 .audio-plate { margin-top: var(--space-4); padding: var(--space-5); border-radius: var(--radius-control); background: var(--colour-ink); color: var(--colour-on-ink); }
+.sermon-section--media .button { min-width: 0; max-width: 100%; white-space: normal; }
 .audio-plate__title { font-weight: 700; margin-bottom: var(--space-2); }
 .audio-plate__note { max-width: 50ch; margin-bottom: var(--space-3); font-size: var(--size-ui); color: var(--colour-on-ink-soft); }
 .audio-plate iframe { display: block; width: 100%; min-width: 0; height: 180px; border: 0; background: var(--colour-ground); }

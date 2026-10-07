@@ -1,5 +1,54 @@
 # Migration Validation Plan
 
+## Local mobile adaptation — 7 October 2026
+
+- Impeccable adaptation preserves current design, earlier V5 refinements and
+  every selector/authentication/content boundary. No database mutations.
+- Anonymous rendered QA: 58 page/size/state checks across eight page types,
+  320/390/768/844/1440px, landscape/coarse input and 200% text; no overflow or
+  unsolicited external requests. Native transcript disclosure, no-JS navigation,
+  nested Escape/focus, 44px target checks and the prior 13 V5 groups pass.
+- Three new integrated bubbling tests reproduce the menu defect and pass with
+  the outer handler respecting preventDefault. Standard suite: 998 passed,
+  138 database-gated skips; no PostgreSQL write suite needed for CSS/JS changes.
+  Existing core/church byte hashes were deliberately updated after diff review
+  for the authorized responsive changes, not to remove protection.
+- Type/Astro: 543 files, zero diagnostics. Static build: 45 pages and existing
+  runtime font notices. Anonymous importer dry-run: 3 included, 2 excluded,
+  0 rejected. Cached offline dependency audit: zero vulnerabilities.
+- Actual candidate preview: 407 eligible; 9→18 unique rows; original description
+  hashes preserved; direct/final/detail pages work. Anonymous 401, no-store/noindex,
+  zero review writes, media requests or real-content screenshots.
+- Refreshed local port 4411 passes the same live checks. Scoped outgoing scan:
+  24 intentional changed/new files and 45 static HTML pages; zero credential,
+  real-prose, raw-caption or symlink findings, with zero dataset changes.
+- Desktop/mobile captures inspected and independent finish review found no
+  blocker. Detector retains an inherited Claude card-strip height transition
+  warning plus 44 type advisories; no global design-system changes. Physical
+  iOS/Android or screen-reader certification is not claimed.
+- No dataset changes, staging/provider access, commit or push.
+
+## Local V5 duration/browsing refinement — 7 October 2026
+
+- Presentation/enhancement only; no database or selector change. Existing
+  authenticated routes serve same-origin continuation, without media playback.
+- `npm test`: 995 passed, 138 database-gated skips. No PostgreSQL writes/schema
+  changes; the disposable runner was not invoked for this UI task.
+- `npm run check`: 538 files, zero diagnostics. `npm run build`: 45 pages, existing
+  font notices only. Anonymous importer dry-run: 3 included, 2 excluded, 0 rejected.
+  `npm audit --offline --json`: zero cached vulnerabilities.
+- Anonymous browser: 13 check groups, 1440/768/390/320, duration contrast, >1h
+  formatting, ordered/unique appends, direct/filtered/final navigation, duplicate
+  clicks, auth/network/stale-response failures, keyboard, no-JS, reduced motion.
+- Actual preview: 407 eligible, 9→18 unique rows, original description hashes
+  preserved, 17 known durations/one genuinely unknown in that sample; detail 200,
+  unauthenticated 401, no-store/noindex. No external request or review write.
+- Fresh visual review: ship. Single detector pass: 15 compact-type advisories,
+  no blocking antipattern. Global design files preserved. No real-content images.
+- Scoped scan: 15 intended changed/new files and 45 built HTML pages, zero
+  credential, private-prose, raw-caption or symlink findings; zero dataset changes.
+- No staging, provider access, dataset export, commit or GitHub push.
+
 ## D-177 verified recording durations — 7 October 2026
 
 - Read-only discovery: 430 local sermons / 407 eligible, zero stored positive
@@ -2192,3 +2241,35 @@ corrections, privacy qualifications and final state are recorded in
   is this existing integrated branch/history to Samuel's named GitHub repository.
   No production, WordPress, content regeneration, new sermon, human approval,
   publication-state, access-boundary or frontend-design change occurred.
+# D-178 accepted-description Related themes — delivery verification
+
+Guarded local migration 0026 applies once and reruns unchanged. The actual
+430-record database retains 407 eligible members; 406 complete English inputs
+are indexed and the unsupported Arabic input is excluded from semantics only.
+Second indexing run is unchanged. The source/review/acceptance and all other
+non-semantic table/sequence fingerprint is unchanged. Exact model artifacts were
+verified before local inference; network access was disabled for inference.
+
+Focused index/runtime/evaluation and staging-operator tests cover description-only
+inputs, pair-independent holdout, immutable vectors, exact cosine and ties,
+self/source deduplication, stale content/eligibility, scope remapping, atomic
+activation, schema rollback/reapply, guarded pointer rollback and release denial.
+Metadata evaluation optimization is directly compared with the unchanged
+original query on anonymous PostgreSQL fixtures; real 406-anchor generation
+took about 16 seconds in one read-only snapshot instead of repeated card queries.
+
+Standard suite before final pair-hardening: 1,048 passed, 140 database-gated skips;
+the final guarded full PostgreSQL run passes all 1,192 tests with zero skips.
+Type/Astro: zero errors/warnings, five hints (two ignored browser helpers and
+three Zod deprecation hints). Production build: 45 pages; staging bundle passes.
+The two build-time font notices resolve through generated asset routes.
+Offline audit: zero cached vulnerabilities. Anonymized importer dry-run and ten
+offline deployment-guard tests pass. Outgoing changed-file/build scan: zero
+credential, private-description, symlink or prohibited-private-path findings.
+
+Anonymous browser captures inspected at 1440/390/320px and 200% text; keyboard,
+focus, error recovery and private download mechanics pass. Independent agent
+design review ships only the protected evaluation scope, not human semantic
+quality approval. Actual local live browser passes with no prose screenshots,
+zero external requests or script errors, intact media consent and locked holdout.
+No human ratings exist; calibration/holdout release remains blocked intentionally.

@@ -500,6 +500,13 @@ export function buildPublishedTopicalSermonsQuery(scope: FrontendSermonScope): P
     ORDER BY s.service_date DESC,s.id`, values: [] };
 }
 
+/** Display metadata is hydrated only AFTER description-only ranking. */
+export function buildEligibleSemanticCardsQuery(ids:readonly string[],scope:FrontendSermonScope):ParameterizedQuery{
+ return{text:`SELECT s.id,s.title,s.slug,to_char(s.service_date,'YYYY-MM-DD') AS service_date,
+ CASE WHEN ${exposesUnapprovedContent(scope)?'true':"s.summary_status='approved'"} THEN s.summary ELSE NULL END AS summary,
+ ${publicRelationshipProjection('s',scope)} FROM sermons s WHERE s.id=ANY($1::uuid[]) AND ${frontendSermonEligibilitySql('s',scope)}`,values:[`{${ids.join(',')}}`]};
+}
+
 export function buildPublishedSeriesRepresentativesQuery(
   scope: FrontendSermonScope = "public"
 ): ParameterizedQuery {

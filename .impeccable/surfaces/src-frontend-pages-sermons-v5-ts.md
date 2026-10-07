@@ -2,7 +2,7 @@
 version: 1
 slug: "src-frontend-pages-sermons-v5-ts"
 primary_target: "src/frontend/pages/sermons-v5.ts"
-related_targets: ["src/frontend/components/sermon-journal.ts","src/frontend/styles/v5.ts","src/frontend/scripts/journal.ts"]
+related_targets: ["src/frontend/components/sermon-journal.ts","src/frontend/styles/v5.ts","src/frontend/scripts/journal.ts","src/frontend/scripts/journal-pagination.ts"]
 ---
 
 # SermonsV5
@@ -67,3 +67,18 @@ known repository limitations and existing raster provenance are recorded in
 `docs/design/sermons-v5.md`.
 Preserve the global `DESIGN.md`, `.impeccable/design.json` and `PRODUCT.md`;
 this scoped extension does not establish a new design system.
+
+LOCAL REFINEMENT (7 October): Verified duration labels use a clock, semantic
+book hue and pale tint; unknown durations retain honest text. Above the unchanged
+directories, More sermons appends one eligible page at a time, followed by
+numbered navigation. Progress, loading, failure fallback and end states are
+explicit. Server-rendered links work without JS. Same-origin authenticated
+continuation changes no eligibility or content. Anonymous responsive inspection
+and fresh independent finish review pass. Evidence is in the design note.
+
+MOBILE ADAPTATION (7 October): Retain the same journal, with 16px phone reading
+text and flexible dates/actions/directories at enlarged text. The thin visible
+book tab has a 44px touch hit area; More sermons is contained, phone search spans
+the form, and nested-menu Escape returns focus one level at a time. Anonymous
+desktop/mobile/landscape and 200% text checks pass; physical-device certification
+is not claimed. The design note records the exact scope and remaining advisories.

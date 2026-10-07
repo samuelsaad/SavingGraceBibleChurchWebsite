@@ -29,9 +29,9 @@ export function sermonJournal(sermons: SermonSummary[], links: SiteLinks, featur
     const descriptionId = `description-${sermon.id}`;
     const duration = recordingDurationLabel(sermonRecordingDuration(sermon));
     const contentAttributes = sermon.language === "ar" ? html` lang="ar" dir="rtl"` : null;
-    return html`<li><article class="journal__entry${featured ? " journal__entry--featured" : ""}${sermon.isTopical ? " hue--topical" : book ? ` hue--${book.category}` : ""}">
+    return html`<li><article class="journal__entry${featured ? " journal__entry--featured" : ""}${sermon.isTopical ? " hue--topical" : book ? ` hue--${book.category}` : ""}" data-sermon-id="${sermon.id}">
       <div class="journal__tab">${sermonTab(sermon, links)}</div>
-      <div class="journal__dateline"><div class="journal__recording">${passageStamp(sermon, "journal__passage")}<span class="journal__duration">${clockGlyph}${duration ?? html`<span>Duration unavailable</span>`}</span></div><span class="journal__date">${timeElement(sermon.serviceDate)}</span></div>
+      <div class="journal__dateline"><div class="journal__recording">${passageStamp(sermon, "journal__passage")}<span class="journal__duration${duration ? " journal__duration--known" : ""}">${clockGlyph}${duration ?? html`<span>Duration unavailable</span>`}</span></div><span class="journal__date">${timeElement(sermon.serviceDate)}</span></div>
       <div class="journal__body">
         <h3 class="journal__title"${contentAttributes}><a href="${href}">${sermon.title}</a></h3>
         ${when(sermon.reviewState === "draft_awaiting_review", html`<p class="journal__warning">Draft · awaiting administrator review</p>`)}

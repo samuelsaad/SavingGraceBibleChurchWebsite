@@ -1,5 +1,88 @@
 # SermonsV5 design and verification
 
+## Mobile adaptation — 7 October 2026 (local)
+
+Impeccable's adapt, audit and polish guidance led to narrow fixes rather than a
+redesign: 16px phone descriptions and directory names, wrapping metadata/actions,
+bounded gutters/portraits, contained More sermons, stable table counts, full-width
+phone search and 44px hit areas around the existing thin Bible-book tabs. On touch
+screens, titles and chapter/verse controls remain usable beyond phone breakpoints.
+Dates stay right-aligned, flowing to their own line when necessary. The existing
+duration colours, images, collapsed shelf, description toggles and paging remain.
+
+Shared navigation respects the inner disclosure's Escape before closing the outer
+menu and wraps without JavaScript. Contact's narrow heading stacks its image rather
+than compressing the title. Media fallback buttons wrap at enlarged text. These
+fixes leave desktop composition, content and access controls intact.
+
+Rendered anonymous Edge/Chromium inspection and confirmation cover 58 page/size/
+state combinations across home, V5, sermon detail, About, Ministries, Events,
+Contact and Giving: 320/390/768/844/1440px, touch and 200% text. No horizontal
+overflow, input text under 16px, script errors or unsolicited external requests.
+Touch hit testing, nested-menu focus, no-JS menus, native transcript disclosure
+and the earlier 13 pagination/description/contrast/reduced-motion groups pass.
+Screenshots contain synthetic sermon fixtures only. Independent finish review
+found no blocking regression. The detector's inherited Claude card-strip height
+transition warning and 44 compact-type advisories remain; this task did not
+redesign the existing card animation or global type system. Physical iOS/Android
+devices and assistive-technology certification remain untested.
+
+The real local preview retains 407 eligible records, 9→18 unique rows, unchanged
+original description hashes and working detail/direct/final pages. Anonymous
+access remains 401; no-store/noindex holds. Standard tests: 998 passed and 138
+database-gated skips (no database changes were made); type/Astro: 543 files with
+zero diagnostics; static build: 45 pages. The two intentional responsive-file
+preservation hashes were updated after diff review; other preservation guards
+remain. No migrations, review decisions, staging delivery or Git publication.
+
+Repeat the anonymous mobile checks using the existing fixture launcher and
+`node tests/helpers/verify-mobile-browser.mjs`, with an installed
+`PLAYWRIGHT_MODULE_PATH`. Optional `--capture` uses ignored private storage.
+
+## Duration and continuous browsing — 7 October 2026 (local)
+
+Impeccable's bounded polish pass keeps the existing journal design. Verified
+durations use the sermon book's colour on a pale tint, a clock and tabular
+numerals; unknown values remain honest text. Provider-specific accessible labels
+and formatting remain unchanged. The label is not a player or interactive chip.
+
+Above the Series/Speakers tables, More sermons appends one existing nine-item
+archive page; numbered links navigate normally. Filters, order and authenticated
+route prefixes are preserved, without repeating the featured sermon. Progress
+updates, appended descriptions work, focus moves to the first added title and a
+polite status announces the addition. The address stays on the original page;
+reload and numbered links retain ordinary paging. Full descriptions and page
+links still work without JavaScript.
+
+Requests are single-flight, same-origin, credentialed and no-store, refusing
+redirects and unexpected page state. A timeout, changed total or expired access
+preserves the current list and offers Open next page. Only actual continuation
+markup opens CSP `connect-src 'self'`. No selector, detail query or data mutation
+is added. Existing transcript/media behavior and the bottom tables are unchanged.
+
+Anonymous browser checks cover 1440/768/390/320px, 9→18→25 ordered unique entries,
+filtered/direct/final pages, repeated clicks, failures, keyboard descriptions,
+no-JS and reduced motion. Duration contrast is at least 4.5:1; controls retain
+44px targets. Desktop/mobile captures were inspected; fresh independent review:
+ship. One detector pass returned only 15 compact-type advisories retained within
+V5's established scale, without global design-system changes.
+
+The actual local preview verifies 407 eligible records and 9→18 unique rows with
+unchanged original description hashes. One of those 18 has a genuinely unknown
+duration. Direct/final pages and detail routes work; unauthenticated access is
+401 and no-store/noindex remains intact. No real-content screenshot, external
+request or review write. Standard tests: 995 passed, 138 database-gated skips;
+type/Astro: 538 files, zero diagnostics; build: 45 pages, existing runtime-font
+notices only. Anonymous dry-run: 3 included, 2 excluded, 0 rejected; cached offline
+audit: zero vulnerabilities. No database changes or database test run were needed.
+
+Local URL: `http://127.0.0.1:4411/frontend-preview/sermons-v5/`, via `/admin` if the
+preview session needs renewing. Staging, GitHub and database contents are unchanged.
+Repeat anonymous checks using `node --import tsx tests/helpers/v5-browser-fixture.ts`
+and `node tests/helpers/verify-v5-browser.mjs` with an existing
+`PLAYWRIGHT_MODULE_PATH`. Optional `--capture` captures synthetic fixtures only.
+Stop the temporary fixture after verification.
+
 ## Latest-sermon emphasis — 7 October 2026
 
 The local refinement uses the existing mineral-blue heading band, pale-blue
@@ -80,8 +163,9 @@ are recorded below with the existing repository verification limitations.
   narrow Bible-book tab, passage and recording duration at left, date at right,
   title, existing summary, series links and the verified speaker byline. A
   separate Open sermon link sits beneath the speaker on the wide layout.
-- Duration uses only stored `primaryMedia.durationSeconds`, projected from the
-  existing media column. Positive safe whole seconds format as `m:ss` or
+- Duration uses the verified `recordingDuration` projection; only an undefined
+  projection permits the legacy `primaryMedia` fallback. Explicit null remains
+  unknown. Positive safe whole seconds format as `m:ss` or
   `h:mm:ss`; absent, zero or invalid values show "Duration unavailable". No
   transcript-length or cue-timing estimate is made.
 - YouTube, audio and transcript shortcut icons are inert spans labelled

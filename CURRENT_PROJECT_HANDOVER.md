@@ -1,5 +1,74 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
+## D-178 — Related themes implementation and local evaluation
+
+The isolated `codex/sermon-related-themes` delivery preserves the integrated
+Astra/Claude frontend and carries the existing V5/mobile work below intact.
+Reused the verified local BGE float32 model and exact cosine foundation; added
+environment-scoped accepted-description indexing, migration 0026, immutable
+cache/build history, fresh eligibility/hash checks and guarded scoped recovery.
+No sermon, acceptance, review or publication record changes are part of D-178.
+
+Local capture: 430 stored, 407 eligible; 406 English descriptions indexed. The
+one Arabic sermon remains eligible on the website but is excluded from this
+English-only model. Staging capture is 398 eligible, 397 indexable; nine local-only
+members are excluded from its packets. Local second indexing run is unchanged.
+Content/review/acceptance and unrelated-table/sequence fingerprints are preserved.
+
+Local evaluation runs at `http://127.0.0.1:4412/admin`, then
+`/frontend-preview/related-themes-evaluation/`. The existing loopback development
+identity is truthful, not personal sign-in. Port 4411 and existing tunnels remain
+untouched. Actual browser checks passed for V5, detail/related links, two separate
+recommendation sections, the 12-anchor calibration form, unauthenticated denial,
+locked holdout, no-store/noindex and no external player requests before activation.
+No review decision was submitted by automation.
+
+The private experiment has 24 deterministic anchors, split 12/12, with no shared
+unordered relationship across calibration and holdout. Two separately assigned
+human reviewers, adjudication where needed, calibrated policy locking and a
+positive untouched holdout remain required. Actual human ratings: zero. No cutoff
+or result count has been invented. Normal visitor Related themes remains OFF.
+The evaluator exports/imports private ratings idempotently and recomputes evidence
+rather than trusting a release boolean. Existing metadata Related sermons and
+keyword/Scripture search remain separate and unchanged.
+
+See `related-themes-delivery-plan.md`, `docs/related-themes-evaluation.md`,
+`docs/related-themes-deployment.md` and `docs/design/related-themes.md`.
+Staging execution and exact release evidence are recorded below after delivery.
+
+## Local mobile adaptation — 7 October 2026
+
+Impeccable-guided mobile refinement preserves the current Astra/Claude design
+and prior uncommitted V5 duration/pagination work. V5 now reflows dates, actions,
+directory names/counts and enlarged text without overflow. Thin book tabs retain
+their appearance with 44px touch hit areas. Search fills the phone width; chapter
+links remain touch-sized in landscape. Shared navigation handles nested Escape
+and no-JS wrapping; Contact stacks its heading image and audio fallback controls
+remain contained. No content, eligibility, database or remote change.
+
+Anonymous verification passes 58 page/size/state checks across eight page types,
+320–1440px, landscape and 200% text, plus the existing 13 V5 interaction groups.
+Standard suite: 998 passed, 138 database-gated skips. Type/Astro: 543 files, zero
+diagnostics. Build: 45 pages. Offline audit and anonymous importer dry-run pass.
+The actual local preview retains 407 eligible records and the existing entry at
+`http://127.0.0.1:4411/admin`, then `/frontend-preview/sermons-v5/`.
+Physical iOS/Android and screen-reader certification were not performed.
+See the design/validation notes; these are local uncommitted changes only.
+
+## Local V5 duration styling and browsing — 7 October 2026
+
+Uncommitted local presentation work adds book-coloured duration labels and
+More sermons above the unchanged Series/Speakers tables. It appends the next
+eligible page; numbered links navigate directly. Existing auth, no-store,
+noindex and selectors remain intact. Local port 4411 is refreshed; enter via
+`/admin`, then `/frontend-preview/sermons-v5/`. No database, remote or dataset change.
+Actual preview retains 407 eligible sermons, adds nine unique rows and preserves
+original description hashes. Anonymous responsive/interaction checks pass.
+Standard tests: 995 passed, 138 database-gated skips; type/Astro: zero diagnostics
+across 538 files; build: 45 pages. Offline audit and anonymous dry-run pass.
+See `docs/design/sermons-v5.md`. Prior D-177 delivery below remains the remote
+state; no commit or push was requested for this local refinement.
+
 ## D-177 — verified recording durations delivered, 7 October 2026
 
 Discovery found 430 local sermons, 407 frontend eligible and no stored duration.

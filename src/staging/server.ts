@@ -7,8 +7,11 @@ import { stagingSchemaExpectation, verifyReleaseSchema } from "./database-verifi
 import { createSealedStagingHandler } from "./handler";
 import { verifyRestrictedPublicationBoundary } from "./restricted-publication-boundary";
 import {loadCompletedCohort} from './completed-cohort';
-import {verifyCompletedSchema} from './completed-schema';
 import {stagingFrontendScope} from './frontend-scope';
+import {verifyAcceptedSemanticSchema} from '../semantic/accepted-semantic-migration';
+import {PostgresAcceptedSemanticRepository} from '../server/repositories/postgres-accepted-semantic-repository';
+import {createRelatedThemesRuntime} from '../semantic/related-themes-runtime';
+import {createRelatedThemesEvaluationHandler} from '../server/http/related-themes-evaluation';
 
 async function main() {
   const config = stagingConfiguration(process.env);
@@ -22,14 +25,17 @@ async function main() {
     try {
       await client.query("BEGIN READ ONLY");
       await verifyStagingIdentity(client);
-      if(completed)await verifyCompletedSchema(client);
+      if(completed)await verifyAcceptedSemanticSchema(client,{allowPreMigration:true});
       else await verifyReleaseSchema(client, expectedSchema as 21|22);
       await verifyRestrictedPublicationBoundary(client,"sealed_staging");
     } finally { await client.query("ROLLBACK"); client.release(); }
   };
   await ready();
-  const handler = createSealedStagingHandler(new PostgresSermonRepository(pool,scope), ready,
-    process.env.RELEASE_COMMIT!, process.env.RESTRICTED_FRONTEND_DISABLED === "1");
+  const environment=process.env.RELATED_THEMES_ENVIRONMENT??'staging_public';
+  if(!['staging_public','staging_protected'].includes(environment))throw Error('semantic_environment_refused');
+  const runtime=scope==='d175_completed'?await createRelatedThemesRuntime(new PostgresAcceptedSemanticRepository(pool,{environment:environment as 'staging_public'|'staging_protected',scope}),process.env):{};
+  const handler = createSealedStagingHandler(new PostgresSermonRepository(pool,scope,runtime.reader), ready,
+    process.env.RELEASE_COMMIT!, process.env.RESTRICTED_FRONTEND_DISABLED === "1",createRelatedThemesEvaluationHandler(runtime,''));
   const server = createServer(async (incoming, outgoing) => {
     try {
       const response = await handler(await toWebRequest(incoming, "http://127.0.0.1:8080", 16_384));

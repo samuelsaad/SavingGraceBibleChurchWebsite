@@ -50,7 +50,9 @@ export function contentSecurityPolicy(html: string): string {
     /<[a-z][^>]*\sdata-audio-frame[\s>]/u.test(html) ? 'https://embed.sermonaudio.com' : null
   ].filter(Boolean);
   const frame = frameOrigins.length ? ` frame-src ${frameOrigins.join(' ')};` : '';
-  return `default-src 'none'; style-src ${styleHashes.length ? styleHashes.join(" ") : "'none'"};${scriptHashes.length ? ` script-src ${scriptHashes.join(" ")};` : ""} img-src 'self' data:; font-src 'self';${frame} base-uri 'none'; frame-ancestors 'none'; form-action 'self'`;
+  // Only a real V5 continuation link permits same-origin page retrieval.
+  const connect = /<a\b[^>]*\sdata-v5-more[\s>]/u.test(html) ? " connect-src 'self';" : "";
+  return `default-src 'none'; style-src ${styleHashes.length ? styleHashes.join(" ") : "'none'"};${scriptHashes.length ? ` script-src ${scriptHashes.join(" ")};` : ""} img-src 'self' data:; font-src 'self';${frame}${connect} base-uri 'none'; frame-ancestors 'none'; form-action 'self'`;
 }
 
 export interface FrontendResponseOptions {
