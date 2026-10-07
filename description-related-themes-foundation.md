@@ -2,6 +2,13 @@
 
 **Status:** Verified external local model and locked adapter; synthetic inference only, no real description embedded, no quality approval, no public feature
 
+**D-178 extension:** The historical status above records the foundation milestone.
+The current bounded task in `related-themes-delivery-plan.md` separately authorizes
+accepted-description processing and protected evaluation with current environment
+selectors. It does not make human holdout evidence exist or enable ordinary
+visitor release. Preserve this v1 contract; the v2 accepted scope records truthful
+pipeline/input provenance and never changes sermon publication states.
+
 ## Boundary
 
 The future **Related themes** feature is separate from keyword/structured search and from the existing metadata-based related-sermon results. Its sole embedding input is the exact approved public `sermons.summary` value.

@@ -1,5 +1,24 @@
 # Project Decision Log
 
+## D-178 — accepted-description semantic evaluation and gated delivery
+
+Samuel explicitly authorizes completing the D-127/D-128 foundation using exact
+current accepted descriptions only, local verified inference, guarded semantic
+storage, blinded evaluation tooling and current local/protected staging preview.
+The integrated isolated branch is `codex/sermon-related-themes`. Existing accepted
+membership is rechecked per environment; no sermon acceptance/publication/content
+changes are authorized. Necessary additive migration, scoped index synchronization,
+staging deployment and a normal GitHub handoff are included. Preserve existing
+dataset-bearing history; no model/vector/reviewer/private-content export.
+
+Normal visitor Related themes remains disabled until at least two independent
+blinded human calibration reviews, policy lock and positive independent holdout
+evidence satisfy the documented gate. Automated/AI evidence cannot replace it.
+Metadata recommendations and keyword/Scripture search remain distinct. See
+`related-themes-delivery-plan.md`; older semantic exclusions remain historical
+outside this accepted-description implementation scope. Production remains out
+of scope. No execution or quality pass is implied by recording this decision.
+
 ## D-177 — verified recording-duration delivery
 
 Samuel's 7 October 2026 instruction authorizes verified duration metadata for

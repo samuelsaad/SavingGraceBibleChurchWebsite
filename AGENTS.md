@@ -1,5 +1,44 @@
 # Repository Operating Rules
 
+## D-178 — accepted-description Related themes and blinded evaluation
+
+Samuel's separate current request authorizes completing the existing local
+description-only semantic foundation on `codex/sermon-related-themes`. Read
+`related-themes-delivery-plan.md`. Only exact current accepted descriptions in
+each environment's existing frontend eligibility selector may be embedded.
+This bounded authority supersedes older categorical semantic exclusions for
+that processing only; it grants no new content acceptance or publication state.
+Preserve all previous decisions, content, review evidence and source uncertainty.
+
+Reuse the verified external local model with exact revision, tokenizer, pipeline
+and float32 provenance; inference stays local, with no remote provider, query
+embedding, metadata scoring or guessed topic taxonomy. Store complete inputs and
+vectors privately. Do not silently truncate a description or imply support for
+an unvalidated language. Description text may enter necessary primary private
+tool results/history, never ordinary logs, chat, screenshots or new Git datasets.
+Metadata-based Related sermons and keyword/Scripture search stay independent.
+
+Necessary scoped implementation, additive schema, guarded local PostgreSQL and
+existing staging index writes, protected evaluation previews, deployment and
+normal GitHub push are authorized. Freeze actual corpus hashes and pipeline;
+guard environment/source identity, current eligibility, concurrency, atomicity,
+idempotency and scoped recovery. Public staging must never receive local-only
+recommendations. Existing authenticated local and SSH-protected staging access,
+private admin denial, no-store/noindex and listener boundaries remain intact.
+Normal visitor Related themes requires genuine independent blinded human
+calibration, a locked policy and positive untouched-holdout evidence. Missing
+human ratings keep it disabled; no fabricated ratings or approvals.
+
+The named branch may push safe code/tests/documentation and its existing
+previously authorized dataset-bearing history to Samuel's existing repository.
+No new content export, credentials, models, vectors, private reviewer records,
+account/session data or configuration enters Git or images. The current tested
+local V5/mobile refinements may be carried intact into the isolated integrated
+baseline while their original dirty worktree remains unchanged. No production,
+force-push, protected-branch merge, new sermon batch or content regeneration.
+Anonymous PostgreSQL tests may use only the existing guarded disposable runner.
+All permanent protections remain outside this exact scope.
+
 ## D-177 — verified recording durations, existing inventory only
 
 Samuel explicitly authorizes the duration-only task in `docs/sermon-durations.md`:
