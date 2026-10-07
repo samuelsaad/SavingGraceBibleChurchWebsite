@@ -20,11 +20,14 @@ PROTECTED = 'savinggrace-d167-protected-app-1'
 DB = 'savinggrace-d167-protected-db-1'
 NETWORK = 'savinggrace-d167-protected_private'
 PREVIOUS = {
-    'public': {'commit': 'fc34ae2ca722ac046b0523c76e19fa85882fae66',
-               'image': 'sha256:544f56f6c0c1fa696a4a858623b357d4862a75ac1108f877dbc05a8445d3fc88'},
-    'protected': {'commit': 'c919ae038d0bbcefff31eb10e3013d61cc27ca82',
-                  'image': 'sha256:df751abeb61bf162bac2bc0d898faae2d57b02a2db4f52b77480281052d0247d'},
+    'public': {'commit': '800542c359812f42c9654ca37f48b51a9626cdc6',
+               'image': 'sha256:69eb032efe37418be439e70e955cb7b432dc8b05eb5ad263df490634e4e2b556'},
+    'protected': {'commit': '800542c359812f42c9654ca37f48b51a9626cdc6',
+                  'image': 'sha256:69eb032efe37418be439e70e955cb7b432dc8b05eb5ad263df490634e4e2b556'},
 }
+# This independently hash-pinned identity/backup helper predates the application
+# image being replaced. Never infer its location from a later serving commit.
+HELPER_COMMIT = 'c919ae038d0bbcefff31eb10e3013d61cc27ca82'
 HELPER_SHA = '43dd96fc79b98944f5aed7089c5e520e5c4c025c3522a985d359dd8162b00b14'
 COUNT_FIELDS = {'total', 'matched', 'updated', 'unchanged', 'unavailable', 'conflicting',
                 'failed', 'eligibleBefore', 'eligibleAfter', 'skipped', 'targets', 'checked',
@@ -69,7 +72,7 @@ def checked_json(path):
 
 
 def retained_helper():
-    path = pathlib.Path('/home/ec2-user/.d175-transfer') / PREVIOUS['protected']['commit'] / 'operator.py'
+    path = pathlib.Path('/home/ec2-user/.d175-transfer') / HELPER_COMMIT / 'operator.py'
     if path.is_symlink() or not path.is_file() or sha(path) != HELPER_SHA:
         fail('verified_helper_changed')
     spec = importlib.util.spec_from_file_location('retained_duration_helper', path)

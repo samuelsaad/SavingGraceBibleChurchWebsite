@@ -43,6 +43,17 @@ Use `m:ss` below one hour and `h:mm:ss` thereafter. Missing values remain unknow
 Accessible labels identify the provider; each player displays its own duration.
 Players remain deliberate-load and never autoplay.
 
+## Staging query resources
+
+Keep the complete acceptance predicates, but disable LLVM JIT compilation for
+the existing read-only staging application connections only. The expanded
+freshness-check archive plan compiles 1,006 functions on Linux staging; concurrent
+requests exhausted its database container memory during verification. The same
+read-only filter query executes in about 2.5 seconds without JIT. The Windows
+verification database has no JIT implementation, so it did not expose this gap.
+Read-only mode, UTC, the 15-second statement timeout, roles and authentication
+guards remain unchanged. Maintenance and global PostgreSQL settings are untouched.
+
 ## Delivery and recovery
 
 Synchronize only existing destination records with matching stable source and

@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import type { PublicSermonRepository } from "../src/server/repositories/sermon-repository";
 import {
   stagingConfiguration,
+  stagingDraftPreviewConfiguration,
   verifyStagingIdentity,
 } from "../src/staging/guard";
 import { createSealedStagingHandler } from "../src/staging/handler";
@@ -158,6 +159,31 @@ describe("sealed staging target and authentication boundary", () => {
         "staging_configuration_refused",
       );
     }
+  });
+  it("disables LLVM only on bounded application reader sessions without relaxing any access or timeout guard", () => {
+    const reader = stagingConfiguration(environment);
+    expect(reader).toMatchObject({
+      user: "staging_reader",
+      passwordFile: "/run/secrets/db_reader_password",
+      max: 4,
+      statement_timeout: 15000,
+      options: "-c default_transaction_read_only=on -c timezone=UTC -c jit=off",
+    });
+    const draftReader = stagingDraftPreviewConfiguration({
+      ...environment, DB_HOST: "127.0.0.1", DB_PORT: "5433",
+    });
+    expect(draftReader).toMatchObject({
+      host: "127.0.0.1", port: 5433, user: "staging_reader", max: 2,
+      statement_timeout: 15000, options: reader.options,
+    });
+    expect(stagingConfiguration(environment, true)).toMatchObject({
+      user: "postgres", passwordFile: "/run/secrets/db_owner_password",
+      statement_timeout: 15000, options: "-c timezone=UTC",
+    });
+    for (const key of ["PGOPTIONS", "PGHOST", "PGUSER", "PGPASSWORD", "DATABASE_URL"])
+      expect(() => stagingDraftPreviewConfiguration({
+        ...environment, DB_HOST: "127.0.0.1", DB_PORT: "5433", [key]: "forbidden",
+      })).toThrow("staging_draft_preview_configuration_refused");
   });
   it("verifies actual database, PostgreSQL version, TCP port, read-only state and non-superuser identity", async () => {
     const row = {

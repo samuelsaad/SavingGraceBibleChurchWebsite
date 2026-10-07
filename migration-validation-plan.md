@@ -30,6 +30,18 @@
   preserves history and current receipt validity. Old-image rollback is rehearsed
   before staging metadata writes, not falsely advertised as compatible afterward.
   Staging and final browser results are pending at this implementation checkpoint.
+- Subsequent staging application/data validation: 393 duration updates, 32 packet
+  members absent on staging skipped; 398 stored/eligible remain. Identical apply
+  and independent verify preserve the complete post-update database fingerprint.
+- Browser concurrency exposed a Linux-only PostgreSQL LLVM JIT memory failure:
+  one database backend was killed and protected application restarted once.
+  Both recovered with saved data intact. Windows PostgreSQL has no JIT available;
+  Linux planned 1,006 functions for the filter query. A bounded read-only staging
+  reader execution with transaction-local JIT disabled takes 2,483 ms, with 41 ms
+  planning. The correction disables JIT only on existing read-only application
+  connections; maintenance/global settings and every acceptance predicate remain.
+  Focused connection/duration/sync tests: 25 pass. Post-fix delivery/browser
+  verification follows before claiming completion.
 
 ## Local V5 featured-sermon emphasis — 7 October 2026
 
