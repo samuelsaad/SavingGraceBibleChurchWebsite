@@ -1,6 +1,6 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
-## D-178 — Related themes implementation and local evaluation
+## D-178 — Related themes delivered; human quality gate remains closed
 
 The isolated `codex/sermon-related-themes` delivery preserves the integrated
 Astra/Claude frontend and carries the existing V5/mobile work below intact.
@@ -34,7 +34,34 @@ keyword/Scripture search remain separate and unchanged.
 
 See `related-themes-delivery-plan.md`, `docs/related-themes-evaluation.md`,
 `docs/related-themes-deployment.md` and `docs/design/related-themes.md`.
-Staging execution and exact release evidence are recorded below after delivery.
+Both staging applications now serve implementation
+`e17b5f487eca77bb1e8496be91e0382aca746b47`, image
+`sha256:5d80b6959ab5c2adab3db31b58f70317bb4a62e513ac44cd504ce128c9e2f381`.
+The guarded operator correction is committed in
+`d6a6a59fadbd147a453a2946c785a7b3e34e99c0`; it changes only an obsolete
+maintenance owner-secret reference, not credentials, permissions or application
+code. The initial attempt stopped before any SQL; that attempt is preserved.
+
+Staging ledger 26, 397 vectors, two environment-specific builds and active
+pointers; both runtime inventories remain 398. Identical imports are unchanged.
+The feature-off compatible bridge and exact prior pointers were restored in a
+real rollback rehearsal; repeat rollback was unchanged. Frozen indexes were then
+reimported, repeated unchanged, verified and reactivated. Original image/config
+and scoped recovery remain retained. Do not roll back to the old 25-only image.
+
+Public `http://54.253.237.138:8080/` has both semantic flags OFF and denies the
+evaluation route. Protected evaluation is available through the existing tunnel
+at `http://127.0.0.1:4396/related-themes-evaluation/`; ordinary visitor release
+remains OFF there too. Apps and private DB are healthy; no new public/database
+port, admin route or development identity was exposed. Content/eligibility and
+all incumbent table/sequence fingerprints are unchanged. No new dataset, model,
+vector or reviewer material is committed or exported to GitHub.
+Final real-browser checks passed on local, protected and public staging: V5,
+working detail/related links, mobile overflow, existing metadata section,
+protected calibration and locked holdout, public evaluation denial, zero script
+errors/external requests and no iframe before activation. No real ratings or
+review decisions were submitted. Normal visitor semantic release is the only
+deliberately uncompleted gate, pending genuine human evaluation.
 
 ## Local mobile adaptation — 7 October 2026
 

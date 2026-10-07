@@ -2258,7 +2258,7 @@ Metadata evaluation optimization is directly compared with the unchanged
 original query on anonymous PostgreSQL fixtures; real 406-anchor generation
 took about 16 seconds in one read-only snapshot instead of repeated card queries.
 
-Standard suite before final pair-hardening: 1,048 passed, 140 database-gated skips;
+Final standard suite: 1,052 passed, 140 database-gated skips;
 the final guarded full PostgreSQL run passes all 1,192 tests with zero skips.
 Type/Astro: zero errors/warnings, five hints (two ignored browser helpers and
 three Zod deprecation hints). Production build: 45 pages; staging bundle passes.
@@ -2273,3 +2273,27 @@ design review ships only the protected evaluation scope, not human semantic
 quality approval. Actual local live browser passes with no prose screenshots,
 zero external requests or script errors, intact media consent and locked holdout.
 No human ratings exist; calibration/holdout release remains blocked intentionally.
+
+Staging application e17b5f487eca77bb1e8496be91e0382aca746b47 is healthy in both
+runtimes. Schema 0026, destination-only 398-member packets/397 indexed records,
+environment-specific active pointers, repeated unchanged imports and full
+incumbent data fingerprints pass. Arabic remains website-eligible, model-excluded.
+Real feature-off bridge/pointer rollback, unchanged second rollback, frozen
+reimport, unchanged second import and final reactivation passed. The twelve
+offline operator tests include the narrowly repaired stale owner-secret reference,
+exact original-config retention, idempotence and unexpected-drift refusal.
+No secret ACLs, container capabilities, database contents outside semantics or
+public listener boundaries changed. Public evaluation/admin/draft access is denied;
+protected evaluation is enabled only behind the existing tunnel.
+
+Local repeated inventory and evaluation generation retain identical corpus and
+experiment fingerprints. The inventory full-snapshot filename now keys the full
+database fingerprint, preserving earlier snapshots when authorized semantic rows
+change but the separate content-preservation fingerprint does not. Real browser
+comparison of Romans 8 on the untouched 4411 and new 4412 servers returns the
+same nine displayed IDs in the same order; no semantic query substitution.
+Final actual-browser checks also pass on protected tunnel 4396 and public staging:
+nine archive entries, working detail routes, five provisional theme links only
+in protected mode, 12 calibration anchors, locked holdout and public evaluation
+denial. Both have zero script errors/external requests and no iframe before
+activation. No prose screenshot or real review submission was made.

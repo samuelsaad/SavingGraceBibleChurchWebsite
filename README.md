@@ -1,6 +1,25 @@
 # Saving Grace Bible Church Website
 
-The active exact SermonAudio completion/delivery task is governed by
+## Description-only Related themes evaluation (D-178)
+
+The isolated `codex/sermon-related-themes` branch completes the accepted-description
+index and private blinded comparison workflow while preserving current eligibility,
+the Astra/Claude frontend, keyword/Scripture search and metadata Related sermons.
+Normal visitor Related themes remains disabled until genuine two-reviewer
+calibration, adjudication, a locked policy and positive independent holdout pass.
+Index generation or an AI assessment does not satisfy that gate.
+
+See the [delivery plan](related-themes-delivery-plan.md),
+[private evaluation instructions](docs/related-themes-evaluation.md),
+[guarded staging and rollback](docs/related-themes-deployment.md), and current
+tracked handover for exact deployed state. Existing protected local configuration
+can start the new loopback preview with
+`node --import tsx scripts/start-related-themes-local.ts` (default port 4412).
+Enter through `/admin`, then `/frontend-preview/related-themes-evaluation/`.
+This uses the documented development identity, not personal authentication.
+Private packs, ratings, models and vectors are never repository datasets.
+
+The earlier exact SermonAudio completion/delivery task is governed by
 [sermonaudio-119-completion-plan.md](sermonaudio-119-completion-plan.md).
 This is not a new download batch or permission to restore review authority from
 a development snapshot. Ordinary production/publication gates remain unchanged.

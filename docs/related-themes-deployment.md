@@ -1,5 +1,30 @@
 # Description-only Related themes: guarded staging delivery
 
+## Verified handoff — 7 October 2026
+
+Application release: `e17b5f487eca77bb1e8496be91e0382aca746b47`.
+Immutable image:
+`sha256:5d80b6959ab5c2adab3db31b58f70317bb4a62e513ac44cd504ce128c9e2f381`.
+Release archive SHA-256:
+`943e23f7ec9635ba04cb0b64d26afb51d91b37079864b294ff58a1f5d4782945`.
+Final operator SHA-256:
+`08d647f27b10a13221e2f94139287d81dcb9318d4bfe6646a5e30b80726c5dc2`.
+
+Both inventories remain 398; each has 397 English indexed members and one
+unsupported Arabic member (still available on the website). The shared cache has
+397 vectors, two immutable environment-specific builds, 796 member rows and two
+active pointers. Local-only records were not transferred. Both applications and
+the private database are healthy. Repeated imports preserve full fingerprints.
+Rollback to the compatible feature-off bridge and previous pointers, repeated
+rollback, frozen reimport and final reactivation were actually rehearsed.
+
+The public application keeps both semantic flags disabled. Protected evaluation
+is enabled through the existing loopback tunnel; visitor release remains disabled.
+The two-reviewer human calibration and untouched holdout are not yet performed.
+This release does not claim a useful-match threshold, positive holdout or human
+semantic approval. The local and destination experiments have different frozen
+corpora; do not interchange their evidence merely because they use the same model.
+
 This is D-178 evaluation deployment, not visitor release. The ordinary feature is
 disabled on both staging runtimes until the recorded two-reviewer calibration,
 locked policy and independent holdout requirements pass. No machine score or

@@ -82,3 +82,26 @@ Retain exact corpus/model/build evidence privately; safe aggregates only in Git.
 Push the named branch normally to the existing GitHub repository after scanning.
 Deploy scoped code/indexes only to existing staging runtimes, verify served commit
 and access boundaries, and retain recovery instructions. No production changes.
+
+## Frozen delivery evidence
+
+Pipeline `accepted-description-semantic-v2`, fingerprint
+`82a111961b5ee39a8c255255ea68b01fcba29099726864bee43e59792e22d2b3`.
+Model ONNX SHA-256:
+`828e1496d7fabb79cfa4dcd84fa38625c0d3d21da474a00f08db0f559940cf35`.
+Revision-matched `tokenizer.json` SHA-256:
+`d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66`.
+Input is exact UTF-8, symmetric document mode, no prefixes, CPU fp32, CLS pooling,
+L2 float32 normalization, 384 dimensions. Inputs over 512 tokens are refused,
+not silently truncated; none of the 406 current English descriptions exceeded it.
+The existing model manifest retains all artifact hashes, MIT license and locked
+Transformers.js 4.2.0 runtime integrity. Inference made no network requests.
+
+Local experiment fingerprint:
+`a3322bb27c05eef8d77dda962a27014dc20595004d6f13817649252d5aeecbf3`.
+Destination-only staging experiment fingerprint:
+`626c8568be005956ca0933dd26b78ff26198d29d2d46a227a247048b31cc2bb3`.
+Each has 24 anchors, 12 calibration and 12 locked holdout, with unordered-pair
+independence. Repeated local and staging preparation reproduces the same frozen
+experiment. Human ratings, adjudications and calibrated thresholds remain absent.
+Normal visitor release stays off; protected evaluation delivery is complete.
