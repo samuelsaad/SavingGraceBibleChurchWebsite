@@ -23,7 +23,25 @@ V5 surface brief. No global design drift repair or redesign was performed.
 Local database fingerprint and 430 stored / 407 eligible counts are preserved.
 No database changes or disposable PostgreSQL writes belong to this task. Public
 staging retains its existing 398 eligible members; protected staging is unchanged.
-Code-only public activation and final GitHub/URL verification remain pending.
+Final delivery: local V5 is `/frontend-preview/sermons-v5/` on loopback 4411,
+entered through `/admin`; public V5 is `http://54.253.237.138:8080/sermons-v5/`.
+Both menus expose SermonsV5. Serving code commit is
+`fc34ae2ca722ac046b0523c76e19fa85882fae66`; public image is
+`sha256:544f56f6c0c1fa696a4a858623b357d4862a75ac1108f877dbc05a8445d3fc88`.
+The code-only package hash is
+`9ef7af515a5720059794b4249855997309af1229e91fd9df0a2369d112c60420`.
+The unexposed canary and actual public browser pass all four widths, description
+keyboard toggles/content preservation, mobile navigation, old/detail routes and
+no-JS descriptions. Final type/Astro covers 510 files with zero diagnostics.
+Five offline operator tests pass. Rollback to prior public release and reactivation
+pass with 398 eligible, full database unchanged and protected runtime unchanged.
+An initial temporary canary copied the reserved public network address; automatic
+private canary addressing fixes that deployment-only conflict. Only its failed
+temporary container was removed; original image/package/recovery evidence remain.
+No listener, selector, database, migration, record or publication state changed.
+The successful temporary canary and local candidate were stopped; the working
+local preview and existing tunnel remain running. Final Git handover is
+documentation-only after the serving commit above.
 
 ## D-175 complete — exact SermonAudio 119 delivery
 

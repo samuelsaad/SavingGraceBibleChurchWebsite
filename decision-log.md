@@ -16,6 +16,14 @@ accompany the saved design. Public staging reuses its listener/database/configur
 with prior-image recovery. Protected staging and unrelated listeners are unchanged.
 Actual execution outcomes are recorded in the handover, not inferred from this plan.
 
+Completed: V5 is visible in both requested runtime menus and direct routes, with
+the current eligible population unchanged. The code-only public release is
+`fc34ae2ca722ac046b0523c76e19fa85882fae66`; local frontend uses the same code.
+Public canary/browser checks, prior-image rollback/reactivation, unchanged database
+fingerprints, private-route denial and source-worktree preservation pass. Existing
+dataset history is unchanged. Final safe handover changes are documentation-only;
+normal push targets the authorized current delivery branch, never a protected merge.
+
 ## D-175 — exact SermonAudio 119 completion and frontend delivery
 
 Samuel's current 6 October 2026 instruction authorizes full preparation, primary

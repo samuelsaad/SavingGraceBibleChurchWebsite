@@ -18,8 +18,23 @@ external request/review write. An initial harness did not open the existing mobi
 menu; the corrected normal flow passes without changing the interface. Impeccable:
 zero antipatterns and twelve documented compact-type advisories. Read-only local
 database hash `ab0b4421292b9e2b91eecb85bdc1049c9ee5b7ccfff26cf21749cd5f94605cb5`,
-430 stored / 407 eligible. Final public activation, rollback and GitHub checks
-remain pending until actually performed; no remote outcome is claimed yet.
+430 stored / 407 eligible. Final serving commit:
+`fc34ae2ca722ac046b0523c76e19fa85882fae66`. Code-only package transfer hashes were
+independently verified through the pinned SSH host. The unexposed canary passes
+with 398 eligible and public untouched, then public activation passes with the
+database/protected image unchanged. Actual public V5 browser at four widths passes
+closed shelf, normal description toggles, semantic tables, menu/older/detail routes,
+no overflow/client error/external media request and no-JS full descriptions.
+Public rollback to `c919ae038d0bbcefff31eb10e3013d61cc27ca82` and reactivation are
+verified: 398 throughout, V5 404/200 as expected, readiness/image correct, full
+database unchanged. Remote private routes and no-store/noindex remain intact.
+Final type/Astro: 510 files, zero diagnostics; five offline operator tests pass.
+The initial owned canary failed on a reserved-address collision without changing
+public staging. Removing only that temporary container and adding anonymous
+canary-address isolation coverage resolved it. Failed image/package remain intact.
+The final scoped credential/private-content/history scans find no issues; datasets
+are byte-identical, source worktree is preserved and no protected runtime or data
+was modified. Final Git commit is documentation-only after the serving release.
 
 ## D-175 final delivery verification — 7 October 2026 Australia/Sydney
 

@@ -12,7 +12,13 @@ description toggles with unchanged content hashes, mobile menu access, semantic
 tables, no-JavaScript full descriptions and existing detail/older routes. No overflow,
 client error, external playback or review write occurred. Detector: zero antipatterns,
 twelve existing compact-size advisories. This is bounded browser/code verification,
-not complete accessibility certification. GitHub/public activation remain pending.
+not complete accessibility certification. The same public render checks pass after
+activation. Local V5 is `http://127.0.0.1:4411/frontend-preview/sermons-v5/` after
+the normal `/admin` preview entry; public V5 is
+`http://54.253.237.138:8080/sermons-v5/`. Both menus expose it. Serving code commit
+`fc34ae2ca722ac046b0523c76e19fa85882fae66` retains 407 local and 398 public eligible
+sermons. Code-only rollback/reactivation passes without data changes. The original
+dirty worktree remains preserved. No production, content or review decision changed.
 
 
 ## Scope — 2 October 2026
