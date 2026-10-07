@@ -118,6 +118,20 @@ It is not a public HTTP endpoint. Output is sanitized aggregate counts, hashes
 and status codes only. Evaluation descriptions and raw database errors are never
 printed.
 
+Both maintenance environments must use the verified owner secret for their
+**shared protected database**, not an obsolete owner-secret reference retained in
+the public application's configuration. The operator compares the protected
+reference against the existing database's read-only secret mount privately. It
+does not change secret contents, ownership, permissions or container capabilities.
+
+An initial e17b5f4 maintenance attempt stopped before connecting with filesystem
+`EACCES`: the public maintenance template inherited the obsolete public-database
+owner reference. The schema remained at 25, with no semantic tables. The guarded
+`repair-maintenance-owner` operation corrects only the exact expected stale
+reference, preserves the previous maintenance configuration and operator hash,
+and refuses unrelated configuration differences. The application image and live
+reader configuration do not change. Repeating the repair is unchanged.
+
 ## Verification and access
 
 Check both health endpoints against the exact release commit and image. Verify

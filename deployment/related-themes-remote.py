@@ -247,6 +247,66 @@ def maintenance_config(root, image, original, commit, runtime):
         'networks': {'existing': {'external': True, 'name': NETWORK}}, 'secrets': {'db_owner_password': owner}}
 
 
+def verified_database_owner(retained, configurations):
+    """Both runtimes use the protected shared DB, not the old public DB owner.
+
+    Compare protected references privately; never print secret bytes or hashes.
+    Existing ownership, permissions and maintenance capabilities are unchanged.
+    """
+    db = retained.inspect(DB)
+    env = dict(value.split('=', 1) for value in db['Config']['Env'] if '=' in value)
+    destination = env.get('POSTGRES_PASSWORD_FILE')
+    mounts = [value for value in db['Mounts'] if value['Destination'] == destination]
+    if len(mounts) != 1 or mounts[0]['RW']:
+        fail('database_owner_mount_refused')
+    original = configurations['protected']
+    reference = original.get('secrets', {}).get('db_owner_password', {})
+    if not isinstance(reference.get('file'), str):
+        fail('database_owner_reference_refused')
+    intended = protected_file(pathlib.Path(reference['file']))
+    mounted = protected_file(pathlib.Path(mounts[0]['Source']))
+    if hashlib.sha256(intended.read_bytes()).digest() != hashlib.sha256(mounted.read_bytes()).digest():
+        fail('database_owner_reference_mismatch')
+    return original
+
+
+def repair_maintenance_owner(retained, root, recovery, commit):
+    configurations = {name: checked_json(root / (name + '-previous.json')) for name in ['public', 'protected']}
+    owner = verified_database_owner(retained, configurations)
+    outcomes = {}
+    planned = {}
+    for runtime in ['public', 'protected']:
+        image = checked_json(root / (runtime + '-bridge.json'))['services']['app']['image']
+        before = maintenance_config(root, image, configurations[runtime], commit, runtime)
+        after = maintenance_config(root, image, owner, commit, runtime)
+        path = root / (runtime + '-maintenance.json')
+        current = checked_json(path)
+        if current == after:
+            outcomes[runtime] = 'unchanged'
+            continue
+        if current != before:
+            fail('unexpected_maintenance_configuration')
+        planned[runtime] = (current, after)
+    # Validate both runtimes before changing either task-owned config.
+    for runtime, (current, after) in planned.items():
+        path = root / (runtime + '-maintenance.json')
+        if checked_json(path) != current:
+            fail('concurrent_maintenance_configuration')
+        save_unchanged(root / (runtime + '-maintenance-owner-before.json'), current)
+        temporary = root / (runtime + '-maintenance-owner-corrected.tmp')
+        save(temporary, after)
+        os.replace(temporary, path)
+        outcomes[runtime] = 'corrected'
+    if preservation_state() != recovery['preservation']:
+        fail('owner_repair_changed_database')
+    save_unchanged(root / 'maintenance-owner-repair.json', {
+        'outcome': 'owner_reference_corrected', 'commit': commit,
+        'operatorSha256': sha(pathlib.Path(__file__)), 'secretPermissionsUnchanged': True,
+        'maintenanceIdentityUnchanged': True, 'sharedDatabaseOwnerVerified': True})
+    return {'outcome': 'owner_reference_verified', 'corrected': sum(value == 'corrected' for value in outcomes.values()),
+            'unchanged': sum(value == 'unchanged' for value in outcomes.values()), 'contentPreserved': True}
+
+
 def safe_archive(archive):
     total = 0
     for item in archive.getmembers():
@@ -346,6 +406,7 @@ def main():
         with (root / 'build.log').open('xb') as log:
             run(['docker', 'build', '--build-arg', 'NODE_IMAGE=' + digests[0], '--build-arg',
                  'RELEASE_COMMIT=' + commit, '-t', image, str(source)], log, timeout=900)
+        owner_configuration = verified_database_owner(retained, configurations)
         for runtime, original in configurations.items():
             (root / ('output-' + runtime)).mkdir(mode=0o700)
             save(root / (runtime + '-previous.json'), original)
@@ -355,7 +416,7 @@ def main():
                                 ('bridge-canary', canary_config(bridge, runtime, commit)),
                                 ('canary', canary_config(candidate, runtime, commit))]:
                 save(root / (runtime + '-' + name + '.json'), value)
-            save(root / (runtime + '-maintenance.json'), maintenance_config(root, image, original, commit, runtime))
+            save(root / (runtime + '-maintenance.json'), maintenance_config(root, image, owner_configuration, commit, runtime))
         if preservation_state() != before:
             fail('incumbent_data_changed_during_prepare')
         save(root / 'recovery.json', {'commit': commit, 'previousCommit': PREVIOUS_COMMIT,
@@ -375,7 +436,9 @@ def main():
         fail('incumbent_data_changed')
     verify_current_runtimes(retained, root, recovery,
                             require_compatible=(root / 'bridge-active.json').exists())
-    if operation in ['bridge-canary', 'canary']:
+    if operation == 'repair-maintenance-owner':
+        print(json.dumps(repair_maintenance_owner(retained, root, recovery, commit)))
+    elif operation in ['bridge-canary', 'canary']:
         if operation == 'canary' and (not (root / 'index-verified.json').is_file() or not (root / 'evaluation-verified.json').is_file()):
             fail('index_verification_required')
         before = semantic_state()

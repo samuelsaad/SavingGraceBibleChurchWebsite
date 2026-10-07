@@ -5,6 +5,7 @@ import pathlib
 import tarfile
 import tempfile
 import unittest
+from unittest.mock import patch
 
 SOURCE = pathlib.Path(__file__).resolve().parents[1] / 'deployment' / 'related-themes-remote.py'
 SPEC = importlib.util.spec_from_file_location('related_themes_operator_fixture', SOURCE)
@@ -139,6 +140,48 @@ class RelatedThemesDeploymentTest(unittest.TestCase):
             states[OP.PUBLIC]['Image'] = 'unexpected'
             with self.assertRaisesRegex(RuntimeError, 'concurrent_runtime_changed'):
                 OP.verify_current_runtimes(retained, root, {'newImage': 'new'})
+
+    def test_owner_reference_uses_verified_shared_db_not_old_public_secret(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            mounted, protected, old_public = [root / name for name in ['mounted.secret', 'protected.secret', 'old.secret']]
+            mounted.write_text('anonymous fixture shared credential')
+            protected.write_text('anonymous fixture shared credential')
+            old_public.write_text('anonymous different fixture credential')
+            configs = {'public': original(), 'protected': original()}
+            configs['public']['secrets']['db_owner_password']['file'] = str(old_public)
+            configs['protected']['secrets']['db_owner_password']['file'] = str(protected)
+            retained = type('Fixture', (), {'inspect': staticmethod(lambda name: {'Config': {'Env': ['POSTGRES_PASSWORD_FILE=/run/secrets/owner']},
+                'Mounts': [{'Destination': '/run/secrets/owner', 'Source': str(mounted), 'RW': False}]})})
+            self.assertIs(OP.verified_database_owner(retained, configs), configs['protected'])
+            configs['protected']['secrets']['db_owner_password']['file'] = str(old_public)
+            with self.assertRaisesRegex(RuntimeError, 'database_owner_reference_mismatch'):
+                OP.verified_database_owner(retained, configs)
+
+    def test_guarded_owner_repair_retains_original_and_refuses_unrelated_drift(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            commit = '1' * 40
+            configs = {'public': original(), 'protected': original()}
+            configs['public']['secrets']['db_owner_password']['file'] = '/fixture/old-owner.secret'
+            configs['protected']['secrets']['db_owner_password']['file'] = '/fixture/shared-owner.secret'
+            for runtime in ['public', 'protected']:
+                OP.save(root / (runtime + '-previous.json'), configs[runtime])
+                OP.save(root / (runtime + '-bridge.json'), {'services': {'app': {'image': 'image'}}})
+                OP.save(root / (runtime + '-maintenance.json'), OP.maintenance_config(root, 'image', configs[runtime], commit, runtime))
+            previous = OP.checked_json(root / 'public-maintenance.json')
+            with patch.object(OP, 'verified_database_owner', return_value=configs['protected']), patch.object(OP, 'preservation_state', return_value={'safe': True}):
+                result = OP.repair_maintenance_owner(None, root, {'preservation': {'safe': True}}, commit)
+                self.assertEqual(result['corrected'], 1)
+                self.assertEqual(OP.checked_json(root / 'public-maintenance-owner-before.json'), previous)
+                fixed = OP.checked_json(root / 'public-maintenance.json')
+                self.assertEqual(fixed['secrets']['db_owner_password'], configs['protected']['secrets']['db_owner_password'])
+                self.assertEqual(fixed['services'], previous['services'])
+                self.assertEqual(OP.repair_maintenance_owner(None, root, {'preservation': {'safe': True}}, commit)['corrected'], 0)
+                fixed['services']['maintenance']['read_only'] = False
+                (root / 'public-maintenance.json').write_text(OP.json.dumps(fixed))
+                with self.assertRaisesRegex(RuntimeError, 'unexpected_maintenance_configuration'):
+                    OP.repair_maintenance_owner(None, root, {'preservation': {'safe': True}}, commit)
 
 
 if __name__ == '__main__':

@@ -29,7 +29,9 @@ async function main(){
   try{await c.query('BEGIN READ ONLY');before=await databaseFingerprint(c);await c.query('ROLLBACK');}finally{c.release();}
   if(operation==='inventory'){
    await saveSemanticPrivateJson(root,`inventory-${inventory.corpusSha256}.private.json`,inventory);
-   await saveSemanticPrivateJson(root,`baseline-${safeFingerprint(before)}.private.json`,before);
+   // Full snapshots differ when an authorized semantic build or ledger entry is
+   // added, even while the non-semantic preservation hash remains unchanged.
+   await saveSemanticPrivateJson(root,`baseline-${before.sha256}.private.json`,before);
    console.log(JSON.stringify({operation,stored:before.counts.sermons,eligible:sources.length,corpusSha256:inventory.corpusSha256,preservationSha256:safeFingerprint(before),languages:sources.reduce((counts,s)=>({...counts,[s.language]:(counts[s.language]??0)+1}),{} as Record<string,number>)}));return;
   }
   if(operation==='migrate'){
