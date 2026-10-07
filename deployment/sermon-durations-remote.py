@@ -179,7 +179,9 @@ def eligible_count(container):
 
 def maintenance_config(root, image, original, commit):
     owner = original.get('secrets', {}).get('db_owner_password')
-    if not isinstance(owner, dict) or set(owner) != {'file'} or not pathlib.PurePosixPath(owner['file']).is_absolute():
+    if (not isinstance(owner, dict) or set(owner) not in [{'file'}, {'file', 'name'}]
+            or not isinstance(owner.get('file'), str) or not pathlib.PurePosixPath(owner['file']).is_absolute()
+            or 'name' in owner and (not isinstance(owner['name'], str) or not re.fullmatch(r'[a-zA-Z0-9_.-]+', owner['name']))):
         fail('owner_secret_reference_refused')
     return {'name': 'savinggrace-duration-maintenance', 'services': {'maintenance': {
         'image': image, 'user': '0:0', 'entrypoint': ['node', 'sermon-durations-sync.cjs'],

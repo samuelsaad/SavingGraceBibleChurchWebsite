@@ -11,6 +11,15 @@ spec.loader.exec_module(operator)
 
 
 class DurationOperatorTests(unittest.TestCase):
+    def test_existing_compose_normalized_secret_name_is_preserved(self):
+        original = self.fixture()
+        original['secrets']['db_owner_password']['name'] = 'anonymous_db_owner_password'
+        result = operator.maintenance_config(pathlib.Path('/protected/release'), 'anonymous-image', original, 'a' * 40)
+        self.assertEqual(result['secrets']['db_owner_password'], original['secrets']['db_owner_password'])
+        original['secrets']['db_owner_password']['environment'] = 'PROHIBITED_EXTRA_SOURCE'
+        with self.assertRaisesRegex(RuntimeError, 'owner_secret_reference_refused'):
+            operator.maintenance_config(pathlib.Path('/protected/release'), 'anonymous-image', original, 'a' * 40)
+
     def fixture(self, runtime='public'):
         return {'name': 'anonymous-project', 'services': {'app': {
             'image': 'anonymous-prior-image', 'environment': {
