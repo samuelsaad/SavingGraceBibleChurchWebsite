@@ -1,6 +1,6 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
-## D-177 — recording durations, local application verified
+## D-177 — verified recording durations delivered, 7 October 2026
 
 Discovery found 430 local sermons, 407 frontend eligible and no stored duration.
 Reverified retained metadata supplies 387 SermonAudio audio lengths (including
@@ -16,15 +16,44 @@ All 425 updates applied atomically, with no conflicts and unchanged 430/407 coun
 Original content, reviews, acceptance history and publication states are preserved.
 Only affected current acceptance dependencies receive audited metadata refreshes;
 local-only completion stays local. No migration or content processing occurred.
-The local runtime on loopback 4411 is refreshed. Staging delivery and final browser
-verification are still pending at this implementation checkpoint.
+The local runtime on loopback 4411 is refreshed. Both staging runtimes share the
+existing 398-record database: 393 durations saved, five genuinely unknown, with
+all 398 eligible members unchanged. The 32 additional local packet members absent
+from staging are skipped, not copied. Identical local and staging reruns preserve
+complete database fingerprints, including row versions and audit records.
 
-Full guarded PostgreSQL suite: 1,127 passed, zero skips. Standard suite: 989 passed,
+Full guarded PostgreSQL suite: 1,128 passed, zero skips. Standard suite: 990 passed,
 138 intentionally gated skips (covered by that PostgreSQL run). Production build
-and staging bundles pass. Earlier fixture failures were corrected without relaxing
-validators. Existing curated datasets change only 393 provider-matched duration
+and staging bundles pass; type/Astro checks cover 534 files with zero diagnostics.
+Earlier fixture failures were corrected without relaxing validators. Existing
+curated datasets change only 393 provider-matched duration
 fields and their content hashes; the 15-record YouTube-only seed stays unchanged.
 The prior intentional V5 local emphasis is preserved in this integrated release.
+
+Serving staging code is `e12c28196179c155aca98a73b2fcd2daed6ee116`, image
+`sha256:c1ee9ee3cab01e159d7889b7f009e8332c4f0ad1e5130b08db85935b4a748f6b`.
+Code-only package SHA-256:
+`0b79735b047ac286261e529b6ce524518d09a8f44fb037766b5724684232a6ae`.
+Initial browser concurrency exposed a staging-only PostgreSQL LLVM compilation
+memory failure. The fix disables JIT for application reader sessions only; all
+freshness predicates, read-only/UTC/timeouts, maintenance and global database
+settings are preserved. New unexposed canaries and both active health checks pass.
+Local, public and protected browser checks pass at desktop/mobile, including
+durations over one hour, provider attribution and deliberate non-autoplay players.
+Each covers 15 archive/home renders, 153 labels and nine detail checks. Public and
+protected mean navigation is 3.065 and 2.970 seconds respectively. Post-browser
+checks confirm healthy exact images, no additional memory failure or application
+restart, no-store/noindex, denied administrator routes and unchanged private data.
+Final outgoing scan covers 51 intended paths and four curated dataset files with
+zero findings. Only safe handover evidence follows the serving implementation.
+
+Local access remains `/admin` then `/frontend-preview/sermons-v5/` on loopback
+4411. Public staging is `http://54.253.237.138:8080/sermons-v5/`; protected staging
+uses the existing SSH tunnel at `http://127.0.0.1:4396/sermons-v5/`.
+No additional frontend membership, sermon content, publication state or production
+change. Original receipts and prior images remain preserved. Application rollback
+was rehearsed before duration writes; later audited metadata compensation must
+retain D-177-compatible code rather than returning to an incompatible old selector.
 
 ## Local V5 latest-sermon emphasis — 7 October 2026
 
@@ -32,8 +61,9 @@ Samuel's follow-up refines only the featured V5 entry: a mineral-blue heading
 band, stronger hover/focus colour and a small book-tab/arrow motion on fine-pointer
 hover. Touch/reduced-motion keep the tab still. The existing local preview on
 loopback 4411 is refreshed; `/admin` remains the entry to
-`/frontend-preview/sermons-v5/`. This is an uncommitted local CSS refinement, not
-a new staging release or data change. The D-176 deployed commit below is unchanged.
+`/frontend-preview/sermons-v5/`. At this historical checkpoint it was an uncommitted
+local CSS refinement, not a new staging release or data change. D-177 above later
+preserves and delivers this refinement; the original verification below remains.
 Standard suite: 951 passed / 134 database-gated skips. Type/Astro: zero diagnostics.
 Build: 45 pages. Anonymous visual and actual authenticated preview checks pass.
 See the V5 design note and validation plan for the bounded verification.

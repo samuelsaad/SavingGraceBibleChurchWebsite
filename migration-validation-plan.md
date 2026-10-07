@@ -13,15 +13,16 @@
   identities, publication, old audits/reviews and eligible membership preserved.
   Identical apply: 425 unchanged; independent verify passes with the same complete
   database fingerprint, including versions and audits.
-- `npm run test:postgres`: 1,127 passed, zero skips. The runner created/removed
+- Final `npm run test:postgres`: 1,128 passed, zero skips. The runner created/removed
   only its uniquely named disposable database. Initial failures were anonymous
   summary/media fixture omissions and a preservation hash for the intentional
   card duration field; fixed without changing validation or weakening the guard.
-- `npm test`: 989 passed / 138 database-gated skips, covered by the full PG run.
+- Final `npm test`: 990 passed / 138 database-gated skips, covered by the full PG run.
+- Final type/Astro: 534 files, zero errors, warnings or hints.
 - Build: 45 pages; staging bundle passes. Two existing build-time font warnings
   retain working runtime asset routes. Anonymous importer dry-run: 5 inputs,
   3 included, 2 excluded, 0 rejected. Cached offline audit: zero vulnerabilities.
-- Eight direct Python operator tests pass. Outgoing scoped scan: 49 paths,
+- Nine direct Python operator tests pass. Outgoing scoped scan: 51 paths,
   four existing curated dataset files, zero credential/private-content findings.
   Dataset verification proves only 393 duration values plus required hashes change;
   identical dataset rerun makes zero writes. The provider-mismatched 15-record
@@ -29,7 +30,7 @@
 - Recovery: immutable precommit scoped evidence; compensating metadata rollback
   preserves history and current receipt validity. Old-image rollback is rehearsed
   before staging metadata writes, not falsely advertised as compatible afterward.
-  Staging and final browser results are pending at this implementation checkpoint.
+  Pre-data staging rollback/reactivation passed with the database unchanged.
 - Subsequent staging application/data validation: 393 duration updates, 32 packet
   members absent on staging skipped; 398 stored/eligible remain. Identical apply
   and independent verify preserve the complete post-update database fingerprint.
@@ -40,14 +41,39 @@
   reader execution with transaction-local JIT disabled takes 2,483 ms, with 41 ms
   planning. The correction disables JIT only on existing read-only application
   connections; maintenance/global settings and every acceptance predicate remain.
-  Focused connection/duration/sync tests: 25 pass. Post-fix delivery/browser
-  verification follows before claiming completion.
+  Focused connection/duration/sync tests: 25 pass. Post-fix unexposed canaries
+  and activation pass with the database unchanged and both runtimes healthy.
+- Final staging code: `e12c28196179c155aca98a73b2fcd2daed6ee116`; image
+  `sha256:c1ee9ee3cab01e159d7889b7f009e8332c4f0ad1e5130b08db85935b4a748f6b`.
+  Package SHA-256: `0b79735b047ac286261e529b6ce524518d09a8f44fb037766b5724684232a6ae`.
+  Verified staging second-run/independent-check receipt:
+  `d6d08be507dbd2d107363cc47e596a77fa1e4c0e57728c8956eccde22e9f09fc`;
+  full post-update database fingerprint:
+  `b4673b082b65dd4ca4e323e06b57f17098221cd73f3de87e7603b0cbfba2f7dd`.
+- Actual local and post-fix public browser checks each cover 15 archive/home
+  renders, 153 duration labels and nine detail renders across 1440/390/320px.
+  Long audio `1:04:04`, separate audio/video attribution, initial zero media
+  requests, keyboard deliberate load/no autoplay, no overflow/client error pass.
+  Public post-fix 26 navigations: 2.735–3.421 seconds, mean 3.065 seconds.
+  Protected repeats all checks; its 26 navigations take 2.624–3.420 seconds, mean
+  2.970 seconds. Test browsers close afterward. External iframe requests are
+  deliberately intercepted; no audio/video bytes, real-content screenshots or
+  review decisions are recorded by browser automation.
+- Final read-only post-browser runtime checks: both exact intended images healthy,
+  zero restarts of replacement applications, no additional database memory failure,
+  private database network, remote development identities disabled, admin/preview
+  denial, no-store/noindex and exact 398 eligibility preserved. Independent replay
+  of the original apply receipt still gives 393 unchanged and the same full
+  database fingerprint. Local preview and existing protected tunnel stay running.
+- The outgoing scan covers all 51 changed paths from the pre-task remote commit,
+  including four authorized dataset files, with zero findings. Private manifests,
+  recovery/query/browser evidence, credentials and source exports remain excluded.
 
 ## Local V5 featured-sermon emphasis — 7 October 2026
 
 - Scoped CSS only: existing blue heading/panel, book-tab lift and opening-arrow
   feedback for the latest entry. No schema, data, content, eligibility or remote
-  changes. Working-tree implementation remains uncommitted.
+  changes. It was uncommitted at that checkpoint; D-177 later preserves/delivers it.
 - Anonymous desktop/tablet/mobile renders at 1440/768/390/320px pass without
   overflow/errors. Mouse hover raises the feature's tab 4px; ordinary rows stay
   still. Touch and reduced-motion have no tab transform. Keyboard description
