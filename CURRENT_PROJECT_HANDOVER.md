@@ -1,36 +1,51 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
-## D-179 — modular website CMS implementation
+## D-179 — modular website CMS delivered locally and to staging
 
 `codex/modular-admin-cms` extends the integrated Astra/Claude application from
 `b259a16` with migration 0027, independent immutable draft/published revisions,
 optimistic concurrency, audited restore, protected preview and persistent uploads.
-The curated initializer adds 51 ordinary-content entities and 46 existing image
-references: homepage, 33 church pages, three posts, ten events, three venues and
-shared settings. Twenty-nine supported module types feed the existing renderers.
-Existing wording, routes and visibility are the initial published state.
+The initializer adds 51 ordinary-content entities and 46 existing image references:
+homepage, 33 church pages, three posts, ten events, three venues and shared settings.
+Twenty-nine supported module types feed the existing renderers. Existing wording,
+routes and visibility are preserved as the initial published state.
 
-Published content is read from a fresh PostgreSQL snapshot on each request; ordinary
-updates do not require a rebuild or restart. Existing sermon eligibility, review,
-search and Related themes gates remain independent. No sermon bodies are copied
-into CMS records. Production builds and production authentication remain unchanged.
+Published content is read from a fresh PostgreSQL snapshot on each request;
+ordinary updates require neither source edits nor rebuilds/restarts. Sermon
+eligibility, review, search and Related themes gates remain independent. No sermon
+bodies are copied into CMS records. Production authentication remains unchanged.
 
-Local migration and no-clobber reruns succeeded, including a rerun after browser
-editing. Unrelated table/sequence fingerprints stayed identical. The actual
-loopback dashboard demonstrated all ten requested editing workflows, protected
-draft isolation, immediate publication, PDF attachment and persistence after restart.
-Original published content was restored through revision history; the verification
-event is unpublished and its audit/revisions remain intact.
+Local and configured staging migration, repeated no-clobber initialization and
+actual browser demonstrations of all ten requested workflows passed. Drafts stayed
+private, publication appeared immediately, and content/PDF delivery survived
+application restart. Both staging applications also passed rollback to the
+compatible bridge and reactivation with identical CMS rows and upload hashes.
+Original published home/About/settings content was restored through revision
+history; each demonstration event is unpublished and its audit/revisions retained.
 
-Start the CMS with the guarded initialization/server commands in
-`docs/modular-cms-deployment.md`; the local entry is
-`http://127.0.0.1:4430/admin/login`. Explicit local development entry is not personal
-or production sign-in. Configured staging uses separate secret-backed sessions only
-through the existing protected access path; public staging must keep admin denied.
+Both staging applications and the local CMS run implementation
+`7b411d957d6b468f6d9b1bffa8e21efe40d4de2d`. Staging image:
+`sha256:53bef03bba2c58e5e88c3415c7a41dc584e2336c91bebdb4121e9d4e55f848fd`.
+Staging ledger is 27; its 398 stored sermons, 144 ordinary published statuses,
+unrelated rows/sequences, listener bindings and networks are unchanged. Visitor
+Related themes remains OFF. Final initialization inserted zero entities/assets
+and retained all 51 seed identities unchanged after browser edits and restore.
 
-See `docs/cms-content-inventory.md`, `modular-cms-plan.md` and
-`docs/modular-cms-validation.md`. Staging activation and Git publication were still
-pending at this implementation checkpoint; later delivery receipts below govern.
+Local administration: `http://127.0.0.1:4430/admin/login`, then **Open local
+administration**. Protected staging: `http://127.0.0.1:4396/admin/login` through
+the existing SSH tunnel and separate protected operator-key session. These are
+truthful development/staging identities, not church-owned production sign-in.
+Public staging still denies administration and unpublished previews.
+
+The implementation has been pushed normally to the named GitHub branch. The
+final evidence and browser-harness synchronization commit follows the running
+implementation above and changes no deployed runtime code. The final full PostgreSQL run passed 1,241 tests with zero
+skips; the later standard suite passed 1,101 tests, with its 142 database cases
+covered by that PostgreSQL run. Type checks, builds, browser checks, importer dry
+run, offline audit and outgoing privacy/security scans passed. See the inventory,
+`docs/modular-cms-deployment.md` and `docs/modular-cms-validation.md` for commands,
+exact evidence, scan limits and intentionally code-owned behavior. No production
+rollout or human semantic-quality approval is implied.
 
 ## D-178 — Related themes delivered; human quality gate remains closed
 

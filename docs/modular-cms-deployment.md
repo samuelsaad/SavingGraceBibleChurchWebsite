@@ -130,8 +130,11 @@ at release `e17b5f487eca77bb1e8496be91e0382aca746b47`, ledger 26, 398 stored ser
 visitor Related themes disabled and approximately 23 GB free. The public
 application already had its loopback 8080 mapping and two existing networks;
 the protected application had one private network and no Docker host-port mapping.
-These incumbent settings are frozen, not recreated or widened. Live deployment
-outcomes must be recorded separately after execution.
+These incumbent settings were preserved during delivery. Both applications now
+serve implementation `7b411d957d6b468f6d9b1bffa8e21efe40d4de2d` with ledger 27.
+Actual rollback/reactivation, browser editing, restart persistence, restoration
+and no-clobber reruns passed; see the final receipt in
+`docs/modular-cms-validation.md` for exact image, hashes and access checks.
 
 ## Administrator access
 
