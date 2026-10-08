@@ -32,6 +32,6 @@ for (const path of paths) {
 }
 const archive = resolve(destination, "release.tar");
 if (await lstat(archive).then(() => true, () => false)) throw new Error("existing_release_archive_preserved");
-execFileSync("git", ["archive", "--format=tar", `--output=${archive}`, commit, "--", ...[...paths].sort()]);
+execFileSync("git", ["-c", "core.autocrlf=false", "archive", "--format=tar", `--output=${archive}`, commit, "--", ...[...paths].sort()]);
 const sha256 = createHash("sha256").update(await readFile(archive)).digest("hex");
 process.stdout.write(JSON.stringify({ commit, pathCount: paths.size, sha256 }) + "\n");
