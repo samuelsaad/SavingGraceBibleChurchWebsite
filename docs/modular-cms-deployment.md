@@ -86,14 +86,25 @@ printing them. All operator output is status/count/hash data.
 1. `inventory` reads exact existing releases, images, configuration hashes,
    binding scopes, network-name hashes, schema counts, capability/root filesystem
    state and available storage. Preserve this receipt privately.
-2. Commit and package the verified source closure. Independently hash the release,
-   inventory receipt and operator, transfer them into a fresh protected release
-   directory, and verify destination hashes. Do not transfer credentials or
-   development datasets.
-3. `prepare <commit> <archive-sha256> <inventory-sha256>` refuses drift, binds all
+2. Commit and package the verified source closure with `package-release.mjs`.
+   Run `package-cms-runtime.mjs` with the same external `STAGING_PACKAGE_DIRECTORY`
+   and a fresh ignored `CMS_RUNTIME_SCAN_MANIFEST` ending in `.private.json`.
+   It rebuilds the committed closure, verifies all source inputs, runs the outgoing
+   privacy scan and packages only fixed runtime JavaScript/admin files and exact
+   committed migrations. The manifest binds the Git commit, source archive and
+   every runtime file hash. Private dependency provenance remains outside the tar.
+   Independently hash both archives, inventory receipt and operator, transfer them
+   into a fresh protected release directory, and verify destination hashes.
+   Do not transfer credentials or development datasets.
+3. `prepare <commit> <archive-sha256> <inventory-sha256> <runtime-sha256>` refuses drift, binds all
    generated configurations and recovery artifacts, captures unrelated
    table/sequence fingerprints and scoped CMS/upload backups, and builds the
-   immutable image. It changes no incumbent application or database.
+   immutable image from `Dockerfile.cms-runtime`. This copy-only build uses the
+   already cached immutable Node digest, `--pull=false` and `--network=none`;
+   it performs no dependency installation or registry request. Bundles contain
+   all dependencies except Node builtins and unused optional `pg-native`; forced
+   native PostgreSQL configuration is refused. Build diagnostics stay private.
+   It changes no incumbent application or database.
 4. `bridge-canary <commit>`, then `activate-bridge <commit>`, verify the exact
    26/27-compatible reader before schema changes. Canaries have no host ports.
 5. `initialize <commit>` runs the gated non-HTTP maintenance bundle, seeds
@@ -121,6 +132,16 @@ application already had its loopback 8080 mapping and two existing networks;
 the protected application had one private network and no Docker host-port mapping.
 These incumbent settings are frozen, not recreated or widened. Live deployment
 outcomes must be recorded separately after execution.
+
+## Administrator access
+
+Local administration remains at `http://127.0.0.1:4430/admin/login`, using the
+explicit **Open local administration** development entry. Protected staging uses
+`http://127.0.0.1:4396/admin/login` through the existing pinned SSH tunnel and
+requires the separately protected operator key. Retrieve that key only through
+the established operator workflow into owner-restricted private storage; never
+place it in documentation, browser screenshots, commands, logs or Git. Public
+staging continues to deny administration.
 
 ## Verification
 

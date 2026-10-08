@@ -164,6 +164,8 @@ def assets_manifest():
 def candidate(original, image, commit, root, runtime, enabled):
     result = copy.deepcopy(original)
     app = result["services"]["app"]
+    if app["environment"].get("NODE_PG_FORCE_NATIVE"):
+        fail("cms_native_pg_environment_refused")
     app["image"] = image
     env = app["environment"]
     env.update({"RELEASE_COMMIT": commit, "CMS_SITE_ENABLED": "1" if enabled else "0"})
@@ -197,10 +199,43 @@ def canary(configuration, commit, runtime):
     return value
 
 
-def prepare(helper, root, incoming, commit, archive_hash, inventory_hash):
+RUNTIME_ENTRIES = ("server", "database", "cms-maintenance", "sermonaudio-sync", "completed-sync", "sermonaudio-completion-sync", "sermon-durations-sync", "related-themes-sync", "draft-preview", "d160-sync", "d161-sync", "d167-protected-sync")
+
+
+def unpack_runtime(archive_path, destination, source, commit, archive_hash):
+    with tarfile.open(archive_path) as archive:
+        safe_archive(archive)
+        members = archive.getmembers()
+        names = [member.name for member in members]
+        if len(names) != len(set(names)) or any(not member.isfile() for member in members):
+            fail("cms_runtime_archive_members_refused")
+        manifest_member = next((member for member in members if member.name == "runtime-manifest.json"), None)
+        if not manifest_member:
+            fail("cms_runtime_manifest_missing")
+        manifest = json.load(archive.extractfile(manifest_member))
+        required = {"app/" + name + ".cjs" for name in RUNTIME_ENTRIES} | {"app/admin/index.html", "app/admin/_astro/cms-admin.js", "app/admin/_astro/cms-admin.css"}
+        required |= {"app/db/migrations/" + path.name for path in (source / "db/migrations").iterdir() if path.is_file() and re.fullmatch(r"[0-9]{4}_[a-z0-9_]+(?:\.down)?\.sql", path.name)}
+        files = manifest.get("files", [])
+        if manifest.get("version") != 1 or manifest.get("commit") != commit or manifest.get("sourceArchiveSha256") != archive_hash or not re.fullmatch(r"[a-f0-9]{64}", manifest.get("scanManifestSha256", "")) or not re.fullmatch(r"[a-f0-9]{64}", manifest.get("provenanceSha256", "")):
+            fail("cms_runtime_manifest_binding")
+        if len(files) != len(required) or {file.get("path") for file in files} != required or set(names) != required | {"runtime-manifest.json"}:
+            fail("cms_runtime_manifest_scope")
+        for file in files:
+            data = archive.extractfile(file["path"]).read()
+            if len(data) != file.get("bytes") or hashlib.sha256(data).hexdigest() != file.get("sha256"):
+                fail("cms_runtime_file_hash_mismatch")
+            if file["path"].startswith("app/db/migrations/") and data != checked(source / file["path"][4:]).read_bytes():
+                fail("cms_runtime_migration_source_mismatch")
+        destination.mkdir(mode=0o700)
+        archive.extractall(destination)
+    shutil.copyfile(checked(source / "deployment/Dockerfile.cms-runtime"), destination / "Dockerfile")
+    return manifest
+
+
+def prepare(helper, root, incoming, commit, archive_hash, inventory_hash, runtime_hash):
     if root.exists():
         fail("cms_release_exists")
-    if sha(incoming / "release.tar") != archive_hash or sha(incoming / "inventory.private.json") != inventory_hash:
+    if sha(incoming / "release.tar") != archive_hash or sha(incoming / "inventory.private.json") != inventory_hash or sha(incoming / "runtime.tar") != runtime_hash:
         fail("cms_transfer_hash_mismatch")
     expected = load(incoming / "inventory.private.json")
     actual = inventory(helper)
@@ -234,9 +269,16 @@ def prepare(helper, root, incoming, commit, archive_hash, inventory_hash):
     digests = [item for item in helper.inspect("node:24-bookworm-slim")["RepoDigests"] if item.startswith("node@sha256:")]
     if len(digests) != 1:
         fail("cms_immutable_base_required")
+    (root / "runtime.tar").write_bytes((incoming / "runtime.tar").read_bytes())
+    (root / "runtime.tar").chmod(0o600)
+    runtime = root / "runtime"
+    manifest = unpack_runtime(root / "runtime.tar", runtime, source, commit, archive_hash)
+    save(root / "runtime-manifest.receipt.json", manifest)
     image = "savinggrace-cms:" + commit
     with (root / "build.log").open("xb") as output:
-        run(["docker", "build", "--pull=false", "--network=none", "--build-arg", "NODE_IMAGE=" + digests[0], "--build-arg", "RELEASE_COMMIT=" + commit, "-t", image, str(source)], output=output, timeout=900)
+        result = subprocess.run(["docker", "build", "--pull=false", "--network=none", "--build-arg", "NODE_IMAGE=" + digests[0], "--build-arg", "RELEASE_COMMIT=" + commit, "-t", image, str(runtime)], stdout=output, stderr=subprocess.STDOUT, timeout=900)
+        if result.returncode:
+            fail("cms_offline_image_build_failed")
     for name in ("cms_writer_password", "cms_session_secret"):
         path = root / name
         with path.open("x") as stream:
@@ -267,7 +309,7 @@ def prepare(helper, root, incoming, commit, archive_hash, inventory_hash):
     if preservation() != before:
         fail("cms_preservation_failed")
     bound = {path.name: sha(path) for path in root.iterdir() if path.suffix == ".json" or path.name == "uploads-before.tar"}
-    save(root / "recovery.json", {"commit": commit, "before": before, "image": helper.inspect(image)["Id"], "previous": actual, "archiveSha256": archive_hash, "boundFiles": bound})
+    save(root / "recovery.json", {"commit": commit, "before": before, "image": helper.inspect(image)["Id"], "previous": actual, "archiveSha256": archive_hash, "runtimeArchiveSha256": runtime_hash, "boundFiles": bound})
     return {"outcome": "cms_prepared", "commit": commit, "image": helper.inspect(image)["Id"], "unrelatedPreserved": True}
 
 
@@ -305,12 +347,12 @@ def main():
     root = pathlib.Path("/opt/savinggrace-cms") / commit
     incoming = pathlib.Path("/home/ec2-user/.cms-transfer") / commit
     if operation == "prepare":
-        if len(sys.argv) != 5:
+        if len(sys.argv) != 6:
             fail("cms_prepare_arguments_refused")
-        print(json.dumps(prepare(helper, root, incoming, commit, sys.argv[3], sys.argv[4]))); return
+        print(json.dumps(prepare(helper, root, incoming, commit, sys.argv[3], sys.argv[4], sys.argv[5]))); return
     recovery = load(root / "recovery.json")
     verify_frozen(root, recovery)
-    if recovery["commit"] != commit or sha(root / "release.tar") != recovery["archiveSha256"] or preservation() != recovery["before"]:
+    if recovery["commit"] != commit or sha(root / "release.tar") != recovery["archiveSha256"] or sha(root / "runtime.tar") != recovery["runtimeArchiveSha256"] or preservation() != recovery["before"]:
         fail("cms_recovery_or_preservation_changed")
     if operation in ("bridge-canary", "canary"):
         phase = "bridge" if operation == "bridge-canary" else "candidate"

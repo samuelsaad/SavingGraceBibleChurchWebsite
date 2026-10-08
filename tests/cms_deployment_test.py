@@ -2,6 +2,8 @@
 import copy
 import importlib.util
 import io
+import json
+import hashlib
 import pathlib
 import tarfile
 import tempfile
@@ -65,6 +67,39 @@ class CmsOperatorTest(unittest.TestCase):
             buffer.seek(0)
             with tarfile.open(fileobj=buffer) as archive:
                 with self.assertRaises(RuntimeError):OP.safe_archive(archive)
+
+    def test_runtime_archive_requires_exact_hash_bound_scope(self):
+        for defect in (None, "duplicate", "extra", "hash", "commit", "migration"):
+            with self.subTest(defect=defect), tempfile.TemporaryDirectory(prefix="cms-runtime-") as directory:
+                root=pathlib.Path(directory); source=root/"source"; migrations=source/"db/migrations"; migrations.mkdir(parents=True)
+                (migrations/"0001_fixture.sql").write_bytes(b"SELECT 1;")
+                deployment=source/"deployment"; deployment.mkdir(); (deployment/"Dockerfile.cms-runtime").write_text("ARG NODE_IMAGE\nFROM ${NODE_IMAGE}\nCOPY app/ /app/\n")
+                values={"app/"+name+".cjs":b"fixture bundled JavaScript" for name in OP.RUNTIME_ENTRIES}
+                values.update({"app/admin/index.html":b"fixture", "app/admin/_astro/cms-admin.js":b"fixture", "app/admin/_astro/cms-admin.css":b"fixture", "app/db/migrations/0001_fixture.sql":b"SELECT 1;"})
+                if defect=="migration":values["app/db/migrations/0001_fixture.sql"]=b"SELECT 2;"
+                manifest={"version":1,"commit":"1"*40,"sourceArchiveSha256":"2"*64,"scanManifestSha256":"3"*64,"provenanceSha256":"4"*64,"files":[{"path":name,"bytes":len(data),"sha256":hashlib.sha256(data).hexdigest()} for name,data in values.items()]}
+                if defect=="hash":manifest["files"][0]["sha256"]="0"*64
+                if defect=="commit":manifest["commit"]="0"*40
+                archive_path=root/"runtime.tar"
+                with tarfile.open(archive_path,"w") as archive:
+                    records=[("runtime-manifest.json",json.dumps(manifest).encode()),*values.items()]
+                    if defect=="duplicate":records.append(records[1])
+                    if defect=="extra":records.append(("app/unlisted.js",b"fixture"))
+                    for name,data in records:
+                        item=tarfile.TarInfo(name);item.size=len(data);archive.addfile(item,io.BytesIO(data))
+                if defect:
+                    with self.assertRaises(RuntimeError):OP.unpack_runtime(archive_path,root/"output",source,"1"*40,"2"*64)
+                    self.assertFalse((root/"output").exists())
+                else:
+                    result=OP.unpack_runtime(archive_path,root/"output",source,"1"*40,"2"*64)
+                    self.assertEqual(result["commit"],"1"*40)
+                    self.assertEqual((root/"output/app/server.cjs").read_bytes(),values["app/server.cjs"])
+                    self.assertTrue((root/"output/Dockerfile").is_file())
+
+    def test_native_postgres_environment_is_refused(self):
+        config=original();config["services"]["app"]["environment"]["NODE_PG_FORCE_NATIVE"]="1"
+        with self.assertRaisesRegex(RuntimeError,"cms_native_pg_environment_refused"):
+            OP.candidate(config,"new","1"*40,pathlib.Path("/fixture"),"protected",True)
 
     def test_writer_secret_is_stdin_only_and_existing_role_is_not_replaced(self):
         with tempfile.TemporaryDirectory(prefix="cms-operator-") as directory:

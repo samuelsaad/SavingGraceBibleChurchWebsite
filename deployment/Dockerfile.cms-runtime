@@ -1,0 +1,11 @@
+# Offline CMS release: dependencies are already included in audited runtime bundles.
+ARG NODE_IMAGE
+FROM ${NODE_IMAGE}
+ARG RELEASE_COMMIT
+LABEL org.opencontainers.image.revision=${RELEASE_COMMIT}
+ENV NODE_ENV=production
+WORKDIR /app
+COPY --chown=node:node app/ ./
+USER node
+EXPOSE 8080
+CMD ["node", "server.cjs"]

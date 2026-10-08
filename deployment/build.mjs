@@ -1,4 +1,6 @@
 import { build } from "esbuild";
+import { builtinModules } from "node:module";
+const runtimeBuiltins = new Set(builtinModules.flatMap(name => [name, "node:" + name]));
 import {buildCmsAdmin} from "./build-cms-admin.mjs";
 import { mkdir, writeFile } from "node:fs/promises";
 
@@ -18,12 +20,13 @@ for (const [name, entry] of Object.entries({
   "d161-sync": "deployment/d161-sync.ts",
   "d167-protected-sync": "deployment/d167-protected-sync.ts"
 })) {
-  const result = await build({ entryPoints: [entry], outfile: `dist-staging/${name}.cjs`, bundle: true,
+  const result = await build({ entryPoints: [entry], outfile: `dist-staging/${name}.cjs`, bundle: true, preserveSymlinks: true,
     // The minimal archive intentionally excludes the Astro workspace config.
     // Keep strict-mode semantics identical in local and isolated image builds.
     tsconfigRaw: { compilerOptions: { alwaysStrict: true } },
     platform: "node", target: "node24", format: "cjs", external: ["pg-native"], metafile: true,
     sourcemap: false, legalComments: "none", logLevel: "silent" });
+  if (Object.values(result.metafile.outputs).some(output => output.imports.some(item => item.external && item.path !== "pg-native" && !runtimeBuiltins.has(item.path)))) throw new Error("prohibited_staging_external_dependency");
   if (Object.keys(result.metafile.inputs).some((path) => /(?:local-test-identity|local-dashboard-static|googleapis|transformers)/i.test(path)||(!path.includes("/node_modules/")&&/(?:private\/|development-data\/)/i.test(path)))) {
     throw new Error("prohibited_staging_bundle_input");
   }

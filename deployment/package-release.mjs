@@ -9,7 +9,7 @@ if (!directory || !isAbsolute(directory)) throw new Error("external_package_dire
 const destination = await realpath(directory);
 if (!relative(process.cwd(), destination).startsWith("..")) throw new Error("package_inside_repository_refused");
 const commit = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
-const paths = new Set(["deployment/build-cms-admin.mjs", "src/pages/admin/index.astro", "src/admin/workbench.css", "Dockerfile", ".dockerignore", "package.json", "package-lock.json",
+const paths = new Set(["deployment/Dockerfile.cms-runtime", "deployment/build-cms-admin.mjs", "src/pages/admin/index.astro", "src/admin/workbench.css", "Dockerfile", ".dockerignore", "package.json", "package-lock.json",
   "deployment/build.mjs", "deployment/compose.yaml", "deployment/acceptance-compose.yaml", "deployment/topical-compose.yaml", "deployment/d160-draft-preview-compose.yaml", "deployment/d160-sync.ts", "deployment/d161-sync-compose.yaml", "deployment/d161-sync.ts", "deployment/restore.py", "deployment/README.md",
   "deployment/savinggrace-staging.socket", "deployment/savinggrace-staging.service",
   "deployment/savinggrace-d160-db.socket", "deployment/savinggrace-d160-db.service", "deployment/d167-protected-sync.ts", "deployment/sermon-durations-sync.ts"]);
