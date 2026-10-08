@@ -6,8 +6,6 @@
  * WordPress export of 24 September 2026. Composers turn blocks into markup;
  * nothing here is HTML.
  */
-import type { MediaId } from "../assets/media";
-import type { EventId } from "./events";
 
 /** Inline markup: see content/markup.ts. */
 export type Markup = string;
@@ -21,7 +19,7 @@ export interface Tile {
   text?: Markup;
   /** Root-relative destination; null renders the tile without a link (its destination is not published). */
   href: string | null;
-  media?: MediaId;
+  media?: string;
   eyebrow?: string;
   linkLabel?: string;
 }
@@ -29,7 +27,7 @@ export interface Tile {
 export interface Person {
   name: string;
   role: string;
-  media?: MediaId;
+  media?: string;
   email?: string;
   text: Markup[];
 }
@@ -64,21 +62,21 @@ export type Block =
   | { kind: "heading"; level: 2 | 3 | 4; text: string; id?: string }
   | { kind: "list"; ordered?: boolean; items: Markup[] }
   | { kind: "quote"; text: Markup; cite?: string }
-  | { kind: "figure"; media: MediaId; caption?: Markup; size?: "full" | "inset" | "portrait" }
+  | { kind: "figure"; media: string; caption?: Markup; size?: "full" | "inset" | "portrait"; alt?:string; focalPoint?:{x:number;y:number} }
   | { kind: "callout"; title?: string; text: Markup }
   | { kind: "panel"; title?: string; blocks: readonly Block[] }
   | { kind: "tiles"; items: Tile[]; columns?: 2 | 3 | 4 }
   | { kind: "people"; items: Person[] }
   | { kind: "timeline"; items: TimelineItem[] }
-  | { kind: "next-event"; event: EventId; label: string }
+  | { kind: "next-event"; event: string; label: string }
   | { kind: "video"; videoId: string; title: string }
   | { kind: "playlist"; listId: string; title: string }
   | { kind: "downloads"; items: DownloadItem[] }
   | { kind: "hymns"; items: HymnItem[] }
   | { kind: "index"; items: IndexItem[] }
-  | { kind: "sermon-cards"; heading: string; text?: Markup; linkLabel: string }
+  | { kind: "sermon-cards"; heading: string; text?: Markup; linkLabel: string; limit?:number; order?:"ASC"|"DESC"; sermonIds?:string[] }
   | { kind: "external-plate"; title: string; text: Markup; href: string; label: string }
-  | { kind: "book"; media: MediaId; text: Markup }
+  | { kind: "book"; media: string; text: Markup }
   | {
     kind: "contact-panel";
     name: string;
@@ -89,13 +87,16 @@ export type Block =
   }
   | {
     kind: "giving-methods";
+    heading?: string;
     intro: Markup;
     button: { label: string; href: string };
     methods: ReadonlyArray<{ title: string; text: Markup }>;
     bank: { title: string; account: string; lines: readonly string[] };
     online: { title: string; links: ReadonlyArray<{ label: string; href: string }> };
   }
-  | { kind: "events-calendar" };
+  | { kind: "events-calendar"; upcomingHeading?:string;regularHeading?:string;pastHeading?:string;subscribeLabel?:string;days?:number;limit?:number;showUpcoming?:boolean;showRegular?:boolean;showPast?:boolean }
+  | { kind:"blog-list";heading?:string;limit?:number;order?:"ASC"|"DESC" }
+  | { kind:"sitemap-list" };
 
 export interface PageSource {
   /** WordPress post ID. */
@@ -124,7 +125,7 @@ export interface SitePage {
   source: PageSource;
   eyebrow?: string;
   lede?: Markup;
-  hero?: { media: MediaId; treatment: "banner" | "aside" };
+  hero?: { enabled?:boolean; media: string; treatment: "banner" | "aside"; alt?:string; focalPoint?:{x:number;y:number} };
   blocks: readonly Block[];
   /** Side column blocks (downloads, next study, related pages). */
   aside?: readonly Block[];
@@ -140,7 +141,7 @@ export interface BlogPost {
   title: string;
   date: string;
   description: string;
-  media?: MediaId;
+  media?: string;
   source: PageSource;
   blocks: readonly Block[];
 }

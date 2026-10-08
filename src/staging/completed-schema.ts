@@ -16,7 +16,9 @@ export async function completedSchemaMigrations(){
 export async function verifyCompletedSchema(c:Pick<PoolClient,'query'>){
  const definitions=await completedSchemaMigrations();
  const journal=(await c.query('SELECT migration_order,migration_id,checksum_sha256 FROM schema_migrations ORDER BY migration_order')).rows;
+ if(journal.length>=26)definitions.push(await (await import('../semantic/accepted-semantic-migration')).loadAcceptedSemanticMigration());
+ if(journal.length===27)definitions.push(await (await import('../cms/migration')).loadCmsMigration());
  const count=validateSchemaMigrationJournal(definitions,journal);
- if(count!==25)throw Error('d171_schema_mismatch');
+ if(count!==25&&count!==26&&count!==27)throw Error('d171_schema_mismatch');
  return count;
 }

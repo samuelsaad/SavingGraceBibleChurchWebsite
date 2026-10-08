@@ -19,7 +19,7 @@ const environment = {
   RELEASE_COMMIT: "a".repeat(40),
 };
 describe("sealed staging target and authentication boundary", () => {
-  it("admits only the two required pure enrichment validators into the isolated build", () => {
+  it("admits only the two validators and dashboard provenance parser into the isolated build", () => {
     const source = readFileSync(
       new URL("../.dockerignore", import.meta.url),
       "utf8",
@@ -32,6 +32,7 @@ describe("sealed staging target and authentication boundary", () => {
     ).toEqual([
       "!src/enrichment/generated-text-mechanical-qa.ts",
       "!src/enrichment/review-set-integrity.ts",
+      "!src/enrichment/sermon-enrichment-policy.ts",
     ]);
     for (const guard of [
       "src/youtube/**",
@@ -44,6 +45,8 @@ describe("sealed staging target and authentication boundary", () => {
       expect(source).toContain(guard);
     expect(source).toContain("src/server/http/local*.ts");
     expect(source).toContain("!src/server/http/local-frontend-preview.ts");
+    const parser=readFileSync(new URL("../src/enrichment/sermon-enrichment-policy.ts",import.meta.url),"utf8");
+    expect(parser).not.toMatch(/\bimport\b|\bfetch\s*\(|process\.env|readFile|writeFile/);
   });
   it("explicitly preserves strict-mode compilation without relying on unshipped workspace configuration", () => {
     const source = readFileSync(

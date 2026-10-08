@@ -13,7 +13,7 @@ export const blogsPage: SitePage = {
   legacyPaths: [],
   source: { id: 274, link: "https://savinggrace.org.au/blogs/", status: "publish", modified: "2024-01-09 16:26:33" },
   eyebrow: "Blogs",
-  blocks: [],
+  blocks: [{kind:"blog-list",order:"DESC",limit:100}],
   related: [
     "what-we-teach",
     "about"

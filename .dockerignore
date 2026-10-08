@@ -39,3 +39,13 @@ src/**/*.map
 **/node_modules/**
 **/private/**
 **/.git/**
+# D-179 protected CMS uses only the existing container listener and scoped dashboard closure.
+!deployment/build-cms-admin.mjs
+!src/pages/admin/
+!src/pages/admin/index.astro
+!src/admin/
+!src/admin/**/*.ts
+!src/admin/*.ts
+!src/admin/workbench.css
+!src/enrichment/sermon-enrichment-policy.ts
+!src/admin/**/*.css

@@ -1,5 +1,37 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
+## D-179 — modular website CMS implementation
+
+`codex/modular-admin-cms` extends the integrated Astra/Claude application from
+`b259a16` with migration 0027, independent immutable draft/published revisions,
+optimistic concurrency, audited restore, protected preview and persistent uploads.
+The curated initializer adds 51 ordinary-content entities and 46 existing image
+references: homepage, 33 church pages, three posts, ten events, three venues and
+shared settings. Twenty-nine supported module types feed the existing renderers.
+Existing wording, routes and visibility are the initial published state.
+
+Published content is read from a fresh PostgreSQL snapshot on each request; ordinary
+updates do not require a rebuild or restart. Existing sermon eligibility, review,
+search and Related themes gates remain independent. No sermon bodies are copied
+into CMS records. Production builds and production authentication remain unchanged.
+
+Local migration and no-clobber reruns succeeded, including a rerun after browser
+editing. Unrelated table/sequence fingerprints stayed identical. The actual
+loopback dashboard demonstrated all ten requested editing workflows, protected
+draft isolation, immediate publication, PDF attachment and persistence after restart.
+Original published content was restored through revision history; the verification
+event is unpublished and its audit/revisions remain intact.
+
+Start the CMS with the guarded initialization/server commands in
+`docs/modular-cms-deployment.md`; the local entry is
+`http://127.0.0.1:4430/admin/login`. Explicit local development entry is not personal
+or production sign-in. Configured staging uses separate secret-backed sessions only
+through the existing protected access path; public staging must keep admin denied.
+
+See `docs/cms-content-inventory.md`, `modular-cms-plan.md` and
+`docs/modular-cms-validation.md`. Staging activation and Git publication were still
+pending at this implementation checkpoint; later delivery receipts below govern.
+
 ## D-178 — Related themes delivered; human quality gate remains closed
 
 The isolated `codex/sermon-related-themes` delivery preserves the integrated

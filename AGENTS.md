@@ -589,3 +589,39 @@ Missing parity blocks launch; do not guarantee rankings.
 ## 12. Stop conditions
 
 Stop on conflict, missing authority, failed safety checks, overlapping changes, possible exposure/cost, or unauthorised production, destruction, deployment, publication, or external-service work. Before out-of-scope action, report target, risk, and rollback.
+
+## 13. D-179 — modular website CMS delivery
+
+The user's 8 October 2026 CMS brief explicitly requests narrow amendments to
+AGENTS.md, applicable skills, contracts and governance instructions needed for
+this CMS. This section records that current-task exception only. Necessary CMS
+backend/frontend/API/schema changes, existing church-content migration, isolated
+codex/modular-admin-cms commits, scoped configured-staging deployment and normal
+GitHub push of safe implementation/seed and authorized history are in scope.
+
+CMS writes use verified PostgreSQL 16 on loopback5432 with ALLOW_LOCAL_DB_WRITE=1
+and savinggrace_sermons_test. The existing guarded integration runner may create
+and remove only its uniquely generated savinggrace_test_run_<token> database
+after exact identity/name/absence checks, never the application database.
+
+Permit additive CMS schema, immutable revisions, draft/public pointers, audited
+page/module/settings/event/venue/post editing and validated persistent uploads.
+Staging maintenance must verify its configured existing target and preserve
+unrelated records. A dedicated CMS writer gets no sermon/review/acceptance or
+semantic mutation privilege. Files persist outside releases with narrow mounts.
+
+Protected staging CMS may use a separate secret-backed, expiring single-admin
+session through SSH-loopback only, using the existing IdentityProvider contract,
+strict same-origin/CSRF, logout and truthful staging attribution. This is not
+church-owned production sign-in. Public staging must continue denying admin,
+mutation APIs, development identities and unpublished previews.
+
+Require checksum-aware schema compatibility before migration, scoped backups,
+canaries, preservation and idempotency checks, and an exercised compatible app
+rollback retaining all CMS revisions/assets. Destructive down must refuse when
+content revisions exist. Never replace staging wholesale from the local DB.
+
+Preserve Astra/Claude appearance, URLs/SEO, current sermon workflows and gates,
+Related themes human evaluation, other workers, secrets and private artifacts.
+Production/WordPress, traffic/DNS, provider/paid-service and force-push protections
+are unchanged. See modular-cms-plan.md for coverage and verification.

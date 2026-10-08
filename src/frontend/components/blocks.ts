@@ -4,8 +4,11 @@
  * validates links; images come from the embedded media registry; event
  * dates are computed from the schedules for the render's "today".
  */
+import type { CmsHomeBlock } from "../../cms/model";
+import { renderCmsHomeBlock } from "../pages/home";
+import { renderBlogListing, renderSitemapListing, renderEventCalendar } from "../pages/church";
 import type { SermonSummary } from "../../domain/sermon";
-import { siteImage, type MediaId, type SiteImage } from "../assets/media";
+import { siteImage, type MediaId } from "../assets/media";
 import { eventById, formatLongDate, formatTimeRange, nextOccurrence } from "../content/events";
 import { inline, isExternalHref, paragraph, plainText, resolveHref } from "../content/markup";
 import { destinationAvailable } from "../content/registry";
@@ -23,6 +26,7 @@ export interface BlockEnvironment {
   today: string;
   /** Newest published sermons, for the sermon-cards block. */
   sermons: SermonSummary[];
+  sermonSelections?: Readonly<Record<string, SermonSummary[]>>;
 }
 
 export interface PictureOptions {
@@ -30,12 +34,19 @@ export interface PictureOptions {
   eager?: boolean;
   /** Overrides the registry alt (for example when a caption already describes the image). */
   alt?: string;
+  context?: FrontendRenderContext;
+  focalPoint?: {x:number;y:number};
 }
 
 /** An `<img>` for a registry image with its intrinsic size, lazy unless eager. */
-export function picture(id: MediaId, options: PictureOptions = {}): Html {
-  const image: SiteImage = siteImage(id);
-  return html`<img${attribute("class", options.className ?? null)} src="${image.path}" width="${image.width}" height="${image.height}" alt="${options.alt ?? image.alt}"${when(!options.eager, () => html` loading="lazy"`)} decoding="async" />`;
+export function picture(id: string, options: PictureOptions = {}): Html {
+  const image = options.context?.siteContent?.assets[id] ?? siteImage(id as MediaId);
+  if (!image) return html``;
+  const x=options.focalPoint?.x ?? ("focalX" in image ? image.focalX : undefined);
+  const y=options.focalPoint?.y ?? ("focalY" in image ? image.focalY : undefined);
+  const focal=typeof x==="number"&&typeof y==="number"&&Number.isFinite(x)&&Number.isFinite(y)&&x>=0&&x<=100&&y>=0&&y<=100 ? {x,y} : null;
+  const focalClass=focal ? `cms-focal-${String(focal.x).replace(".","_")}-${String(focal.y).replace(".","_")}` : "";
+  return html`${focal?html`<style>.${focalClass}{object-position:${focal.x}% ${focal.y}%}</style>`:html``}<img${attribute("class", [options.className,focalClass].filter(Boolean).join(" ") || null)} src="${image.path}" width="${image.width}" height="${image.height}" alt="${options.alt ?? image.alt}"${when(!options.eager, () => html` loading="lazy"`)} decoding="async" />`;
 }
 
 function externalLink(href: string, label: Html | string, className = ""): Html {
@@ -54,7 +65,7 @@ function tiles(block: Extract<Block, { kind: "tiles" }>, env: BlockEnvironment):
   return html`<ul class="tiles tiles--${columns}" role="list">${block.items.map((tile) => {
     const linked = Boolean(tile.href && destinationAvailable(tile.href, env.context));
     return html`<li class="tile${tile.media ? " tile--pictured" : ""}${linked ? " tile--linked" : ""}">
-      ${when(tile.media, () => html`<div class="tile__picture">${picture(tile.media!, { className: "tile__image", alt: "" })}</div>`)}
+      ${when(tile.media, () => html`<div class="tile__picture">${picture(tile.media!, { className: "tile__image", alt: "", context:env.context })}</div>`)}
       <div class="tile__body">
         <h3 class="tile__title">${linked ? html`<a href="${resolveHref(tile.href!, env.context)}">${tile.title}</a>` : tile.title}</h3>
         ${when(tile.eyebrow && tile.eyebrow !== tile.title, () => html`<p class="tile__metadata">${tile.eyebrow}</p>`)}
@@ -67,7 +78,7 @@ function tiles(block: Extract<Block, { kind: "tiles" }>, env: BlockEnvironment):
 
 function person(item: Person, env: BlockEnvironment): Html {
   return html`<li class="person">
-    ${when(item.media, () => html`<div class="person__picture">${picture(item.media!, { className: "person__image" })}</div>`)}
+    ${when(item.media, () => html`<div class="person__picture">${picture(item.media!, { className: "person__image", context:env.context })}</div>`)}
     <div class="person__body">
       <h3 class="person__name">${item.name}</h3>
       <p class="person__role">${item.role}</p>
@@ -78,8 +89,9 @@ function person(item: Person, env: BlockEnvironment): Html {
 }
 
 function nextEvent(block: Extract<Block, { kind: "next-event" }>, env: BlockEnvironment): Html {
-  const event = eventById(block.event);
-  const occurrence = nextOccurrence(block.event, env.today);
+  const event = eventById(block.event, env.context.siteContent?.events);
+  if (!event) return html``;
+  const occurrence = nextOccurrence(block.event, env.today, env.context.siteContent?.events);
   const links = siteLinks(env.context);
   const href = links.path(event.path);
   return html`<p class="next-event"><span class="next-event__label">${block.label}</span> ${occurrence
@@ -100,9 +112,11 @@ function videoPlate(input: { title: string; videoId?: string; listId?: string })
   </div>`;
 }
 
-export function renderBlock(block: Block, env: BlockEnvironment): Html {
+export function renderBlock(block: Block | CmsHomeBlock, env: BlockEnvironment): Html {
   const context = env.context;
   switch (block.kind) {
+    case "home-arrival": case "home-welcome": case "home-about": case "home-sermons": case "home-events":
+      return renderCmsHomeBlock(block, {sermons:env.sermons,sermonSelections:env.sermonSelections,options:{books:[],speakers:[],series:[],passages:[],passageVerseAvailability:[]},totalItems:env.sermons.length,today:env.today}, context, (block as {cmsInstanceId?:string}).cmsInstanceId);
     case "paragraph":
       return paragraph(block.text, context, block.lede ? "lede page__lede" : undefined);
     case "heading": {
@@ -116,11 +130,11 @@ export function renderBlock(block: Block, env: BlockEnvironment): Html {
     case "quote":
       return html`<blockquote class="verse"><p>${inline(block.text, context)}</p>${when(block.cite, () => html`<footer class="verse__cite">${block.cite}</footer>`)}</blockquote>`;
     case "figure":
-      return html`<figure class="figure figure--${block.size ?? "inset"}">${picture(block.media, { className: "figure__image" })}${when(block.caption, () => html`<figcaption class="figure__caption">${inline(block.caption!, context)}</figcaption>`)}</figure>`;
+      return html`<figure class="figure figure--${block.size ?? "inset"}">${picture(block.media, { className: "figure__image", context, ...(block.alt!==undefined?{alt:block.alt}:{}), ...(block.focalPoint?{focalPoint:block.focalPoint}:{}) })}${when(block.caption, () => html`<figcaption class="figure__caption">${inline(block.caption!, context)}</figcaption>`)}</figure>`;
     case "callout":
       return html`<aside class="callout">${when(block.title, () => html`<h2 class="callout__title">${block.title}</h2>`)}<p>${inline(block.text, context)}</p></aside>`;
     case "panel":
-      return html`<div class="panel">${when(block.title, () => html`<h3 class="panel__title">${block.title}</h3>`)}${block.blocks.map((child) => renderBlock(child, env))}</div>`;
+      return html`<div class="panel">${when(block.title, () => html`<h3 class="panel__title">${block.title}</h3>`)}${block.blocks.map((child,index) => renderBlock({...child,...((block as {cmsInstanceId?:string}).cmsInstanceId?{cmsInstanceId:`${(block as {cmsInstanceId?:string}).cmsInstanceId}-child-${index+1}`}:{})}, env))}</div>`;
     case "tiles":
       return tiles(block, env);
     case "people":
@@ -141,9 +155,11 @@ export function renderBlock(block: Block, env: BlockEnvironment): Html {
       return html`<ol class="index-grid" role="list">${block.items.map((item) => html`<li class="index-grid__item"><a class="index-grid__link" href="${item.href}"><span class="index-grid__title">${item.title}</span><span class="index-grid__text">${inline(item.text, context)}</span></a></li>`)}</ol>`;
     case "sermon-cards": {
       const links = siteLinks(context);
-      const recent = env.sermons.slice(0, 3);
-      return html`<section class="page__sermons" aria-labelledby="page-sermons-heading">
-        <h2 id="page-sermons-heading" class="page__h2">${block.heading}</h2>
+      const instance=(block as {cmsInstanceId?:string}).cmsInstanceId;
+      const recent = (instance ? env.sermonSelections?.[instance] ?? env.sermons : env.sermons).slice(0, block.limit ?? 3);
+      const headingId=instance ? `${instance}-sermons-heading` : "page-sermons-heading";
+      return html`<section class="page__sermons" aria-labelledby="${headingId}">
+        <h2 id="${headingId}" class="page__h2">${block.heading}</h2>
         ${when(block.text, () => paragraph(block.text!, context))}
         ${recent.length ? cardGrid(recent, { links, headingLevel: 3 }) : sectionNote("No sermon is available yet. Please check back soon.")}
         <p class="page__sermons-link"><a class="button" href="${links.archive}">${block.linkLabel}</a></p>
@@ -152,31 +168,35 @@ export function renderBlock(block: Block, env: BlockEnvironment): Html {
     case "external-plate":
       return html`<div class="plate plate--church plate--external"><div class="plate__consent">${shelfMark("plate__mark")}<p class="plate__title">${block.title}</p><p class="plate__note">${inline(block.text, context)}</p><p class="plate__actions">${externalLink(block.href, html`${block.label}<span aria-hidden="true"> ↗</span>`, "button button--onink")}</p></div></div>`;
     case "book":
-      return html`<div class="book">${picture(block.media, { className: "book__cover" })}<div class="book__text">${block.text.split(/\n\s*\n/u).map((text) => paragraph(text, context))}</div></div>`;
+      return html`<div class="book">${picture(block.media, { className: "book__cover", context })}<div class="book__text">${block.text.split(/\n\s*\n/u).map((text) => paragraph(text, context))}</div></div>`;
     case "contact-panel":
       return html`<div class="contact-panel">
         <address class="contact-panel__address"><strong class="contact-panel__name">${block.name}</strong>${block.addressLines.map((line) => html`<span>${line}</span>`)}<span><a href="${block.telephone.href}">${block.telephone.label}</a></span><span><a href="mailto:${block.email}">${block.email}</a></span></address>
         <p class="contact-panel__actions"><a class="button" href="mailto:${block.email}">Send us an email</a> ${externalLink(block.map.href, html`${block.map.label}<span aria-hidden="true"> →</span>`, "button button--outline")}</p>
       </div>`;
-    case "giving-methods":
+    case "giving-methods": {
+      const givingId=(block as {cmsInstanceId?:string}).cmsInstanceId;
+      const bankId=givingId?`${givingId}-giving-bank-heading`:"giving-bank-heading",onlineId=givingId?`${givingId}-giving-online-heading`:"giving-online-heading";
       return html`<div class="giving">
-        <h2 class="page__h2">Ways to make an offering</h2>
+        <h2 class="page__h2">${block.heading??"Ways to make an offering"}</h2>
         <p class="giving__intro">${inline(block.intro, context)}</p>
         <p class="giving__cta">${externalLink(block.button.href, html`${block.button.label}<span aria-hidden="true"> ↗</span>`, "button")}</p>
         <ul class="giving__methods" role="list">${block.methods.map((method) => html`<li class="giving__method"><h3 class="giving__method-title">${method.title}</h3><p>${inline(method.text, context)}</p></li>`)}</ul>
         <div class="giving__details">
-          <section class="giving__bank" aria-labelledby="giving-bank-heading"><h3 id="giving-bank-heading" class="giving__method-title">${block.bank.title}</h3><p><strong>${block.bank.account}</strong></p>${block.bank.lines.map((line) => html`<p class="tabular">${line}</p>`)}</section>
-          <section class="giving__online" aria-labelledby="giving-online-heading"><h3 id="giving-online-heading" class="giving__method-title">${block.online.title}</h3><ul class="page__list">${block.online.links.map((link) => html`<li>${externalLink(link.href, html`${link.label}<span aria-hidden="true"> ↗</span>`)}</li>`)}</ul></section>
+          <section class="giving__bank" aria-labelledby="${bankId}"><h3 id="${bankId}" class="giving__method-title">${block.bank.title}</h3><p><strong>${block.bank.account}</strong></p>${block.bank.lines.map((line) => html`<p class="tabular">${line}</p>`)}</section>
+          <section class="giving__online" aria-labelledby="${onlineId}"><h3 id="${onlineId}" class="giving__method-title">${block.online.title}</h3><ul class="page__list">${block.online.links.map((link) => html`<li>${externalLink(link.href, html`${link.label}<span aria-hidden="true"> ↗</span>`)}</li>`)}</ul></section>
         </div>
       </div>`;
-    case "events-calendar":
-      return html``;
+    }
+    case "events-calendar": return renderEventCalendar(block,env);
+    case "blog-list": return renderBlogListing(block,context);
+    case "sitemap-list": return renderSitemapListing(context);
     default:
       return html``;
   }
 }
 
-export function renderBlocks(blocks: readonly Block[], env: BlockEnvironment): Html {
+export function renderBlocks(blocks: readonly (Block|CmsHomeBlock)[], env: BlockEnvironment): Html {
   return html`${blocks.map((block) => renderBlock(block, env))}`;
 }
 
@@ -187,6 +207,6 @@ export function firstParagraph(blocks: readonly Block[]): string {
 }
 
 /** Whether the blocks include a click-to-load video or playlist, so the page embeds the loader. */
-export function hasVideo(blocks: readonly Block[]): boolean {
+export function hasVideo(blocks: readonly (Block|CmsHomeBlock)[]): boolean {
   return blocks.some((block) => block.kind === "video" || block.kind === "playlist" || (block.kind === "panel" && hasVideo(block.blocks)));
 }

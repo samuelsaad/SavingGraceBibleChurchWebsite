@@ -3,6 +3,7 @@
  * frontend. Public routes and legacy-compatible query names are a stable
  * contract; nothing here changes a URL shape.
  */
+import type { FrontendSiteSnapshot } from "./content/site-snapshot";
 import type { PublicSermonListQuery } from "../api/contracts/public-sermons";
 import {sermonSlugPathSegment} from '../domain/slug';
 
@@ -22,7 +23,9 @@ export type ArchiveBasePath = typeof archivePath | typeof sermonsV1Path | typeof
 
 export interface FrontendRenderContext {
   mode: "public" | "preview" | "restricted" | "draft-preview";
-  basePath: "" | "/frontend-preview" | "/draft-preview";
+  basePath: "" | "/frontend-preview" | "/draft-preview" | "/cms-preview";
+  /** Immutable content selected for this request, never a process-global override. */
+  siteContent?: FrontendSiteSnapshot;
 }
 
 export const publicRenderContext: FrontendRenderContext = Object.freeze({ mode: "public", basePath: "" });

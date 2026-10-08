@@ -26,7 +26,7 @@ export const eventsPage: SitePage = {
       kind: "paragraph",
       text: "Select an event below for more details, and [subscribe to our calendar](/events/calendar.ics) to ensure you never miss a church event."
     },
-    { kind: "events-calendar" }
+    { kind: "events-calendar",upcomingHeading:"Upcoming",regularHeading:"Regular gatherings",pastHeading:"Past events",subscribeLabel:"Subscribe to the calendar",days:35,limit:6,showUpcoming:true,showRegular:true,showPast:true }
   ],
   related: [
     "lords-day-service",

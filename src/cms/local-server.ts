@@ -1,0 +1,27 @@
+import {resolve} from "node:path";
+import {randomBytes} from "node:crypto";
+import {createApplicationApiRouter} from "../server/http/application-api-router";
+import {PostgresAdminSermonRepository} from "../server/repositories/postgres-admin-sermon-repository";
+import {createCmsLocalPool,verifyCmsLocalIdentity} from "./local-database";
+import {PostgresSermonRepository} from "../server/repositories/postgres-sermon-repository";
+import {PostgresCmsRepository} from "./postgres-repository";
+import {PostgresCmsAssetStore,CmsDiskAssets} from "./assets";
+import {CmsSessionProvider} from "./session";
+import {readCmsSecret} from "./runtime-secrets";
+import {verifyCmsSchema} from "./migration";
+import {createCmsRuntimeHandler} from "./runtime";
+import {listenLocalCmsServer} from "./node-server";
+async function main(){
+ const port=Number(process.env.CMS_PORT??4430);if(!Number.isInteger(port)||port<1024||port>65535)throw Error("cms_local_port_refused");
+ if(process.env.NODE_ENV==="production"||process.env.CMS_HOST&&process.env.CMS_HOST!=="127.0.0.1")throw Error("cms_local_host_refused");
+ const origin="http://127.0.0.1:"+port,writer=await createCmsLocalPool(),reader=await createCmsLocalPool(true);
+ const ready=async()=>{await verifyCmsLocalIdentity(writer);const c=await writer.connect();try{await verifyCmsSchema(c);}finally{c.release();}};
+ await ready();const repository=new PostgresCmsRepository(writer),assetStore=new PostgresCmsAssetStore(writer);
+ const assets=await CmsDiskAssets.create(process.env.CMS_STORAGE_DIRECTORY??"",assetStore);
+ const development=process.env.ENABLE_LOCAL_TEST_IDENTITIES==="1";
+ const session=new CmsSessionProvider({origin,secret:development?randomBytes(32).toString("hex"):await readCmsSecret(process.env.CMS_SESSION_SECRET_FILE??""),environment:"local",allowLocalDevelopmentEntry:development});
+ const existingAdminHandler=createApplicationApiRouter(new PostgresSermonRepository(reader),new PostgresAdminSermonRepository(writer),session);
+ const handler=createCmsRuntimeHandler({repository,assetStore,assets,session,sermons:new PostgresSermonRepository(reader,"d175_local_completed"),dashboardDirectory:resolve(process.env.CMS_DASHBOARD_DIRECTORY??"dist-staging/admin"),environment:"local",release:process.env.RELEASE_COMMIT??"local-working-tree",ready,existingAdminHandler});
+ listenLocalCmsServer({origin,port,handler,shutdown:async()=>{await Promise.all([writer.end(),reader.end()]);}});
+}
+void main().catch(()=>{process.stderr.write("cms_local_startup_refused\n");process.exitCode=1;});

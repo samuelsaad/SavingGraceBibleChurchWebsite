@@ -10,6 +10,12 @@
  * had published, the authenticated preview also shows drafts and the
  * private page. Every response is server-rendered; nothing here mutates.
  */
+import type { FrontendSiteSnapshot } from "../../frontend/content/site-snapshot";
+import type { Block } from "../../frontend/content/types";
+import type { CmsHomeBlock } from "../../cms/model";
+import type { SermonSummary } from "../../domain/sermon";
+import { escapeXml } from "../../frontend/xml";
+import { canonicalOrigin } from "../../frontend/routes";
 import { ZodError } from "zod";
 import { publicSermonListQuerySchema } from "../../api/contracts/public-sermons";
 import { InvalidLegacySermonQueryError } from "../../api/legacy-sermon-query";
@@ -35,11 +41,14 @@ import { siteAssetResponse } from "./site-assets";
 export interface ChurchSiteOptions {
   /** Today's Melbourne date; defaults to the clock. Tests pass a fixed date. */
   today?: () => string;
+  /** Fresh published or selected-revision snapshot, loaded once per request. */
+  content?: () => Promise<FrontendSiteSnapshot>;
 }
 
 const calendarPath = `${eventsPath}calendar.ics`;
 
-export function createChurchSiteHandler(repository: PublicSermonRepository, context: FrontendRenderContext, options: ChurchSiteOptions = {}) {
+export function createChurchSiteHandler(repository: PublicSermonRepository, context: FrontendRenderContext, options: ChurchSiteOptions = {}): (request:Request)=>Promise<Response|null> {
+  if(options.content){const {content,...rest}=options;return async request=>createChurchSiteHandler(repository,{...context,siteContent:await content()},rest)(request);}
   const base = context.basePath;
   const privatePreview = context.mode !== "public";
   const robots = privatePreview ? { "X-Robots-Tag": "noindex, nofollow, noarchive" } : {};
@@ -56,12 +65,33 @@ export function createChurchSiteHandler(repository: PublicSermonRepository, cont
     return new Response(null, { status: redirectStatus, headers: { ...plainResponseHeaders, ...robots, Location: location } });
   }
 
-  async function data(): Promise<ChurchPageData> {
+  async function data(path:string): Promise<ChurchPageData> {
     const [sermons, options] = await Promise.all([
       repository.listPublished(publicSermonListQuerySchema.parse({ page: 1, pageSize: 6, order: "DESC" })),
       repository.listPublishedFilterOptions()
     ]);
-    return { today: today(), sermons: sermons.data, options };
+    const sourcePage=pageByPath(path,context),sourcePost=postByPath(path,context);
+    const configs:Array<{id:string|undefined;block:Block|CmsHomeBlock}>=path==="/" ? context.siteContent?.home?.modules.filter(module=>module.enabled).map(module=>({id:module.id,block:module.block})) ?? [] : [...(sourcePage?.blocks ?? sourcePost?.blocks ?? []),...(sourcePage?.aside ?? [])].map(block=>({id:(block as {cmsInstanceId?:string}).cmsInstanceId,block}));
+    const selections:Record<string,SermonSummary[]>={};
+    const nested:typeof configs=[];
+    const visit=(module:typeof configs[number])=>{nested.push(module);if(module.block.kind==="panel")module.block.blocks.forEach((child,index)=>visit({id:module.id?`${module.id}-child-${index+1}`:undefined,block:child}));};
+    configs.forEach(visit);
+    for(const module of nested){
+      if(!["home-sermons","sermon-cards"].includes(module.block.kind) || !module.id)continue;
+      const config=module.block as Extract<CmsHomeBlock,{kind:"home-sermons"}>;
+      const block={limit:config.limit??3,order:config.order??"DESC",sermonIds:config.sermonIds??[]};
+      if(!block.sermonIds.length){selections[module.id]=(await repository.listPublished(publicSermonListQuerySchema.parse({page:1,pageSize:block.limit,order:block.order}))).data;continue;}
+      const wanted=new Set(block.sermonIds),found=new Map<string,SermonSummary>();
+      let pageNumber=1;
+      while(wanted.size){
+        const eligible=await repository.listPublished(publicSermonListQuerySchema.parse({page:pageNumber,pageSize:50,order:block.order}));
+        for(const sermon of eligible.data)if(wanted.delete(sermon.id))found.set(sermon.id,sermon);
+        if(pageNumber*50>=eligible.totalItems || !eligible.data.length)break;
+        pageNumber+=1;
+      }
+      selections[module.id]=block.sermonIds.flatMap(id=>found.get(id)??[]).slice(0,block.limit);
+    }
+    return { today: today(), sermons: sermons.data, options, sermonSelections:selections };
   }
 
   return async (request: Request): Promise<Response | null> => {
@@ -73,50 +103,58 @@ export function createChurchSiteHandler(repository: PublicSermonRepository, cont
     if (relative.startsWith("/sermons") || /^\/(?:speakers|series|books)\/(?:[a-z0-9-]+\/)?$/u.test(relative) && context.mode !== "public" && context.mode !== "restricted") return null;
     if (relative.startsWith("/api/") || relative.startsWith("/admin") || relative.startsWith("/__local")) return null;
 
-    const isChurchRoute = relative === "/" || Boolean(pageByPath(relative) ?? postByPath(relative)) || relative.startsWith(eventsPath)
-      || Boolean(legacyDisposition(relative, context)) || slashlessTarget(relative) !== null;
+    const isChurchRoute = relative === "/" || relative === "/sitemap.xml" || Boolean(context.siteContent?.routes.some(route=>route.path===relative)) || Boolean(pageByPath(relative, context) ?? postByPath(relative, context)) || relative.startsWith(eventsPath)
+      || Boolean(legacyDisposition(relative, context)) || slashlessTarget(relative, context) !== null;
     if (!isChurchRoute) return null;
     if (request.method !== "GET" && request.method !== "HEAD") {
       return new Response("Method not allowed", { status: 405, headers: { ...plainResponseHeaders, ...robots, "Content-Type": "text/plain; charset=utf-8", Allow: "GET, HEAD" } });
     }
 
     try {
-      const slashless = slashlessTarget(relative);
-      if (slashless) return redirect(`${contextualPath(context, slashless)}${url.search}`);
-
+      const slashless = slashlessTarget(relative, context);
+      if (slashless) {
+        const disposition=legacyDisposition(slashless,context);
+        if(disposition?.kind==="gone")return boundary(410,"Page no longer available","This page has been permanently removed.");
+        if(disposition?.kind==="unavailable")return boundary(404,"Page not found","The requested page is not publicly available.","private");
+        return redirect(`${contextualPath(context,disposition?.kind==="redirect"?disposition.location:slashless)}${url.search}`);
+      }
+      if(relative==="/sitemap.xml"){
+        if(context.mode!=="public")return boundary(404,"Page not found","The requested page does not exist.");
+        const paths=context.siteContent ? context.siteContent.routes.filter(route=>route.status===200).map(route=>route.path) : [];
+        const xml=`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${[...new Set(paths)].map(path=>`<url><loc>${escapeXml(`${canonicalOrigin}${path}`)}</loc></url>`).join("")}</urlset>`;
+        return new Response(xml,{headers:{...plainResponseHeaders,"Content-Type":"application/xml; charset=utf-8"}});
+      }
       const disposition = legacyDisposition(relative, context);
       if (disposition?.kind === "redirect") return redirect(`${contextualPath(context, disposition.location)}${url.search}`);
       if (disposition?.kind === "gone") return boundary(410, "Page no longer available", "This page has been permanently removed.");
       if (disposition?.kind === "unavailable") return boundary(404, "Page not found", "The requested page is not publicly available.", "private");
 
       if (relative === "/") {
-        const [sermons, options] = await Promise.all([
-          repository.listPublished(publicSermonListQuerySchema.parse({ page: 1, pageSize: 6, order: "DESC" })),
-          repository.listPublishedFilterOptions()
-        ]);
-        return page(renderFrontendHomePage({ sermons: sermons.data, options, totalItems: sermons.totalItems, today: today() }, context));
+        if(context.siteContent && !context.siteContent.home)return boundary(404,"Page not found","The requested page is not published.");
+        const pageData=await data(relative);
+        return page(renderFrontendHomePage({...pageData,totalItems:pageData.sermons.length}, context));
       }
 
       if (relative === calendarPath) {
-        return new Response(renderCalendarFeed(), { status: 200, headers: { ...plainResponseHeaders, ...robots, "Content-Type": "text/calendar; charset=utf-8", "Content-Disposition": "inline; filename=\"saving-grace-bible-church-events.ics\"" } });
+        return new Response(renderCalendarFeed(context), { status: 200, headers: { ...plainResponseHeaders, ...robots, "Content-Type": "text/calendar; charset=utf-8", "Content-Disposition": "inline; filename=\"saving-grace-bible-church-events.ics\"" } });
       }
 
       const eventMatch = /^\/events\/([a-z0-9]+(?:-[a-z0-9]+)*)\/$/u.exec(relative);
       if (eventMatch) {
-        const event = eventBySlug(eventMatch[1]!);
+        const event = eventBySlug(eventMatch[1]!, context.siteContent?.events);
         if (!event) return boundary(404, "Event not found", "That event does not exist.");
-        return page(renderEventPage(event, await data(), context));
+        return page(renderEventPage(event, await data(relative), context));
       }
 
-      const post = postByPath(relative);
-      if (post) return page(renderBlogPost(post, await data(), context));
+      const post = postByPath(relative, context);
+      if (post) return page(renderBlogPost(post, await data(relative), context));
 
-      const sitePage = pageByPath(relative);
+      const sitePage = pageByPath(relative, context);
       if (sitePage) {
         if (!pageAvailable(sitePage, context)) {
           return boundary(404, "Page not found", "The requested page is not publicly available.", "private");
         }
-        const pageData = await data();
+        const pageData = await data(relative);
         switch (sitePage.id) {
           case "events": return page(renderEventsPage(sitePage, pageData, context));
           case "blogs": return page(renderBlogIndex(sitePage, pageData, context));
@@ -135,9 +173,9 @@ export function createChurchSiteHandler(repository: PublicSermonRepository, cont
 }
 
 /** A church route requested without its trailing slash, or null. */
-function slashlessTarget(relative: string): string | null {
+function slashlessTarget(relative: string, context:FrontendRenderContext): string | null {
   if (relative === "" || relative.endsWith("/")) return null;
   const candidate = `${relative}/`;
-  if (pageByPath(candidate) || postByPath(candidate) || (candidate.startsWith(eventsPath) && (candidate === eventsPath || eventBySlug(candidate.slice(eventsPath.length, -1)) !== null))) return candidate;
+  if (context.siteContent?.routes.some(route=>route.path===candidate)||legacyDisposition(candidate,context)||pageByPath(candidate, context) || postByPath(candidate, context) || (candidate.startsWith(eventsPath) && (candidate === eventsPath || eventBySlug(candidate.slice(eventsPath.length, -1), context.siteContent?.events) !== null))) return candidate;
   return null;
 }

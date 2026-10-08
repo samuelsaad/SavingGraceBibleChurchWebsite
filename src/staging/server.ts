@@ -1,4 +1,5 @@
 import { createServer } from "node:http";
+import {createStagingCmsIntegration} from "../cms/staging-integration";
 import { Pool } from "pg";
 import { PostgresSermonRepository } from "../server/repositories/postgres-sermon-repository";
 import { toWebRequest } from "../server/http/node-request-adapter";
@@ -34,11 +35,13 @@ async function main() {
   const environment=process.env.RELATED_THEMES_ENVIRONMENT??'staging_public';
   if(!['staging_public','staging_protected'].includes(environment))throw Error('semantic_environment_refused');
   const runtime=scope==='d175_completed'?await createRelatedThemesRuntime(new PostgresAcceptedSemanticRepository(pool,{environment:environment as 'staging_public'|'staging_protected',scope}),process.env):{};
-  const handler = createSealedStagingHandler(new PostgresSermonRepository(pool,scope,runtime.reader), ready,
-    process.env.RELEASE_COMMIT!, process.env.RESTRICTED_FRONTEND_DISABLED === "1",createRelatedThemesEvaluationHandler(runtime,''));
+  const repository=new PostgresSermonRepository(pool,scope,runtime.reader),evaluation=createRelatedThemesEvaluationHandler(runtime,"");
+  const cms=await createStagingCmsIntegration({reader:pool,sermons:repository,ready,release:process.env.RELEASE_COMMIT!,evaluation});
+  const handler = cms?.handler??createSealedStagingHandler(repository, ready,
+    process.env.RELEASE_COMMIT!, process.env.RESTRICTED_FRONTEND_DISABLED === "1",evaluation);
   const server = createServer(async (incoming, outgoing) => {
     try {
-      const response = await handler(await toWebRequest(incoming, "http://127.0.0.1:8080", 16_384));
+      const response = await handler(await toWebRequest(incoming, cms?.origin??"http://127.0.0.1:8080", cms?.maximumBodyBytes??16_384));
       outgoing.writeHead(response.status, Object.fromEntries(response.headers));
       outgoing.end(Buffer.from(await response.arrayBuffer()));
     } catch { outgoing.writeHead(400, { "Cache-Control": "no-store", "X-Robots-Tag": "noindex" }); outgoing.end("request_refused"); }
@@ -47,7 +50,7 @@ async function main() {
   server.headersTimeout = 10000;
   // Internal-only container listener; the guarded host socket exposes loopback.
   server.listen(8080, "0.0.0.0", () => process.stdout.write("sealed_staging_ready\n"));
-  const shutdown = () => server.close(() => { void pool.end().then(() => process.exit(0)); });
+  const shutdown = () => server.close(() => { void Promise.all([pool.end(),cms?.close()]).then(() => process.exit(0)); });
   process.once("SIGTERM", shutdown); process.once("SIGINT", shutdown);
 }
 main().catch(() => { process.stderr.write("sealed_staging_startup_refused\n"); process.exitCode = 1; });

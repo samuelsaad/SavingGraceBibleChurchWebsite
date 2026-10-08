@@ -31,7 +31,7 @@ const previewRoot = "/frontend-preview";
 const taxonomyPageSize = 50;
 
 export interface ProtectedFrontendPreviewOptions {
-  root?: "/frontend-preview" | "/draft-preview";
+  root?: "/frontend-preview" | "/draft-preview" | "/cms-preview";
   context?: FrontendRenderContext;
   church?: ChurchSiteOptions;
   relatedThemesEvaluation?:(request:Request)=>Promise<Response|null>;
@@ -68,7 +68,7 @@ export function createLocalFrontendPreviewHandler(
   repository: PublicSermonRepository,
   session: Pick<LocalFrontendPreviewSession, "authorizes">,
   options: ProtectedFrontendPreviewOptions = {}
-) {
+): (request:Request)=>Promise<Response|null> {
   const root = options.root ?? previewRoot;
   const context = options.context ?? (root === "/draft-preview" ? draftPreviewRenderContext : previewRenderContext);
   const alternates = createAlternateArchiveHandlers(repository, context);
@@ -93,6 +93,7 @@ export function createLocalFrontendPreviewHandler(
         context
       );
     }
+    if(options.church?.content){const {content,...church}=options.church;return createLocalFrontendPreviewHandler(repository,session,{...options,context:{...context,siteContent:await content()},church})(request);}
     const evaluation=await options.relatedThemesEvaluation?.(request);
     if(evaluation)return evaluation;
     const alternate = await alternates(request);

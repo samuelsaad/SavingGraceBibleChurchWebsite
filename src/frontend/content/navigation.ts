@@ -15,6 +15,7 @@ export interface MenuItem {
   id?: string;
   /** A child nested one level deeper in the WordPress menu ("What We Teach >"). */
   sub?: boolean;
+  enabled?: boolean;
 }
 
 export const primaryMenu: readonly MenuItem[] = [
@@ -69,18 +70,19 @@ export const footerMenu: readonly MenuItem[] = [
 
 /** Strips a preview base path so menu matching works in every render context. */
 export function sitePath(path: string): string {
-  return path.replace(/^\/(?:frontend-preview|draft-preview)(?=\/|$)/u, "") || "/";
+  return path.replace(/^\/(?:frontend-preview|draft-preview|cms-preview)(?=\/|$)/u, "") || "/";
 }
 
 /** The top-level item whose subtree contains a path, for aria-current on the masthead. */
-export function activeMenuItem(path: string): MenuItem | null {
+export function activeMenuItem(path: string, menu:readonly MenuItem[]=primaryMenu): MenuItem | null {
   const normalised = sitePath(path);
-  if (normalised === "/") return primaryMenu[0]!;
-  for (const item of primaryMenu.slice(1)) {
+  if (normalised === "/") return menu.find(item=>item.href==="/") ?? null;
+  const contains=(items:readonly MenuItem[]):boolean=>items.some(child=>child.enabled!==false&&(normalised===child.href||normalised.startsWith(child.href)||contains(child.children??[])));
+  for (const item of menu.filter(item=>item.href!=="/"&&item.enabled!==false)) {
     if (item.id === "sermons") continue;
     if (normalised === item.href || normalised.startsWith(item.href)) return item;
-    if (item.children?.some((child) => normalised === child.href || normalised.startsWith(child.href))) return item;
+    if (contains(item.children??[])) return item;
   }
-  if (normalised.startsWith("/sermons") || normalised.startsWith("/archived-sermons") || /^\/(?:speakers|series|books)\//u.test(normalised)) return primaryMenu.find((item) => item.id === "sermons")!;
+  if (normalised.startsWith("/sermons") || normalised.startsWith("/archived-sermons") || /^\/(?:speakers|series|books)\//u.test(normalised)) return menu.find((item) => item.id === "sermons") ?? null;
   return null;
 }

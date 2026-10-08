@@ -1,3 +1,4 @@
+import { renderCms } from './cms/editor';
 import {
   allowedDashboardActions,
   buildControlledMediaInputs,
@@ -345,7 +346,14 @@ function errorMessage(error: unknown): string {
 
 async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
-  headers.set("x-local-identity", "admin");
+  if (document.body.hasAttribute("data-cms-runtime")) {
+    if (!["GET", "HEAD"].includes(init.method ?? "GET")) {
+      const sessionResponse = await fetch("/api/v1/admin/cms/session");
+      if (!sessionResponse.ok) throw new DashboardRequestError(401, "unauthenticated");
+      const session = await sessionResponse.json() as { csrfToken: string };
+      headers.set("x-csrf-token", session.csrfToken);
+    }
+  } else headers.set("x-local-identity", "admin");
   if (init.body && !headers.has("content-type")) headers.set("content-type", "application/json");
   const response = await fetch(path, { ...init, headers });
   const payload = await response.json().catch(() => ({})) as {
@@ -362,6 +370,7 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
 }
 
 function routeKey(pathname: string): string {
+  if (pathname.startsWith("/admin/cms")) return "cms";
   if (pathname === "/admin" || pathname === "/admin/") return "dashboard";
   if (pathname === "/admin/sermons/new") return "new";
   if (pathname === "/admin/remaining-reviews") return "remaining-reviews";
@@ -2042,7 +2051,9 @@ async function renderRoute(): Promise<void> {
   main.innerHTML = '<div class="loading-card" role="status">Loading local administration…</div>';
   try {
     const path = location.pathname.replace(/\/$/, "") || "/admin";
-    if (path === "/admin") await renderDashboard();
+    main.classList.remove("cms-workspace");
+    if (path.startsWith("/admin/cms")) await renderCms({ main, announce, onDirty: value => { dirty = value; }, navigate });
+    else if (path === "/admin") await renderDashboard();
     else if (path === "/admin/ai-reviews") await renderDelegatedAiReviews();
     else if (path === "/admin/remaining-reviews" && !new URLSearchParams(location.search).has("legacy")) await renderDashboard();
     else if (path === "/admin/remaining-reviews") await renderRemainingAiReviews();

@@ -42,7 +42,8 @@ describe("shared frontend shell", () => {
       expect(html, name).toContain('<nav aria-label="Footer">');
       expect(html, name).toContain('<a class="brand" href="');
       expect(html, name).toContain('<img class="brand__logo" src="/brand/saving-grace-logo.png" width="300" height="178" alt="Saving Grace Bible Church" decoding="async" />');
-      expect(html, name).toContain("the Saving Grace Bible Church logo is the church's own.");
+      // The editable footer copy is escaped rather than authored as literal HTML.
+      expect(html.replaceAll("&#39;", "'"), name).toContain("the Saving Grace Bible Church logo is the church's own.");
       expect(html, name).toContain('<h2 class="footer-col__title" id="footer-contact-heading">Contact Us</h2>');
       expect(html, name).toContain('<span><a href="tel:+61450545589">Tel: 0450545589</a></span>');
       expect(html, name).toContain('<a class="button masthead__give" href="');

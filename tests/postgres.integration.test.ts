@@ -134,6 +134,8 @@ import {registerSermonAudioPortablePostgresTests} from './sermonaudio-portable-p
 import {registerSermonDurationPostgresTests} from './sermon-duration-postgres';
 import {registerAcceptedDescriptionPostgresTests} from './accepted-description-postgres';
 
+import {registerCmsPostgresTests} from './cms-postgres';
+
 const enabled = process.env.RUN_POSTGRES_INTEGRATION === "1";
 const integration = enabled ? describe : describe.skip;
 
@@ -408,6 +410,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   registerSermonAudioPortablePostgresTests(()=>pool);
   registerSermonDurationPostgresTests(()=>pool);
   registerAcceptedDescriptionPostgresTests(()=>pool);
+  registerCmsPostgresTests(()=>pool);
   registerRemainingAiReviewPostgresTests(() => pool, runSchema);
   registerRestrictedAcceptancePostgresTests(() => pool, runSchema);
   registerFifthBatchPostgresTests(() => pool);

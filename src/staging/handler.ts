@@ -1,3 +1,4 @@
+import type {ChurchSiteOptions} from "../server/http/church-site";
 import type { PublicSermonRepository } from "../server/repositories/sermon-repository";
 import { createPublicApiRouter } from "../server/http/public-api-router";
 import { createPublicSermonSiteHandler, frontendResponse } from "../server/http/public-sermon-page";
@@ -14,9 +15,9 @@ function plain(code: string, status: number) {
     "Content-Type": "text/plain; charset=utf-8",
     "Content-Security-Policy": "default-src 'none'; frame-ancestors 'none'; base-uri 'none'" } });
 }
-export function createSealedStagingHandler(repository: PublicSermonRepository, ready: () => Promise<void>, commit: string, frontendDisabled = false, evaluation?:(request:Request)=>Promise<Response|null>) {
+export function createSealedStagingHandler(repository: PublicSermonRepository, ready: () => Promise<void>, commit: string, frontendDisabled = false, evaluation?:(request:Request)=>Promise<Response|null>, church:ChurchSiteOptions={}) {
   const publicApi = createPublicApiRouter(repository);
-  const publicPages = createPublicSermonSiteHandler(repository, restrictedRenderContext);
+  const publicPages = createPublicSermonSiteHandler(repository, restrictedRenderContext, church);
   return async (request: Request): Promise<Response> => {
     try {
       const url = new URL(request.url);
@@ -44,7 +45,8 @@ export function createSealedStagingHandler(repository: PublicSermonRepository, r
       } else if (/^\/(speakers|series|books)\/$/.test(path)) {
         const kind = path.split('/')[1] as FrontendTaxonomyKind;
         const options = await repository.listPublishedFilterOptions();
-        response = frontendResponse(renderFrontendTaxonomyIndex(kind, options[kind], restrictedRenderContext, options));
+        const context=church.content?{...restrictedRenderContext,siteContent:await church.content()}:restrictedRenderContext;
+        response = frontendResponse(renderFrontendTaxonomyIndex(kind, options[kind], context, options));
       } else if (/^\/(speakers|series|books)$/.test(path)) {
         response = new Response(null, {status:307, headers:{Location:`${path}/${url.search}`}});
       } else response = path.startsWith("/api/") ? await publicApi(request) : await publicPages(request);

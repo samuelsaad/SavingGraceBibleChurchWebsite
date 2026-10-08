@@ -6,6 +6,7 @@ COPY package.json package-lock.json ./
 RUN npm ci --ignore-scripts --no-audit --no-fund
 COPY src ./src
 COPY deployment/build.mjs ./deployment/build.mjs
+COPY deployment/build-cms-admin.mjs ./deployment/build-cms-admin.mjs
 COPY deployment/d160-sync.ts ./deployment/d160-sync.ts
 COPY deployment/d161-sync.ts ./deployment/d161-sync.ts
 COPY deployment/d167-protected-sync.ts ./deployment/d167-protected-sync.ts
@@ -18,7 +19,9 @@ LABEL org.opencontainers.image.revision=${RELEASE_COMMIT}
 ENV NODE_ENV=production
 WORKDIR /app
 COPY --from=build --chown=node:node /build/dist-staging/server.cjs ./server.cjs
+COPY --from=build --chown=node:node /build/dist-staging/admin ./admin
 COPY --from=build --chown=node:node /build/dist-staging/database.cjs ./database.cjs
+COPY --from=build --chown=node:node /build/dist-staging/cms-maintenance.cjs ./cms-maintenance.cjs
 COPY --from=build --chown=node:node /build/dist-staging/sermonaudio-sync.cjs ./sermonaudio-sync.cjs
 COPY --from=build --chown=node:node /build/dist-staging/completed-sync.cjs ./completed-sync.cjs
 COPY --from=build --chown=node:node /build/dist-staging/sermonaudio-completion-sync.cjs ./sermonaudio-completion-sync.cjs

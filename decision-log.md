@@ -1086,3 +1086,14 @@ remain intact; scoped media updates have recovery evidence and idempotency check
 - Production canonical host/slash policy, any intentionally crawlable filter landing pages, and baseline-derived SEO performance/rollback thresholds.
 - Human review and a separate acceptance/rejection decision for the one grounded replacement canary. The other 11 Wave 1 description/Q&A sets remain quarantined and have no regeneration authority. D-133/D-135 grant no authority for Wave 2, Wave 3, another sermon, publication, public **Related themes**, semantic quality acceptance, production/deployment or Phase 3C.
 - Selection and bounded approval of an actual text-generation provider/model, including immutable identity, privacy/retention terms, retry and cost ceilings, is required before the authorised single-description canary can be generated. The embedding model is ineligible and no extractive fallback exists.
+
+## D-179 — complete modular website CMS (8 October 2026)
+
+Samuel expressly authorizes necessary CMS implementation and narrow governance
+amendments, existing church-content migration, an isolated branch and commits,
+configured-staging delivery and normal GitHub push. The work extends existing
+Astro/PostgreSQL and single-admin authorization, preserving Astra/Claude visuals,
+sermon gates, URLs, SEO, other workers and private artifacts. See AGENTS.md section
+13 and modular-cms-plan.md for protected staging sessions, additive schema,
+persistent assets, compatibility bridge and history-preserving rollback gates.
+No production traffic/DNS or content-provider activity is authorized.

@@ -15,5 +15,5 @@ export const sitemapPage: SitePage = {
   ],
   source: { id: 3003, link: "https://savinggrace.org.au/pages/sitemap/", status: "publish", modified: "2013-03-22 14:45:15" },
   eyebrow: "Sitemap",
-  blocks: []
+  blocks: [{kind:"sitemap-list"}]
 };

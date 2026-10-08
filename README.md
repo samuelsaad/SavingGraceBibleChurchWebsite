@@ -1,5 +1,18 @@
 # Saving Grace Bible Church Website
 
+## Modular website CMS (D-179)
+
+The existing dashboard now manages ordinary church pages, homepage sections,
+posts, events, venues, images/documents, navigation and footer settings through
+versioned PostgreSQL content. Save a draft, preview, publish and restore without
+editing source or rebuilding the frontend. The supported layouts retain the
+existing church design; new visual components remain a development task.
+
+See [editable coverage](docs/cms-content-inventory.md),
+[local and protected staging operation](docs/modular-cms-deployment.md), and
+[verification evidence](docs/modular-cms-validation.md).
+
+
 ## Description-only Related themes evaluation (D-178)
 
 The isolated `codex/sermon-related-themes` branch completes the accepted-description

@@ -10,9 +10,8 @@
  * schedule and its replacement), the gathering is one event here with the
  * current schedule, and every legacy record slug redirects to it.
  */
-import type { MediaId } from "../assets/media";
 
-export type VenueId = "church" | "rye-civic-hall" | "state-library";
+export type VenueId = string;
 
 export interface Venue {
   id: VenueId;
@@ -62,7 +61,7 @@ export type Schedule =
 type ChurchEventInput = Omit<ChurchEvent, "id"> & { id: string };
 
 export interface ChurchEvent {
-  id: EventId;
+  id: string;
   title: string;
   /** Root-relative event page path. */
   path: string;
@@ -75,7 +74,7 @@ export interface ChurchEvent {
   description: readonly string[];
   /** The ministry page this gathering belongs to. */
   page?: string;
-  media?: MediaId;
+  media?: string;
   /** Legacy Events Calendar paths (event records and series) that redirect here. */
   legacyPaths: readonly string[];
   /** Source record identifiers, for the inventory. */
@@ -250,16 +249,16 @@ export const events = [
   }
 ] as const satisfies readonly ChurchEventInput[];
 
-export type EventId = (typeof events)[number]["id"];
+export type EventId = string;
 
 export const eventsPath = "/events/";
 
-export function eventById(id: EventId): ChurchEvent {
-  return events.find((event) => event.id === id) as ChurchEvent;
+export function eventById(id: EventId, collection: readonly ChurchEvent[] = events): ChurchEvent | undefined {
+  return collection.find((event) => event.id === id);
 }
 
-export function eventBySlug(slug: string): ChurchEvent | null {
-  return (events as readonly ChurchEvent[]).find((event) => event.path === `${eventsPath}${slug}/`) ?? null;
+export function eventBySlug(slug: string, collection: readonly ChurchEvent[] = events): ChurchEvent | null {
+  return collection.find((event) => event.path === `${eventsPath}${slug}/`) ?? null;
 }
 
 export interface EventOccurrence {
@@ -335,17 +334,18 @@ export interface UpcomingOptions {
 }
 
 /** Every occurrence across events from `today`, soonest first. */
-export function upcomingOccurrences(today: string, options: UpcomingOptions = {}): EventOccurrence[] {
+export function upcomingOccurrences(today: string, options: UpcomingOptions = {}, collection: readonly ChurchEvent[] = events): EventOccurrence[] {
   const until = addDays(today, options.days ?? 70);
-  const selected = (events as readonly ChurchEvent[]).filter((event) => !options.eventIds || options.eventIds.includes(event.id));
+  const selected = collection.filter((event) => !options.eventIds || options.eventIds.includes(event.id));
   const all = selected.flatMap((event) => occurrencesBetween(event, today, until));
   all.sort((a, b) => (a.date === b.date ? a.start.localeCompare(b.start) : a.date.localeCompare(b.date)));
   return options.limit ? all.slice(0, options.limit) : all;
 }
 
 /** The next occurrence of one event, looking a year ahead. */
-export function nextOccurrence(id: EventId, today: string): EventOccurrence | null {
-  return occurrencesBetween(eventById(id), today, addDays(today, 366), 1)[0] ?? null;
+export function nextOccurrence(id: EventId, today: string, collection: readonly ChurchEvent[] = events): EventOccurrence | null {
+  const event = eventById(id, collection);
+  return event ? occurrencesBetween(event, today, addDays(today, 366), 1)[0] ?? null : null;
 }
 
 export function isRecurring(event: ChurchEvent): boolean {
@@ -353,8 +353,8 @@ export function isRecurring(event: ChurchEvent): boolean {
 }
 
 /** Past one-off events and ended schedules, most recent first. */
-export function pastEvents(today: string): ChurchEvent[] {
-  return (events as readonly ChurchEvent[])
+export function pastEvents(today: string, collection: readonly ChurchEvent[] = events): ChurchEvent[] {
+  return collection
     .filter((event) => (event.schedule.kind === "single" ? event.schedule.date < today : Boolean(event.schedule.until && event.schedule.until < today)))
     .sort((a, b) => eventDateKey(b).localeCompare(eventDateKey(a)));
 }

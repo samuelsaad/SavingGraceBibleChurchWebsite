@@ -13,14 +13,15 @@ export async function loadAcceptedSemanticMigration():Promise<LoadedSchemaMigrat
 export async function verifyAcceptedSemanticSchema(client:Pick<PoolClient,'query'>,options:{allowPreMigration?:boolean}={}):Promise<number>{
  const definitions=[...await completedSchemaMigrations(),await loadAcceptedSemanticMigration()];
  const journal=(await client.query('SELECT migration_order,migration_id,checksum_sha256 FROM schema_migrations ORDER BY migration_order')).rows;
+ if(journal.length===27)definitions.push(await (await import('../cms/migration')).loadCmsMigration());
  const count=validateSchemaMigrationJournal(definitions,journal);
- if(count!==26&&!(options.allowPreMigration&&count===25))throw Error('semantic_schema_mismatch');
+ if(count!==26&&count!==27&&!(options.allowPreMigration&&count===25))throw Error('semantic_schema_mismatch');
  return count;
 }
 /** Caller must verify destination and begin a guarded transaction first. */
 export async function applyAcceptedSemanticMigration(client:Pick<PoolClient,'query'>):Promise<'applied'|'unchanged'>{
  await client.query('SELECT pg_advisory_xact_lock(178,26)');
- if(await verifyAcceptedSemanticSchema(client,{allowPreMigration:true})===26)return 'unchanged';
+ if(await verifyAcceptedSemanticSchema(client,{allowPreMigration:true})>=26)return 'unchanged';
  const migration=await loadAcceptedSemanticMigration();await client.query(migration.upBody);
  await client.query('INSERT INTO schema_migrations(migration_order,migration_id,checksum_sha256) VALUES($1,$2,$3)',[migration.order,migration.id,migration.checksumSha256]);
  await verifyAcceptedSemanticSchema(client);return 'applied';
