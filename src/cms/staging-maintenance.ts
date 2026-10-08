@@ -24,4 +24,3 @@ async function main(){
  }finally{await pool.end();}
 }
 void main().catch(()=>{process.stderr.write("cms_maintenance_refused\n");process.exitCode=1;});
-

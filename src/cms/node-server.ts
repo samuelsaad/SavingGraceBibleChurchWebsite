@@ -9,4 +9,3 @@ export function listenLocalCmsServer(options:{origin:string;port:number;handler:
  server.requestTimeout=30000;server.headersTimeout=10000;server.listen(options.port,"127.0.0.1",()=>process.stdout.write("cms_runtime_ready\n"));
  const shutdown=()=>server.close(()=>{void options.shutdown().then(()=>process.exit(0));});process.once("SIGINT",shutdown);process.once("SIGTERM",shutdown);return server;
 }
-

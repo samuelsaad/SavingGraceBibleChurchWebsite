@@ -21,4 +21,3 @@ async function main(){
  }finally{await pool.end();}
 }
 void main().catch(error=>{const code=error instanceof Error&&/^cms_[a-z_]+$/.test(error.message)?error.message:"cms_initialization_refused";process.stderr.write(code+"\n");process.exitCode=1;});
-

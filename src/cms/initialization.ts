@@ -28,4 +28,3 @@ export async function initializeCmsSeeds(pool:Pool,actor:string){
  }
  return{...await new PostgresCmsRepository(pool).seed(buildCmsSeeds(),actor),assetsInserted};
 }
-

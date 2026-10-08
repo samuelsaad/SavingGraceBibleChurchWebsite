@@ -87,12 +87,3 @@ export function createCmsAssetHandler(assets:CmsDiskAssets,identity:IdentityProv
   }catch(error){const code=error instanceof Error&&/^cms_upload_/.test(error.message)?error.message:"cms_asset_unavailable";return json({error:{code}},code.startsWith("cms_upload_")?400:503);}
  };
 }
-
-
-
-
-
-
-
-
-

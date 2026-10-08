@@ -7,4 +7,3 @@ export async function readCmsSecret(filename:string):Promise<string>{
  if(!stat.isFile()||stat.isSymbolicLink()||await realpath(path)!==path||(process.platform!=="win32"&&(stat.mode&0o077)!==0))throw Error("cms_secret_permissions_refused");
  const secret=(await readFile(path,"utf8")).trim();if(!/^[a-f0-9]{64}$/.test(secret))throw Error("cms_secret_format_refused");return secret;
 }
-
