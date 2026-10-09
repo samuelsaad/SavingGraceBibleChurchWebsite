@@ -124,22 +124,39 @@ def immutable_preserved(before, current):
         fail("cms_upgrade_prior_entity_removed")
 
 
+def secret_file_identity(path, name):
+    if name not in ("db_reader_password", *CMS_SECRETS):
+        fail("cms_upgrade_secret_name_refused")
+    if not path.is_absolute() or path.is_symlink() or not path.is_file() or any(parent.is_symlink() for parent in path.parents):
+        fail("cms_upgrade_secret_file_refused")
+    stat = path.stat(); parent_stat = path.parent.stat()
+    identity = {"mode": stat.st_mode & 0o777, "uid": stat.st_uid, "gid": stat.st_gid,
+                "parent": {"mode": parent_stat.st_mode & 0o777, "uid": parent_stat.st_uid, "gid": parent_stat.st_gid}}
+    expected = {"mode": 0o440 if name == "db_reader_password" else 0o400, "uid": 1000,
+                "gid": 0 if name == "db_reader_password" else 1000,
+                "parent": {"mode": 0o700, "uid": 0, "gid": 0}}
+    # The incumbent reader intentionally grants root-group read under a root-only
+    # directory. Retain this exact identity; do not rotate/chmod any credential.
+    if identity != expected:
+        fail("cms_upgrade_secret_permissions_refused")
+    return identity
+
+
 def secret_receipt(base, originals):
     result = {}
     for runtime, config in originals.items():
         app = config["services"]["app"]
-        for entry in app.get("secrets", []):
-            name = entry if isinstance(entry, str) else entry["source"]
+        names = [entry if isinstance(entry, str) else entry["source"] for entry in app.get("secrets", [])]
+        expected = {"db_reader_password", *(CMS_SECRETS if runtime == "protected" else ())}
+        if len(names) != len(expected) or set(names) != expected:
+            fail("cms_upgrade_secret_name_refused")
+        for name in names:
             definition = config.get("secrets", {}).get(name, {})
             path = pathlib.Path(definition.get("file", ""))
-            if not path.is_absolute() or path.is_symlink() or not path.is_file():
-                fail("cms_upgrade_secret_file_refused")
-            stat = path.stat()
-            if stat.st_mode & 0o077:
-                fail("cms_upgrade_secret_permissions_refused")
+            identity = secret_file_identity(path, name)
             if name in CMS_SECRETS and not re.fullmatch(r"[a-f0-9]{64}", path.read_text().strip()):
                 fail("cms_upgrade_secret_format_refused")
-            result[runtime + ":" + name] = {"path": str(path), "sha256": base.sha(path), "mode": stat.st_mode & 0o777, "uid": stat.st_uid, "gid": stat.st_gid}
+            result[runtime + ":" + name] = {"path": str(path), "sha256": base.sha(path), **identity}
     return result
 
 
@@ -226,10 +243,10 @@ def prepare(base, helper, root, incoming, commit, source_hash, inventory_hash, r
 
 def verify_frozen(base, root, recovery):
     base.verify_frozen(root, recovery)
-    for receipt in base.load(root / "secrets-before.private.json").values():
+    for key, receipt in base.load(root / "secrets-before.private.json").items():
         path = pathlib.Path(receipt["path"])
-        stat = base.checked(path).stat()
-        if base.sha(path) != receipt["sha256"] or (stat.st_mode & 0o777, stat.st_uid, stat.st_gid) != (receipt["mode"], receipt["uid"], receipt["gid"]):
+        identity = secret_file_identity(path, key.split(":", 1)[-1])
+        if base.sha(path) != receipt["sha256"] or any(identity[name] != receipt[name] for name in ("mode", "uid", "gid", "parent")):
             fail("cms_upgrade_secret_changed")
     if base.preservation() != recovery["previous"]["unrelatedSha256"]:
         fail("cms_upgrade_unrelated_changed")

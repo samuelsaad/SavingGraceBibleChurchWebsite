@@ -7,7 +7,7 @@ import pathlib
 import tempfile
 import unittest
 from types import SimpleNamespace
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, MagicMock, patch
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SPEC = importlib.util.spec_from_file_location("cms_upgrade_fixture", ROOT / "deployment/cms-upgrade-remote.py")
@@ -256,13 +256,69 @@ class CmsUpgradeTest(unittest.TestCase):
             self.assertTrue(statement.startswith("SELECT "))
             self.assertNotIn("PASSWORD", statement)
 
+    def secret_path(self, name="db_reader_password"):
+        path = MagicMock(); path.is_absolute.return_value = True; path.is_symlink.return_value = False; path.is_file.return_value = True
+        path.stat.return_value = SimpleNamespace(st_mode=0o440 if name == "db_reader_password" else 0o400, st_uid=1000, st_gid=0 if name == "db_reader_password" else 1000)
+        path.parent.stat.return_value = SimpleNamespace(st_mode=0o700, st_uid=0, st_gid=0)
+        path.parent.is_symlink.return_value = False
+        ancestor = MagicMock(); ancestor.is_symlink.return_value = False
+        path.parents = [path.parent, ancestor]
+        return path
+
+    def test_verified_reader_root_group_mode_and_strict_cms_modes_are_retained(self):
+        for name in ("db_reader_password", *OP.CMS_SECRETS):
+            with self.subTest(name=name):
+                identity = OP.secret_file_identity(self.secret_path(name), name)
+                self.assertEqual(identity["mode"], 0o440 if name == "db_reader_password" else 0o400)
+                self.assertEqual(identity["parent"], {"mode": 0o700, "uid": 0, "gid": 0})
+
+    def test_secret_mode_owner_group_and_parent_drift_are_refused(self):
+        for name in ("db_reader_password", *OP.CMS_SECRETS):
+            for level, field, value in (("file", "st_mode", 0o444), ("file", "st_uid", 0), ("file", "st_gid", 99), ("parent", "st_mode", 0o750), ("parent", "st_uid", 1000), ("parent", "st_gid", 1000)):
+                path = self.secret_path(name); stat = path.stat.return_value if level == "file" else path.parent.stat.return_value
+                setattr(stat, field, value)
+                with self.subTest(name=name, level=level, field=field), self.assertRaisesRegex(RuntimeError, "cms_upgrade_secret_permissions_refused"):
+                    OP.secret_file_identity(path, name)
+
+    def test_secret_file_parent_or_ancestor_symlinks_are_refused(self):
+        for location in ("file", "parent", "ancestor"):
+            path = self.secret_path()
+            target = path if location == "file" else path.parent if location == "parent" else path.parents[1]
+            target.is_symlink.return_value = True
+            with self.subTest(location=location), self.assertRaisesRegex(RuntimeError, "cms_upgrade_secret_file_refused"):
+                OP.secret_file_identity(path, "db_reader_password")
+
+    def test_unknown_or_duplicate_secret_keys_are_refused_before_file_access(self):
+        for name in ("unknown_password", "db_reader_password"):
+            config = original("public"); config["services"]["app"]["secrets"].append(name)
+            with patch.object(OP, "secret_file_identity") as inspect:
+                with self.subTest(name=name), self.assertRaisesRegex(RuntimeError, "cms_upgrade_secret_name_refused"):
+                    OP.secret_receipt(Mock(), {"public": config})
+                inspect.assert_not_called()
+        with self.assertRaisesRegex(RuntimeError, "cms_upgrade_secret_name_refused"):
+            OP.secret_file_identity(self.secret_path(), "unknown_password")
+
+    def test_secret_receipt_binds_parent_permissions_and_rechecks_each_phase(self):
+        identity = {"mode": 0o440, "uid": 1000, "gid": 0, "parent": {"mode": 0o700, "uid": 0, "gid": 0}}
+        base = Mock(); base.sha.return_value = "a" * 64
+        with patch.object(OP, "secret_file_identity", return_value=identity):
+            receipt = OP.secret_receipt(base, {"public": original("public")})
+        self.assertEqual(receipt["public:db_reader_password"]["parent"], identity["parent"])
+        base.load.return_value = receipt
+        changed = copy.deepcopy(identity); changed["parent"]["mode"] = 0o750
+        with patch.object(OP, "secret_file_identity", return_value=changed) as inspect:
+            with self.assertRaisesRegex(RuntimeError, "cms_upgrade_secret_changed"):
+                OP.verify_frozen(base, pathlib.Path("/fixture/upgrade"), {})
+            inspect.assert_called_once()
+
     def test_secret_rotation_is_refused_before_activating(self):
         base = Mock(); root = pathlib.Path("/fixture/upgrade")
         base.load.return_value = {"protected:cms_session_secret": {"path": "/fixture/key", "sha256": "a" * 64, "mode": 0o400, "uid": 1000, "gid": 1000}}
         base.checked.return_value.stat.return_value = SimpleNamespace(st_mode=0o400, st_uid=1000, st_gid=1000)
         base.sha.return_value = "b" * 64
-        with self.assertRaisesRegex(RuntimeError, "cms_upgrade_secret_changed"):
-            OP.verify_frozen(base, root, {"previous": {"unrelatedSha256": "unchanged"}})
+        with patch.object(OP, "secret_file_identity", return_value={"mode": 0o400, "uid": 1000, "gid": 1000, "parent": {"mode": 0o700, "uid": 0, "gid": 0}}):
+            with self.assertRaisesRegex(RuntimeError, "cms_upgrade_secret_changed"):
+                OP.verify_frozen(base, root, {"previous": {"unrelatedSha256": "unchanged"}})
         base.preservation.assert_not_called()
 
 
