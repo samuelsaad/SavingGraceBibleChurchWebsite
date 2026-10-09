@@ -6,22 +6,30 @@ durable asset store. Saving, previewing and publishing ordinary content do not
 require a build or application restart. Installing a changed editor application
 uses the guarded release procedure below.
 
-This document describes the procedure, not an assertion that the visual editor
-has been deployed. Record the actual release, image, browser results and rollback
-receipt in the final validation evidence after those steps succeed.
+The 9 October delivery completed locally and on both existing staging
+applications at `e8892c08eb1ea26e9675c8af87ebefef9866699d`, using staging image
+`sha256:2760ce944f9393cde4388a2fe6e1ed5aba108a4f8ac48ad3dbcb41558c2462cc`.
+All nine requested browser workflows and application rollback/reactivation passed.
+See [the validation record](visual-page-editor-validation.md) for the tested
+identities, preservation evidence, exact check results and limitations. The later
+documentation-only commit does not change the deployed application identity.
 
 ## Current supported destinations
 
 | Destination | Administrator entry | Identity and publication scope |
 | --- | --- | --- |
 | Local development | `http://127.0.0.1:4430/admin/login` | Explicit local development identity; publication changes the guarded local CMS only. |
-| Protected staging | `http://127.0.0.1:4396/admin/login` through the existing SSH tunnel | Existing protected operator-key session; publication changes the existing staging CMS. |
+| Protected staging | `http://127.0.0.1:4396/admin/login` through an active approved SSH tunnel | Existing protected operator-key session; publication changes the existing staging CMS. |
 | Production | Not configured | No connected replacement-site production administrator or publication target. |
 
 After signing in, open `/admin/cms` and select an existing page. The visual editor
 is the default; the advanced form editor remains available. The toolbar labels the
 actual local or staging destination. The staging runtime's `NODE_ENV=production`
 setting is a Node deployment mode, not evidence of a production website target.
+
+The verification-only SSH tunnel was closed after delivery. Reopen the approved
+protected tunnel before using port 4396. The requested local dashboard remains
+available on loopback 4430.
 
 ## Application-only staging upgrade
 

@@ -1,5 +1,56 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
+## D-180 — visual website editor delivered locally and to staging
+
+`codex/visual-page-editor` makes the actual rendered website the default CMS
+editing canvas. Administrators can select sections and content, edit supported
+text inline, replace images, change links, manage sections and nested blocks,
+choose supported layouts, preview device widths, and use undo/redo and revision
+history. Advanced forms remain available. The existing Astra/Claude website,
+29 module families, CMS persistence, authentication and sermon gates are retained.
+No new dependency or database migration was required.
+
+Local and both staging applications run implementation
+`e8892c08eb1ea26e9675c8af87ebefef9866699d`. Staging image:
+`sha256:2760ce944f9393cde4388a2fe6e1ed5aba108a4f8ac48ad3dbcb41558c2462cc`.
+The implementation was pushed normally to the named GitHub branch. A subsequent
+documentation-only commit records the final evidence without changing that runtime.
+The earlier D-179 runtime identity below is historical and superseded here.
+
+All nine requested browser workflows passed locally and on protected staging:
+open the real page, edit text, replace an image, manage sections, preview device
+sizes, save/reopen a draft, publish and verify the website, restore a revision,
+and use keyboard controls. Drafts remained isolated. Local browser conflict
+recovery and staging stale-version rejection passed. Original demonstration
+content was restored through immutable history, retaining the audit trail.
+
+Staging rollback to the prior CMS application and reactivation retained identical
+current CMS and upload hashes. Final staging inventory is 52 entities, 68 revisions,
+97 routes, 46 published entities and 47 assets, including the existing uploaded
+file with verified bytes. Schema ledger 27, all 398 stored sermons, 144 ordinary
+published sermon statuses, unrelated data, credentials, mounts and networks were
+retained. Public staging still denies administration and private previews;
+visitor Related themes remains OFF. No sermon content or review state was edited.
+
+Local administration: `http://127.0.0.1:4430/admin/login`, then **Open local
+administration** and select **Homepage** or another page. Protected staging:
+`http://127.0.0.1:4396/admin/login` through an active approved SSH tunnel and the
+existing protected operator session. These destinations remain explicitly labelled
+local development and protected staging. The local restart retained all 52 entities
+and 47 assets with identical content hashes.
+
+The guarded PostgreSQL suite passed 1,277 tests with zero skips. Standard tests,
+type checks, public/staging builds, importer dry run, offline dependency audit,
+36 offline deployment checks, privacy scans and scoped Impeccable review passed.
+See `docs/visual-page-editor-validation.md` for exact outcomes and limitations.
+
+Production is not connected. The remaining work is the selected replacement
+runtime/HTTPS origins, individually attributable administrator/MFA integration,
+guarded production database and durable assets, production rendering/publishing
+adapter and any cache invalidation, followed by approved SEO/cutover gates.
+`docs/visual-page-editor-deployment.md` records this exact connection gap.
+Local/staging publication does not change the live WordPress website.
+
 ## D-179 — modular website CMS delivered locally and to staging
 
 `codex/modular-admin-cms` extends the integrated Astra/Claude application from
