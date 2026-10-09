@@ -6,6 +6,7 @@ import {CmsDiskAssets,createCmsAssetHandler} from "./assets";
 import {CmsSessionProvider} from "./session";
 import {createCmsDashboardHandler} from "./dashboard";
 import {createCmsApiHandler} from "./api";
+import {createCmsVisualRenderHandler} from "./visual-render";
 import {createCmsFrontendSnapshot} from "./frontend-adapter";
 import {createPublicSermonSiteHandler,frontendResponse} from "../server/http/public-sermon-page";
 import {createLocalFrontendPreviewHandler} from "../server/http/local-frontend-preview";
@@ -24,6 +25,7 @@ export function createCmsRuntimeHandler(options:CmsRuntimeOptions){
  const api=createCmsApiHandler(repository,session,{authorizeMutation:request=>session.authorizeMutation(request)});
  const assets=createCmsAssetHandler(options.assets,session,session,(key,draft)=>repository.canReadAsset(key,draft));
  const dashboard=createCmsDashboardHandler(options.dashboardDirectory,session,options.environment,Boolean(options.existingAdminHandler));
+ const visualRender=createCmsVisualRenderHandler({repository,session,sermons:options.sermons,environment:options.environment,assets:async()=>(await options.assetStore.list()).filter(a=>a.type.startsWith("image/")).map(a=>({id:a.id,path:a.url,type:a.type,width:a.width??1,height:a.height??1,alt:a.alt}))});
  const selections=new Map<string,{entityId:string;revisionId?:string}>();
  const content=async(selection?:{entityId:string;revisionId?:string})=>{
   const snapshot=selection?await repository.getPreviewSnapshot(selection):await repository.getPublishedSnapshot();
@@ -32,11 +34,12 @@ export function createCmsRuntimeHandler(options:CmsRuntimeOptions){
  };
  return async(request:Request):Promise<Response>=>{
   const pathname=new URL(request.url).pathname;
-  const finish=(response:Response)=>{const result=new Headers(response.headers);for(const [key,value] of Object.entries(headers))result.set(key,value);return new Response(request.method==="HEAD"?null:response.body,{status:response.status,headers:result});};
+  const finish=(response:Response,canvas=false)=>{const result=new Headers(response.headers);for(const [key,value] of Object.entries(headers))result.set(key,canvas&&key==="X-Frame-Options"&&response.status===200?"SAMEORIGIN":value);return new Response(request.method==="HEAD"?null:response.body,{status:response.status,headers:result});};
   try{
    const sessionResponse=await session.handle(request);if(sessionResponse)return finish(sessionResponse);
    if(pathname==="/health/ready"){await options.ready();return finish(Response.json({status:"ready",release:options.release,authentication:"protected_cms_session"}));}
    if(pathname==="/robots.txt")return finish(new Response("User-agent: *\nDisallow: /\n"));
+   const canvas=await visualRender(request);if(canvas)return finish(canvas,pathname.startsWith("/cms-editor-frame/"));
    const asset=await assets(request);if(asset)return finish(asset);
    if(pathname==="/api/v1/admin/cms/sermons"){
     if(!await session.authenticate(request))return finish(Response.json({error:{code:"authentication_required"}},{status:401}));

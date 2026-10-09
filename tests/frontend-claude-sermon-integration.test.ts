@@ -13,13 +13,13 @@ import { contentSecurityPolicy } from "../src/server/http/frontend-response";
 const preservedSources = [
   [
     "src/frontend/pages/home.ts",
-    // Authorized CMS projection keeps the visual components; seed parity is verified in cms-frontend.test.ts.
-    "57d09058fe095ccc39a74a28a9f35fb2720c135f5c0bec365e6cc2128c6ef37d"
+    // Visual-editor attributes are private; all 47 baseline church HTML documents remain byte-identical.
+    "47bccd2ecac412f5b8c4ab667c60b512e5cc762a1c02e13ba04bc579eb32a18e"
   ],
   [
     "src/frontend/pages/church.ts",
-    // Authorized CMS projection keeps the visual components; seed parity is verified in cms-frontend.test.ts.
-    "853cbc0359ff397c700abb94690dd286d5e1a321417ca8d9d8258913d6e8a69d"
+    // Visual-editor attributes are private; all 47 baseline church HTML documents remain byte-identical.
+    "45ae19e675558f556c97e61147d5266c6fe7817890cbd740e561c5826bdb1dd5"
   ],
   [
     "src/frontend/styles/core.ts",
@@ -45,7 +45,8 @@ const preservedSources = [
   ],
   [
     "src/frontend/components/sections.ts",
-    "881828489257b7e5af7efb0ab3c2b68444da82e8efdbedbbd56538e1e822e180"
+    // Visual-editor attributes are private; all 47 baseline church HTML documents remain byte-identical.
+    "b61c919dd2eeccde0b066d4fada075a1bfc6e2cc519810f918c719866d5ce30e"
   ],
   [
     "src/frontend/components/cards.ts",

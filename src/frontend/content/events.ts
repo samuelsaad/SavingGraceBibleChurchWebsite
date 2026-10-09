@@ -75,6 +75,8 @@ export interface ChurchEvent {
   /** The ministry page this gathering belongs to. */
   page?: string;
   media?: string;
+  mediaAlt?:string;
+  mediaFocalPoint?:{x:number;y:number};
   /** Legacy Events Calendar paths (event records and series) that redirect here. */
   legacyPaths: readonly string[];
   /** Source record identifiers, for the inventory. */

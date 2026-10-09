@@ -24,6 +24,8 @@ export type ArchiveBasePath = typeof archivePath | typeof sermonsV1Path | typeof
 export interface FrontendRenderContext {
   mode: "public" | "preview" | "restricted" | "draft-preview";
   basePath: "" | "/frontend-preview" | "/draft-preview" | "/cms-preview";
+  /** Set exclusively by the authenticated visual canvas endpoint. */
+  visualEditor?: {entityId:string;kind:string};
   /** Immutable content selected for this request, never a process-global override. */
   siteContent?: FrontendSiteSnapshot;
 }

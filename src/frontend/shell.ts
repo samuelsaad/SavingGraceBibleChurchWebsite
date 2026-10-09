@@ -10,6 +10,7 @@
  *
  * This module has no Node-only imports so the static build can consume it.
  */
+import {editAttributes,cmsEditorStyles,cmsPresentationStyles,hasCmsPresentation,type CmsContentPath} from "./editing";
 import { defaultSiteSettings, siteSettings } from "./content/site-snapshot";
 import { destinationAvailable } from "./content/registry";
 import { inline, resolveHref } from "./content/markup";
@@ -80,34 +81,35 @@ export function pendingLabel(label: string, className = ""): Html {
 
 const chevron = html`<span class="masthead__chevron" aria-hidden="true"></span>`;
 
-function nestedMenuItems(items:readonly MenuItem[],depth=0):MenuItem[]{
-  return items.filter(item=>item.enabled!==false).flatMap(item=>[{...item,...(depth>0?{sub:true}:{})},...nestedMenuItems(item.children??[],depth+1)]);
+type MarkedMenu=MenuItem&{cmsMenuPath:CmsContentPath};
+function nestedMenuItems(items:readonly MenuItem[],depth=0,path:CmsContentPath=[]):MarkedMenu[]{
+  return items.flatMap((item,index)=>item.enabled===false?[]:[{...item,cmsMenuPath:[...path,index],...(depth>0?{sub:true}:{})},...nestedMenuItems(item.children??[],depth+1,[...path,index,"children"])]);
 }
 
-function sermonsMenu(context: FrontendRenderContext, navigationPath: string, active: string | null, menuLabel?:string): Html {
+function sermonsMenu(context: FrontendRenderContext, navigationPath: string, active: string | null, menuLabel?:string,menuPath?:CmsContentPath): Html {
   const {navigationCopy}=siteSettings(context);
   const links = siteLinks(context);
   const items = links.hasTaxonomyRoutes ? sections : sections.slice(0, 1);
   const current = activeMenuItem(navigationPath, siteSettings(context).primaryMenu)?.id === "sermons";
   if (!links.hasTaxonomyRoutes) {
-    return html`<a href="${links.sermonsV4}"${attribute("aria-current", current ? "page" : null)}>${menuLabel ?? navigationCopy.sermons}</a>`;
+    return html`<a${editAttributes(context,menuPath?[...menuPath,"label"]:undefined,"link","Sermons menu","navigation")} href="${links.sermonsV4}"${attribute("aria-current", current ? "page" : null)}>${menuLabel ?? navigationCopy.sermons}</a>`;
   }
   const v1Active = sitePath(navigationPath) === sermonsV1Path;
   const v4Active = sitePath(navigationPath) === sermonsV4Path;
   const v5Active = sitePath(navigationPath) === sermonsV5Path;
   return html`<details class="masthead__menu" data-menu data-sermon-menu>
-      <summary class="masthead__menu-toggle${active || v1Active || v4Active || v5Active ? " is-active" : ""}" aria-controls="sermon-navigation" title="Open menu; double-click to browse SermonsV4">${menuLabel ?? navigationCopy.sermons}${chevron}</summary>
+      <summary${editAttributes(context,menuPath?[...menuPath,"label"]:undefined,"link","Sermons menu","navigation")} class="masthead__menu-toggle${active || v1Active || v4Active || v5Active ? " is-active" : ""}" aria-controls="sermon-navigation" title="Open menu; double-click to browse SermonsV4">${menuLabel ?? navigationCopy.sermons}${chevron}</summary>
       <ul class="masthead__dropdown" id="sermon-navigation"><li><a href="${links.sermonsV1}"${attribute("aria-current", v1Active ? "page" : null)}>SermonsV1</a></li>${items.map(([section, label]) => html`<li><a href="${section === "sermons" ? links.archive : links.taxonomyIndex(section)}"${attribute("aria-current", active === section ? "page" : null)}>${section === "sermons" ? "SermonsV2" : label}</a></li>${when(section === "sermons", () => html`<li><a href="${links.sermonsV4}" data-sermon-archive${attribute("aria-current", v4Active ? "page" : null)}>SermonsV4</a></li><li><a href="${links.sermonsV5}"${attribute("aria-current", v5Active ? "page" : null)}>SermonsV5</a></li>`)}`)}</ul>
     </details>`;
 }
 
-function menuDisclosure(item: MenuItem, context: FrontendRenderContext, navigationPath: string): Html {
+function menuDisclosure(item: MenuItem, context: FrontendRenderContext, navigationPath: string,menuPath:CmsContentPath): Html {
   const path = sitePath(navigationPath);
   const active = activeMenuItem(navigationPath, siteSettings(context).primaryMenu)?.id === item.id;
   const id = `menu-${item.id ?? item.label.toLowerCase().replace(/[^a-z0-9]+/gu,"-")}`;
   return html`<details class="masthead__menu" data-menu>
-      <summary class="masthead__menu-toggle${active ? " is-active" : ""}" aria-controls="${id}">${item.label}${chevron}</summary>
-      <ul class="masthead__dropdown masthead__dropdown--wide" id="${id}"><li><a href="${resolveHref(item.href,context)}"${attribute("aria-current", path === item.href ? "page" : null)}>${item.label}<span class="sr-only"> overview</span></a></li>${nestedMenuItems(item.children ?? []).filter(child=>destinationAvailable(child.href,context)).map((child) => html`<li${attribute("class", child.sub ? "masthead__dropdown-sub" : null)}><a href="${resolveHref(child.href,context)}"${attribute("aria-current", path === child.href ? "page" : null)}>${child.label}</a></li>`)}</ul>
+      <summary${editAttributes(context,[...menuPath,"label"],"link","Navigation item","navigation")} class="masthead__menu-toggle${active ? " is-active" : ""}" aria-controls="${id}">${item.label}${chevron}</summary>
+      <ul class="masthead__dropdown masthead__dropdown--wide" id="${id}"><li><a${editAttributes(context,[...menuPath,"label"],"link","Navigation item","navigation")} href="${resolveHref(item.href,context)}"${attribute("aria-current", path === item.href ? "page" : null)}>${item.label}<span class="sr-only"> overview</span></a></li>${nestedMenuItems(item.children ?? [],0,[...menuPath,"children"]).filter(child=>destinationAvailable(child.href,context)).map((child) => html`<li${attribute("class", child.sub ? "masthead__dropdown-sub" : null)}><a${editAttributes(context,[...child.cmsMenuPath,"label"],"link","Navigation item","navigation")} href="${resolveHref(child.href,context)}"${attribute("aria-current", path === child.href ? "page" : null)}>${child.label}</a></li>`)}</ul>
     </details>`;
 }
 
@@ -115,10 +117,10 @@ function navigationLinks(context: FrontendRenderContext, navigationPath: string)
   const {primaryMenu}=siteSettings(context);
   const active = activeSection(navigationPath);
   const currentTop = activeMenuItem(navigationPath, siteSettings(context).primaryMenu);
-  return html`<ul class="masthead__links">${primaryMenu.filter(item=>item.enabled!==false&&destinationAvailable(item.href,context)).map((item) => {
-    if (item.id === "sermons") return html`<li class="masthead__links-sermons">${sermonsMenu(context, navigationPath, active, item.label)}</li>`;
-    if (item.children) return html`<li class="masthead__links-menu">${menuDisclosure(item, context, navigationPath)}</li>`;
-    return html`<li><a href="${resolveHref(item.href,context)}"${attribute("aria-current", currentTop === item && sitePath(navigationPath) === item.href ? "page" : null)}>${item.label}</a></li>`;
+  return html`<ul class="masthead__links">${primaryMenu.map((item,index)=>({item,index})).filter(({item})=>item.enabled!==false&&destinationAvailable(item.href,context)).map(({item,index}) => {
+    if (item.id === "sermons") return html`<li class="masthead__links-sermons">${sermonsMenu(context, navigationPath, active, item.label,["primaryMenu",index])}</li>`;
+    if (item.children) return html`<li class="masthead__links-menu">${menuDisclosure(item, context, navigationPath,["primaryMenu",index])}</li>`;
+    return html`<li><a${editAttributes(context,["primaryMenu",index,"label"],"link","Navigation item","navigation")} href="${resolveHref(item.href,context)}"${attribute("aria-current", currentTop === item && sitePath(navigationPath) === item.href ? "page" : null)}>${item.label}</a></li>`;
   })}</ul>`;
 }
 
@@ -126,15 +128,15 @@ function navigationLinks(context: FrontendRenderContext, navigationPath: string)
 export function churchLogo(className = "brand__logo", context:FrontendRenderContext=publicRenderContext): Html {
   const {branding}=siteSettings(context);
   const image=context.siteContent?.assets[branding.logoAsset];
-  if(image)return html`<img class="${className}" src="${image.path}" width="${image.width}" height="${image.height}" alt="${branding.logoAlt}" decoding="async" />`;
-  return html`<img class="${className}" src="${logoPath}" width="${logoWidth}" height="${logoHeight}" alt="${logoAlt}" decoding="async" />`;
+  if(image)return html`<img${editAttributes(context,["branding","logoAsset"],"image","Shared header logo","header")} class="${className}" src="${image.path}" width="${image.width}" height="${image.height}" alt="${branding.logoAlt}" decoding="async" />`;
+  return html`<img${editAttributes(context,["branding","logoAsset"],"image","Shared header logo","header")} class="${className}" src="${logoPath}" width="${logoWidth}" height="${logoHeight}" alt="${logoAlt}" decoding="async" />`;
 }
 
 /** The church's white logo for the footer's ink band. */
 function footerLogo(context:FrontendRenderContext): Html {
   const {branding}=siteSettings(context);
   const image = context.siteContent?.assets[branding.footerLogoAsset] ?? siteImage("logo-white");
-  return html`<img class="brand__logo brand__logo--inverse" src="${image.path}" width="${image.width}" height="${image.height}" alt="${branding.logoAlt}" loading="lazy" decoding="async" />`;
+  return html`<img${editAttributes(context,["branding","footerLogoAsset"],"image","Shared footer logo","footer")} class="brand__logo brand__logo--inverse" src="${image.path}" width="${image.width}" height="${image.height}" alt="${branding.logoAlt}" loading="lazy" decoding="async" />`;
 }
 
 function brand(context: FrontendRenderContext, inverse = false): Html {
@@ -161,30 +163,31 @@ function headMetadata(input: PageShellInput, context: FrontendRenderContext): Ht
 function footerColumns(input: PageShellInput, context: FrontendRenderContext): Html {
   const {contactCopy,footerServicesCopy,bottomBarCopy,footerMenu,socialPlatforms,footerVisibility,getInvolvedHeading,sermonFooterHeading}=siteSettings(context);
   const links = siteLinks(context);
+  const mark=(path:CmsContentPath,kind:"text"|"richtext"|"link"="text",label="Footer text")=>editAttributes(context,path,kind,label,"footer");
   return html`<div class="footer-columns">
         ${when(footerVisibility.contact,()=>html`<section class="footer-col" id="${homeSections.contact}" aria-labelledby="footer-contact-heading">
-          <h2 class="footer-col__title" id="footer-contact-heading">${contactCopy.heading}</h2>
-          <address class="footer-col__address"><span>${contactCopy.name}</span><span>${contactCopy.addressLine1}</span><span>${contactCopy.addressLine2}</span><span><a href="${contactCopy.telephoneHref}">${contactCopy.telephone}</a></span><span><a href="mailto:${contactCopy.emailAddress}">${contactCopy.email}</a></span></address>
-          <p class="footer-col__directions"><a href="${contactCopy.directionsHref}" rel="noopener">${contactCopy.directions}<span class="sr-only"> (external site)</span></a></p>
+          <h2 class="footer-col__title" id="footer-contact-heading"${mark(["contactCopy","heading"],"text","Footer heading")}>${contactCopy.heading}</h2>
+          <address class="footer-col__address"><span${mark(["contactCopy","name"])}>${contactCopy.name}</span><span${mark(["contactCopy","addressLine1"])}>${contactCopy.addressLine1}</span><span${mark(["contactCopy","addressLine2"])}>${contactCopy.addressLine2}</span><span><a href="${contactCopy.telephoneHref}"${mark(["contactCopy","telephone"],"link","Contact link")}>${contactCopy.telephone}</a></span><span><a href="mailto:${contactCopy.emailAddress}"${mark(["contactCopy","email"],"link","Contact link")}>${contactCopy.email}</a></span></address>
+          <p class="footer-col__directions"><a href="${contactCopy.directionsHref}" rel="noopener"${mark(["contactCopy","directions"],"link","Contact link")}>${contactCopy.directions}<span class="sr-only"> (external site)</span></a></p>
         </section>`)}
         ${when(footerVisibility.navigation,()=>html`<nav class="footer-col" aria-labelledby="footer-involved-heading">
-          <h2 class="footer-col__title" id="footer-involved-heading">${getInvolvedHeading}</h2>
-          <ul class="footer-col__list" role="list">${nestedMenuItems(footerMenu).filter(item=>destinationAvailable(item.href,context)).map((item) => html`<li><a href="${item.href === "/sermons/" ? links.archive : resolveHref(item.href,context)}">${item.label}</a></li>`)}</ul>
+          <h2 class="footer-col__title" id="footer-involved-heading"${mark(["getInvolvedHeading"],"text","Footer heading")}>${getInvolvedHeading}</h2>
+          <ul class="footer-col__list" role="list">${nestedMenuItems(footerMenu,0,["footerMenu"]).filter(item=>destinationAvailable(item.href,context)).map((item) => html`<li><a${mark([...item.cmsMenuPath,"label"],"link","Footer navigation")} href="${item.href === "/sermons/" ? links.archive : resolveHref(item.href,context)}">${item.label}</a></li>`)}</ul>
         </nav>`)}
         ${when(footerVisibility.recentSermon && input.footerSermon, () => html`<section class="footer-col footer-col--sermon" aria-labelledby="footer-sermon-heading">
-          <h2 class="footer-col__title" id="footer-sermon-heading">${sermonFooterHeading}</h2>
+          <h2 class="footer-col__title" id="footer-sermon-heading"${mark(["sermonFooterHeading"],"text","Footer heading")}>${sermonFooterHeading}</h2>
           ${input.footerSermon}
         </section>`)}
         ${when(footerVisibility.services,()=>html`<section class="footer-col" aria-labelledby="footer-services-heading">
-          <h2 class="footer-col__title" id="footer-services-heading">${footerServicesCopy.heading}</h2>
-          <ul class="footer-col__list" role="list"><li>${footerServicesCopy.morning}</li><li>${footerServicesCopy.evening}</li></ul>
-          <p class="footer-col__more"><a href="${resolveHref(footerServicesCopy.morningHref ?? "/lords-day-service/",context)}">${footerServicesCopy.morningLink}</a> · <a href="${resolveHref(footerServicesCopy.eveningHref ?? "/evening-service/",context)}">${footerServicesCopy.eveningLink}</a></p>
+          <h2 class="footer-col__title" id="footer-services-heading"${mark(["footerServicesCopy","heading"],"text","Footer heading")}>${footerServicesCopy.heading}</h2>
+          <ul class="footer-col__list" role="list"><li${mark(["footerServicesCopy","morning"])}>${footerServicesCopy.morning}</li><li${mark(["footerServicesCopy","evening"])}>${footerServicesCopy.evening}</li></ul>
+          <p class="footer-col__more"><a href="${resolveHref(footerServicesCopy.morningHref ?? "/lords-day-service/",context)}"${mark(["footerServicesCopy","morningLink"],"link","Service link")}>${footerServicesCopy.morningLink}</a> · <a href="${resolveHref(footerServicesCopy.eveningHref ?? "/evening-service/",context)}"${mark(["footerServicesCopy","eveningLink"],"link","Service link")}>${footerServicesCopy.eveningLink}</a></p>
         </section>`)}
       </div>
       <div class="footer-bar">
-        <p class="footer-bar__copyright">${bottomBarCopy.copyright}</p>
+        <p class="footer-bar__copyright"${mark(["bottomBarCopy","copyright"],"text","Copyright")}>${bottomBarCopy.copyright}</p>
         <a class="footer-bar__top" href="#${homeSections.top}">${upGlyph()}<span class="sr-only">${bottomBarCopy.backToTop}</span></a>
-        ${when(footerVisibility.social,()=>html`<p class="footer-bar__follow"><span class="footer-bar__label">${bottomBarCopy.followUs}</span>${socialPlatforms.filter(platform=>platform.enabled).map((platform) => platform.href ? html`<a class="footer-bar__glyph footer-bar__glyph--link" href="${resolveHref(platform.href,context)}" rel="noopener"><span aria-hidden="true">${socialGlyph(platform.id)}</span><span class="sr-only">${platform.name}</span></a>` : html`<span class="footer-bar__glyph pending"><span aria-hidden="true">${socialGlyph(platform.id)}</span><span class="sr-only">${platform.name} (link not yet available)</span></span>`)}${when(socialPlatforms.some(platform=>platform.enabled&&!platform.href),()=>html`<span class="footer-bar__availability">Links not yet available</span>`)}<a class="footer-bar__glyph footer-bar__glyph--link" href="${links.archive}#sermon-search">${searchGlyph()}<span class="sr-only">Search sermons</span></a></p>`)}
+        ${when(footerVisibility.social,()=>html`<p class="footer-bar__follow"><span class="footer-bar__label"${mark(["bottomBarCopy","followUs"])}>${bottomBarCopy.followUs}</span>${socialPlatforms.map((platform,index)=>({platform,index})).filter(({platform})=>platform.enabled).map(({platform,index}) => platform.href ? html`<a class="footer-bar__glyph footer-bar__glyph--link"${mark(["socialPlatforms",index,"href"],"link","Social link")} href="${resolveHref(platform.href,context)}" rel="noopener"><span aria-hidden="true">${socialGlyph(platform.id)}</span><span class="sr-only">${platform.name}</span></a>` : html`<span class="footer-bar__glyph pending"><span aria-hidden="true">${socialGlyph(platform.id)}</span><span class="sr-only">${platform.name} (link not yet available)</span></span>`)}${when(socialPlatforms.some(platform=>platform.enabled&&!platform.href),()=>html`<span class="footer-bar__availability">Links not yet available</span>`)}<a class="footer-bar__glyph footer-bar__glyph--link" href="${links.archive}#sermon-search">${searchGlyph()}<span class="sr-only">Search sermons</span></a></p>`)}
       </div>`;
 }
 
@@ -200,7 +203,7 @@ export function pageShell(input: PageShellInput, context: FrontendRenderContext 
     ? "Protected D-160 draft preview · Awaiting administrator review · Not public or indexable"
     : "Private local frontend preview · Draft content · Not public or indexable";
   const title = input.suffixTitle === false ? input.title : `${input.title} — ${siteName}`;
-  const scripts = [...new Set<EnhancementScriptName>([...(input.scripts ?? []), "navigation", "mobileNavigation"])];
+  const scripts = context.visualEditor?[]:[...new Set<EnhancementScriptName>([...(input.scripts ?? []), "navigation", "mobileNavigation"])];
   const document = html`<!doctype html>
 <html lang="en-AU">
   <head>
@@ -212,30 +215,30 @@ export function pageShell(input: PageShellInput, context: FrontendRenderContext 
     <link rel="apple-touch-icon" href="${context.siteContent?.assets[branding.touchIconAsset]?.path ?? touchIconPath}" sizes="192x192" />
     <title>${title}</title>
     ${headMetadata(input, context)}
-    <style>${raw(siteStyles([...(input.styles ?? []), ...(preview ? ["preview" as const] : [])]))}</style>
+    <style>${raw(siteStyles([...(input.styles ?? []), ...(preview ? ["preview" as const] : [])]))}${raw(hasCmsPresentation(context)?cmsPresentationStyles:"")}${raw(context.visualEditor?cmsEditorStyles:"")}</style>
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
     ${when(preview, () => html`<div class="preview-band" role="status">${shelfMark()}<span>${previewLabel}</span></div>`)}
     ${input.notice}
-    <header class="masthead" id="${homeSections.top}" data-site-header>
+    <header${editAttributes(context,["branding"],"section","Shared header","header")} class="masthead" id="${homeSections.top}" data-site-header>
       <div class="masthead__inner">
         ${brand(context)}
         <button class="masthead__mobile-toggle" type="button" aria-controls="primary-navigation" aria-expanded="false" data-site-toggle hidden>Menu<span class="masthead__chevron" aria-hidden="true"></span></button>
-        <nav class="masthead__nav" id="primary-navigation" aria-label="Primary">${navigationLinks(context, input.navigationPath ?? input.canonicalPath)}</nav>
-        <div class="masthead__actions">${when(input.mastheadSearch !== false, () => mastheadSearch(context))}${when(headerAction.enabled&&destinationAvailable(headerAction.href,context),()=>html`<a class="button masthead__give" href="${resolveHref(headerAction.href,context)}">${headerAction.label}</a>`)}</div>
+        <nav${editAttributes(context,["primaryMenu"],"section","Shared navigation","navigation")} class="masthead__nav" id="primary-navigation" aria-label="Primary">${navigationLinks(context, input.navigationPath ?? input.canonicalPath)}</nav>
+        <div class="masthead__actions">${when(input.mastheadSearch !== false, () => mastheadSearch(context))}${when(headerAction.enabled&&destinationAvailable(headerAction.href,context),()=>html`<a class="button masthead__give"${editAttributes(context,["headerAction","label"],"link","Header button","header")} href="${resolveHref(headerAction.href,context)}">${headerAction.label}</a>`)}</div>
       </div>
     </header>
     <main id="main-content" class="site-main">${input.body}</main>
-    <footer class="site-footer">
+    <footer class="site-footer"${editAttributes(context,[],"section","Shared footer","footer")}>
       ${canonStrip({ books: input.books ?? [] })}
       <div class="site-footer__band">
         <div class="site-footer__inner">
           ${footerColumns(input, context)}
           <div class="site-footer__imprint">
             ${brand(context, true)}
-            ${when(footerVisibility.archiveLinks,()=>html`<nav aria-label="Footer"><ul class="site-footer__links">${nestedMenuItems(footerExtraMenu).filter(item=>destinationAvailable(item.href,context)).map(item=>html`<li><a href="${resolveHref(item.href,context)}">${item.label}</a></li>`)}</ul></nav>`)}
-            ${when(archiveAbout.enabled,()=>html`<details class="site-footer__about"><summary>${archiveAbout.heading}</summary><p class="site-footer__note">${inline(archiveAbout.text,context)}</p></details>`)}
+            ${when(footerVisibility.archiveLinks,()=>html`<nav aria-label="Footer"><ul class="site-footer__links">${nestedMenuItems(footerExtraMenu,0,["footerExtraMenu"]).filter(item=>destinationAvailable(item.href,context)).map(item=>html`<li><a${editAttributes(context,[...item.cmsMenuPath,"label"],"link","Footer navigation","footer")} href="${resolveHref(item.href,context)}">${item.label}</a></li>`)}</ul></nav>`)}
+            ${when(archiveAbout.enabled,()=>html`<details class="site-footer__about"><summary${editAttributes(context,["archiveAbout","heading"],"text","Archive information heading","footer")}>${archiveAbout.heading}</summary><p class="site-footer__note"${editAttributes(context,["archiveAbout","text"],"richtext","Archive information","footer")}>${inline(archiveAbout.text,context)}</p></details>`)}
           </div>
         </div>
       </div>

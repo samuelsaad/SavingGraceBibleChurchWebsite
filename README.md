@@ -1,5 +1,16 @@
 # Saving Grace Bible Church Website
 
+## Visual website editor (D-180)
+
+Opening a CMS page now shows the actual website with click selection, inline text
+editing, image and link controls, a visual section library, pointer and keyboard
+reordering, responsive previews, undo/redo and revision history. Save and publish
+use the existing persistent CMS services and explicitly name local or staging.
+Advanced forms remain available.
+
+See [editor operation and production connection](docs/visual-page-editor-deployment.md)
+and [verification](docs/visual-page-editor-validation.md).
+
 ## Modular website CMS (D-179)
 
 The existing dashboard now manages ordinary church pages, homepage sections,

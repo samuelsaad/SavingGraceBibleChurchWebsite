@@ -36,13 +36,14 @@ export function markupHtml(value:string):string {
 export function richTextValue(root:Node):string {
   return Array.from(root.childNodes).map(node=>{
     if(node.nodeType===Node.TEXT_NODE)return node.textContent??'';
-    if(!(node instanceof HTMLElement))return '';
-    if(node.tagName==='BR')return '\n';
+    if(node.nodeType!==Node.ELEMENT_NODE)return '';
+    const element=node as HTMLElement;
+    if(element.tagName==='BR')return '\n';
     const content=richTextValue(node);
-    if(node.tagName==='STRONG'||node.tagName==='B')return `**${content}**`;
-    if(node.tagName==='EM'||node.tagName==='I')return `_${content}_`;
-    if(node.tagName==='A'){const href=node.getAttribute('href')??'';return safeHref(href)?`[${content}](${href})`:content;}
-    return ['DIV','P','LI'].includes(node.tagName)?content+'\n':content;
+    if(element.tagName==='STRONG'||element.tagName==='B')return `**${content}**`;
+    if(element.tagName==='EM'||element.tagName==='I')return `_${content}_`;
+    if(element.tagName==='A'){const href=element.getAttribute('href')??'';return safeHref(href)?`[${content}](${href})`:content;}
+    return ['DIV','P','LI'].includes(element.tagName)?content+'\n':content;
   }).join('');
 }
 
@@ -74,6 +75,7 @@ export function optionalFieldsFor(object:CmsObject,path:string,contentKind:strin
  if(kind==='figure')Object.assign(fields,{caption:'',alt:'',focalPoint:{x:50,y:50},size:'full'});
  if(kind==='callout'||kind==='panel')fields.title='Section heading';
  if(kind==='tiles')fields.columns=3;
+ if(kind==='panel')fields.columns=1;
  if(kind==='sermon-cards')Object.assign(fields,{text:'',limit:3,order:'DESC',sermonIds:[]});
  if(kind==='events-calendar')Object.assign(fields,{upcomingHeading:'Coming up',regularHeading:'Regular gatherings',pastHeading:'Past events',subscribeLabel:'Subscribe to calendar',days:120,limit:12,showUpcoming:true,showRegular:true,showPast:true});
  if(kind==='blog-list')Object.assign(fields,{heading:'From the church',limit:12,order:'DESC'});

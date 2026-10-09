@@ -625,3 +625,32 @@ Preserve Astra/Claude appearance, URLs/SEO, current sermon workflows and gates,
 Related themes human evaluation, other workers, secrets and private artifacts.
 Production/WordPress, traffic/DNS, provider/paid-service and force-push protections
 are unchanged. See modular-cms-plan.md for coverage and verification.
+
+## 14. D-180 — visual page editor delivery
+
+Samuel's 9 October visual-editor brief explicitly authorizes frontend/backend/API,
+necessary additive model/schema changes, narrow repository-instruction changes,
+isolated codex/visual-page-editor commits, normal GitHub delivery and scoped
+configured staging delivery. Extend the existing CMS and real website renderers;
+preserve all prior content, revisions, uploads, identities and sermon safeguards.
+The ordinary visual-editing workflow may save/publish/restore CMS content on the
+existing guarded local test database and existing protected staging CMS only.
+
+Reuse D-179's exact local PostgreSQL16 loopback5432 target, ALLOW_LOCAL_DB_WRITE=1,
+and uniquely guarded disposable integration-test runner. Existing staged CMS
+roles, secrets, persistent uploads, networks, listeners and denial rules remain
+unchanged. Upgrade through frozen recovery, source/runtime scans, no-port canaries,
+readiness checks and an exercised app-only rollback preserving CMS history.
+Do not reinitialize, rotate secrets, recreate roles or overwrite newer content
+merely to deploy the editor. No new sermon processing or Related themes release.
+
+A bounded, session-bound ephemeral rendering cache may serve authenticated editor
+frames from validated CMS drafts through the same server renderers. It is not
+persistent content storage. Exact Origin/CSRF, size/TTL/count bounds, private/no-store
+headers and same-origin-only framing are required; public output has no editing
+authority or draft visibility. Production publication requires a genuinely
+configured production application, guarded storage and authenticated administrator;
+local/staging identities must never represent that capability as connected.
+No production WordPress/MariaDB mutation, traffic/DNS change, provider activity
+or production deployment is granted by this local/staging completion boundary.
+See visual-page-editor-plan.md.

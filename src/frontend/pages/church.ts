@@ -5,6 +5,7 @@
  * page's blocks come from the content registry, its images from the media
  * registry, and its dates from the events schedule.
  */
+import {editAttributes,editField,fieldPath,type CmsRenderMetadata} from "../editing";
 import type { SermonSummary } from "../../domain/sermon";
 import type { PublicSermonFilterOptions } from "../../server/repositories/sermon-repository";
 import { firstParagraph, hasVideo, picture, renderBlock, renderBlocks, type BlockEnvironment } from "../components/blocks";
@@ -63,15 +64,15 @@ function related(page: SitePage, context: FrontendRenderContext): Html {
 
 function pageHead(page: SitePage, context: FrontendRenderContext, lede?: Html): Html {
   const heading = page.heading ?? page.title;
-  return html`<header class="page__head${page.hero && page.hero.enabled!==false ? " page__head--aside" : ""}">
+  return html`<header${editAttributes(context,[],"section","Page introduction")} class="page__head${page.hero && page.hero.enabled!==false ? " page__head--aside" : ""}">
     <div class="page__head-text">
       ${trail(breadcrumbs(page, context), context)}
-      <h1 class="page__title${heading.length > 32 ? " page__title--long" : ""}">${heading}</h1>
-      ${when(page.eyebrow && page.eyebrow !== heading, () => html`<p class="page__category">${page.eyebrow}</p>`)}
-      ${lede ?? when(page.lede, () => paragraph(page.lede!, context, "lede page__lede"))}
+      <h1 class="page__title${heading.length > 32 ? " page__title--long" : ""}"${editAttributes(context,[page.heading!==undefined?"heading":"title"],"text","Page heading")}>${heading}</h1>
+      ${when(page.eyebrow && page.eyebrow !== heading, () => html`<p class="page__category"${editAttributes(context,["eyebrow"],"text","Category label")}>${page.eyebrow}</p>`)}
+      ${lede ?? when(page.lede, () => editField(paragraph(page.lede!, context, "lede page__lede"),context,["lede"],"richtext","Introduction"))}
       ${statusBand(page)}
     </div>
-    ${when(page.hero && page.hero.enabled!==false, () => html`<div class="page__head-picture">${picture(page.hero!.media, { className: "page__head-image", eager: true, context, ...(page.hero!.alt!==undefined?{alt:page.hero!.alt}:{}), ...(page.hero!.focalPoint?{focalPoint:page.hero!.focalPoint}:{}) })}</div>`)}
+    ${when(page.hero && page.hero.enabled!==false, () => html`<div class="page__head-picture">${picture(page.hero!.media, { className: "page__head-image", eager: true, context,editPath:["hero","media"], ...(page.hero!.alt!==undefined?{alt:page.hero!.alt}:{}), ...(page.hero!.focalPoint?{focalPoint:page.hero!.focalPoint}:{}) })}</div>`)}
   </header>`;
 }
 
@@ -147,21 +148,24 @@ function calendarJumps(block:CalendarBlock,today:string,context:FrontendRenderCo
 export function renderEventCalendar(block:CalendarBlock,env:BlockEnvironment):Html{
  const context=env.context,links=siteLinks(context),{upcoming,regular,past}=calendarData(block,env.today,context),ids=calendarIds(block),limit=block.limit??6;
  return html`${when(block.showUpcoming!==false,()=>html`<section class="section" aria-labelledby="${ids.upcoming}">
-   ${sectionHead(ids.upcoming,block.upcomingHeading??"Upcoming",html`<a class="button button--outline" href="${links.path("/events/calendar.ics")}">${block.subscribeLabel??"Subscribe to the calendar"}</a>`)}
+   ${sectionHead(ids.upcoming,block.upcomingHeading??"Upcoming",html`<a class="button button--outline"${editAttributes(context,fieldPath(block,"subscribeLabel"),"text","Calendar button label")} href="${links.path("/events/calendar.ics")}">${block.subscribeLabel??"Subscribe to the calendar"}</a>`,editAttributes(context,fieldPath(block,"upcomingHeading"),"text","Upcoming events heading"))}
    ${upcoming.length?html`<ol class="events" role="list">${upcoming.slice(0,limit).map(occurrence=>occurrenceRow(occurrence,context))}</ol>${when(upcoming.length>limit,()=>html`<details class="events-more"><summary class="events-more__summary">More upcoming dates <span class="events-more__count">(${upcoming.length-limit})</span></summary><ol class="events" start="${limit+1}" role="list">${upcoming.slice(limit).map(occurrence=>occurrenceRow(occurrence,context))}</ol></details>`)}`:sectionNote("No upcoming event is scheduled in the next few weeks.")}
   </section>`)}
-  ${when(regular.length,()=>html`<section class="section" aria-labelledby="${ids.regular}">${sectionHead(ids.regular,block.regularHeading??"Regular gatherings")}<ul class="tiles tiles--3" role="list">${regular.map(event=>gatheringTile(event,context))}</ul></section>`)}
-  ${when(past.length,()=>html`<section class="section" aria-labelledby="${ids.past}">${sectionHead(ids.past,block.pastHeading??"Past events")}<ul class="past-events" role="list">${past.map(event=>html`<li><a href="${links.path(event.path)}">${event.title}</a> <span class="past-events__when">${scheduleLabel(event)}</span></li>`)}</ul></section>`)}`;
+  ${when(regular.length,()=>html`<section class="section" aria-labelledby="${ids.regular}">${sectionHead(ids.regular,block.regularHeading??"Regular gatherings",undefined,editAttributes(context,fieldPath(block,"regularHeading"),"text","Regular gatherings heading"))}<ul class="tiles tiles--3" role="list">${regular.map(event=>gatheringTile(event,context))}</ul></section>`)}
+  ${when(past.length,()=>html`<section class="section" aria-labelledby="${ids.past}">${sectionHead(ids.past,block.pastHeading??"Past events",undefined,editAttributes(context,fieldPath(block,"pastHeading"),"text","Past events heading"))}<ul class="past-events" role="list">${past.map(event=>html`<li><a href="${links.path(event.path)}">${event.title}</a> <span class="past-events__when">${scheduleLabel(event)}</span></li>`)}</ul></section>`)}`;
 }
 export function renderEventsPage(page:SitePage,data:ChurchPageData,context:FrontendRenderContext=publicRenderContext):string{
  const env:BlockEnvironment={context,today:data.today,sermons:data.sermons,...(data.sermonSelections?{sermonSelections:data.sermonSelections}:{})};
- const calendar=page.blocks.find((block):block is CalendarBlock=>block.kind==="events-calendar");
- const body=html`<article class="page page--events">${pageHead(page,context)}${calendar?calendarJumps(calendar,data.today,context):html``}${page.blocks.map(block=>block.kind==="events-calendar"?renderEventCalendar(block,env):html`<div class="page__body">${renderBlock(block,env)}</div>`)}${related(page,context)}</article>`;
+ const calendar=page.blocks.find((block):block is CalendarBlock=>block.kind==="events-calendar"&&(block as CmsRenderMetadata).cmsEnabled!==false);
+ const body=html`<article class="page page--events">${pageHead(page,context)}${calendar?calendarJumps(calendar,data.today,context):html``}${page.blocks.map(block=>block.kind==="events-calendar"?renderBlock(block,env):html`<div class="page__body">${renderBlock(block,env)}</div>`)}${related(page,context)}</article>`;
  return pageShell(shellInput(page,data,body),context);
 }
 
 export function renderEventPage(event: ChurchEvent, data: ChurchPageData, context: FrontendRenderContext = publicRenderContext): string {
   const links = siteLinks(context);
+  const venueEditing=context.visualEditor?.kind==="venue";
+  const venueContext=venueEditing?{...context,visualEditor:{...context.visualEditor!,kind:"venue-fields"}}:context;
+  const venueMark=(key:string,kind:"text"|"link"="text",label="Venue details")=>editAttributes(venueContext,venueEditing?[key]:undefined,kind,label);
   const venue = eventVenue(event, context);
   const upcoming = occurrencesBetween(event, data.today, `${Number(data.today.slice(0, 4)) + 1}${data.today.slice(4)}`, 6);
   const ministry = event.page ? availablePages(context).find(page=>page.id===event.page) : null;
@@ -170,11 +174,11 @@ export function renderEventPage(event: ChurchEvent, data: ChurchPageData, contex
     <header class="page__head${event.media ? " page__head--aside" : ""}">
       <div class="page__head-text">
         ${trail([{ href: "/", label: "Home" }, ...(eventsIndex?[{ href: eventsIndex.path, label: eventsIndex.title }]:[])], context)}
-        <h1 class="page__title${event.title.length > 32 ? " page__title--long" : ""}">${event.title}</h1>
+        <h1 class="page__title${event.title.length > 32 ? " page__title--long" : ""}"${editAttributes(context,["title"],"text","Event title")}>${event.title}</h1>
         <p class="page__category">${isRecurring(event) ? "Regular gathering" : "Event"}</p>
-        <p class="lede page__lede">${scheduleLabel(event)}</p>
+        <p class="lede page__lede"${editAttributes(context,["schedule"],"section","Event schedule")}>${scheduleLabel(event)}</p>
       </div>
-      ${when(event.media, () => html`<div class="page__head-picture">${picture(event.media!, { className: "page__head-image", eager: true, context })}</div>`)}
+      ${when(event.media, () => html`<div class="page__head-picture">${picture(event.media!, { className: "page__head-image", eager: true, context,editPath:["media"],...(event.mediaAlt!==undefined?{alt:event.mediaAlt}:{}),...(event.mediaFocalPoint?{focalPoint:event.mediaFocalPoint}:{}) })}</div>`)}
     </header>
     <div class="page__body">
       <div class="event-detail">
@@ -184,14 +188,14 @@ export function renderEventPage(event: ChurchEvent, data: ChurchPageData, contex
             ? html`<ul class="page__list" role="list">${upcoming.map((occurrence) => html`<li><time datetime="${occurrence.date}T${occurrence.start}">${formatLongDate(occurrence.date)}</time>, ${formatTimeRange(occurrence.start, occurrence.end)}</li>`)}</ul>`
             : html`<p>${event.schedule.kind === "single" ? `This event took place on ${formatLongDate(event.schedule.date)}, ${formatTimeRange(event.start, event.end)}.` : "No upcoming date is scheduled."}</p>`}
         </section>
-        <section class="event-detail__venue" aria-labelledby="venue-heading">
+        <section class="event-detail__venue" aria-labelledby="venue-heading"${editAttributes(context,["venue"],"section","Event venue")}>
           <h2 id="venue-heading" class="page__h2">Where</h2>
-          <address class="contact-panel__address"><strong>${venue.name}</strong><span>${venue.address}</span><span>${venue.locality}</span>${when(venue.phone, () => html`<span><a href="tel:+61${venue.phone!.replace(/\D/gu, "").replace(/^0/u, "")}">${venue.phone}</a></span>`)}</address>
-          ${when(venue.mapHref, () => html`<p><a class="button button--outline" href="${venue.mapHref}" rel="noopener">Open in Google Maps<span class="sr-only"> (external site)</span></a></p>`)}
-          ${when(venue.href, () => html`<p><a href="${venue.href}" rel="noopener">${venue.name} website<span class="sr-only"> (external site)</span></a></p>`)}
+          <address class="contact-panel__address"><strong${venueMark("name","text","Venue name")}>${venue.name}</strong><span${venueMark("address","text","Venue address")}>${venue.address}</span><span${venueMark("locality","text","Venue locality")}>${venue.locality}</span>${when(venue.phone, () => html`<span><a href="tel:+61${venue.phone!.replace(/\D/gu, "").replace(/^0/u, "")}"${venueMark("phone","text","Venue telephone")}>${venue.phone}</a></span>`)}</address>
+          ${when(venue.mapHref, () => html`<p><a class="button button--outline"${venueMark("mapHref","link","Map destination")} href="${venue.mapHref}" rel="noopener">Open in Google Maps<span class="sr-only"> (external site)</span></a></p>`)}
+          ${when(venue.href, () => html`<p><a${venueMark("href","link","Venue website")} href="${venue.href}" rel="noopener">${venue.name} website<span class="sr-only"> (external site)</span></a></p>`)}
         </section>
       </div>
-      ${event.description.map((text) => paragraph(text, context))}
+      ${event.description.map((text,index) => editField(paragraph(text, context),context,["description",index],"richtext","Event description"))}
       ${when(ministry && pageAvailable(ministry, context), () => html`<p class="event-detail__ministry"><a class="button" href="${links.path(ministry!.path)}">${ministry!.title}</a></p>`)}
       <p>${when(eventsIndex,()=>html`<a href="${links.path(eventsIndex!.path)}">All events</a> · `)}<a href="${links.path("/events/calendar.ics")}">Subscribe to the calendar</a></p>
     </div>
@@ -268,11 +272,11 @@ function postCard(post: BlogPost, context: FrontendRenderContext): Html {
 
 export function renderBlogListing(block:Extract<Block,{kind:"blog-list"}>,context:FrontendRenderContext):Html{
  const posts=[...postsFor(context)].sort((a,b)=>block.order==="ASC"?a.date.localeCompare(b.date):b.date.localeCompare(a.date)).slice(0,block.limit??100);
- return html`${when(block.heading,()=>html`<h2 class="page__h2">${block.heading}</h2>`)}<ul class="tiles tiles--3" role="list">${posts.map(post=>postCard(post,context))}</ul>`;
+ return html`${when(block.heading,()=>html`<h2 class="page__h2"${editAttributes(context,fieldPath(block,"heading"),"text","Blog heading")}>${block.heading}</h2>`)}<ul class="tiles tiles--3" role="list">${posts.map(post=>postCard(post,context))}</ul>`;
 }
 export function renderBlogIndex(page:SitePage,data:ChurchPageData,context:FrontendRenderContext=publicRenderContext):string{
  const env:BlockEnvironment={context,today:data.today,sermons:data.sermons,...(data.sermonSelections?{sermonSelections:data.sermonSelections}:{})};
- const body=html`<article class="page page--blog">${pageHead(page,context,html`<p class="lede page__lede">${page.description}</p>`)}<div class="page__body">${renderBlocks(page.blocks,env)}</div>${related(page,context)}</article>`;
+ const body=html`<article class="page page--blog">${pageHead(page,context,html`<p class="lede page__lede"${editAttributes(context,["description"],"richtext","Introduction")}>${page.description}</p>`)}<div class="page__body">${renderBlocks(page.blocks,env)}</div>${related(page,context)}</article>`;
  return pageShell(shellInput(page,data,body),context);
 }
 
@@ -283,10 +287,10 @@ export function renderBlogPost(post: BlogPost, data: ChurchPageData, context: Fr
     <header class="page__head${post.media ? " page__head--aside" : ""}">
       <div class="page__head-text">
         ${trail([{ href: "/", label: "Home" }, ...(blogs?[{ href: blogs.path, label: blogs.title }]:[])], context)}
-        <h1 class="page__title${post.title.length > 32 ? " page__title--long" : ""}">${post.title}</h1>
-        <p class="page__category">${timeElement(post.date)}</p>
+        <h1 class="page__title${post.title.length > 32 ? " page__title--long" : ""}"${editAttributes(context,["title"],"text","Post title")}>${post.title}</h1>
+        <p class="page__category"${editAttributes(context,["date"],"text","Post date")}>${timeElement(post.date)}</p>
       </div>
-      ${when(post.media, () => html`<div class="page__head-picture">${picture(post.media!, { className: "page__head-image", eager: true, context })}</div>`)}
+      ${when(post.media, () => html`<div class="page__head-picture">${picture(post.media!, { className: "page__head-image", eager: true, context,editPath:["media"],...(post.mediaAlt!==undefined?{alt:post.mediaAlt}:{}),...(post.mediaFocalPoint?{focalPoint:post.mediaFocalPoint}:{}) })}</div>`)}
     </header>
     <div class="page__body">${renderBlocks(post.blocks, env)}</div>
     ${when(blogs,()=>html`<p class="page__back"><a href="${siteLinks(context).path(blogs!.path)}">All blog posts</a></p>`)}
@@ -312,7 +316,7 @@ export function renderSitemapListing(context:FrontendRenderContext):Html{
 }
 export function renderSitemapPage(page:SitePage,data:ChurchPageData,context:FrontendRenderContext=publicRenderContext):string{
  const env:BlockEnvironment={context,today:data.today,sermons:data.sermons,...(data.sermonSelections?{sermonSelections:data.sermonSelections}:{})};
- const body=html`<article class="page page--sitemap">${pageHead(page,context,html`<p class="lede page__lede">${page.description}</p>`)}<div class="page__body">${renderBlocks(page.blocks,env)}</div></article>`;
+ const body=html`<article class="page page--sitemap">${pageHead(page,context,html`<p class="lede page__lede"${editAttributes(context,["description"],"richtext","Introduction")}>${page.description}</p>`)}<div class="page__body">${renderBlocks(page.blocks,env)}</div></article>`;
  return pageShell(shellInput(page,data,body),context);
 }
 

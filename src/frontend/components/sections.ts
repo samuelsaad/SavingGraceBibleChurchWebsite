@@ -6,8 +6,8 @@ import type { PublicSermonListQuery } from "../../api/contracts/public-sermons";
 import { html, when, type Html, type Renderable } from "../html";
 import { archiveTarget, paginationUrl, type ArchiveTarget, type FrontendRenderContext } from "../routes";
 
-export function sectionHead(id: string, heading: string, aside?: Renderable): Html {
-  return html`<div class="section__head"><h2 id="${id}" class="section__title">${heading}</h2>${when(aside, () => html`<div class="section__aside">${aside}</div>`)}</div>`;
+export function sectionHead(id: string, heading: string, aside?: Renderable, headingAttributes:Html=html``): Html {
+  return html`<div class="section__head"><h2 id="${id}" class="section__title"${headingAttributes}>${heading}</h2>${when(aside, () => html`<div class="section__aside">${aside}</div>`)}</div>`;
 }
 
 /** A calm one-paragraph state for an empty section. */

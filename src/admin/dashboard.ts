@@ -1,4 +1,4 @@
-import { renderCms } from './cms/editor';
+import { renderCms, disposeVisualEditor } from './cms/editor';
 import {
   allowedDashboardActions,
   buildControlledMediaInputs,
@@ -2051,6 +2051,7 @@ async function renderRoute(): Promise<void> {
   main.innerHTML = '<div class="loading-card" role="status">Loading local administration…</div>';
   try {
     const path = location.pathname.replace(/\/$/, "") || "/admin";
+    disposeVisualEditor();
     main.classList.remove("cms-workspace");
     if (path.startsWith("/admin/cms")) await renderCms({ main, announce, onDirty: value => { dirty = value; }, navigate });
     else if (path === "/admin") await renderDashboard();

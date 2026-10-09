@@ -1097,3 +1097,13 @@ sermon gates, URLs, SEO, other workers and private artifacts. See AGENTS.md sect
 13 and modular-cms-plan.md for protected staging sessions, additive schema,
 persistent assets, compatibility bridge and history-preserving rollback gates.
 No production traffic/DNS or content-provider activity is authorized.
+
+## D-180 — visual website editing (9 October 2026)
+
+Samuel requests direct selection/editing of the actual rendered website as the
+default CMS page experience, retaining the existing website design and CMS
+persistence/authentication/publishing boundaries. The task authorizes the
+isolated visual-editor branch, necessary narrow implementation/governance changes,
+normal GitHub push and existing staging delivery. Production connection must be
+reported truthfully; missing production runtime/auth configuration does not block
+complete local/staging editor delivery. See visual-page-editor-plan.md.

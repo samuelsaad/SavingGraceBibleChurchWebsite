@@ -20,6 +20,8 @@ export interface Tile {
   /** Root-relative destination; null renders the tile without a link (its destination is not published). */
   href: string | null;
   media?: string;
+  mediaAlt?:string;
+  mediaFocalPoint?:{x:number;y:number};
   eyebrow?: string;
   linkLabel?: string;
 }
@@ -28,6 +30,8 @@ export interface Person {
   name: string;
   role: string;
   media?: string;
+  mediaAlt?:string;
+  mediaFocalPoint?:{x:number;y:number};
   email?: string;
   text: Markup[];
 }
@@ -64,7 +68,7 @@ export type Block =
   | { kind: "quote"; text: Markup; cite?: string }
   | { kind: "figure"; media: string; caption?: Markup; size?: "full" | "inset" | "portrait"; alt?:string; focalPoint?:{x:number;y:number} }
   | { kind: "callout"; title?: string; text: Markup }
-  | { kind: "panel"; title?: string; blocks: readonly Block[] }
+  | { kind: "panel"; title?: string; columns?:1|2|3; blocks: readonly Block[] }
   | { kind: "tiles"; items: Tile[]; columns?: 2 | 3 | 4 }
   | { kind: "people"; items: Person[] }
   | { kind: "timeline"; items: TimelineItem[] }
@@ -76,7 +80,7 @@ export type Block =
   | { kind: "index"; items: IndexItem[] }
   | { kind: "sermon-cards"; heading: string; text?: Markup; linkLabel: string; limit?:number; order?:"ASC"|"DESC"; sermonIds?:string[] }
   | { kind: "external-plate"; title: string; text: Markup; href: string; label: string }
-  | { kind: "book"; media: string; text: Markup }
+  | { kind: "book"; media: string; mediaAlt?:string;mediaFocalPoint?:{x:number;y:number}; text: Markup }
   | {
     kind: "contact-panel";
     name: string;
@@ -142,6 +146,8 @@ export interface BlogPost {
   date: string;
   description: string;
   media?: string;
+  mediaAlt?:string;
+  mediaFocalPoint?:{x:number;y:number};
   source: PageSource;
   blocks: readonly Block[];
 }
