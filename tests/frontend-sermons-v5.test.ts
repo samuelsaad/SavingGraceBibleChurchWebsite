@@ -24,6 +24,19 @@ const input = {
 };
 
 describe("SermonsV5 presentation", () => {
+  it("retains only exact observed single-filter archive canonicals, including observed pagination", () => {
+    const context={...publicRenderContext,seo:{canonicalOrigin:'https://www.savinggrace.org.au',indexable:true,indexableArchivePaths:['/sermons/?sermon_book=romans','/sermons/page/2/?sermon_book=romans']}};
+    const filtered={...input,query:publicSermonListQuerySchema.parse({book:'romans'}),hasQueryParameters:true,requestQuery:'sermon_book=romans'};
+    const page=renderSermonsV5Page(filtered,context,{canonical:true});
+    expect(page).toContain('name="robots" content="index, follow"');expect(page).toContain('rel="canonical" href="https://www.savinggrace.org.au/sermons/?sermon_book=romans"');
+    const second=renderSermonsV5Page({...filtered,query:{...filtered.query,page:2}},context,{canonical:true});
+    expect(second).toContain('rel="canonical" href="https://www.savinggrace.org.au/sermons/page/2/?sermon_book=romans"');
+    for(const requestQuery of ['sermon_book=romans&utm_source=fixture','sermon_book=romans&sermon_book=romans','s=romans','sermon_book=genesis']){
+      const result=renderSermonsV5Page({...filtered,requestQuery},context,{canonical:true});
+      expect(result).toContain('name="robots" content="noindex, follow"');expect(result).toContain('rel="canonical" href="https://www.savinggrace.org.au/sermons/"');
+    }
+    expect(renderSermonsV5Page(filtered,{...context,seo:{...context.seo,indexable:false}},{canonical:true})).not.toContain('rel="canonical"');
+  });
   it("places progressive More sermons and numbered links before the directories on discovery", () => {
     const page = renderSermonsV5Page(input, previewRenderContext);
     expect(page).toContain('data-v5-more href="/frontend-preview/sermons-v5/page/2/#v5-results"');
@@ -109,7 +122,7 @@ describe("SermonsV5 presentation", () => {
     expect(filtered).not.toContain('id="v5-latest-heading"');
     expect(filtered).not.toContain('class="journal__entry journal__entry--featured');
   });
-  it("renders the complete description once, safely escaped, with a progressive toggle and inert icons", () => {
+  it("renders the complete description once, safely escaped, with a progressive toggle and accessible media links", () => {
     const record = {...sermon, summary: 'Synthetic first paragraph.\n\nLast paragraph with <script>unsafe fixture</script>.', transcript: {bodyText: "Private transcript fixture must not appear in V5."}};
     const page = renderSermonsV5Page({...input, sermons: [record]});
     expect(page).toContain('class="journal__description" id="description-00000000-0000-4000-8000-000000000051"');
@@ -121,7 +134,8 @@ describe("SermonsV5 presentation", () => {
     expect(page).not.toContain('Private transcript fixture');
     expect(page).not.toContain('class="journal__reading"');
     expect(page).not.toContain('class="journal__transcript"');
-    expect(page).toContain('aria-label="Media shortcuts, not yet active"');
+    expect(page).not.toContain("not yet active");
+    expect(page).not.toContain("Not yet active");
     for (const type of ["youtube", "audio", "text"]) expect(page).toContain(`class="journal__format journal__format--${type}"`);
     expect(page).not.toContain('<iframe');
     expect(page).toContain('class="journal__rail"');
@@ -129,6 +143,40 @@ describe("SermonsV5 presentation", () => {
     const absent = renderSermonsV5Page({...input, sermons: [{...sermon, summary: null}]});
     expect(absent).not.toContain('class="journal__toggle"');
     expect(absent).not.toContain('Transcript unavailable');
+  });
+  it.each([
+    ["public discovery", publicRenderContext, {}],
+    ["protected discovery", previewRenderContext, {}],
+    ["filtered results", publicRenderContext, {speaker: "example-speaker"}],
+    ["expanded recent", publicRenderContext, {view: "recent"}],
+    ["protected continuation", previewRenderContext, {page: 2}]
+  ])("keeps every shortcut bound to its own sermon in %s", (_label, context, query) => {
+    const records: SermonSummary[] = [sermon, {...sermon,
+      id: "00000000-0000-4000-8000-000000000052", slug: "another-anonymous-sermon", title: "Another anonymous example",
+      primaryMedia: {provider: "sermonaudio", mediaType: "audio", externalId: "1111111111111",
+        canonicalUrl: "https://www.sermonaudio.com/sermons/1111111111111", title: "Synthetic audio"}
+    }];
+    const page = renderSermonsV5Page({...input, sermons: records, query: publicSermonListQuerySchema.parse(query)}, context);
+    const entries = Array.from(page.matchAll(/<article\b[^>]*data-sermon-id="([^"]+)"[^>]*>([\s\S]*?)<\/article>/gu));
+    expect(entries).toHaveLength(2);
+    const fragments = {audio: "play-audio", video: "play-video", transcript: "transcript"};
+    for (const [, id, entry] of entries) {
+      const record = records.find(item => item.id === id)!;
+      const base = context.basePath + "/sermons/" + record.slug + "/";
+      const shortcuts = Array.from(entry!.matchAll(/<a\b[^>]*data-sermon-action="([^"]+)"[^>]*>/gu));
+      expect(shortcuts).toHaveLength(3);
+      expect(shortcuts.map(([, action]) => action).sort()).toEqual(["audio", "transcript", "video"]);
+      for (const [anchor, action] of shortcuts) {
+        expect(anchor).toContain('href="' + base + '#' + fragments[action as keyof typeof fragments] + '"');
+        expect(anchor).toMatch(/aria-label="[^"]+"/u);
+        expect(anchor).toContain(record.title);
+        expect(anchor).not.toMatch(/\son[a-z]+=/iu);
+      }
+      expect(entry).toContain('href="' + base + '"');
+      expect(entry).not.toContain("https://");
+    }
+    expect(page).not.toContain("<iframe");
+    expect(contentSecurityPolicy(page)).not.toContain("frame-src");
   });
   it("keeps real tables, exact taxonomy links and only verified speaker portraits", () => {
     const page = renderSermonsV5Page({...input, options: {...input.options, speakers: [{name: "Wesam Saad", slug: "wesam-saad", sermonCount: 18}, {name: "Example Speaker", slug: "example-speaker"}]}}, previewRenderContext);

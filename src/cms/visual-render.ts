@@ -1,3 +1,5 @@
+import {preserveSourceMetadata} from '../seo/source-metadata';
+import type {SourcePublicPage} from '../seo/source-public-model';
 /** Transient server-rendered canvases. Tokens are session-bound transport only;
  * drafts, publication and revision history remain in the existing CMS repository. */
 import {randomBytes} from "node:crypto";
@@ -26,13 +28,15 @@ type Frame={sessionKey:string;html:string;expires:number;size:number};
 export interface CmsVisualRenderOptions{
  repository:Pick<CmsRepository,"get"|"getPublishedSnapshot">;sermons:PublicSermonRepository;
  session:Pick<CmsSessionProvider,"authenticate"|"authorizeMutation"|"sessionKey">;
+ sourcePages?:()=>Promise<readonly SourcePublicPage[]>;
  assets:()=>Promise<readonly FrontendAsset[]>;environment:"local"|"staging";now?:()=>number;
 }
 function overlay(snapshot:CmsSnapshot,entity:CmsEntity,content:CmsDocument):CmsSnapshot{
  const result=structuredClone(snapshot),path=pathForContent(entity.kind,content);
  if(path&&result.routes.some(route=>route.path===path&&route.entityId!==entity.id))throw new ApplicationError(409,"path_in_use","Another page owns this address");
+ const initialMetadata=result.entities.find(item=>item.id===entity.id)?.initialMetadata;
  result.entities=result.entities.filter(item=>item.id!==entity.id);
- result.entities.push({id:entity.id,key:entity.key,kind:entity.kind,revisionId:entity.draftRevisionId,content,payload:content});
+ result.entities.push({...(initialMetadata?{initialMetadata}:{}),id:entity.id,key:entity.key,kind:entity.kind,revisionId:entity.draftRevisionId,content,payload:content});
  result.documents[entity.key]=content;
  result.routes=result.routes.filter(route=>route.entityId!==entity.id);
  if(path)result.routes.push({path,entityId:entity.id,status:200,targetPath:null});
@@ -100,7 +104,9 @@ export function createCmsVisualRenderHandler(options:CmsVisualRenderOptions){
    if(entity.rowVersion!==input.expectedRowVersion)return json({error:{code:"version_conflict",message:"This content changed in another session. Reload before continuing.",currentRowVersion:entity.rowVersion}},409);
    const content=validateCmsContent(entity.kind,input.content);
    const snapshot=overlay(await options.repository.getPublishedSnapshot(),entity,content),path=canvasPath(entity,content,snapshot,input.path);
-   const context:FrontendRenderContext={mode:"restricted",basePath:"",siteContent:createCmsFrontendSnapshot(snapshot,await options.assets(),input.mode==="edit"),...(input.mode==="edit"?{visualEditor:{entityId:entity.id,kind:entity.kind}}:{})};
+   const selectedContent=createCmsFrontendSnapshot(snapshot,await options.assets(),input.mode==="edit");
+   const projectedContent=options.sourcePages?preserveSourceMetadata(selectedContent,await options.sourcePages()):selectedContent;
+   const context:FrontendRenderContext={mode:"restricted",basePath:"",siteContent:projectedContent,...(input.mode==="edit"?{visualEditor:{entityId:entity.id,kind:entity.kind}}:{})};
    const response=await createChurchSiteHandler(createCmsRenderSermonRepository(options.sermons),context)(new Request(url.origin+path));
    if(!response||response.status!==200||!response.headers.get("content-type")?.startsWith("text/html"))return json({error:{code:"preview_unavailable",message:"This content does not currently have a website preview."}},422);
    const html=await response.text(),size=Buffer.byteLength(html);

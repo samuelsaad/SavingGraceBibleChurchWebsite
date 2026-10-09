@@ -23,7 +23,8 @@ export type ArchivePageLoad =
 export async function loadArchivePage(
   repository: PublicSermonRepository,
   searchParams: URLSearchParams,
-  pathPage: number | null
+  pathPage: number | null,
+  settings: { includeDirectoryOptions?: boolean } = {}
 ): Promise<ArchivePageLoad> {
   const translated = translateLegacySermonQuery(searchParams);
   const query = publicSermonListQuerySchema.parse({
@@ -34,11 +35,17 @@ export async function loadArchivePage(
   const discoveryRequested = query.page === 1
     && query.view !== "recent"
     && !hasActiveSermonFilters(query);
-  const [result, options, topicalSermons, seriesRepresentatives] = await Promise.all([
+  // V5 directory links open a fresh taxonomy archive, so their counts must not
+  // inherit the finder's active filters. Reuse the facet result when unfiltered.
+  const directoryRequested = settings.includeDirectoryOptions === true;
+  const [result, options, topicalSermons, seriesRepresentatives, directoryOptions] = await Promise.all([
     repository.listPublished(query),
     repository.listPublishedFilterOptions(query),
     discoveryRequested ? repository.listPublishedTopicalSermons() : Promise.resolve([]),
-    discoveryRequested ? repository.listPublishedSeriesRepresentatives() : Promise.resolve([])
+    discoveryRequested ? repository.listPublishedSeriesRepresentatives() : Promise.resolve([]),
+    directoryRequested && hasActiveSermonFilters(query)
+      ? repository.listPublishedFilterOptions()
+      : Promise.resolve(null)
   ]);
   const totalPages = Math.ceil(result.totalItems / query.pageSize);
   if (query.page > 1 && (totalPages === 0 || query.page > totalPages)) return { kind: "not-found" };
@@ -50,9 +57,11 @@ export async function loadArchivePage(
       totalItems: result.totalItems,
       query,
       options,
+      ...(directoryRequested ? { directoryOptions: directoryOptions ?? options } : {}),
       topicalSermons,
       seriesRepresentatives,
-      hasQueryParameters: searchParams.size > 0
+      hasQueryParameters: searchParams.size > 0,
+      requestQuery: searchParams.toString()
     }
   };
 }

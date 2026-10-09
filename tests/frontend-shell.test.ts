@@ -31,11 +31,11 @@ describe("shared frontend shell", () => {
   it("gives every page one h1, a skip link, landmarks, accessible navigation and the church name as text", () => {
     for (const [name, html] of Object.entries(pages)) {
       expect(html.match(/<h1[\s>]/gu), `${name} h1 count`).toHaveLength(1);
-      expect(html, name).toContain('<a class="skip-link" href="#main-content">Skip to main content</a>');
+      expect(html, name).toContain('<a lang="en-AU" class="skip-link" href="#main-content">Skip to main content</a>');
       expect(html, name).toContain('<main id="main-content" class="site-main">');
       const isPreview = html.includes('class="preview-band"');
       expect(html, name).toContain('<nav class="masthead__nav" id="primary-navigation" aria-label="Primary"><ul class="masthead__links">');
-      expect(html, name).toContain(isPreview ? '<details class="masthead__menu" data-menu data-sermon-menu>' : '<li class="masthead__links-sermons"><a href="/sermons-v4/"');
+      expect(html, name).toContain(isPreview ? '<details class="masthead__menu" data-menu data-sermon-menu>' : '<li class="masthead__links-sermons"><a href="/sermons/"');
       expect(html, name).toContain('<details class="masthead__menu" data-menu>');
       expect(html, name).not.toContain('data-sermon-menu open');
       expect(html, name).not.toContain('data-menu open');
@@ -73,9 +73,9 @@ describe("shared frontend shell", () => {
 
   it("adds the canon enhancement only on shelf pages and keeps preview pages free of indexable metadata", () => {
     expect(pages.home).toContain('<script data-enhancement="canon">');
-    expect(pages.home.match(/<script /gu)).toHaveLength(3);
-    expect(pages.boundary.match(/<script /gu)).toHaveLength(2);
-    expect(pages.churchHome.match(/<script /gu)).toHaveLength(2);
+    expect(pages.home.match(/<script data-enhancement=/gu)).toHaveLength(3);
+    expect(pages.boundary.match(/<script data-enhancement=/gu)).toHaveLength(2);
+    expect(pages.churchHome.match(/<script data-enhancement=/gu)).toHaveLength(2);
     expect(pages.churchHome).not.toContain('<script data-enhancement="canon">');
     expect(pages.previewHome).not.toContain('rel="canonical"');
     expect(pages.previewHome).not.toContain('property="og:');
@@ -98,7 +98,9 @@ describe("shared frontend shell", () => {
     for (const [name, source] of Object.entries(enhancementScripts)) {
       expect(() => new Function(source), `${name} parses`).not.toThrow();
       expect(source, `${name} is readable`).toContain("\n");
-      expect(source).not.toMatch(/innerHTML|eval\(|XMLHttpRequest|document\.write|autoplay/u);
+      expect(source).not.toMatch(/innerHTML|eval\(|XMLHttpRequest|document\.write/u);
+      // Only the shared media loaders may support an explicit playback request.
+      if (name !== "sermon" && name !== "church") expect(source).not.toContain("autoplay");
       if (name !== "journalPagination") expect(source).not.toContain("fetch(");
     }
     for (const html of Object.values(pages)) {

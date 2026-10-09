@@ -1,3 +1,5 @@
+import {preserveSourceMetadata} from '../seo/source-metadata';
+import type {SourcePublicPage} from '../seo/source-public-model';
 import {publicSermonListQuerySchema} from "../api/contracts/public-sermons";
 import type {PublicSermonRepository} from "../server/repositories/sermon-repository";
 import type {CmsRepository} from "./repository";
@@ -18,6 +20,7 @@ const headers={"Cache-Control":"private, no-store","X-Robots-Tag":"noindex, nofo
 export interface CmsRuntimeOptions{
  repository:CmsRepository;sermons:PublicSermonRepository;assets:CmsDiskAssets;assetStore:CmsAssetStore;
  session:CmsSessionProvider;dashboardDirectory:string;environment:"local"|"staging";release:string;
+ sourcePages?:()=>Promise<readonly SourcePublicPage[]>;
  ready:()=>Promise<void>;existingAdminHandler?:(request:Request)=>Promise<Response>;evaluation?:(request:Request)=>Promise<Response|null>;
 }
 export function createCmsRuntimeHandler(options:CmsRuntimeOptions){
@@ -25,12 +28,12 @@ export function createCmsRuntimeHandler(options:CmsRuntimeOptions){
  const api=createCmsApiHandler(repository,session,{authorizeMutation:request=>session.authorizeMutation(request)});
  const assets=createCmsAssetHandler(options.assets,session,session,(key,draft)=>repository.canReadAsset(key,draft));
  const dashboard=createCmsDashboardHandler(options.dashboardDirectory,session,options.environment,Boolean(options.existingAdminHandler));
- const visualRender=createCmsVisualRenderHandler({repository,session,sermons:options.sermons,environment:options.environment,assets:async()=>(await options.assetStore.list()).filter(a=>a.type.startsWith("image/")).map(a=>({id:a.id,path:a.url,type:a.type,width:a.width??1,height:a.height??1,alt:a.alt}))});
+ const visualRender=createCmsVisualRenderHandler({repository,session,sermons:options.sermons,environment:options.environment,...(options.sourcePages?{sourcePages:options.sourcePages}:{}),assets:async()=>(await options.assetStore.list()).filter(a=>a.type.startsWith("image/")).map(a=>({id:a.id,path:a.url,type:a.type,width:a.width??1,height:a.height??1,alt:a.alt}))});
  const selections=new Map<string,{entityId:string;revisionId?:string}>();
  const content=async(selection?:{entityId:string;revisionId?:string})=>{
   const snapshot=selection?await repository.getPreviewSnapshot(selection):await repository.getPublishedSnapshot();
   const images=(await options.assetStore.list()).filter(a=>a.type.startsWith("image/")).map(a=>({id:a.id,path:a.url,type:a.type,width:a.width??1,height:a.height??1,alt:a.alt}));
-  return createCmsFrontendSnapshot(snapshot,images);
+  const result=createCmsFrontendSnapshot(snapshot,images);return options.sourcePages?preserveSourceMetadata(result,await options.sourcePages()):result;
  };
  return async(request:Request):Promise<Response>=>{
   const pathname=new URL(request.url).pathname;

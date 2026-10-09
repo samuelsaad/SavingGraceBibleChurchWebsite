@@ -17,6 +17,8 @@ import { contextualPath, sermonsV1Path, sermonsV4Path, sermonsV5Path, type Front
 import type { PublicSermonRepository } from "../repositories/sermon-repository";
 import { loadArchivePage } from "./frontend-archive-loader";
 import { frontendResponse } from "./frontend-response";
+import { archiveRoute, withHead, normalizedLegacyTermSearch } from "./http-routing";
+import { archivePagePath } from "../../frontend/routes";
 
 export type AlternateArchive = "v1" | "v4" | "v5";
 
@@ -32,8 +34,6 @@ export function createAlternateArchiveHandler(
   const privatePreview = context.mode !== "public";
   const robots = { "X-Robots-Tag": privatePreview ? "noindex, nofollow, noarchive" : "noindex, follow" };
   const redirectStatus = context.mode === "preview" || context.mode === "draft-preview" ? 307 : 301;
-  const pageMatcher = new RegExp(`^${root.replaceAll("/", "\\/")}page\\/([0-9]+)\\/$`, "u");
-  const slashless = new RegExp(`^${root.slice(0, -1).replaceAll("/", "\\/")}(?:\\/page\\/[0-9]+)?$`, "u");
 
   function error(status: number, title: string, message: string): Response {
     return frontendResponse(renderFrontendBoundaryPage({ title, message }, context), { status, privatePreview, headers: robots });
@@ -42,14 +42,18 @@ export function createAlternateArchiveHandler(
     return new Response(null, { status: redirectStatus, headers: { ...robots, "Cache-Control": "no-store", Location: location } });
   }
 
-  return async (request: Request): Promise<Response | null> => {
+  return withHead(async (request: Request): Promise<Response | null> => {
     const url = new URL(request.url);
     if (url.pathname !== root.slice(0, -1) && !url.pathname.startsWith(root)) return null;
     if (request.method !== "GET") {
-      return new Response("Method not allowed", { status: 405, headers: { ...robots, "Cache-Control": "no-store", Allow: "GET" } });
+      return new Response("Method not allowed", { status: 405, headers: { ...robots, "Cache-Control": "no-store", Allow: "GET, HEAD" } });
     }
     try {
-      if (slashless.test(url.pathname)) return redirect(`${url.pathname}/${url.search}`);
+      const normalized = archiveRoute(url.pathname, root);
+      if (!normalized) return error(404,"Page not found","That archive page does not exist.");
+      const normalizedSearch=normalizedLegacyTermSearch(url.search);
+      if (context.mode === "public") return redirect(`${archivePagePath(normalized.page)}${normalizedSearch}`);
+      if (url.pathname !== normalized.path || normalizedSearch !== url.search) return redirect(`${normalized.path}${normalizedSearch}`);
       if (presentation === "v1") {
         if (url.pathname !== root) return error(404, "Page not found", "That sermon page does not exist.");
         const [sermons, options] = await Promise.all([
@@ -58,12 +62,10 @@ export function createAlternateArchiveHandler(
         ]);
         return frontendResponse(renderSermonsV1Page({ sermons: sermons.data, options, totalItems: sermons.totalItems }, context), { privatePreview, headers: robots });
       }
-      const match = pageMatcher.exec(url.pathname);
-      if (url.pathname !== root && !match) return error(404, "Page not found", "That archive page does not exist.");
-      const page = match ? Number(match[1]) : null;
+      const page = normalized.page > 1 ? normalized.page : null;
       if (page !== null && (!Number.isSafeInteger(page) || page < 1)) return error(404, "Page not found", "That archive page does not exist.");
       if (page === 1) return redirect(`${root}${url.search}`);
-      const loaded = await loadArchivePage(repository, url.searchParams, page);
+      const loaded = await loadArchivePage(repository, url.searchParams, page, { includeDirectoryOptions: presentation === "v5" });
       if (loaded.kind === "not-found") return error(404, "Page not found", "That archive page does not exist.");
       // Eligible summaries already contain the complete description used by V5.
       const render = presentation === "v4" ? renderSermonsV4Page : renderSermonsV5Page;
@@ -74,17 +76,17 @@ export function createAlternateArchiveHandler(
       }
       return error(500, "Sermons temporarily unavailable", "Please try again later.");
     }
-  };
+  });
 }
 
 /** All alternates, tried in order; null when the request is for none. */
 export function createAlternateArchiveHandlers(repository: PublicSermonRepository, context: FrontendRenderContext) {
   const handlers = (["v1", "v4", "v5"] as const).map((presentation) => createAlternateArchiveHandler(repository, context, presentation));
-  return async (request: Request): Promise<Response | null> => {
+  return withHead(async (request: Request): Promise<Response | null> => {
     for (const handler of handlers) {
       const response = await handler(request);
       if (response) return response;
     }
     return null;
-  };
+  });
 }

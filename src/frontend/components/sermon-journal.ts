@@ -38,11 +38,10 @@ export function sermonJournal(sermons: SermonSummary[], links: SiteLinks, featur
         ${when(sermon.summary, () => html`<div class="journal__description" id="${descriptionId}"${contentAttributes}>${plainTextParagraphs(sermon.summary!)}</div>`)}
         ${when(sermon.series.length, () => html`<p class="journal__series"><span>Series</span> ${sermon.series.map((series, i) => html`${i ? ", " : ""}<a href="${links.taxonomy("series", series.slug)}">${series.name}</a>`)}</p>`)}
         <div class="journal__tools">
-          <div class="journal__formats" aria-label="Media shortcuts, not yet active">
-            <span class="journal__format journal__format--youtube" title="YouTube shortcut — not yet active" aria-label="YouTube shortcut, not yet active">${socialGlyph("youtube")}</span>
-            <span class="journal__format journal__format--audio" title="Sermon audio shortcut — not yet active" aria-label="Sermon audio shortcut, not yet active">${socialGlyph("podcast")}</span>
-            <span class="journal__format journal__format--text" title="Transcript shortcut — not yet active" aria-label="Transcript shortcut, not yet active">${transcriptGlyph}</span>
-            <span class="journal__formats-note">Not yet active</span>
+          <div class="journal__formats" aria-label="Sermon media and transcript">
+            <a class="journal__format journal__format--youtube" href="${href}#play-video" data-sermon-action="video" title="Play on YouTube" aria-label="${`Play YouTube video: ${sermon.title}`}">${socialGlyph("youtube")}</a>
+            <a class="journal__format journal__format--audio" href="${href}#play-audio" data-sermon-action="audio" title="Play on SermonAudio" aria-label="${`Play SermonAudio recording: ${sermon.title}`}">${socialGlyph("podcast")}</a>
+            <a class="journal__format journal__format--text" href="${href}#transcript" data-sermon-action="transcript" title="Open transcript" aria-label="${`Open transcript: ${sermon.title}`}">${transcriptGlyph}</a>
           </div>
           ${when(sermon.summary, () => html`<button class="journal__toggle" type="button" hidden aria-expanded="false" aria-controls="${descriptionId}"><span data-description-label>See more</span><span class="sr-only"> — description of ${sermon.title}</span>${disclosureGlyph}</button>`)}
         </div>

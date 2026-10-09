@@ -13,7 +13,7 @@ const paths = new Set(["deployment/Dockerfile.cms-runtime", "deployment/build-cm
   "deployment/build.mjs", "deployment/compose.yaml", "deployment/acceptance-compose.yaml", "deployment/topical-compose.yaml", "deployment/d160-draft-preview-compose.yaml", "deployment/d160-sync.ts", "deployment/d161-sync-compose.yaml", "deployment/d161-sync.ts", "deployment/restore.py", "deployment/README.md",
   "deployment/savinggrace-staging.socket", "deployment/savinggrace-staging.service",
   "deployment/savinggrace-d160-db.socket", "deployment/savinggrace-d160-db.service", "deployment/d167-protected-sync.ts", "deployment/sermon-durations-sync.ts"]);
-for (const name of ["cms-admin", "cms-maintenance", "server", "database", "draft-preview", "sermonaudio-sync", "completed-sync", "sermonaudio-completion-sync", "sermon-durations-sync", "related-themes-sync", "d160-sync", "d161-sync", "d167-protected-sync"]) {
+for (const name of ["cms-admin", "cms-maintenance", "source-public-sync", "server", "database", "draft-preview", "sermonaudio-sync", "completed-sync", "sermonaudio-completion-sync", "sermon-durations-sync", "related-themes-sync", "d160-sync", "d161-sync", "d167-protected-sync"]) {
   for (const path of JSON.parse(await readFile(`dist-staging/${name}.inputs.json`, "utf8"))) {
     if (path.startsWith("src/")) paths.add(path);
   }

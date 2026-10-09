@@ -138,7 +138,7 @@ describe("live CMS route adaptation",()=>{
   source.routes.push({path:page.path,entityId:"page:about",status:200,targetPath:null});
   const handler=createChurchSiteHandler(repository(),publicRenderContext,{content:async()=>createCmsFrontendSnapshot(source)});
   for(const oldPath of ["/about","/about/"]){const response=await handler(new Request(`http://127.0.0.1${oldPath}?from=old-link`));expect(response!.status).toBe(301);expect(response!.headers.get("location")).toBe("/renamed-about/?from=old-link");}
-  const html=await (await handler(new Request("http://127.0.0.1/renamed-about/")))!.text();expect(html).toMatch(/href="\/about\/"[^>]*>About Us/);
+  const html=await (await handler(new Request("http://127.0.0.1/renamed-about/")))!.text();expect(html).toMatch(/href="\/renamed-about\/"[^>]*>About Us/);
  });
  it("resolves static venue aliases directly to renamed or retired event dispositions",async()=>{
   const source=snapshot(),event=content<CmsEventPayload>(source,"event:sgbc-picnic-rye"),old=event.path;event.path="/events/renamed-picnic/";

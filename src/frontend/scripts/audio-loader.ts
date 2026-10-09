@@ -16,12 +16,12 @@ export const audioLoaderSource = `
       status.setAttribute('role', 'status');
       status.textContent = 'Loading the audio player…';
       var timer = window.setTimeout(function () {
-        status.textContent = 'If the player does not load, use “Listen on SermonAudio” below.';
+        status.textContent = 'The audio player is taking longer to load. Reload the page and try again.';
       }, 12000);
       iframe.addEventListener('load', function () { window.clearTimeout(timer); status.remove(); });
       iframe.addEventListener('error', function () {
         window.clearTimeout(timer);
-        status.textContent = 'The audio player could not load. Use “Listen on SermonAudio” below.';
+        status.textContent = 'The audio player could not load. Reload the page and try again.';
       });
       frame.replaceChildren(status, iframe);
       frame.setAttribute('data-audio-loaded', 'true');

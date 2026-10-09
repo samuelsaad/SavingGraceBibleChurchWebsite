@@ -27,6 +27,7 @@ export function renderFrontendBoundaryPage(
   return pageShell({
     title: input.title,
     canonicalPath: "/sermons/",
+    suppressCanonical: true,
     robots: "noindex, nofollow",
     body: html`<div class="boundary">
       <div>

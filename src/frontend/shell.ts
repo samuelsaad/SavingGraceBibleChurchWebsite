@@ -1,3 +1,5 @@
+import {retainedSourceCopy,sourceHeading} from './source-copy';
+import {pageStructuredData,type PageStructuredData} from './structured-data';
 /**
  * The document shell shared by every server-rendered page and by the static
  * Astro pages: head metadata, the skip link, the preview band, an optional
@@ -13,10 +15,11 @@
 import {editAttributes,cmsEditorStyles,cmsPresentationStyles,hasCmsPresentation,type CmsContentPath} from "./editing";
 import { defaultSiteSettings, siteSettings } from "./content/site-snapshot";
 import { destinationAvailable } from "./content/registry";
-import { inline, resolveHref } from "./content/markup";
+import { inline, plainText, resolveHref } from "./content/markup";
+import type {ContentSeo} from './seo';
 import type { PublicSermonFilterOptions } from "../server/repositories/sermon-repository";
 import { logoAlt, logoHeight, logoPath, logoWidth } from "./assets/logo";
-import { faviconPath, siteImage, touchIconPath } from "./assets/media";
+import { faviconPath, siteImage, siteImages, touchIconPath } from "./assets/media";
 import { searchGlyph, socialGlyph, upGlyph } from "./components/glyphs";
 import { shelfMark } from "./components/marks";
 import { mastheadSearch } from "./components/search";
@@ -24,13 +27,17 @@ import { canonStrip } from "./components/shelf";
 import { homeSections } from "./content/home-content";
 import { activeMenuItem, sitePath, type MenuItem } from "./content/navigation";
 import { attribute, html, raw, type Html, when } from "./html";
-import { canonicalOrigin, sermonsV1Path, sermonsV4Path, sermonsV5Path, siteLinks, type FrontendRenderContext, type FrontendTaxonomyKind, publicRenderContext } from "./routes";
+import { canonicalOriginFor, sermonsV1Path, sermonsV4Path, sermonsV5Path, siteLinks, type FrontendRenderContext, type FrontendTaxonomyKind, publicRenderContext } from "./routes";
 import { enhancementScripts, type EnhancementScriptName } from "./scripts";
 import { siteStyles, type StyleBlockName } from "./styles";
 
 export type RobotsDirective = "index, follow" | "noindex, follow" | "noindex, nofollow";
 
 export interface PageShellInput {
+  sourceMetadata?: PageStructuredData;
+  seo?: ContentSeo;
+  /** Errors and gone URLs are not alternative content canonicals. */
+  suppressCanonical?: boolean;
   /** Page title without the site name suffix. */
   title: string;
   description?: string;
@@ -92,7 +99,7 @@ function sermonsMenu(context: FrontendRenderContext, navigationPath: string, act
   const items = links.hasTaxonomyRoutes ? sections : sections.slice(0, 1);
   const current = activeMenuItem(navigationPath, siteSettings(context).primaryMenu)?.id === "sermons";
   if (!links.hasTaxonomyRoutes) {
-    return html`<a${editAttributes(context,menuPath?[...menuPath,"label"]:undefined,"link","Sermons menu","navigation")} href="${links.sermonsV4}"${attribute("aria-current", current ? "page" : null)}>${menuLabel ?? navigationCopy.sermons}</a>`;
+    return html`<a${editAttributes(context,menuPath?[...menuPath,"label"]:undefined,"link","Sermons menu","navigation")} href="${links.archive}"${attribute("aria-current", current ? "page" : null)}>${menuLabel ?? navigationCopy.sermons}</a>`;
   }
   const v1Active = sitePath(navigationPath) === sermonsV1Path;
   const v4Active = sitePath(navigationPath) === sermonsV4Path;
@@ -145,19 +152,31 @@ function brand(context: FrontendRenderContext, inverse = false): Html {
   return html`<a class="brand" href="${links.home}">${inverse ? footerLogo(context) : churchLogo("brand__logo",context)}<span class="sr-only">, ${navigationCopy.home}</span></a>`;
 }
 
+function documentTitle(input:PageShellInput,context:FrontendRenderContext):string {
+  return input.seo?.title?.trim() || (input.suffixTitle === false ? input.title : `${input.title} — ${siteSettings(context).siteName}`);
+}
 function headMetadata(input: PageShellInput, context: FrontendRenderContext): Html {
-  if (context.mode !== "public") return html``;
-  const canonicalUrl = `${canonicalOrigin}${input.canonicalPath}`;
-  const title = input.suffixTitle === false ? input.title : `${input.title} — ${siteSettings(context).siteName}`;
-  return html`${when(input.description, () => html`<meta name="description" content="${input.description}" />`)}
+  if (context.mode !== "public" || context.seo?.indexable === false || input.suppressCanonical) return html``;
+  const origin=canonicalOriginFor(context),canonicalUrl = `${origin}${input.canonicalPath}`;
+  const title = documentTitle(input,context);
+  const description=input.seo?.description!==undefined?input.seo.description.trim():plainText(input.description??'');
+  const socialTitle=input.seo?.socialTitle?.trim()||title;
+  const socialDescription=input.seo?.socialDescription?.trim()||description;
+  const selected=input.seo?.image;
+  const image=selected?(context.siteContent?.assets[selected]??siteImages.find(asset=>asset.id===selected)):undefined;
+  const imageUrl=image&&image.path.startsWith('/')&&!image.path.startsWith('//')?`${origin}${image.path}`:undefined;
+  const imageAlt=input.seo?.imageAlt?.trim()||image?.alt;
+  return html`${when(description, () => html`<meta name="description" content="${description}" />`)}
     <link rel="canonical" href="${canonicalUrl}" />
-    <meta property="og:type" content="${input.openGraphType ?? "website"}" />
-    <meta property="og:title" content="${title}" />
+    ${pageStructuredData(canonicalUrl,input.title,description,input.sourceMetadata,input.canonicalPath==='/'?{name:siteSettings(context).contactCopy.name,address:[siteSettings(context).contactCopy.addressLine1,siteSettings(context).contactCopy.addressLine2].join(', '),telephone:siteSettings(context).contactCopy.telephone,email:siteSettings(context).contactCopy.emailAddress,image:origin+logoPath,sameAs:siteSettings(context).socialPlatforms.flatMap(item=>item.enabled&&item.href?[item.href]:[])}:undefined)}
+    <meta property="og:type" content="${input.seo?.socialType ?? input.openGraphType ?? "website"}" />
+    <meta property="og:title" content="${socialTitle}" />
     <meta property="og:url" content="${canonicalUrl}" />
-    ${when(input.description, () => html`<meta property="og:description" content="${input.description}" />
-    <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="${title}" />
-    <meta name="twitter:description" content="${input.description}" />`)}`;
+    ${when(socialDescription, () => html`<meta property="og:description" content="${socialDescription}" />`)}
+    <meta name="twitter:card" content="${imageUrl?'summary_large_image':'summary'}" />
+    <meta name="twitter:title" content="${socialTitle}" />
+    ${when(socialDescription, () => html`<meta name="twitter:description" content="${socialDescription}" />`)}
+    ${when(imageUrl,()=>html`<meta property="og:image" content="${imageUrl}" /><meta name="twitter:image" content="${imageUrl}" />${when(imageAlt,()=>html`<meta property="og:image:alt" content="${imageAlt}" /><meta name="twitter:image:alt" content="${imageAlt}" />`)}`)}`;
 }
 
 function footerColumns(input: PageShellInput, context: FrontendRenderContext): Html {
@@ -193,7 +212,19 @@ function footerColumns(input: PageShellInput, context: FrontendRenderContext): H
 
 /** Renders a complete HTML document. */
 export function pageShell(input: PageShellInput, context: FrontendRenderContext = publicRenderContext): string {
-  const {branding,footerVisibility,siteName}=siteSettings(context);
+  const originals=context.siteContent?.sourceContentByPath?.[input.canonicalPath];
+  const primary=originals?.filter(page=>page.kind!=='archive');
+  const original=originals?.find(page=>page.path===input.canonicalPath)??(originals?.length===1?originals[0]:primary?.length===1?primary[0]:undefined);
+  const initial=context.siteContent?.initialMetadataByPath?.[input.canonicalPath];
+  const originalBody=input.body;
+  const headingMatch=/<h1\b[^>]*>([\s\S]*?)<\/h1>/u.exec(originalBody.toString());
+  const headingUnchanged=initial?.seeded&&headingMatch?.[1]===String(initial.heading).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
+  if(original?.hasOriginalHeading&&headingUnchanged&&!input.seo?.replaceSourceContent)input={...input,body:sourceHeading(input.body,original.heading)};
+  if(initial&&(!initial.seeded||input.title!==initial.title)&&!context.siteContent?.cmsExplicitSeoByPath?.[input.canonicalPath]?.title)input={...input,seo:{...input.seo,title:input.suffixTitle===false?input.title:`${input.title} — ${siteSettings(context).siteName}`}};
+  input={...input,seo:{...context.siteContent?.sourceSeoByPath?.[input.canonicalPath],...input.seo},body:retainedSourceCopy(input.body,input.canonicalPath,input.seo?.replaceSourceContent===true,context),...(original?{sourceMetadata:{language:original.language,publishedAt:original.publishedAt,modifiedAt:context.siteContent?.modifiedAtByPath?.[input.canonicalPath]??original.modifiedAt,...(original.structuredData&&!input.seo?.replaceSourceContent?{primary:original.structuredData.primary,breadcrumbs:original.structuredData.breadcrumbs}:{}),...input.sourceMetadata}}:{})};
+  const sourceSeo=context.siteContent?.sourceSeoByPath?.[input.canonicalPath];
+  if(sourceSeo)input={...input,seo:{...sourceSeo,...input.seo}};
+  const {branding,footerVisibility}=siteSettings(context);
   const settings=siteSettings(context);
   const headerAction=settings.headerAction ?? defaultSiteSettings.headerAction!;
   const archiveAbout=settings.archiveAbout ?? defaultSiteSettings.archiveAbout!;
@@ -202,15 +233,17 @@ export function pageShell(input: PageShellInput, context: FrontendRenderContext 
   const previewLabel = context.mode === "draft-preview"
     ? "Protected D-160 draft preview · Awaiting administrator review · Not public or indexable"
     : "Private local frontend preview · Draft content · Not public or indexable";
-  const title = input.suffixTitle === false ? input.title : `${input.title} — ${siteName}`;
+  const title = documentTitle(input,context);
   const scripts = context.visualEditor?[]:[...new Set<EnhancementScriptName>([...(input.scripts ?? []), "navigation", "mobileNavigation"])];
   const document = html`<!doctype html>
-<html lang="en-AU">
+<html lang="${input.sourceMetadata?.language??'en-AU'}">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="robots" content="${context.mode !== "public" ? "noindex, nofollow, noarchive" : input.robots}" />
+    <meta name="robots" content="${context.mode !== "public" || context.seo?.indexable===false ? "noindex, nofollow, noarchive" : input.seo?.noindex ? "noindex, follow" : input.robots}" />
     <meta name="color-scheme" content="light" />
+    <link rel="preload" href="/brand/fonts/bitstream-vera-sans-regular.ttf" as="font" type="font/ttf" crossorigin />
+    <link rel="preload" href="/brand/fonts/bitstream-vera-sans-bold.ttf" as="font" type="font/ttf" crossorigin />
     <link rel="icon" href="${context.siteContent?.assets[branding.faviconAsset]?.path ?? faviconPath}" sizes="32x32" type="image/png" />
     <link rel="apple-touch-icon" href="${context.siteContent?.assets[branding.touchIconAsset]?.path ?? touchIconPath}" sizes="192x192" />
     <title>${title}</title>
@@ -218,10 +251,10 @@ export function pageShell(input: PageShellInput, context: FrontendRenderContext 
     <style>${raw(siteStyles([...(input.styles ?? []), ...(preview ? ["preview" as const] : [])]))}${raw(hasCmsPresentation(context)?cmsPresentationStyles:"")}${raw(context.visualEditor?cmsEditorStyles:"")}</style>
   </head>
   <body>
-    <a class="skip-link" href="#main-content">Skip to main content</a>
+    <a lang="en-AU" class="skip-link" href="#main-content">Skip to main content</a>
     ${when(preview, () => html`<div class="preview-band" role="status">${shelfMark()}<span>${previewLabel}</span></div>`)}
     ${input.notice}
-    <header${editAttributes(context,["branding"],"section","Shared header","header")} class="masthead" id="${homeSections.top}" data-site-header>
+    <header${editAttributes(context,["branding"],"section","Shared header","header")} lang="en-AU" class="masthead" id="${homeSections.top}" data-site-header>
       <div class="masthead__inner">
         ${brand(context)}
         <button class="masthead__mobile-toggle" type="button" aria-controls="primary-navigation" aria-expanded="false" data-site-toggle hidden>Menu<span class="masthead__chevron" aria-hidden="true"></span></button>
@@ -229,8 +262,9 @@ export function pageShell(input: PageShellInput, context: FrontendRenderContext 
         <div class="masthead__actions">${when(input.mastheadSearch !== false, () => mastheadSearch(context))}${when(headerAction.enabled&&destinationAvailable(headerAction.href,context),()=>html`<a class="button masthead__give"${editAttributes(context,["headerAction","label"],"link","Header button","header")} href="${resolveHref(headerAction.href,context)}">${headerAction.label}</a>`)}</div>
       </div>
     </header>
+    ${when(scripts.includes("mobileNavigation"),()=>html`<script data-enhancement="mobileNavigation">${raw(enhancementScripts.mobileNavigation)}</script>`)}
     <main id="main-content" class="site-main">${input.body}</main>
-    <footer class="site-footer"${editAttributes(context,[],"section","Shared footer","footer")}>
+    <footer lang="en-AU" class="site-footer"${editAttributes(context,[],"section","Shared footer","footer")}>
       ${canonStrip({ books: input.books ?? [] })}
       <div class="site-footer__band">
         <div class="site-footer__inner">
@@ -243,7 +277,7 @@ export function pageShell(input: PageShellInput, context: FrontendRenderContext 
         </div>
       </div>
     </footer>
-    ${scripts.map((name) => html`<script data-enhancement="${name}">${raw(enhancementScripts[name])}</script>`)}
+    ${scripts.filter(name=>name!=="mobileNavigation").map((name) => html`<script data-enhancement="${name}">${raw(enhancementScripts[name])}</script>`)}
   </body>
 </html>`;
   return document.toString().trim();

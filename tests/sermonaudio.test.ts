@@ -37,10 +37,16 @@ describe('controlled single-sermon SermonAudio',()=>{
  const result=officialPlayerMetadata(h,id);expect(result).toEqual({...recording,title:target.title,durationSeconds:1234,serviceDate:undefined});
  expect(JSON.stringify(result)).not.toContain('excluded');
  });
- it('keeps audio and YouTube inert, with accessible activation and fallback',()=>{
+ it('keeps embedded audio and YouTube inert without separate provider links',()=>{
  const sermon={title:'Example teaching',media:[{provider:'sermonaudio',mediaType:'audio',externalId:id,canonicalUrl:canonicalSermonAudioUrl(id),title:'Audio'},{provider:'youtube',mediaType:'video',externalId:'abcdefghijk',canonicalUrl:'https://youtu.be/abcdefghijk',title:'Video'}]} as SermonDetail;
- const html=String(mediaSection(sermon));expect(html).toContain('Load audio player');expect(html).toContain('Listen on SermonAudio');expect(html).toContain('data-load-youtube');expect(html).not.toContain('<iframe');expect(html).not.toContain('embed.sermonaudio.com/player');
- expect(audioLoaderSource).not.toContain('autoplay');expect(audioLoaderSource).toContain('iframe.title');expect(audioLoaderSource).toContain('iframe.tabIndex = 0');expect(audioLoaderSource).toContain("addEventListener('click'");
+ const html=String(mediaSection(sermon));expect(html).toContain('Load audio player');expect(html).not.toContain('Listen on SermonAudio');expect(html).not.toContain('Watch on YouTube');expect(html).not.toMatch(/<a\b/u);expect(html).toContain('data-load-youtube');expect(html).not.toContain('<iframe');expect(html).not.toContain('embed.sermonaudio.com/player');
+ expect(html).toContain('id="play-audio" data-audio-frame data-sermonaudio-id="'+id+'"');
+ expect(html).toContain('id="media-heading" class="section__title">Watch or listen</h2>');
+ const audioOnly=String(mediaSection({...sermon,media:[sermon.media[0]!]}));
+ expect(audioOnly).toContain('id="media-heading" class="section__title">Listen</h2>');expect(audioOnly).not.toContain('currently unavailable');
+ const videoOnly=String(mediaSection({...sermon,media:[sermon.media[1]!]}));
+ expect(videoOnly).toContain('id="media-heading" class="section__title">Watch</h2>');expect(videoOnly).not.toContain('data-audio-frame');
+ expect(html).not.toContain('autoplay');expect(audioLoaderSource).toContain('iframe.title');expect(audioLoaderSource).toContain('iframe.tabIndex = 0');expect(audioLoaderSource).toContain("addEventListener('click'");
  expect(contentSecurityPolicy(html)).toContain('frame-src https://www.youtube-nocookie.com https://embed.sermonaudio.com;');
  expect(contentSecurityPolicy('<script>'+audioLoaderSource+'</script>')).not.toContain('frame-src');
  expect(sermonMedia({...sermon,media:[{...sermon.media[0]!,canonicalUrl:'https://www.sermonaudio.com/sermons/999'}]}).audio).toHaveLength(0);

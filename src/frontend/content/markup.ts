@@ -15,6 +15,7 @@
  */
 import { escapeHtml, html, raw, type Html } from "../html";
 import { contextualPath, type FrontendRenderContext } from "../routes";
+import {legacyDisposition} from './registry';
 
 const linkPattern = /\[([^\]]+)\]\(([^)\s]+)\)/gu;
 
@@ -23,7 +24,11 @@ export function isExternalHref(href: string): boolean {
 }
 
 export function resolveHref(href: string, context: FrontendRenderContext): string {
-  if (href.startsWith("/")) return contextualPath(context, href);
+  if (href.startsWith("/")&&!href.startsWith('//')) {
+    const split=href.search(/[?#]/u),path=split<0?href:href.slice(0,split),suffix=split<0?'':href.slice(split);
+    const disposition=legacyDisposition(path,context)??(!path.endsWith('/')?legacyDisposition(`${path}/`,context):null);
+    return contextualPath(context,(disposition?.kind==='redirect'?disposition.location:path)+suffix);
+  }
   return href;
 }
 
@@ -45,7 +50,8 @@ export function inline(text: string, context: FrontendRenderContext): Html {
   for (const match of text.matchAll(linkPattern)) {
     const [whole, label, href] = match as unknown as [string, string, string];
     output += emphasis(escapeHtml(text.slice(last, match.index)));
-    if (!allowedHref(href)) {
+    const disposition=href.startsWith('/')?legacyDisposition(href.split(/[?#]/u)[0]!,context):null;
+    if (!allowedHref(href)||disposition?.kind==='gone'||disposition?.kind==='unavailable') {
       output += emphasis(escapeHtml(label));
     } else {
       const external = isExternalHref(href);

@@ -156,7 +156,7 @@ export function renderFrontendHomePage(input:FrontendHomePageInput,context:Front
   const settings=siteSettings(context);
   const newest=input.sermons[0];
   return pageShell({
-    title:content.title,suffixTitle:false,description:content.description,canonicalPath:"/",robots:"index, follow",
+    ...(content.seo?{seo:content.seo}:{}),title:content.title,suffixTitle:false,description:content.description,canonicalPath:"/",robots:"index, follow",
     styles:["cards","church","home"],scripts:hasVideo(content.modules.filter(module=>module.enabled).map(module=>module.block))?["church"]:[],books:input.options.books,
     notice:settings.notice.enabled ? html`<aside class="notice" aria-label="Church notice"${editAttributes(context,["notice"],"section","Shared church notice","header")}><div class="notice__inner"><span class="notice__pin" aria-hidden="true"></span><p${editAttributes(context,["notice","text"],"richtext","Church notice","header")}>${inline(settings.notice.text,context)}</p></div></aside>` : html``,
     footerSermon:newest ? html`<div class="footer-sermon">${sermonCard(newest,{links,headingLevel:3})}</div>` : html`<p class="site-footer__note site-footer__note--column">No sermon is available yet. Please check back soon.</p>`,

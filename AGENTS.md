@@ -1,5 +1,35 @@
 # Repository Operating Rules
 
+## D-181 — whole-site SEO migration and acceptance (9 October 2026)
+
+Samuel explicitly authorizes the bounded work in `seo-migration-plan.md`: fresh
+read-only original public website and guarded WordPress inspection, available
+church-owned search/measurement evidence, implementation, local/protected staging
+rehearsal, narrow governance amendments, local commits and normal push of the
+integrated branch to the existing repository. No production traffic/DNS change,
+WordPress mutation, force-push or old-system removal is authorized.
+
+Verified originally public source content may have a separate, provenance-bound
+migration projection with original URLs, wording, dates, metadata and resources.
+It does not confer transcript/description/Q&A approval or alter existing reviews,
+findings, explicit editorial withdrawals or semantic eligibility. New generated
+content remains subject to its independent current display gates. Missing optional
+enrichment must not suppress a verified original public page. Fresh source evidence,
+identity, explicit URL dispositions, dependency hashes, no-clobber delta imports,
+transactional audit and scoped recovery govern this projection. Source bodies and
+account exports remain ignored/private; no additional real-content Git dataset is
+created. Safe URL ledgers, hashes, aggregates and synthetic tests may be tracked.
+
+Use the existing guarded PostgreSQL 16 test target with ALLOW_LOCAL_DB_WRITE=1;
+existing staging writes require verified incumbent identity and recoverable scope.
+New local rehearsal listeners bind explicit loopback and stop after verification.
+WordPress readers must pass the current SELECT/USAGE-only privilege guard; do not
+weaken it or use broader access to work around a rejection. Public crawling remains
+independent. Read-only requests are bounded, rate limited, and never fetch recordings.
+Production-equivalent rehearsal must remain isolated and cannot expose private
+content or administrator routes. Missing evidence stays an explicit launch blocker.
+
+
 ## D-178 — accepted-description Related themes and blinded evaluation
 
 Samuel's separate current request authorizes completing the existing local

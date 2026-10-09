@@ -1,5 +1,6 @@
 import type { QueryResult, QueryResultRow } from "pg";
 import { z } from "zod";
+import { validateLegacySlug } from "../../domain/slug";
 import type { PublicSermonListQuery } from "../../api/contracts/public-sermons";
 import {
   relatedSermonSummarySchema,
@@ -75,7 +76,7 @@ type SeriesRepresentativeRow = PublicSermonRow & {
 
 const filterOptionSchema = z.object({
   name: z.string().min(1),
-  slug: z.string().min(1).max(200).regex(/^[a-z0-9-]+$/),
+  slug: z.string().min(1).max(200).refine(value => validateLegacySlug(value) !== null),
   sermonCount: z.number().int().nonnegative().optional()
 });
 
@@ -92,7 +93,7 @@ const filterOptionsSchema = z.object({
 });
 
 const sitemapEntrySchema = z.object({
-  slug: z.string().min(1).max(200).regex(/^[a-z0-9-]+$/),
+  slug: z.string().min(1).max(200).refine(value => validateLegacySlug(value) !== null),
   lastModified: z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
 });
 

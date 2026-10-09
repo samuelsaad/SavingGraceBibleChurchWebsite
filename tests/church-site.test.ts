@@ -337,7 +337,7 @@ describe("church page rendering", () => {
     expect(contact).toContain('<a href="tel:+61450545589">Tel: 0450545589</a>');
     expect(contact).toContain('<a class="button" href="mailto:info@savinggrace.org.au">Send us an email</a>');
     expect(contact).toContain('href="https://goo.gl/maps/gL2hcbXG3Ci9zqRVA"');
-    expect(contact.replace(/<header class="masthead"[\s\S]*?<\/header>/u, "")).not.toContain("<form");
+    expect(contact.replace(/<header\b[^>]*class="masthead"[\s\S]*?<\/header>/u, "")).not.toContain("<form");
     expect(contact).not.toContain("form provided above");
   });
 

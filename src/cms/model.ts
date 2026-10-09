@@ -18,7 +18,7 @@ export interface CmsPresentation {background?:'default'|'white'|'soft'|'ink';spa
 export interface CmsModule {id:string;enabled:boolean;block:CmsBlock;presentation?:CmsPresentation}
 export type CmsPagePayload = Omit<Assets<SitePage>,'blocks'|'aside'|'source'> & {modules:CmsModule[];asideModules?:CmsModule[];source?:SitePage['source']};
 export type CmsPostPayload = Omit<Assets<BlogPost>,'blocks'|'source'> & {modules:CmsModule[];source?:BlogPost['source'];status?:'published'|'draft'|'private';legacyPaths?:string[]};
-export interface CmsHomePayload {title:string;description:string;modules:CmsModule[]}
+export interface CmsHomePayload {title:string;description:string;modules:CmsModule[];seo?:import('../frontend/seo').ContentSeo}
 export interface CmsSettingsPayload {
  primaryMenu:MenuItem[];footerMenu:MenuItem[];navigationCopy:Copy<typeof navigationCopy>;contactCopy:Copy<typeof contactCopy>;
  footerServicesCopy:Copy<typeof footerServicesCopy>&{morningHref?:string;eveningHref?:string};getInvolvedHeading:string;sermonFooterHeading:string;bottomBarCopy:Copy<typeof bottomBarCopy>;
@@ -33,7 +33,7 @@ export type CmsDocument = Record<string,unknown>;
 export interface CmsSeed {key:string;kind:CmsKind;title:string;path?:string;payload:object;publish:boolean}
 export interface CmsRevision {id:string;revisionNumber:number;content:CmsDocument;createdAt:string;actor:string;sourceRevisionId:string|null}
 export interface CmsEntity {id:string;key:string;kind:CmsKind;rowVersion:number;draftRevisionId:string;publishedRevisionId:string|null;draft:CmsRevision;published:CmsRevision|null}
-export interface CmsPublishedDocument {id:string;key:string;kind:CmsKind;revisionId:string;content:CmsDocument;payload:CmsDocument}
+export interface CmsPublishedDocument {initialMetadata?:{title:string;heading:string;seeded:boolean};modifiedAt?:string;id:string;key:string;kind:CmsKind;revisionId:string;content:CmsDocument;payload:CmsDocument}
 export interface CmsRoute {path:string;entityId:string;status:200|301|410;targetPath:string|null}
 export interface CmsSnapshot {documents:Record<string,CmsDocument>;entities:CmsPublishedDocument[];routes:CmsRoute[]}
 export interface CmsMutation {expectedRowVersion:number}

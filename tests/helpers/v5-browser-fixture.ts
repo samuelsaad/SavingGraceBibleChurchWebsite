@@ -99,14 +99,35 @@ const repository: PublicSermonRepository = {
   },
   async findPublishedBySlug(slug): Promise<SermonDetail | null> {
     const sermon = sermons.find(item => item.slug === slug);
-    return sermon ? { ...sermon, seoDescription: null, body: null,
-      media: [{ provider: "sermonaudio", mediaType: "audio", externalId: "1111111111111",
-        canonicalUrl: "https://www.sermonaudio.com/sermons/1111111111111", title: "Synthetic audio fixture" }],
-      transcript: { bodyText: "An anonymous transcript for browser layout testing. No real sermon wording is used.\n\nA second synthetic paragraph checks readable line lengths and the native disclosure control." },
-      questionAnswers: [{ question: "What does this anonymous layout fixture demonstrate?", answer: "It tests the placement of a complete answer without using private sermon content.", displayOrder: 1 }],
+    const ordinal = Number(slug.match(/-(\d+)$/u)?.[1] ?? 0);
+    const audioId = String(1111111111110 + ordinal);
+    const videoId = 'fixture' + String(ordinal).padStart(4, '0');
+    return sermon ? { ...sermon, language: ordinal === 5 ? 'ar' : 'en', seoDescription: null, body: null,
+      media: [
+        ...(ordinal === 3 || ordinal === 4 ? [] : [{ provider: 'sermonaudio' as const, mediaType: 'audio' as const, externalId: audioId,
+          canonicalUrl: 'https://www.sermonaudio.com/sermons/' + audioId, title: 'Synthetic audio fixture' }]),
+        ...(ordinal === 2 || ordinal === 4 ? [] : [{ provider: 'youtube' as const, mediaType: 'video' as const, externalId: videoId,
+          canonicalUrl: 'https://www.youtube.com/watch?v=' + videoId, title: 'Synthetic video fixture' }])
+      ],
+      transcript: ordinal === 4 ? null : { bodyText: "An anonymous transcript for browser layout testing. No real sermon wording is used.\n\nA second synthetic paragraph checks readable line lengths and the native disclosure control." },
+      questionAnswers: Array.from({length: 5}, (_, index) => ({
+        question: ordinal === 5 ? 'سؤال تجريبي لاختبار عرض الصفحة ' + (index + 1) : `What does anonymous question ${index + 1} demonstrate${index === 1 ? ' when a longer question wraps across several lines on a narrow screen' : ''}?`,
+        answer: ordinal === 5 ? 'هذا نص تجريبي لاختبار إظهار الإجابة وإخفائها. لا يحتوي على محتوى عظة حقيقي.' : `Synthetic answer ${index + 1} checks the complete reading layout without using real sermon content. Each control reveals only its own answer.\n\nThis second anonymous paragraph checks spacing after the answer opens and helps verify that printing retains the full text.`,
+        displayOrder: index + 1
+      })),
       relatedSermons: [] } : null;
   },
-  async listPublishedFilterOptions() { return options; },
+  async listPublishedFilterOptions(query) {
+    if (!query) return options;
+    const matches = matchingSermons(query);
+    const available = (items: PublicSermonFilterOption[], belongs: (sermon: SermonSummary, slug: string) => boolean) =>
+      items.map(item => ({...item, sermonCount: matches.filter(sermon => belongs(sermon, item.slug)).length})).filter(item => item.sermonCount > 0);
+    return {...options,
+      speakers: available(speakers, (sermon, slug) => sermon.speaker?.slug === slug),
+      series: available(series, (sermon, slug) => sermon.series.some(item => item.slug === slug)),
+      books: available(books, (sermon, slug) => sermon.books.some(item => item.slug === slug))
+    };
+  },
   async listPublishedTopicalSermons() { return []; },
   async listPublishedSeriesRepresentatives() { return []; },
   async listPublishedSitemapEntries() { return []; },

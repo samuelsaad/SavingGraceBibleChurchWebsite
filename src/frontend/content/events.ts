@@ -61,6 +61,7 @@ export type Schedule =
 type ChurchEventInput = Omit<ChurchEvent, "id"> & { id: string };
 
 export interface ChurchEvent {
+  seo?: import('../seo').ContentSeo;
   id: string;
   title: string;
   /** Root-relative event page path. */

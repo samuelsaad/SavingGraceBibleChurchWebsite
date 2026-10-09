@@ -109,7 +109,7 @@ describe("public sermon site routes", () => {
     });
     expect(html).toContain('<meta name="robots" content="noindex, follow"');
     expect(html).toContain('rel="canonical" href="https://www.savinggrace.org.au/sermons/page/2/"');
-    expect(html).toContain('<p class="title-page__category">Search results</p>');
+    expect(html).toContain('class="v5__heading"');
     expect(html).toContain("“grace” · Example Speaker · Example Series · Romans · Romans 8:1-4</h1>");
     expect(html).toContain('<label class="field__label" for="sermon-search">Search sermons</label>');
     expect(html).toContain('<label class="field__label" for="speaker-filter">Speaker</label>');
@@ -119,15 +119,15 @@ describe("public sermon site routes", () => {
     expect(html).toContain('<details class="refine" data-refine data-active="true" open>');
     expect(html).toContain('<span class="refine__badge">5 filters active</span>');
     expect(html).not.toMatch(/<summary\b[^>]*aria-expanded/u);
-    expect(html).toContain('<section class="results" id="results" tabindex="-1" aria-labelledby="results-heading results-status">');
-    expect(html).toContain('<h2 id="results-heading" class="section__title">Sermons</h2>');
-    expect(html).toContain('<span class="results__status" id="results-status">10 sermons · Page 2 of 2</span>');
-    expect(html).toContain('<ol class="catalogue results__list" role="list" start="10">');
+    expect(html).toContain('<section class="v5__recent" id="v5-results" tabindex="-1" aria-labelledby="v5-results-heading"');
+    expect(html).toContain('<h2 id="v5-results-heading" class="section__title">Sermons</h2>');
+    expect(html).toContain('<span>10 sermons</span>');
+    expect(html).toContain('data-v5-pagination data-page="2" data-total="10"');
     expect(html).toContain('aria-label="Active filters"');
     expect(html).toContain('<a class="tokens__clear" href="/sermons/">Clear all</a>');
-    const masthead = section(html, '<header class="masthead"', "</header>");
+    const masthead = html.match(/<header\b[^>]*class="masthead"[\s\S]*?<\/header>/u)?.[0]??"";
     expect(masthead).toContain('<ul class="masthead__links"><li><a href="/">Home</a></li><li class="masthead__links-menu"><details class="masthead__menu" data-menu>');
-    expect(masthead).toContain('<li class="masthead__links-sermons"><a href="/sermons-v4/" aria-current="page">Sermons</a></li>');
+    expect(masthead).toContain('<li class="masthead__links-sermons"><a href="/sermons/" aria-current="page">Sermons</a></li>');
     expect(masthead).toContain('<li><a href="/events/">News &amp; Events</a></li><li><a href="/contact/">Contact Us</a></li></ul>');
     expect(masthead).toContain('aria-controls="menu-about"');
     expect(masthead).toContain('<li class="masthead__dropdown-sub"><a href="/what-we-teach/the-gospel/">The Gospel</a></li>');
@@ -147,9 +147,9 @@ describe("public sermon site routes", () => {
       "http://localhost/sermons/?sermon_speaker=example-speaker&sermon_series=example-series&order=ASC"
     ));
     const html = await response!.text();
-    expect(html).toContain('href="/sermons/?sermon_series=example-series&amp;order=ASC#results">Speaker: Example Speaker');
-    expect(html).toContain('href="/sermons/?sermon_speaker=example-speaker&amp;order=ASC#results">Series: Example Series');
-    expect(html).toContain('href="/sermons/?sermon_speaker=example-speaker&amp;sermon_series=example-series#results">Oldest first');
+    expect(html).toContain('href="/sermons/?sermon_series=example-series&amp;order=ASC#v5-results">Speaker: Example Speaker');
+    expect(html).toContain('href="/sermons/?sermon_speaker=example-speaker&amp;order=ASC#v5-results">Series: Example Series');
+    expect(html).toContain('href="/sermons/?sermon_speaker=example-speaker&amp;sermon_series=example-series#v5-results">Oldest first');
     expect(html).toContain('<span class="sr-only">, remove this filter</span>');
     expect(html).toContain('<a class="tokens__clear" href="/sermons/">Clear all</a>');
   });
@@ -166,8 +166,8 @@ describe("public sermon site routes", () => {
     expect(html).toContain('<option value="ASC" selected>Oldest first</option>');
     expect(html).toContain('<script data-enhancement="canon">');
     expect(html).toContain("dateFrom=2026-08-01&amp;order=ASC");
-    expect(html).toContain('action="/sermons/#results"');
-    expect(html).toContain('<p class="title-page__category">Search results</p>');
+    expect(html).toContain('action="/sermons/#v5-results"');
+    expect(html).toContain('class="v5__heading"');
     expect(html).toContain("Sermons by service date</h1>");
   });
 
@@ -217,11 +217,11 @@ describe("public sermon site routes", () => {
     expect(html).toContain("passageChapter=3&amp;passageScope=chapter#canon\"");
     expect(html).toContain("sermon_topics=legacy-topic&amp;passageBook=romans");
     expect(html).toContain("Search all of Romans</a>");
-    expect(html).toContain('<a class="open-book__clear" href="/sermons/?s=faith&amp;sermon_topics=legacy-topic#results">Put the book back</a>');
+    expect(html).toContain('<a class="open-book__clear" href="/sermons/?s=faith&amp;sermon_topics=legacy-topic#v5-results">Put the book back</a>');
     expect(html).toContain("Passage: Romans 8:1");
     expect(html).toContain("Reference: legacy-topic");
     expect(html).toContain("“faith” · Romans 8:1 · legacy-topic</h1>");
-    expect(html).toContain('<h2 id="results-heading" class="section__title">Sermons</h2>');
+    expect(html).toContain('<h2 id="v5-results-heading" class="section__title">Sermons</h2>');
     expect(response?.headers.get("content-security-policy")).toContain("script-src 'sha256-");
   });
 
@@ -229,17 +229,17 @@ describe("public sermon site routes", () => {
     const route = createPublicSermonSiteHandler(new SiteRepository());
     const filtered = await route(new Request("http://localhost/sermons/?sermon_speaker=example-speaker"));
     const html = await filtered!.text();
-    const shelf = section(html, '<nav class="shelf"', "</nav>");
+    const shelf = section(html, '<nav class="shelf', "</nav>");
 
-    expect(html).toContain('<details class="book-details"><summary class="book-details__summary">Choose a Bible book</summary>');
+    expect(html).toContain('<details class="fold" id="v5-shelf"');
     expect(shelf.match(/<li class="spine /gu)).toHaveLength(66);
     expect(shelf).toContain('<a class="spine__link" href="/sermons/?sermon_speaker=example-speaker&amp;sermon_book=romans#canon">');
     expect(shelf).toContain('<li class="spine spine--genesis spine--law" data-len="mid"><span class="spine__ghost" aria-hidden="true">');
     expect(shelf).toContain("preached from 1 of the 66 books: Romans (10).");
     expect(shelf).not.toContain("tabindex");
     expect(shelf).not.toContain("aria-pressed");
-    expect(shelf).toContain('data-canon-grid data-escape-to="results"');
-    expect(shelf).toContain('<a class="shelf__skip" href="#results">Skip the bookshelf</a>');
+    expect(shelf).toContain('data-canon-grid data-escape-to="after-v5-shelf"');
+    expect(shelf).toContain('<a class="shelf__skip" href="#after-v5-shelf">Skip the bookshelf</a>');
 
     const book = await route(new Request("http://localhost/sermons/?sermon_book=romans"));
     const bookHtml = await book!.text();
@@ -251,11 +251,11 @@ describe("public sermon site routes", () => {
     expect(bookHtml).toContain('<span class="sr-only">Chapter 8, has sermons</span>');
     expect(bookHtml).not.toContain("Verses of");
     expect(bookHtml).toContain('href="/sermons/?passageBook=romans&amp;passageChapter=8&amp;passageScope=chapter#canon"');
-    expect(bookHtml).toContain('<a class="open-book__clear" href="/sermons/#results">Put the book back</a>');
+    expect(bookHtml).toContain('<a class="open-book__clear" href="/sermons/#v5-results">Put the book back</a>');
     expect(bookHtml).toContain("Romans</h1>");
   });
 
-  it("renders the discovery view with the shelf, exactly three latest sermons newest first and fail-closed sections", async () => {
+  it("renders the canonical V5 journal with the first-page selection and native pagination", async () => {
     const repository = new SiteRepository();
     repository.totalItems = 4;
     repository.data = [
@@ -264,46 +264,33 @@ describe("public sermon site routes", () => {
       { ...summary, id: "33333333-3333-4333-8333-333333333333", slug: "recent-three", serviceDate: "2026-08-02" },
       { ...summary, id: "44444444-4444-4444-8444-444444444444", slug: "older-four", serviceDate: "2026-08-01" }
     ];
-    const route = createPublicSermonSiteHandler(repository);
-    const response = await route(new Request("http://localhost/sermons/"));
+    const response = await createPublicSermonSiteHandler(repository)(new Request("http://localhost/sermons/"));
     const html = await response!.text();
-
-    expect(html).toContain('<h1 class="title-page__title">Sermons</h1>');
-    expect(html).toContain('<ul class="stats" role="list"><li>4 sermons</li><li>1 of 66 books</li><li>1 speaker</li><li>1 series</li></ul>');
-    expect(html).toContain('<h2 id="shelf-heading" class="section__title">By Bible book</h2>');
-    expect(html).toContain('<nav class="shelf shelf--settle" aria-labelledby="shelf-heading" data-canon-grid data-escape-to="after-shelf">');
-    expect(html).toContain('<a class="spine__link" href="/sermons/?sermon_book=romans#canon">');
-    expect(html).toContain('<h2 id="latest-heading" class="section__title">Latest sermons</h2>');
-    expect(html).toContain('href="/sermons/?view=recent#results">Browse all 4 sermons, newest first</a>');
-    expect(html.match(/<article class="entry entry--card/gu)).toHaveLength(3);
+    expect(repository.lastQuery).toMatchObject({page:1,pageSize:9,order:"DESC"});
+    expect(html).toContain('<header class="v5__heading"><h1>Sermons</h1>');
+    expect(html).toContain('id="v5-latest-heading"');
+    expect(html).toContain('id="v5-results"');
+    expect(html).toContain('href="/sermons/?view=recent#v5-results">Browse all 4 sermons</a>');
+    for(const slug of ["recent-one","recent-two","recent-three","older-four"]) expect(html).toContain(slug);
     expect(html.indexOf("recent-one")).toBeLessThan(html.indexOf("recent-two"));
     expect(html.indexOf("recent-two")).toBeLessThan(html.indexOf("recent-three"));
-    expect(html).not.toContain("older-four");
-    expect(html).toContain('<h2 id="speakers-heading" class="section__title">By speaker</h2>');
-    expect(html).toContain('<a class="chip" href="/sermons/?sermon_speaker=example-speaker#results">Example Speaker<span class="chip__count">10</span></a>');
-    expect(html).toContain('<a class="chip" href="/sermons/?sermon_series=example-series#results">Example Series<span class="chip__count">10</span></a>');
-    expect(html).not.toContain('id="topical-heading"');
-    expect(html).not.toContain('id="results"');
-    expect(html).not.toContain("autoplay");
-    const primaryRow = section(html, '<div class="finder__row">', '<details class="refine"');
-    expect(primaryRow.match(/<label /gu)).toHaveLength(3);
-    expect(primaryRow).toContain('<button class="button" type="submit">Search</button>');
-    expect(html).toContain('<details class="refine" data-refine data-active="false">');
-    expect(html).not.toContain('data-active="false" open');
+    expect(html).toContain('data-v5-pagination data-page="1" data-total="4"');
+    expect(html).toContain('id="v5-series-heading"');
+    expect(html).toContain('id="v5-speakers-heading"');
+    expect(html).not.toMatch(/<(?:iframe|audio|video)\b/iu);
+    expect(html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/giu, "")).not.toContain("autoplay");
     expect(html).toContain('<meta name="robots" content="index, follow"');
     expect(html).toContain('rel="canonical" href="https://www.savinggrace.org.au/sermons/"');
   });
 
-  it("shows only repository-declared topical sermons and never infers them from no-primary state", async () => {
+  it("does not invent a topical section on the selected canonical journal", async () => {
     const repository = new SiteRepository();
     const route = createPublicSermonSiteHandler(repository);
     const empty = await route(new Request("http://localhost/sermons/"));
     expect(await empty!.text()).not.toContain('id="topical-heading"');
-
     repository.topicalSermons = [summary];
     const explicit = await route(new Request("http://localhost/sermons/"));
-    const html = await explicit!.text();
-    expect(html).toContain('<h2 id="topical-heading" class="section__title">Topical sermons</h2>');
+    expect(await explicit!.text()).not.toContain('id="topical-heading"');
   });
 
   it("preserves expanded recent pagination in URLs, numbers the archive continuously and hides discovery", async () => {
@@ -314,11 +301,11 @@ describe("public sermon site routes", () => {
     const html = await response!.text();
 
     expect(repository.lastQuery).toMatchObject({ view: "recent", page: 1, pageSize: 9, order: "DESC" });
-    expect(html).toContain('<a class="results__fewer" href="/sermons/">Back to the shelf</a>');
-    expect(html).toContain('<h2 id="results-heading" class="section__title">All sermons, newest first</h2>');
-    expect(html).toContain("19 sermons · Page 1 of 3");
-    expect(html).toContain('href="/sermons/page/2/#results"');
-    expect(html).toContain('<ol class="catalogue results__list" role="list" start="1">');
+    expect(html).toContain('<a href="/sermons/">Back to recent sermons</a>');
+    expect(html).toContain('<h2 id="v5-results-heading" class="section__title">All sermons, newest first</h2>');
+    expect(html).toContain("<span>19 sermons</span>");
+    expect(html).toContain('href="/sermons/page/2/#v5-results"');
+    expect(html).toContain('data-v5-pagination data-page="1" data-total="19"');
     expect(html).not.toContain('id="topical-heading"');
     expect(html).not.toContain('id="latest-heading"');
     expect(html).toContain('aria-current="page"');
@@ -328,10 +315,10 @@ describe("public sermon site routes", () => {
 
     const second = await route(new Request("http://localhost/sermons/page/2/"));
     const secondHtml = await second!.text();
-    expect(secondHtml).toContain('<ol class="catalogue results__list" role="list" start="10">');
+    expect(secondHtml).toContain('data-v5-pagination data-page="2" data-total="19"');
     expect(secondHtml).toContain('rel="prev"');
-    expect(secondHtml).toContain('href="/sermons/?view=recent#results"');
-    expect(secondHtml).toContain("Back to the shelf");
+    expect(secondHtml).toContain('href="/sermons/?view=recent#v5-results"');
+    expect(secondHtml).toContain("Back to recent sermons");
   });
 
   it("rejects contradictory broad-book and exact-passage filters", async () => {
@@ -353,12 +340,12 @@ describe("public sermon site routes", () => {
     const empty = await route(new Request("http://localhost/sermons/?sermon_series=not-present"));
     expect(empty?.status).toBe(200);
     const emptyHtml = await empty!.text();
-    expect(emptyHtml).toContain("No published sermons matched");
-    expect(emptyHtml).toContain('<a class="button button--outline" href="/sermons/">Show all sermons</a>');
+    expect(emptyHtml).toContain("No sermons matched these filters");
+    expect(emptyHtml).toContain('<a class="button button--outline" href="/sermons/">Clear filters</a>');
 
     const landing = await route(new Request("http://localhost/sermons/"));
     const landingHtml = await landing!.text();
-    expect(landingHtml).toContain("No sermons are available yet.");
+    expect(landingHtml).toContain("No sermons are available yet");
     expect(landingHtml).not.toContain("Browse all");
 
     const missingPage = await route(new Request("http://localhost/sermons/page/2/"));
@@ -376,10 +363,11 @@ describe("public sermon site routes", () => {
     const csp = archive!.headers.get("content-security-policy")!;
     expect(csp).not.toContain("unsafe-inline");
     expect(csp).not.toContain("frame-src");
-    expect(archiveHtml.match(/<script /gu)).toHaveLength(3);
-    for (const match of archiveHtml.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gu)) {
-      expect(csp).toContain(hash(match[1]!));
-      expect(() => new Function(match[1]!)).not.toThrow();
+    expect(archiveHtml.match(/<script data-enhancement=/gu)).toHaveLength(5);
+    for (const match of archiveHtml.matchAll(/<script(\s[^>]*)?>([\s\S]*?)<\/script>/gu)) {
+      expect(csp).toContain(hash(match[2]!));
+      if (match[1]?.includes('type="application/ld+json"')) expect(() => JSON.parse(match[2]!)).not.toThrow();
+      else expect(() => new Function(match[2]!)).not.toThrow();
     }
     for (const match of archiveHtml.matchAll(/<style>([\s\S]*?)<\/style>/gu)) expect(csp).toContain(hash(match[1]!));
 

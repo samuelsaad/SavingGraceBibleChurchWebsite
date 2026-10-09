@@ -1,43 +1,46 @@
-/**
- * The click-to-load YouTube loader shared by the sermon page and the church
- * pages. No request reaches YouTube until the visitor activates the button.
- * A video identifier or a playlist identifier is re-validated in the
- * browser, the privacy-enhanced host is used, autoplay is never requested,
- * and focus moves into the player so keyboard users are not dropped at the
- * top of the document.
- */
+/** Lazy YouTube loading; only an explicit sermon play shortcut requests autoplay. */
 export const videoLoaderSource = `
-  var loaders = document.querySelectorAll('[data-load-youtube]');
-  for (var index = 0; index < loaders.length; index += 1) wireLoader(loaders[index]);
+  document.querySelectorAll('[data-load-youtube]').forEach(function (button) {
+    button.addEventListener('click', function () { loadYouTube(button, false); });
+  });
 
-  function wireLoader(button) {
-    button.addEventListener('click', function () {
-      var frame = button.closest('[data-video-frame]');
-      var id = button.getAttribute('data-video-id') || '';
-      var list = button.getAttribute('data-playlist-id') || '';
-      var title = button.getAttribute('data-video-title') || 'Video';
-      var source = '';
-      if (/^[A-Za-z0-9_-]{11}$/.test(id)) source = 'https://www.youtube-nocookie.com/embed/' + id;
-      else if (/^PL[A-Za-z0-9_-]{10,}$/.test(list)) source = 'https://www.youtube-nocookie.com/embed/videoseries?list=' + list;
-      if (!frame || !source) return;
-      var iframe = document.createElement('iframe');
-      iframe.src = source;
-      iframe.title = title;
-      iframe.allow = 'accelerometer; encrypted-media; gyroscope; picture-in-picture';
-      iframe.allowFullscreen = true;
-      iframe.referrerPolicy = 'strict-origin-when-cross-origin';
-      iframe.tabIndex = 0;
-      var status = document.createElement('p');
-      status.className = 'plate__status';
-      status.setAttribute('role', 'status');
-      status.textContent = 'Loading the video player…';
-      iframe.addEventListener('load', function () {
-        status.remove();
-        frame.setAttribute('data-video-loaded', 'true');
-      });
-      frame.replaceChildren(status, iframe);
-      frame.setAttribute('data-video-loaded', 'loading');
-      iframe.focus();
+  function loadYouTube(button, autoplay) {
+    var frame = button && button.closest('[data-video-frame]');
+    var id = button ? button.getAttribute('data-video-id') || '' : '';
+    var list = button ? button.getAttribute('data-playlist-id') || '' : '';
+    var source = '';
+    if (/^[A-Za-z0-9_-]{11}$/.test(id)) source = 'https://www.youtube-nocookie.com/embed/' + id;
+    else if (/^PL[A-Za-z0-9_-]{10,}$/.test(list)) source = 'https://www.youtube-nocookie.com/embed/videoseries?list=' + list;
+    if (!frame || !source) return null;
+    var existing = frame.querySelector('iframe');
+    if (existing) return existing;
+    if (autoplay === true) source += (source.indexOf('?') < 0 ? '?' : '&') + 'autoplay=1';
+    var iframe = document.createElement('iframe');
+    iframe.src = source;
+    iframe.title = button.getAttribute('data-video-title') || 'Video';
+    iframe.allow = (autoplay === true ? 'autoplay; ' : '') + 'accelerometer; encrypted-media; gyroscope; picture-in-picture';
+    iframe.allowFullscreen = true;
+    iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+    iframe.tabIndex = 0;
+    var status = document.createElement('p');
+    status.className = 'plate__status';
+    status.setAttribute('role', 'status');
+    status.textContent = 'Loading the video player…';
+    var timer = window.setTimeout(function () {
+      status.textContent = 'The video player is taking longer to load. Reload the page or use the YouTube link if available.';
+    }, 12000);
+    iframe.addEventListener('load', function () {
+      window.clearTimeout(timer);
+      status.remove();
+      frame.setAttribute('data-video-loaded', 'true');
     });
+    iframe.addEventListener('error', function () {
+      window.clearTimeout(timer);
+      status.textContent = 'The video player could not load. Reload the page or use the YouTube link if available.';
+    });
+    frame.replaceChildren(status, iframe);
+    frame.setAttribute('data-video-loaded', 'loading');
+    iframe.focus();
+    return iframe;
   }
 `;

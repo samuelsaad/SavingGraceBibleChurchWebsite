@@ -8,7 +8,7 @@ export interface InspectorOptions {
 }
 const hidden=new Set(['id','kind','status','source','sourceIds','legacyPaths','legacyPath','notes','template','modules','asideModules','presentation']);
 const rich=new Set(['text','lede','paragraph','intro','quote','caption']);
-const images=new Set(['media','logoAsset','footerLogoAsset','faviconAsset','touchIconAsset']);
+const images=new Set(['image','media','logoAsset','footerLogoAsset','faviconAsset','touchIconAsset']);
 const label=(key:string)=>({mediaAlt:'Image description / alternative text',mediaFocalPoint:'Image positioning',background:'Section background',spacing:'Vertical spacing',alignment:'Text alignment',width:'Content width'}[key]??titleCase(key));
 const pkey=(path:ContentPath)=>path.join('.');
 const isObject=(value:CmsValue|undefined):value is CmsObject=>Boolean(value)&&typeof value==='object'&&!Array.isArray(value);

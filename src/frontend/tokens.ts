@@ -59,13 +59,13 @@ export const colour = {
 
 export const font = {
   /** Display voice: large titles. */
-  display: '"Bitstream Vera Sans", sans-serif',
+  display: '"Bitstream Vera Sans", Verdana, sans-serif',
   /** Reading voice: descriptions, transcripts, answers, ledes. */
-  reading: '"Bitstream Vera Sans", "Segoe UI", sans-serif',
+  reading: '"Bitstream Vera Sans", Verdana, "Segoe UI", sans-serif',
   /** Signage voice: condensed caps for labels, spines, counts and navigation. */
-  signage: '"Bitstream Vera Sans", "Segoe UI", sans-serif',
+  signage: '"Bitstream Vera Sans", Verdana, "Segoe UI", sans-serif',
   /** Interface voice: controls, metadata lines, helper copy. */
-  ui: '"Bitstream Vera Sans", "Segoe UI", sans-serif'
+  ui: '"Bitstream Vera Sans", Verdana, "Segoe UI", sans-serif'
 } as const;
 
 export const size = {

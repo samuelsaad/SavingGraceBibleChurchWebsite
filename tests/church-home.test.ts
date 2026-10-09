@@ -88,7 +88,7 @@ describe("church homepage", () => {
     expect(recent).not.toContain("anonymised-sermon-1");
     expect(recent).not.toContain("card--latest");
     expect(recent).toContain('<h3 class="card__title"><a href="/sermons/anonymised-sermon-4/">An anonymised sermon 4</a></h3>');
-    const footer = html.slice(html.indexOf('<footer class="site-footer">'));
+    const footer = html.slice(html.search(/<footer\b[^>]*class="site-footer"/u));
     expect(footer).toContain('<h2 class="footer-col__title" id="footer-sermon-heading">Recent Sermon</h2>');
     expect(footer.match(/<article class="card /gu)).toHaveLength(1);
     expect(footer).toContain('href="/sermons/anonymised-sermon-4/"');
@@ -99,7 +99,7 @@ describe("church homepage", () => {
 
   it("computes the upcoming events for the render date instead of carrying dated copy", () => {
     const html = decode(renderFrontendHomePage({ sermons, options, totalItems: 4, today }, publicRenderContext));
-    const section = html.slice(html.indexOf('id="events"'), html.indexOf('<footer class="site-footer">'));
+    const section = html.slice(html.indexOf('id="events"'), html.search(/<footer\b[^>]*class="site-footer"/u));
     expect(section).toContain('<span class="event__month">SEP</span><span class="event__day">27</span>');
     expect(section).toContain('<time datetime="2026-09-27T16:30">Sunday 27 September 2026, 4:30 pm – 5:30 pm</time>');
     expect(section).toContain('<a href="/events/mens-theological-study/">Men’s Theological Study</a>');
@@ -134,7 +134,8 @@ describe("church homepage", () => {
     }
     const csp = contentSecurityPolicy(html);
     for (const styleHash of embeddedStyleHashes(html)) expect(csp).toContain(styleHash);
-    expect(embeddedScriptHashes(html)).toHaveLength(2);
+    expect(html.match(/<script data-enhancement=/gu)).toHaveLength(2);
+    expect(embeddedScriptHashes(html)).toHaveLength(3);
     for (const scriptHash of embeddedScriptHashes(html)) expect(csp).toContain(scriptHash);
     expect(html).toContain('<script data-enhancement="navigation">');
     expect(html).toContain('<script data-enhancement="mobileNavigation">');

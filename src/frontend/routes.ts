@@ -22,6 +22,8 @@ export const sermonsV5Path = "/sermons-v5/";
 export type ArchiveBasePath = typeof archivePath | typeof sermonsV1Path | typeof sermonsV4Path | typeof sermonsV5Path;
 
 export interface FrontendRenderContext {
+  /** Supplied only by the validated HTTP environment policy. */
+  seo?: {canonicalOrigin:string;indexable:boolean;indexableArchivePaths?:readonly string[]};
   mode: "public" | "preview" | "restricted" | "draft-preview";
   basePath: "" | "/frontend-preview" | "/draft-preview" | "/cms-preview";
   /** Set exclusively by the authenticated visual canvas endpoint. */
@@ -31,6 +33,7 @@ export interface FrontendRenderContext {
 }
 
 export const publicRenderContext: FrontendRenderContext = Object.freeze({ mode: "public", basePath: "" });
+export function canonicalOriginFor(context:FrontendRenderContext):string {return context.seo?.canonicalOrigin??canonicalOrigin;}
 export const previewRenderContext: FrontendRenderContext = Object.freeze({ mode: "preview", basePath: "/frontend-preview" });
 /** Authenticated D-160 pending-draft preview; never a publication surface. */
 export const draftPreviewRenderContext: FrontendRenderContext = Object.freeze({ mode: "draft-preview", basePath: "/draft-preview" });

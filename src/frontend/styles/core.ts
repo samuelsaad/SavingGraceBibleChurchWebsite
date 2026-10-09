@@ -233,6 +233,9 @@ select.control { background-image: linear-gradient(45deg, transparent 50%, var(-
 
 /* ---- reading ---- */
 .prose { max-width: var(--measure-prose); font-family: var(--font-reading); font-size: var(--size-reading); line-height: var(--size-line-reading); }
+.prose img { max-width: 100%; height: auto; }
+.prose figure { margin-inline: 0; }
+.source-table { max-width: 100%; overflow-x: auto; }
 .prose p { margin: 0 0 0.9em; }
 .prose p:last-child { margin-bottom: 0; }
 .prose--lede { font-size: var(--size-lede); line-height: 1.6; }
@@ -333,6 +336,15 @@ a { text-underline-offset: 0.18em; }
   .masthead--compact .masthead__actions { order: 1; margin-left: auto; }
   .masthead--compact .masthead__mobile-toggle { order: 2; }
   .masthead--compact .masthead__nav { order: 3; flex-basis: 100%; width: 100%; min-width: 0; }
+}
+
+/* Keep the narrow masthead on two intentional rows before and after font loading. */
+@media (max-width: 23rem) {
+  .masthead--compact .masthead__inner { display: grid; grid-template-columns: minmax(0, 1fr) auto; }
+  .masthead--compact .brand { grid-column: 1; grid-row: 1; }
+  .masthead--compact .masthead__actions { grid-column: 2; grid-row: 1; }
+  .masthead--compact .masthead__mobile-toggle { grid-column: 1 / -1; grid-row: 2; justify-self: start; }
+  .masthead--compact .masthead__nav { grid-row: 3; }
 }
 
 /* ---- motion, forced colours, print ---- */

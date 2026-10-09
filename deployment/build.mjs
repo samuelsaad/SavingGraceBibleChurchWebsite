@@ -8,6 +8,7 @@ await mkdir("dist-staging", { recursive: true });
 await buildCmsAdmin();
 for (const [name, entry] of Object.entries({
   server: "src/staging/server.ts",
+  "source-public-sync": "src/seo/staging-maintenance.ts",
   "cms-maintenance": "src/cms/staging-maintenance.ts",
   database: "src/staging/database-cli.ts",
   "draft-preview": "src/staging/draft-preview-server.ts",

@@ -1,5 +1,28 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
+## D-181 — whole-site SEO candidate, acceptance still open
+
+`codex/whole-site-seo-migration` continues the integrated state and preserves the current CMS/design/media interactions. Additive migration0028 stores immutable verified original-public versions and import receipts independently of enrichment approvals. Source bodies/assets remain private; no new real-content Git dataset exists. The source snapshot covers457 verified public sermon identities, including all454 retained published records, plus church pages/posts/events/archives and verified resources. Publication and search readiness remain blocked by incomplete source/account evidence and the acceptance gates in [the SEO acceptance record](docs/seo-migration-acceptance.md).
+
+Source-aware rendering retains original text, metadata, dates, links and media identities; explicit CMS edits and withdrawals retain precedence. Local full PostgreSQL tests passed1,367/1,367 with zero skips, type/build checks passed, and42 browser cases passed. Final URL comparison, safe ledger publication, protected staging upgrade/rollback evidence and release identifiers are still being recorded. No production traffic, DNS or WordPress mutation is authorized or performed. Backup restoration and opt-in measurement implementation remain pending explicit approval following automatic review rejection.
+
+
+## Local follow-up — sermon card media shortcuts
+
+The V5 YouTube, SermonAudio and transcript icons now link to the matching sermon
+content. Explicit media links request playback; the transcript opens and receives
+focus. Missing media is reported without substitution. The separate outbound provider buttons have been removed, and each Q&A answer
+has a light, independently animated Show/Hide answer control. Transcripts start
+closed on ordinary visits; explicit transcript shortcuts open them. All 21 current
+offline browser cases passed; the prior 13 archive cases also passed. No sermon data or eligibility was
+changed. The whole local directory audit confirmed all 19 series counts; filtered
+V5 pages now use global directory counts matching their links while finder options
+remain contextual. The named Topical series has two assigned sermons; nine have
+the separate topical classification. Of 407 eligible sermons, 290 have no series
+assignment. These relationships were preserved. This is an uncommitted local working-tree follow-up; staging retains the
+D-180 runtime below. Local verification is recorded in
+[the V5 design record](docs/design/sermons-v5.md#9-october-local-follow-up-active-sermon-shortcuts).
+
 ## D-180 — visual website editor delivered locally and to staging
 
 `codex/visual-page-editor` makes the actual rendered website the default CMS
@@ -10,7 +33,7 @@ history. Advanced forms remain available. The existing Astra/Claude website,
 29 module families, CMS persistence, authentication and sermon gates are retained.
 No new dependency or database migration was required.
 
-Local and both staging applications run implementation
+The completed D-180 local and staging deployment used implementation
 `e8892c08eb1ea26e9675c8af87ebefef9866699d`. Staging image:
 `sha256:2760ce944f9393cde4388a2fe6e1ed5aba108a4f8ac48ad3dbcb41558c2462cc`.
 The implementation was pushed normally to the named GitHub branch. A subsequent

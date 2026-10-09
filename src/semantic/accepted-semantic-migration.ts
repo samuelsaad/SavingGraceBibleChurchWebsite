@@ -13,9 +13,10 @@ export async function loadAcceptedSemanticMigration():Promise<LoadedSchemaMigrat
 export async function verifyAcceptedSemanticSchema(client:Pick<PoolClient,'query'>,options:{allowPreMigration?:boolean}={}):Promise<number>{
  const definitions=[...await completedSchemaMigrations(),await loadAcceptedSemanticMigration()];
  const journal=(await client.query('SELECT migration_order,migration_id,checksum_sha256 FROM schema_migrations ORDER BY migration_order')).rows;
- if(journal.length===27)definitions.push(await (await import('../cms/migration')).loadCmsMigration());
+ if(journal.length>=27)definitions.push(await (await import('../cms/migration')).loadCmsMigration());
+ if(journal.length===28)definitions.push(await (await import('../seo/source-public-migration')).loadSourcePublicMigration());
  const count=validateSchemaMigrationJournal(definitions,journal);
- if(count!==26&&count!==27&&!(options.allowPreMigration&&count===25))throw Error('semantic_schema_mismatch');
+ if(count!==26&&count!==27&&count!==28&&!(options.allowPreMigration&&count===25))throw Error('semantic_schema_mismatch');
  return count;
 }
 /** Caller must verify destination and begin a guarded transaction first. */

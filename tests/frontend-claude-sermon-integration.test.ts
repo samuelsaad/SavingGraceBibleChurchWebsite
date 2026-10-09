@@ -13,18 +13,18 @@ import { contentSecurityPolicy } from "../src/server/http/frontend-response";
 const preservedSources = [
   [
     "src/frontend/pages/home.ts",
-    // Visual-editor attributes are private; all 47 baseline church HTML documents remain byte-identical.
-    "47bccd2ecac412f5b8c4ab667c60b512e5cc762a1c02e13ba04bc579eb32a18e"
+    // Authorized SEO/source metadata controls preserve the existing church layout.
+    "afea1065813a47616ad5ef6419dd76799caa51e97db51ff33ab02b60332f7b14"
   ],
   [
     "src/frontend/pages/church.ts",
-    // Visual-editor attributes are private; all 47 baseline church HTML documents remain byte-identical.
-    "45ae19e675558f556c97e61147d5266c6fe7817890cbd740e561c5826bdb1dd5"
+    // Authorized SEO/source metadata controls preserve the existing church layout.
+    "54a3fe979a8c9f1a3325ca1e38137be345e9e336e3f562b4352ccab845e78ecc"
   ],
   [
     "src/frontend/styles/core.ts",
-    // Authorized mobile adaptation: contained no-JS menus and text-scaled gutters.
-    "1f12349f226180706458727a2b6a4e8a6e46297d4d4cbef1e76687a318a7df9b"
+    // Authorized mobile adaptation plus stable narrow masthead rows to prevent measured layout shift.
+    "8cca5442b28e5138c1c566510efd3708078bb256a1346c1365a2df0c2efd3bf2"
   ],
   [
     "src/frontend/styles/home.ts",
@@ -41,7 +41,7 @@ const preservedSources = [
   ],
   [
     "src/frontend/tokens.ts",
-    "f5c9097145bc4a8c171181edcd73f37df56264837657d83fc734c4000a3b47de"
+    "61bbbeeade853c73896c61512cb7a7f7c40adc47bcdee4529791fe5532dafb31"
   ],
   [
     "src/frontend/components/sections.ts",
@@ -63,7 +63,8 @@ const preservedSources = [
   ],
   [
     "src/frontend/scripts/sermon.ts",
-    "4941b691d054e2afe570b4436bfbfbc581c3a5ddbfc033fc1e30be6d73f3abad"
+    // Authorized shortcuts and reversible answer reveals retain passive media and complete initial content.
+    "fc3b1876aea69cc51bd4216b55dccf69376d8f05dc53674af50a3f5eea511f85"
   ],
 ] as const;
 export const fixture: SermonDetail = {
@@ -103,11 +104,11 @@ describe("Claude sermon integration inside the preserved Astra shell", () => {
     expect(sermonPath(publicRenderContext,encoded)).toBe('/sermons/'+encoded+'/');
   });
 
-  it('adds Arabic language/direction only to original-language reading content without redesigning the chrome',()=>{
+  it('declares Arabic document language and reading direction while preserving the site chrome',()=>{
     const page=renderPublicSermonPage({...fixture,language:'ar',title:'مثال تجريبي',summary:'نص عربي تجريبي لا يتضمن مادة وعظ حقيقية.',transcript:{bodyText:'فقرة تجريبية أولى.\n\nفقرة تجريبية ثانية.'},questionAnswers:[{question:'سؤال تجريبي؟',answer:'جواب تجريبي.',displayOrder:1}]});
     expect(page).toContain('<ol class="questions" role="list" lang="ar" dir="rtl">');
     expect(page).toContain('class="prose transcript__body" lang="ar" dir="rtl"');
-    expect(page).toContain('data-site-header');expect(page).not.toContain('<html lang="ar"');
+    expect(page).toContain('data-site-header');expect(page).toContain('<html lang="ar"');
     const english=renderPublicSermonPage(fixture);expect(english).toContain('<ol class="questions" role="list">');expect(english).not.toContain('class="prose transcript__body" lang="ar"');
   });
 
@@ -140,7 +141,7 @@ describe("Claude sermon integration inside the preserved Astra shell", () => {
     expect(claudeSermonTokens).toContain('--font-display:"Sitka Banner"');
   });
 
-  it("preserves exact escaped content, description-first order, visible ordered answers and private draft notices", () => {
+  it("preserves exact escaped content, description-first order, complete no-JavaScript answers and private draft notices", () => {
     const page=renderPublicSermonPage({...fixture,reviewState:"draft_awaiting_review"},previewRenderContext);
     const body=page.slice(page.indexOf('<main'));
     expect(body).toContain('First fixture paragraph with &lt;unsafe&gt; text.');
@@ -149,7 +150,8 @@ describe("Claude sermon integration inside the preserved Astra shell", () => {
     expect(body.indexOf('First fixture question?')).toBeLessThan(body.indexOf('Second fixture question?'));
     expect(body).toContain('First unchanged fixture answer.');
     expect(body).toContain('Second unchanged fixture answer.');
-    expect(body).toContain('<details class="transcript" open');
+    expect(body).toContain('<details class="transcript" data-open-for-print>');
+    expect(body).not.toMatch(/<details\b[^>]*class="transcript"[^>]*\sopen(?:[\s=>])/u);
     expect(body).toContain('Private draft awaiting administrator review.');
     expect(body).not.toMatch(/<details[^>]*class="question/);
     expect(page).not.toContain('rel="canonical"');
@@ -158,7 +160,7 @@ describe("Claude sermon integration inside the preserved Astra shell", () => {
 
   it("changes only the main Sermons destination, preserving the existing menu and stable alternative routes", () => {
     const publicHome=renderFrontendHomePage({sermons:[],options:emptyFilterOptions,totalItems:0,today:"2026-09-28"},publicRenderContext);
-    expect(publicHome).toContain('<li class="masthead__links-sermons"><a href="/sermons-v4/"');
+    expect(publicHome).toContain('<li class="masthead__links-sermons"><a href="/sermons/"');
     const preview=renderSermonsV4Page(input,previewRenderContext);
     expect(preview).toContain('<a href="/frontend-preview/sermons-v4/" data-sermon-archive');
     expect(preview).toContain('double-click to browse SermonsV4');

@@ -4,17 +4,20 @@
  * package; this module re-exports its render functions for existing callers.
  */
 import { ZodError } from "zod";
+import {publicSermonListQuerySchema} from "../../api/contracts/public-sermons";
 import {validateLegacySlug} from '../../domain/slug';
 import { InvalidLegacySermonQueryError } from "../../api/legacy-sermon-query";
 import {
   archivePath,
-  canonicalOrigin,
   publicRenderContext,
   renderFrontendBoundaryPage,
   renderPublicSermonArchivePage,
   renderPublicSermonPage
 } from "../../frontend";
-import { escapeXml } from "../../frontend/xml";
+import { renderSeoSitemap } from "../../seo/http-sitemap";
+import { renderSermonsV5Page } from "../../frontend/pages/sermons-v5";
+import { sermonPath } from "../../frontend/routes";
+import { archiveRoute, withHead, normalizedLegacyTermSearch } from "./http-routing";
 import type { PublicSermonRepository } from "../repositories/sermon-repository";
 import { createAlternateArchiveHandlers } from "./alternate-archives";
 import { createChurchSiteHandler, type ChurchSiteOptions } from "./church-site";
@@ -43,87 +46,63 @@ function redirect(status: 301, location: string): Response {
   return new Response(null, { status, headers: { ...plainResponseHeaders, Location: location } });
 }
 
-function renderSermonSitemap(entries: Array<{ slug: string; lastModified: string }>): string {
-  const urls = [
-    `<url><loc>${escapeXml(`${canonicalOrigin}${archivePath}`)}</loc></url>`,
-    ...entries.map((entry) => `<url><loc>${escapeXml(`${canonicalOrigin}/sermons/${entry.slug}/`)}</loc><lastmod>${escapeXml(entry.lastModified)}</lastmod></url>`)
-  ];
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.join("")}</urlset>`;
-}
-
 export function createPublicSermonSiteHandler(repository: PublicSermonRepository, context: FrontendRenderContext = publicRenderContext, churchOptions: ChurchSiteOptions = {}): (request:Request)=>Promise<Response|null> {
   if(churchOptions.content){const {content,...rest}=churchOptions;return async request=>createPublicSermonSiteHandler(repository,{...context,siteContent:await content()},rest)(request);}
+  const privatePreview = context.mode !== "public";
   function errorPage(status: 400 | 404 | 410 | 500, title: string, message: string): Response {
-    return frontendResponse(renderFrontendBoundaryPage({ title, message }, context), { status });
+    return frontendResponse(renderFrontendBoundaryPage({ title, message }, context), { status, privatePreview });
   }
   const alternates = createAlternateArchiveHandlers(repository, context);
   const church = createChurchSiteHandler(repository, context, churchOptions);
-  return async (request: Request): Promise<Response | null> => {
+  return withHead(async (request: Request): Promise<Response | null> => {
     const alternate = await alternates(request);
     if (alternate) return alternate;
     const churchPage = await church(request);
     if (churchPage) return churchPage;
     const url = new URL(request.url);
-    const isArchiveRoot = url.pathname === archivePath;
-    const archivePageMatch = /^\/sermons\/page\/(\d+)\/$/.exec(url.pathname);
-    const detailMatchRaw = /^\/sermons\/([^/]+)\/$/.exec(url.pathname);
-    const detailMatch = detailMatchRaw && validateLegacySlug(detailMatchRaw[1]) ? detailMatchRaw : null;
+    const archive = archiveRoute(url.pathname, archivePath);
+    const detailMatch = /^\/sermons\/([^/]+)\/?$/u.exec(url.pathname);
+    const slug = detailMatch ? validateLegacySlug(detailMatch[1]) : null;
     const isSitemap = url.pathname === "/sitemap-sermons.xml";
-    const needsTrailingSlash = url.pathname === "/sermons"
-      || /^\/sermons\/page\/\d+$/.test(url.pathname)
-      || Boolean(/^\/sermons\/([^/]+)$/.exec(url.pathname)?.[1] && validateLegacySlug(/^\/sermons\/([^/]+)$/.exec(url.pathname)![1]));
-    const isSermonRoute = isArchiveRoot || Boolean(archivePageMatch || detailMatch || isSitemap || needsTrailingSlash || url.pathname.startsWith("/sermons/"));
-    if (!isSermonRoute) return null;
+    if (!archive && !slug && !isSitemap && !url.pathname.startsWith("/sermons/")) return null;
     if (request.method !== "GET") {
-      return new Response("Method not allowed", { status: 405, headers: { ...plainResponseHeaders, "Content-Type": "text/plain; charset=utf-8", Allow: "GET" } });
+      return new Response("Method not allowed", { status: 405, headers: { ...plainResponseHeaders, "Content-Type": "text/plain; charset=utf-8", Allow: "GET, HEAD" } });
     }
-
     try {
-      if (needsTrailingSlash) return redirect(301, `${url.pathname}/${url.search}`);
-
       if (isSitemap) {
-        const entries = await repository.listPublishedSitemapEntries();
-        return new Response(renderSermonSitemap(entries), {
-          status: 200,
-          headers: { ...plainResponseHeaders, "Content-Type": "application/xml; charset=utf-8" }
+        if (privatePreview || context.seo?.indexable === false) return errorPage(404,"Page not found","The requested page does not exist.");
+        const [entries,archive]=await Promise.all([repository.listPublishedSitemapEntries(),repository.listPublished(publicSermonListQuerySchema.parse({page:1,pageSize:1}))]);
+        return new Response(renderSeoSitemap(entries,context,true,[],archive.totalItems), {
+          status: 200, headers: { ...plainResponseHeaders, "Content-Type": "application/xml; charset=utf-8" }
         });
       }
-
-      if (isArchiveRoot || archivePageMatch) {
-        const pathPage = archivePageMatch ? Number(archivePageMatch[1]) : 1;
-        if (!Number.isSafeInteger(pathPage) || pathPage < 1) {
-          return errorPage(404, "Page not found", "That sermon archive page does not exist.");
-        }
-        if (archivePageMatch && pathPage === 1) return redirect(301, `${archivePath}${url.search}`);
-        const loaded = await loadArchivePage(repository, url.searchParams, archivePageMatch ? pathPage : null);
-        if (loaded.kind === "not-found") {
-          return errorPage(404, "Page not found", "That sermon archive page does not exist.");
-        }
-        return frontendResponse(renderPublicSermonArchivePage(loaded.input, context));
+      if (archive) {
+        const normalizedSearch=normalizedLegacyTermSearch(url.search);
+        if (url.pathname !== archive.path || url.search !== normalizedSearch) return redirect(301, `${archive.path}${normalizedSearch}`);
+        const loaded = await loadArchivePage(repository, url.searchParams, archive.page > 1 ? archive.page : null, {includeDirectoryOptions:context.mode==="public"});
+        if (loaded.kind === "not-found") return errorPage(404,"Page not found","That sermon archive page does not exist.");
+        return frontendResponse(context.mode === "public"
+          ? renderSermonsV5Page(loaded.input,context,{canonical:true})
+          : renderPublicSermonArchivePage(loaded.input,context), {privatePreview});
       }
-
-      if (detailMatch) {
-        const [sermon, options] = await Promise.all([
-          repository.findPublishedBySlug(detailMatch[1]!),
-          repository.listPublishedFilterOptions()
-        ]);
-        if (sermon) return frontendResponse(renderPublicSermonPage(sermon, context, { options }));
-        const disposition = await repository.findPublicPathDisposition(url.pathname);
-        if (disposition?.kind === "redirect") return redirect(301, disposition.location);
-        if (disposition?.kind === "gone") {
-          return errorPage(410, "Sermon no longer available", "This sermon has been permanently removed.");
+      if (slug) {
+        const path = sermonPath(publicRenderContext,slug);
+        const sermon = await repository.findPublishedBySlug(slug);
+        if (sermon) {
+          if (url.pathname !== path) return redirect(301,`${path}${url.search}`);
+          const options = await repository.listPublishedFilterOptions();
+          return frontendResponse(renderPublicSermonPage(sermon,context,{options}),{privatePreview});
         }
-        return errorPage(404, "Sermon not found", "The requested sermon is not publicly available.");
+        const disposition = await repository.findPublicPathDisposition(path);
+        if (disposition?.kind === "redirect") return redirect(301, `${disposition.location}${url.search}`);
+        if (disposition?.kind === "gone") return errorPage(410,"Sermon no longer available","This sermon has been permanently removed.");
+        return errorPage(404,"Sermon not found","The requested sermon is not publicly available.");
       }
-
-      return errorPage(404, "Page not found", "The requested sermon page does not exist.");
+      return errorPage(404,"Page not found","The requested sermon page does not exist.");
     } catch (error) {
-      if (error instanceof ZodError || error instanceof InvalidLegacySermonQueryError) {
-        return errorPage(400, "Check the sermon filters", "One or more filter values are invalid.");
-      }
-      return errorPage(500, "Sermons temporarily unavailable", "Please try again later.");
+      if (error instanceof ZodError || error instanceof InvalidLegacySermonQueryError) return errorPage(400,"Check the sermon filters","One or more filter values are invalid.");
+      return errorPage(500,"Sermons temporarily unavailable","Please try again later.");
     }
-  };
+  });
 }
-
 export const createPublicSermonPageHandler = createPublicSermonSiteHandler;

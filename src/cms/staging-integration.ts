@@ -1,3 +1,5 @@
+import {readSourcePublicPages} from '../seo/source-public-store';
+import {createSourcePublicVisitor,retainPrivateRoutes} from '../seo/site-integration';
 /** D-179: request-handler integration only. Reuses the incumbent protected
  * container/socket; this module creates no server, port, proxy or listener. */
 import {Pool} from "pg";
@@ -23,8 +25,9 @@ export async function createStagingCmsIntegration(options:{reader:Pool;sermons:P
   const checkWriter=()=>verifyStagingCmsWriter(writer);
   await checkWriter();const assetStore=new PostgresCmsAssetStore(writer),assets=await CmsDiskAssets.create(process.env.CMS_STORAGE_DIRECTORY,assetStore);
   const session=new CmsSessionProvider({origin:process.env.CMS_ORIGIN??"",secret:await readCmsSecret("/run/secrets/cms_session_secret"),environment:"staging"});
-  const handler=createCmsRuntimeHandler({repository:new PostgresCmsRepository(writer),assetStore,assets,session,sermons:options.sermons,dashboardDirectory:"/app/admin",environment:"staging",release:options.release,ready:async()=>{await verify();await checkWriter();},...(options.evaluation?{evaluation:options.evaluation}:{})});
-  return{handler,origin:session.origin,maximumBodyBytes:cmsUploadMaximum+1024,close:()=>writer.end()};
+  const handler=createCmsRuntimeHandler({repository:new PostgresCmsRepository(writer),assetStore,assets,session,sermons:options.sermons,dashboardDirectory:"/app/admin",environment:"staging",release:options.release,ready:async()=>{await verify();await checkWriter();},...(process.env.SOURCE_PUBLIC_ENABLED==='1'?{sourcePages:()=>readSourcePublicPages(options.reader)}:{}),...(options.evaluation?{evaluation:options.evaluation}:{})});
+  const selected=process.env.SOURCE_PUBLIC_ENABLED==='1'?retainPrivateRoutes(handler,await createSourcePublicVisitor(options.reader,process.env.CMS_STORAGE_DIRECTORY,session.origin,options.sermons)):handler;
+  return{handler:selected,origin:session.origin,maximumBodyBytes:cmsUploadMaximum+1024,close:()=>writer.end()};
  }
  if(environment!=="staging_public"||process.env.CMS_ACCESS||process.env.CMS_ORIGIN)throw Error("cms_public_identity_refused");
  const repository=new PostgresCmsRepository(options.reader),store=new PostgresCmsAssetStore(options.reader),assets=await CmsDiskAssets.create(process.env.CMS_STORAGE_DIRECTORY,store);
@@ -38,5 +41,6 @@ export async function createStagingCmsIntegration(options:{reader:Pool;sermons:P
   }
   return visitor(request);
  };
- return{handler,origin:"http://127.0.0.1:8080",maximumBodyBytes:16384,close:async()=>{}};
+ const selected=process.env.SOURCE_PUBLIC_ENABLED==='1'?retainPrivateRoutes(handler,await createSourcePublicVisitor(options.reader,process.env.CMS_STORAGE_DIRECTORY,"http://127.0.0.1:8080",options.sermons)):handler;
+ return{handler:selected,origin:"http://127.0.0.1:8080",maximumBodyBytes:16384,close:async()=>{}};
 }

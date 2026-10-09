@@ -3,12 +3,13 @@ import { describe, expect, it, vi } from "vitest";
 import type { PublicSermonListQuery } from "../src/api/contracts/public-sermons";
 import type { SermonSummary } from "../src/domain/sermon";
 import { emptyFilterOptions } from "../src/frontend";
-import { publicRenderContext, restrictedRenderContext } from "../src/frontend/routes";
+import { draftPreviewRenderContext, previewRenderContext, publicRenderContext, restrictedRenderContext, type FrontendRenderContext } from "../src/frontend/routes";
 import { canonScript } from "../src/frontend/scripts/canon";
 import { createAlternateArchiveHandlers } from "../src/server/http/alternate-archives";
+import { loadArchivePage } from "../src/server/http/frontend-archive-loader";
 import { createLocalFrontendPreviewHandler } from "../src/server/http/local-frontend-preview";
 import { createPublicSermonSiteHandler } from "../src/server/http/public-sermon-page";
-import type { PublicSermonRepository } from "../src/server/repositories/sermon-repository";
+import type { PublicSermonFilterOptions, PublicSermonRepository } from "../src/server/repositories/sermon-repository";
 import { createSealedStagingHandler } from "../src/staging/handler";
 
 function repository() {
@@ -60,15 +61,15 @@ describe("SermonsV5 route integration", () => {
     for (const context of [publicRenderContext, restrictedRenderContext]) {
       const source = repository();
       const route = createPublicSermonSiteHandler(source, context);
-      const response = await route(new Request("http://127.0.0.1/sermons-v5/?sermon_speaker=example-speaker&s=grace"));
+      const response = await route(new Request("http://127.0.0.1/"+(context.mode==="public"?"sermons":"sermons-v5")+"/?sermon_speaker=example-speaker&s=grace"));
       expect(response?.status).toBe(200);
       expect(source.listPublished).toHaveBeenCalledWith(expect.objectContaining({
         speaker: "example-speaker", query: "grace", page: 1, pageSize: 9
       }));
-      expect(response?.headers.get("x-robots-tag")).toBe(context.mode === "public" ? "noindex, follow" : "noindex, nofollow, noarchive");
+      expect(response?.headers.get("x-robots-tag")).toBe(context.mode === "public" ? null : "noindex, nofollow, noarchive");
       expect(response?.headers.get("cache-control")).toContain("no-store");
       const html = await response!.text();
-      expect(html).toContain('action="/sermons-v5/#v5-results"');
+      expect(html).toContain('action="/'+(context.mode==='public'?'sermons':'sermons-v5')+'/#v5-results"');
       if (context.mode === "public") {
         expect(html).toContain('rel="canonical" href="https://www.savinggrace.org.au/sermons/"');
       } else {
@@ -83,7 +84,7 @@ describe("SermonsV5 route integration", () => {
 
   it("keeps pagination, redirects, invalid filters and method handling within V5", async () => {
     const source = repository();
-    const route = createAlternateArchiveHandlers(source, publicRenderContext);
+    const route = createAlternateArchiveHandlers(source, restrictedRenderContext);
     for (const path of ["/sermons-v5?s=grace", "/sermons-v5/page/1/?s=grace"]) {
       const response = await route(new Request(`http://127.0.0.1${path}`));
       expect(response?.status).toBe(301);
@@ -140,5 +141,110 @@ describe("SermonsV5 route integration", () => {
     expect(response.headers.get("content-security-policy")).toContain("script-src 'sha256-");
     expect(response.headers.get("content-security-policy")).not.toContain("'unsafe-inline'");
     expect(await response.text()).not.toContain('rel="canonical"');
+  });
+});
+
+
+describe("V5 directory count destinations", () => {
+  const globalOptions: PublicSermonFilterOptions = {
+    ...emptyFilterOptions,
+    series: [
+      { name: "Shared series", slug: "shared-series", sermonCount: 2 },
+      { name: "Other series", slug: "other-series", sermonCount: 5 }
+    ],
+    speakers: [
+      { name: "Example Speaker", slug: "example-speaker", sermonCount: 12 },
+      { name: "Other Speaker", slug: "other-speaker", sermonCount: 3 }
+    ]
+  };
+  const contextualOptions: PublicSermonFilterOptions = {
+    ...emptyFilterOptions,
+    series: [{ name: "Shared series", slug: "shared-series", sermonCount: 1 }],
+    speakers: [{ name: "Example Speaker", slug: "example-speaker", sermonCount: 1 }]
+  };
+
+  function countedRepository() {
+    const base = repository();
+    return {
+      ...base,
+      listPublished: vi.fn(async (query: PublicSermonListQuery) => {
+        const totalItems = query.query ? 1
+          : query.series ? globalOptions.series.find(item => item.slug === query.series)!.sermonCount!
+          : query.speaker ? globalOptions.speakers.find(item => item.slug === query.speaker)!.sermonCount!
+          : 12;
+        const result = await base.listPublished(query);
+        return { data: result.data.slice(0, totalItems), totalItems };
+      }),
+      listPublishedFilterOptions: vi.fn(async (query?: PublicSermonListQuery) => query?.query ? contextualOptions : globalOptions)
+    } satisfies PublicSermonRepository;
+  }
+
+  function routeFor(source: PublicSermonRepository, context: FrontendRenderContext) {
+    return context.mode === "preview" || context.mode === "draft-preview"
+      ? createLocalFrontendPreviewHandler(source, { authorizes: () => true }, { root: context.basePath as "/frontend-preview" | "/draft-preview", context })
+      : createPublicSermonSiteHandler(source, context);
+  }
+
+  it.each([publicRenderContext, restrictedRenderContext, previewRenderContext, draftPreviewRenderContext])(
+    "matches each global directory count to its unfiltered destination while preserving the $mode finder",
+    async (context) => {
+      const source = countedRepository();
+      const route = routeFor(source, context);
+      const response = await route(new Request(`http://127.0.0.1${context.basePath}/${context.mode==="public"?"sermons":"sermons-v5"}/?sermon_speaker=example-speaker&s=synthetic`));
+      expect(response?.status).toBe(200);
+      expect(source.listPublishedFilterOptions).toHaveBeenCalledTimes(2);
+      expect(source.listPublishedFilterOptions).toHaveBeenCalledWith(expect.objectContaining({ speaker: "example-speaker", query: "synthetic" }));
+      expect(source.listPublishedFilterOptions).toHaveBeenCalledWith();
+      const html = await response!.text();
+      const finder = html.match(/<form class="finder__form"[\s\S]*?<\/form>/u)![0];
+      expect(finder).toContain('value="shared-series">Shared series (1)</option>');
+      expect(finder).toContain('value="example-speaker" selected>Example Speaker (1)</option>');
+      expect(finder).not.toContain("Other series");
+      expect(finder).not.toContain("Other Speaker");
+      const tables = [...html.matchAll(/<table class="v5-directory">([\s\S]*?)<\/table>/gu)];
+      expect(tables).toHaveLength(2);
+      const rows = tables.flatMap(([, table]) => [...table!.matchAll(/<tr><th scope="row"><a class="v5-directory__link" href="([^"]+)"[\s\S]*?class="v5-directory__count">(\d+)<\/span><\/td><\/tr>/gu)]);
+      expect(rows).toHaveLength(4);
+      expect(rows.map(([, , count]) => Number(count))).toEqual([2, 5, 12, 3]);
+      for (const [, href, count] of rows) {
+        const destination = new URL(href!.replaceAll("&amp;", "&"), "http://127.0.0.1");
+        expect(destination.pathname.startsWith(`${context.basePath}/`)).toBe(true);
+        expect(destination.searchParams.has("s")).toBe(false);
+        expect(destination.searchParams.size).toBe(context.mode === "preview" ? 0 : 1);
+        const target = await route(new Request(destination));
+        expect(target?.status).toBe(200);
+        const targetHtml = await target!.text();
+        if (context.mode === "preview") expect(targetHtml).toContain(`<span>${count} sermons</span>`);
+        else if(context.mode==="public") expect(targetHtml).toContain(`<span>${count} sermons</span>`);
+        else expect(targetHtml).toMatch(new RegExp(`id="results-status">${count} sermons`));
+      }
+    }
+  );
+
+  it.each(["", "view=recent", "page=2"])("reuses one eligible options result without active filters (%s)", async (search) => {
+    const source = countedRepository();
+    const loaded = await loadArchivePage(source, new URLSearchParams(search), null, { includeDirectoryOptions: true });
+    expect(loaded.kind).toBe("page");
+    expect(source.listPublishedFilterOptions).toHaveBeenCalledTimes(1);
+    if (loaded.kind === "page") {
+      expect(loaded.input.directoryOptions).toBe(loaded.input.options);
+      expect(loaded.input.directoryOptions).toBe(globalOptions);
+    }
+  });
+
+  it("does not load a global directory for the ordinary archive or V4", async () => {
+    const source = countedRepository();
+    const query = new URLSearchParams("sermon_speaker=example-speaker&s=synthetic");
+    const loaded = await loadArchivePage(source, query, null);
+    expect(loaded.kind).toBe("page");
+    if (loaded.kind === "page") {
+      expect(loaded.input).not.toHaveProperty("directoryOptions");
+      expect(loaded.input.options).toBe(contextualOptions);
+    }
+    expect(source.listPublishedFilterOptions).toHaveBeenCalledTimes(1);
+    source.listPublishedFilterOptions.mockClear();
+    const response = await createAlternateArchiveHandlers(source, restrictedRenderContext)(new Request(`http://127.0.0.1/sermons-v4/?${query}`));
+    expect(response?.status).toBe(200);
+    expect(source.listPublishedFilterOptions).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ speaker: "example-speaker", query: "synthetic" }));
   });
 });

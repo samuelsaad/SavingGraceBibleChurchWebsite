@@ -14,8 +14,8 @@ import type { FrontendSiteSnapshot } from "../../frontend/content/site-snapshot"
 import type { Block } from "../../frontend/content/types";
 import type { CmsHomeBlock } from "../../cms/model";
 import type { SermonSummary } from "../../domain/sermon";
-import { escapeXml } from "../../frontend/xml";
-import { canonicalOrigin } from "../../frontend/routes";
+import { renderSeoSitemap, type SitemapUrl } from "../../seo/http-sitemap";
+import { withHead } from "./http-routing";
 import { ZodError } from "zod";
 import { publicSermonListQuerySchema } from "../../api/contracts/public-sermons";
 import { InvalidLegacySermonQueryError } from "../../api/legacy-sermon-query";
@@ -43,6 +43,8 @@ export interface ChurchSiteOptions {
   today?: () => string;
   /** Fresh published or selected-revision snapshot, loaded once per request. */
   content?: () => Promise<FrontendSiteSnapshot>;
+  /** Additional proven source-public routes; current CMS routes retain precedence. */
+  sourceSitemap?: () => Promise<readonly SitemapUrl[]>;
 }
 
 const calendarPath = `${eventsPath}calendar.ics`;
@@ -94,7 +96,7 @@ export function createChurchSiteHandler(repository: PublicSermonRepository, cont
     return { today: today(), sermons: sermons.data, options, sermonSelections:selections };
   }
 
-  return async (request: Request): Promise<Response | null> => {
+  return withHead(async (request: Request): Promise<Response | null> => {
     const url = new URL(request.url);
     const asset = siteAssetResponse(request);
     if (asset) return asset;
@@ -119,9 +121,9 @@ export function createChurchSiteHandler(repository: PublicSermonRepository, cont
         return redirect(`${contextualPath(context,disposition?.kind==="redirect"?disposition.location:slashless)}${url.search}`);
       }
       if(relative==="/sitemap.xml"){
-        if(context.mode!=="public")return boundary(404,"Page not found","The requested page does not exist.");
-        const paths=context.siteContent ? context.siteContent.routes.filter(route=>route.status===200).map(route=>route.path) : [];
-        const xml=`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${[...new Set(paths)].map(path=>`<url><loc>${escapeXml(`${canonicalOrigin}${path}`)}</loc></url>`).join("")}</urlset>`;
+        if(context.mode!=="public" || context.seo?.indexable===false)return boundary(404,"Page not found","The requested page does not exist.");
+        const [sermons,source,archive]=await Promise.all([repository.listPublishedSitemapEntries(),options.sourceSitemap?.()??Promise.resolve([]),repository.listPublished(publicSermonListQuerySchema.parse({page:1,pageSize:1}))]);
+        const xml=renderSeoSitemap(sermons,context,false,source,archive.totalItems);
         return new Response(xml,{headers:{...plainResponseHeaders,"Content-Type":"application/xml; charset=utf-8"}});
       }
       const disposition = legacyDisposition(relative, context);
@@ -169,7 +171,7 @@ export function createChurchSiteHandler(repository: PublicSermonRepository, cont
       }
       return boundary(500, "Page temporarily unavailable", "Please try again later.", "error");
     }
-  };
+  });
 }
 
 /** A church route requested without its trailing slash, or null. */

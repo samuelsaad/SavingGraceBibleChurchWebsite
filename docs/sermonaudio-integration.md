@@ -12,9 +12,34 @@ The official public RSS feed supplies a limited catalogue, not an exhaustive arc
 
 ## Playback and privacy
 
-The existing media section retains YouTube and adds an audio consent panel only for a validated structured recording. An explicit, keyboard-accessible **Load audio player** action creates the responsive iframe. There is no iframe, preconnect, player request or autoplay before activation. The iframe has a descriptive title and keyboard focus; a normal **Listen on SermonAudio** link survives script or player failure. No audio/video is downloaded, stored, transcribed or processed by the application.
+The existing media section retains YouTube and adds an audio consent panel only for a validated structured recording. An explicit, keyboard-accessible **Load audio player** action creates the responsive iframe. There is no iframe, preconnect, player request or autoplay before activation. The iframe has a descriptive title and keyboard focus; the embedded controls remain on the sermon page. The 9 October follow-up removes the separate outbound provider buttons; player failures offer a reload instruction. No audio/video is downloaded, stored, transcribed or processed by the application.
 
 CSP permits only `https://embed.sermonaudio.com` as an additional frame origin, and only on documents containing actual controlled audio markup. Existing YouTube and unrelated CSP restrictions remain intact. Private cache and indexing protections are unchanged.
+
+## Explicit sermon-list playback shortcuts (9 October local follow-up)
+
+V5 card icons now target that sermon's eligible detail page. `#play-audio` reads
+its validated numeric recording identity and redirects to the provider's individual
+`https://www.sermonaudio.com/sermons/<id>/a?autoplay=1` playback page. This uses
+the [official SermonAudio autoplay route](https://www.sermonaudio.com/gb/sermons/216252350143255/a?autoplay=1).
+The [official embed guidance](https://sermonaudiotips.com/embedding-singlesermon/)
+describes an autoplay option without documenting its embed parameter, so no
+undocumented embed query parameter is introduced.
+
+The corresponding YouTube shortcut uses its validated privacy-enhanced iframe,
+with [documented `autoplay=1`](https://developers.google.com/youtube/player_parameters)
+and iframe autoplay permission. Provider/browser autoplay restrictions may still
+require pressing Play; see [YouTube autoplay blocking](https://developers.google.com/youtube/iframe_api_reference#onAutoplayBlocked).
+Normal visits and manual load buttons preserve the existing passive behavior.
+The later 9 October follow-up removes the separate Watch on YouTube and Listen
+on SermonAudio links from the detail page, including obsolete no-script and
+error references. The existing explicit card actions are retained.
+Missing media shows an explicit status rather than selecting a different provider.
+The transcript shortcut opens and focuses the already-rendered transcript.
+
+Offline browser verification intercepts every provider request; no recording was
+retrieved or audibly verified. See [V5 validation](design/sermons-v5.md) for the
+local interaction evidence. This follow-up has no content writes or deployment.
 
 ## Audited writes and preserved review dependencies
 

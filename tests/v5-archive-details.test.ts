@@ -5,6 +5,7 @@ import { emptyFilterOptions } from "../src/frontend";
 import { renderSermonsV5Page } from "../src/frontend/pages/sermons-v5";
 import { publicRenderContext, restrictedRenderContext } from "../src/frontend/routes";
 import { createAlternateArchiveHandlers } from "../src/server/http/alternate-archives";
+import { createPublicSermonSiteHandler } from "../src/server/http/public-sermon-page";
 import { createLocalFrontendPreviewHandler } from "../src/server/http/local-frontend-preview";
 import { buildPublishedSermonDetailQuery, buildPublishedSermonListQuery } from "../src/server/queries/public-sermons";
 import type { PublicSermonRepository } from "../src/server/repositories/sermon-repository";
@@ -54,12 +55,13 @@ describe("V5 eligible archive description scope", () => {
     const excluded = detail(summary(99));
     const details = listed.map(detail);
     const repository = source(listed, [...details, excluded]);
-    const handler = createAlternateArchiveHandlers(repository, context);
-    const response = await handler(new Request("http://127.0.0.1/sermons-v5/?s=example"));
+    const handler = context.mode==="public"?createPublicSermonSiteHandler(repository,context):createAlternateArchiveHandlers(repository, context);
+    const response = await handler(new Request("http://127.0.0.1/"+(context.mode==="public"?"sermons":"sermons-v5")+"/?s=example"));
     expect(response?.status).toBe(200);
     expect(repository.listPublished).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ query: "example", pageSize: 9 }));
     expect(repository.findPublishedBySlug).not.toHaveBeenCalled();
-    expect(renderSermonsV5Page).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ sermons: listed }), context);
+    if(context.mode==="public") expect(renderSermonsV5Page).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ sermons: listed }), context,{canonical:true});
+    else expect(renderSermonsV5Page).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ sermons: listed }), context);
     const renderedInput = vi.mocked(renderSermonsV5Page).mock.calls[0]![0];
     expect(renderedInput.sermons).toBe(listed);
     expect(renderedInput).not.toHaveProperty("details");
@@ -68,7 +70,7 @@ describe("V5 eligible archive description scope", () => {
     expect(repository.listPublishedTopicalSermons).not.toHaveBeenCalled();
     expect(repository.listPublishedSeriesRepresentatives).not.toHaveBeenCalled();
     expect(response?.headers.get("cache-control")).toContain("no-store");
-    expect(response?.headers.get("x-robots-tag")).toBe(context.mode === "public" ? "noindex, follow" : "noindex, nofollow, noarchive");
+    expect(response?.headers.get("x-robots-tag")).toBe(context.mode === "public" ? null : "noindex, nofollow, noarchive");
   });
 
   it("preserves complete descriptions and page ordering independently of unavailable details", async () => {
@@ -76,11 +78,11 @@ describe("V5 eligible archive description scope", () => {
     listed[0]!.summary = "A synthetic description opening.\n\n" + "This anonymous paragraph remains complete. ".repeat(24) + "The synthetic description ends here.";
     const repository = source(listed);
     repository.findPublishedBySlug.mockRejectedValue(new Error("Detail lookup must not be reached"));
-    const response = await createAlternateArchiveHandlers(repository, publicRenderContext)(new Request("http://127.0.0.1/sermons-v5/page/2/?sermon_speaker=example-speaker"));
+    const response = await createPublicSermonSiteHandler(repository, publicRenderContext)(new Request("http://127.0.0.1/sermons/page/2/?sermon_speaker=example-speaker"));
     expect(response?.status).toBe(200);
     expect(repository.listPublished).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ page: 2, pageSize: 9, speaker: "example-speaker" }));
     expect(repository.findPublishedBySlug).not.toHaveBeenCalled();
-    expect(renderSermonsV5Page).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ sermons: listed }), publicRenderContext);
+    expect(renderSermonsV5Page).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ sermons: listed }), publicRenderContext,{canonical:true});
     expect(vi.mocked(renderSermonsV5Page).mock.calls[0]![0].sermons[0]!.summary).toBe(listed[0]!.summary);
   });
 
@@ -112,7 +114,7 @@ describe("V5 eligible archive description scope", () => {
 
   it.each(["v1", "v4"])("leaves %s as a summary-only presentation", async (presentation) => {
     const repository = source([summary(1)]);
-    const response = await createAlternateArchiveHandlers(repository, publicRenderContext)(new Request(`http://127.0.0.1/sermons-${presentation}/`));
+    const response = await createAlternateArchiveHandlers(repository, restrictedRenderContext)(new Request(`http://127.0.0.1/sermons-${presentation}/`));
     expect(response?.status).toBe(200);
     expect(repository.findPublishedBySlug).not.toHaveBeenCalled();
     expect(renderSermonsV5Page).not.toHaveBeenCalled();
@@ -121,7 +123,7 @@ describe("V5 eligible archive description scope", () => {
   it("returns the generic unavailable response if summary loading fails", async () => {
     const repository = source([summary(1)]);
     repository.listPublished.mockRejectedValue(new Error("Anonymous backend failure"));
-    const response = await createAlternateArchiveHandlers(repository, publicRenderContext)(new Request("http://127.0.0.1/sermons-v5/"));
+    const response = await createPublicSermonSiteHandler(repository, publicRenderContext)(new Request("http://127.0.0.1/sermons/"));
     expect(response?.status).toBe(500);
     expect(await response!.text()).not.toContain("Anonymous backend failure");
     expect(repository.findPublishedBySlug).not.toHaveBeenCalled();

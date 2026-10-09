@@ -1,10 +1,12 @@
+import {renderSourceContent} from '../source-content';
 /**
  * The sermon page: a reading room. The book tab at the left, the reading
  * column with the description, the video plate, the open transcript and the
  * questions, related sermons at the end, and an "On this page" rail.
  *
  * Transcript and Q&A wording is rendered exactly as approved. The transcript
- * is a native disclosure, open by default; Q&A answers stay open in flow.
+ * is a native disclosure, closed by default; Q&A answers use independent enhanced
+ * Show answer controls and remain readable without JavaScript.
  */
 import type { SermonDetail } from "../../domain/sermon";
 import type { PublicSermonFilterOptions } from "../../server/repositories/sermon-repository";
@@ -49,7 +51,7 @@ export function renderPublicSermonPage(
   const canonicalPath = `/sermons/${sermon.slug}/`;
   const metadataDescription = sermon.seoDescription ?? sermon.summary ?? undefined;
   const isLongTitle = sermon.title.length > 40;
-  const contentLanguage=sermon.language??'en';
+  const contentLanguage=sermon.sourcePublic?.language??sermon.language??'en';
   const contentAttributes=contentLanguage==='ar'?html` lang="ar" dir="rtl"`:null;
   const stats = sermon.transcript ? readingStats(sermon.transcript.bodyText) : null;
   const trail = html`<ol class="trail" role="list">
@@ -96,7 +98,7 @@ export function renderPublicSermonPage(
   const transcript = sermon.transcript
     ? html`<section class="sermon-section" id="transcript" aria-labelledby="transcript-heading">
         <h2 id="transcript-heading" class="section__title">Transcript</h2>
-        <details class="transcript" open data-open-for-print>
+        <details class="transcript" data-open-for-print>
           <summary class="transcript__summary"><span class="transcript__label--closed">Read the transcript</span><span class="transcript__label--open">Hide the transcript</span>${when(stats, () => html`<span class="transcript__stats">${formatCount(stats!.words, "word")} · about ${formatCount(stats!.minutes, "minute")}</span>`)}</summary>
           <div class="prose transcript__body"${contentAttributes}>${plainTextParagraphs(sermon.transcript.bodyText)}</div>
           <p class="transcript__back"><a href="#transcript-heading">Back to the top of the transcript</a></p>
@@ -109,7 +111,8 @@ export function renderPublicSermonPage(
         <ol class="questions" role="list"${contentAttributes}>${sermon.questionAnswers.map((item, index) => html`<li class="question">
           <span class="question__number" aria-hidden="true">${index + 1}</span>
           <h3 class="question__title"><span class="sr-only">Question ${index + 1}: </span>${item.question}</h3>
-          <div class="prose question__answer">${plainTextParagraphs(item.answer)}</div>
+          <button class="question__toggle" type="button" lang="en" dir="ltr" data-toggle-answer aria-expanded="false" aria-controls="question-answer-${index + 1}" hidden><span data-answer-label>Show answer</span><span class="sr-only"> for question ${index + 1}</span><svg class="question__chevron" viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false"><path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg></button>
+          <div class="prose question__answer" id="question-answer-${index + 1}"><div class="question__answer-content">${plainTextParagraphs(item.answer)}</div></div>
         </li>`)}</ol>
       </section>`
     : null;
@@ -146,8 +149,10 @@ export function renderPublicSermonPage(
   const tab = html`<div class="sermon__tab">${sermon.isTopical ? topicalTab() : bookTab(book, { href: book ? withFilter({ ...emptyQuery }, { passageBook: book.slug, passageScope: "book" }, context, "canon") : null, count: bookCount, ghost: !book })}</div>`;
   return pageShell({
     title: sermon.title,
+    ...(sermon.sourcePublic ? {seo:{title:sermon.sourcePublic.title,...(sermon.sourcePublic.socialType?{socialType:sermon.sourcePublic.socialType}:{}),...(sermon.sourcePublic.socialTitle?{socialTitle:sermon.sourcePublic.socialTitle}:{}),...(sermon.sourcePublic.socialDescription?{socialDescription:sermon.sourcePublic.socialDescription}:{}),...(sermon.sourcePublic.socialImage?{image:sermon.sourcePublic.socialImage}:{}),noindex:!sermon.sourcePublic.indexable,description:sermon.sourcePublic.description??''}} : {}),
     ...(metadataDescription ? { description: metadataDescription } : {}),
     canonicalPath,
+    sourceMetadata:{language:contentLanguage,...(sermon.sourcePublic?{publishedAt:sermon.sourcePublic.publishedAt,modifiedAt:sermon.sourcePublic.modifiedAt}:{}),breadcrumbs:[{name:"Sermons",path:archivePath},{name:sermon.title,path:canonicalPath}]},
     robots: "index, follow",
     openGraphType: "article",
     styles: ["shelf", "sermon", "claudeSermons"],
@@ -159,6 +164,7 @@ export function renderPublicSermonPage(
         ${head}
         ${reviewNotice}
         ${description}
+        ${when(sermon.sourcePublic?.content.length,()=>html`<section class="sermon-section"><div class="prose"${contentAttributes}>${renderSourceContent(sermon.sourcePublic!.content)}</div></section>`)}
         ${mediaSection(sermon)}
         ${transcript}
         ${questions}

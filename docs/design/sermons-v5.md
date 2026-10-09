@@ -308,3 +308,164 @@ deployment, content mutation, commit or push occurred in this V5 task. The
 existing suite and type-check findings remain limitations of the full
 repository verification. The scoped ship disposition does not establish
 deployment or production readiness.
+
+
+## 9 October local follow-up: active sermon shortcuts
+
+The three journal icons are now accessible links on every V5 featured, recent,
+filtered, numbered-page and appended card. YouTube links to the same eligible
+sermon with `#play-video`, SermonAudio uses `#play-audio`, and the transcript uses
+`#transcript`. Preview prefixes are retained. No list DTO/query change, content
+write, migration, dependency, or eligibility change was needed.
+
+The detail page resolves only its existing validated media. The audio shortcut
+replaces the handoff page with the individual SermonAudio audio page and its
+`autoplay=1` request; Back returns to the list. The video shortcut creates the
+controlled YouTube iframe with `autoplay=1` and the corresponding iframe allow
+permission. A normal visit or manual Load button remains passive. Native transcript
+disclosure opens and its heading receives focus, including repeated activation.
+Missing content produces a focused status message and never substitutes another
+provider. Icons have 44-pixel targets and visible keyboard focus.
+
+Browser verification uses generated anonymous records only. All external requests
+are intercepted and fulfilled locally; it verifies URLs and playback requests,
+not audible recording playback or provider availability. Browser autoplay policy
+can require a further press of Play. The subsequent question-controls follow-up removes the separate outbound provider buttons.
+
+Completed local checks:
+
+- `verify-sermon-shortcuts-browser.mjs`: 12 interaction cases passed at 1440,
+  390 and 320 pixels, including keyboard video activation, per-record audio
+  identity and Back, transcript reopen/focus, three missing-content cases,
+  normal visits/manual loading, appended cards and no-JavaScript transcript.
+- Existing `verify-v5-browser.mjs`: all 13 archive cases passed at 1440, 768,
+  390 and 320 pixels; zero browser errors, provider requests or database access.
+- Anonymous desktop/mobile captures were inspected; no overflow or overlapping
+  targets. The incumbent visual design is retained.
+- Full standard suite: 1,141 passed, 142 gated/skipped. Database checks are not
+  claimed from skips; this change has no database/schema writes.
+- Final `npm run check`: 589 files, zero errors or warnings and seven hints.
+- The read-only outgoing scan covered 113 source files and 129 build files with
+  zero private-body matches, excluded paths, secret/source classes or symlink
+  findings. Existing approved datasets retained their baseline scope and hashes.
+- Static build: 45 pages; local staging bundle passed. Anonymous importer dry
+  run passed; cached offline audit returned zero vulnerabilities.
+
+The requested loopback dashboard was restarted on port 4430 with the truthful
+`local-working-tree-sermon-shortcuts` label. Its list and detail returned 200,
+the first page exposed nine of each shortcut, no initial iframe was rendered,
+and noindex remained set. The temporary anonymous fixture was stopped.
+
+This is a local working-tree change for review at `/sermons-v5/` on the requested
+loopback dashboard. It has not been committed, pushed or deployed to staging.
+
+
+## 9 October follow-up: question answer controls and provider links
+
+Each sermon question now has its own Show answer button. Answers start hidden
+when the enhancement script runs; opening one changes only that control to Hide
+answer. Native buttons retain keyboard focus, `aria-expanded` and a unique
+`aria-controls` target. The incumbent outlined button, spacing and authored
+chevron fit the existing reading layout without adding another card or modal.
+The English controls declare their language within Arabic question lists.
+
+Complete, ordered, escaped answer text remains in the initial HTML. With
+JavaScript disabled, answers remain readable and inactive controls are hidden.
+Printing reveals every answer and restores the prior open/closed state afterward.
+Q&A does not introduce native disclosure or automatic FAQ structured data.
+No wording, review state, metadata, eligibility or database content was changed.
+
+The separate Watch on YouTube and Listen on SermonAudio detail-page links were
+removed as requested. Embedded media controls and the previously requested card
+shortcuts remain. Error/no-script instructions no longer refer to removed links.
+
+Validation:
+
+- All 18 offline browser cases passed using only generated anonymous records;
+  provider requests were intercepted locally. Coverage includes independent
+  mouse/Enter/Space answer controls, labels, focus, unchanged content, no-JS,
+  printing/restoration, RTL, media shortcuts and missing content.
+- Desktop/mobile captures at 1440/390 were inspected in the bounded build/fix/
+  confirm cycle; 320 also passed overflow and 44-pixel target checks. The final
+  Impeccable finish verdict was ship with no remaining visual findings.
+- All 75 focused tests across eight files passed. Full standard suite: 1,141
+  passed and 142 gated/skipped. No database/schema changes require a new database
+  suite; skipped cases are not claimed as database evidence.
+- `npm run check`: 589 files, zero errors/warnings and seven existing hints.
+  The anonymous importer dry run passed and offline audit found zero vulnerabilities.
+
+- Static build completed with 45 pages; the local staging bundle passed.
+- The read-only content/security scan covered 118 source and 129 build files,
+  with zero private-body matches, excluded paths or secret/source findings.
+- The requested loopback dashboard was restarted on 4430 with the truthful
+  local-working-tree label. The selected sermon returned 200 with one control
+  per initial-HTML answer and no outbound provider links. Noindex remained set.
+  The temporary anonymous fixture was stopped.
+
+Local working-tree implementation only; no commit, push or staging deployment.
+
+
+## 9 October refinement: answer motion, transcript default and directory audit
+
+Question controls are now light text controls aligned with the question, retaining
+44-pixel keyboard/pointer targets. Each answer unfolds through a bounded CSS grid
+transition (240ms opening, 180ms closing) with opacity and chevron state feedback.
+Rapid repeated activation reverses the transition; closing answers are immediately
+inert/hidden from assistive navigation and fully hidden when the transition ends.
+Reduced motion uses immediate state changes. Initial HTML and no-JavaScript answer
+reading remain complete. Printing cancels motion, includes every answer and
+restores the saved states, including repeated beforeprint events.
+
+The transcript now starts closed on ordinary visits, including without JavaScript.
+Its existing transcript shortcut explicitly opens it; native keyboard disclosure
+and print opening/restoration remain supported. No sermon wording was changed.
+
+The complete local directory audit used a verified PostgreSQL 16 read-only,
+repeatable-read transaction on the approved loopback test target. All 19 unfiltered
+series rows and all eight speaker rows matched their clicked archive totals.
+The current local eligible inventory is 407 sermons. Series mappings cover 117
+distinct sermons; 290 have no series assignment. There are 119 memberships because
+two sermons each have two series. No duplicate mapping pairs or normalized series
+names were found. These are stored relationship facts, not inferred corrections.
+
+The named legacy Topical series has two members. The separately audited topical
+classification has nine, with no overlap. The existing classification contract
+forbids inferring one from the other. A visible directory note now explains that
+Topical's displayed count is a series-assignment count. No reassignment was made.
+
+A genuine scope mismatch was reproduced: with either of two speaker filters, the
+Psalm row showed one sermon but its full-series destination contained two. V5 now
+loads separate global directory options only on filtered requests; the finder and
+book controls retain contextual options. Unfiltered pages reuse their existing
+options result. Ordinary/V4 routes incur no additional query. SQL, eligibility,
+classification and storage remain unchanged.
+
+Validation:
+
+- 81 focused tests passed, including eight new directory route regressions across
+  public and protected rendering contexts, destination/count agreement, contextual
+  finder preservation, query reuse and unchanged ordinary/V4 loading.
+- All 21 anonymous browser cases passed at 1440/390/320: an actual CSS transition,
+  rapid reversal, reduced motion, independent answers, closed/default and explicit
+  transcript actions, duplicate print events, no-JavaScript keyboard disclosure,
+  stable global counts under filters and the retained media actions.
+- Existing archive browser suite: all 13 cases passed at 1440/768/390/320 with
+  zero browser errors, provider requests or database access.
+- Final desktop/mobile capture review: ship; no clipping/overlap or remaining
+  scoped visual findings. Providers were intercepted locally throughout.
+- Full standard suite: 1,149 passed, 142 gated/skipped. Static check: 589 files,
+  zero errors/warnings, seven hints. Static build emitted 45 pages and the local
+  staging bundle passed. Anonymous importer dry run passed; offline audit found
+  zero vulnerabilities. No database writes or migrations required a PostgreSQL
+  write suite; skipped cases are not represented as database verification.
+
+- Final content/security scan: 123 source and 129 build files; zero private-body
+  matches, excluded paths or secret/source findings.
+- After restarting the requested 4430 runtime, the selected sermon returned 200
+  with a closed transcript and the animated controls. Three live directory pages
+  returned 200; both speaker-filtered directories matched all 19 series and eight
+  speaker rows/counts/links on the unfiltered page. Psalm now shows two in each
+  directory while each contextual finder correctly shows one. Noindex remains.
+  The temporary anonymous fixture was stopped.
+
+This refinement remains local and uncommitted; it does not change staging.

@@ -1107,3 +1107,16 @@ isolated visual-editor branch, necessary narrow implementation/governance change
 normal GitHub push and existing staging delivery. Production connection must be
 reported truthfully; missing production runtime/auth configuration does not block
 complete local/staging editor delivery. See visual-page-editor-plan.md.
+
+## D-181 — whole-site SEO migration and acceptance (9 October 2026)
+
+Samuel authorizes completion of D-110 using the current integrated Astro/PostgreSQL
+and CMS implementation: fresh read-only source/measurement evidence, source-backed
+public-content migration independent of generated enrichment, accurate URL and
+metadata preservation, necessary narrow governance and implementation changes,
+local/protected staging rehearsal, normal GitHub push and acceptance artifacts.
+The source-backed projection never manufactures approval or clears findings.
+Existing withdrawal decisions prevail. Private captures remain outside Git.
+Historic fixed counts are snapshots, not current completeness criteria. Production
+traffic/DNS cutover and WordPress mutation/removal remain prohibited. See
+`seo-migration-plan.md` for execution, evidence and stop conditions.

@@ -1,3 +1,4 @@
+import {sourcePublicContentSchema} from './source-content';
 import { z } from "zod";
 
 export const sermonStatusSchema = z.enum([
@@ -113,6 +114,8 @@ export const relatedSermonSummarySchema = sermonSummarySchema.extend({
 export type RelatedSermonSummary = z.infer<typeof relatedSermonSummarySchema>;
 
 export const sermonDetailSchema = sermonSummarySchema.extend({
+  /** Verified original public content, independent of generated enrichment approval. */
+  sourcePublic: sourcePublicContentSchema.optional(),
   seoDescription: z.string().min(1).max(320).nullable(),
   body: z.string().nullable(),
   media: z.array(publicMediaSchema),

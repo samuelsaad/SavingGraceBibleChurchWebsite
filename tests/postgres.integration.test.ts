@@ -1,3 +1,4 @@
+import {registerSeoSourcePostgresTests} from './seo-source-postgres';
 import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -411,6 +412,7 @@ integration("disposable PostgreSQL Phase 3B application", () => {
   registerSermonDurationPostgresTests(()=>pool);
   registerAcceptedDescriptionPostgresTests(()=>pool);
   registerCmsPostgresTests(()=>pool);
+  registerSeoSourcePostgresTests(()=>pool);
   registerRemainingAiReviewPostgresTests(() => pool, runSchema);
   registerRestrictedAcceptancePostgresTests(() => pool, runSchema);
   registerFifthBatchPostgresTests(() => pool);

@@ -11,9 +11,13 @@ function blocks(modules:readonly CmsModule[] = [],collection="modules",visualEdi
 export function createCmsFrontendSnapshot(snapshot:CmsSnapshot,assets:readonly FrontendAsset[]=[],visualEditor=false):FrontendSiteSnapshot {
   const result:FrontendSiteSnapshot={pages:[],posts:[],events:[],venues:{},home:null,settings:structuredClone(defaultSiteSettings),assets:{},routes:snapshot.routes.map(route=>({...route}))};
   const pages:SitePage[]=[],posts:BlogPost[]=[];
+  const initialMetadataByPath:Record<string,{title:string;heading:string;seeded:boolean}>={};
+  const modifiedAtByPath:Record<string,string>={};
   const events:CmsEventPayload[]=[],venues:Record<string,CmsVenuePayload>={};
   for(const entity of snapshot.entities){
     const content=entity.content;
+    const ownPath=entity.kind==='home'?'/':typeof content.path==='string'?content.path:null;if(ownPath&&entity.initialMetadata)initialMetadataByPath[ownPath]=entity.initialMetadata;
+    if(entity.modifiedAt){const path=entity.kind==="home"?"/":typeof content.path==="string"?content.path:null;if(path)modifiedAtByPath[path]=entity.modifiedAt;}
     if(entity.kind==="page"){
       const page=content as unknown as CmsPagePayload;
       const {modules,asideModules,...metadata}=page;
@@ -29,5 +33,5 @@ export function createCmsFrontendSnapshot(snapshot:CmsSnapshot,assets:readonly F
   }
   const embedded:FrontendAsset[]=siteImages.map(image=>({id:image.id,path:image.id==="favicon-32"?"/brand/favicon-32.png":image.id==="icon-192"?"/brand/icon-192.png":image.path,type:image.type,width:image.width,height:image.height,alt:image.alt}));
   embedded.push({id:"church-logo",path:logoPath,type:"image/png",width:logoWidth,height:logoHeight,alt:logoAlt});
-  return {...result,pages,posts,events,venues,assets:Object.fromEntries([...embedded,...assets].map(asset=>[asset.id,{...asset}]))};
+  return {...result,pages,posts,events,venues,modifiedAtByPath,initialMetadataByPath,assets:Object.fromEntries([...embedded,...assets].map(asset=>[asset.id,{...asset}]))};
 }

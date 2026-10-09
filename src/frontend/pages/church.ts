@@ -79,6 +79,7 @@ function pageHead(page: SitePage, context: FrontendRenderContext, lede?: Html): 
 function shellInput(page: SitePage, data: ChurchPageData, body: Html, extra: Partial<PageShellInput> = {}): PageShellInput {
   return {
     title: page.title,
+    ...(page.seo?{seo:page.seo}:{}),
     description: page.description,
     canonicalPath: page.path,
     robots: page.status === "published" ? "index, follow" : "noindex, nofollow",
@@ -202,6 +203,7 @@ export function renderEventPage(event: ChurchEvent, data: ChurchPageData, contex
   </article>`;
   return pageShell({
     title: event.title,
+    ...(event.seo?{seo:event.seo}:{}),
     description: event.description[0] ?? `${event.title}: ${scheduleLabel(event)} at ${venue.name}.`,
     canonicalPath: event.path,
     robots: "index, follow",
@@ -297,6 +299,7 @@ export function renderBlogPost(post: BlogPost, data: ChurchPageData, context: Fr
   </article>`;
   return pageShell({
     title: post.title,
+    ...(post.seo?{seo:post.seo}:{}),
     description: post.description,
     canonicalPath: post.path,
     robots: "index, follow",

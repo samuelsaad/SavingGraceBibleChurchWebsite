@@ -31,6 +31,11 @@ export interface FrontendAsset {
   focalX?:number; focalY?:number;
 }
 export interface FrontendSiteSnapshot {
+  cmsExplicitSeoByPath?:Readonly<Record<string,import("../seo").ContentSeo>>;
+  initialMetadataByPath?:Readonly<Record<string,{title:string;heading:string;seeded:boolean}>>;
+  sourceContentByPath?:Readonly<Record<string,readonly import("../../seo/source-public-model").SourcePublicPage[]>>;
+  sourceSeoByPath?:Readonly<Record<string,import("../seo").ContentSeo>>;
+  modifiedAtByPath?:Readonly<Record<string,string>>;
   pages: readonly SitePage[];
   posts: readonly BlogPost[];
   events: readonly ChurchEvent[];

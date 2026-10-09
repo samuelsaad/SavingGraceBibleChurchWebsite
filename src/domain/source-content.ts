@@ -1,0 +1,21 @@
+import {z} from 'zod';
+export type SourceNode={tag:string;text?:string|undefined;href?:string|undefined;src?:string|undefined;alt?:string|undefined;width?:number|undefined;height?:number|undefined;children?:SourceNode[]|undefined};
+const tags=['text','p','h2','h3','h4','h5','h6','ul','ol','li','strong','em','b','i','a','blockquote','br','hr','figure','figcaption','img','table','thead','tbody','tr','th','td','div','span'] as const;
+export const sourceNodeSchema:z.ZodType<SourceNode>=z.lazy(()=>z.object({tag:z.enum(tags),text:z.string().max(500000).optional(),href:z.string().max(2000).optional(),src:z.string().max(2000).optional(),alt:z.string().max(4000).optional(),width:z.number().int().positive().max(20000).optional(),height:z.number().int().positive().max(20000).optional(),children:z.array(sourceNodeSchema).max(20000).optional()}).strict());
+
+export const sourcePublicContentSchema=z.object({content:z.array(sourceNodeSchema),language:z.string().optional(),indexable:z.boolean(),title:z.string(),description:z.string().nullable(),socialTitle:z.string().optional(),socialType:z.enum(['website','article']).optional(),socialDescription:z.string().optional(),socialImage:z.string().optional(),publishedAt:z.string().nullable(),modifiedAt:z.string().nullable()}).strict();
+
+/** A small source-fact vocabulary, never arbitrary JSON-LD supplied by an editor. */
+export const sourceStructuredPathSchema=z.string().min(1).max(2000).refine(value=>{
+ try{const url=new URL(value,'https://www.savinggrace.org.au');return value.startsWith('/')&&!value.startsWith('//')&&!/[\\\u0000-\u0020]/u.test(value)&&url.origin==='https://www.savinggrace.org.au'&&url.pathname+url.search===value&&!url.hash&&!/^\/(?:admin|api|frontend-preview|draft-preview|cms-preview|cms-editor-frame|related-themes-evaluation|cms-assets)(?:\/|$)/u.test(value);}catch{return false;}
+});
+const sourceFactText=z.string().min(1).max(4000);
+const sourceFactDate=z.iso.datetime({offset:true});
+const sourcePostalAddressSchema=z.object({streetAddress:sourceFactText.optional(),addressLocality:sourceFactText.optional(),addressRegion:sourceFactText.optional(),postalCode:sourceFactText.optional(),addressCountry:sourceFactText.optional()}).strict().refine(value=>Object.keys(value).length>0);
+export const sourcePrimaryStructuredDataSchema=z.discriminatedUnion('type',[
+ z.object({type:z.literal('Event'),path:sourceStructuredPathSchema,name:sourceFactText,startDate:sourceFactDate,endDate:sourceFactDate.optional(),description:sourceFactText.optional(),imagePath:sourceStructuredPathSchema.optional(),location:z.object({name:sourceFactText,address:sourcePostalAddressSchema.optional()}).strict().optional()}).strict(),
+ z.object({type:z.literal('BlogPosting'),path:sourceStructuredPathSchema,headline:sourceFactText,datePublished:sourceFactDate.optional(),dateModified:sourceFactDate.optional(),inLanguage:z.string().regex(/^[a-z]{2,3}(?:[-_][A-Za-z]{2,4})?$/u).optional(),imagePath:sourceStructuredPathSchema.optional()}).strict()
+]).superRefine((value,context)=>{if(value.type==='Event'&&value.endDate&&Date.parse(value.endDate)<Date.parse(value.startDate))context.addIssue({code:'custom',message:'Source event end precedes start'});});
+export const sourceStructuredDataSchema=z.object({responseSha256:z.string().regex(/^[a-f0-9]{64}$/u),schemaSha256:z.string().regex(/^[a-f0-9]{64}$/u),primary:sourcePrimaryStructuredDataSchema.optional(),breadcrumbs:z.array(z.object({name:sourceFactText,path:sourceStructuredPathSchema}).strict()).min(1).max(20).optional()}).strict().refine(value=>Boolean(value.primary||value.breadcrumbs));
+export type SourcePrimaryStructuredData=z.infer<typeof sourcePrimaryStructuredDataSchema>;
+export type SourceStructuredData=z.infer<typeof sourceStructuredDataSchema>;

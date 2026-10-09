@@ -32,9 +32,13 @@ export interface SermonArchivePageInput {
   totalItems: number;
   query: PublicSermonListQuery;
   options: PublicSermonFilterOptions;
+  /** Full eligible archive counts for directory links that leave current filters. */
+  directoryOptions?: PublicSermonFilterOptions;
   topicalSermons: SermonSummary[];
   seriesRepresentatives: PublicSeriesRepresentative[];
   hasQueryParameters: boolean;
+  /** Original normalized query, before unsupported parameters are discarded. */
+  requestQuery?: string;
 }
 
 const archiveDescription = "Browse published sermons from Saving Grace Bible Church by speaker, series, Scripture, Bible book, or service date.";

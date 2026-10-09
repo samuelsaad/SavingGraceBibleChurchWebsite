@@ -227,13 +227,13 @@ describe("alternate archive routes", () => {
 
     const publicRoute = createPublicSermonSiteHandler(repository, publicRenderContext);
     const publicV4 = await publicRoute(new Request("http://127.0.0.1/sermons-v4/"));
-    expect(publicV4?.status).toBe(200);
+    expect(publicV4?.status).toBe(301);
     expect(publicV4?.headers.get("x-robots-tag")).toBe("noindex, follow");
-    expect(await publicV4!.text()).toContain('rel="canonical" href="https://www.savinggrace.org.au/sermons/"');
+    expect(publicV4?.headers.get("location")).toBe("/sermons/");
   });
 
   it("redirects slashless and first-page forms, rejects invalid pages and filters, and 404s beyond the last page", async () => {
-    const route = createAlternateArchiveHandlers(new Repository(), publicRenderContext);
+    const route = createAlternateArchiveHandlers(new Repository(), restrictedRenderContext);
     const slashless = await route(new Request("http://127.0.0.1/sermons-v4?s=grace"));
     expect(slashless?.status).toBe(301);
     expect(slashless?.headers.get("location")).toBe("/sermons-v4/?s=grace");

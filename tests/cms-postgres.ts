@@ -6,6 +6,7 @@ import {loadAcceptedSemanticMigration,verifyAcceptedSemanticSchema} from '../src
 import {applyCmsMigration,loadCmsMigration,verifyCmsSchema} from '../src/cms/migration';
 import {PostgresCmsRepository} from '../src/cms/postgres-repository';
 import type {CmsAuditActor,CmsDocument} from '../src/cms/model';
+import {verifyCmsSeoHttpLifecycle} from './helpers/cms-seo-http-lifecycle';
 const actor:CmsAuditActor={subject:'anonymous-cms-integration',role:'admin',correlationId:'anonymous-cms-integration'};
 function guard(){assertDisposableIntegrationTestDatabase(process.env.TEST_DATABASE_URL!,process.env.DISPOSABLE_TEST_DATABASE_TOKEN,process.env.ALLOW_LOCAL_DB_WRITE);}
 function content(title='Anonymous CMS fixture',path='/anonymous-cms-fixture/'):CmsDocument{return{id:'anonymous-cms-fixture',path,title,description:'Anonymous website editing fixture; no real sermon content.',section:'about',modules:[{id:'text-1',enabled:true,block:{kind:'paragraph',text:'Anonymous original wording.'}}]};}
@@ -58,6 +59,7 @@ export function registerCmsPostgresTests(getPool:()=>Pool){
    expect(await repository.canReadAsset(pdfKey,false)).toBe(false);
    linking=await repository.save(linking.id,{expectedRowVersion:linking.rowVersion,content:{...linking.draft.content,modules:[{id:'document',enabled:true,block:{kind:'downloads',items:[{title:'Anonymous document',text:'An anonymous document fixture.',label:'Download',href:'/cms-assets/'+pdfKey}]}}]}},actor);
    await repository.publish(linking.id,{expectedRowVersion:linking.rowVersion,revisionId:linking.draftRevisionId},actor);expect(await repository.canReadAsset(pdfKey,false)).toBe(true);
+   await verifyCmsSeoHttpLifecycle(repository);
    expect((await pool.query('SELECT count(*)::int n,sum(row_version)::text versions FROM sermons')).rows).toEqual(before);
   }finally{
    // Only this guarded disposable test family creates these tables and anonymous rows.

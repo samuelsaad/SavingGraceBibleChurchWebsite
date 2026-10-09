@@ -93,7 +93,7 @@ async function authorisedRoute() {
 }
 
 function masthead(html: string): string {
-  return html.slice(html.indexOf('<header class="masthead"'), html.indexOf("</header>"));
+  return html.match(/<header\b[^>]*class="masthead"[\s\S]*?<\/header>/u)?.[0]??"";
 }
 
 describe("authenticated local frontend preview", () => {
@@ -176,12 +176,18 @@ describe("authenticated local frontend preview", () => {
     expect(sermonHtml).toContain("No single primary passage (reviewed outcome)");
     expect(sermonHtml).not.toContain("Topical or multi-passage");
     expect(sermonHtml).toContain("An approved anonymised transcript");
-    expect(sermonHtml).toContain('<details class="transcript" open data-open-for-print>');
+    expect(sermonHtml).toContain('<details class="transcript" data-open-for-print>');
+    expect(sermonHtml).not.toMatch(/<details\b[^>]*class="transcript"[^>]*\sopen(?:[\s=>])/u);
     expect(sermonHtml.match(/<li class="question">/gu)).toHaveLength(7);
     expect(sermonHtml).toContain('data-video-id="abcdefghijk"');
     expect(sermonHtml).not.toContain("<iframe");
-    expect(sermonHtml).not.toContain("autoplay");
+    // Playback support in the script must not preload or autoplay SSR media.
+    expect(sermonHtml).not.toMatch(/<(?:iframe|audio|video)\b/iu);
+    expect(sermonHtml.replace(/<script\b[^>]*>[\s\S]*?<\/script>/giu, "")).not.toContain("autoplay");
     expect(sermonHtml).not.toContain('href="https://www.youtube.com/watch?v=abcdefghijk"');
+    expect(sermonHtml).not.toContain('Watch on YouTube');
+    expect(sermonHtml).not.toContain('Listen on SermonAudio');
+    expect(sermonHtml).not.toContain('class="media-links"');
     expect(sermonHtml).not.toContain("Open video");
     expect(sermonHtml).not.toContain("Related themes");
     expect(sermonHtml).toContain('<a class="tab hue--pauline" href="/frontend-preview/sermons/?passageBook=romans&amp;passageScope=book#canon">');

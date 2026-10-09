@@ -4,7 +4,7 @@ import {readFile,lstat,realpath,mkdir,writeFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {resolve,relative,isAbsolute,dirname} from 'node:path';
 import {pathToFileURL} from 'node:url';
-export const cmsRuntimeEntries=['server','database','cms-maintenance','sermonaudio-sync','completed-sync','sermonaudio-completion-sync','sermon-durations-sync','related-themes-sync','draft-preview','d160-sync','d161-sync','d167-protected-sync'];
+export const cmsRuntimeEntries=['server','database','cms-maintenance','source-public-sync','sermonaudio-sync','completed-sync','sermonaudio-completion-sync','sermon-durations-sync','related-themes-sync','draft-preview','d160-sync','d161-sync','d167-protected-sync'];
 export function permittedCmsRuntimePath(path){return cmsRuntimeEntries.some(name=>path===`app/${name}.cjs`)||['app/admin/index.html','app/admin/_astro/cms-admin.js','app/admin/_astro/cms-admin.css'].includes(path)||/^app\/db\/migrations\/[0-9]{4}_[a-z0-9_]+(?:\.down)?\.sql$/.test(path);}
 export function gitArchiveCommit(archive){if(archive.length<1024)throw Error('cms_runtime_archive_header');return execFileSync('git',['get-tar-commit-id'],{input:archive.subarray(0,1024),encoding:'utf8'}).trim();}
 const hash=value=>createHash('sha256').update(value).digest('hex');

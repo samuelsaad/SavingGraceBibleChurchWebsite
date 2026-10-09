@@ -22,6 +22,8 @@ const date=z.string().regex(/^\d{4}-\d{2}-\d{2}$/u).refine(v=>{const parsed=new 
 const time=z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/u);
 const bool=z.boolean();
 const focalPoint=z.object({x:z.number().min(0).max(100),y:z.number().min(0).max(100)}).strict();
+const seoText=(max:number)=>z.string().max(max).refine(value=>!/[<>\u0000-\u001f\u007f]/u.test(value),'Use plain text without HTML');
+export const cmsSeoSchema=z.object({title:seoText(240).optional(),description:seoText(1000).optional(),socialTitle:seoText(240).optional(),socialDescription:seoText(1000).optional(),image:z.union([asset,z.literal('')]).optional(),imageAlt:seoText(500).optional(),noindex:bool.optional(),replaceSourceContent:bool.optional()}).strict();
 const mediaPlacement={mediaAlt:short.optional(),mediaFocalPoint:focalPoint.optional()};
 const source=z.object({id:z.number().int().nonnegative(),link:cmsHrefSchema,status:z.enum(['publish','draft','private']),modified:z.string().max(60)}).strict();
 const tile=z.object({...mediaPlacement,title,text:rich.optional(),href:cmsHrefSchema.nullable(),media:z.union([asset,z.literal('')]).optional(),eyebrow:short.optional(),linkLabel:short.optional()}).strict();
@@ -62,8 +64,8 @@ const modules=z.array(cmsModuleSchema).max(250).superRefine((items,ctx)=>{if(new
 const menu:z.ZodType<unknown>=z.lazy(()=>z.object({label:title,href:cmsHrefSchema,children:z.array(menu).max(50).optional(),id:id.optional(),sub:bool.optional(),enabled:bool.optional()}).strict());
 const menuList=z.array(menu).max(60);
 const status=z.enum(['published','draft','private']);
-const page=z.object({id,path:cmsPathSchema,title,heading:title.optional(),status:status.default('draft'),section:z.enum(['home','about','teaching','ministries','events','resources','giving','contact','blog','sermons']),parent:id.optional(),description:z.string().max(1000),legacyPaths:z.array(legacyPath).max(100).default([]),source:source.optional(),eyebrow:short.optional(),lede:rich.optional(),hero:z.object({media:asset,treatment:z.enum(['banner','aside']),enabled:bool.optional(),alt:short.optional(),focalPoint:z.object({x:z.number().min(0).max(100),y:z.number().min(0).max(100)}).strict().optional()}).strict().optional(),modules,asideModules:modules.optional(),related:z.array(id).max(100).optional(),notes:z.array(rich).max(100).optional()}).strict();
-const post=z.object({...mediaPlacement,id,path:cmsPathSchema,title,date,description:z.string().max(1000),media:z.union([asset,z.literal('')]).optional(),source:source.optional(),modules,status:status.optional(),legacyPaths:z.array(legacyPath).max(100).optional()}).strict();
+const page=z.object({seo:cmsSeoSchema.optional(),id,path:cmsPathSchema,title,heading:title.optional(),status:status.default('draft'),section:z.enum(['home','about','teaching','ministries','events','resources','giving','contact','blog','sermons']),parent:id.optional(),description:z.string().max(1000),legacyPaths:z.array(legacyPath).max(100).default([]),source:source.optional(),eyebrow:short.optional(),lede:rich.optional(),hero:z.object({media:asset,treatment:z.enum(['banner','aside']),enabled:bool.optional(),alt:short.optional(),focalPoint:z.object({x:z.number().min(0).max(100),y:z.number().min(0).max(100)}).strict().optional()}).strict().optional(),modules,asideModules:modules.optional(),related:z.array(id).max(100).optional(),notes:z.array(rich).max(100).optional()}).strict();
+const post=z.object({...mediaPlacement,seo:cmsSeoSchema.optional(),id,path:cmsPathSchema,title,date,description:z.string().max(1000),media:z.union([asset,z.literal('')]).optional(),source:source.optional(),modules,status:status.optional(),legacyPaths:z.array(legacyPath).max(100).optional()}).strict();
 const settings=z.object({
  primaryMenu:menuList,footerMenu:menuList,
  navigationCopy:z.object({home:short,aboutUs:short,sermons:short,ministries:short,newsEvents:short,contactUs:short,give:short,search:short,sitemap:short}).strict(),
@@ -80,9 +82,9 @@ const schedule=z.discriminatedUnion('kind',[
  z.object({kind:z.literal('weekly'),weekday:z.number().int().min(0).max(6),from:date,until:date.optional(),exclusions:z.array(date).max(1000).optional()}).strict(),
  z.object({kind:z.literal('monthly-first'),weekday:z.number().int().min(0).max(6),from:date,until:date.optional(),exclusions:z.array(date).max(1000).optional()}).strict()
 ]).refine(s=>s.kind==='single'||!s.until||s.until>=s.from,'Recurrence end must follow its start');
-const event=z.object({...mediaPlacement,id,title,path:cmsPathSchema,schedule,start:time,end:time,venue:id,description:z.array(rich).max(100),page:id.optional(),media:z.union([asset,z.literal('')]).optional(),legacyPaths:z.array(legacyPath).max(100),sourceIds:z.array(z.number().int().positive()).max(100),tag:short.optional(),status:status.optional()}).strict();
+const event=z.object({...mediaPlacement,seo:cmsSeoSchema.optional(),id,title,path:cmsPathSchema,schedule,start:time,end:time,venue:id,description:z.array(rich).max(100),page:id.optional(),media:z.union([asset,z.literal('')]).optional(),legacyPaths:z.array(legacyPath).max(100),sourceIds:z.array(z.number().int().positive()).max(100),tag:short.optional(),status:status.optional()}).strict();
 const venue=z.object({id,name:title,address:short,locality:short,phone:short.optional(),href:cmsHrefSchema.optional(),mapHref:cmsHrefSchema.optional(),legacyPath}).strict();
-export const cmsContentSchemas={page,post,home:z.object({title,description:z.string().max(1000),modules}).strict(),settings,navigation:z.object({primaryMenu:menuList,footerMenu:menuList}).strict(),event,venue};
+export const cmsContentSchemas={page,post,home:z.object({seo:cmsSeoSchema.optional(),title,description:z.string().max(1000),modules}).strict(),settings,navigation:z.object({primaryMenu:menuList,footerMenu:menuList}).strict(),event,venue};
 export function validateCmsContent(kind:CmsKind,value:unknown):CmsDocument {
  let count=0;
  function bounded(v:unknown,depth:number):void {if(depth>16||++count>20000)throw new ApplicationError(400,'invalid_request','Content is too deeply nested or large');if(v&&typeof v==='object')for(const child of Object.values(v))bounded(child,depth+1);}

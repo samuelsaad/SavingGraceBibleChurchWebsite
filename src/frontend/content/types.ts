@@ -113,6 +113,7 @@ export interface PageSource {
 }
 
 export interface SitePage {
+  seo?: import('../seo').ContentSeo;
   id: string;
   /** Canonical root-relative path with a trailing slash. */
   path: string;
@@ -140,6 +141,7 @@ export interface SitePage {
 }
 
 export interface BlogPost {
+  seo?: import('../seo').ContentSeo;
   id: string;
   path: string;
   title: string;

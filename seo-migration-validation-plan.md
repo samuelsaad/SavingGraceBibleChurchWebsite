@@ -1,3 +1,8 @@
+> D-181 (9 October 2026) supersedes historical fixed-count and universal new-enrichment
+> prerequisites for preserving already-public originals. Use the fresh union inventory
+> and `seo-migration-plan.md`; source-backed original pages and independently approved
+> new enrichment are separate. Historical counts below remain dated evidence only.
+
 # Whole-Site SEO Migration and Validation Plan
 
 **Status:** Permanent architecture and launch-gate requirement; baseline discovery is partially complete.  
@@ -202,3 +207,16 @@ Rollback or immediately remediate when there is a widespread erroneous `noindex`
 - Post-launch Search Console/analytics monitoring runbook and rollback thresholds
 
 All artifacts must avoid credentials, personal data, and uncontrolled production exports.
+
+
+## D-181 execution evidence — 10 October2026, before staging
+
+- Frozen source ledger:6,135 responses/11,300 observed URLs; retained454 public sermon IDs reconcile exactly and the current457-record public union is prepared.
+- Private source projection:2,351 routes/resources; final local import and identical replay passed without touching existing sermon/CMS publication or review rows.
+- `npm run test:postgres`:140 files/1,367 tests passed,zero skips; the guarded disposable database was removed.
+- `npm test`:1,222 passed,145 database-gated skips covered above. `npm run check`:626 files,zero errors/warnings,seven hints. `npm run build` and `npm run staging:bundle`:passed.
+- Capture24, fixed-frontier6, comparison14, acceptance-export12 and staging-operator11 anonymous Python checks passed.
+- Anonymous importer dry run:five input/three included/two excluded/zero rejected. Offline dependency audit:zero vulnerabilities.
+-42 browser cases passed with external resources blocked; max labCLS0.001587/maxLCP588ms. This is not field evidence or a comparable old/new performance certification.
+- Full URL/canonical/sitemap/link/resource comparison and outgoing scans are in progress. Final per-URL results, release/deployment identities and staging rollback/reactivation receipts supersede this pre-release checkpoint when recorded.
+- Full local backup restoration and production-only GA4 implementation remain blocked by automatic approval review pending explicit user confirmation. Neither was executed. WordPress source grant validation rejected broader privileges before table reads; account reports are unavailable.

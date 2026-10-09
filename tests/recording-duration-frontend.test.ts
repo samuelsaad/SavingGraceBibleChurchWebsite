@@ -72,7 +72,8 @@ describe("recording duration display", () => {
     expect(String(result.audio[0])).toContain("Audio length:");
     expect(String(result.audio[0])).toContain(">1:12:08</time>");
     expect(String(result.audio[0])).toContain("data-load-sermonaudio");
-    expect(String(result.audioLinks[0])).toContain(audio.canonicalUrl);
+    expect(String(result.audio[0])).toContain('data-audio-frame data-sermonaudio-id="' + audio.externalId + '"');
+    expect(String(result.audio[0])).not.toMatch(/<a\b/u);
     expect(JSON.stringify(result)).not.toMatch(/<iframe|autoplay=|<audio|<video/u);
     expect(String(sermonMedia({ ...detail, media: [{ ...youtube, durationSeconds: 2732 }] }).video)).toContain(">45:32</time>");
   });
