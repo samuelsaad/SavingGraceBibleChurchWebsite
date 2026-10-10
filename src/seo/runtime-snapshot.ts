@@ -43,7 +43,14 @@ export function sourceRoutePolicy(pages:readonly SourcePublicPage[],routes:reado
  const sourceShortlinks=Object.fromEntries([...ids].filter(([,paths])=>paths.size===1).map(([id,paths])=>[id,[...paths][0]! ]));
  const indexableArchivePaths=pages.filter(page=>page.kind==='archive'&&page.indexable&&!page.issues.length
   && /^\/sermons\/(?:page\/(?:[2-9]|[1-9][0-9]+)\/)?\?(?:sermon_series|sermon_speaker|sermon_topics|sermon_book)=[a-z0-9-]+$/u.test(page.path)).map(page=>page.path);
- return {sourceShortlinks,indexableArchivePaths:[...new Set(indexableArchivePaths)].sort()};
+ const attachmentIds=new Map<string,Set<string>>();
+ for(const page of pages){
+  if(page.kind!=='asset'||page.sourceId===null||page.issues.length||!page.asset||page.path.includes('?'))continue;
+  const id=String(page.sourceId);if(!/^[1-9][0-9]*$/u.test(id))continue;
+  const values=attachmentIds.get(id)??new Set<string>();values.add(page.path);attachmentIds.set(id,values);
+ }
+ const sourceAttachmentLinks=Object.fromEntries([...attachmentIds].filter(([,paths])=>paths.size===1).map(([id,paths])=>[id,[...paths][0]! ]));
+ return {sourceShortlinks,sourceAttachmentLinks,indexableArchivePaths:[...new Set(indexableArchivePaths)].sort()};
 }
 
 /** Only small mutable pointers/metadata, never the source or CMS document bodies. */

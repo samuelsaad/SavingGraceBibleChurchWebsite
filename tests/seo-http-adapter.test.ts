@@ -40,6 +40,20 @@ describe("explicit production SEO adapter",()=>{
     expect(await(await captured(new Request(origin+'/events/?related_series=42'))).text()).toBe('Anonymous captured archive');
     expect((await captured(new Request(origin+'/events/?ical=1'))).headers.get('Content-Type')).toBe('text/calendar');
   });
+  it("resolves proven attachment identities directly to their migrated resource and preserves campaign bytes",async()=>{
+    const route=createSeoHttpAdapter({policy:{environment:'production',canonicalOrigin:origin},sermons:repository(),sourceAttachmentLinks:{'42':'/wp-content/uploads/anonymous.pdf'}});
+    const response=await route(new Request(origin+'/?attachment_id=42&utm_campaign=church%20notes'));
+    expect(response.status).toBe(301);expect(response.headers.get('Location')).toBe('/wp-content/uploads/anonymous.pdf?utm_campaign=church%20notes');
+    expect((await route(new Request(origin+'/?attachment_id=42&p=43'))).status).toBe(404);
+    expect((await route(new Request(origin+'/?attachment_id=43'))).status).toBe(404);
+  });
+  it("never substitutes the homepage for an uncaptured WordPress attachment, feed or REST query",async()=>{
+    const route=production();
+    for(const path of ['/?attachment_id=42','/?feed=rss2','/?rest_route=%2Fwp%2Fv2%2Fpages']){
+      const response=await route(new Request(origin+path));expect(response.status).toBe(404);
+      expect(response.headers.get('Location')).toBeNull();expect(response.headers.get('X-Robots-Tag')).toContain('noindex');
+    }
+  });
   it("never redirects an uncaptured venue or organiser calendar export to an unrelated contact page",async()=>{
     const route=production();
     for(const family of ['venue','venues','organiser','organisers']){

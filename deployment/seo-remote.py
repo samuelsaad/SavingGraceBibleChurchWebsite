@@ -16,11 +16,12 @@ import tarfile
 import time
 
 UPGRADE_SHA = "e41bbc7b36e883665a4f57c07ed1fbd9b222f018d07af9597f90cebfd4e62fb2"
-PREVIOUS_COMMIT = "5c07e8f3a99bf529562563de4162fa65ff8edbc0"
-PREVIOUS_IMAGE = "sha256:a1ba75dabc6bb565423d435f5abd2b1661df207fbbcde8ec0c94ceca272e4ccb"
+PREVIOUS_COMMIT = "4f127b5e5f702f639bd2b3ec36cd1fbb36420abb"
+PREVIOUS_IMAGE = "sha256:9a268940761c35005c4b469e59e0dc32b4d03c00a7c2370e73c6909ea454ce8e"
 BASE_SCHEMA_ORDER = 28
 EXISTING_SOURCE_SHA = "2cbe0faa1dfab33eab8c4c3e2817957f7d2b16537abbcb6fb0fc331e557de831"
 EXISTING_BUNDLE_SHA = "846be1ce89d93c7b41c153c712cb7ec8f1f4d89244aa8cb9ed8b46f3c4d70442"
+INCOMING_BUNDLE_SHA = "8499c2c3fd3c983a757fa286614d949e90b1ac10976ce4ebcf7b3b78ed2b30a1"
 SOURCE_TABLES = ("source_public_versions", "source_public_routes", "source_public_imports")
 ASSET_KEY = re.compile(r"[a-f0-9]{64}\.(?:png|jpg|webp|gif|avif|svg|ico|pdf|doc|docx|xls|xlsx|ppt|pptx|rss|atom|ics)")
 MIGRATION = "0028_source_public_migration"
@@ -171,9 +172,9 @@ def owner_secret_identity(base, path):
 
 
 def verify_existing_source(actual, bundle_hash):
-    # This retry is only the already-verified D-181 bridge and exact immutable import.
+    # Require the frozen incumbent history and the exact reviewed additive delta.
     expected={"source_public_versions":2351,"source_public_routes":2351,"source_public_imports":1}
-    if actual.get("sourceCounts") != expected or actual.get("sourceSha256") != EXISTING_SOURCE_SHA or bundle_hash != EXISTING_BUNDLE_SHA:
+    if actual.get("sourceCounts") != expected or actual.get("sourceSha256") != EXISTING_SOURCE_SHA or bundle_hash != INCOMING_BUNDLE_SHA:
         fail("seo_existing_source_drift")
 
 

@@ -19,6 +19,8 @@ export interface SeoHttpAdapterOptions extends ChurchSiteOptions {
   sermons: PublicSermonRepository;
   /** Proven source IDs mapped to active canonical paths; never inferred from GUIDs. */
   sourceShortlinks?: Readonly<Record<string,string>>;
+  /** Proven attachment IDs whose exact migrated resource bytes are available. */
+  sourceAttachmentLinks?: Readonly<Record<string,string>>;
   publicSearch?: (request:Request,context:FrontendRenderContext)=>Promise<Response|null>;
   /** Frozen published-source fallback, after every current CMS route/disposition. */
   sourceQueryPage?: (request:Request,context:FrontendRenderContext)=>Promise<Response|null>;
@@ -69,12 +71,12 @@ export function createSeoHttpAdapter(options: SeoHttpAdapterOptions): (request: 
       const search=options.publicSearch?await options.publicSearch(head?new Request(request,{method:'GET'}):request,{...context,...(options.content?{siteContent:await options.content()}:{})}):null;
       if(resource){response=resource;}else if(search){response=search;}else if(observedQuery){response=observedQuery;}else if(legacySitemapPaths.includes(url.pathname)) {
         response=policy.indexable?new Response(null,{status:301,headers:{Location:"/sitemap.xml"+url.search,"Cache-Control":"no-store"}}):boundary(404,"Page not found");
-      } else if (url.pathname === "/" && (url.searchParams.has("p") || url.searchParams.has("page_id"))) {
-        const entries=[...url.searchParams].filter(([key])=>["p","page_id"].includes(key));
+      } else if (url.pathname === "/" && (url.searchParams.has("p") || url.searchParams.has("page_id") || url.searchParams.has("attachment_id"))) {
+        const entries=[...url.searchParams].filter(([key])=>["p","page_id","attachment_id"].includes(key));
         const ambiguous=["s","search","preview","action","post_type","page"].some(key=>url.searchParams.has(key));
         const value=entries.length===1&&!ambiguous ? entries[0]![1] : "";
-        const retained=url.search.slice(1).split("&").filter(part=>!["p","page_id"].includes([...new URLSearchParams(part).keys()][0]??"" )).join("&");
-        const path=/^[1-9][0-9]*$/u.test(value) ? options.sourceShortlinks?.[value] : undefined;
+        const retained=url.search.slice(1).split("&").filter(part=>!["p","page_id","attachment_id"].includes([...new URLSearchParams(part).keys()][0]??"" )).join("&");
+        const path=/^[1-9][0-9]*$/u.test(value) ? (entries[0]?.[0]==="attachment_id"?options.sourceAttachmentLinks?.[value]:options.sourceShortlinks?.[value]) : undefined;
         if(!path) response=boundary(404,"Page not found");
         else {
           const target=new URL(path,policy.canonicalOrigin);
@@ -85,7 +87,7 @@ export function createSeoHttpAdapter(options: SeoHttpAdapterOptions): (request: 
         response = new Response(policy.indexable
           ? `User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/\nDisallow: /frontend-preview/\nDisallow: /draft-preview/\nDisallow: /cms-preview/\nSitemap: ${policy.canonicalOrigin}/sitemap.xml\n`
           : "User-agent: *\nDisallow: /\n", {headers:{"Content-Type":"text/plain; charset=utf-8","Cache-Control":"no-store"}});
-      } else if ((url.pathname==='/'||/^\/(?:events?|venues?|organisers?)(?:\/|$)/u.test(decodedPath))&&[...url.searchParams.keys()].some(key=>['post_type','pagename','eventDisplay','paged','page','related_series','tribe_events_cat','tribe_organizer','tribe_venue','tribe-bar-date','ical','outlook-ical',...(url.pathname==='/'?['s']:[])].includes(key))) {
+      } else if ((url.pathname==='/'||/^\/(?:events?|venues?|organisers?)(?:\/|$)/u.test(decodedPath))&&[...url.searchParams.keys()].some(key=>['post_type','pagename','eventDisplay','paged','page','related_series','tribe_events_cat','tribe_organizer','tribe_venue','tribe-bar-date','ical','outlook-ical',...(url.pathname==='/'?['s','attachment_id','feed','rest_route']:[])].includes(key))) {
         // Exact captured query pages/resources already won above. A missing
         // meaningful legacy query must never return an unrelated collection/homepage.
         response=boundary(404,"Page not found");

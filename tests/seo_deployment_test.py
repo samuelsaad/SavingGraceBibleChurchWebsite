@@ -40,8 +40,9 @@ def archive(path, records):
 class SeoDeploymentTest(unittest.TestCase):
     def test_existing_source_retry_refuses_unknown_history_or_bundle(self):
         valid={'sourceCounts':{'source_public_versions':2351,'source_public_routes':2351,'source_public_imports':1},'sourceSha256':OP.EXISTING_SOURCE_SHA}
-        OP.verify_existing_source(valid,OP.EXISTING_BUNDLE_SHA)
-        for changed,bundle in (({**valid,'sourceSha256':'0'*64},OP.EXISTING_BUNDLE_SHA),(valid,'0'*64),({**valid,'sourceCounts':{}},OP.EXISTING_BUNDLE_SHA)):
+        OP.verify_existing_source(valid,OP.INCOMING_BUNDLE_SHA)
+        with self.assertRaisesRegex(RuntimeError,'seo_existing_source_drift'):OP.verify_existing_source(valid,OP.EXISTING_BUNDLE_SHA)
+        for changed,bundle in (({**valid,'sourceSha256':'0'*64},OP.INCOMING_BUNDLE_SHA),(valid,'0'*64),({**valid,'sourceCounts':{}},OP.INCOMING_BUNDLE_SHA)):
             with self.assertRaisesRegex(RuntimeError,'seo_existing_source_drift'):OP.verify_existing_source(changed,bundle)
 
     def test_helpers_remain_checksum_pinned_and_only_extend_exact_runtime_scope(self):
