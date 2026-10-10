@@ -4,6 +4,7 @@ import hashlib
 import importlib.util
 import io
 import json
+import os
 import pathlib
 import tarfile
 import tempfile
@@ -127,7 +128,11 @@ class SeoDeploymentTest(unittest.TestCase):
                 output.write(b"PGDMPanonymous fixture")
             base_mock.run.side_effect = dump
             listing = b"; dbname: savinggrace_staging\n1; 1 1 TABLE public sermons postgres\n2; 1 2 TABLE public cms_entities postgres\n"
-            with patch.object(OP.subprocess, "run", return_value=SimpleNamespace(returncode=0, stdout=listing)) as restore:
+            def inspect_descriptor(*args, **kwargs):
+                # subprocess consumes the underlying FD, not Python's read buffer.
+                self.assertEqual(os.read(kwargs['stdin'].fileno(),5), b'PGDMP')
+                return SimpleNamespace(returncode=0, stdout=listing)
+            with patch.object(OP.subprocess, "run", side_effect=inspect_descriptor) as restore:
                 receipt = OP.database_recovery(base_mock, Mock(), root)
             base_mock.verify_database.assert_called_once(); self.assertTrue(receipt["listingVerified"])
             self.assertEqual(receipt["bytes"], 22); self.assertEqual(receipt["sha256"], hashlib.sha256(b"PGDMPanonymous fixture").hexdigest())

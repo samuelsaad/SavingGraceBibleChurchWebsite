@@ -40,6 +40,16 @@ describe("explicit production SEO adapter",()=>{
     expect(await(await captured(new Request(origin+'/events/?related_series=42'))).text()).toBe('Anonymous captured archive');
     expect((await captured(new Request(origin+'/events/?ical=1'))).headers.get('Content-Type')).toBe('text/calendar');
   });
+  it("retains calendar/export duplicate HTML with noindex while keeping base pages and genuine calendar files distinct",async()=>{
+    const route=createSeoHttpAdapter({policy:{environment:'production',canonicalOrigin:origin},sermons:repository(),
+      sourcePage:async()=>new Response('<html><h1>Verified calendar page</h1></html>',{headers:{'Content-Type':'text/html'}}),
+      publicAsset:async request=>new URL(request.url).search==='?ical=verified'?new Response('BEGIN:VCALENDAR',{headers:{'Content-Type':'text/calendar'}}):null});
+    for(const path of ['/event/anonymous/all/?ical=1','/organiser/anonymous/?outlook-ical=1','/venue/anonymous/?eventDisplay=past','/?taxonomy=&term=']){
+      const response=await route(new Request(origin+path));expect(response.status).toBe(200);expect(response.headers.get('X-Robots-Tag')).toBe('noindex, follow');
+    }
+    expect((await route(new Request(origin+'/event/anonymous/all/?utm_source=church'))).headers.get('X-Robots-Tag')).toBeNull();
+    const asset=await route(new Request(origin+'/event/anonymous/all/?ical=verified'));expect(asset.headers.get('Content-Type')).toBe('text/calendar');expect(asset.headers.get('X-Robots-Tag')).toBeNull();
+  });
   it("collapses host, slash, pagination and old-slug redirects to one final target",async()=>{
     const route=production();
     for(const [path,target] of [["/sermons/page/01?s=test","/sermons/?s=test"],["/sermons/page/02?s=test","/sermons/page/2/?s=test"],["/sermons/old-title?order=ASC","/sermons/anonymous-teaching/?order=ASC"],["/sermons-v5/page/02?sermon_book=romans","/sermons/page/2/?sermon_book=romans"],["/pages/lordsdayservice?x=1","/lords-day-service/?x=1"]]){

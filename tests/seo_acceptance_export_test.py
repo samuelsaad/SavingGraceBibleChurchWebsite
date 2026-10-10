@@ -70,6 +70,25 @@ def review_file(value, aggregate, *, disposition='preserved', accepted=None):
 
 
 class AcceptanceExportTests(unittest.TestCase):
+    def test_parsing_cache_does_not_mask_a_changed_response_body(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture(Path(directory))
+            # Resolve fixture response evidence independently of tuple ordering.
+            root=Path(directory)/'private/candidate'
+            relative='responses/'+report.digest(URL)+'.json'
+            first=report.body_record(root,relative,URL)
+            first['extracted']['title']='Changed returned object'
+            self.assertEqual(report.body_record(root,relative,URL)['extracted']['title'],'Anonymous title')
+            (root/'responses/candidate.body').write_bytes(b'Changed anonymous bytes')
+            with self.assertRaisesRegex(ValueError,'report_response_hash_mismatch'):
+                report.body_record(root,relative,URL)
+
+    def test_verified_public_query_identities_remain_visible_but_unknown_parameters_are_withheld(self):
+        for query in ('page=2','pagename=calendar','tribe_organizer=7','tribe_venue=8'):
+            value='https://www.savinggrace.org.au/?'+query
+            self.assertEqual(report.safe_url(value),value)
+        self.assertTrue(report.safe_url('https://www.savinggrace.org.au/?session=anonymous').startswith('withheld-reference:'))
+
     def test_200_without_explicit_review_stays_unresolved_and_contains_no_prose(self):
         with tempfile.TemporaryDirectory() as root:
             value = fixture(Path(root)); summary = run(value)

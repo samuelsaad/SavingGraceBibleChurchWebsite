@@ -24,6 +24,31 @@ class Opener:
         return self.responses.pop(0)
 
 class CandidateVerifyTests(unittest.TestCase):
+    def test_parallel_loopback_budget_and_identity_are_not_weakened(self):
+        from concurrent.futures import ThreadPoolExecutor
+        from threading import Lock
+        with tempfile.TemporaryDirectory() as root:
+            opener=Opener([Response(headers={'x-seo-candidate':'frozen'}) for _ in range(5)])
+            original_open=opener.open;lock=Lock()
+            def guarded_open(*args,**kwargs):
+                with lock:return original_open(*args,**kwargs)
+            opener.open=guarded_open
+            client=verify.LoopbackClient('http://127.0.0.1:4440',Path(root),opener=opener,expected_label='frozen',request_limit=5)
+            def request(i):
+                try:return client.fetch(ORIGIN+'/anonymous-'+str(i)+'/')['status']
+                except ValueError as e:return str(e)
+            with ThreadPoolExecutor(max_workers=4) as pool:results=list(pool.map(request,range(12)))
+            self.assertEqual(results.count(200),5);self.assertEqual(results.count('candidate_request_budget_exhausted'),7)
+            self.assertEqual(client.requests,5);self.assertEqual(len(opener.requests),5)
+            self.assertTrue(all(urlsplit(r.full_url).hostname=='127.0.0.1' for r in opener.requests))
+
+    def test_concurrency_refuses_unbounded_or_noninteger_values(self):
+        with tempfile.TemporaryDirectory() as root:
+            base=Path(root);baseline=base/'ledger.json';baseline.write_text('{}')
+            for value in (0,5,True,1.5):
+                with self.assertRaisesRegex(ValueError,'concurrency_invalid'):
+                    verify.Verification(baseline,'http://127.0.0.1:4440',base/'private'/'run',concurrency=value)
+
     def test_only_literal_loopback_with_explicit_port(self):
         with tempfile.TemporaryDirectory() as root:
             for candidate in ['https://127.0.0.1:4440','http://localhost:4440','http://192.168.1.1:4440','http://127.0.0.1','http://127.0.0.1:4440/path','http://user@127.0.0.1:4440','http://www.savinggrace.org.au:4440']:

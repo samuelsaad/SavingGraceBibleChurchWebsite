@@ -148,7 +148,7 @@ def database_recovery(base, helper, root):
     with path.open("xb") as output:
         path.chmod(0o600)
         base.run(["docker", "exec", base.DB, "pg_dump", "-U", "postgres", "-d", "savinggrace_staging", "--format=custom"], output=output, timeout=900)
-    with path.open("rb") as source:
+    with path.open("rb", buffering=0) as source:
         if source.read(5) != b"PGDMP": fail("seo_database_backup_header")
         source.seek(0)
         result = subprocess.run(["docker", "exec", "-i", base.DB, "pg_restore", "--list"], stdin=source, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=180)

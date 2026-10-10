@@ -1,6 +1,7 @@
 """Export safe, hash-bound SEO acceptance reports without network or database access."""
 from __future__ import annotations
 import argparse
+from functools import lru_cache
 from collections import Counter
 import csv
 import hashlib
@@ -17,7 +18,7 @@ ORIGIN = VERIFY.CANONICAL
 DISPOSITIONS = frozenset(('preserved', 'redirected', 'intentionally_removed', 'unresolved'))
 HASH = re.compile(r'^[a-f0-9]{64}$')
 CODE = re.compile(r'^[a-z][a-z0-9_:.\-]{0,159}$')
-SAFE_QUERY = frozenset(('p', 'page_id', 'paged', 'pagename', 'post_type', 'feed', 's', 'order', 'sermon_dates', 'sermon_series', 'sermon_speaker', 'sermon_book', 'sermon_topics', 'tribe-bar-date', 'eventDisplay', 'tribe_events_cat', 'tag', 'ical', 'outlook-ical', 'related_series', 'shortcode', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'ver', 'resize', 'ssl'))
+SAFE_QUERY = frozenset(('p', 'page_id', 'paged', 'page', 'pagename', 'tribe_organizer', 'tribe_venue', 'post_type', 'feed', 's', 'order', 'sermon_dates', 'sermon_series', 'sermon_speaker', 'sermon_book', 'sermon_topics', 'tribe-bar-date', 'eventDisplay', 'tribe_events_cat', 'tag', 'ical', 'outlook-ical', 'related_series', 'shortcode', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'ver', 'resize', 'ssl'))
 MAP_FIELDS = ('source_url', 'source_url_sha256', 'source_wordpress_id', 'source_type', 'source_route_family', 'source_state', 'source_captured_at', 'source_status', 'source_redirect', 'source_canonical_urls', 'source_indexability', 'source_origin', 'source_provenance', 'traffic_evidence', 'backlink_evidence', 'retained_published_source_id', 'retained_reconciliation', 'target_identity', 'intended_url', 'candidate_first_status', 'candidate_final_status', 'candidate_final_url', 'redirect_hops', 'candidate_response_sha256', 'candidate_indexable', 'candidate_canonical_valid', 'candidate_robots_allowed', 'candidate_in_sitemap', 'raw_verification_issues', 'report_validation_issues', 'reviewed_issue_codes', 'unreviewed_issue_codes', 'explained_difference_policies', 'review_evidence_references', 'disposition', 'disposition_reason')
 DIFF_GROUPS = ('blocks', 'metadata', 'language', 'dates', 'images', 'media', 'content_tree')
 DIFF_FIELDS = ('source_url', 'source_url_sha256', 'source_response_sha256', 'candidate_response_sha256', 'comparison_available', 'source_block_count', 'matched_block_count', 'missing_block_count', 'missing_image_count', 'missing_media_count', 'metadata_change_count', *tuple(field for group in DIFF_GROUPS for field in ('source_' + group + '_sha256', 'candidate_' + group + '_sha256', group + '_changed')), 'missing_block_hashes', 'missing_image_hashes', 'missing_media_hashes', 'metadata_change_hashes', 'bundle_projection_sha256', 'explained_difference_policies', 'raw_verification_issues', 'disposition')
@@ -82,6 +83,15 @@ def boolean_cell(value):
     return str(value).lower() if str(value).lower() in ('true', 'false') else ''
 
 
+@lru_cache(maxsize=256)
+def extracted_candidate(raw, url):
+    # Cache parsing only. Every file read still verifies its current byte hash.
+    decoded=raw.decode('utf8',errors='replace')
+    value=VERIFY.parser.extract(decoded,url)
+    value['verifiedMediaIdentities']=sorted(VERIFY.candidate_media(decoded,value))
+    return stable(value)
+
+
 def body_record(root, relative, expected_url=None):
     record = load(VERIFY.confined_file(root, relative))
     if expected_url and record.get('url') != expected_url: raise ValueError('report_response_url_mismatch')
@@ -89,9 +99,7 @@ def body_record(root, relative, expected_url=None):
         raw = VERIFY.confined_file(root, record['responsePath']).read_bytes()
         if digest(raw) != record.get('bodySha256'): raise ValueError('report_response_hash_mismatch')
         if record.get('extracted') is not None:
-            decoded = raw.decode('utf8', errors='replace')
-            record['extracted'] = VERIFY.parser.extract(decoded, record['url'])
-            record['extracted']['verifiedMediaIdentities'] = sorted(VERIFY.candidate_media(decoded, record['extracted']))
+            record['extracted'] = json.loads(extracted_candidate(raw,record['url']))
     return record
 
 

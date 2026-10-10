@@ -2,6 +2,8 @@
 from __future__ import annotations
 import argparse
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
+from threading import Lock
 from datetime import datetime, timezone
 import csv
 import hashlib
@@ -112,18 +114,20 @@ class LoopbackClient:
         self.opener = opener or build_opener(ProxyHandler({}), parser.NoRedirect())
         self.expected_label, self.label = expected_label, None
         self.requests, self.cache = 0, {}
+        self.lock = Lock()
 
     def fetch(self, logical):
         if logical in self.cache: return json.loads(self.cache[logical].read_text(encoding='utf8'))
         if not church_url(logical): raise ValueError('candidate_logical_origin_refused')
         if parser.MEDIA_EXT.search(logical):
             return {'url': logical, 'status': None, 'headers': {}, 'error': 'recording_not_requested', 'bodySha256': None}
-        if self.requests >= self.limit: raise ValueError('candidate_request_budget_exhausted')
+        with self.lock:
+            if self.requests >= self.limit: raise ValueError('candidate_request_budget_exhausted')
+            self.requests += 1
         parts = urlsplit(logical)
         physical = self.base + (parts.path or '/') + ('?' + parts.query if parts.query else '')
         headers = {'X-SEO-Rehearsal-Origin': parts.scheme + '://' + parts.netloc,
                    'User-Agent': 'SavingGrace-SEO-Loopback-Comparator/1.0', 'Accept-Encoding': 'identity'}
-        self.requests += 1
         response = None
         started = time.monotonic()
         try:
@@ -133,8 +137,9 @@ class LoopbackClient:
                                 if key.lower() in ('content-type', 'location', 'x-robots-tag', 'x-seo-candidate', 'cache-control', 'content-length', 'link')}
             label = response_headers.get('x-seo-candidate')
             if self.expected_label and label != self.expected_label: raise ValueError('candidate_runtime_label_mismatch')
-            if self.label is not None and label != self.label: raise ValueError('candidate_runtime_changed')
-            if label is not None: self.label = label
+            with self.lock:
+                if self.label is not None and label != self.label: raise ValueError('candidate_runtime_changed')
+                if label is not None: self.label = label
             mime = response_headers.get('content-type', '').split(';')[0].strip().lower()
             recording = mime.startswith(('audio/', 'video/')) or mime in ('application/vnd.apple.mpegurl', 'application/x-mpegurl')
             body = b'' if recording else response.read(self.max_bytes + 1)
@@ -294,7 +299,9 @@ def indexable(response):
     return response.get('status') == 200 and 'noindex' not in robots.lower() and 'none' not in re.split(r'[,\s]+', robots.lower())
 
 class Verification:
-    def __init__(self, baseline, candidate, output, *, assets=None, environment='production', candidate_id=None, expected_label=None, request_limit=20000):
+    def __init__(self, baseline, candidate, output, *, assets=None, environment='production', candidate_id=None, expected_label=None, request_limit=20000, concurrency=1):
+        if type(concurrency) is not int or not 1 <= concurrency <= 4: raise ValueError('candidate_concurrency_invalid')
+        self.concurrency = concurrency
         self.baseline = Path(baseline).resolve()
         self.root = self.baseline.parent
         self.output = private_directory(output)
@@ -306,7 +313,7 @@ class Verification:
         self.bindings = {'baselineSha256': digest(baseline_bytes), 'assetsSha256': digest(assets_bytes) if assets_bytes else None,
                          'parserSha256': digest(PARSER_PATH.read_bytes()), 'comparatorSha256': digest(Path(__file__).read_bytes()),
                          'candidateOrigin': candidate, 'candidateId': candidate_id, 'expectedRuntimeLabel': expected_label,
-                         'environment': environment, 'requestLimit': request_limit}
+                         'environment': environment, 'requestLimit': request_limit, 'concurrency': concurrency}
         state_path = self.output / 'bindings.private.json'
         if state_path.exists(): raise ValueError('verification_output_already_used_choose_fresh_directory')
         save(state_path, self.bindings)
@@ -509,6 +516,12 @@ class Verification:
         fatal = None
         try:
             self.controls()
+            if self.concurrency > 1:
+                # Unique logical URLs, literal loopback sockets, unchanged budgets.
+                urls=[url for url in inventory(self.ledger,self.assets) if church_url(url) and not parser.MEDIA_EXT.search(url)]
+                with ThreadPoolExecutor(max_workers=self.concurrency) as pool:
+                    for _ in pool.map(self.client.fetch,urls): pass
+                print(json.dumps({'prefetchedRequests':self.client.requests,'concurrency':self.concurrency}),flush=True)
             for index, (url, state) in enumerate(inventory(self.ledger, self.assets).items(), 1):
                 self.verify_url(url, state)
                 if index % 25 == 0:
@@ -532,10 +545,11 @@ def main():
     cli.add_argument('--candidate-id', help='Caller-supplied provenance label, not proof of running bytes.')
     cli.add_argument('--expected-runtime-label', help='Require every HTTP response X-SEO-Candidate header to match.')
     cli.add_argument('--request-limit', type=int, default=20000)
+    cli.add_argument('--concurrency', type=int, default=1, choices=range(1,5), help='Bounded loopback-only HTTP prefetch; source/provider traffic is never enabled.')
     args = cli.parse_args()
     try:
         summary = Verification(args.baseline, args.candidate, args.output, assets=args.assets, environment=args.environment,
-                               candidate_id=args.candidate_id, expected_label=args.expected_runtime_label, request_limit=args.request_limit).run()
+                               candidate_id=args.candidate_id, expected_label=args.expected_runtime_label, request_limit=args.request_limit, concurrency=args.concurrency).run()
         print(json.dumps({key: summary[key] for key in ('checkedInventoryRows', 'inventoryCount', 'candidateRequests', 'baselineComplete', 'passed', 'issueCounts')}))
         return 0 if summary['passed'] else 1
     except (ValueError, OSError, json.JSONDecodeError):
