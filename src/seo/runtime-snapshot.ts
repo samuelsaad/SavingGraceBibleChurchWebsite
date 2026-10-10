@@ -1,3 +1,4 @@
+import {sourcePresentationPolicy} from './source-route-policy';
 import {createLegacySourceSearch} from './source-search';
 /** Version-keyed runtime snapshots. Every request checks current database state. */
 import type {Pool} from 'pg';
@@ -50,11 +51,14 @@ export function sourceRoutePolicy(pages:readonly SourcePublicPage[],routes:reado
   const values=attachmentIds.get(id)??new Set<string>();values.add(page.path);attachmentIds.set(id,values);
  }
  const sourceAttachmentLinks=Object.fromEntries([...attachmentIds].filter(([,paths])=>paths.size===1).map(([id,paths])=>[id,[...paths][0]! ]));
- return {sourceShortlinks,sourceAttachmentLinks,indexableArchivePaths:[...new Set(indexableArchivePaths)].sort()};
+ const presentation=sourcePresentationPolicy(pages,context);
+ const indexableCapturedQueryPaths=pages.filter(page=>page.path.includes('?')&&!page.issues.length&&page.kind!=='asset'&&page.kind!=='feed'&&presentation(page).indexable).map(page=>page.path);
+ return {sourceShortlinks,sourceAttachmentLinks,indexableArchivePaths:[...new Set(indexableArchivePaths)].sort(),indexableCapturedQueryPaths:[...new Set(indexableCapturedQueryPaths)].sort()};
 }
 
-/** Only small mutable pointers/metadata, never the source or CMS document bodies. */
-export const sourceRuntimeFingerprintSql=`SELECT jsonb_build_object(
+/** Hash all existing dependency pointers in PostgreSQL; return only 64 bytes.
+ * Every request still checks current state; no TTL or eligibility shortcut. */
+export const sourceRuntimeFingerprintSql=`SELECT encode(sha256(convert_to(jsonb_build_object(
  'source',(SELECT COALESCE(jsonb_agg(jsonb_build_array(path,version_sha256,source_wordpress_id,withdrawn,row_version) ORDER BY path COLLATE "C"),'[]'::jsonb) FROM source_public_routes),
  'sermons',(SELECT COALESCE(jsonb_agg(jsonb_build_array(id,source_wordpress_id,slug,status,row_version,updated_at,deleted_at,summary_status) ORDER BY id),'[]'::jsonb) FROM sermons),
  'transcripts',(SELECT COALESCE(jsonb_agg(jsonb_build_array(sermon_id,row_version,status,grounding_revision_id,updated_at) ORDER BY sermon_id),'[]'::jsonb) FROM sermon_transcripts),
@@ -71,16 +75,16 @@ export const sourceRuntimeFingerprintSql=`SELECT jsonb_build_object(
  'sourceTerms',(SELECT COALESCE(jsonb_agg(jsonb_build_array(id,updated_at) ORDER BY id),'[]'::jsonb) FROM source_taxonomy_terms),
  'sourceTermMap',(SELECT COALESCE(jsonb_agg(to_jsonb(m) ORDER BY sermon_id,source_taxonomy_term_id),'[]'::jsonb) FROM sermon_source_terms m),
  'media',(SELECT COALESCE(jsonb_agg(jsonb_build_array(id,sermon_id,updated_at,availability_status,display_order) ORDER BY id),'[]'::jsonb) FROM sermon_media),
- 'editorialChanges',(SELECT COALESCE(jsonb_agg(jsonb_build_array(id,created_at) ORDER BY id),'[]'::jsonb) FROM audit_events WHERE entity_type='sermon' AND actor_role='admin' AND action='sermon.update' AND outcome='succeeded'),
+ 'editorialChanges',(SELECT COALESCE(jsonb_agg(jsonb_build_array(id,created_at) ORDER BY id),'[]'::jsonb) FROM audit_events WHERE entity_type='sermon' AND outcome='succeeded'),
  'redirects',(SELECT COALESCE(jsonb_agg(to_jsonb(r) ORDER BY old_path COLLATE "C"),'[]'::jsonb) FROM redirects r),
  'cms',(SELECT COALESCE(jsonb_agg(jsonb_build_array(id,key,kind,published_revision_id) ORDER BY id),'[]'::jsonb) FROM cms_entities),
  'cmsRoutes',(SELECT COALESCE(jsonb_agg(to_jsonb(r) ORDER BY path COLLATE "C"),'[]'::jsonb) FROM cms_routes r),
  'assets',(SELECT COALESCE(jsonb_agg(to_jsonb(a) ORDER BY id),'[]'::jsonb) FROM media_assets a)
-) AS fingerprint`;
+)::text,'UTF8')),'hex') AS fingerprint`;
 export async function sourceRuntimeFingerprint(reader:Pick<Pool,'query'>){
  const row=(await reader.query(sourceRuntimeFingerprintSql)).rows[0] as {fingerprint:unknown}|undefined;
- if(!row?.fingerprint)throw Error('source_runtime_fingerprint_missing');
- return sha256(stableJson(row.fingerprint));
+ if(typeof row?.fingerprint!=='string'||!/^[a-f0-9]{64}$/u.test(row.fingerprint))throw Error('source_runtime_fingerprint_missing');
+ return row.fingerprint;
 }
 
 export function versionedHandlerCache<T>(fingerprint:()=>Promise<string>,build:(version:string)=>Promise<T>){

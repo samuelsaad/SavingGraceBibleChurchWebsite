@@ -24,6 +24,17 @@ export function isExternalHref(href: string): boolean {
 }
 
 export function resolveHref(href: string, context: FrontendRenderContext): string {
+  // Absolute church links keep their external-preview behavior while reaching
+  // the verified production host and final CMS path directly.
+  try {
+    const source = new URL(href);
+    if (["http:", "https:"].includes(source.protocol) && !source.username && !source.password && !source.port
+        && ["savinggrace.org.au", "www.savinggrace.org.au"].includes(source.hostname)) {
+      const disposition = legacyDisposition(source.pathname, context)
+        ?? (!source.pathname.endsWith("/") ? legacyDisposition(`${source.pathname}/`, context) : null);
+      return `https://www.savinggrace.org.au${disposition?.kind === "redirect" ? disposition.location : source.pathname}${source.search}${source.hash}`;
+    }
+  } catch { /* Relative links continue through the existing contextual policy. */ }
   if (href.startsWith("/")&&!href.startsWith('//')) {
     const split=href.search(/[?#]/u),path=split<0?href:href.slice(0,split),suffix=split<0?'':href.slice(split);
     const disposition=legacyDisposition(path,context)??(!path.endsWith('/')?legacyDisposition(`${path}/`,context):null);

@@ -16,6 +16,8 @@ export interface SeoHttpAdapterOptions extends ChurchSiteOptions {
   policy: SeoHttpPolicyInput;
   /** Exact observed canonical archive query paths; supplied from verified source records. */
   indexableArchivePaths?: readonly string[];
+  /** Frozen meaningful source query archives, not arbitrary filter combinations. */
+  indexableCapturedQueryPaths?: readonly string[];
   sermons: PublicSermonRepository;
   /** Proven source IDs mapped to active canonical paths; never inferred from GUIDs. */
   sourceShortlinks?: Readonly<Record<string,string>>;
@@ -123,7 +125,7 @@ export function createSeoHttpAdapter(options: SeoHttpAdapterOptions): (request: 
         && [...url.searchParams.keys()].some(key=>['ical','outlook-ical','eventDisplay','tribe-bar-date','related_series'].includes(key));
       const emptyTaxonomy=url.pathname==='/' && url.searchParams.has('taxonomy') && url.searchParams.has('term')
         && [...url.searchParams].filter(([key])=>['taxonomy','term'].includes(key)).every(([,value])=>value==='');
-      if(policy.indexable && response.status===200 && (calendarDerivative||emptyTaxonomy)
+      if(policy.indexable && response.status===200 && ((calendarDerivative&&!(observedQuery&&options.indexableCapturedQueryPaths?.includes(url.pathname+url.search)))||emptyTaxonomy)
         && response.headers.get('Content-Type')?.toLowerCase().includes('text/html'))response.headers.set('X-Robots-Tag','noindex, follow');
       const location = response.headers.get("Location");
       if (location) {

@@ -1,5 +1,5 @@
 import {describe,expect,it} from 'vitest';
-import {createVersionedSourceHandler,sourceRoutePolicy,versionedHandlerCache,sourceRuntimeFingerprintSql} from '../src/seo/runtime-snapshot';
+import {createVersionedSourceHandler,sourceRoutePolicy,versionedHandlerCache,sourceRuntimeFingerprintSql,sourceRuntimeFingerprint} from '../src/seo/runtime-snapshot';
 import type {SourcePublicPage} from '../src/seo/source-public-model';
 function page(value:Partial<SourcePublicPage>):SourcePublicPage{
  const path=value.path??'/example/';
@@ -36,6 +36,10 @@ describe('version-bound source runtime',()=>{
   let release!:()=>void;const gate=new Promise<void>(resolve=>{release=resolve;});let builds=0;
   const select=versionedHandlerCache(async()=>'one',async()=>{builds++;await gate;return 'ready';});
   const a=select(),b=select();await Promise.resolve();release();expect(await a).toEqual(await b);expect(builds).toBe(1);
+ });
+ it('requires a complete server-generated dependency hash',async()=>{
+  expect(await sourceRuntimeFingerprint({query:async()=>({rows:[{fingerprint:'a'.repeat(64)}]})} as never)).toBe('a'.repeat(64));
+  for(const fingerprint of [null,{},'a'.repeat(63),'A'.repeat(64)])await expect(sourceRuntimeFingerprint({query:async()=>({rows:[{fingerprint}]})} as never)).rejects.toThrow('source_runtime_fingerprint_missing');
  });
  it('fingerprints source withdrawals, editorial redirects, CMS published pointers and asset state without source bodies',()=>{
   for(const name of ['source_public_routes','withdrawn','sermons','redirects','cms_entities','published_revision_id','cms_routes','media_assets','sermon_transcripts','sermon_question_answers','scripture_references','sermon_primary_passage_reviews','sermon_transcript_legacy_grounding_bindings','speakers','series','book_classifications','bible_books','sermon_series_map','sermon_book_classifications','source_taxonomy_terms','sermon_source_terms','sermon_media','audit_events'])expect(sourceRuntimeFingerprintSql).toContain(name);

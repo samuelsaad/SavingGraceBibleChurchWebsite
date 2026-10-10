@@ -16,10 +16,10 @@ import tarfile
 import time
 
 UPGRADE_SHA = "e41bbc7b36e883665a4f57c07ed1fbd9b222f018d07af9597f90cebfd4e62fb2"
-PREVIOUS_COMMIT = "4f127b5e5f702f639bd2b3ec36cd1fbb36420abb"
-PREVIOUS_IMAGE = "sha256:9a268940761c35005c4b469e59e0dc32b4d03c00a7c2370e73c6909ea454ce8e"
+PREVIOUS_COMMIT = "2bebefb74565ccd44602ee5be0c80d80a52818b9"
+PREVIOUS_IMAGE = "sha256:975d2a00a59b1cd38acd5d32e1a806d3a11f3b5fe9ee530db6fa0365d8963471"
 BASE_SCHEMA_ORDER = 28
-EXISTING_SOURCE_SHA = "2cbe0faa1dfab33eab8c4c3e2817957f7d2b16537abbcb6fb0fc331e557de831"
+EXISTING_SOURCE_SHA = "7a1a5ffca195eb99c587eec12bb8a0903269c94c49794034d38525967c1f6845"
 EXISTING_BUNDLE_SHA = "846be1ce89d93c7b41c153c712cb7ec8f1f4d89244aa8cb9ed8b46f3c4d70442"
 INCOMING_BUNDLE_SHA = "8499c2c3fd3c983a757fa286614d949e90b1ac10976ce4ebcf7b3b78ed2b30a1"
 SOURCE_TABLES = ("source_public_versions", "source_public_routes", "source_public_imports")
@@ -173,7 +173,7 @@ def owner_secret_identity(base, path):
 
 def verify_existing_source(actual, bundle_hash):
     # Require the frozen incumbent history and the exact reviewed additive delta.
-    expected={"source_public_versions":2351,"source_public_routes":2351,"source_public_imports":1}
+    expected={"source_public_versions":3424,"source_public_routes":3422,"source_public_imports":2}
     if actual.get("sourceCounts") != expected or actual.get("sourceSha256") != EXISTING_SOURCE_SHA or bundle_hash != INCOMING_BUNDLE_SHA:
         fail("seo_existing_source_drift")
 

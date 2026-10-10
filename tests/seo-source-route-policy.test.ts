@@ -17,8 +17,12 @@ describe('bounded captured archive canonical corrections',()=>{
   const paths=['/events/category/example/month/','/events/category/example/list/2026-10-10/','/events/category/example/2026-10/'];
   const pages=paths.map(path=>page(path)),policy=sourcePresentationPolicy([base,...pages]);
   for(const entry of pages)expect(policy(entry)).toEqual({canonicalPath:base.path,indexable:false,reason:'calendar_navigation'});
-  const unknown=page('/events/category/absent/day/');expect(policy(unknown)).toEqual({canonicalPath:unknown.path,indexable:false,reason:'calendar_navigation'});
+  const unknown=page('/events/category/absent/day/');expect(policy(unknown)).toEqual({canonicalPath:unknown.path,indexable:true,reason:'distinct_source_archive'});
   const unrelated=page('/events/category/example/annual/');expect(policy(unrelated)).toEqual({canonicalPath:unrelated.path,indexable:true,reason:'source_self'});
+ });
+ it('retains meaningful distinct captured calendar archives and their original noindex decisions',()=>{
+  const base=page('/events/'),distinct=page('/events/month/2023-09/',{content:[{tag:'p',text:'A different historical event collection.'}]}),privateArchive=page('/events/month/2023-08/',{indexable:false});
+  const policy=sourcePresentationPolicy([base,distinct,privateArchive]);expect(policy(distinct)).toEqual({canonicalPath:distinct.path,indexable:true,reason:'distinct_source_archive'});expect(policy(privateArchive).indexable).toBe(false);expect(sourcePublicSitemap([base,distinct,privateArchive]).map(p=>p.path)).toEqual([base.path,distinct.path]);
  });
  it('preserves distinct event-tag and all-occurrence collections rather than unrelated source canonicals',()=>{
   const blog=page('/tag/example/'),eventTag=page('/events/tag/example/',{canonicalSource:origin+blog.path,content:[{tag:'p',text:'Different event collection.'}]}),instance=page('/event/example/2026-01-01/',{kind:'event'}),all=page('/event/example/all/',{canonicalSource:origin+instance.path});

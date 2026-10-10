@@ -391,7 +391,7 @@ describe("church page rendering", () => {
     }
     const constitution = decode(renderChurchPage(pageById("constitution"), data, previewRenderContext));
     expect(constitution).toContain("Article 7 - Government");
-    expect(constitution).toContain('href="https://savinggrace.org.au/wp-content/uploads/2020/02/Constitution.pdf"');
+    expect(constitution).toContain('href="https://www.savinggrace.org.au/wp-content/uploads/2020/02/Constitution.pdf"');
     const sitemapPublic = renderSitemapPage(pageById("sitemap"), data);
     expect(sitemapPublic).not.toContain("/constitution/");
     expect(sitemapPublic).not.toContain("lordship-salvation");

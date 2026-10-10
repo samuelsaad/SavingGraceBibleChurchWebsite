@@ -21,6 +21,12 @@ export function sourcePresentationPolicy(pages:readonly SourcePublicPage[],conte
   if(/\/page\/(?:[2-9]|[1-9][0-9]+)\/$/u.test(page.path))return {...base,reason:'distinct_pagination'};
   const collection=calendarBase(page.path);
   if(collection){
+   const sourceBase=current.get(collection);
+   const identical=Boolean(sourceBase&&sourceBase.kind===page.kind&&sourceBase.content.length>0
+    &&sourceBase.heading===page.heading&&stableJson(sourceBase.content)===stableJson(page.content));
+   // A calendar-shaped URL alone does not prove duplicate or low-value content.
+   // Keep captured meaningful distinct archives eligible and self-canonical.
+   if(page.indexable&&page.content.length>0&&!identical)return {...base,reason:'distinct_source_archive'};
    let canonicalPath=page.path;
    if(current.has(collection)){
     const disposition=legacyDisposition(collection,context);
