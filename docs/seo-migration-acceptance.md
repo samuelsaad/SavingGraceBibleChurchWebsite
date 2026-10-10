@@ -1,201 +1,327 @@
-# D-181 SEO migration acceptance record
+# Whole-site SEO migration acceptance - 10–11 October 2026
 
-**Status: NOT READY — final evidence and release gates remain pending.**
+**Verdict: NOT READY FOR CUTOVER.** The implementation and protected staging
+rehearsal below are complete to the recorded extent. Unresolved URL/content,
+source/account, measurement and restoration requirements block launch. Production
+traffic, DNS and WordPress were not changed.
 
-This is an in-progress acceptance record for `codex/whole-site-seo-migration`,
-not permission to change production traffic or DNS. Results below distinguish
-implemented safeguards, executed checks and evidence still required. Final URL,
-content and asset coverage counts must come from the frozen reports; none are
-inferred from historical inventories or earlier sermon review totals.
+## 1. Source and dated baseline
 
-The execution scope is [the migration contract](../seo-migration-plan.md).
-Operational procedures remain in the
-[cutover and rollback runbook](seo-cutover-rollback-runbook.md),
-[staging procedure](seo-staging-deployment.md), and
-[monitoring plan](seo-post-launch-monitoring.md).
+The verified original site is https://www.savinggrace.org.au. The fresh public REST
+root reports both home and url at this HTTPS www origin, timezone Australia/Melbourne.
+The apex HTTPS homepage also served a self-canonical copy; the replacement's permanent
+www normalization is a documented duplicate correction. Public responses identified
+WordPress 6.4.13, AIOSEO 4.6.4 and Site Kit 1.116.0. Stored SQL facts and plugin meta
+fields could not be read because the configured account failed the unchanged privilege
+guard before table inspection.
 
-## Release identity and preservation
+The frozen union retains captures from 9 October 13:18-14:52 UTC plus the dated
+10 October REST/HTML/resource continuation and search probe. It includes 7,376
+responses (5,802 successful, 1,247 permanent redirects, 28 temporary redirects,
+137 not found, 162 rate-limited) and 14,818 discovered URLs. It is incomplete.
+The union SHA-256 is `dd355c3d210e9d5ba13abe9f5a1b54d0945a993e94660729204b7ae0d30eec39`.
+Retained 4 October source evidence remains labeled historical. See
+[the detailed baseline](seo-source-baseline.md).
 
-| Item | Evidence or current state |
-| --- | --- |
-| Integrated starting commit | `6a5239b136e5c68211d85bd34380db9992c29ef9` |
-| Existing local work | Preserved sermon media, transcript/Q&A interaction and directory-count refinements are part of the integrated migration scope. The source worktree is retained. |
-| Final reviewed commit | Pending final diff review and commit. |
-| Source and runtime archives | Pending committed-input packaging, file hashes and fresh outgoing scans. |
-| Private source and asset bundle identities | Pending final frozen bundle hashes and reconciliation report. These bundles remain outside Git and code archives. |
-| Normal branch publication | Pending final gates and recorded remote result. No force-push or production merge is part of this record. |
+## 2. Coverage and source release
 
-## Implemented behavior
+| Projection type | Migrated routes |
+| --- | ---: |
+| Pages, including home/about/beliefs/ministries/contact/giving | 30 |
+| Posts | 3 |
+| Archives, taxonomy and observed query/pagination projections | 665 |
+| Originally public sermons | 457 |
+| Events and captured date projections | 1197 |
+| Images/documents/feeds/calendar resource routes | 1070 |
+| Total | 3422 |
 
-Verified originally public content has a separate immutable, provenance-bound
-projection. Its additive migration, import receipts and current-version pointers
-do not grant enrichment approval, clear findings or rewrite existing sermon
-publication states. Imports require expected prior versions, preserve immutable
-history, reject conflicts and honor explicit withdrawal decisions. Missing optional
-generated enrichment does not suppress a verified original-public source page.
+Public REST independently exposed 1,084 published events, three venues, one
+organizer and 420 readable media identities. Seventeen of the header-reported
+437 media records were not exposed; their identities are not invented. The
+1,197 event projections include 113 previously captured virtual/date pages.
+Aliases, captures and projections are different counts.
 
-The visitor repository also admits normal approved sermon publications through
-the unchanged public eligibility selector. Existing records bind to originals by
-their unique stored WordPress source ID. Approved descriptions, transcripts and
-Q&A can augment the original; the captured body and metadata remain defaults.
-Successful administrator edit events identify deliberate field overrides, including
-edits before a later source recrawl. Import/system events do not count as those
-edits. New eligible sermons enter visitor detail, search, discovery and sitemaps.
-Explicit slug changes resolve original URLs and verified source short links to the
-chosen canonical directly. Withdrawn source pointers and explicit gone responses
-cannot be reintroduced as newly published records by this composition.
+The deployed import bundle file SHA-256 is
+`8499c2c3fd3c983a757fa286614d949e90b1ac10976ce4ebcf7b3b78ed2b30a1`.
+The 1,049-file asset archive SHA-256 is
+`2eaaf36231cb9c5fbd88175fc1ae55ceb245a6917fed1bcc0a41dc0de7bfd064`.
+The final comparison witness binds the union inventory while retaining identical
+projection payloads; it is not an additional import or approval. Its SHA-256 is
+`f817a19fb2b274b8064916a13883a2f7f1db69e96baae74aab859410b283b659`.
+The CAS proof verified all 2,351 old versions and all original content fields.
+Local delta inserted 1,071 routes, updated two asset identity metadata records and
+retained 2,349 unchanged. Replay inserted/updated zero, retaining all 3,422 routes.
 
-Source-only non-sermon fallback documents remain immutable migration snapshots
-until an administrator explicitly creates and publishes a supported CMS entity at
-the retained path, or adopts a reviewed replacement and redirect. They are not
-automatically editable modules in the visual editor. Existing CMS-owned pages and
-shared settings already override the fallback; a draft does not replace the public
-original, and a published redirect/gone disposition prevents its resurrection. The
-final content inventory must identify any fallback documents requiring this adoption;
-this record does not claim whole-source visual editing coverage.
+## 3. Explicit URL outcomes
 
-Public HTML uses the configured canonical origin and server-rendered content and
-links. Canonicals are derived from validated routes. Captured titles and optional
-metadata supply defaults; explicit versioned CMS metadata overrides them. An absent
-captured description remains absent instead of being invented from seeded copy.
-Search, preview, staging, errors and unapproved variants have separate indexing
-rules. Only exact observed eligible archive query paths can retain query canonicals.
-Reviewed redirects resolve directly to the final destination.
+The complete inventory contains 15,252 rows.
 
-CMS search appearance controls cover title, description, sharing text, managed
-images and an explicit noindex choice. They do not accept arbitrary canonical URLs
-or executable structured data. Draft, publish, hide, rename, restore and unpublish
-operations retain optimistic concurrency and immutable revision history. Initial
-imports, no-op saves and replayed restores do not manufacture sitemap modification
-dates. Structured data uses supplied facts, escapes executable-looking text and
-does not automatically invent FAQ or recording schema.
+| Outcome | URL rows |
+| --- | ---: |
+| intentionally_removed | 238 |
+| preserved | 2711 |
+| redirected | 1279 |
+| unresolved | 11024 |
 
-The source asset path accepts only bounded, content-addressed, type-checked files.
-The public handler checks current metadata, expected length and byte hash. SVG and
-feed responses retain the restricted content-security policy. Deployment archives
-reject links, duplicate names, arbitrary paths, extra members and byte mismatches;
-existing asset bytes cannot be overwritten by transfer.
+The [complete URL ledger](seo-url-migration-map.csv) and
+[content/metadata comparison](seo-content-metadata-diff.csv) retain source/candidate
+status, identity, capture provenance, canonical/indexability, hashes, issue codes
+and reviewed policy references. Traffic/backlink evidence is unavailable. An
+unresolved row is a launch issue, even if the candidate returned 200.
 
-## Executed CMS and implementation checks
+Preexisting source 404s and exactly 101 zero-byte calendar-export responses have
+narrow removal reasons. Those exports contain no substantive HTML or calendar bytes.
+Missing migration work is not classified as intentional removal. Decisions are
+mechanical evidence dispositions, never administrator or theological approvals.
 
-| Check | Result and limit |
-| --- | --- |
-| Guarded PostgreSQL integration file | 145 tests passed with zero skips in the final focused rerun; the exact disposable test database was removed. This includes source/editorial publication, withdrawal, child-only approval invalidation and same-sermon redirect preservation. The full guarded suite completed; the exact disposable database was removed. |
-| CMS lifecycle through actual loopback HTTP | The integration run exercised anonymous synthetic content through authenticated API requests and visitor HTTP responses: draft isolation, protected preview, publish, metadata, module visibility, repeated slug changes, revision restore, inbound-link protection, unpublish/gone responses and sitemap exclusion. |
-| Read-only local CMS browser inspection | Five checks passed for home/page search previews, optional SEO entry, canonical guidance, advanced navigation and the mobile inspector. External requests and content mutations were blocked by the harness; none were attempted. Revision pointers remained identical and there were no browser errors. This used the existing development identity, not personal production authentication. No content was added, saved or published in this browser check; mutation coverage comes from the separate synthetic HTTP workflow. |
-| Source repository, runtime snapshot and package checks | Focused anonymous tests passed. Final aggregate suite result and receipt are pending. |
-| Source/editorial composite and actual loopback HTTP | Anonymous tests verify original-only rendering, normal approved augmentation, new publication discovery, intentional metadata/body changes, direct slug aliases, source-ID short links and withdrawn/private exclusion. The public constructor uses the existing public selector, never a restricted-preview scope. |
-| Local restore guard/comparison unit tests | Four tests passed. They prove guard and comparison behavior, not that a database was restored. |
-| Staging operator tests | Eleven offline tests passed without remote, Docker or database execution. |
-| Metadata regression tests | Eleven tests passed across the source-asset/schema and CMS SEO files, including absent captured description, exact archive title and explicit CMS override precedence. All new fixtures are synthetic. |
-| Final tests, type checks, builds, dry run, offline dependency audit and outgoing scans | Unit tests:1,222 passed,145 database-gated skips covered by the1,367/1,367 PostgreSQL run. Astro:626 files,zero errors/warnings,seven hints. Production and offline staging builds passed. Anonymous importer:five records,three included,two excluded,zero rejected. Offline dependency audit:zero vulnerabilities. Outgoing scans are recorded with the final release. |
+## 4. Original public sermon reconciliation
 
-The HTTP checks found and corrected a restore defect: promoting a historical slug
-could temporarily turn the selected canonical path into a self-redirect. The route
-update now excludes that selected path while flattening aliases. Packaging review
-also added the new source-public maintenance entry to both runtime and source-input
-closures; the final packager must still verify the committed archive bytes.
+All 454 retained published identities had fresh successful original-path source
+responses; three new identities bring the known public set to 457. All 457 are
+included independently of missing YouTube mappings or optional new enrichment.
+The REST API does not expose sermons, so 457 is not a proven complete current
+stored count. No GUID was treated as a permalink.
 
-## Security and administration boundary
+Reconciliation: `{"available": true, "basis": "explicit_retained_source_id_and_sermon_path_not_guid", "freshDatabaseInventoryAvailable": false, "freshIdsAbsentFromFinalBundle": [], "freshIdsAbsentFromRetainedPublished": [30130, 30131, 30132], "freshPrimaryMediaMissingCount": 0, "freshUniqueSermonIds": 457, "limitation": "retained_export_is_historical_fresh_wordpress_grant_guard_failed", "outcomeCounts": {"fresh_same_identity_same_path": 454}, "retainedIdsAbsentFromFinalBundle": [], "retainedIdsAbsentFromFreshSermons": [], "retainedPublishedCount": 454, "retainedSeedSourceStatuses": {"200": 454}}`.
 
-Read-only review covered the source import compare-and-swap checks, immutable
-version history, withdrawal handling, safe source rendering, structured-data
-escaping, asset confinement and publication separation. It found no additional
-concrete blocker after the reported corrections. This is a bounded code review,
-not an independent penetration test or a production certification.
+Imported source versions retain captured wording, service/publication/modification
+dates, metadata and verified media relationships. Complete rendered equivalence
+remains unresolved where the ledger records missing blocks or metadata changes.
+Generated transcript/description/Q&A
+review and uncertainty remain separate. Native staging remains 398 sermons with
+144 ordinary publications; source migration does not rewrite those publication
+states, human reviews, warnings or editorial withdrawals. Stage-only delegated
+supplements remain rejected by the production selector.
 
-The existing local development identity and protected staging operator-key session
-remain environment-specific administration mechanisms. Neither is individual
-production authentication or MFA. The source visitor integration retains the
-existing admin/API/private-preview boundaries; source publication adds no CMS-writer
-privileges. Production administration and account connection remain a separate
-launch gate. Secrets, source bodies, private receipts and database archives remain
-outside Git, ordinary logs and release payloads.
+## 5. Content, metadata and structured data
 
-A separate pinned, read-only check confirmed the incumbent staging reader already
-has SELECT on the audit table and the existing tables/views needed by the normal
-public selector and its cache dependencies. It returned only boolean results and
-changed no grants. Immutable edit attribution stays server-side. Source migration
-still adds only the documented SELECT grants on its three new tables.
+Remaining issue counts after bounded exact-witness review:
 
-## Source parity and coverage evidence
+| Outcome | URL rows |
+| --- | ---: |
+| asset_bytes_not_captured | 145 |
+| external_dependency_not_requested | 408 |
+| metadata_change_requires_review | 2709 |
+| non_html_source_bytes_changed_requires_review | 37 |
+| recording_not_requested | 118 |
+| source_capture_pending_or_missing | 6837 |
+| source_content_image_or_alt_missing | 76 |
+| source_excluded_no_comparison_evidence | 6 |
+| source_indexability_lost | 1928 |
+| source_redirect_target_capture_missing | 438 |
+| source_semantic_blocks_missing | 2767 |
+| status_mapping_change_requires_review | 629 |
 
-| Required evidence | Final report status |
-| --- | --- |
-| Fresh source capture, canonical hosts, robots and sitemaps | Pending final report identity, capture interval and explained limitations. |
-| Disposition for every discovered URL | Pending final ledger counts and unresolved-item list. |
-| Current original-public sermon reconciliation | Pending source-to-candidate identity and content report; historical cohort counts are not completeness evidence. |
-| Titles, descriptions, headings, dates, language and visible content | Pending actual HTTP comparison report and approved differences. |
-| Direct redirects, gone/missing responses and short links | Pending exhaustive candidate result summary. |
-| Navigation, internal links, discovery and sitemap eligibility | Pending final route-level comparison. |
-| Images, documents and feeds | Pending final asset ledger and byte/response verification. Recordings are not downloaded for this task. |
-| Fresh WordPress database evidence | The strict read-only privilege gate blocked the attempted fresh inspection. No weaker credential or guard bypass was used. Final source reconciliation must state the resulting limitation. |
-| Search Console, Analytics and Tag Manager evidence | Pending an access/result statement. No unavailable evidence may be represented as checked. |
-| Browser/accessibility and laboratory performance evidence |42 local browser cases passed across1440/390/320 widths with JavaScript enabled/disabled:one main/H1,no horizontal overflow,zero uncaught errors,zero external requests. Maximum measured CLS0.001587 and LCP588ms, unthrottled headless Edge on loopback. INP and comparable source/field measurements are not established. |
-| Field Core Web Vitals and post-launch search behavior | Unavailable for the replacement before launch. Laboratory results are not field performance, and staging cannot prove future indexing, traffic or ranking parity. |
+The comparison covers title/description/headings, blocks/lists/links,
+canonical/robots/social signals, images/alt text, breadcrumbs/schema and dates.
+The [difference policy](seo-difference-policy.md) records exact bounded corrections
+including a broken staging-host social logo, actual Arabic language/RTL, missing
+source H1 and equivalent formatting. Existing explicit CMS edits take precedence;
+retained source copy is included by default until an explicit published replacement.
+Import/deployment times do not become historical dates. Translation relationships,
+ratings, reviews and recording facts are not invented.
 
-## Backup and restoration gate
+Missing paragraphs/links/alt/schema and unexplained material metadata changes remain
+unresolved. Automated JSON/property consistency does not constitute Google rich-result
+certification. Current [organization guidance](https://developers.google.com/search/docs/appearance/structured-data/organization)
+was reviewed; eligible properties must agree with visible verified church facts.
 
-The private local proof is implemented in `scripts/seo-local-recovery.ts` and
-documented in [the recovery procedure](seo-local-recovery.md). It takes a consistent
-read-only exported snapshot, retains a private custom-format dump, restores only to
-one newly created guarded target, compares all table counts and fingerprints, and
-cleans up only the database created by that run. It cannot restore over the source.
+## 6. Redirects, discovery, canonicals and indexing
 
-**Actual restoration remains unexecuted and blocking.** Automatic approval review
-rejected the proposed narrow database-governance amendment because the direct
-authorization for that exact amendment was not established in its trusted context.
-Explicit user confirmation is pending. No restore target was created, and no
-alternative path bypassed that rejection. Unit tests and `pg_restore --list`
-validation do not meet the demonstrated-restoration requirement.
+Production-mode comparison checked 15,252/15,252 rows with 15,960 actual HTTP requests and 2,111 sitemap URLs. The comparator verdict is failed because unresolved findings/source coverage remain. The current production sitemap contains 2,111 URLs; zero recorded canonical-conflict/redirect-loop/avoidable-chain issues is not full content acceptance. Complete raw results are in the machine summary; zero-valued absence of a particular issue is not overall acceptance.
 
-The staging operator implements a private full database dump and captures CMS,
-assets, immutable configuration and secret identities before changes. Its archive
-header/listing checks and hashes must be recorded when staging preparation actually
-runs. Reconstructing production roles, identities and grants is not claimed by the
-isolated local schema/data recovery procedure.
+The production internal-target audit still records 975 non-200 targets. The final
+download-button correction removes the preceding single internal redirect, but
+does not clear the remaining discovery failures. The deployed private-environment
+audit records 1,059 non-200 internal targets, 32 non-HTML MIME differences and 133
+previous-success status differences; its raw findings remain in the machine report.
+Staging exclusions require individual classification and do not establish production
+content equivalence. Neither crawl is represented as an overall pass.
 
-## Protected staging delivery gate
+HTTPS www policy governs metadata, links, sitemaps and structured data. Original
+sermon slugs replace temporary evaluation identifiers; design variants redirect to
+/sermons/. Exact observed query content/exports precede generic routes. Unknown
+meaningful legacy queries return genuine errors rather than unrelated homepage
+content. Verified shortlinks/attachment identities retain campaign query bytes.
+Useful archive/taxonomy links and pagination are server-rendered; valid later pages
+retain their own canonical. Search/filter policy is bounded rather than a blanket
+noindex for valuable archives.
 
-The latest read-only inventory observed D-180 release
-`e8892c08eb1ea26e9675c8af87ebefef9866699d`, image
-`sha256:2760ce944f9393cde4388a2fe6e1ed5aba108a4f8ac48ad3dbcb41558c2462cc`,
-and schema ledger 27. These are the incumbent identities, not a D-181 deployment.
+Production-mode rehearsal is isolated on loopback. Deployed staging remains
+loopback/SSH-only and noindex, with no production canonical/sitemap exposure.
+Admin/private previews retain their denial/authentication boundaries. Robots blocking
+alone is not represented as protection against indexed URLs. Redirects must remain
+at least a year, preferably indefinitely, and internal links must use final targets.
+See [Google migration guidance](https://developers.google.com/search/docs/crawling-indexing/site-move-with-url-changes).
 
-| Required staging evidence | Status |
-| --- | --- |
-| Fresh inventory bound to the final release | Pending. |
-| Private recovery snapshots and full dump | Pending execution and verified receipts. |
-| Compatible feature-off bridge canary and activation | Pending. |
-| Migration 28 apply, unchanged replay and source import replay | Pending. |
-| Candidate canary, activation and actual HTTP parity checks | Pending. |
-| CMS, asset, sermon/review, secret, mount, network and listener preservation | Pending before/after evidence. |
-| Rollback to the schema-compatible bridge and reactivation | Pending actual exercise and HTTP verification. |
-| Final protected staging image/configuration identity | Pending. |
+## 7. Assets, media and persistence
 
-The implemented operator requires the bridge before migration and permits only
-the compatible bridge as application rollback after migration 28. Ordinary rollback
-does not erase source history, assets, audit records or subsequent CMS changes.
-No D-181 staging transfer, application switch, migration or role change is certified
-by this record yet. Production traffic, DNS and WordPress remain unchanged.
+The source resource capture verified 1,120 responses by status, MIME, file signature,
+length and SHA-256. It covers images, seven PDFs, a DOCX, a PPTX, RSS and ICS.
+The migrated projection has 1,070 resource routes and 1,049 unique durable files.
 
-## Outstanding acceptance decision
+After rollback/reactivation, both deployed runtimes served all 1,070 resource routes
+with exact expected SHA-256, length and MIME: 2,140 HTTP checks, zero failures.
+These checks bind the actual runtime labels and verify durable availability after restart.
 
-The final reviewer must attach the frozen evidence identities, replace pending
-entries with actual results, enumerate unresolved differences and decide whether
-they block launch. Demonstrated restoration, complete source/candidate comparison,
-release verification and protected staging delivery remain open. Missing account
-or field evidence must retain an explicit limitation and follow-up owner. This
-record cannot be used as a READY verdict while these gates remain unresolved.
+All 117 MP3s, one MP4 and two ZIP URLs returned 200 to HEAD-only checks. No recording
+body was fetched; no byte identity or durable recording migration is claimed.
+One OTF and 17 unexposed media identities remain unresolved. There are 408 external
+dependencies; 37 verified church-original rewrites do not prove transformed CDN byte
+identity. WordPress cannot be retired while required hosted files remain dependent.
 
-## Completed source and implementation milestone
+The 755 primary provider relationships (328 YouTube, 427 SermonAudio) and 129
+audio-only sermons retain their identities and deliberate playback controls.
+Click-to-load frames limit evidence of video discoverability: schema alone does not
+prove video indexing. See [Google video requirements](https://developers.google.com/search/docs/appearance/video).
 
-The frozen linked baseline observes11,300 URLs and captures6,135 responses. The final private source projection contains2,351 routes/resources:30 pages,three posts,665 archive/query pages,457 sermons,377 events and819 resources. Every one of the454 published retained-export sermon identities is present; three further current public IDs are included. All457 have primary media relationships. The exact source import replay changed nothing.
+## 8. CMS and future-edit protection
 
-The source comparison identified real missing paragraphs in initial CMS copy and a leading-slash filter failure affecting516 observed URLs. The implementation now retains missing original text/links/images in the selected layout, restores verified original headings where the seed label is unchanged, honors subsequent explicit CMS edits, preserves exact observed calendar/archive queries without indexing those duplicate spaces, and retains original social types. Protected previews use the same source defaults. Existing sealed-staging enrichment uses the incumbent selector and warnings; production cannot select that delegate.
+Executed synthetic PostgreSQL/actual HTTP lifecycle tests cover draft metadata and
+sitemap exclusion, publishing rendered SEO/content, hiding a module while retaining
+page status, repeated slug changes with direct flattened redirects, restore then
+publish, final internal links, in-use removal refusal, gone/redirect disposition,
+revision retention, noindex/sitemap consistency and deletion denial. All final
+PostgreSQL tests passed with zero skips. Five separate read-only browser checks
+verified page/home SEO controls, canonical guidance and mobile inspector without
+changing revision pointers.
 
-A measured font fallback correction retains the chosen self-hosted face and uses Verdana before Segoe UI while loading. Source images are responsive and source tables have keyboard-accessible horizontal scrolling. All changes address recorded content, metadata, accessibility or performance defects.
+Native CMS state and authentication material were preserved during deployment.
+Source-only fallback documents are immutable migration snapshots, not automatically
+editable CMS entities. Full editor adoption of every source-only type and externally
+verified personally authenticated production publishing remain incomplete; successful
+synthetic submission alone is not whole-site workflow acceptance.
 
-The full source coverage remains incomplete:162 source requests remained rate-limited after allowed retries and4,987 additional observed URLs were not recursively requested. Three dynamic host resource variants differ and remain unaccepted. The final exhaustive comparison, per-URL disposition review, Git release and protected staging receipts must be attached below before this record is finalized.
+## 9. Automated, browser and performance verification
 
-GA4 continuity code was not added: automatic approval review rejected the proposed opt-in production telemetry/CSP change, and explicit confirmation remains pending. The public source config receipt is private; no analytics tag or account API was executed.
+Final unit run: 1,240 passed, 145 DB-gated skips. The PostgreSQL run before the final
+download-button-only rendering correction passed 1,384 tests, zero skips; exact
+disposable test database removed. That correction changes no database code or data.
+Astro: zero errors/warnings,
+16 hints. Build and offline runtime build passed. Python SEO suites: 82 passed.
+Source/build scans verified unchanged authorized datasets, 16-word private-body
+matching, secret/proprietary/binary/symlink controls; zero blocking findings.
+Offline dependency audit: zero known vulnerabilities. Anonymous importer dry run:
+five input, three included, two excluded, zero rejected.
+
+Independent CSV validation checked 15,252 unique identities in each ledger, matching
+map/diff dispositions, summary counts and output hashes. Missing traffic/backlink
+evidence stays `unavailable`; unknown response codes are not replaced by zero.
+The production comparison's independently parsed source cache verified 7,376 records
+and 13,794 source-file witnesses before/after the run, with source-body hashes checked
+on each read. All candidate HTTP responses were fresh. Its proof SHA-256 is
+`704e157763a4b7f99dd3b63138a72764874f222aead5daaf0907eb0236d6ea77`.
+This proves frozen-input integrity, not complete semantic reading or content accuracy.
+
+Final local browser proof: 66 cases, JavaScript on/off at 1440/390/320 pixels, zero errors and external requests. Main/event/visitor maximum LCP 920/672/788 ms, CLS at most 0.001591. Final deployed browser metrics appear in the release result below; neither is field evidence.
+
+A repeatable streamed mobile reading-column shift was fixed without changing selected
+design, copy or media identity. Controlled streaming trials reduced CLS from 0.122222
+to at most 0.000293; deployed three-trial recheck reported zero. A bounded comparable
+390x900, JS-off, 4x CPU/150ms network experiment measured old/new LCP home 3280/1752ms,
+archive 3284/1576ms, sermon 3148/2164ms, candidate CLS at most 0.044646. Conditions
+blocked third parties and are not field evidence. INP and production real-user
+Core Web Vitals are unavailable. See [performance evidence](seo-performance-verification.md).
+
+## 10. Missing evidence and launch blockers
+
+Resolve every unresolved URL/material content or metadata difference; complete
+source inventory including meaningful deferred archives/aliases/query/feed/resource
+paths; obtain fresh authoritative sermon/permalink/plugin metadata through a least-
+privileged account or equivalent verified source; reconcile full WXR/assets and
+WordPress recovery backup. Obtain church-owned Search Console/Analytics/Tag Manager,
+organic landing/query/backlink/indexing/sitemap/error evidence, comparable periods,
+access logs and field performance. Public verification TXT presence is not account
+ownership/report evidence. No future monitoring has been claimed.
+
+Production measurement continuity is not implemented: automatic approval review
+rejected the GA4 opt-in/minimal CSP egress change because its telemetry payload/egress
+authority was not explicit. The separate local full-backup restore target/governance
+change was also rejected; no restore database was created and no full restoration
+was demonstrated. Guarded restoration code/tests and protected archive-validated
+backups do not satisfy that missing execution gate. Continue retaining WordPress.
+
+## 11. Git and protected staging release
+
+Branch: [codex/whole-site-seo-migration](https://github.com/samuelsaad/SavingGraceBibleChurchWebsite/tree/codex/whole-site-seo-migration).
+Application core `52dca271bef9e80c15ee76b9b46e2d85ae15de08` was normally pushed and independently matched against
+the remote before deployment. Both sealed runtimes run image
+`sha256:b11affa6ee5f919fea6796512d50f2cd43d0ca53a97133470b8658a172cce38f`.
+Verifier commit `162b584ccf23d71338ca62a033815a5914170d79` changes only evidence-path
+portability; subsequent acceptance documentation does not change deployed application
+bytes. The final evidence publication commit is the verified branch head reported
+at completion.
+
+Executed final bridge/candidate canaries, exact replay, activation, feature-off
+rollback and reactivation passed. The retained rollback HTTP witness hash is
+`6094bb325565542dcb6927e8d3726df03682fd6f2c178b587108452a6d732cc4`.
+Independent reactivated runtime labels are public
+`e5740ae593aba55f241c5b3ee890f6d6f747a0a7aeb4ce3db673060f649ff74f` and protected
+`bf224e0b926aeaba96b4da836c70946104475fbaf897dec6f4e5563f1b6b431c`.
+Ten HTTP responses after each switch verified home/readiness/robots, intentional
+staging sitemap 404, public admin 401 and protected admin login redirect.
+
+The corrected deployed comparator checked 15,252/15,252
+inventory rows with 17,482 real HTTP requests through the
+deployed proxy, requiring the exact release label. It completed at
+`2026-10-10T13:23:36.636336Z`. Production-mode local rehearsal completed at
+`2026-10-10T12:25:08.604635Z`. Both raw comparisons retain unresolved findings and
+return failed verdicts; private-environment exclusions are deliberate and do not
+establish production parity. The first deployed harness attempt is retained as
+failed evidence (missing asset witnesses and a Windows path error), separately from
+these corrected complete results. See [the complete machine results](seo-http-verification-summary.json).
+
+Final deployed browser checks passed 66 cases, JS on/off at 1440/390/320 pixels,
+with zero page errors/external requests. Main/event/visitor maximum LCP was
+3368/2396/5308 ms and maximum CLS 0.000350/0.003235/0. SSH transport and concurrent
+bulk reconciliation affected these lab timings; deployed LCP does not meet the
+2.5-second target in every case. Field LCP/INP/CLS remain unavailable.
+
+Source history remains 3,424 immutable versions/3,422 active routes/two receipts
+at fingerprint `7a1a5ffca195eb99c587eec12bb8a0903269c94c49794034d38525967c1f6845`.
+Native 398 sermons/144 publications and CMS 52 entities/68 revisions/97 routes/
+47 assets/81 audit rows remain unchanged. Schema is 28. Both roots are read-only;
+semantic visitor eligibility is disabled, public port is loopback-only, protected
+port is unpublished, and staging remains non-indexable.
+
+
+The source import preserves prior immutable history and existing CMS/editorial rows.
+Compatible feature-off application rollback differs from full backup restoration.
+See [staging procedure](seo-staging-deployment.md). No production traffic/DNS,
+WordPress mutation, forced push or old-system removal occurred.
+
+## 12. Exact remaining cutover actions
+
+Close the blockers above and rerun full acceptance. Confirm Samuel or a named delegate
+as cutover/rollback operator, agree a UTC content freeze/change-capture window, obtain
+verified old/new backups and demonstrate isolated restoration. Capture/import/replay
+the final additions/edits/publication changes with current-version conflict guards;
+reconcile removals explicitly. Freeze exact code/image/config/schema/content hashes.
+Review real-host TLS/proxy/redirect activation and production measurement without
+staging reporting pollution; obtain separate production cutover authority. Activate
+in reviewed order, run real hostname/TLS/status/canonical/robots/sitemap/assets/media/
+analytics and visitor smoke tests, and preserve post-launch edits before rollback.
+
+Use the [cutover/rollback runbook](seo-cutover-rollback-runbook.md) and
+[monitoring checklist](seo-post-launch-monitoring.md) for launch day, following days
+and weeks. This is a same-domain CMS replacement: no Search Console Change of Address.
+Passing technical gates would demonstrate readiness, not guaranteed rankings during
+recrawl. No cutover is authorized while this verdict remains NOT READY.
+
+## Rerunnable commands
+
+```powershell
+npm test
+npm run check
+npm run build
+npm run test:postgres
+python -m unittest discover -s tests -p "seo_*_test.py"
+npm run migration:dry-run -- --input tests/fixtures/dry-run.json
+python scripts/seo-verify-candidate.py --baseline private/seo-baseline/public-api-frontier-20261010/ledger-final-union.private.json --assets private/seo-baseline/public-api-frontier-20261010/assets-final-union.private.json --candidate http://127.0.0.1:4440 --environment production --expected-runtime-label <verified-label> --timeout 60 --request-limit 30000 --concurrency 4 --output private/seo-candidate/<fresh-run>
+python scripts/seo-export-acceptance.py --baseline private/seo-baseline/public-api-frontier-20261010/ledger-final-union.private.json --assets private/seo-baseline/public-api-frontier-20261010/assets-final-union.private.json --candidate private/seo-candidate/<fresh-run> --bundle private/seo/source-expanded-acceptance-bundle.private.json --reviews private/seo/disposition-review-download-links-final.private.json --repo . --output private/seo-acceptance/<fresh-output>
+```
+
+Use the protected retained source/review paths, current runtime labels and fresh
+output directories. No
+placeholder is executable evidence. Public-safe machine summaries bind all inputs;
+private source/account material stays excluded from Git and runtime images.

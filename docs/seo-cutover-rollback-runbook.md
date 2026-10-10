@@ -43,3 +43,44 @@ For a production rollback, stop new application editing through the agreed opera
 Keep legacy redirects at least one year and preferably indefinitely. Continue monitoring after rollback. Never delete the original system as part of this task.
 
 References: [Google site moves](https://developers.google.com/search/docs/crawling-indexing/site-move-with-url-changes), [canonical consolidation](https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls).
+
+## Release-bound commands for the final go/no-go review
+
+After resolving the acceptance blockers and obtaining separate production cutover authority, record the exact content-freeze UTC time, fresh final-delta bundle/hash, application/image and migration checksums. A domain-preserving CMS replacement must not initiate Change of Address. Do not activate a source snapshot while the acceptance verdict is NOT READY.
+
+Run the repeatable mapping comparator documented in `seo-post-launch-monitoring.md` through an approved loopback path to the actual proxy. Verify the real DNS/TLS hostname separately; loopback success alone does not certify the external certificate or routing. Example public smoke commands below are prepared, not claimed as executed after a production cutover:
+
+```powershell
+curl.exe --head https://www.savinggrace.org.au/
+curl.exe --head http://savinggrace.org.au/sermons/
+curl.exe --head https://www.savinggrace.org.au/sermons/
+curl.exe --head https://www.savinggrace.org.au/robots.txt
+curl.exe --head https://www.savinggrace.org.au/sitemap.xml
+```
+
+For actual canonical/robots/social/schema verification, fetch complete HTML and compare with the bound ledger; HEAD alone is insufficient. Require final 200, the expected release identity, correct content, canonical/indexing policy and exact image/document bytes. Check important visitor journeys and one verified production measurement implementation. Obtain confirmed Search Console verification and account reports; a missing HTML verification tag does not establish which ownership mechanism is in use.
+
+The staging application rollback retains migration 28 and the exact source/CMS state, and selects its compatible feature-off bridge. Verify actual HTTP boundaries after rollback and after reactivation, and recheck all source resources after restart. Restore a database only through an independently demonstrated, separately approved recovery target; a valid dump listing is not restoration. WordPress and required assets remain retained throughout this task.
+
+## Rehearsed source delta and remaining asset gate
+
+The 10 October expanded source delta expects the exact prior 2,351 route versions.
+It adds 1,071 routes and changes only two existing asset identity metadata records;
+all prior content, metadata, media and resource hashes were independently compared
+and retained. Byte-identical replay changes nothing. Fresh final imports must use
+new snapshots and current expected versions; the frozen deployment operator is not
+a general authorization to apply another delta.
+
+Before WordPress retirement, decide and verify durable hosting for the 117 original
+MP3 and one MP4 URLs without changing recording identity. This task performs no
+recording download. Also resolve the two ZIP/one font references, the 17 publicly
+unexposed media records, unsupported versions and 408 external dependencies. Keeping
+WordPress as a dependency is an explicitly recorded temporary recovery measure,
+not completed resource migration.
+
+A protected staging custom-format backup was captured and archive-validated.
+Application rollback/reactivation preserves content history; it is distinct from
+restoring that full backup. Automatic approval review rejected the separate local
+restore database/target amendment, so full restoration remains unexecuted. Resolve
+that exact target authorization, then run the guarded recovery helper and prove
+schema, rows, files and subsequent-edit preservation before cutover acceptance.

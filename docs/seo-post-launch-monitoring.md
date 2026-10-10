@@ -15,3 +15,14 @@ Executable starting commands for the protected candidate are documented in `seo-
 Search account baselines are unavailable unless subsequently provided; do not fabricate zero clicks, complete indexing or historical Core Web Vitals. Candidate browser timing is lab evidence only. Good field targets at the75th percentile are LCP≤2.5seconds, INP≤200milliseconds and CLS≤0.1. No claim of field acceptance can be made before representative real-user data exist.
 
 A successful technical migration cannot guarantee identical rankings during recrawl. Preserve redirects and investigate observed evidence; do not mass-rewrite content in response to short-term noise. [Google Core Web Vitals](https://developers.google.com/search/docs/appearance/core-web-vitals), [site-move monitoring](https://developers.google.com/search/docs/crawling-indexing/site-move-with-url-changes).
+
+## Rerunnable verification commands
+
+Use a fresh ignored output directory for every run. Supply the protected frozen ledger/assets paths and require the runtime label returned by the bound release. Both commands refuse non-loopback destinations; verify actual public DNS/TLS separately after authorized cutover.
+
+```powershell
+python scripts/seo-verify-candidate.py --baseline private/seo-baseline/public-api-frontier-20261010/ledger-final-union.private.json --assets private/seo-baseline/public-api-frontier-20261010/assets-final-union.private.json --candidate http://127.0.0.1:4440 --environment production --expected-runtime-label <verified-label> --concurrency 4 --timeout 60 --request-limit 30000 --output private/seo-candidate/<fresh-run>
+python scripts/seo-verify-candidate.py --baseline private/seo-baseline/public-api-frontier-20261010/ledger-final-union.private.json --assets private/seo-baseline/public-api-frontier-20261010/assets-final-union.private.json --candidate http://127.0.0.1:4450 --environment staging --expected-runtime-label <verified-label> --concurrency 4 --timeout 60 --request-limit 30000 --output private/seo-candidate/<fresh-staging-run>
+```
+
+A nonzero comparator exit is an unresolved finding, not a deployment success. Retain its complete machine-readable issue ledger. The responsible operator must classify original defects, planned private-environment differences and new regressions individually; never clear the report just to reach a pass. On launch day run the full mapping, then repeat critical-page/status/asset checks during the first day, daily through week one and with the account/field comparisons in the table above.

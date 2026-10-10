@@ -5,6 +5,66 @@ relevant read-only account/source evidence. D-110 remains the production launch
 gate. A captured source response is evidence of the old public website, not a new
 content review, approval, production deployment or claim of SEO parity.
 
+## Current acceptance checkpoint - 10 October 2026
+
+The final frozen union supersedes the smaller historical checkpoints below; their
+original evidence remains retained. The public REST root at 05:59:35 UTC explicitly
+reported `home` and `url` as `https://www.savinggrace.org.au` and the WordPress timezone
+as Australia/Melbourne. Live apex HTTPS nevertheless served a self-canonical copy.
+The replacement uses HTTPS www consistently and corrects this duplicate with a
+permanent host redirect. These public configuration facts do not bypass the rejected
+SQL privilege guard or prove every stored permalink/SEO plugin field.
+
+The dated union combines the 9 October 13:18-14:52 UTC fixed-frontier crawl, the
+10 October public REST metadata inventory and its exact 1,240-URL HTML continuation,
+verified resource responses, retained 4 October sermon metadata and a separately
+captured original search page. Each retained response keeps its original capture
+time; adding provenance does not make an older body a fresh inspection.
+
+The union has 7,376 captured responses and 14,818 discovered URLs. The preceding
+API frontier retained 7,263 deferred URLs; additional inventory resource references
+remain explicit. A completed bounded request queue is not complete source coverage.
+The frozen union SHA-256 is
+`dd355c3d210e9d5ba13abe9f5a1b54d0945a993e94660729204b7ae0d30eec39`.
+Its parent expanded ledger SHA-256 is
+`6e9d19c5311bbc4ee199b1754a98af73ac12785d495e55c1b9d1b224e04b7db0`.
+
+Public REST revealed 30 pages, three posts, 1,084 published event identities, three
+venues, one organizer and 420 readable media records. Headers report 437 media
+records; 17 were not exposed and were neither guessed nor queried privately.
+The API does not expose the sermon type. The known sermon reconciliation is 454
+retained public identities plus three freshly discovered identities, all with
+successful original-path source evidence; 457 is not a proven complete current
+stored sermon count. GUIDs were not used as permalinks.
+
+The media metadata includes 117 MP3 recordings and one MP4. Recording bodies are
+outside this task. Two ZIP files and one OTF were not copied by the document/image
+allowlist. The resource phase verified 1,120 source responses: 513 RSS, 245 ICS,
+88 PNG, 262 JPEG, two GIF, seven PDF, one DOCX, one WEBP and one PPTX. It completed
+at 07:13:46 UTC. Its immutable parent manifest SHA-256 is
+`89ecea2b1c23759873722de68eac989ed5079f4944a7c81377d87d8fea505027`.
+There are 408 external dependencies, including transformed assets whose bytes were
+not verified. Source-derived church originals do not establish CDN-byte equivalence.
+
+The migration bundle holds 3,422 routes: 30 pages, three posts, 665 archive/query
+projections, 457 sermons, 1,197 event projections (including the 1,084 stored public
+identities and 113 previously captured virtual/date projections), and 1,070 resource
+routes backed by 1,049 unique files. Source metadata, capture variants and intended
+canonical projections have different counts and must not be conflated.
+
+The SQL account failed the unchanged SELECT/USAGE-only guard before any table read.
+Search Console/Analytics/Tag Manager account reports, access logs, the complete WXR
+and supplied asset archive, and a current complete WordPress recovery backup remain
+unavailable. Public DNS TXT inspection observed one Google-verification record;
+its token is kept private. No DNS/account change was made. Repeated browser-tool
+startup failures prevented account inspection; they are not evidence that an
+account has no property, no history or no errors.
+
+Frozen private ledger and resource paths used by the repeatable checks are shown
+in the acceptance/runbook documents. The safe CSV ledger records every discovered
+row with preserved, redirected, intentionally removed or unresolved disposition.
+Missing account/source evidence and uncaptured URLs remain launch blockers.
+
 ## Verified access and origin findings
 
 On 9 October 2026 both `https://www.savinggrace.org.au/` and
@@ -18,8 +78,8 @@ The current protected MySQL Shell identity/grant probe matched the configured
 MariaDB destination. It failed the unchanged SELECT/USAGE-only guard: the two
 grant rows exposed `PROCESS` and `SELECT, SHOW VIEW, EVENT, TRIGGER`. No WordPress
 table was queried. Do not weaken the guard or describe the public crawl and old
-export as a fresh database inventory. Stored `home`/`siteurl` values remain
-unretrieved; the public response establishes observed URL behavior only.
+export as a fresh database inventory. The guarded SQL options remain unread. A later fresh public REST inspection
+verified both `home` and `url` as HTTPS www; see the current checkpoint above.
 
 The retained WordPress metadata capture is dated 4 October 2026; its separate
 media export has 462 records including 454 published rows. Those explicit stored
@@ -113,7 +173,7 @@ The phase does not mutate the HTML ledger or publish assets. Asset validation ch
 - `measurementSignals` records script references and GA/GTM/verification presence
   from returned HTML only. It does not execute tags or establish account ownership.
 
-## Frozen finite baseline
+## Historical initial finite baseline (superseded by the current checkpoint)
 
 The finite phase finished with 2,537 responses across 6,313 observed church URLs:
 2,483 HTTP 200, 36 HTTP 404 and 18 HTTP 301 responses. There are no eligible
@@ -213,3 +273,25 @@ The public homepage contains one actual GA4 config call; a second G-pattern matc
 Final source ledger SHA256: `e6480d8fafe7b7d1e6c47f49f3456b2e1f4b167af86a0c49f5e8b38089399f9c`.
 Extended asset manifest SHA256: `44a0f513cf0b9acea55e17a08ea5cb477fd56724bbef86fbf6ad7fabfad3f4c7`.
 The final prepared projection contains30 pages, three posts,665 archive/query pages,457 sermons,377 events and819 resource routes. This is a captured-source projection, not a claim that the current source database contains no additional public records.
+
+## Additional search observation
+
+One separately frozen readonly source probe on 10 October 2026 at 00:00:50 UTC (11:00:50 Sydney) inspected `/?s=church`. It returned 200, a search-results heading, noindex and no canonical. Its response SHA-256 is `f2494b7dc8ad9d08f5cb618ce19f237030a5335f9a1ccab116e6e3363a82de1a`. This later observation is not retroactively inserted into the linked frozen crawl. Its separate response/result comparison is included through the safe acceptance-report union; exact result ordering/text differences remain explicit. No account access or provider recording was involved.
+
+The original retained raw WXR export and complete asset archive were not located/reconciled through available repository/protected evidence. The verified 462-record retained sermon projection remains available. Browser account inspection could not start because its Windows sandbox helper rejected deny-read ACL setup; no Search Console, Analytics or Tag Manager account report was inspected. No fresh stored WordPress home/siteurl/permalink or plugin metadata was read after the strict grant guard rejected the configured account. These limits cannot be represented as complete source coverage.
+
+## Supplementary public ownership evidence
+
+A read-only public DNS TXT inspection on 10 October 2026 at 05:06:25 UTC found one Google site-verification record at the apex. The protected receipt SHA-256 is `f750697a7b8beb3cbd41ec72c13c2958a6c846a5b19e199dbc87d2c05ad0fe0d`. No token is included here and no DNS record was changed. This supports retaining the existing DNS verification mechanism; it does not prove the accessible Search Console property, ownership state or indexing reports.
+
+Two further attempts to open Search Console through the existing in-app browser automation failed with `trusted Node process exited unexpectedly; kernel reset`. No account page or report was returned. Account evidence remains unavailable through this environment; the report does not claim that the church lacks accounts or access. Public tagging inspection and DNS evidence are separate from account/report access.
+
+## Fresh public WordPress configuration and publication metadata
+
+On 10 October at 05:59:35 UTC, the public REST index returned configured `url` and `home` as `https://www.savinggrace.org.au`, timezone `Australia/Melbourne` and GMT offset 11. Its response SHA-256 is `7cea2d7a356eab15f771508fc9d135106baab74a4b5f85391e7196a6a249e055`. This independently verifies the selected hostname through live public configuration; direct SQL settings/permalink options remain unavailable. The earlier HTTPS apex/www self-canonical conflict remains a recorded source defect.
+
+A bounded read-only API inventory captured all 30 public pages, 3 posts, 1084 published event records, 3 venues and 1 organizer. The media collection reported 437 records but returned only 420 readable entries across its five pages; the 17 omitted entries are not guessed or retrieved through privileged routes. The readable entries include 117 audio files and one video file, which are not downloaded under this task, plus public images/documents and unsupported font/archive objects. Private feedback, payment-order, template and navigation records were not queried.
+
+Page/post coverage matches the existing projection. The API revealed 820 event URLs not captured in the main frozen ledger, plus 420 attachment URLs requiring explicit reconciliation. Their exact bounded public HTML capture is retained separately and must supersede any claim that the older event inventory was complete. API `link` fields are current permalink evidence; GUIDs were not requested or used. Source metadata records and bodies remain in protected storage.
+
+The public post-type index does not expose the sermon type. Its absence does not establish the authoritative total of published sermons. The known 457 sermon identities remain reconciled through HTML, sitemaps and the retained export; fresh authoritative complete sermon publication evidence is still required.

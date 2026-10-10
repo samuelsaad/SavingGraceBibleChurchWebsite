@@ -1,11 +1,47 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
-## D-181 — whole-site SEO candidate, acceptance still open
+## D-181 - whole-site SEO candidate; NOT READY FOR CUTOVER
 
-`codex/whole-site-seo-migration` continues the integrated state and preserves the current CMS/design/media interactions. Additive migration0028 stores immutable verified original-public versions and import receipts independently of enrichment approvals. Source bodies/assets remain private; no new real-content Git dataset exists. The source snapshot covers457 verified public sermon identities, including all454 retained published records, plus church pages/posts/events/archives and verified resources. Publication and search readiness remain blocked by incomplete source/account evidence and the acceptance gates in [the SEO acceptance record](docs/seo-migration-acceptance.md).
+`codex/whole-site-seo-migration` preserves the integrated CMS, selected website,
+media/disclosure controls, search and unrelated source worktree. Additive migration
+0028 stores immutable verified original-public versions/receipts independently of
+new enrichment. Bodies/assets remain private; no new real-content Git dataset exists.
+The frozen union has 7,376 source responses and 14,818 discovered URLs. It verifies
+457 known public sermon identities (all 454 retained published plus three new),
+30 pages, three posts and 1,084 public event identities; coverage is incomplete.
 
-Source-aware rendering retains original text, metadata, dates, links and media identities; explicit CMS edits and withdrawals retain precedence. Local full PostgreSQL tests passed1,367/1,367 with zero skips, type/build checks passed, and42 browser cases passed. Final URL comparison, safe ledger publication, protected staging upgrade/rollback evidence and release identifiers are still being recorded. No production traffic, DNS or WordPress mutation is authorized or performed. Backup restoration and opt-in measurement implementation remain pending explicit approval following automatic review rejection.
+The current source projection has 3,422 routes including 1,070 resource routes.
+The delta added 1,071 routes, updated two asset identity records, preserved all old
+content and replayed with zero changes. Source-aware rendering retains original
+text, metadata, dates and media; explicit CMS edits/withdrawals take precedence.
+No source import changes human reviews, enrichment approval or native publication.
 
+Application `52dca271bef9e80c15ee76b9b46e2d85ae15de08` is pushed normally and deployed
+to both existing sealed staging runtimes as image
+`sha256:b11affa6ee5f919fea6796512d50f2cd43d0ca53a97133470b8658a172cce38f`.
+Bridge/candidate canaries, activation, compatible rollback and reactivation passed;
+source history, CMS/editorial rows and access boundaries were preserved. Local
+PostgreSQL tests passed 1,384/1,384 with zero skips; type/build and privacy gates
+passed. Final exhaustive comparisons and dispositions are recorded in
+[the acceptance record](docs/seo-migration-acceptance.md), with public-safe CSV/JSON.
+
+Final local/deployed comparisons each checked 15,252 inventory rows, with 15,960/
+17,482 HTTP requests and exact runtime identities. Safe ledger outcomes are 2,711
+preserved, 1,279 redirected, 238 intentionally removed and 11,024 unresolved.
+Production has 2,111 sitemap URLs, zero internal redirects and 975 non-200 internal
+targets; this is failed parity acceptance. Both restarted runtimes passed all
+1,070 migrated resource routes by byte hash, length and MIME. All 66 local and 66
+deployed browser cases passed. The final records bind the frozen 9–10 October source
+and separate 10–11 October verification times.
+
+Source/account/content/measurement/full-restoration gaps block launch. Original
+WordPress SQL inspection stopped at the grant guard; public REST evidence is separately
+dated. Automatic review rejected the separate restore-target/governance amendment
+and production GA4 egress change; neither was executed. No production traffic, DNS
+or WordPress mutation occurred. This task's staging scope is not cutover authority.
+Earlier D-180 and local refinement checkpoints below are historical; the selected
+refinements were integrated intact into this isolated branch, while their original
+working tree remains unchanged.
 
 ## Local follow-up — sermon card media shortcuts
 

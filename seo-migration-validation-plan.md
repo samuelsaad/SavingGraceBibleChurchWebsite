@@ -209,7 +209,7 @@ Rollback or immediately remediate when there is a widespread erroneous `noindex`
 All artifacts must avoid credentials, personal data, and uncontrolled production exports.
 
 
-## D-181 execution evidence — 10 October2026, before staging
+## Historical D-181 execution evidence - before staging
 
 - Frozen source ledger:6,135 responses/11,300 observed URLs; retained454 public sermon IDs reconcile exactly and the current457-record public union is prepared.
 - Private source projection:2,351 routes/resources; final local import and identical replay passed without touching existing sermon/CMS publication or review rows.
@@ -220,3 +220,46 @@ All artifacts must avoid credentials, personal data, and uncontrolled production
 -42 browser cases passed with external resources blocked; max labCLS0.001587/maxLCP588ms. This is not field evidence or a comparable old/new performance certification.
 - Full URL/canonical/sitemap/link/resource comparison and outgoing scans are in progress. Final per-URL results, release/deployment identities and staging rollback/reactivation receipts supersede this pre-release checkpoint when recorded.
 - Full local backup restoration and production-only GA4 implementation remain blocked by automatic approval review pending explicit user confirmation. Neither was executed. WordPress source grant validation rejected broader privileges before table reads; account reports are unavailable.
+
+## Final D-181 verification checkpoint - 10 October 2026
+
+The final acceptance package supersedes the smaller pre-staging counts above.
+See `docs/seo-migration-acceptance.md`, both safe CSV ledgers, machine summaries,
+source baseline, staging release procedure, cutover/rollback and monitoring runbooks.
+
+Executed gates: `npm test` 1,240 pass/145 database-gated skips;
+`npm run test:postgres` 1,384 pass/zero skips and exact temporary database cleanup;
+`npm run check` zero errors/warnings, 16 hints; `npm run build` and
+`npm run staging:bundle` pass; Python SEO suites 82 pass. Anonymous migration
+`npm run migration:dry-run -- --input tests/fixtures/dry-run.json` retains five input,
+three included, two excluded and zero rejected. Offline dependency audit reports
+zero known vulnerabilities. Runtime/source privacy scans retain unchanged authorized
+datasets and zero secret/private-body/proprietary/symlink findings.
+
+The public REST expansion verifies 1,084 event identities and 420 readable media
+records, adding 1,071 source routes with strict old-version/content preservation.
+Both local and sealed staging imports/replays pass; schema remains 28. Staging
+canaries, activation, rollback/reactivation and preservation checks pass. Final
+3,424 immutable versions/3,422 active routes/two receipts remain independent of
+native 398 sermons/144 publications and CMS 52 entities/68 revisions/97 routes.
+The full mapping comparator, strict runtime labels, independent source reparse,
+resource hash/MIME checks and browser results are detailed in the acceptance record;
+nonzero comparison results are recorded unresolved rather than converted to passes.
+
+Full backup restoration, GA4 continuity, complete source/account baselines and
+unexplained content/URL differences remain open launch gates. No production traffic,
+DNS or WordPress mutation was performed. Prepared monitoring is future work, not
+observed search-performance validation or a ranking guarantee.
+
+The completed final comparisons each cover 15,252 rows: local production rehearsal
+15,960 HTTP requests and 2,111 sitemap URLs; deployed proxy 17,482 HTTP requests,
+no staging sitemap, exact release labels. Source integrity is verified; parity is
+failed. Ledger outcomes: 2,711 preserved/1,279 redirected/238 intentional removals/
+11,024 unresolved. Production internal targets include 975 non-200 responses and
+zero redirects after the final download-button fix. Both restarted runtimes passed
+2,140 combined byte/length/MIME resource checks with zero failures. Both 66-case
+browser matrices passed; field performance remains unverified. Independent CSV
+checks agree on identities, dispositions, counts, hashes and unavailable metrics.
+Failed harness attempts (missing source witnesses, relative-path portability,
+Windows output path length and an export wait timeout) remain separately retained.
+No failed or missing requirement is converted into launch acceptance.
