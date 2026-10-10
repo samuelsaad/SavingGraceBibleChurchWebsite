@@ -51,9 +51,9 @@ def private_directory(path):
     return result
 
 def confined_file(root, relative):
-    if not isinstance(relative, str) or not relative or Path(relative).is_absolute():
+    if not isinstance(relative, str) or not relative or re.match(r'^(?:[a-zA-Z]:|[/\\])',relative) or Path(relative).is_absolute():
         raise ValueError('source_evidence_path_invalid')
-    result = (root / relative).resolve()
+    result = (root / relative.replace('\\','/')).resolve()
     if not result.is_relative_to(root.resolve()) or not result.is_file():
         raise ValueError('source_evidence_path_invalid')
     return result

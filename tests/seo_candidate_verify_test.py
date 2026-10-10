@@ -198,3 +198,11 @@ class DateComparisonTests(unittest.TestCase):
         self.assertIn('publishedAt', verify.compare_content(source,{**candidate,'publishedAt':None})['metadataChanges'])
 
 if __name__=='__main__': unittest.main()
+
+class PortableEvidencePaths(unittest.TestCase):
+    def test_windows_relative_paths_resolve_and_absolute_or_traversal_paths_refuse(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder);(root/'responses').mkdir();(root/'responses/example.html').write_text('Anonymous fixture.',encoding='utf8')
+            self.assertEqual(verify.confined_file(root,'responses\\example.html'),(root/'responses/example.html').resolve())
+            for value in ['C:\\private\\example.html','../outside.html','\\server\\share\\file','responses\\..\\..\\outside.html']:
+                with self.assertRaises(ValueError):verify.confined_file(root,value)
