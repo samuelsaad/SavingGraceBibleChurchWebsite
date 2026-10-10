@@ -7,8 +7,8 @@
 export const sermonStyles = `
 .sermon { display: grid; grid-template-columns: 3.5rem minmax(0, 46rem) 14rem; gap: var(--space-6) var(--space-7); align-items: start; }
 .sermon__tab { position: sticky; top: var(--space-4); }
-.sermon__body { min-width: 0; }
-.sermon__rail { position: sticky; top: var(--space-4); }
+.sermon__body { min-width: 0; order: 1; }
+.sermon__rail { position: sticky; top: var(--space-4); order: 2; }
 .sermon__head { margin-bottom: var(--space-6); }
 .sermon__stamp { display: inline-block; margin-top: var(--space-3); font-family: var(--font-ui); font-size: var(--size-ui); font-weight: 600; color: var(--colour-ink-soft); }
 .sermon__title { max-width: 22ch; font-size: var(--size-title); }

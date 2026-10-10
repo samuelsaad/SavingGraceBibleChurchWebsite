@@ -160,6 +160,7 @@ export function renderPublicSermonPage(
     books: options.books,
     body: html`<div class="claude-sermons"><article class="sermon${book ? ` hue--${book.category}` : ""}">
       ${tab}
+      ${rail}
       <div class="sermon__body">
         ${head}
         ${reviewNotice}
@@ -171,7 +172,6 @@ export function renderPublicSermonPage(
         ${related}
         ${relatedThemes}
       </div>
-      ${rail}
     </article></div>`
   }, context);
 }
