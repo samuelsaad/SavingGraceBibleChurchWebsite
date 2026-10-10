@@ -23,6 +23,13 @@ describe('ordinary approved editorial content with source originals',()=>{
   const repository=await CompositeSourceSermonRepository.create([original()],[staged],async()=>null,true);
   const detail=await repository.findPublishedBySlug('source-original');expect(detail?.reviewState).toBe('draft_awaiting_review');expect(detail?.transcript?.bodyText).toContain('Approvedtranscripttoken');
  });
+ it('defers and caches native related metadata until a detail request without changing source identities',async()=>{
+  const first=approved(),second=approved({sourceWordpressId:null});second.detail={...second.detail,id:'33333333-3333-4333-8333-333333333333',slug:'another-fixture'};
+  let calls=0;const loader=async(id:string,slug:string)=>{calls++;expect(id).toBe(first.detail.id);expect(slug).toBe(first.detail.slug);return[{id:second.detail.id,slug:second.detail.slug,title:second.detail.title,serviceDate:second.detail.serviceDate,summary:second.detail.summary,speaker:second.detail.speaker,series:second.detail.series,scriptureReferences:second.detail.scriptureReferences,books:second.detail.books,primaryPassages:second.detail.primaryPassages,primaryPassageState:second.detail.primaryPassageState,primaryMedia:second.detail.primaryMedia,relationshipReasons:['same_series' as const]}];};
+  const repository=await CompositeSourceSermonRepository.create([original()],[first,second],async()=>null,false,loader);
+  await repository.listPublished(query());expect(calls).toBe(0);
+  const [a,b]=await Promise.all([repository.findPublishedBySlug('source-original'),repository.findPublishedBySlug('source-original')]);expect(calls).toBe(1);expect(a?.relatedSermons).toEqual(b?.relatedSermons);expect(a?.relatedSermons[0]?.id).toBe(second.detail.id);
+ });
  it('keeps the original public page complete when no enrichment is eligible',async()=>{
   const repository=await CompositeSourceSermonRepository.create([original()],[],async()=>null);
   await withHttp(repository,async base=>{const response=await fetch(base+'/sermons/source-original/'),body=await response.text();expect(response.status).toBe(200);expect(body).toContain('Original public fixture wording.');expect(body).toContain('<title>Exact original document title</title>');expect(body).not.toContain('Approvedsynthetickeyword');expect(body).not.toContain('id="transcript-heading"');});

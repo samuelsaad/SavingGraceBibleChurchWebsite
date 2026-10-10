@@ -117,7 +117,7 @@ export function createSeoHttpAdapter(options: SeoHttpAdapterOptions): (request: 
       }
       // Calendar export/filter HTML duplicates and empty legacy taxonomy forms
       // retain their visible page, but must not create indexable query variants.
-      const calendarDerivative=/^\/(?:event|events|venue|organiser)(?:\/|$)/u.test(decodedPath)
+      const calendarDerivative=/^\/(?:events?|venues?|organisers?)(?:\/|$)/u.test(decodedPath)
         && [...url.searchParams.keys()].some(key=>['ical','outlook-ical','eventDisplay','tribe-bar-date','related_series'].includes(key));
       const emptyTaxonomy=url.pathname==='/' && url.searchParams.has('taxonomy') && url.searchParams.has('term')
         && [...url.searchParams].filter(([key])=>['taxonomy','term'].includes(key)).every(([,value])=>value==='');

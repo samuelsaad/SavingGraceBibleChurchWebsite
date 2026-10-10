@@ -51,6 +51,14 @@ describe("PostgreSQL sermon repository", () => {
     expect(calls[0]?.text).not.toContain("sermon_media_source_audit");
   });
 
+  it("loads startup snapshots with identical visibility SQL while deferring only recommendations",async()=>{
+    const calls:Array<{text:string;values:unknown[]|undefined}>=[];
+    const executor:SqlExecutor={async query(text,values){calls.push({text,values});return{rows:text.includes('WITH current_sermon')?[relatedRow]:[row],rowCount:1,command:'SELECT',oid:0,fields:[]};}};
+    const repository=new PostgresSermonRepository(executor);
+    const snapshot=await repository.findPublishedSnapshotBySlug(row.slug);expect(calls).toHaveLength(1);expect(snapshot?.relatedSermons).toEqual([]);
+    const initial=calls[0];const detail=await repository.findPublishedBySlug(row.slug);expect(calls).toHaveLength(3);expect(calls[1]).toEqual(initial);
+    expect(detail?.relatedSermons).toHaveLength(1);expect({...detail,relatedSermons:[]}).toEqual(snapshot);
+  });
   it("performs a visibility-safe slug lookup", async () => {
     const calls: Array<{ text: string; values: unknown[] | undefined }> = [];
     const executor: SqlExecutor = {

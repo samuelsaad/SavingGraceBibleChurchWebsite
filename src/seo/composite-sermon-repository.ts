@@ -68,13 +68,16 @@ export class CompositeSourceSermonRepository implements PublicSermonRepository {
  private readonly aliases=new Map<string,string>();
  private readonly bySlug=new Map<string,RecordProjection>();
  private readonly sourceShortlinks=new Map<string,string>();
- private constructor(private readonly disposition:(path:string)=>Promise<PublicSermonPathDisposition|null>){}
- static async create(pages:readonly SourcePublicPage[],approved:readonly PublicEditorialSermon[],disposition:(path:string)=>Promise<PublicSermonPathDisposition|null>,acceptedStaging=false){
-  const repository=new CompositeSourceSermonRepository(disposition),source=new SourcePublicSermonRepository(pages);
+ private readonly nativeSlugs=new Map<string,string>();
+ private readonly relatedCache=new Map<string,Promise<SermonDetail['relatedSermons']>>();
+ private constructor(private readonly disposition:(path:string)=>Promise<PublicSermonPathDisposition|null>,private readonly relatedLoader?:(id:string,slug:string)=>Promise<SermonDetail['relatedSermons']>){}
+ static async create(pages:readonly SourcePublicPage[],approved:readonly PublicEditorialSermon[],disposition:(path:string)=>Promise<PublicSermonPathDisposition|null>,acceptedStaging=false,relatedLoader?:(id:string,slug:string)=>Promise<SermonDetail['relatedSermons']>){
+  const repository=new CompositeSourceSermonRepository(disposition,relatedLoader),source=new SourcePublicSermonRepository(pages);
   const candidates=pages.map(p=>sourcePageSchema.parse(p)).filter(p=>p.kind==='sermon'&&!p.issues.length);
   const sourceIds=candidates.flatMap(page=>page.sourceId===null?[]:[page.sourceId]);if(new Set(sourceIds).size!==sourceIds.length)throw Error('source_editorial_duplicate_identity');
   const bySource=new Map<string,PublicEditorialSermon>(),ids=new Set<string>();
   for(const item of approved){sermonDetailSchema.parse(item.detail);if(item.detail.sourcePublic||!acceptedStaging&&(item.detail.reviewState||item.detail.reviewProvenance))throw Error('source_editorial_private_projection');
+   repository.nativeSlugs.set(item.detail.id,item.detail.slug);
    if(ids.has(item.detail.id))throw Error('source_editorial_duplicate_identity');ids.add(item.detail.id);
    if(item.sourceWordpressId!==null){if(!/^[1-9][0-9]*$/u.test(item.sourceWordpressId)||bySource.has(item.sourceWordpressId))throw Error('source_editorial_duplicate_identity');bySource.set(item.sourceWordpressId,item);}
   }
@@ -113,6 +116,12 @@ export class CompositeSourceSermonRepository implements PublicSermonRepository {
  verifiedSourceShortlinks():Readonly<Record<string,string>>{return Object.fromEntries(this.sourceShortlinks);}
  async listPublished(query:PublicSermonListQuery){const rows=this.selected(query).sort((a,b)=>query.order==='ASC'?-newest(a,b):newest(a,b));return{totalItems:rows.length,data:rows.slice((query.page-1)*query.pageSize,query.page*query.pageSize).map(r=>summary(r.detail))};}
  async findPublishedBySlug(slug:string){const normalized=canonicalStoredSermonSlug(slug),record=normalized?this.bySlug.get(normalized):undefined;if(!record)return null;const detail=structuredClone(record.detail),byId=new Map(this.records.map(r=>[r.detail.id,r]));
+  const nativeSlug=this.nativeSlugs.get(detail.id);
+  if(nativeSlug&&this.relatedLoader){
+   let pending=this.relatedCache.get(detail.id);
+   if(!pending){pending=this.relatedLoader(detail.id,nativeSlug).catch(error=>{this.relatedCache.delete(detail.id);throw error;});this.relatedCache.set(detail.id,pending);}
+   detail.relatedSermons=structuredClone(await pending);
+  }
   detail.relatedSermons=detail.relatedSermons.flatMap(related=>{const target=byId.get(related.id);return target&&target.detail.id!==detail.id?[{...summary(target.detail),relationshipReasons:related.relationshipReasons}]:[];}).slice(0,3);
   if(!detail.relatedSermons.length)detail.relatedSermons=this.records.filter(r=>r.detail.id!==detail.id&&r.detail.series.some(t=>detail.series.some(s=>s.slug===t.slug))).sort(newest).slice(0,3).map(r=>({...summary(r.detail),relationshipReasons:['same_series' as const]}));
   return detail;
@@ -154,6 +163,6 @@ export async function createCompositeSourceSermonRepository(pages:readonly Sourc
   }
  }
  const approved:PublicEditorialSermon[]=[];
- for(let start=0;start<rows.length;start+=4){const batch=await Promise.all(rows.slice(start,start+4).map(async row=>{const detail=await editorial.findPublishedBySlug(row.slug);if(!detail){if(acceptedStageRepository)return null;throw Error('source_editorial_changed_during_snapshot');}if(detail.id!==row.id)throw Error('source_editorial_changed_during_snapshot');return{detail,sourceWordpressId:row.source_wordpress_id,editorialChanges:row.editorial_changes,passageTerms:row.passage_terms,lastModified:row.last_modified,...(moved.has(row.id)?{canonicalSlug:row.slug}:{})};}));approved.push(...batch.filter((item):item is NonNullable<typeof item>=>item!==null));}
- return CompositeSourceSermonRepository.create(originals,approved,path=>editorial.findPublicPathDisposition(path),Boolean(acceptedStageRepository));
+ for(let start=0;start<rows.length;start+=4){const batch=await Promise.all(rows.slice(start,start+4).map(async row=>{const detail=await (editorial.findPublishedSnapshotBySlug?.(row.slug)??editorial.findPublishedBySlug(row.slug));if(!detail){if(acceptedStageRepository)return null;throw Error('source_editorial_changed_during_snapshot');}if(detail.id!==row.id)throw Error('source_editorial_changed_during_snapshot');return{detail,sourceWordpressId:row.source_wordpress_id,editorialChanges:row.editorial_changes,passageTerms:row.passage_terms,lastModified:row.last_modified,...(moved.has(row.id)?{canonicalSlug:row.slug}:{})};}));approved.push(...batch.filter((item):item is NonNullable<typeof item>=>item!==null));}
+ return CompositeSourceSermonRepository.create(originals,approved,path=>editorial.findPublicPathDisposition(path),Boolean(acceptedStageRepository),async(id,slug)=>{const current=await editorial.findPublishedBySlug(slug);if(current&&current.id!==id)throw Error('source_editorial_related_changed');return current?.relatedSermons??[];});
 }

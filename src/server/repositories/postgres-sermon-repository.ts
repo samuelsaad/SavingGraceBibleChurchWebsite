@@ -172,22 +172,21 @@ export class PostgresSermonRepository implements PublicSermonRepository {
     };
   }
 
-  async findPublishedBySlug(slug: string): Promise<SermonDetail | null> {
+  async findPublishedBySlug(slug: string): Promise<SermonDetail | null> {return this.publishedDetail(slug,true);}
+  async findPublishedSnapshotBySlug(slug: string): Promise<SermonDetail | null> {return this.publishedDetail(slug,false);}
+  private async publishedDetail(slug:string,includeRelated:boolean):Promise<SermonDetail|null>{
     const statement = buildPublishedSermonDetailQuery(slug, this.scope);
     const result = await this.database.query(statement.text, statement.values);
     const row = (result.rows as PublicSermonDetailRow[])[0];
     if (!row) return null;
 
-    const relatedStatement = buildRelatedPublishedSermonsQuery(row.id, 3, this.scope);
-    const relatedResult = await this.database.query(
-      relatedStatement.text,
-      relatedStatement.values
-    );
+    const relatedStatement = includeRelated ? buildRelatedPublishedSermonsQuery(row.id, 3, this.scope) : null;
+    const relatedResult = relatedStatement ? await this.database.query(relatedStatement.text,relatedStatement.values) : {rows:[]};
     const detail=detailFromRow(
       row,
       (relatedResult.rows as RelatedSermonRow[]).map(relatedFromRow)
     );
-    if(this.relatedThemes){
+    if(includeRelated&&this.relatedThemes){
       const selected=await this.relatedThemes.select(row.id);
       const ids=selected.map(item=>z.uuid().parse(item.neighbourSermonId));
       const cards=ids.length?buildEligibleSemanticCardsQuery(ids,this.scope):null;

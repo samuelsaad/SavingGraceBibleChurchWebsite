@@ -44,6 +44,8 @@ export type PublicSermonPathDisposition =
 export interface PublicSermonRepository {
   listPublished(query: PublicSermonListQuery): Promise<PaginatedSermons>;
   findPublishedBySlug(slug: string): Promise<SermonDetail | null>;
+  /** Identical content eligibility; omit only deferred related recommendations. */
+  findPublishedSnapshotBySlug?(slug: string): Promise<SermonDetail | null>;
   listPublishedFilterOptions(query?: PublicSermonListQuery): Promise<PublicSermonFilterOptions>;
   listPublishedTopicalSermons(): Promise<SermonSummary[]>;
   listPublishedSeriesRepresentatives(): Promise<PublicSeriesRepresentative[]>;

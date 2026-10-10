@@ -82,3 +82,11 @@ a source import is a separate audited pointer operation with later-change checks
 it is not part of ordinary application rollback. No schema down migration or data
 deletion is part of this staging procedure. Keep private recovery/evidence out of
 Git and release archives, and close verification-only tunnels/listeners afterward.
+
+## Verified schema-28 application retry
+
+The first D-181 attempt migrated and replayed the exact source bundle successfully, then stopped at the source canary. Its healthy compatible bridge is release `50711cf3858fe86bd69de8c3f153a0de7dc05927`, image `sha256:8ca2549af5b5e34dbc3be0cfbfcbfe6ba306ae8ca63d36c91ebab48b14aaf824`. No source candidate was activated by that attempt. The exact source-history fingerprint is `2cbe0faa1dfab33eab8c4c3e2817957f7d2b16537abbcb6fb0fc331e557de831`: 2351 immutable versions/routes and one import receipt.
+
+The current operator accepts only that bridge, all 28 existing migration checksums, that source-history fingerprint and the byte-identical original bundle. It captures fresh full recovery material and preserves the earlier attempt. Migration/import replay must change no source/CMS/editorial rows. Its prior image already supports schema 28; it is a safe application rollback target. No schema down or source-history reset is authorized.
+
+Readonly timing isolated startup cost: the sampled native detail SQL took 71 ms and the related-sermon SQL 1977 ms. Startup formerly repeated related lookup across 398 records. The corrected snapshot method uses identical content eligibility and defers only related/semantic recommendation lookup until a detail request. Related metadata is cached per versioned source snapshot, with identity checks and retry after a failed lookup. Actual canary, activation, rollback and HTTP results still require final receipts; these measurements alone do not certify deployment.

@@ -16,8 +16,11 @@ import tarfile
 import time
 
 UPGRADE_SHA = "e41bbc7b36e883665a4f57c07ed1fbd9b222f018d07af9597f90cebfd4e62fb2"
-PREVIOUS_COMMIT = "e8892c08eb1ea26e9675c8af87ebefef9866699d"
-PREVIOUS_IMAGE = "sha256:2760ce944f9393cde4388a2fe6e1ed5aba108a4f8ac48ad3dbcb41558c2462cc"
+PREVIOUS_COMMIT = "50711cf3858fe86bd69de8c3f153a0de7dc05927"
+PREVIOUS_IMAGE = "sha256:8ca2549af5b5e34dbc3be0cfbfcbfe6ba306ae8ca63d36c91ebab48b14aaf824"
+BASE_SCHEMA_ORDER = 28
+EXISTING_SOURCE_SHA = "2cbe0faa1dfab33eab8c4c3e2817957f7d2b16537abbcb6fb0fc331e557de831"
+EXISTING_BUNDLE_SHA = "846be1ce89d93c7b41c153c712cb7ec8f1f4d89244aa8cb9ed8b46f3c4d70442"
 SOURCE_TABLES = ("source_public_versions", "source_public_routes", "source_public_imports")
 ASSET_KEY = re.compile(r"[a-f0-9]{64}\.(?:png|jpg|webp|gif|avif|svg|ico|pdf|doc|docx|xls|xlsx|ppt|pptx|rss|atom|ics)")
 MIGRATION = "0028_source_public_migration"
@@ -37,6 +40,7 @@ def helpers():
     base.RUNTIME_ENTRIES = (*base.RUNTIME_ENTRIES, "source-public-sync")
     base.CMS_TABLES = (*base.CMS_TABLES, *SOURCE_TABLES)
     base.assets_manifest = lambda: assets_manifest(base)
+    upgrade.SCHEMA_ORDER = BASE_SCHEMA_ORDER
     upgrade.PREVIOUS_COMMIT = PREVIOUS_COMMIT; upgrade.PREVIOUS_IMAGE = PREVIOUS_IMAGE
     upgrade.verify_schema_source = verify_schema_source
     original_candidate = upgrade.candidate
@@ -67,7 +71,7 @@ def assets_manifest(base):
 
 def verify_schema_source(source, snapshot):
     rows = snapshot["schema_migrations"]
-    if sorted(row["migration_order"] for row in rows) != list(range(1, 28)): fail("seo_schema_prefix")
+    if sorted(row["migration_order"] for row in rows) != list(range(1, BASE_SCHEMA_ORDER + 1)): fail("seo_schema_prefix")
     directory = source / "db/migrations"; names = set()
     for row in rows:
         name = row["migration_id"]
@@ -166,11 +170,18 @@ def owner_secret_identity(base, path):
     return {"path": str(path), "sha256": base.sha(path), "mode": stat.st_mode & 0o777, "uid": stat.st_uid, "gid": stat.st_gid, "parent": {"mode": parent.st_mode & 0o777, "uid": parent.st_uid, "gid": parent.st_gid}}
 
 
+def verify_existing_source(actual, bundle_hash):
+    # This retry is only the already-verified D-181 bridge and exact immutable import.
+    expected={"source_public_versions":2351,"source_public_routes":2351,"source_public_imports":1}
+    if actual.get("sourceCounts") != expected or actual.get("sourceSha256") != EXISTING_SOURCE_SHA or bundle_hash != EXISTING_BUNDLE_SHA:
+        fail("seo_existing_source_drift")
+
+
 def prepare(base, upgrade, helper, root, incoming, commit, source_hash, inventory_hash, runtime_hash, bundle_hash, assets_hash):
     expected = base.load(incoming / "inventory.private.json"); actual = inventory(base, upgrade, helper)
     for key in ("runtimes", "counts", "cmsCounts", "cmsSha256", "uploadsSha256", "unrelatedSha256", "secretFilesSha256"):
         if actual[key] != expected[key]: fail("seo_inventory_drift")
-    if any(actual["sourceCounts"].values()): fail("seo_initial_source_schema_not_empty")
+    verify_existing_source(actual, bundle_hash)
     if base.sha(incoming / "source-public.bundle.private.json") != bundle_hash or base.sha(incoming / "source-public-assets.private.tar") != assets_hash: fail("seo_private_transfer_hash")
     required_bytes = 2 * 1024**3 + 2 * sum((incoming / name).stat().st_size for name in ("source-public.bundle.private.json", "source-public-assets.private.tar"))
     if actual["storage"]["availableBytes"] < required_bytes: fail("seo_source_storage_insufficient")
@@ -196,7 +207,7 @@ def prepare(base, upgrade, helper, root, incoming, commit, source_hash, inventor
     recovery["version"] = 2
     recovery["boundFiles"] = {path.name: base.sha(path) for path in root.iterdir() if path.suffix == ".json" or path.name.endswith((".tar", ".private.dump"))}
     base.save(root / "seo-recovery.json", recovery)
-    return {"outcome": "seo_prepared", "commit": commit, "image": recovery["image"], "sourceAssets": len(asset_expectations(bundle)), "schema": 27}
+    return {"outcome": "seo_prepared", "commit": commit, "image": recovery["image"], "sourceAssets": len(asset_expectations(bundle)), "schema": BASE_SCHEMA_ORDER}
 
 
 def verify_frozen(base, upgrade, root, recovery):
@@ -208,9 +219,9 @@ def verify_frozen(base, upgrade, root, recovery):
         if base.sha(path) != receipt["sha256"] or any(identity[name] != receipt[name] for name in ("mode", "uid", "gid", "parent")): fail("seo_secret_changed")
     if base.preservation() != recovery["previous"]["unrelatedSha256"]: fail("seo_unrelated_changed")
     before = base.load(root / "cms-before.private.json"); current = upgrade.cms_snapshot(base)
-    extra = [row for row in current["schema_migrations"] if row["migration_order"] > 27]
+    extra = [row for row in current["schema_migrations"] if row["migration_order"] > BASE_SCHEMA_ORDER]
     if len(extra) > 1 or any(row["migration_order"] != 28 or row["migration_id"] != MIGRATION or row["checksum_sha256"] != source_migration_checksum(root) for row in extra): fail("seo_schema_suffix_changed")
-    current["schema_migrations"] = [row for row in current["schema_migrations"] if row["migration_order"] <= 27]
+    current["schema_migrations"] = [row for row in current["schema_migrations"] if row["migration_order"] <= BASE_SCHEMA_ORDER]
     upgrade.immutable_preserved(before, current)
     for name in ("source_public_versions", "source_public_imports"):
         old = {json.dumps(row, sort_keys=True) for row in base.load(root / "source-before.private.json")[name]}
@@ -273,7 +284,7 @@ def switch(base, upgrade, helper, root, recovery, phase):
         verify_frozen(base, upgrade, root, recovery)
     except Exception:
         ledger = int(base.sql("SELECT count(*) FROM schema_migrations").decode().strip())
-        if ledger == 28 and "previous" in current.values(): fail("seo_incompatible_rollback_refused")
+        if ledger == 28 and BASE_SCHEMA_ORDER < 28 and "previous" in current.values(): fail("seo_incompatible_rollback_refused")
         for runtime, chosen in current.items(): start(runtime, chosen)
         if active_phases(base, helper, root, recovery) != current: fail("seo_recovery_configuration")
         verify_frozen(base, upgrade, root, recovery); fail("seo_switch_restored")
@@ -313,8 +324,8 @@ def migrate(base, upgrade, helper, root, recovery):
     base.run(["docker", "exec", "-i", base.DB, "psql", "-X", "-q", "-U", "postgres", "-d", "savinggrace_staging", "-v", "ON_ERROR_STOP=1"], data=grant)
     added = install_assets(base, root)
     result = json.loads(base.run(command + ["import"], timeout=600)); replay = json.loads(base.run(command + ["import"], timeout=600))
-    after = upgrade.cms_snapshot(base); after["schema_migrations"] = [row for row in after["schema_migrations"] if row["migration_order"] <= 27]
-    cms_before["schema_migrations"] = [row for row in cms_before["schema_migrations"] if row["migration_order"] <= 27]
+    after = upgrade.cms_snapshot(base); after["schema_migrations"] = [row for row in after["schema_migrations"] if row["migration_order"] <= BASE_SCHEMA_ORDER]
+    cms_before["schema_migrations"] = [row for row in cms_before["schema_migrations"] if row["migration_order"] <= BASE_SCHEMA_ORDER]
     if upgrade.snapshot_hash(cms_before) != upgrade.snapshot_hash(after) or any(base.assets_manifest().get(name) != size for name, size in assets_before.items()): fail("seo_import_cms_changed")
     if replay.get("result", {}).get("inserted") != 0 or replay.get("result", {}).get("updated") != 0: fail("seo_import_not_idempotent")
     verify_frozen(base, upgrade, root, recovery)

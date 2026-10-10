@@ -83,7 +83,7 @@ def boolean_cell(value):
     return str(value).lower() if str(value).lower() in ('true', 'false') else ''
 
 
-@lru_cache(maxsize=256)
+@lru_cache(maxsize=2048)
 def extracted_candidate(raw, url):
     # Cache parsing only. Every file read still verifies its current byte hash.
     decoded=raw.decode('utf8',errors='replace')
@@ -92,13 +92,21 @@ def extracted_candidate(raw, url):
     return stable(value)
 
 
+@lru_cache(maxsize=2048)
+def response_metadata(raw):
+    value=json.loads(raw.decode('utf-8-sig'))
+    has_extracted=value.pop('extracted',None) is not None
+    return stable(value),has_extracted
+
+
 def body_record(root, relative, expected_url=None):
-    record = load(VERIFY.confined_file(root, relative))
+    metadata,has_extracted=response_metadata(VERIFY.confined_file(root,relative).read_bytes())
+    record=json.loads(metadata)
     if expected_url and record.get('url') != expected_url: raise ValueError('report_response_url_mismatch')
     if record.get('responsePath'):
         raw = VERIFY.confined_file(root, record['responsePath']).read_bytes()
         if digest(raw) != record.get('bodySha256'): raise ValueError('report_response_hash_mismatch')
-        if record.get('extracted') is not None:
+        if has_extracted:
             record['extracted'] = json.loads(extracted_candidate(raw,record['url']))
     return record
 
@@ -331,7 +339,8 @@ def export_reports(baseline, assets_path, candidate, bundle_path, output, *, rev
     projections = {page['path']: page for page in bundle.get('pages', [])}
     if len(projections) != len(bundle.get('pages', [])): raise ValueError('bundle_route_duplicate')
     rows, diff_rows = [], []
-    for url, state in sorted(inventory.items()):
+    for review_index,(url,state) in enumerate(sorted(inventory.items()),1):
+        if review_index%250==0: print(json.dumps({'exportedReviewRows':review_index,'inventoryCount':len(inventory)}),flush=True)
         key = url.removeprefix('withheld-reference:') if url.startswith('withheld-reference:') and HASH.fullmatch(url.removeprefix('withheld-reference:')) else digest(url)
         row, diff, source, asset = observed.get(key, {}), differences.get(key), records.get(url), assets.get('assets', {}).get(url)
         issues = code_list(row.get('issues', 'candidate_not_checked'))
