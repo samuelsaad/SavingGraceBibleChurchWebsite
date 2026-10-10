@@ -40,8 +40,21 @@ describe("explicit production SEO adapter",()=>{
     expect(await(await captured(new Request(origin+'/events/?related_series=42'))).text()).toBe('Anonymous captured archive');
     expect((await captured(new Request(origin+'/events/?ical=1'))).headers.get('Content-Type')).toBe('text/calendar');
   });
+  it("never redirects an uncaptured venue or organiser calendar export to an unrelated contact page",async()=>{
+    const route=production();
+    for(const family of ['venue','venues','organiser','organisers']){
+      for(const key of ['ical','outlook-ical']){
+        const response=await route(new Request(origin+`/${family}/saving-grace-bible-church/?eventDisplay=past&${key}=1`));
+        expect(response.status).toBe(404);expect(response.headers.get('Location')).toBeNull();
+        expect(response.headers.get('X-Robots-Tag')).toContain('noindex');
+      }
+    }
+    const regular=await route(new Request(origin+'/venue/saving-grace-bible-church/?utm_campaign=church'));
+    expect(regular.status).toBe(301);expect(regular.headers.get('Location')).toBe('/contact/?utm_campaign=church');
+  });
   it("retains calendar/export duplicate HTML with noindex while keeping base pages and genuine calendar files distinct",async()=>{
     const route=createSeoHttpAdapter({policy:{environment:'production',canonicalOrigin:origin},sermons:repository(),
+      sourceQueryPage:async request=>new URL(request.url).search?new Response('<html><h1>Verified captured calendar query</h1></html>',{headers:{'Content-Type':'text/html'}}):null,
       sourcePage:async()=>new Response('<html><h1>Verified calendar page</h1></html>',{headers:{'Content-Type':'text/html'}}),
       publicAsset:async request=>new URL(request.url).search==='?ical=verified'?new Response('BEGIN:VCALENDAR',{headers:{'Content-Type':'text/calendar'}}):null});
     for(const path of ['/event/anonymous/all/?ical=1','/organiser/anonymous/?outlook-ical=1','/venue/anonymous/?eventDisplay=past','/?taxonomy=&term=']){

@@ -85,7 +85,7 @@ export function createSeoHttpAdapter(options: SeoHttpAdapterOptions): (request: 
         response = new Response(policy.indexable
           ? `User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/\nDisallow: /frontend-preview/\nDisallow: /draft-preview/\nDisallow: /cms-preview/\nSitemap: ${policy.canonicalOrigin}/sitemap.xml\n`
           : "User-agent: *\nDisallow: /\n", {headers:{"Content-Type":"text/plain; charset=utf-8","Cache-Control":"no-store"}});
-      } else if ((url.pathname==='/'||/^\/events(?:\/|$)/u.test(url.pathname))&&[...url.searchParams.keys()].some(key=>['post_type','pagename','eventDisplay','paged','page','related_series','tribe_events_cat','tribe_organizer','tribe_venue','tribe-bar-date','ical','outlook-ical',...(url.pathname==='/'?['s']:[])].includes(key))) {
+      } else if ((url.pathname==='/'||/^\/(?:events?|venues?|organisers?)(?:\/|$)/u.test(decodedPath))&&[...url.searchParams.keys()].some(key=>['post_type','pagename','eventDisplay','paged','page','related_series','tribe_events_cat','tribe_organizer','tribe_venue','tribe-bar-date','ical','outlook-ical',...(url.pathname==='/'?['s']:[])].includes(key))) {
         // Exact captured query pages/resources already won above. A missing
         // meaningful legacy query must never return an unrelated collection/homepage.
         response=boundary(404,"Page not found");
