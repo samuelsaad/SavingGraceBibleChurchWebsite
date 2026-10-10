@@ -34,6 +34,8 @@ import { siteStyles, type StyleBlockName } from "./styles";
 export type RobotsDirective = "index, follow" | "noindex, follow" | "noindex, nofollow";
 
 export interface PageShellInput {
+  /** Original fallback body and metadata are already rendered for this exact source URL. */
+  sourceContentRendered?: boolean;
   sourceMetadata?: PageStructuredData;
   seo?: ContentSeo;
   /** Errors and gone URLs are not alternative content canonicals. */
@@ -212,16 +214,16 @@ function footerColumns(input: PageShellInput, context: FrontendRenderContext): H
 
 /** Renders a complete HTML document. */
 export function pageShell(input: PageShellInput, context: FrontendRenderContext = publicRenderContext): string {
-  const originals=context.siteContent?.sourceContentByPath?.[input.canonicalPath];
+  const originals=input.sourceContentRendered?undefined:context.siteContent?.sourceContentByPath?.[input.canonicalPath];
   const primary=originals?.filter(page=>page.kind!=='archive');
   const original=originals?.find(page=>page.path===input.canonicalPath)??(originals?.length===1?originals[0]:primary?.length===1?primary[0]:undefined);
-  const initial=context.siteContent?.initialMetadataByPath?.[input.canonicalPath];
+  const initial=input.sourceContentRendered?undefined:context.siteContent?.initialMetadataByPath?.[input.canonicalPath];
   const originalBody=input.body;
   const headingMatch=/<h1\b[^>]*>([\s\S]*?)<\/h1>/u.exec(originalBody.toString());
   const headingUnchanged=initial?.seeded&&headingMatch?.[1]===String(initial.heading).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
   if(original?.hasOriginalHeading&&headingUnchanged&&!input.seo?.replaceSourceContent)input={...input,body:sourceHeading(input.body,original.heading)};
   if(initial&&(!initial.seeded||input.title!==initial.title)&&!context.siteContent?.cmsExplicitSeoByPath?.[input.canonicalPath]?.title)input={...input,seo:{...input.seo,title:input.suffixTitle===false?input.title:`${input.title} — ${siteSettings(context).siteName}`}};
-  input={...input,seo:{...context.siteContent?.sourceSeoByPath?.[input.canonicalPath],...input.seo},body:retainedSourceCopy(input.body,input.canonicalPath,input.seo?.replaceSourceContent===true,context),...(original?{sourceMetadata:{language:original.language,publishedAt:original.publishedAt,modifiedAt:context.siteContent?.modifiedAtByPath?.[input.canonicalPath]??original.modifiedAt,...(original.structuredData&&!input.seo?.replaceSourceContent?{primary:original.structuredData.primary,breadcrumbs:original.structuredData.breadcrumbs}:{}),...input.sourceMetadata}}:{})};
+  input={...input,seo:{...context.siteContent?.sourceSeoByPath?.[input.canonicalPath],...input.seo},body:input.sourceContentRendered?input.body:retainedSourceCopy(input.body,input.canonicalPath,input.seo?.replaceSourceContent===true,context),...(original?{sourceMetadata:{language:original.language,publishedAt:original.publishedAt,modifiedAt:context.siteContent?.modifiedAtByPath?.[input.canonicalPath]??original.modifiedAt,...(original.structuredData&&!input.seo?.replaceSourceContent?{primary:original.structuredData.primary,breadcrumbs:original.structuredData.breadcrumbs}:{}),...input.sourceMetadata}}:{})};
   const sourceSeo=context.siteContent?.sourceSeoByPath?.[input.canonicalPath];
   if(sourceSeo)input={...input,seo:{...sourceSeo,...input.seo}};
   const {branding,footerVisibility}=siteSettings(context);

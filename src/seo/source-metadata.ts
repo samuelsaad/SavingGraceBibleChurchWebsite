@@ -15,7 +15,7 @@ export function preserveSourceMetadata(snapshot:FrontendSiteSnapshot,pages:reado
  const home=source.get('/');if(result.home&&home)result.home.seo={...sourceSeo(home),...result.home.seo};
  const sourceContentByPath:Record<string,SourcePublicPage[]>={};
  for(const page of pages){
-  if(!['page','post','event','attachment','archive'].includes(page.kind)||page.kind==='archive'&&(page.path.startsWith('/sermons/')||!result.routes.some(route=>route.path===page.path&&route.status===301))||page.issues.length)continue;
+  if(!['page','post','event','attachment','archive'].includes(page.kind)||page.kind==='archive'&&page.path.startsWith('/sermons/')||page.issues.length)continue;
   let path=page.path;
   const owner=[...result.pages,...result.posts,...result.events].find(item=>(item as {legacyPaths?:readonly string[]}).legacyPaths?.includes(page.path));if(owner&&!result.routes.some(route=>route.path===page.path))path=owner.path;
   const seen=new Set<string>();

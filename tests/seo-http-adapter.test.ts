@@ -30,6 +30,16 @@ describe("explicit production SEO adapter",()=>{
     const html=await response.text();expect(response.status).toBe(200);expect(html).toContain('class="v5"');expect(html).toContain('href="'+origin+'/sermons/"');expect(html).toContain('name="robots" content="index, follow"');
     const refused=await route(new Request("https://untrusted.test/sermons/",{headers:{"x-forwarded-host":"www.example.test","x-forwarded-proto":"https"}}));expect(refused.status).toBe(421);expect(refused.headers.get("x-robots-tag")).toContain("noindex");
   });
+  it("never serves the homepage or calendar as a successful unsupported legacy query or export",async()=>{
+    const route=production();
+    for(const path of ['/?post_type=tribe_events&eventDisplay=day&paged=2','/?s=anonymous','/events/?ical=1','/events/?related_series=42']){
+      const response=await route(new Request(origin+path));expect(response.status).toBe(404);expect(response.headers.get('X-Robots-Tag')).toContain('noindex');expect(await response.text()).not.toContain('rel="canonical"');
+    }
+    expect((await route(new Request(origin+'/?utm_source=church%20email'))).status).toBe(200);
+    const captured=createSeoHttpAdapter({policy:{environment:'production',canonicalOrigin:origin},sermons:repository(),sourceQueryPage:async request=>new URL(request.url).search==='?related_series=42'?new Response('Anonymous captured archive'):null,publicAsset:async request=>new URL(request.url).search==='?ical=1'?new Response('BEGIN:VCALENDAR\r\nEND:VCALENDAR',{headers:{'Content-Type':'text/calendar'}}):null});
+    expect(await(await captured(new Request(origin+'/events/?related_series=42'))).text()).toBe('Anonymous captured archive');
+    expect((await captured(new Request(origin+'/events/?ical=1'))).headers.get('Content-Type')).toBe('text/calendar');
+  });
   it("collapses host, slash, pagination and old-slug redirects to one final target",async()=>{
     const route=production();
     for(const [path,target] of [["/sermons/page/01?s=test","/sermons/?s=test"],["/sermons/page/02?s=test","/sermons/page/2/?s=test"],["/sermons/old-title?order=ASC","/sermons/anonymous-teaching/?order=ASC"],["/sermons-v5/page/02?sermon_book=romans","/sermons/page/2/?sermon_book=romans"],["/pages/lordsdayservice?x=1","/lords-day-service/?x=1"]]){

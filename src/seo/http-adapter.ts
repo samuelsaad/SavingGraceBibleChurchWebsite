@@ -19,6 +19,7 @@ export interface SeoHttpAdapterOptions extends ChurchSiteOptions {
   sermons: PublicSermonRepository;
   /** Proven source IDs mapped to active canonical paths; never inferred from GUIDs. */
   sourceShortlinks?: Readonly<Record<string,string>>;
+  publicSearch?: (request:Request,context:FrontendRenderContext)=>Promise<Response|null>;
   /** Frozen published-source fallback, after every current CMS route/disposition. */
   sourceQueryPage?: (request:Request,context:FrontendRenderContext)=>Promise<Response|null>;
   sourcePage?: (request:Request,context:FrontendRenderContext)=>Promise<Response|null>;
@@ -65,7 +66,8 @@ export function createSeoHttpAdapter(options: SeoHttpAdapterOptions): (request: 
       let response: Response;
       const resource=await options.publicAsset?.(head?new Request(request,{method:"GET"}):request); 
       const observedQuery=url.search&&options.sourceQueryPage?await options.sourceQueryPage(head?new Request(request,{method:'GET'}):request,{...context,...(options.content?{siteContent:await options.content()}:{})}):null;
-      if(resource){response=resource;}else if(observedQuery){response=observedQuery;}else if(legacySitemapPaths.includes(url.pathname)) {
+      const search=options.publicSearch?await options.publicSearch(head?new Request(request,{method:'GET'}):request,{...context,...(options.content?{siteContent:await options.content()}:{})}):null;
+      if(resource){response=resource;}else if(search){response=search;}else if(observedQuery){response=observedQuery;}else if(legacySitemapPaths.includes(url.pathname)) {
         response=policy.indexable?new Response(null,{status:301,headers:{Location:"/sitemap.xml"+url.search,"Cache-Control":"no-store"}}):boundary(404,"Page not found");
       } else if (url.pathname === "/" && (url.searchParams.has("p") || url.searchParams.has("page_id"))) {
         const entries=[...url.searchParams].filter(([key])=>["p","page_id"].includes(key));
@@ -83,6 +85,10 @@ export function createSeoHttpAdapter(options: SeoHttpAdapterOptions): (request: 
         response = new Response(policy.indexable
           ? `User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/\nDisallow: /frontend-preview/\nDisallow: /draft-preview/\nDisallow: /cms-preview/\nSitemap: ${policy.canonicalOrigin}/sitemap.xml\n`
           : "User-agent: *\nDisallow: /\n", {headers:{"Content-Type":"text/plain; charset=utf-8","Cache-Control":"no-store"}});
+      } else if ((url.pathname==='/'||/^\/events(?:\/|$)/u.test(url.pathname))&&[...url.searchParams.keys()].some(key=>['post_type','pagename','eventDisplay','paged','page','related_series','tribe_events_cat','tribe_organizer','tribe_venue','tribe-bar-date','ical','outlook-ical',...(url.pathname==='/'?['s']:[])].includes(key))) {
+        // Exact captured query pages/resources already won above. A missing
+        // meaningful legacy query must never return an unrelated collection/homepage.
+        response=boundary(404,"Page not found");
       } else {
         const get = head ? new Request(request,{method:"GET"}) : request;
         let selectedSourceContext:Promise<FrontendRenderContext>|undefined;

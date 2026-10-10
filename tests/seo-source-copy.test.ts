@@ -30,6 +30,21 @@ describe('verified original copy preservation',()=>{
   expect(output).toContain('class="selected"');expect(output.match(/Existing paragraph/g)).toHaveLength(1);expect(output).toContain('Missing paragraph');expect(output).toContain('href="/resource/"');
   expect(retainedSourceCopy(html`<p>Edited copy.</p>`,'/replacement/',true,context).toString()).toBe('<p>Edited copy.</p>');
  });
+ it('retains native non-sermon archive descriptions, links and dates without adding old sermon card layouts',()=>{
+  const eventArchive={...source,kind:'archive' as const,path:'/events/',sourceUrl:'https://www.savinggrace.org.au/events/'};
+  const sermonArchive={...source,kind:'archive' as const,path:'/sermons/',sourceUrl:'https://www.savinggrace.org.au/sermons/'};
+  const content=preserveSourceMetadata({...snapshot,routes:[{path:'/events/',entityId:'events',status:200 as const,targetPath:null}]},[eventArchive,sermonArchive]);
+  const context={mode:'public' as const,basePath:'' as const,siteContent:content};
+  const document=pageShell({title:'Events',canonicalPath:'/events/',robots:'index, follow',body:html`<h1>Events</h1><p>Existing paragraph.</p>`},context);
+  expect(document).toContain('Missing paragraph with');expect(document).toContain('href="/legacy/"');expect(document).toContain('2020-01-01T00:00:00Z');expect(content.sourceContentByPath?.['/sermons/']).toBeUndefined();
+ });
+ it('does not append the base calendar or override a dated fallback title when canonical policy points to the collection',async()=>{
+  const base={...source,path:'/events/',kind:'archive' as const,title:'Base calendar title',content:[{tag:'p' as const,text:'Base month only.'}]};
+  const dated={...source,path:'/events/2027-12/',sourceUrl:'https://www.savinggrace.org.au/events/2027-12/',kind:'archive' as const,title:'Exact dated calendar title',heading:'December 2027',content:[{tag:'p' as const,text:'Dated month only.'}]};
+  const content=preserveSourceMetadata({...snapshot,initialMetadataByPath:{'/events/':{title:'Events',heading:'Events',seeded:true}}},[base,dated]);
+  const response=await createSourcePublicPageHandler([base,dated])(new Request(dated.sourceUrl),{mode:'public',basePath:'',siteContent:content});
+  const document=await response!.text();expect(document).toContain('<title>Exact dated calendar title</title>');expect(document).toContain('Dated month only.');expect(document).not.toContain('Base month only.');
+ });
  it('never resurrects explicit gone content or exposes source text in an unrelated route',()=>{
   const content=preserveSourceMetadata({...snapshot,routes:[{path:'/original/',entityId:'page',status:410 as const,targetPath:null}]},[source]);
   expect(content.sourceContentByPath).toEqual({});expect(retainedSourceCopy(html`<p>Other</p>`,'/unrelated/',false,{mode:'public',basePath:'',siteContent:content}).toString()).toBe('<p>Other</p>');

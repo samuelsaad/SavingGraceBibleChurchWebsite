@@ -69,6 +69,12 @@ def canonical_url(value):
     parts = urlsplit(value)
     return CANONICAL + (parts.path or '/') + ('?' + parts.query if parts.query else '')
 
+def expected_canonical(value):
+    parts = urlsplit(value)
+    retained = [part for part in parts.query.split('&') if part and not next(iter(__import__('urllib.parse', fromlist=['parse_qsl']).parse_qsl(part)), ('', ''))[0].lower().startswith('utm_')]
+    return CANONICAL + (parts.path or '/') + ('?' + '&'.join(retained) if retained else '')
+
+
 def safe_url(value):
     return value if church_url(value) else 'external-reference:' + digest(value)
 
@@ -376,8 +382,8 @@ class Verification:
         url = result['url']
         is_indexable = indexable(result)
         canonicals = extracted.get('canonicalUrls', [])
-        valid = len(canonicals) == 1 and canonicals[0] == canonical_url(url)
-        row.update(indexable=is_indexable, canonicalValid=valid, robotsAllowed=self.robots.can_fetch('*', url), inSitemap=canonical_url(url) in self.sitemap_urls)
+        valid = len(canonicals) == 1 and canonicals[0] == expected_canonical(url)
+        row.update(indexable=is_indexable, canonicalValid=valid, robotsAllowed=self.robots.can_fetch('*', url), inSitemap=expected_canonical(url) in self.sitemap_urls)
         issues = []
         if self.environment == 'production':
             if result['status'] == 200 and is_indexable and not valid: issues.append('indexable_canonical_not_self_or_missing')
@@ -388,7 +394,7 @@ class Verification:
         elif is_indexable or canonicals: issues.append('private_page_indexable_or_canonical')
         for item in extracted.get('links', []) + extracted.get('images', []) + extracted.get('resources', []):
             raw = item.get('href') or item.get('url')
-            if not raw: continue
+            if result.get('status') != 200 or not raw or raw.startswith('#'): continue
             target = parser.address(raw, url)
             if target and church_url(target) and not parser.MEDIA_EXT.search(target):
                 if item.get('rel') == 'canonical': continue

@@ -61,6 +61,21 @@ class CandidateVerifyTests(unittest.TestCase):
             client.fetch(ORIGIN+'/c/')
             with self.assertRaisesRegex(ValueError,'budget_exhausted'): client.fetch(ORIGIN+'/d/')
 
+    def test_campaign_canonical_preserves_meaningful_query_parameters(self):
+        self.assertEqual(verify.expected_canonical(ORIGIN+'/page/?utm_source=rss&utm_campaign=one'),ORIGIN+'/page/')
+        self.assertEqual(verify.expected_canonical(ORIGIN+'/sermons/?sermon_book=romans&utm_source=rss'),ORIGIN+'/sermons/?sermon_book=romans')
+
+    def test_error_pages_and_fragment_links_do_not_create_crawl_targets(self):
+        with tempfile.TemporaryDirectory() as root:
+            base=Path(root);baseline=base/'source.json';baseline.write_text(json.dumps({'pages':{},'completed':False}),encoding='utf8')
+            run=verify.Verification(baseline,'http://127.0.0.1:4440',base/'private'/'run')
+            run.robots.parse(['User-agent: *','Allow: /'])
+            extracted={'canonicalUrls':[],'links':[{'href':'#main-content'},{'href':ORIGIN+'/actual-page/'}]}
+            run.inspect_page({'url':ORIGIN+'/missing/','status':404,'headers':{'x-robots-tag':'noindex'},'extracted':extracted},{})
+            self.assertEqual(run.internal_targets,set())
+            run.inspect_page({'url':ORIGIN+'/existing/','status':200,'headers':{'x-robots-tag':'noindex'},'extracted':extracted},{})
+            self.assertEqual(run.internal_targets,{ORIGIN+'/actual-page/'})
+
     def test_inventory_keeps_pending_excluded_assets_external_dependencies(self):
         ledger={'pages':{ORIGIN+'/a/':{}},'discovered':{ORIGIN+'/b/':{}},'pendingUrls':[ORIGIN+'/b/'],'assets':{ORIGIN+'/image.jpg':{}},'excluded':{ORIGIN+'/recording.mp3':'recording_not_requested'}}
         assets={'assets':{ORIGIN+'/image.jpg':{}},'remainingDependencies':{'https://outside.example/font.woff':{}},'excludedResources':{ORIGIN+'/old.zip':{}}}

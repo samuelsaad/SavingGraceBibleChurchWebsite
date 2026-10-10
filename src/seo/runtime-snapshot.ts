@@ -1,3 +1,4 @@
+import {createLegacySourceSearch} from './source-search';
 /** Version-keyed runtime snapshots. Every request checks current database state. */
 import type {Pool} from 'pg';
 import {legacyDisposition} from '../frontend/content/registry';
@@ -103,10 +104,10 @@ export async function createVersionedSourceHandler(options:{reader:Pool;assetDir
   const content=preserveSourceMetadata(createCmsFrontendSnapshot(snapshot,images.filter(a=>a.type.startsWith('image/')).map(a=>({id:a.id,path:a.url,type:a.type,width:a.width??1,height:a.height??1,alt:a.alt}))),pages);
   const routes=sourceRoutePolicy(pages,snapshot.routes,{...publicRenderContext,siteContent:content});
   routes.sourceShortlinks={...routes.sourceShortlinks,...sermons.verifiedSourceShortlinks()};
-  const handler=createSeoHttpAdapter({policy:options.policy,sermons,...routes,content:async()=>content,
+  const handler=createSeoHttpAdapter({policy:options.policy,sermons,...routes,content:async()=>content,publicSearch:createLegacySourceSearch(pages,content,sermons,sermons.verifiedSourceShortlinks()),
    sourcePage:createSourcePublicPageHandler(pages),sourceQueryPage:createSourcePublicPageHandler(pages,true),sourceSitemap:async()=>sourcePublicSitemap(pages,{...publicRenderContext,siteContent:content}),sourceDisposition:path=>editorial.findPublicPathDisposition(path),
    publicAsset:async request=>{const response=await sourceAssets(request)??siteAssetResponse(request)??await assetHandler(request);
-    if(response&&options.policy.environment==='production'&&response.status===200){response.headers.delete('X-Robots-Tag');response.headers.set('Cache-Control','public, max-age=3600');}
+    if(response&&options.policy.environment==='production'&&response.status===200){if(!['application/rss+xml','application/atom+xml'].includes(response.headers.get('Content-Type')?.split(';')[0]??''))response.headers.delete('X-Robots-Tag');response.headers.set('Cache-Control','public, max-age=3600');}
     return response;}});
   return {handler,label:sha256(stableJson({release:options.releaseIdentity,state:version,policy:options.policy,acceptedStageSupplement:Boolean(options.acceptedStageRepository)})),pages:pages.length,sermons:pages.filter(p=>p.kind==='sermon').length};
  });

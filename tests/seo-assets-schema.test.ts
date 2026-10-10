@@ -33,6 +33,16 @@ describe('source asset identity and structured facts',()=>{
    expect(()=>sourcePageSchema.parse({...source,asset:{...source.asset,contentType:'text/html'}})).toThrow();
   }finally{await rm(directory,{recursive:true,force:true});}
  });
+ it('preserves feed bytes and their original noindex, follow response directive',async()=>{
+  const directory=await mkdtemp(join(tmpdir(),'seo-feed-'));
+  try{
+   const bytes=Buffer.from('<rss version="2.0"><channel><title>Anonymous feed</title></channel></rss>'),hash=sha256(bytes),key=hash+'.rss';
+   await mkdir(join(directory,'source-public'));await writeFile(join(directory,'source-public',key),bytes);
+   const source=sourcePageSchema.parse({...syntheticSource('/feed/'),kind:'asset',indexable:false,responseSha256:hash,asset:{storageKey:key,sha256:hash,contentType:'application/rss+xml',bytes:bytes.length}});
+   const response=await createSourcePublicAssetHandler([source],directory)(new Request(source.sourceUrl));
+   expect(response?.status).toBe(200);expect(response?.headers.get('X-Robots-Tag')).toBe('noindex, follow');expect(Buffer.from(await response!.arrayBuffer())).toEqual(bytes);
+  }finally{await rm(directory,{recursive:true,force:true});}
+ });
  it('escapes executable-looking text and includes only supplied real dates and breadcrumb identities',()=>{
   const value=String(pageStructuredData('https://www.savinggrace.org.au/example/','Example </script><script>bad</script>','Description',{language:'ar',publishedAt:'2004-01-01T00:00:00Z',modifiedAt:'invalid',breadcrumbs:[{name:'Archive',path:'/sermons/'},{name:'Example',path:'/example/'}]}));
   expect(value.match(/<script/g)).toHaveLength(1);const data=JSON.parse(value.replace(/^<script[^>]*>/,'').replace(/<\/script>$/,''));
