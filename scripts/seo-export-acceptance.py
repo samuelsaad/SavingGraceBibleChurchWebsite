@@ -1,5 +1,6 @@
 """Export safe, hash-bound SEO acceptance reports without network or database access."""
 from __future__ import annotations
+from concurrent.futures import ThreadPoolExecutor
 import argparse
 from functools import lru_cache
 from collections import Counter
@@ -161,15 +162,35 @@ def path_family(url):
     return 'other_path'
 
 
+def public_rest_identity(provenance):
+    ids={item['wordpressId'] for item in provenance if isinstance(item,dict)
+         and re.fullmatch(r'public_rest_[a-z_]+_(?:link|source_url)',str(item.get('kind','')))
+         and VERIFY.church_url(item.get('from')) and type(item.get('wordpressId')) is int
+         and item['wordpressId']>0}
+    return next(iter(ids)) if len(ids)==1 else None
+
+
 def source_records(root, ledger):
-    result = {}
-    for url, summary in ledger.get('pages', {}).items():
+    def validated(item):
+        url, summary = item
         record = VERIFY.source_record(root, summary)
         if record.get('url') != url: raise ValueError('report_source_url_mismatch')
         if record.get('bodySha256') != summary.get('bodySha256'): raise ValueError('report_source_ledger_hash_mismatch')
         if record.get('sourcePostId') != summary.get('sourcePostId'): raise ValueError('report_source_identity_mismatch')
-        result[url] = record
+        return url, record
+    result = {}
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        for index,(url,record) in enumerate(pool.map(validated,ledger.get('pages', {}).items()),1):
+            result[url]=record
+            if index%500==0: print(json.dumps({'validatedSourceRecords':index}),flush=True)
     return result
+
+
+def response_file_fingerprint(directory):
+    paths=sorted(directory.glob('*.json'))
+    def identity(path):return path.name,digest(path.read_bytes())
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        return fingerprint(list(pool.map(identity,paths)))
 
 
 def retained_reconciliation(retained, records, bundle):
@@ -305,7 +326,7 @@ def export_reports(baseline, assets_path, candidate, bundle_path, output, *, rev
     ledger, assets, bundle = load(baseline), load(assets_path), load(bundle_path)
     candidate_summary_path = candidate / 'summary.json'
     summary, candidate_bindings = load(candidate_summary_path), load(candidate / 'bindings.private.json')
-    bindings = {'baselineSha256': digest(baseline.read_bytes()), 'assetsSha256': digest(assets_path.read_bytes()), 'candidateSummarySha256': digest(candidate_summary_path.read_bytes()), 'candidateBindingsSha256': digest((candidate / 'bindings.private.json').read_bytes()), 'candidateUrlLedgerSha256': digest((candidate / 'url-ledger.csv').read_bytes()), 'candidateDiffSha256': digest((candidate / 'content-metadata-diff.private.json').read_bytes()), 'candidateResponsesSha256': fingerprint([(path.name, digest(path.read_bytes())) for path in sorted((candidate / 'responses').glob('*.json'))]), 'bundleSha256': digest(bundle_path.read_bytes())}
+    bindings = {'baselineSha256': digest(baseline.read_bytes()), 'assetsSha256': digest(assets_path.read_bytes()), 'candidateSummarySha256': digest(candidate_summary_path.read_bytes()), 'candidateBindingsSha256': digest((candidate / 'bindings.private.json').read_bytes()), 'candidateUrlLedgerSha256': digest((candidate / 'url-ledger.csv').read_bytes()), 'candidateDiffSha256': digest((candidate / 'content-metadata-diff.private.json').read_bytes()), 'candidateResponsesSha256': response_file_fingerprint(candidate / 'responses'), 'bundleSha256': digest(bundle_path.read_bytes())}
     if candidate_bindings.get('baselineSha256') != bindings['baselineSha256'] or candidate_bindings.get('assetsSha256') != bindings['assetsSha256'] or summary.get('bindings') != candidate_bindings: raise ValueError('candidate_bindings_mismatch')
     if assets.get('sourceLedgerSha256') != bindings['baselineSha256'] or bundle.get('inventorySha256') != bindings['baselineSha256']: raise ValueError('source_bundle_or_assets_binding_mismatch')
     if not ledger.get('htmlPhaseFrozen'): raise ValueError('source_baseline_not_frozen')
@@ -321,6 +342,7 @@ def export_reports(baseline, assets_path, candidate, bundle_path, output, *, rev
         if not isinstance(key, str) or not HASH.fullmatch(key) or key in differences: raise ValueError('candidate_diff_identity_invalid')
         differences[key] = item
     records = source_records(baseline.parent, ledger)
+    bindings['sourceRecordsProofSha256'] = fingerprint([(digest(url),fingerprint(record)) for url,record in sorted(records.items())])
     retained = load(retained_path) if retained_path else None
     retained_rows, reconciliation = retained_reconciliation(retained, records, bundle)
     inventory = VERIFY.inventory(ledger, assets)
@@ -371,9 +393,10 @@ def export_reports(baseline, assets_path, candidate, bundle_path, output, *, rev
         safe_provenance = [{'kind': safe_code(item.get('kind')), 'from': safe_url(item.get('from')) if item.get('from') else ''} for item in provenance]
         metadata = source or asset or {}
         source_id = source.get('sourcePostId') if source else None
+        if source_id is None: source_id=public_rest_identity(provenance)
         target_identity = ('source:' + str(projection['sourceId']) if isinstance(projection.get('sourceId'), int) else 'source-route:' + digest(projection['path'])) if projection else ('candidate-route:' + digest(route(intended)) if intended and route(intended) else '')
         safe_source = 'withheld-reference:' + key if url.startswith('withheld-reference:') else safe_url(url)
-        report = {'source_url': safe_source, 'source_url_sha256': key, 'source_wordpress_id': source_id if isinstance(source_id, int) else None, 'source_type': safe_code(source.get('template') or ('non_html' if source else 'asset' if asset else 'unverified')) if source or asset else 'unverified', 'source_route_family': path_family(url) if VERIFY.church_url(url) else 'external_or_withheld_reference', 'source_state': safe_code(state), 'source_captured_at': metadata.get('capturedAt') if re.fullmatch(r'\d{4}-\d\d-\d\dT[0-9:.+Z\-]+', str(metadata.get('capturedAt', ''))) else '', 'source_status': metadata.get('status'), 'source_redirect': safe_url(source.get('redirectTarget')) if source else '', 'source_canonical_urls': [safe_url(value) for value in source.get('canonicalUrls', []) if value] if source else [], 'source_indexability': source_indexability(source), 'source_origin': public_origin(url), 'source_provenance': {'count': len(provenance), 'sha256': fingerprint(provenance), 'sample': safe_provenance[:10], 'sampleLimit': 10, 'fullEvidence': 'frozen_private_ledger_or_asset_manifest'}, 'traffic_evidence': 'unavailable', 'backlink_evidence': 'unavailable', 'retained_published_source_id': historical.get('sourceId'), 'retained_reconciliation': historical.get('outcome', ''), 'target_identity': target_identity, 'intended_url': safe_url(intended), 'candidate_first_status': first.get('status'), 'candidate_final_status': final.get('status'), 'candidate_final_url': safe_url(final.get('url')), 'redirect_hops': len(chain) - 1 if chain else None, 'candidate_response_sha256': safe_hash(final.get('bodySha256')), 'candidate_indexable': boolean_cell(row.get('indexable')), 'candidate_canonical_valid': boolean_cell(row.get('canonicalValid')), 'candidate_robots_allowed': boolean_cell(row.get('robotsAllowed')), 'candidate_in_sitemap': boolean_cell(row.get('inSitemap')), 'raw_verification_issues': issues, 'report_validation_issues': validation, 'reviewed_issue_codes': accepted, 'unreviewed_issue_codes': remaining, 'explained_difference_policies': own_policies, 'review_evidence_references': [policies[code] for code in own_policies], 'disposition': disposition, 'disposition_reason': reason}
+        report = {'source_url': safe_source, 'source_url_sha256': key, 'source_wordpress_id': source_id if isinstance(source_id, int) else None, 'source_type': safe_code((source or {}).get('template') or ('non_html' if source else 'asset' if asset else 'unverified')), 'source_route_family': path_family(url) if VERIFY.church_url(url) else 'external_or_withheld_reference', 'source_state': safe_code(state), 'source_captured_at': metadata.get('capturedAt') if re.fullmatch(r'\d{4}-\d\d-\d\dT[0-9:.+Z\-]+', str(metadata.get('capturedAt', ''))) else '', 'source_status': metadata.get('status'), 'source_redirect': safe_url(source.get('redirectTarget')) if source else '', 'source_canonical_urls': [safe_url(value) for value in source.get('canonicalUrls', []) if value] if source else [], 'source_indexability': source_indexability(source), 'source_origin': public_origin(url), 'source_provenance': {'count': len(provenance), 'sha256': fingerprint(provenance), 'sample': safe_provenance[:10], 'sampleLimit': 10, 'fullEvidence': 'frozen_private_ledger_or_asset_manifest'}, 'traffic_evidence': 'unavailable', 'backlink_evidence': 'unavailable', 'retained_published_source_id': historical.get('sourceId'), 'retained_reconciliation': historical.get('outcome', ''), 'target_identity': target_identity, 'intended_url': safe_url(intended), 'candidate_first_status': first.get('status'), 'candidate_final_status': final.get('status'), 'candidate_final_url': safe_url(final.get('url')), 'redirect_hops': len(chain) - 1 if chain else None, 'candidate_response_sha256': safe_hash(final.get('bodySha256')), 'candidate_indexable': boolean_cell(row.get('indexable')), 'candidate_canonical_valid': boolean_cell(row.get('canonicalValid')), 'candidate_robots_allowed': boolean_cell(row.get('robotsAllowed')), 'candidate_in_sitemap': boolean_cell(row.get('inSitemap')), 'raw_verification_issues': issues, 'report_validation_issues': validation, 'reviewed_issue_codes': accepted, 'unreviewed_issue_codes': remaining, 'explained_difference_policies': own_policies, 'review_evidence_references': [policies[code] for code in own_policies], 'disposition': disposition, 'disposition_reason': reason}
         rows.append(report)
         source_groups, candidate_groups = signal_groups(comparison_source), signal_groups(final.get('extracted'))
         difference = {'source_url': safe_source, 'source_url_sha256': key, 'source_response_sha256': safe_hash(source.get('bodySha256') if source else asset.get('sha256') if asset else ''), 'candidate_response_sha256': safe_hash(final.get('bodySha256')), 'comparison_available': diff is not None, 'source_block_count': diff.get('sourceBlockCount') if diff else None, 'matched_block_count': diff.get('matchedBlockCount') if diff else None, 'missing_block_count': diff.get('missingBlockCount') if diff else None, 'missing_image_count': diff.get('missingImageCount') if diff else None, 'missing_media_count': diff.get('missingMediaCount') if diff else None, 'metadata_change_count': len(diff.get('metadataChanges', {})) if diff else None, 'missing_block_hashes': safe_diff_hashes(diff.get('missingBlockHashes', {})) if diff else {}, 'missing_image_hashes': safe_diff_hashes(diff.get('missingImageHashes', [])) if diff else [], 'missing_media_hashes': safe_diff_hashes(diff.get('missingMediaHashes', [])) if diff else [], 'metadata_change_hashes': safe_diff_hashes(diff.get('metadataChanges', {})) if diff else {}, 'bundle_projection_sha256': fingerprint(projection) if projection else '', 'explained_difference_policies': own_policies, 'raw_verification_issues': issues, 'disposition': disposition}

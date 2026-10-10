@@ -299,7 +299,7 @@ def indexable(response):
     return response.get('status') == 200 and 'noindex' not in robots.lower() and 'none' not in re.split(r'[,\s]+', robots.lower())
 
 class Verification:
-    def __init__(self, baseline, candidate, output, *, assets=None, environment='production', candidate_id=None, expected_label=None, request_limit=20000, concurrency=1):
+    def __init__(self, baseline, candidate, output, *, assets=None, environment='production', candidate_id=None, expected_label=None, request_limit=20000, concurrency=1, timeout=15):
         if type(concurrency) is not int or not 1 <= concurrency <= 4: raise ValueError('candidate_concurrency_invalid')
         self.concurrency = concurrency
         self.baseline = Path(baseline).resolve()
@@ -313,14 +313,14 @@ class Verification:
         self.bindings = {'baselineSha256': digest(baseline_bytes), 'assetsSha256': digest(assets_bytes) if assets_bytes else None,
                          'parserSha256': digest(PARSER_PATH.read_bytes()), 'comparatorSha256': digest(Path(__file__).read_bytes()),
                          'candidateOrigin': candidate, 'candidateId': candidate_id, 'expectedRuntimeLabel': expected_label,
-                         'environment': environment, 'requestLimit': request_limit, 'concurrency': concurrency}
+                         'environment': environment, 'requestLimit': request_limit, 'concurrency': concurrency, 'httpTimeoutSeconds': timeout}
         state_path = self.output / 'bindings.private.json'
         if state_path.exists(): raise ValueError('verification_output_already_used_choose_fresh_directory')
         save(state_path, self.bindings)
         (self.output / 'frozen-ledger.private.json').write_bytes(baseline_bytes)
         if assets_bytes: (self.output / 'frozen-assets.private.json').write_bytes(assets_bytes)
         self.environment = environment
-        self.client = LoopbackClient(candidate, self.output, request_limit=request_limit, expected_label=expected_label)
+        self.client = LoopbackClient(candidate, self.output, request_limit=request_limit, expected_label=expected_label, timeout=timeout)
         self.rows, self.differences, self.link_rows, self.control_issues = [], [], [], []
         self.sitemap_urls, self.internal_targets = set(), set()
         self.internal_inlinks = Counter()
@@ -546,10 +546,11 @@ def main():
     cli.add_argument('--expected-runtime-label', help='Require every HTTP response X-SEO-Candidate header to match.')
     cli.add_argument('--request-limit', type=int, default=20000)
     cli.add_argument('--concurrency', type=int, default=1, choices=range(1,5), help='Bounded loopback-only HTTP prefetch; source/provider traffic is never enabled.')
+    cli.add_argument('--timeout', type=int, default=15, choices=range(1,61), help='Bounded per-request timeout in seconds; failures remain recorded.')
     args = cli.parse_args()
     try:
         summary = Verification(args.baseline, args.candidate, args.output, assets=args.assets, environment=args.environment,
-                               candidate_id=args.candidate_id, expected_label=args.expected_runtime_label, request_limit=args.request_limit, concurrency=args.concurrency).run()
+                               candidate_id=args.candidate_id, expected_label=args.expected_runtime_label, request_limit=args.request_limit, concurrency=args.concurrency, timeout=args.timeout).run()
         print(json.dumps({key: summary[key] for key in ('checkedInventoryRows', 'inventoryCount', 'candidateRequests', 'baselineComplete', 'passed', 'issueCounts')}))
         return 0 if summary['passed'] else 1
     except (ValueError, OSError, json.JSONDecodeError):

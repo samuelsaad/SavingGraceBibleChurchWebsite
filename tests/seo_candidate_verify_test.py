@@ -42,6 +42,16 @@ class CandidateVerifyTests(unittest.TestCase):
             self.assertEqual(client.requests,5);self.assertEqual(len(opener.requests),5)
             self.assertTrue(all(urlsplit(r.full_url).hostname=='127.0.0.1' for r in opener.requests))
 
+    def test_timeout_is_bounded_and_bound_to_verification_evidence(self):
+        with tempfile.TemporaryDirectory() as root:
+            base=Path(root);baseline=base/'ledger.json';baseline.write_text('{}')
+            run=verify.Verification(baseline,'http://127.0.0.1:4440',base/'private'/'valid',timeout=60)
+            self.assertEqual(run.client.timeout,60)
+            self.assertEqual(json.loads((run.output/'bindings.private.json').read_text())['httpTimeoutSeconds'],60)
+            for i,value in enumerate((0,61)):
+                with self.assertRaisesRegex(ValueError,'request_limits_invalid'):
+                    verify.Verification(baseline,'http://127.0.0.1:4440',base/'private'/str(i),timeout=value)
+
     def test_concurrency_refuses_unbounded_or_noninteger_values(self):
         with tempfile.TemporaryDirectory() as root:
             base=Path(root);baseline=base/'ledger.json';baseline.write_text('{}')

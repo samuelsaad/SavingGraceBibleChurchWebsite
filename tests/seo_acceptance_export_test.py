@@ -70,6 +70,18 @@ def review_file(value, aggregate, *, disposition='preserved', accepted=None):
 
 
 class AcceptanceExportTests(unittest.TestCase):
+    def test_captured_asset_without_html_source_gets_explicit_unresolved_ledger_row(self):
+        with tempfile.TemporaryDirectory() as root:
+            value=fixture(Path(root));value['ledger']['pages']={}
+            value['assets']['assets'][URL]={'url':URL,'status':200,'sha256':value['source']['bodySha256'],'contentType':'application/pdf','bytes':len((value['paths']['baseline'].parent/'source.body').read_bytes())}
+            value['row'].update(sourceKind='asset',issues='asset_mime_changed')
+            synchronize(value);save(value['paths']['candidate']/'content-metadata-diff.private.json',[])
+            aggregate=run(value);actual=rows(value)[0]
+            self.assertEqual(aggregate['inventoryCount'],1)
+            self.assertEqual(actual['source_type'],'asset')
+            self.assertEqual(actual['disposition'],'unresolved')
+            self.assertNotIn(SECRET,(value['paths']['output']/'seo-url-migration-map.csv').read_text())
+
     def test_parsing_cache_does_not_mask_a_changed_response_body(self):
         with tempfile.TemporaryDirectory() as directory:
             fixture(Path(directory))
@@ -215,3 +227,10 @@ class AcceptanceExportTests(unittest.TestCase):
 
 
 if __name__ == '__main__': unittest.main()
+
+class PublicRestIdentityTests(unittest.TestCase):
+    def test_only_unambiguous_explicit_public_metadata_ids_are_used(self):
+        good={'kind':'public_rest_media_source_url','from':report.ORIGIN+'/wp-json/wp/v2/media','wordpressId':17}
+        self.assertEqual(report.public_rest_identity([good]),17)
+        for changed in ({**good,'wordpressId':True},{**good,'kind':'guid'},{**good,'from':'https://unapproved.invalid/'},{**good,'wordpressId':-1}):self.assertIsNone(report.public_rest_identity([changed]))
+        self.assertIsNone(report.public_rest_identity([good,{**good,'wordpressId':18}]))
