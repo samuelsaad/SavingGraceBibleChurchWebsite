@@ -7,6 +7,9 @@ import {renderSourceContent} from "../src/frontend/source-content";
 import {publicRenderContext,restrictedRenderContext} from "../src/frontend/routes";
 import {createSeoHttpAdapter} from "../src/seo/http-adapter";
 import type {SourceNode} from "../src/domain/source-content";
+import {preserveSourceMetadata} from '../src/seo/source-metadata';
+import {sourceRoutePolicy} from '../src/seo/runtime-snapshot';
+import {defaultSiteSettings} from '../src/frontend/content/site-snapshot';
 
 const hash="b".repeat(64),origin="https://www.savinggrace.org.au";
 function page(number=1,overrides:Partial<SourcePublicPage>={}):SourcePublicPage{
@@ -22,6 +25,17 @@ function page(number=1,overrides:Partial<SourcePublicPage>={}):SourcePublicPage{
 }
 function query(input:Record<string,unknown>={}){return publicSermonListQuerySchema.parse(input);}
 describe("source-public provenance model",()=>{
+  it('retains captured facet metadata and headings in the selected archive without admitting search or compound queries',async()=>{
+    const path='/sermons/?sermon_book=john';
+    const archive=page(1,{path,sourceUrl:origin+path,kind:'archive',sourceId:null,sermon:null,title:'John - Original church title',heading:'Book: John',canonicalSource:origin+'/sermons/?sermon_book=/john',content:[{tag:'a',href:origin+'/sermons/anonymous-source-1/',text:'Anonymous source 1'}]});
+    const pages=[page(),archive],content=preserveSourceMetadata({pages:[],posts:[],events:[],venues:{},home:null,settings:defaultSiteSettings,assets:{},routes:[]},pages);
+    const route=createSeoHttpAdapter({policy:{environment:'production',canonicalOrigin:origin},sermons:new SourcePublicSermonRepository(pages),...sourceRoutePolicy(pages),content:async()=>content,sourceQueryPage:createSourcePublicPageHandler(pages,true),sourceSitemap:async()=>sourcePublicSitemap(pages)});
+    const response=await route(new Request(origin+path)),body=await response.text();
+    expect(response.status).toBe(200);expect(body).toContain('class="v5"');expect(body).toContain('<h1>Book: John</h1>');expect(body).toContain('<title>John - Original church title</title>');expect(body).toContain('rel="canonical" href="'+origin+path+'"');expect(body).toContain('name="robots" content="index, follow"');
+    expect(await(await route(new Request(origin+path+'&utm_campaign=example'))).text()).toContain('name="robots" content="noindex, follow"');
+    const hidden={...archive,indexable:false};const restricted=createSeoHttpAdapter({policy:{environment:'production',canonicalOrigin:origin},sermons:new SourcePublicSermonRepository(pages),...sourceRoutePolicy([hidden]),content:async()=>preserveSourceMetadata(content,[hidden]),sourceQueryPage:createSourcePublicPageHandler([hidden],true)});
+    expect(await(await restricted(new Request(origin+path))).text()).toContain('name="robots" content="noindex, follow"');
+  });
   it("rejects source identity mismatch, generated enrichment, review attribution and unsafe routes",()=>{
     const original=page();
     for(const change of [{sourceUrl:origin+"/different/"},{sourceUrl:origin+original.path+"?preview=true"},

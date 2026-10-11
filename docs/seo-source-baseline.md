@@ -295,3 +295,41 @@ A bounded read-only API inventory captured all 30 public pages, 3 posts, 1084 pu
 Page/post coverage matches the existing projection. The API revealed 820 event URLs not captured in the main frozen ledger, plus 420 attachment URLs requiring explicit reconciliation. Their exact bounded public HTML capture is retained separately and must supersede any claim that the older event inventory was complete. API `link` fields are current permalink evidence; GUIDs were not requested or used. Source metadata records and bodies remain in protected storage.
 
 The public post-type index does not expose the sermon type. Its absence does not establish the authoritative total of published sermons. The known 457 sermon identities remain reconciled through HTML, sitemaps and the retained export; fresh authoritative complete sermon publication evidence is still required.
+
+## D-182 final available source freeze — 11 October 2026
+
+The latest frozen ledger contains 11,225 responses and 16,246 discovered URLs.
+The finite, previously observed queue contains 6,852 URLs: 3,849 have recorded
+outcomes and 3,003 remain unfinished after recurrent server rate-limit cooldowns.
+Requests did not expand into newly discovered dates/filters. Three-second global
+spacing retained the same two workers and two-retry ceiling. Two completed records
+were recovered by byte hash without making another request; earlier frozen
+inventories remain intact. Completeness is still unproven.
+
+Source ledger SHA-256:
+`f641d6a15179fc2f29cc47d4cf0393f0663bedc99b779c67140b7ea74393899a`.
+The independently verified cache checks 19,563 files, reuses 11,169 unchanged
+previously independently parsed records and freshly parses 56. Certificate SHA-256:
+`70d7259ceac72f3ffb23d5fab0430b3f41fc94b8a1626534587a4e85e04b97dc`.
+The resource union contains 1,736 observations (including captured hostname aliases),
+with SHA-256 `19f50be8a96f51015297f712dfdd316c2ff12498279416bd800c343dfd9e3d5b`.
+The migration retains 464 differing dynamic alias observations as raw review
+findings and adds 55 verified canonical feed routes without replacing prior content.
+
+Fresh 11 October public REST reconciliation made 37 successful responses and found
+no additions/absence/changes in the retained identity, slug, publication/link/date,
+media-type and source-URL fields. This does not prove unchanged raw bodies or a
+complete sermon inventory. The public sermon sitemap contains 457 actual URL
+elements; nested image URLs are not counted as sermons. All 454 retained published
+identities plus three verified additions are known and migrated. Fresh authoritative
+WordPress sermon publication counts remain unavailable because the configured SQL
+account fails the unchanged read-only privilege guard.
+
+The public media endpoint still reports 437 records and exposes 420; the 17 omitted
+identities/publication states are unknown. Account browser startup again failed
+before returning Search Console/Analytics data. The intended Search Console
+property, comparable landing-page/query/link/indexing reports, GA4 property/web
+stream/consent mapping and church-owned test stream remain missing. No live test
+measurement or production activation occurred. The repository ZIP is not a
+WordPress backup: 43 SQL files are application migrations, with zero verified
+WordPress table dumps and no uploads/config backup.

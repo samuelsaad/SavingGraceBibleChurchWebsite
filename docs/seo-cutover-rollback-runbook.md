@@ -79,15 +79,35 @@ new snapshots and current expected versions; the frozen deployment operator is n
 a general authorization to apply another delta.
 
 Before WordPress retirement, decide and verify durable hosting for the 117 original
-MP3 and one MP4 URLs without changing recording identity. This task performs no
-recording download. Also resolve the two ZIP/one font references, the 17 publicly
-unexposed media records, unsupported versions and 408 external dependencies. Keeping
-WordPress as a dependency is an explicitly recorded temporary recovery measure,
-not completed resource migration.
+MP3 and one MP4 URLs without changing recording identity. No recording bodies were
+downloaded. Keep the existing WordPress runtime/files available until the operator
+has an exact church-owned storage/origin mapping, verified HEAD/Range behavior,
+backup and restart proof for every recording URL. Do not point a fallback proxy at
+the cutover hostname itself: that can loop after DNS/routing changes. A separately
+verified retained origin is required before activating that configuration.
 
-A protected staging custom-format backup was captured and archive-validated.
-Application rollback/reactivation preserves content history; it is distinct from
-restoring that full backup. Automatic approval review rejected the separate local
-restore database/target amendment, so full restoration remains unexecuted. Resolve
-that exact target authorization, then run the guarded recovery helper and prove
-schema, rows, files and subsequent-edit preservation before cutover acceptance.
+The two ZIP archives and one OTF download are captured, structurally validated and
+included in the final source asset archive. All old source resource witnesses stay
+retained. The 17 publicly unexposed media identities and nine unresolved external
+image/theme identities remain evidence gaps; 396 transformed CDN references have
+verified owned-original replacements, and three broken social-logo dependencies
+have a recorded correction. Transformed CDN byte identity is not claimed.
+
+D-182 explicitly authorized the exact isolated restore target. The final actual
+local PostgreSQL backup was restored and matched across 65 tables, schema,
+constraints/indexes/triggers/sequences, 1,499 asset files and 1,224 resource routes.
+The isolated application passed eight HTTP smoke checks with outbound integrations
+disabled, and its created database was removed after OID validation. Ownership/ACL
+recreation was not tested. This is PostgreSQL/assets/application recovery;
+WordPress recovery remains untested because no database/uploads/config backup was
+available. A staging dump listing and application rollback remain distinct from
+restoration of that specific staging backup. Retain those separate missing gates.
+
+The final content release adds 55 verified source feed routes without updating an
+existing projection. Its exact replay changes nothing. A final production delta
+must cover additions, edits, removals/publication changes and asset references,
+compare current expected versions, preserve CMS edits and withdrawals, and rerun
+all acceptance checks. Do not infer freshness or completeness from this partial
+frozen snapshot. Record the precise freeze UTC time and a church operator's
+no-change confirmation; alternatively capture a new delta after the last source
+edit. The current task does not enact a production content freeze.

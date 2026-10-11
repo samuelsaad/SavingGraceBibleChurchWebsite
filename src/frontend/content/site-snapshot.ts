@@ -31,6 +31,7 @@ export interface FrontendAsset {
   focalX?:number; focalY?:number;
 }
 export interface FrontendSiteSnapshot {
+  sourceArchiveHeadingsByPath?:Readonly<Record<string,string>>;
   sourceContentAdoptedByPath?:Readonly<Record<string,boolean>>;
   cmsExplicitSeoByPath?:Readonly<Record<string,import("../seo").ContentSeo>>;
   initialMetadataByPath?:Readonly<Record<string,{title:string;heading:string;seeded:boolean}>>;

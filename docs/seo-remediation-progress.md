@@ -197,3 +197,15 @@ observations remain unresolved raw-byte differences. The prepared bundle has
 The archive contains 1,203 unique files (49,629,144 body bytes), SHA-256
 `87b64cc90ee3a84b707b88744645c8a4590f3c51670566edc165bb79c16d16be`.
 No recording body was requested. Final verification is still pending.
+
+The subsequent bounded taxonomy delta adds 492 captured single-term sermon
+archives, including 438 source-indexable routes. It preserves all 3,589 prior
+versions and imports/replays locally with 492/0 inserts and no updates. The
+selected V5 archive receives original title/heading/description defaults; unknown,
+compound and search queries remain excluded. Optional enrichment audit timestamps
+no longer replace original WordPress modification dates. Actual edits to original
+copy still update those dates. Synthetic focused checks passed 56/56; full
+PostgreSQL regression passed 1,410/1,410 with zero skips, type checking reported
+709 files with zero errors/warnings, and the 45-page build/runtime bundle passed.
+Protected CMS browser checks are incomplete after native preview/tunnel timeouts;
+no staging draft or publication was changed by these failed attempts.

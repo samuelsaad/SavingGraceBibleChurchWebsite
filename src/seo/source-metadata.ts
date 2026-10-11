@@ -4,6 +4,7 @@ import type {SourcePublicPage} from './source-public-model';
 import {sha256} from './source-public-model';
 import {legacyDisposition} from '../frontend/content/registry';
 import {publicRenderContext} from '../frontend/routes';
+import {valuableOriginalTaxonomyQuery} from './source-query-indexing';
 /** Captured public metadata supplies defaults; explicit versioned CMS overrides win. */
 const sourcePhotoId=(page:SourcePublicPage)=>'source-photo-'+sha256(page.path);
 export function sourceSocialAssets(pages:readonly SourcePublicPage[],registered:FrontendSiteSnapshot['assets']={}){return Object.fromEntries(pages.flatMap(page=>{if(!page.asset?.contentType.startsWith('image/')||page.issues.length)return [];const known=Object.values(registered).find(image=>image.path.endsWith('/'+page.asset!.storageKey)&&image.type===page.asset!.contentType);return known&&known.width>0&&known.height>0?[[sourcePhotoId(page),{...known,id:sourcePhotoId(page),path:page.path}]]:[];}));}
@@ -18,6 +19,7 @@ export function preserveSourceMetadata(snapshot:FrontendSiteSnapshot,pages:reado
  result.cmsExplicitSeoByPath={...Object.fromEntries([...snapshot.pages,...snapshot.posts,...snapshot.events].filter(page=>page.seo).map(page=>[page.path,page.seo!])),...(snapshot.home?.seo?{'/':snapshot.home.seo}:{})};
  const merge=<T extends {path:string;seo?:ContentSeo}>(page:T):T=>{const original=source.get(page.path);return original?{...page,seo:{...sourceSeo(original,pages),...page.seo}}:page;};
  result.sourceSeoByPath=Object.fromEntries(pages.filter(p=>p.kind!=='asset'&&p.issues.length===0).map(p=>[p.path,sourceSeo(p,pages)]));
+ result.sourceArchiveHeadingsByPath=Object.fromEntries(pages.filter(p=>p.kind==='archive'&&!p.issues.length&&valuableOriginalTaxonomyQuery(p.path,p.content)).map(p=>[p.path,p.heading]));
  result.pages=result.pages.map(merge);result.posts=result.posts.map(merge);result.events=result.events.map(merge);
  const home=source.get('/');if(result.home&&home)result.home.seo={...sourceSeo(home,pages),...result.home.seo};
  const sourceContentByPath:Record<string,SourcePublicPage[]>={};

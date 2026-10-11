@@ -17,6 +17,15 @@ async function withHttp(repository:PublicSermonRepository,run:(base:string)=>Pro
  try{await run(base);}finally{server.closeAllConnections();await new Promise<void>((resolve,reject)=>server.close(error=>error?reject(error):resolve()));}
 }
 describe('ordinary approved editorial content with source originals',()=>{
+ it('keeps original historical dates independent of enrichment and preserves actual original-copy edits',async()=>{
+  const source=original();source.modifiedAt='2004-01-01T15:30:00Z';
+  const enrichment=approved({editorialChanges:{summary:'2026-01-01T00:00:00Z',summaryStatus:'2026-01-02T00:00:00Z',transcript:'2026-01-03T00:00:00Z',questionAnswers:'2026-01-04T00:00:00Z'}});
+  const repository=await CompositeSourceSermonRepository.create([source],[enrichment],async()=>null);
+  expect((await repository.findPublishedBySlug('source-original'))?.sourcePublic?.modifiedAt).toBe(source.modifiedAt);
+  expect((await repository.listPublishedSitemapEntries())[0]?.lastModified).toBe('2004-01-01');
+  const edited=await CompositeSourceSermonRepository.create([source],[approved({editorialChanges:{body:'2004-01-01T18:00:00Z',summaryStatus:'2026-01-01T00:00:00Z'}})],async()=>null);
+  expect((await edited.findPublishedBySlug('source-original'))?.sourcePublic?.modifiedAt).toBe('2004-01-01T18:00:00.000Z');
+ });
  it('preserves existing sealed-staging acceptance without admitting it through the normal production projection',async()=>{
   const staged=approved();staged.detail.reviewState='draft_awaiting_review';
   await expect(CompositeSourceSermonRepository.create([original()],[staged],async()=>null)).rejects.toThrow('source_editorial_private_projection');

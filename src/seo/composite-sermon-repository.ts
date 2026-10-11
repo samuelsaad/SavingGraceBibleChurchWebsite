@@ -100,8 +100,11 @@ export class CompositeSourceSermonRepository implements PublicSermonRepository {
     if(edited('body'))detail.sourcePublic!.content=current.body?[{tag:'p',text:current.body}]:[];
     if(edited('title')){detail.sourcePublic!.title=current.title;detail.sourcePublic!.socialTitle=current.title;}
     if(edited('seoDescription')){detail.sourcePublic!.description=current.seoDescription??current.summary;detail.sourcePublic!.socialDescription=current.seoDescription??current.summary??'';}
-    const timestamps=Object.values(changes).filter(value=>Number.isFinite(Date.parse(value))).sort((a,b)=>Date.parse(b)-Date.parse(a));
-    if(timestamps[0]&&Date.parse(timestamps[0])>Date.parse(lastModified)){lastModified=new Date(timestamps[0]).toISOString().slice(0,10);detail.sourcePublic!.modifiedAt=new Date(timestamps[0]).toISOString();}
+    // Optional enrichment/review/import history does not date the original
+    // WordPress copy. Only explicit edits to the original projection do so.
+    const originalFields=['slug','title','serviceDate','speakerId','seriesIds','bookClassificationIds','scriptureReferences','media','body','seoDescription'];
+    const timestamps=originalFields.flatMap(field=>changes[field]?[changes[field]!]:[]).filter(value=>Number.isFinite(Date.parse(value))).sort((a,b)=>Date.parse(b)-Date.parse(a));
+    if(timestamps[0]&&Date.parse(timestamps[0])>Date.parse(page.modifiedAt??page.publishedAt??detail.serviceDate)){lastModified=new Date(timestamps[0]).toISOString().slice(0,10);detail.sourcePublic!.modifiedAt=new Date(timestamps[0]).toISOString();}
     if(originalSlug!==slug)repository.aliases.set(pathFor(originalSlug),pathFor(slug));
     if(current.slug!==slug)repository.aliases.set(pathFor(current.slug),pathFor(slug));
    }
