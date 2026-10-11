@@ -143,6 +143,31 @@ class SeoDeploymentTest(unittest.TestCase):
                 OP.save_verified_configuration(fixture, path, {"changed": True})
             self.assertEqual(path.read_bytes(), before)
 
+    def test_cms_adoption_passes_bound_configuration_to_write_and_replay(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = pathlib.Path(folder)
+            config = {"services": {"app": {"environment": {}, "volumes": []}}}
+            (root / "source-maintenance.json").write_text(json.dumps(config))
+            fixture = base(root)
+            def save(path, value):
+                with path.open("x") as stream: json.dump(value, stream)
+            fixture.save = save; fixture.assets_manifest = lambda: {}
+            calls = []
+            def run(command, timeout):
+                cfg = fixture.load(pathlib.Path(command[3])); operation = command[-1]
+                calls.append(operation)
+                if operation == "cms-plan":
+                    self.assertNotIn("SOURCE_CMS_PLAN_SHA256", cfg["services"]["app"]["environment"])
+                    return json.dumps({"planned": 2126, "held": 239, "planSha256": "d6d594f037c524a80190ed7516a3d093f9c5547211100b6525b1e3c0e18b1154"})
+                self.assertEqual(cfg["services"]["app"]["environment"]["SOURCE_CMS_PLAN_SHA256"], "d6d594f037c524a80190ed7516a3d093f9c5547211100b6525b1e3c0e18b1154")
+                return json.dumps({"result": {"inserted": 0}, "assets": {"inserted": 0}})
+            fixture.run = run
+            upgrade = SimpleNamespace(cms_snapshot=lambda _: {name: [] for name in ("cms_entities", "cms_revisions", "cms_routes", "media_assets", "audit_events", "schema_migrations")})
+            with patch.object(OP, "active_phases", return_value={"public": "bridge", "protected": "bridge"}), patch.object(OP, "verify_source_ready"), patch.object(OP, "source_snapshot", return_value={}), patch.object(OP, "verify_frozen"):
+                result = OP.adopt_cms(fixture, upgrade, Mock(), root, {"commit": COMMIT, "image": IMAGE})
+            self.assertTrue(result["priorRowsPreserved"])
+            self.assertEqual(calls, ["cms-plan", "adopt-cms", "adopt-cms"])
+
     def test_cms_adoption_refuses_without_the_compatible_bridge_before_any_write(self):
         base_mock = Mock()
         with patch.object(OP, "active_phases", return_value={"public": "previous", "protected": "bridge"}), self.assertRaisesRegex(RuntimeError, "seo_bridge_required"):

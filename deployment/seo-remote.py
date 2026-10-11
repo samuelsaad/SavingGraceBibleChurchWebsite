@@ -382,6 +382,7 @@ def adopt_cms(base, upgrade, helper, root, recovery):
     config["services"]["app"]["environment"]["SOURCE_CMS_PLAN_SHA256"] = frozen["planSha256"]
     path = root / "source-cms-adoption-maintenance.private.json"
     save_verified_configuration(base, path, config)
+    command = ["docker", "compose", "-f", str(path), "run", "--rm", "--no-deps", "--pull", "never", "app"]
     result = json.loads(base.run(command + ["adopt-cms"], timeout=900))
     replay = json.loads(base.run(command + ["adopt-cms"], timeout=900))
     if replay.get("result", {}).get("inserted") != 0 or replay.get("assets", {}).get("inserted") != 0:
