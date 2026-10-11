@@ -1,4 +1,5 @@
 import {originalSermonPreview} from './source-sermon-preview';
+import {cmsPreviewSnapshot} from './preview-snapshot';
 import {preserveSourceMetadata} from '../seo/source-metadata';
 import type {SourcePublicPage} from '../seo/source-public-model';
 /** Transient server-rendered canvases. Tokens are session-bound transport only;
@@ -34,7 +35,7 @@ export interface CmsVisualRenderOptions{
  assets:()=>Promise<readonly FrontendAsset[]>;environment:"local"|"staging";now?:()=>number;
 }
 function overlay(snapshot:CmsSnapshot,entity:CmsEntity,content:CmsDocument):CmsSnapshot{
- const result=structuredClone(snapshot),path=pathForContent(entity.kind,content);
+ const result={...snapshot,entities:[...snapshot.entities],documents:{...snapshot.documents},routes:snapshot.routes.map(route=>({...route}))},path=pathForContent(entity.kind,content);
  if(path&&result.routes.some(route=>route.path===path&&route.entityId!==entity.id))throw new ApplicationError(409,"path_in_use","Another page owns this address");
  const initialMetadata=result.entities.find(item=>item.id===entity.id)?.initialMetadata;
  result.entities=result.entities.filter(item=>item.id!==entity.id);
@@ -105,7 +106,8 @@ export function createCmsVisualRenderHandler(options:CmsVisualRenderOptions){
    if(!entity)return json({error:{code:"not_found"}},404);
    if(entity.rowVersion!==input.expectedRowVersion)return json({error:{code:"version_conflict",message:"This content changed in another session. Reload before continuing.",currentRowVersion:entity.rowVersion}},409);
    const content=validateCmsContent(entity.kind,input.content);
-   const snapshot=overlay(await options.repository.getPublishedSnapshot(),entity,content),path=canvasPath(entity,content,snapshot,input.path);
+   const published=await options.repository.getPublishedSnapshot(),path=canvasPath(entity,content,published,input.path);
+   const snapshot=overlay(cmsPreviewSnapshot(published,entity.id,path),entity,content);
    const selectedContent=createCmsFrontendSnapshot(snapshot,await options.assets(),input.mode==="edit",true);
    const originals=options.previewSourcePages?await options.previewSourcePages(path,content):options.sourcePages?await options.sourcePages():[];
    const projectedContent=originals.length?preserveSourceMetadata(selectedContent,originals):selectedContent;

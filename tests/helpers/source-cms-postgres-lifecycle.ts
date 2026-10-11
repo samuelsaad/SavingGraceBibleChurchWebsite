@@ -30,7 +30,7 @@ export async function sourceCmsPostgresLifecycle(client:PoolClient){
  await importSourcePublicBundle(client,{format:'sgbc-source-public-v1',capturedAt:'2026-01-01T00:00:00Z',inventorySha256:'b'.repeat(64),pages:[source],expectedVersions:{[source.path]:null}},'a'.repeat(40));
  const seed=sourceCmsAdoption([source],[],[]).seeds[0]!;await repo.seed([seed],'anonymous-source-migration');
  let entity=(await repo.list()).find(e=>e.key===seed.key)!;const initial=entity.draftRevisionId,actor={subject:'anonymous-source-fixture',role:'admin' as const,correlationId:'anonymous-source-http'};
- const server=createServer(async(req,res)=>{try{const snapshot=await repo.getPublishedSnapshot(),repository=await CompositeSourceSermonRepository.create([source],[],async()=>null,false,undefined,snapshot.entities),handler=createSeoHttpAdapter({policy:{environment:'production',canonicalOrigin:origin},sermons:repository});const response=await handler(new Request(origin+(req.url??'/')));res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));}catch{res.writeHead(500);res.end('anonymous_fixture_failure');}});
+ const server=createServer(async(req,res)=>{try{const snapshot=await repo.getPublishedSnapshot(),repository=await CompositeSourceSermonRepository.create([source],[],async path=>snapshot.routes.some(route=>route.path===path&&route.status===410)?{kind:'gone'}:null,false,undefined,snapshot.entities,snapshot.routes),handler=createSeoHttpAdapter({policy:{environment:'production',canonicalOrigin:origin},sermons:repository});const response=await handler(new Request(origin+(req.url??'/')));res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));}catch{res.writeHead(500);res.end('anonymous_fixture_failure');}});
  server.listen(0,'127.0.0.1');await once(server,'listening');const address=server.address();if(!address||typeof address==='string')throw Error('anonymous_listener');const base='http://127.0.0.1:'+address.port;
  const read=async(path=source.path)=>{const response=await fetch(base+path,{redirect:'manual'});return {response,body:await response.text()};};
  try{
@@ -39,6 +39,10 @@ export async function sourceCmsPostgresLifecycle(client:PoolClient){
   expect((await read()).body).not.toContain('Anonymous changed draft SEO');entity=await repo.publish(entity.id,{expectedRowVersion:entity.rowVersion,revisionId:entity.draftRevisionId},actor);expect((await read()).body).toContain('Anonymous changed draft SEO');expect((await read()).body).toContain('Anonymous changed published body');
   entity=await repo.restore(entity.id,{expectedRowVersion:entity.rowVersion,revisionId:initial},actor);expect((await read()).body).toContain('Anonymous changed published body');entity=await repo.publish(entity.id,{expectedRowVersion:entity.rowVersion,revisionId:entity.draftRevisionId},actor);expect((await read()).body).toContain('Anonymous source original body');
   expect(sourceReferenceReads).toBe(2);
+  entity=await repo.unpublish(entity.id,{expectedRowVersion:entity.rowVersion,disposition:'gone'},actor);
+  expect((await read()).response.status).toBe(410);expect((await read('/sitemap.xml')).body).not.toContain(source.path);expect((await read('/sermons/')).body).not.toContain(source.path);
+  entity=await repo.publish(entity.id,{expectedRowVersion:entity.rowVersion,revisionId:entity.draftRevisionId},actor);
+  expect((await read()).body).toContain('Anonymous source original body');expect((await read('/sitemap.xml')).body).toContain(source.path);
   const serialized=JSON.stringify((await repo.list()).find(e=>e.id===entity.id));expect(serialized).not.toContain('approved');
  }finally{server.closeAllConnections();await new Promise<void>(done=>server.close(()=>done()));}
  // Alias repair is a separate owner-only maintenance command, not CMS writing.

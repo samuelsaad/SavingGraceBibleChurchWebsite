@@ -307,3 +307,46 @@ all four historical blobs match their retained original bytes. Nothing is remove
 from the denominator or its original findings. The unavailable account browser
 again failed before returning Search Console/Analytics data; it is not account
 ownership or measurement-continuity evidence.
+
+## Remaining ordinary preview allocation and source withdrawal
+
+The deployed `c6dc11d` sermon test saved, reloaded, published and restored both a
+temporary original-content paragraph and SEO title through the visual editor;
+actual visitor HTTP responses verified isolation and restoration. Subsequent
+ordinary-page previews still exhausted the unchanged Node heap twice. Their
+whole-site CMS section trees were cloned repeatedly even though only one page
+was rendered. Preview snapshots now keep every discovery/SEO/relationship value
+and global settings, while retaining complete section trees only for the selected
+entity and actual rendered dependency. The repository snapshot is never mutated.
+The retained 2,174-entity staging ordinary-page projection issued a real frame
+under the same 384 MiB old-space limit (251/265 MiB before/after) with the visitor
+cache loaded. Eighteen focused tests passed; actual staging retest remains required.
+
+Source-only sermon CMS withdrawal is also enforced in the public composite
+repository, not just the detail route: archive/filter counts, related content,
+shortlinks and sitemap entries exclude that identity. A genuine published rename
+continues to show its current page. Original source bytes and native review/state
+are unchanged. Real PostgreSQL HTTP unpublish/restore tests cover the distinction.
+Visual controls reuse the existing human-facing search/sharing and indexing labels.
+
+One heavily concurrent full PostgreSQL run had three five-second timeouts in
+unchanged private-pilot/delegated-review tests and a temporary-directory cleanup
+failure; the prior 1,414-test run passed. These failures are retained, not counted
+as passes. Rerun with reduced obsolete verification load before release. The safe
+export also stopped rereading its 285 MB certified cache under memory pressure;
+streaming SHA-256 now checks the identical bytes with bounded memory and retains
+the failed attempt. Comparison rules and every source finding remain unchanged.
+
+The corrected complete regression rerun passed 1,415/1,415 with zero skips,
+standard tests passed 1,270 with 145 gated skips covered by that run, type checking
+passed 747 files with zero errors/warnings, and the 45-page/runtime builds passed.
+Both outgoing privacy scans and all 109 offline SEO checks passed. These results
+supersede, rather than erase, the concurrent timeout run.
+
+The failed ordinary-page attempt had saved a temporary draft before its reload
+timed out. Its exact original pre-test draft was restored through the audited API
+after verifying the selected historical revision had no test marker. The public
+pointer/content stayed unchanged. Future rehearsals select matching draft/public
+revisions so they cannot accidentally publish pre-existing private drafts.
+The source-sermon body/SEO cycles remained fully restored; native 398/144 and
+source 5,973 versions/4,081 routes/five receipts are unchanged.

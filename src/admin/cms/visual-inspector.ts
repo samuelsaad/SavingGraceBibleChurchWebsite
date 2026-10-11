@@ -1,4 +1,4 @@
-import {escape,markupHtml,richTextValue,titleCase,moduleNames,newArrayItem,optionalFieldsFor,shouldShowField,type CmsObject,type CmsValue} from './fields';
+import {escape,markupHtml,richTextValue,titleCase,labels,moduleNames,newArrayItem,optionalFieldsFor,shouldShowField,type CmsObject,type CmsValue} from './fields';
 import {readPath,writePath,moveItem,type ContentPath} from './visual-state';
 export interface VisualAsset {id:string;url:string;name?:string;originalFilename?:string;mimeType?:string;type?:string;alt?:string}
 export interface InspectorOptions {
@@ -9,7 +9,7 @@ export interface InspectorOptions {
 const hidden=new Set(['id','kind','status','source','sourceIds','legacyPaths','legacyPath','notes','template','modules','asideModules','presentation']);
 const rich=new Set(['text','lede','paragraph','intro','quote','caption']);
 const images=new Set(['image','media','logoAsset','footerLogoAsset','faviconAsset','touchIconAsset']);
-const label=(key:string)=>({mediaAlt:'Image description / alternative text',mediaFocalPoint:'Image positioning',background:'Section background',spacing:'Vertical spacing',alignment:'Text alignment',width:'Content width'}[key]??titleCase(key));
+const label=(key:string)=>({mediaAlt:'Image description / alternative text',mediaFocalPoint:'Image positioning',background:'Section background',spacing:'Vertical spacing',alignment:'Text alignment',width:'Content width'}[key]??labels[key]??titleCase(key));
 const pkey=(path:ContentPath)=>path.join('.');
 const isObject=(value:CmsValue|undefined):value is CmsObject=>Boolean(value)&&typeof value==='object'&&!Array.isArray(value);
 export function mountInspector(options:InspectorOptions):void {

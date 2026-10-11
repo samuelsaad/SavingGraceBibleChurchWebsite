@@ -100,8 +100,14 @@ The isolated application passed eight HTTP smoke checks with outbound integratio
 disabled, and its created database was removed after OID validation. Ownership/ACL
 recreation was not tested. This is PostgreSQL/assets/application recovery;
 WordPress recovery remains untested because no database/uploads/config backup was
-available. A staging dump listing and application rollback remain distinct from
-restoration of that specific staging backup. Retain those separate missing gates.
+available. The specific staging backup before `b6b3d79` was subsequently restored
+in the authorized disposable local target: 65 complete table hashes and
+schema/constraints/indexes/triggers/sequences matched, 1,496 files restored,
+1,224 resource routes and eight isolated HTTP checks passed, and the exact created
+database was removed after OID validation. Its archive SHA-256 is
+`2ddb50ed9e7ed51f4158c78c20aa59bd106ba952c7a1a467fe38c22102517939`.
+No global roles were changed; production ownership/ACL recreation remains
+unproven. This specific staging restoration does not prove WordPress recovery.
 
 The final content release adds 55 verified source feed routes without updating an
 existing projection. Its exact replay changes nothing. A final production delta
