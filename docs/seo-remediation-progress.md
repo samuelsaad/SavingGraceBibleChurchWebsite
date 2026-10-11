@@ -226,3 +226,32 @@ record Retry-After while another worker waits. Shared request spacing, retry
 limits, robots and the nonexpanding queue are retained. The currently running
 capture uses its original loaded version; the fix is not claimed as executed
 source inspection. Synthetic tests verify exact request-start/backoff deadlines.
+
+## Protected CMS publication boundary correction
+
+Release `2bf907e` completed normal protected staging deployment and compatible
+rollback/reactivation. Its bounded preview loaded and the actual dashboard saved
+and reloaded a private draft without changing the public response. Publication
+then failed because source-sermon identity validation queried source tables through
+the CMS writer, which intentionally has no SELECT privileges on those tables.
+The temporary draft was restored through the existing audited operation; the
+original published pointer/content stayed unchanged. This failed attempt is retained.
+
+Source identity validation now uses the existing read-only pool. CMS mutations,
+optimistic concurrency and audit remain in the writer transaction; no privilege,
+schema, approval or public-eligibility gate is expanded. Public rendering still
+checks current withdrawals and URL dispositions independently. A real PostgreSQL
+fixture refuses source SELECT through the writer and verifies save, publish,
+restore and actual HTTP responses through the reader dependency. The corrected
+full regression passed 1,413/1,413 with zero skips; standard tests passed 1,268
+with 145 gated skips covered by that run. Type checking passed 735 files with
+zero errors/warnings, the 45-page build passed, and 108 offline SEO tests passed.
+Actual protected three-template publication/restore verification remains pending.
+
+The original D-181 reports are preserved byte-for-byte in `docs/seo-history/`.
+`scripts/seo-original-cohort-accounting.py` retains all 15,252 original URL hashes
+and uses their original unreviewed issue sets for the reported 2,709 metadata and
+2,767 block cohorts. Categories overlap. New observations are counted separately;
+raw original findings are retained. The separate original-target rechecker tests
+all 975 original non-200 targets even if later discovery no longer links to them.
+Neither an absent target nor a successful response alone proves preservation.

@@ -19,7 +19,7 @@ async function main(){
  if(process.env.NODE_ENV==="production"||process.env.CMS_HOST&&process.env.CMS_HOST!=="127.0.0.1")throw Error("cms_local_host_refused");
  const origin="http://127.0.0.1:"+port,writer=await createCmsLocalPool(),reader=await createCmsLocalPool(true);
  const ready=async()=>{await verifyCmsLocalIdentity(writer);const c=await writer.connect();try{await verifyCmsSchema(c);}finally{c.release();}};
- await ready();const repository=new PostgresCmsRepository(writer),assetStore=new PostgresCmsAssetStore(writer);
+ await ready();const repository=new PostgresCmsRepository(writer,reader),assetStore=new PostgresCmsAssetStore(writer);
  const assets=await CmsDiskAssets.create(process.env.CMS_STORAGE_DIRECTORY??"",assetStore);
  const development=process.env.ENABLE_LOCAL_TEST_IDENTITIES==="1";
  const session=new CmsSessionProvider({origin,secret:development?randomBytes(32).toString("hex"):await readCmsSecret(process.env.CMS_SESSION_SECRET_FILE??""),environment:"local",allowLocalDevelopmentEntry:development});
