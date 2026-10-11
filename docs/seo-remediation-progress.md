@@ -149,3 +149,14 @@ correction does not change the application image, imported source or CMS content
 The application release remains `da7d856231341e5e0f7e0ec628ce0c2c75d66cb2`.
 The committed operator correction is executed separately from the retained
 original operator; no immutable release/recovery file is replaced.
+
+The next wrapper attempt also stopped before adoption: the original operator
+used exclusive creation for the same maintenance configuration twice. A prior
+failed plan had already created that file, and a first successful plan would
+also have failed at its second exclusive save. The corrected operator keeps
+plan-probe and adoption configurations separate, reuses an existing configuration
+only when it is exactly equal, and refuses any drift. The original failed-run
+file stays intact. An anonymous regression proves exact retry and drift refusal.
+The direct-invocation diagnostic proposal was rejected by automatic approval;
+it was not executed. Deployment continues only through the standard, hash-checked
+operator entry point after this implementation correction is committed.

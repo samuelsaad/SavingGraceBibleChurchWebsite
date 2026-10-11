@@ -126,6 +126,23 @@ class SeoDeploymentTest(unittest.TestCase):
                 operation(base_mock, upgrade, Mock(), pathlib.Path("/fixture"), {"commit": COMMIT, "image": IMAGE}, "candidate")
         upgrade.compose_up.assert_not_called(); base_mock.run.assert_not_called()
 
+    def test_cms_configuration_retry_reuses_exact_bytes_and_refuses_drift(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = pathlib.Path(folder) / "configuration.json"
+            value = {"services": {"app": {"environment": {"SOURCE_CMS_ADOPTION": "1"}}}}
+            writes = []
+            def save(target, content):
+                with target.open("x") as stream: json.dump(content, stream)
+                writes.append(target)
+            fixture = SimpleNamespace(load=lambda target: json.loads(target.read_text()), save=save)
+            OP.save_verified_configuration(fixture, path, value)
+            before = path.read_bytes()
+            OP.save_verified_configuration(fixture, path, value)
+            self.assertEqual(writes, [path]); self.assertEqual(path.read_bytes(), before)
+            with self.assertRaisesRegex(RuntimeError, "seo_cms_configuration_drift"):
+                OP.save_verified_configuration(fixture, path, {"changed": True})
+            self.assertEqual(path.read_bytes(), before)
+
     def test_cms_adoption_refuses_without_the_compatible_bridge_before_any_write(self):
         base_mock = Mock()
         with patch.object(OP, "active_phases", return_value={"public": "previous", "protected": "bridge"}), self.assertRaisesRegex(RuntimeError, "seo_bridge_required"):
