@@ -126,6 +126,21 @@ class SeoDeploymentTest(unittest.TestCase):
                 operation(base_mock, upgrade, Mock(), pathlib.Path("/fixture"), {"commit": COMMIT, "image": IMAGE}, "candidate")
         upgrade.compose_up.assert_not_called(); base_mock.run.assert_not_called()
 
+    def test_cms_adoption_refuses_without_the_compatible_bridge_before_any_write(self):
+        base_mock = Mock()
+        with patch.object(OP, "active_phases", return_value={"public": "previous", "protected": "bridge"}), self.assertRaisesRegex(RuntimeError, "seo_bridge_required"):
+            OP.adopt_cms(base_mock, Mock(), Mock(), pathlib.Path("/fixture"), {"commit": COMMIT, "image": IMAGE})
+        base_mock.run.assert_not_called(); base_mock.save.assert_not_called()
+
+    def test_cms_adoption_blocks_incompatible_old_image_recovery(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = pathlib.Path(folder); (root / "source-cms-adoption.receipt.json").write_text("{}")
+            base_mock = Mock(); upgrade = Mock(); recovery = {"commit": COMMIT, "image": IMAGE}
+            base_mock.load.return_value = {"commit": COMMIT, "image": IMAGE}
+            with patch.object(OP, "active_phases", return_value={"public": "previous", "protected": "bridge"}), patch.object(OP, "state_hash", return_value=("cms", "source", {})), self.assertRaisesRegex(RuntimeError, "seo_incompatible_cms_image_refused"):
+                OP.switch(base_mock, upgrade, Mock(), root, recovery, "bridge")
+            upgrade.compose_up.assert_not_called()
+
     def test_full_database_backup_is_exact_target_private_verified_and_bound(self):
         with tempfile.TemporaryDirectory() as folder:
             root = pathlib.Path(folder); base_mock = Mock(); base_mock.DB = "anonymous-staging-db"

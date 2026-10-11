@@ -140,14 +140,15 @@ describe("live CMS route adaptation",()=>{
   for(const oldPath of ["/about","/about/"]){const response=await handler(new Request(`http://127.0.0.1${oldPath}?from=old-link`));expect(response!.status).toBe(301);expect(response!.headers.get("location")).toBe("/renamed-about/?from=old-link");}
   const html=await (await handler(new Request("http://127.0.0.1/renamed-about/")))!.text();expect(html).toMatch(/href="\/renamed-about\/"[^>]*>About Us/);
  });
- it("resolves static venue aliases directly to renamed or retired event dispositions",async()=>{
+ it("keeps event aliases direct without redirecting a distinct venue to that event",async()=>{
   const source=snapshot(),event=content<CmsEventPayload>(source,"event:sgbc-picnic-rye"),old=event.path;event.path="/events/renamed-picnic/";
   source.routes=source.routes.map(route=>route.path===old?{...route,status:301,targetPath:event.path}:route);
   source.routes.push({path:event.path,entityId:"event:sgbc-picnic-rye",status:200,targetPath:null});
   const handler=createChurchSiteHandler(repository(),publicRenderContext,{content:async()=>createCmsFrontendSnapshot(source)});
-  for(const path of ["/venue/rye-civic-hall/","/venue/rye-civic-hall",old,old.slice(0,-1)]){const response=await handler(new Request(`http://127.0.0.1${path}`));expect(response!.status).toBe(301);expect(response!.headers.get("location")).toBe(event.path);}
+  for(const path of [old,old.slice(0,-1)]){const response=await handler(new Request(`http://127.0.0.1${path}`));expect(response!.status).toBe(301);expect(response!.headers.get("location")).toBe(event.path);}
+  for(const path of ["/venue/rye-civic-hall/","/venue/rye-civic-hall"]){const response=await handler(new Request(`http://127.0.0.1${path}`));expect(response?.status??404).toBe(404);}
   source.entities=source.entities.filter(entity=>entity.key!=="event:sgbc-picnic-rye");source.routes=source.routes.map(route=>route.entityId==="event:sgbc-picnic-rye"?{...route,status:410,targetPath:null}:route);
-  for(const path of ["/venue/rye-civic-hall/","/venue/rye-civic-hall",old,old.slice(0,-1)])expect((await handler(new Request(`http://127.0.0.1${path}`)))!.status).toBe(410);
+  for(const path of [old,old.slice(0,-1)])expect((await handler(new Request(`http://127.0.0.1${path}`)))!.status).toBe(410);
  });
  it("serves independently published event and blog details when their index pages are unpublished",async()=>{
   const source=snapshot();source.entities=source.entities.filter(entity=>!["page:events","page:blogs"].includes(entity.key));source.routes=source.routes.map(route=>["page:events","page:blogs"].includes(route.entityId)?{...route,status:410,targetPath:null}:route);

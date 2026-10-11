@@ -78,8 +78,6 @@ const extraDispositions: ReadonlyMap<string, LegacyDisposition> = new Map<string
   ["/testimonials/robert-h-schuller/", { kind: "gone", reason: "Theme sample testimonial (WordPress 4586); no church content." }],
   ["/testimonials/thomas-paine/", { kind: "gone", reason: "Theme sample testimonial (WordPress 4587); no church content." }],
   ["/testimonials/rodney-stratton/", { kind: "gone", reason: "Theme sample testimonial (WordPress 25241); no church content." }],
-  ["/venue/rye-civic-hall/", { kind: "redirect", location: "/events/sgbc-picnic-rye/", reason: "Events Calendar venue page for the picnic's venue." }],
-  ["/venue/state-library/", { kind: "redirect", location: "/events/street-evangelism-outreach/", reason: "Events Calendar venue page for the outreach event's venue." }]
 ]);
 
 /** Follow immutable CMS route dispositions so legacy aliases remain a single direct redirect. */

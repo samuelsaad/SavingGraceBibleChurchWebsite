@@ -14,7 +14,7 @@ describe('version-bound source runtime',()=>{
  it('derives shortlinks only from unique active source identities and preserves current CMS disposition',()=>{
   const pages=[page({}),page({sourceId:2,path:'/other/'}),page({sourceId:2,path:'/ambiguous/'}),page({sourceId:3,path:'/withdrawn/'}),page({sourceId:4,kind:'asset',path:'/asset.pdf'}),page({sourceId:5,issues:['unresolved']}),page({sourceId:6,path:'/moved/'}),page({sourceId:7,path:'/venue/rye-civic-hall/'})];
   const policy=sourceRoutePolicy(pages,[{path:'/withdrawn/',entityId:'3',status:410,targetPath:null},{path:'/moved/',entityId:'6',status:301,targetPath:'/current/'},{path:'/current/',entityId:'6',status:200,targetPath:null}]);
-  expect(policy.sourceShortlinks).toEqual({'1':'/example/','6':'/current/','7':'/events/sgbc-picnic-rye/'});
+  expect(policy.sourceShortlinks).toEqual({'1':'/example/','6':'/current/','7':'/venue/rye-civic-hall/'});
  });
  it('allows only observed indexable canonical single taxonomy query routes',()=>{
   const paths=['/sermons/?sermon_series=example','/sermons/page/12/?sermon_book=example','/sermons/?s=example','/sermons/?sermon_series=example&utm_campaign=x','/sermons/page/1/?sermon_book=example'];

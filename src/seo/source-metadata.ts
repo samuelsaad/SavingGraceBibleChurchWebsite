@@ -2,6 +2,8 @@ import type {FrontendSiteSnapshot} from '../frontend/content/site-snapshot';
 import type {ContentSeo} from '../frontend/seo';
 import type {SourcePublicPage} from './source-public-model';
 import {sha256} from './source-public-model';
+import {legacyDisposition} from '../frontend/content/registry';
+import {publicRenderContext} from '../frontend/routes';
 /** Captured public metadata supplies defaults; explicit versioned CMS overrides win. */
 const sourcePhotoId=(page:SourcePublicPage)=>'source-photo-'+sha256(page.path);
 export function sourceSocialAssets(pages:readonly SourcePublicPage[],registered:FrontendSiteSnapshot['assets']={}){return Object.fromEntries(pages.flatMap(page=>{if(!page.asset?.contentType.startsWith('image/')||page.issues.length)return [];const known=Object.values(registered).find(image=>image.path.endsWith('/'+page.asset!.storageKey)&&image.type===page.asset!.contentType);return known&&known.width>0&&known.height>0?[[sourcePhotoId(page),{...known,id:sourcePhotoId(page),path:page.path}]]:[];}));}
@@ -24,7 +26,7 @@ export function preserveSourceMetadata(snapshot:FrontendSiteSnapshot,pages:reado
   let path=page.path;
   const owner=[...result.pages,...result.posts,...result.events].find(item=>(item as {legacyPaths?:readonly string[]}).legacyPaths?.includes(page.path));if(owner&&!result.routes.some(route=>route.path===page.path))path=owner.path;
   const seen=new Set<string>();
-  while(!seen.has(path)){seen.add(path);const route=result.routes.find(r=>r.path===path);if(route?.status===410){path='';break;}if(route?.status!==301)break;if(!route.targetPath){path='';break;}path=route.targetPath;}
+  while(!seen.has(path)){seen.add(path);const route=result.routes.find(r=>r.path===path);if(route?.status===410){path='';break;}if(route?.status===301){if(!route.targetPath){path='';break;}path=route.targetPath;continue;}if(route?.status===200)break;const legacy=legacyDisposition(path,{...publicRenderContext,siteContent:result});if(!legacy)break;if(legacy.kind!=='redirect'){path='';break;}path=legacy.location;}
   if(path)(sourceContentByPath[path]??=[]).push(page);
  }
  result.sourceContentByPath=sourceContentByPath;

@@ -64,7 +64,7 @@ describe("explicit production SEO adapter",()=>{
       }
     }
     const regular=await route(new Request(origin+'/venue/saving-grace-bible-church/?utm_campaign=church'));
-    expect(regular.status).toBe(301);expect(regular.headers.get('Location')).toBe('/contact/?utm_campaign=church');
+    expect(regular.status).toBe(404);expect(regular.headers.get('Location')).toBeNull();
   });
   it("retains calendar/export duplicate HTML with noindex while keeping base pages and genuine calendar files distinct",async()=>{
     const route=createSeoHttpAdapter({policy:{environment:'production',canonicalOrigin:origin},sermons:repository(),

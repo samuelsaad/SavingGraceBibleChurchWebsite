@@ -11,6 +11,8 @@ import {readCmsSecret} from "./runtime-secrets";
 import {verifyCmsSchema} from "./migration";
 import {createCmsRuntimeHandler} from "./runtime";
 import {listenLocalCmsServer} from "./node-server";
+import {readSourcePublicPages} from '../seo/source-public-store';
+import {createSourcePublicAssetHandler} from '../seo/source-public-assets';
 async function main(){
  const port=Number(process.env.CMS_PORT??4430);if(!Number.isInteger(port)||port<1024||port>65535)throw Error("cms_local_port_refused");
  if(process.env.NODE_ENV==="production"||process.env.CMS_HOST&&process.env.CMS_HOST!=="127.0.0.1")throw Error("cms_local_host_refused");
@@ -21,7 +23,8 @@ async function main(){
  const development=process.env.ENABLE_LOCAL_TEST_IDENTITIES==="1";
  const session=new CmsSessionProvider({origin,secret:development?randomBytes(32).toString("hex"):await readCmsSecret(process.env.CMS_SESSION_SECRET_FILE??""),environment:"local",allowLocalDevelopmentEntry:development});
  const existingAdminHandler=createApplicationApiRouter(new PostgresSermonRepository(reader),new PostgresAdminSermonRepository(writer),session);
- const handler=createCmsRuntimeHandler({repository,assetStore,assets,session,sermons:new PostgresSermonRepository(reader,"d175_local_completed"),dashboardDirectory:resolve(process.env.CMS_DASHBOARD_DIRECTORY??"dist-staging/admin"),environment:"local",release:process.env.RELEASE_COMMIT??"local-working-tree",ready,existingAdminHandler});
- listenLocalCmsServer({origin,port,handler,shutdown:async()=>{await Promise.all([writer.end(),reader.end()]);}});
+ const handler=createCmsRuntimeHandler({repository,assetStore,assets,session,sermons:new PostgresSermonRepository(reader,"d175_local_completed"),sourcePages:()=>readSourcePublicPages(reader),dashboardDirectory:resolve(process.env.CMS_DASHBOARD_DIRECTORY??"dist-staging/admin"),environment:"local",release:process.env.RELEASE_COMMIT??"local-working-tree",ready,existingAdminHandler});
+ const sourceAssets=createSourcePublicAssetHandler(await readSourcePublicPages(reader),assets.directory);
+ listenLocalCmsServer({origin,port,handler:async request=>{const response=await sourceAssets(request);if(response){response.headers.set('X-Robots-Tag','noindex, nofollow');return response;}return handler(request);},shutdown:async()=>{await Promise.all([writer.end(),reader.end()]);}});
 }
 void main().catch(()=>{process.stderr.write("cms_local_startup_refused\n");process.exitCode=1;});

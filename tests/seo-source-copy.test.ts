@@ -8,9 +8,20 @@ import {extractSourceStructuredData} from '../src/seo/source-structured-data';
 import {createSourcePublicPageHandler} from '../src/seo/source-public-handler';
 import {pageStructuredData} from '../src/frontend/structured-data';
 import type {SourcePublicPage} from '../src/seo/source-public-model';
+import {renderSourceContent} from '../src/frontend/source-content';
+import {sourceNodeSchema} from '../src/domain/source-content';
+import {simplifySourceNodes} from '../src/seo/source-cms-adoption';
 const source:SourcePublicPage={path:'/original/',kind:'page',sourceUrl:'https://www.savinggrace.org.au/original/',sourceId:1,capturedAt:'2026-01-01T00:00:00Z',responseSha256:'a'.repeat(64),title:'Original title',heading:'Original heading',description:'Original description',language:'en-AU',indexable:true,canonicalSource:null,publishedAt:'2020-01-01T00:00:00Z',modifiedAt:'2021-01-01T00:00:00Z',content:[{tag:'p',children:[{tag:'text',text:'Existing paragraph.'}]},{tag:'p',children:[{tag:'text',text:'Missing paragraph with '},{tag:'a',href:'/legacy/',children:[{tag:'text',text:'a resource'}]}]}],links:[],mediaReferences:[],passageTerms:[],sermon:null,issues:[]};
 const snapshot={pages:[],posts:[],events:[],venues:{},home:null,settings:defaultSiteSettings,assets:{},routes:[{path:'/original/',entityId:'page',status:301 as const,targetPath:'/replacement/'},{path:'/replacement/',entityId:'page',status:200 as const,targetPath:null},{path:'/legacy/',entityId:'resource',status:301 as const,targetPath:'/resource/'},{path:'/resource/',entityId:'resource',status:200 as const,targetPath:null}]};
 describe('verified original copy preservation',()=>{
+ it('retains fragment targets, language direction and table cell spans through rendering and adoption',()=>{
+  const nodes=[sourceNodeSchema.parse({tag:'div',id:'source-section',lang:'ar',dir:'rtl',children:[{tag:'a',href:'/original/#source-section',text:'Source link'},{tag:'table',children:[{tag:'tr',children:[{tag:'td',colspan:2,rowspan:3,title:'Source "caption"',text:'Cell'}]}]}]})];
+  const rendered=renderSourceContent(simplifySourceNodes(nodes)).toString();expect(rendered).toContain('id="source-section" lang="ar" dir="rtl"');expect(rendered).toContain('href="/original/#source-section"');expect(rendered).toContain('colspan="2" rowspan="3"');expect(rendered).toContain('title="Source &quot;caption&quot;"');
+  expect(sourceNodeSchema.safeParse({tag:'p',onclick:'alert(1)'}).success).toBe(false);expect(sourceNodeSchema.safeParse({tag:'td',colspan:-1}).success).toBe(false);
+ });
+ it('retains an original anchor even when its visible wording is already present',()=>{
+  const content=preserveSourceMetadata(snapshot,[{...source,content:[{tag:'span',id:'original-anchor'}]}]);const output=retainedSourceCopy(html`<p>Existing paragraph.</p>`,'/replacement/',false,{mode:'public',basePath:'',siteContent:content}).toString();expect(output).toContain('id="original-anchor"');
+ });
  it('preserves a real original heading while allowing subsequent CMS heading and title edits',()=>{
   const original={...source,path:'/replacement/',sourceUrl:'https://www.savinggrace.org.au/replacement/',hasOriginalHeading:true};
   const content=preserveSourceMetadata({...snapshot,initialMetadataByPath:{'/replacement/':{title:'Seed title',heading:'Seed heading',seeded:true}}},[original]);
@@ -48,6 +59,12 @@ describe('verified original copy preservation',()=>{
  it('never resurrects explicit gone content or exposes source text in an unrelated route',()=>{
   const content=preserveSourceMetadata({...snapshot,routes:[{path:'/original/',entityId:'page',status:410 as const,targetPath:null}]},[source]);
   expect(content.sourceContentByPath).toEqual({});expect(retainedSourceCopy(html`<p>Other</p>`,'/unrelated/',false,{mode:'public',basePath:'',siteContent:content}).toString()).toBe('<p>Other</p>');
+ });
+ it('deduplicates identical retained source blocks without inventing a venue redirect',()=>{
+  const venue={...source,path:'/venue/anonymous-venue/',sourceUrl:'https://www.savinggrace.org.au/venue/anonymous-venue/'};
+  const content=preserveSourceMetadata({...snapshot,routes:[]},[venue,structuredClone(venue)]);
+  expect(content.sourceContentByPath?.[venue.path]).toHaveLength(2);
+  const output=retainedSourceCopy(html`<p>Existing paragraph.</p>`,venue.path,false,{mode:'public',basePath:'',siteContent:content}).toString();expect(output.match(/Missing paragraph/g)).toHaveLength(1);
  });
  it('keeps original dates and absent metadata instead of assigning import time',()=>{
   const content=preserveSourceMetadata(snapshot,[{...source,description:null}]);const output=pageShell({title:'Edited title',canonicalPath:'/replacement/',robots:'index, follow',body:html`<h1>Edited title</h1>`},{mode:'public',basePath:'',siteContent:content});

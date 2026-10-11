@@ -28,6 +28,18 @@ class FixedFrontierTests(unittest.TestCase):
   with patch.object(F.time,'monotonic',side_effect=lambda:clock[0]),patch.object(F.time,'sleep',side_effect=sleep):
    limiter.acquire();limiter.acquire();limiter.acquire()
   self.assertEqual(sleeps,[0,1,1]);self.assertEqual(limiter.last,102.)
+ def test_worker_reset_releases_old_response_discovery_without_loading_global_ledger(self):
+  with tempfile.TemporaryDirectory() as root:
+   p=Path(root)/'private';p.mkdir();(p/'ledger.private.json').write_text('invalid global ledger is not a worker input')
+   job=F.FixedCapture(p,F.RateLimiter());job.state['discovered'][O+'old/']={'sources':[]};job.reset()
+   self.assertEqual(job.state['discovered'],{});self.assertEqual(job.source_expansion,{})
+ def test_server_backoff_applies_to_every_worker_request_start(self):
+  clock=[100.];sleeps=[]
+  def sleep(duration):sleeps.append(duration);clock[0]+=duration
+  limiter=F.RateLimiter(1)
+  with patch.object(F.time,'monotonic',side_effect=lambda:clock[0]),patch.object(F.time,'sleep',side_effect=sleep):
+   limiter.acquire();limiter.defer(120);limiter.acquire();limiter.acquire()
+  self.assertEqual(sleeps,[0,120,1])
  def test_parent_state_is_deep_copied_and_hash_bound(self):
   with tempfile.TemporaryDirectory() as root:
    parent=Path(root)/'private'/'original';parent.mkdir(parents=True);source_file=parent/'ledger.private.json';source={'pages':{O:{'recordPath':'pages/one.json'}},'deferred':{O+'next/':{'reason':'source_declared_feed_variant_unverified'}},'excluded':{},'discovered':{}};source_file.write_text(json.dumps(source),encoding='utf-8')

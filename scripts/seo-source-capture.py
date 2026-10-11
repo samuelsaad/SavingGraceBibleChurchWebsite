@@ -94,23 +94,30 @@ def sanitize(node,base):
     return '<'+tag+''.join(attrs)+'>'+('' if tag in VOID else content+'</'+tag+'>')
 
 TREE_TAGS = frozenset('p h2 h3 h4 h5 h6 ul ol li strong em b i a blockquote br hr figure figcaption img table thead tbody tr th td div span'.split())
-def content_tree(node,base,heading):
+def content_tree(node,base,heading,preformatted=False):
     if isinstance(node,str):
-        value=re.sub(r"\s+"," ",node)
+        value=node if preformatted else re.sub(r"\s+"," ",node)
         return [{'tag':'text','text':value}] if value else []
     tag=node['tag']; a=node['attrs']
     # This function is called only inside the selected primary content region.
     # Nested card headers, footers and navigation carry real titles/dates/links;
     # unwrap their containers rather than dropping all their descendants.
     if (tag in DROP and tag not in ('header','footer','nav')) or any(value in classes(node) for value in ('asp-related-sermons-holder','asp-sermon-navigation','post-siblings','tribe-related-events','tribe-events-related-events-title')): return []
-    if tag=='h1' and clean(text(node))==heading: return []
-    children=[item for child in node['children'] for item in content_tree(child,base,heading)]
+    attrs={}
+    if a.get('id') and len(a['id'])<=512 and not re.search(r'[\s\x00-\x1f\x7f]',a['id']):attrs['id']=a['id']
+    if re.fullmatch(r'[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*',a.get('lang','')):attrs['lang']=a['lang']
+    if a.get('dir') in ('ltr','rtl','auto'):attrs['dir']=a['dir']
+    if a.get('title') and len(a['title'])<=4000:attrs['title']=a['title']
+    if tag=='h1' and clean(text(node))==heading: return [{'tag':'span',**attrs}] if attrs else []
+    children=[item for child in node['children'] for item in content_tree(child,base,heading,preformatted or tag=='pre')]
     if tag=='h1': tag='h2'
-    if tag not in TREE_TAGS: return children
-    result={'tag':tag}
+    if tag not in TREE_TAGS:return [{'tag':'div',**attrs,'children':children}] if attrs else children
+    result={'tag':tag,**attrs}
     if tag=='a' and a.get('href'):
         target=address(a['href'],base)
-        if target: result['href']=target
+        if target:
+            fragment=urlsplit(urljoin(base,a['href'])).fragment
+            result['href']=target+('#'+fragment if fragment and not any(ord(c)<32 for c in fragment) else '')
         elif a['href'].startswith(('mailto:','tel:','#')) and not any(ord(c)<32 for c in a['href']): result['href']=a['href']
     if tag=='img':
         target=address(a.get('src','') or a.get('data-src',''),base)
@@ -118,6 +125,9 @@ def content_tree(node,base,heading):
         result['src']=target; result['alt']=a.get('alt','')
         for key in ('width','height'):
             if re.fullmatch(r'\d{1,5}',a.get(key,'')) and 0<int(a[key])<=20000: result[key]=int(a[key])
+    if tag in ('td','th'):
+        for key,limit in [('colspan',1000),('rowspan',65534)]:
+            if re.fullmatch(r'\d{1,5}',a.get(key,'')) and 0<int(a[key])<=limit:result[key]=int(a[key])
     if children: result['children']=children
     return [result]
 

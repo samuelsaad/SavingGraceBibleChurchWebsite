@@ -4,7 +4,7 @@ import {validateCmsContent} from '../cms/validation';
 import type {SourceNode} from '../domain/source-content';
 import {sha256,type SourcePublicPage} from './source-public-model';
 export function simplifySourceNodes(nodes:readonly SourceNode[]):SourceNode[]{
- return nodes.flatMap(node=>{const children=simplifySourceNodes(node.children??[]);return ['div','span'].includes(node.tag)?[...(node.text?[{tag:'text',text:node.text}]:[]),...children]:[{...node,...(node.children?{children}:{})}];});
+ return nodes.flatMap(node=>{const children=simplifySourceNodes(node.children??[]);return ['div','span'].includes(node.tag)&&!node.id&&!node.lang&&!node.dir&&!node.title?[...(node.text?[{tag:'text',text:node.text}]:[]),...children]:[{...node,...(node.children?{children}:{})}];});
 }
 function wallClock(value:string){const date=new Date(value);if(!Number.isFinite(date.getTime()))throw Error('source_cms_event_date');const parts=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(date).map(p=>[p.type,p.value]));return {date:`${parts.year}-${parts.month}-${parts.day}`,time:`${parts.hour}:${parts.minute}`};}
 export function sourceCmsAdoption(pages:readonly SourcePublicPage[],entities:readonly CmsEntity[],routes:readonly CmsRoute[]){

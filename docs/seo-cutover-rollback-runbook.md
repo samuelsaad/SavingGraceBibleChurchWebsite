@@ -4,6 +4,13 @@ D-181 prepares a CMS replacement at the existing domain. This is not authorizati
 
 ## Release and recovery gates
 
+D-182 adds source-content CMS revisions. After adoption, the D-181 image cannot
+render the new module/template contract. Rehearsal rollback must use the new
+compatible image with `SOURCE_PUBLIC_ENABLED=0`, retaining the source/CMS history
+and asset files. Do not roll back to an older application merely because schema
+order remains 28. The guarded operator freezes the actual source-backed CMS plan,
+preserves every incumbent CMS row and resource, and verifies idempotent adoption.
+
 Use the release commit, image digest, source ledger hash, source bundle hash, asset manifest hash, migration checksums and protected recovery receipt in `seo-migration-acceptance.md`. Never deploy an uncommitted directory. Verify remote Git commit and deployed health/image identity independently. Stage configuration stays loopback/SSH-only, non-indexable and read-only for visitors; protected admin remains protected.
 
 Before production authorization, obtain the missing fresh WordPress SELECT/USAGE-only source account, complete source/destination reconciliation, resolve every unexplained public-content loss, and provide account/indexing evidence or an explicit acceptance of its absence. Obtain a current WordPress database/export, complete uploaded assets and configuration backup through approved read-only access; test restoration in isolation. A retained older export is not a final backup. Retain WordPress and its assets until acceptance and recovery retention expire.

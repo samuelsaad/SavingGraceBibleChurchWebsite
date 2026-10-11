@@ -8,6 +8,7 @@ import {importSourcePublicBundle} from '../../src/seo/source-public-store';
 import {sourcePageSchema} from '../../src/seo/source-public-model';
 import {CompositeSourceSermonRepository} from '../../src/seo/composite-sermon-repository';
 import {createSeoHttpAdapter} from '../../src/seo/http-adapter';
+import {repairInheritedSourceAliases} from '../../src/seo/source-alias-repair';
 export async function sourceCmsPostgresLifecycle(client:PoolClient){
  // Real PostgreSQL savepoints keep this anonymous fixture inside its outer
  // disposable-run transaction. No fake query results or application database.
@@ -35,4 +36,14 @@ export async function sourceCmsPostgresLifecycle(client:PoolClient){
   entity=await repo.restore(entity.id,{expectedRowVersion:entity.rowVersion,revisionId:initial},actor);expect((await read()).body).toContain('Anonymous changed published body');entity=await repo.publish(entity.id,{expectedRowVersion:entity.rowVersion,revisionId:entity.draftRevisionId},actor);expect((await read()).body).toContain('Anonymous source original body');
   const serialized=JSON.stringify((await repo.list()).find(e=>e.id===entity.id));expect(serialized).not.toContain('approved');
  }finally{server.closeAllConnections();await new Promise<void>(done=>server.close(()=>done()));}
+ const venue=sourcePageSchema.parse({...source,path:'/venue/saving-grace-bible-church/',sourceUrl:origin+'/venue/saving-grace-bible-church/',kind:'archive',sourceId:919194,sermon:null,title:'Anonymous venue metadata',heading:'Anonymous venue'});
+ await importSourcePublicBundle(client,{format:'sgbc-source-public-v1',capturedAt:'2026-01-01T00:00:00Z',inventorySha256:'c'.repeat(64),pages:[venue],expectedVersions:{[venue.path]:null}},'a'.repeat(40));
+ await repo.seed([{key:'anonymous-inherited-alias',kind:'page',title:'Anonymous contact',publish:true,payload:{id:'anonymous-native-contact',path:'/contact/',title:'Anonymous contact',heading:'Anonymous contact',description:'',section:'about',status:'published',modules:[],legacyPaths:[venue.path]}}]);
+ let native=(await repo.list()).find(e=>e.key==='anonymous-inherited-alias')!;const nativeInitial=native.draftRevisionId;
+ native=await repo.save(native.id,{expectedRowVersion:native.rowVersion,content:{...native.draft.content,description:'Anonymous unpublished native change'}},actor);
+ const dry=await repairInheritedSourceAliases(pool,[venue],false);expect(dry[0]?.outcome).toBe('planned');
+ const fixed=await repairInheritedSourceAliases(pool,[venue],true);expect(fixed[0]?.outcome).toBe('repaired');
+ const retained=(await repo.get(native.id))!;expect(retained.draft.content.description).toBe('Anonymous unpublished native change');expect(retained.published!.content.description).toBe('');expect(retained.draft.content.legacyPaths).toEqual([]);expect((await repo.history(native.id)).some(r=>r.id===nativeInitial)).toBe(true);
+ const route=(await repo.getPublishedSnapshot()).routes.find(r=>r.path===venue.path)!;expect(route.status).toBe(200);expect(route.entityId).not.toBe(native.id);
+ const beforeReplay=await repo.history(route.entityId);expect((await repairInheritedSourceAliases(pool,[venue],true))[0]?.outcome).toBe('already_repaired');expect(await repo.history(route.entityId)).toEqual(beforeReplay);
 }

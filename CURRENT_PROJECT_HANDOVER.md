@@ -5,8 +5,12 @@
 The explicit follow-up authorizes the isolated restore and bounded GA4 scope in
 AGENTS.md. Local backup/assets/application restoration passed; WordPress recovery
 and measurement account evidence remain unavailable. Primary-region extraction
-and source-metadata defaults are corrected; a 620-route no-clobber delta and CMS
-adoption are prepared. They are not yet imported or deployed. The finite observed
+and source-metadata defaults are corrected. The local 620-route no-clobber delta
+was imported and replayed without changes. CMS adoption added 2,124 private drafts
+and 292 managed original assets; its replay inserted nothing. Browser/HTTP edit,
+save, reload, publish and restore checks passed for original sermon, ordinary-page
+and event templates, and temporary metadata was restored. Staging has not received
+these D-182 changes yet. The finite observed
 frontier is running. Preserve the original acceptance and its full denominator.
 See [the exact progress record](docs/seo-remediation-progress.md). The prior
 NOT READY verdict remains effective until final acceptance is rerun. Both staging

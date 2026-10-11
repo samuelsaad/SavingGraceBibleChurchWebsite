@@ -8,15 +8,17 @@ import {PostgresCmsRepository} from '../cms/postgres-repository';
 import {PostgresCmsAssetStore} from '../cms/assets';
 import {sourceCmsAdoption} from './source-cms-adoption';
 import {adoptSourceCmsAssets} from './source-cms-assets';
+import {repairInheritedSourceAliases} from './source-alias-repair';
 
 async function main(){
  if(process.env.ALLOW_STAGING_SOURCE_PUBLIC_SYNC!=='1'||process.env.SOURCE_PUBLIC_TARGET!=='existing-protected'||process.env.D171_COMPLETED_ENABLED!=='1'||process.env.D175_COMPLETED_ENABLED!=='1')throw Error('source_public_maintenance_gate');
- const operation=process.argv[2];if(!['apply','import','inventory','restore','cms-plan','adopt-cms'].includes(operation??'')||process.argv.length!==3)throw Error('source_public_maintenance_operation');
+ const operation=process.argv[2];if(!['apply','import','inventory','restore','cms-plan','adopt-cms','repair-aliases'].includes(operation??'')||process.argv.length!==3)throw Error('source_public_maintenance_operation');
  const config=stagingConfiguration(process.env,true),pool=new Pool({...config,password:stagingPassword(config.passwordFile),statement_timeout:120000});
  try{
-  if(operation==='cms-plan'||operation==='adopt-cms'){
+  if(operation==='cms-plan'||operation==='adopt-cms'||operation==='repair-aliases'){
    if(process.env.SOURCE_CMS_ADOPTION!=='1'||!process.env.CMS_STORAGE_DIRECTORY)throw Error('source_cms_staging_gate');
    const guard=await pool.connect();try{await guard.query('BEGIN READ ONLY');await verifyStagingIdentity(guard,true);await guard.query('ROLLBACK');}finally{guard.release();}
+   if(operation==='repair-aliases'){console.log(JSON.stringify({outcome:'source_aliases_repaired',results:await repairInheritedSourceAliases(pool,await readSourcePublicPages(pool),true)}));return;}
    const repository=new PostgresCmsRepository(pool),pages=await readSourcePublicPages(pool),snapshot=await repository.getPublishedSnapshot(),plan=sourceCmsAdoption(pages,await repository.list(),snapshot.routes),planSha256=sha256(stableJson(plan.seeds));
    if(operation==='cms-plan'){console.log(JSON.stringify({outcome:'source_cms_plan',planned:plan.seeds.length,planSha256,held:plan.held.length}));return;}
    if(plan.seeds.length&&planSha256!==process.env.SOURCE_CMS_PLAN_SHA256)throw Error('source_cms_staging_scope');

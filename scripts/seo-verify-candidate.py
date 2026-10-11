@@ -1,7 +1,7 @@
 """Compare frozen source evidence to loopback; no source/provider requests or media playback."""
 from __future__ import annotations
 import argparse
-from collections import Counter
+from collections import Counter, OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
 from datetime import datetime, timezone
@@ -114,10 +114,17 @@ class LoopbackClient:
         self.opener = opener or build_opener(ProxyHandler({}), parser.NoRedirect())
         self.expected_label, self.label = expected_label, None
         self.requests, self.cache = 0, {}
+        self.record_hashes, self.parsed_records = {}, OrderedDict()
         self.lock = Lock()
 
-    def fetch(self, logical):
-        if logical in self.cache: return json.loads(self.cache[logical].read_text(encoding='utf8'))
+    def fetch(self, logical, force=False):
+        if logical in self.cache and not force:
+            raw=self.cache[logical].read_bytes()
+            if digest(raw)!=self.record_hashes[logical]:raise ValueError('candidate_cached_record_changed')
+            with self.lock:
+                if logical in self.parsed_records:
+                    self.parsed_records.move_to_end(logical);return self.parsed_records[logical]
+            result=json.loads(raw);self.remember(logical,result);return result
         if not church_url(logical): raise ValueError('candidate_logical_origin_refused')
         if parser.MEDIA_EXT.search(logical):
             return {'url': logical, 'status': None, 'headers': {}, 'error': 'recording_not_requested', 'bodySha256': None}
@@ -158,10 +165,19 @@ class LoopbackClient:
             result = {'url': logical, 'status': None, 'headers': {}, 'error': 'candidate_request_failed', 'bodySha256': None}
         finally:
             if response is not None: response.close()
-        record_path = self.output / 'responses' / (digest(logical) + '.json')
+        record_path = self.output / 'responses' / (digest(logical) + ('-fresh-'+str(self.requests) if force else '') + '.json')
         save(record_path, result)
         self.cache[logical] = record_path
+        self.record_hashes[logical]=digest(record_path.read_bytes());self.remember(logical,result)
         return result
+
+    def remember(self,logical,result):
+        # Bound memory, preserve fresh HTTP per run, and verify every disk record
+        # read. Aliases can reuse parsing of the same final response, not source
+        # evidence or requests from a preceding verification run.
+        with self.lock:
+            self.parsed_records[logical]=result;self.parsed_records.move_to_end(logical)
+            while len(self.parsed_records)>64:self.parsed_records.popitem(last=False)
 
     def follow(self, logical, max_hops=5):
         chain, visited, issues = [], set(), []
@@ -528,6 +544,7 @@ class Verification:
                     save(self.output / 'progress.private.json', {'rows': index, 'requests': self.client.requests, 'updatedAt': stamp()})
                     print(json.dumps({'checkedRows': index, 'candidateRequests': self.client.requests}), flush=True)
             self.audit_targets()
+            if self.client.label is not None:self.client.fetch(CANONICAL+'/robots.txt',force=True)
         except (ValueError, OSError) as error:
             fatal = str(error) if isinstance(error, ValueError) else 'verification_io_failure'
         if digest(self.baseline.read_bytes()) != self.bindings['baselineSha256']:

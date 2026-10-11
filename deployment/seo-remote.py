@@ -16,14 +16,14 @@ import tarfile
 import time
 
 UPGRADE_SHA = "e41bbc7b36e883665a4f57c07ed1fbd9b222f018d07af9597f90cebfd4e62fb2"
-PREVIOUS_COMMIT = "479e6541de9cfa81aac34db4a510767818c2782e"
-PREVIOUS_IMAGE = "sha256:bda02f346c7b1228c32217f15df2757388896288e99c105c4c88e084076601c3"
+PREVIOUS_COMMIT = "52dca271bef9e80c15ee76b9b46e2d85ae15de08"
+PREVIOUS_IMAGE = "sha256:b11affa6ee5f919fea6796512d50f2cd43d0ca53a97133470b8658a172cce38f"
 BASE_SCHEMA_ORDER = 28
 EXISTING_SOURCE_SHA = "7a1a5ffca195eb99c587eec12bb8a0903269c94c49794034d38525967c1f6845"
 EXISTING_BUNDLE_SHA = "846be1ce89d93c7b41c153c712cb7ec8f1f4d89244aa8cb9ed8b46f3c4d70442"
-INCOMING_BUNDLE_SHA = "8499c2c3fd3c983a757fa286614d949e90b1ac10976ce4ebcf7b3b78ed2b30a1"
+INCOMING_BUNDLE_SHA = "3f34acc4b850884c4fbb44bbb66fc0b42c23bb1dfa7f7416f5840cb80ffb1917"
 SOURCE_TABLES = ("source_public_versions", "source_public_routes", "source_public_imports")
-ASSET_KEY = re.compile(r"[a-f0-9]{64}\.(?:png|jpg|webp|gif|avif|svg|ico|pdf|doc|docx|xls|xlsx|ppt|pptx|rss|atom|ics)")
+ASSET_KEY = re.compile(r"[a-f0-9]{64}\.(?:png|jpg|webp|gif|avif|svg|ico|pdf|doc|docx|xls|xlsx|ppt|pptx|rss|atom|ics|zip|otf)")
 MIGRATION = "0028_source_public_migration"
 
 
@@ -273,6 +273,8 @@ def switch(base, upgrade, helper, root, recovery, phase):
     if phase == "candidate": verify_source_ready(base, root, recovery)
     if base.load(root / (phase + "-canary.receipt.json")) != {"commit": recovery["commit"], "image": recovery["image"]}: fail("seo_canary_receipt_binding")
     current = active_phases(base, helper, root, recovery); before = state_hash(base, upgrade)
+    if (root / "source-cms-adoption.receipt.json").exists() and "previous" in current.values():
+        fail("seo_incompatible_cms_image_refused")
     for runtime, previous in current.items():
         for chosen in (previous, phase): upgrade.verify_image(base, helper, phase_file(root, runtime, chosen), PREVIOUS_IMAGE if chosen == "previous" else recovery["image"])
     def start(runtime, chosen):
@@ -342,6 +344,79 @@ def migrate(base, upgrade, helper, root, recovery):
     return receipt
 
 
+def adopt_cms(base, upgrade, helper, root, recovery):
+    """Freeze the source-backed plan before a separate additive CMS transaction.
+
+    The compatible feature-off image is the only rollback target afterwards.
+    No old entity, revision, route, review, resource or credential may change.
+    """
+    if set(active_phases(base, helper, root, recovery).values()) != {"bridge"}:
+        fail("seo_bridge_required")
+    verify_source_ready(base, root, recovery)
+    before = upgrade.cms_snapshot(base); source_before = source_snapshot(base)
+    assets_before = base.assets_manifest()
+    config = base.load(root / "source-maintenance.json")
+    config["services"]["app"]["environment"].update({"SOURCE_CMS_ADOPTION": "1", "CMS_STORAGE_DIRECTORY": "/run/cms-assets"})
+    config["services"]["app"]["volumes"].append({"type": "bind", "source": str(base.ASSETS), "target": "/run/cms-assets", "read_only": False})
+    path = root / "source-cms-maintenance.private.json"
+    base.save(path, config)
+    command = ["docker", "compose", "-f", str(path), "run", "--rm", "--no-deps", "--pull", "never", "app"]
+    plan = json.loads(base.run(command + ["cms-plan"], timeout=600))
+    marker = root / "source-cms-plan.receipt.json"
+    if marker.exists():
+        frozen = base.load(marker)
+        if plan["planned"] and plan != frozen: fail("seo_cms_plan_changed")
+    else:
+        if plan.get("planned") != 2126 or plan.get("held") != 239 or plan.get("planSha256") != "9a7b1e4bdce1962bbcb0fd5c0e419c80617bfcaab33fce12cb6d172956f74f18":
+            fail("seo_cms_plan_scope")
+        frozen = plan; base.save(marker, frozen)
+    config["services"]["app"]["environment"]["SOURCE_CMS_PLAN_SHA256"] = frozen["planSha256"]
+    base.save(path, config)
+    result = json.loads(base.run(command + ["adopt-cms"], timeout=900))
+    replay = json.loads(base.run(command + ["adopt-cms"], timeout=900))
+    if replay.get("result", {}).get("inserted") != 0 or replay.get("assets", {}).get("inserted") != 0:
+        fail("seo_cms_not_idempotent")
+    # The maintenance container owns only newly created managed copies. Restore
+    # their established runtime ownership; never chmod/chown incumbent files.
+    for name in set(base.assets_manifest()) - set(assets_before):
+        if "/" in name or not re.fullmatch(r"[a-f0-9]{64}\.(png|jpg|gif|webp|pdf)", name):
+            fail("seo_cms_new_asset_scope")
+        asset = base.checked(base.ASSETS / name)
+        os.chown(asset, 1000, 1000); asset.chmod(0o600)
+    after = upgrade.cms_snapshot(base)
+    for name in ("cms_entities", "cms_revisions", "cms_routes", "media_assets", "audit_events", "schema_migrations"):
+        if not {json.dumps(row, sort_keys=True) for row in before[name]} <= {json.dumps(row, sort_keys=True) for row in after[name]}:
+            fail("seo_cms_prior_rows_changed")
+    if source_snapshot(base) != source_before or any(base.assets_manifest().get(name) != size for name, size in assets_before.items()):
+        fail("seo_cms_source_or_assets_changed")
+    receipt = {"outcome": "seo_cms_adopted", "commit": recovery["commit"], "image": recovery["image"], "plan": frozen, "result": result, "replay": replay, "priorRowsPreserved": True}
+    base.save(root / "source-cms-adoption.receipt.json", receipt)
+    verify_frozen(base, upgrade, root, recovery)
+    return receipt
+
+
+def repair_aliases(base, upgrade, helper, root, recovery):
+    if set(active_phases(base, helper, root, recovery).values()) != {"bridge"} or not (root / "source-cms-adoption.receipt.json").exists():
+        fail("seo_cms_adoption_required")
+    before=upgrade.cms_snapshot(base); source=source_snapshot(base); assets=base.assets_manifest()
+    command=["docker","compose","-f",str(root / "source-cms-maintenance.private.json"),"run","--rm","--no-deps","--pull","never","app","repair-aliases"]
+    result=json.loads(base.run(command,timeout=600)); replay=json.loads(base.run(command,timeout=600))
+    expected={"/venue/saving-grace-bible-church/","/organiser/saving-grace-bible-church/"}
+    if {r["path"] for r in result.get("results",[])}!=expected or any(r["outcome"] not in ("repaired","already_repaired") for r in result["results"]) or any(r["outcome"]!="already_repaired" for r in replay.get("results",[])):
+        fail("seo_alias_repair_scope")
+    after=upgrade.cms_snapshot(base); allowed={r["entity_id"] for r in before["cms_routes"] if r["path"] in expected and r["status"]==301 and r["target_path"]=="/contact/"}
+    for name in ("cms_entities","cms_routes"):
+        new={r["id"] if name=="cms_entities" else r["path"]:r for r in after[name]}
+        for row in before[name]:
+            key=row["id"] if name=="cms_entities" else row["path"]
+            if (name=="cms_entities" and key in allowed) or (name=="cms_routes" and key in expected):continue
+            if new.get(key)!=row:fail("seo_alias_unrelated_rows_changed")
+    upgrade.immutable_preserved(before,after)
+    if source_snapshot(base)!=source or base.assets_manifest()!=assets:fail("seo_alias_source_or_assets_changed")
+    receipt={"outcome":"seo_inherited_aliases_repaired","result":result,"replay":replay,"unrelatedRowsPreserved":True,"originalRevisionsPreserved":True}
+    base.save(root / "source-alias-repair.receipt.json",receipt);verify_frozen(base,upgrade,root,recovery);return receipt
+
+
 def main():
     if os.geteuid() != 0 or len(sys.argv) < 2: fail("seo_arguments")
     base, upgrade = helpers(); helper = base.retained(); base.verify_database(helper)
@@ -361,6 +436,8 @@ def main():
         canaries(base, upgrade, helper, root, recovery, "bridge" if operation == "bridge-canary" else "candidate")
     elif operation in ("activate-bridge", "rollback", "activate", "reactivate"): switch(base, upgrade, helper, root, recovery, "bridge" if operation in ("activate-bridge", "rollback") else "candidate")
     elif operation == "migrate": print(json.dumps(migrate(base, upgrade, helper, root, recovery)))
+    elif operation == "adopt-cms": print(json.dumps(adopt_cms(base, upgrade, helper, root, recovery)))
+    elif operation == "repair-aliases": print(json.dumps(repair_aliases(base, upgrade, helper, root, recovery)))
     elif operation == "verify":
         current = inventory(base, upgrade, helper)
         if any(not runtime["healthy"] or not runtime["readonlyRoot"] or not runtime["capabilitiesDropped"] for runtime in current["runtimes"].values()): fail("seo_runtime_not_ready")

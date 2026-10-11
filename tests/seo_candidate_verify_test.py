@@ -24,6 +24,13 @@ class Opener:
         return self.responses.pop(0)
 
 class CandidateVerifyTests(unittest.TestCase):
+    def test_cached_candidate_records_are_hash_checked_and_final_fresh_reads_detect_runtime_changes(self):
+        with tempfile.TemporaryDirectory() as root:
+            opener=Opener([Response(headers={'x-seo-candidate':'one'}),Response(headers={'x-seo-candidate':'two'})]);client=verify.LoopbackClient('http://127.0.0.1:4440',Path(root),opener=opener)
+            url=ORIGIN+'/robots.txt';first=client.fetch(url);self.assertIs(client.fetch(url),first);self.assertEqual(len(opener.requests),1)
+            with self.assertRaisesRegex(ValueError,'candidate_runtime_changed'):client.fetch(url,force=True)
+            client.cache[url].write_text('{}')
+            with self.assertRaisesRegex(ValueError,'candidate_cached_record_changed'):client.fetch(url)
     def test_parallel_loopback_budget_and_identity_are_not_weakened(self):
         from concurrent.futures import ThreadPoolExecutor
         from threading import Lock

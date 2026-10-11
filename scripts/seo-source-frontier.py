@@ -12,10 +12,12 @@ CAP=importlib.util.module_from_spec(SPEC);SPEC.loader.exec_module(CAP)
 REASONS={'observed_only_on_nonexpanding_response_unverified':0,'source_declared_feed_variant_unverified':1,'duplicate_host_alias_unverified':2,'source_declared_shortlink_unverified':3,'generated_calendar_navigation_or_export_unverified':4}
 
 class RateLimiter:
-    def __init__(self,interval=1):self.interval=max(1,interval);self.lock=threading.Lock();self.last=0.
+    def __init__(self,interval=1):self.interval=max(1,interval);self.lock=threading.Lock();self.last=0.;self.not_before=0.
     def acquire(self):
         with self.lock:
-            time.sleep(max(0,self.interval-(time.monotonic()-self.last)));self.last=time.monotonic()
+            time.sleep(max(0,self.last+self.interval-time.monotonic(),self.not_before-time.monotonic()));self.last=time.monotonic()
+    def defer(self,seconds):
+        with self.lock:self.not_before=max(self.not_before,time.monotonic()+seconds)
 
 def safe_target(url):
     parsed=urlsplit(url)
@@ -34,7 +36,15 @@ def verified_record(folder,summary):
     return record,body
 
 class FixedCapture(CAP.Capture):
-    def __init__(self,output,limiter):super().__init__(output,10000,1,2);self.limiter=limiter;self.state={'pages':{},'discovered':{},'assets':{},'excluded':{},'deferred':{}}
+    def __init__(self,output,limiter):
+        self.output=output.resolve();self.output.mkdir(parents=True,exist_ok=True)
+        self.pages=self.output/'pages';self.pages.mkdir(exist_ok=True)
+        self.responses=self.output/'responses';self.responses.mkdir(exist_ok=True)
+        self.source_expansion={};self.opener=build_opener(CAP.NoRedirect);self.limiter=limiter
+        self.reset()
+    def reset(self):
+        self.state={'pages':{},'discovered':{},'assets':{},'excluded':{},'deferred':{}}
+        self.source_expansion={}
     def get(self,url):
         if not safe_target(url):raise ValueError('fixed_request_target_refused')
         for attempt in range(3):
@@ -48,7 +58,8 @@ class FixedCapture(CAP.Capture):
                 body=response.read(4_000_001) if allowed else b''
                 result={'url':url,'status':status,'headers':headers,'capturedAt':CAP.stamp(),'attempts':attempt+1,'elapsedMs':round((time.monotonic()-started)*1000),'bodyBytes':len(body),'bodySha256':CAP.digest(body),'bodyLimitExceeded':len(body)>4_000_000,'unsupportedContentType':not allowed}
                 if status in (429,502,503,504) and attempt<2:
-                    pause=headers.get('retry-after','');time.sleep(min(120,max(2,int(pause))) if pause.isdigit() else 3*(attempt+1));continue
+                    pause=headers.get('retry-after','');delay=min(300,max(2,int(pause))) if pause.isdigit() else (120 if status==429 else 3*(attempt+1))
+                    self.limiter.defer(delay);continue
                 return result,body
             except (URLError,TimeoutError,OSError):
                 if attempt==2:return {'url':url,'status':None,'capturedAt':CAP.stamp(),'attempts':3,'error':'request_failed'},b''
@@ -88,14 +99,36 @@ def run(source_file,output):
     limiter=RateLimiter(interval);local=threading.local()
     def request(url):
         if not hasattr(local,'job'):local.job=FixedCapture(output,limiter)
-        job=local.job;job.state['discovered'][url]=copy.deepcopy(source['discovered'].get(url,{'sources':[]}))
+        job=local.job;job.reset();job.state['discovered'][url]=copy.deepcopy(source['discovered'].get(url,{'sources':[]}))
         metadata,body=job.capture(url)
         return metadata,copy.deepcopy(job.state['pages'][url]),copy.deepcopy(job.state['discovered']),copy.deepcopy(job.state['assets'])
     def checkpoint(done=False):
         pending=[u for u in state['fixedFrontier'] if u not in state['fixedFrontierOutcomes']]
         state.update({'updatedAt':CAP.stamp(),'pendingUrls':pending,'frontierComplete':done and not pending,'htmlPhaseComplete':done and not pending,'htmlPhaseFrozen':done,'completed':False,'requestIntervalSeconds':interval})
         CAP.save(state_file,state)
-    checkpoint()
+    # Recover completed per-URL records after an interrupted checkpoint. Never
+    # retry a recorded request or add newly discovered URLs to this fixed queue.
+    recovered=0
+    for url in state['fixedFrontier']:
+        if url in state['fixedFrontierOutcomes']:continue
+        path=output/'pages'/(CAP.digest(url)+'.json')
+        if not path.exists():continue
+        record=json.loads(path.read_text(encoding='utf-8'))
+        summary={'status':record.get('status'),'recordPath':str(path.relative_to(output)),'bodySha256':record.get('bodySha256'),'template':record.get('template'),'sourcePostId':record.get('sourcePostId'),'capturedAt':record['capturedAt']}
+        verified_record(output,summary)
+        if record.get('url')!=url:raise ValueError('resume_record_identity_changed')
+        job=FixedCapture(output,limiter)
+        found=[(r.get('href'),'link') for r in record.get('links',[])]+[(r.get('url'),'image') for r in record.get('images',[])]+[(r,'canonical') for r in record.get('canonicalUrls',[])]+[(r,'sitemap') for r in record.get('sitemapUrls',[])]+[(r.get('url'),r.get('kind','feed_item')) for r in record.get('feedUrls',[])]+[(record.get('redirectTarget'),'redirect')]
+        for target,kind in found:
+            if target:job.enqueue(target,kind,url)
+        for found,item in job.state['discovered'].items():
+            if found not in state['discovered']:
+                state['discovered'][found]=item;state['newObservedUrls'][found]={'reason':'fixed_frontier_no_new_expansion'}
+                if found not in state['pages']:state['deferred'][found]={'reason':'new_observed_fixed_frontier_no_expansion'}
+        for found,item in job.state['assets'].items():state['assets'].setdefault(found,item)
+        state['pages'][url]=summary;state['fixedFrontierOutcomes'][url]={'status':record.get('status'),'outcome':'captured' if record.get('status') else 'request_failed','attempts':record.get('attempts'),'recoveredFromCompletedRecord':True};state['deferred'].pop(url,None);recovered+=1
+    if recovered:state.setdefault('resumeEvidence',[]).append({'at':CAP.stamp(),'verifiedCompletedRecordsReused':recovered})
+    checkpoint();last_checkpoint=time.monotonic()
     with CAP.network_lease(source_file.parent),CAP.network_lease(output),concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
         urls=iter([u for u in state['fixedFrontier'] if u not in state['fixedFrontierOutcomes']]);active={}
         def submit():
@@ -119,7 +152,9 @@ def run(source_file,output):
                         if found not in state['pages']:state['deferred'][found]={'reason':'new_observed_fixed_frontier_no_expansion'}
                 for found,item in assets.items():state['assets'].setdefault(found,item)
                 if len(state['fixedFrontierOutcomes'])%25==0:print(json.dumps({'fixedRequested':len(state['fixedFrontierOutcomes']),'fixedTotal':len(state['fixedFrontier']),'newObserved':len(state['newObservedUrls'])}),flush=True)
-            checkpoint();submit()
+            if len(state['fixedFrontierOutcomes'])%10==0 or time.monotonic()-last_checkpoint>=15:
+                checkpoint();last_checkpoint=time.monotonic()
+            submit()
         checkpoint(done=True)
     if CAP.digest(source_file.read_bytes())!=primary_hash:raise ValueError('parent_changed_during_extension')
     print(json.dumps({'frontierComplete':state['frontierComplete'],'fixedTotal':len(state['fixedFrontier']),'fixedOutcomes':len(state['fixedFrontierOutcomes']),'newObserved':len(state['newObservedUrls']),'parentUnchanged':True}),flush=True)

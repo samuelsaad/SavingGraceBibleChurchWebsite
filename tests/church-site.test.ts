@@ -183,7 +183,7 @@ describe("church content registry", () => {
     expect(legacyDisposition("/testimonials/thomas-paine/", publicRenderContext)?.kind).toBe("gone");
     expect(legacyDisposition("/event/mens-teaching-and-preaching-study-2-2/", publicRenderContext)).toEqual(expect.objectContaining({ location: "/events/mens-teaching-and-preaching-study/" }));
     expect(legacyDisposition("/series/womans-study/", publicRenderContext)).toEqual(expect.objectContaining({ location: "/events/womans-study/" }));
-    expect(legacyDisposition("/venue/state-library/", publicRenderContext)).toEqual(expect.objectContaining({ location: "/events/street-evangelism-outreach/" }));
+    expect(legacyDisposition("/venue/state-library/", publicRenderContext)).toBeNull();
     expect(legacyDisposition("/sermons/", publicRenderContext)).toBeNull();
   });
 });
@@ -467,7 +467,7 @@ describe("church site routes", () => {
       const home = await route(new Request("http://127.0.0.1/"));
       expect(home?.status).toBe(200);
       expect(await home!.text()).toContain('<h1 id="hero-heading" class="arrive__title">');
-      for (const [path, location] of [["/pages/lordsdayservice/", "/lords-day-service/"], ["/contact-us-2/", "/contact/"], ["/church-events/", "/events/"], ["/event/sunday-evening-service-2/", "/events/sunday-evening-service/"], ["/pages/sitemap/", "/sitemap/"], ["/venue/saving-grace-bible-church/", "/contact/"]]) {
+      for (const [path, location] of [["/pages/lordsdayservice/", "/lords-day-service/"], ["/contact-us-2/", "/contact/"], ["/church-events/", "/events/"], ["/event/sunday-evening-service-2/", "/events/sunday-evening-service/"], ["/pages/sitemap/", "/sitemap/"]]) {
         const response = await route(new Request(`http://127.0.0.1${path}?utm=1`));
         expect(response?.status, path).toBe(301);
         expect(response?.headers.get("location"), path).toBe(`${location}?utm=1`);

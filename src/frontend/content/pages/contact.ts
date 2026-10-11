@@ -13,8 +13,6 @@ export const contactPage: SitePage = {
   legacyPaths: [
     "/contact-us-2/",
     "/pages/contact-us/",
-    "/venue/saving-grace-bible-church/",
-    "/organiser/saving-grace-bible-church/"
   ],
   source: { id: 3002, link: "https://savinggrace.org.au/contact-us-2/", status: "publish", modified: "2025-08-06 15:00:17" },
   eyebrow: "Contact Us",

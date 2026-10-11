@@ -87,7 +87,7 @@ async function main(){
  const sourceLineage=(path:string):string[]=>path==='src/frontend/content/site-snapshot.ts'?extractedSources:baselineChurchSources.has(path)?[path]:[];
  async function lineage(scope:'source'|'build',path:string):Promise<string[]>{
   if(scope==='source')return sourceLineage(path);
-  if(/^dist-staging\/(?:server|draft-preview|cms-maintenance)\.cjs$/u.test(path)){
+  if(/^dist-staging\/(?:server|draft-preview|cms-maintenance|source-public-sync)\.cjs$/u.test(path)){
    const inputs:unknown=JSON.parse(await readFile(path.replace(/\.cjs$/u,'.inputs.json'),'utf8'));if(!Array.isArray(inputs)||inputs.some(input=>typeof input!=='string'))throw Error('cms_scan_build_lineage');
    return [...new Set(inputs.flatMap(input=>sourceLineage(input as string)))];
   }
@@ -101,7 +101,7 @@ async function main(){
  for(const name of ['logo.ts','media.ts','media-bytes.ts','fonts.ts','font-bytes.ts']){const path='src/frontend/assets/'+name;if(git('hash-object','--path='+path,path).trim()!==git('rev-parse',`${cmsReleaseScanBase}:${path}`).trim())throw Error('cms_scan_embedded_assets_changed');}
  const embeddedAssetHashes=new Set<string>();for(const path of siteAssetPaths){const response=siteAssetResponse(new Request('http://127.0.0.1'+path));if(response)embeddedAssetHashes.add(digest(new Uint8Array(await response.arrayBuffer())));}
  const artifactFiles:string[]=[];for(const directory of ['dist','dist-staging']){const path=resolve(root,directory);if(!(await lstat(path)).isDirectory())throw Error('cms_scan_build_missing');artifactFiles.push(...await collect(root,path));}
- const manifest:Array<{scope:'source'|'build';path:string;sha256:string;bytes:number}>=[];const inheritedCopyEvidence:Array<{path:string;outputSha256:string;matchedFragments:number;lineage:Array<{path:string;sha256:string}>}>=[];const counts:Record<string,number>={};let excludedPaths=0,bodyMatches=0,binaryFiles=0,existingChurchCopyMatchFiles=0;
+ const manifest:Array<{scope:'source'|'build';path:string;sha256:string;bytes:number}>=[];const privateBodyFindings:Array<{path:string;outputSha256:string;fragmentHashes:string[]}>=[];const inheritedCopyEvidence:Array<{path:string;outputSha256:string;matchedFragments:number;lineage:Array<{path:string;sha256:string}>}>=[];const counts:Record<string,number>={};let excludedPaths=0,bodyMatches=0,binaryFiles=0,existingChurchCopyMatchFiles=0;
  for(const entry of [...sources.map(path=>({scope:'source' as const,path})),...artifactFiles.map(path=>({scope:'build' as const,path:relative(root,path).replaceAll('\\','/')}))]){
   if(excludedCmsPath(entry.path)){excludedPaths++;continue;}
   const target=resolve(root,entry.path),stat=await lstat(target);if(!stat.isFile()||stat.isSymbolicLink()||relative(root,await realpath(target)).startsWith('..'))throw Error('cms_scan_source_file_refused');
@@ -112,11 +112,11 @@ async function main(){
   const matches=[...new Set(fragmentHashes(body).filter(hash=>fragments.has(hash)))];
   if(matches.length){
    const parents=await lineage(entry.scope,entry.path),allowed=new Set(parents.flatMap(path=>[...(baselineChurchSources.get(path)?.fragments??[])]));
-   if(matches.some(hash=>!allowed.has(hash)))bodyMatches++;
+   const unresolved=matches.filter(hash=>!allowed.has(hash));if(unresolved.length){bodyMatches++;privateBodyFindings.push({path:entry.path,outputSha256:digest(bytes),fragmentHashes:unresolved});}
    const inherited=matches.filter(hash=>allowed.has(hash));if(inherited.length){existingChurchCopyMatchFiles++;inheritedCopyEvidence.push({path:entry.path,outputSha256:digest(bytes),matchedFragments:inherited.length,lineage:parents.flatMap(path=>{const source=baselineChurchSources.get(path);return source?[{path,sha256:source.sha256}]:[]})});}
   }
  }
- const args=process.argv.slice(2);if(args.length){if(args.length!==2||args[0]!=='--manifest'||!args[1]?.endsWith('.private.json'))throw Error('cms_scan_manifest_arguments');const target=resolve(root,args[1]);if(relative(root,target).startsWith('..')||relative(root,await realpath(dirname(target))).startsWith('..'))throw Error('cms_scan_manifest_location');git('check-ignore','--',relative(root,target));await writeFile(target,JSON.stringify({baseline:cmsReleaseScanBase,files:manifest,inheritedCopyEvidence},null,2)+'\n',{flag:'wx',mode:0o600});}
+ const args=process.argv.slice(2);if(args.length){if(args.length!==2||args[0]!=='--manifest'||!args[1]?.endsWith('.private.json'))throw Error('cms_scan_manifest_arguments');const target=resolve(root,args[1]);if(relative(root,target).startsWith('..')||relative(root,await realpath(dirname(target))).startsWith('..'))throw Error('cms_scan_manifest_location');git('check-ignore','--',relative(root,target));await writeFile(target,JSON.stringify({baseline:cmsReleaseScanBase,files:manifest,inheritedCopyEvidence,privateBodyFindings},null,2)+'\n',{flag:'wx',mode:0o600});}
  console.log(JSON.stringify({scan:'cms-release-v1',baseline:cmsReleaseScanBase,sourceFiles:sources.length,buildFiles:artifactFiles.length,manifestFiles:manifest.length,manifestSha256:digest(JSON.stringify(manifest)),verifiedDatasetRecords,canonicalDatasetNewlineConversions,referenceBodies:referenceBodies.length,databaseBodies,fragmentWords:fragmentSize,referenceFragments:fragments.size,bodyMatchingScope:'current local summary/body/transcript/Q&A and unchanged approved datasets; normalized exact 16-word windows',excludedPaths,privateBodyMatches:bodyMatches,existingChurchCopyMatchFiles,churchCopyException:'exact baseline fragments in mapped source/compiled-input/route lineage only',inheritedCopyEvidenceSha256:digest(JSON.stringify(inheritedCopyEvidence)),binaryFiles,embeddedAssetHashes:embeddedAssetHashes.size,secretOrSourceClasses:counts,passed:excludedPaths===0&&bodyMatches===0&&Object.keys(counts).length===0}));
  if(excludedPaths||bodyMatches||Object.keys(counts).length)process.exitCode=1;
 }
