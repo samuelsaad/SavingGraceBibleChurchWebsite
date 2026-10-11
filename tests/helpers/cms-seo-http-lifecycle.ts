@@ -49,6 +49,11 @@ export async function verifyCmsSeoHttpLifecycle(repository:CmsRepository):Promis
   expect((await request('/http-lifecycle/')).status).toBe(404);expect((await read('/sitemap.xml')).body).not.toContain('/http-lifecycle/');
   expect((await request(`/cms-preview/http-lifecycle/?entity=${entity.id}`,'GET',undefined,false)).status).toBe(401);
   const preview=await read(`/cms-preview/http-lifecycle/?entity=${entity.id}`);expect(preview.response.status).toBe(200);expect(preview.body).toContain('noindex, nofollow, noarchive');expect(preview.body).not.toContain('rel="canonical"');expect(preview.response.headers.get('cache-control')).toContain('no-store');
+  const directory=await request('/api/v1/admin/cms/entities?projection=directory');expect(directory.status).toBe(200);expect(directory.headers.get('cache-control')).toBe('private, no-store');
+  const directoryBody=await directory.text();expect(directoryBody).not.toContain('Anonymous HTTP visible body');expect(directoryBody).not.toContain('Anonymous exact description');
+  const directoryEntity=JSON.parse(directoryBody).data.find((entry:CmsEntity)=>entry.id===entity.id);expect(directoryEntity.draft.content.path).toBe('/http-lifecycle/');expect(directoryEntity.draftRevisionId).toBe(entity.draftRevisionId);expect(directoryEntity.draft.content).not.toHaveProperty('modules');
+  const selected=await request('/api/v1/admin/cms/entities/'+entity.id);expect((await selected.json()).draft.content.modules[0].block.text).toBe('Anonymous HTTP visible body');
+  expect((await request('/api/v1/admin/cms/entities?projection=directory','GET',undefined,false)).status).toBe(401);
   entity=await publish(entity);const original=entity.draftRevisionId;
   let rendered=await read('/http-lifecycle/');expect(rendered.response.status).toBe(200);expect(rendered.body).toContain('<title>Anonymous exact title</title>');expect(rendered.body).toContain('Anonymous HTTP visible body');expect(rendered.body.match(/rel="canonical"/g)).toHaveLength(1);expect(rendered.response.headers.get('cache-control')).toContain('no-store');expect((await read('/sitemap.xml')).body).toContain('/http-lifecycle/');
   expect(rendered.body).toContain('Anonymous retained original copy');

@@ -1,6 +1,8 @@
 import type {CmsAuditActor,CmsDocument,CmsEntity,CmsKind,CmsRevision,CmsRevisionMutation,CmsSeed,CmsSnapshot,CmsUnpublishInput} from './model';
 export interface CmsRepository {
  list():Promise<CmsEntity[]>;
+ /** Protected editor directory; selected documents are read through get(). */
+ listDirectory?():Promise<CmsEntity[]>;
  get(id:string):Promise<CmsEntity|null>;
  history(id:string):Promise<CmsRevision[]>;
  create(input:{key:string;kind:CmsKind;content:CmsDocument},actor:CmsAuditActor):Promise<CmsEntity>;

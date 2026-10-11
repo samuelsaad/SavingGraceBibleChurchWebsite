@@ -1,4 +1,5 @@
 import {randomUUID} from 'node:crypto';
+import {cmsDirectoryFields} from './directory';
 import type {Pool,PoolClient} from 'pg';
 import {ApplicationError,conflict,notFound} from '../application/errors';
 import {siteImages} from '../frontend/assets/media';
@@ -33,6 +34,13 @@ export class PostgresCmsRepository implements CmsRepository {
  constructor(private readonly pool:Pool,private readonly sourceReferences?:Queryable){}
  private async transaction<T>(run:(c:PoolClient)=>Promise<T>,readOnly=false):Promise<T>{const c=await this.pool.connect();try{await c.query(readOnly?'BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY':'BEGIN');if(!readOnly){await c.query("SET LOCAL savinggrace.application_request='on'");await c.query('SELECT pg_advisory_xact_lock(179,27)');}const result=await run(c);await c.query('COMMIT');return result;}catch(error){await c.query('ROLLBACK');if((error as {code?:string}).code==='23505')throw new ApplicationError(409,'already_exists','This item or address already exists');throw error;}finally{c.release();}}
  async list():Promise<CmsEntity[]>{return this.transaction(async c=>{const rows=(await c.query<EntityRow&{draft:RevisionRow;published:RevisionRow|null}>(`SELECT e.*,to_jsonb(d) AS draft,to_jsonb(p) AS published FROM cms_entities e JOIN cms_revisions d ON d.id=e.draft_revision_id LEFT JOIN cms_revisions p ON p.id=e.published_revision_id ORDER BY e.kind,e.key`)).rows;return rows.map(row=>({id:row.id,key:row.key,kind:row.kind,rowVersion:row.row_version,draftRevisionId:row.draft_revision_id,publishedRevisionId:row.published_revision_id,draft:revisionDto(row.draft),published:row.published?revisionDto(row.published):null}));},true);}
+ async listDirectory():Promise<CmsEntity[]>{return this.transaction(async c=>{
+  const content=(alias:string)=>`jsonb_strip_nulls(jsonb_build_object(${cmsDirectoryFields.map(key=>`'${key}',${alias}.content->'${key}'`).join(',')}))`;
+  const slim=(alias:string)=>`jsonb_build_object('id',${alias}.id,'entity_id',${alias}.entity_id,'revision_number',${alias}.revision_number,'created_at',${alias}.created_at,'actor',${alias}.actor,'source_revision_id',${alias}.source_revision_id,'content',${content(alias)})`;
+  const rows=(await c.query<EntityRow&{draft:RevisionRow;published:RevisionRow|null}>(`SELECT e.*,${slim('d')} AS draft,CASE WHEN p.id IS NULL THEN NULL ELSE ${slim('p')} END AS published FROM cms_entities e JOIN cms_revisions d ON d.id=e.draft_revision_id LEFT JOIN cms_revisions p ON p.id=e.published_revision_id ORDER BY e.kind,e.key`)).rows;
+  return rows.map(row=>({id:row.id,key:row.key,kind:row.kind,rowVersion:row.row_version,draftRevisionId:row.draft_revision_id,publishedRevisionId:row.published_revision_id,draft:revisionDto(row.draft),published:row.published?revisionDto(row.published):null}));
+ },true);}
+
  async get(id:string):Promise<CmsEntity|null>{return this.transaction(async c=>{const row=await find(c,id);return row?dto(c,row):null;},true);}
  async history(id:string):Promise<CmsRevision[]>{return this.transaction(async c=>{if(!await find(c,id))notFound();return(await c.query<RevisionRow>('SELECT * FROM cms_revisions WHERE entity_id=$1 ORDER BY revision_number DESC',[id])).rows.map(revisionDto);},true);}
  async create(input:{key:string;kind:CmsKind;content:CmsDocument},actor:CmsAuditActor):Promise<CmsEntity>{cmsKeySchema.parse(input.key);const content=validateCmsContent(input.kind,input.content);return this.transaction(async c=>{const entityId=randomUUID(),revisionId=randomUUID();await availablePath(c,entityId,input.kind,content);await c.query('INSERT INTO cms_entities(id,key,kind,draft_revision_id) VALUES($1,$2,$3,$4)',[entityId,input.key,input.kind,revisionId]);await c.query('INSERT INTO cms_revisions(id,entity_id,revision_number,content,actor) VALUES($1,$2,1,$3::jsonb,$4)',[revisionId,entityId,JSON.stringify(content),actor.subject]);const row=(await find(c,entityId))!;await audit(c,row,actor,'create',['draft']);return dto(c,row);});}

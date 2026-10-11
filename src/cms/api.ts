@@ -1,4 +1,5 @@
 import {randomUUID} from 'node:crypto';
+import {cmsDirectoryEntity} from './directory';
 import {ZodError,z} from 'zod';
 import {ApplicationError} from '../application/errors';
 import {assertAdminAccess} from '../application/authorization';
@@ -24,7 +25,7 @@ export function createCmsApiHandler(repository:CmsRepository,identityProvider:Id
    if(mutation&&(request.headers.get('origin')!==url.origin||request.headers.get('sec-fetch-site')==='cross-site'||!await security.authorizeMutation(request)))return json(403,{error:{code:'csrf_rejected'}});
    const requestId=request.headers.get('x-request-id');const actor={subject:identity.subject,role:'admin' as const,correlationId:requestId&&/^[A-Za-z0-9._:-]{1,100}$/u.test(requestId)?requestId:randomUUID()};
    if(url.pathname===root){
-    if(request.method==='GET')return json(200,{data:await repository.list()});
+    if(request.method==='GET'){const projection=url.searchParams.get('projection');if(projection!==null&&projection!=='directory')throw new ApplicationError(400,'invalid_projection','Choose the editor directory or the full collection');return json(200,{data:projection==='directory'?(repository.listDirectory?await repository.listDirectory():(await repository.list()).map(cmsDirectoryEntity)):await repository.list()});}
     if(request.method==='POST')return json(201,await repository.create(cmsCreateSchema.parse(await readCmsJsonBody(request)),actor));
     return json(405,{error:{code:'method_not_allowed'}},{Allow:'GET, POST'});
    }
