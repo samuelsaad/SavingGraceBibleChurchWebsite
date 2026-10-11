@@ -131,6 +131,7 @@ class LoopbackClient:
         with self.lock:
             if self.requests >= self.limit: raise ValueError('candidate_request_budget_exhausted')
             self.requests += 1
+            request_number = self.requests
         parts = urlsplit(logical)
         physical = self.base + (parts.path or '/') + ('?' + parts.query if parts.query else '')
         headers = {'X-SEO-Rehearsal-Origin': parts.scheme + '://' + parts.netloc,
@@ -165,7 +166,10 @@ class LoopbackClient:
             result = {'url': logical, 'status': None, 'headers': {}, 'error': 'candidate_request_failed', 'bodySha256': None}
         finally:
             if response is not None: response.close()
-        record_path = self.output / 'responses' / (digest(logical) + ('-fresh-'+str(self.requests) if force else '') + '.json')
+        # Keep forced witnesses as short as ordinary SHA-256 filenames. Adding
+        # a textual suffix exceeded Windows' path limit at the final robots check.
+        record_key = digest(logical + '\0' + str(request_number)) if force else digest(logical)
+        record_path = self.output / 'responses' / (record_key + '.json')
         save(record_path, result)
         self.cache[logical] = record_path
         self.record_hashes[logical]=digest(record_path.read_bytes());self.remember(logical,result)

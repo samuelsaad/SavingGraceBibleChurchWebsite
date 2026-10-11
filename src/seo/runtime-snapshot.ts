@@ -95,6 +95,10 @@ export function versionedHandlerCache<T>(fingerprint:()=>Promise<string>,build:(
    const version=await fingerprint();
    if(selected?.version===version)return selected;
    if(inFlight){await inFlight;continue;}
+   // A changed dependency set makes the old snapshot unusable. Release it
+   // before allocating its replacement so CMS publication cannot retain two
+   // complete inventories under the existing staging heap limit.
+   selected=null;
    inFlight=(async()=>{const value=await build(version);if(await fingerprint()===version)selected={version,value};})().finally(()=>{inFlight=null;});
    await inFlight;
   }

@@ -255,3 +255,55 @@ and uses their original unreviewed issue sets for the reported 2,709 metadata an
 raw original findings are retained. The separate original-target rechecker tests
 all 975 original non-200 targets even if later discovery no longer links to them.
 Neither an absent target nor a successful response alone proves preservation.
+
+## Publication refresh and specific staging recovery
+
+A separate read-only reproduction under staging's existing 384 MiB old-space
+limit loaded the actual complete source inventory, then simulated only a changed
+dependency fingerprint. The old cache retained its unusable snapshot while
+allocating a replacement and exhausted the heap. It changed no database record.
+Invalidation now releases that old snapshot before rebuilding. The same bounded
+reproduction refreshed successfully with HTTP 200 (161/170 MiB before/after).
+Every request still checks the full current dependency fingerprint, concurrent
+construction stays serialized and snapshots built across edits remain rejected.
+The existing stale-version/concurrency tests and all 1,413 PostgreSQL regressions
+passed with zero skips. Type checking passed 739 files with zero errors/warnings;
+the 45-page build passed. Actual protected publication follows the corrected release.
+
+The specific staging backup made before application `b6b3d79` was independently
+transferred by hash into protected local storage and restored into the exact
+D-182 disposable target. Its 65 complete table fingerprints matched the unchanged
+backup-era source; schema/constraints/indexes/triggers/sequences matched too.
+The 1,496 restored files yielded 1,224 successful resource checks and eight
+isolated HTTP checks with no outbound integrations. The created database was
+removed only after its OID matched this run. Archive SHA-256:
+`2ddb50ed9e7ed51f4158c78c20aa59bd106ba952c7a1a467fe38c22102517939`
+(15,983,693 bytes). Schema SHA-256:
+`c366b3401dcc3bd8e1785ab2dc4350c61cc08b2af63cb74132f883a5b637b0d8`.
+This proves recovery of that particular staging backup; it does not prove
+WordPress restoration or recreation of production ownership/ACL roles.
+
+The first `b6b3d79` transfer was initiated while its runtime archive was still
+being written. Its recorded hash check stopped before activation. A subsequent
+audit found all eight complete inbound files equal to the finished local package.
+Only this task-owned, exact-commit inbound directory was retried after scope,
+ownership, symlink and filename checks; no existing release/recovery file was
+replaced. Future transfer must wait for the completed package receipt, not merely
+the runtime archive's existence. Both failed and corrected receipts remain private.
+
+The complete `2bf907e` comparison checked 16,680 rows and 6,849 internal targets,
+then encountered a Windows path-length error saving its forced final robots
+witness. Its explicit `verification_io_failure` stays in that historical report.
+Forced witnesses now use full-length SHA-256 filenames without a growing suffix;
+the ordinary and fresh records remain separate and hash checked. A functional
+anonymous regression verifies both persist and the fresh cache wins. All 109
+offline SEO checks pass. Final acceptance requires the corrected complete rerun.
+
+Historical Git evidence now has explicit byte-preserving attributes. Before this
+correction, Git normalized three retained files' newline bytes despite preserving
+their rows. The corrected staged original ledger is exactly SHA-256
+`e253651a43bfed28763968aa0e82ee522159eb4f2c519fc4dc65757df37f6b21`;
+all four historical blobs match their retained original bytes. Nothing is removed
+from the denominator or its original findings. The unavailable account browser
+again failed before returning Search Console/Analytics data; it is not account
+ownership or measurement-continuity evidence.

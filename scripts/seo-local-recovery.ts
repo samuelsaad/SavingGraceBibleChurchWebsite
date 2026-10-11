@@ -42,17 +42,17 @@ export function compareFingerprints(source:DatabaseFingerprint,restored:Database
  const sourceTables=['source_public_versions','source_public_routes','source_public_imports'].filter(name=>source[name]);
  if(sourceTables.length!==0&&sourceTables.length!==3)throw Error('seo_restore_partial_source_schema');
 }
-async function identity(client:Pick<PoolClient,'query'>,database:string,readOnly:boolean):Promise<void>{
+export async function identity(client:Pick<PoolClient,'query'>,database:string,readOnly:boolean):Promise<void>{
  const row=(await client.query(`SELECT current_database() AS database,current_setting('server_version_num')::integer AS version,inet_server_addr()='127.0.0.1'::inet AS loopback,inet_server_port() AS port,current_setting('transaction_read_only') AS read_only,version() LIKE 'PostgreSQL%' AS postgres`)).rows[0];
  if(!row||row.database!==database||row.version<160000||row.version>=170000||!row.loopback||row.port!==5432||!row.postgres||(readOnly&&row.read_only!=='on'))throw Error('seo_restore_server_identity');
 }
-async function fingerprints(client:Pick<PoolClient,'query'>):Promise<DatabaseFingerprint>{
+export async function fingerprints(client:Pick<PoolClient,'query'>):Promise<DatabaseFingerprint>{
  const tables=(await client.query<{tablename:string}>("SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY tablename")).rows;
  const result:DatabaseFingerprint={};
  for(const {tablename}of tables){const row=(await client.query<{rows:string;sha256:string}>(fingerprintSql(tablename))).rows[0]!;const count=Number(row.rows);if(!Number.isSafeInteger(count)||count<0||! /^[a-f0-9]{64}$/u.test(row.sha256))throw Error('seo_restore_invalid_fingerprint');result[tablename]={rows:count,sha256:row.sha256};}
  return result;
 }
-async function schemaFingerprint(client:Pick<PoolClient,'query'>,receipt?:string):Promise<string>{
+export async function schemaFingerprint(client:Pick<PoolClient,'query'>,receipt?:string):Promise<string>{
  const definitions=await client.query(`SELECT 'constraint' AS kind,c.conrelid::regclass::text AS parent,c.conname AS name,pg_get_constraintdef(c.oid) AS definition FROM pg_constraint c JOIN pg_namespace n ON n.oid=c.connamespace WHERE n.nspname='public'
  UNION ALL SELECT 'index',tablename,indexname,indexdef FROM pg_indexes WHERE schemaname='public'
  UNION ALL SELECT 'column',table_name,column_name,concat_ws('|',data_type,udt_name,is_nullable,column_default) FROM information_schema.columns WHERE table_schema='public'
@@ -77,7 +77,7 @@ async function restoreAssets(source:string,destination:string):Promise<{files:nu
  }};await mkdir(destination,{mode:0o700});await visit(root);items.sort((a,b)=>a.path.localeCompare(b.path,'en'));
  return {files:items.length,bytes:items.reduce((n,item)=>n+item.bytes,0),sha256:hash(JSON.stringify(items))};
 }
-async function applicationProof(pool:Pool,directory:string):Promise<{resourceRoutes:number;httpChecks:number}>{
+export async function applicationProof(pool:Pool,directory:string):Promise<{resourceRoutes:number;httpChecks:number}>{
  const pages=await readSourcePublicPages(pool),handler=await createVersionedSourceHandler({reader:pool,assetDirectory:directory,releaseIdentity:'0'.repeat(40),policy:{environment:'production',canonicalOrigin:sourceOrigin}});
  let resources=0;for(const page of pages.filter(page=>page.asset)){
   const response=await handler(new Request(sourceOrigin+page.path));const bytes=Buffer.from(await response.arrayBuffer());
@@ -91,7 +91,7 @@ async function applicationProof(pool:Pool,directory:string):Promise<{resourceRou
  return {resourceRoutes:resources,httpChecks:checks};
 }
 async function privateFile(path:string,value:unknown):Promise<void>{await writeFile(path,JSON.stringify(value,null,2)+'\n',{flag:'wx',mode:0o600});}
-async function runTool(binary:string,args:string[],env:NodeJS.ProcessEnv):Promise<void>{
+export async function runTool(binary:string,args:string[],env:NodeJS.ProcessEnv):Promise<void>{
  await new Promise<void>((done,reject)=>{
   const child=spawn(binary,args,{env,windowsHide:true,stdio:['ignore','ignore','pipe']});
   // PostgreSQL errors can include source values. Drain them without logging.
@@ -101,7 +101,7 @@ async function runTool(binary:string,args:string[],env:NodeJS.ProcessEnv):Promis
   child.once('exit',code=>{clearTimeout(timer);code===0?done():reject(Error('seo_restore_tool_failed'));});
  });
 }
-async function toolDirectory():Promise<string>{
+export async function toolDirectory():Promise<string>{
  const path=process.platform==='win32'?'C:/Program Files/PostgreSQL/16/bin':'/usr/lib/postgresql/16/bin';
  const directory=await realpath(path);
  for(const name of ['pg_dump','pg_restore']){

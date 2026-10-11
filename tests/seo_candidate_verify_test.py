@@ -24,6 +24,17 @@ class Opener:
         return self.responses.pop(0)
 
 class CandidateVerifyTests(unittest.TestCase):
+    def test_final_fresh_witness_keeps_bounded_filename_and_retains_original(self):
+        with tempfile.TemporaryDirectory() as root:
+            opener=Opener([Response(body=b'original'),Response(body=b'fresh')])
+            client=verify.LoopbackClient('http://127.0.0.1:4440',Path(root),opener=opener)
+            url=ORIGIN+'/robots.txt';client.fetch(url);original=client.cache[url]
+            client.fetch(url,force=True);fresh=client.cache[url]
+            self.assertNotEqual(original,fresh);self.assertEqual(len(fresh.name),69)
+            self.assertTrue(original.is_file());self.assertTrue(fresh.is_file())
+            self.assertEqual(json.loads(original.read_text())['bodySha256'],verify.digest(b'original'))
+            self.assertEqual(client.fetch(url)['bodySha256'],verify.digest(b'fresh'))
+            self.assertEqual(len(opener.requests),2)
     def test_cached_candidate_records_are_hash_checked_and_final_fresh_reads_detect_runtime_changes(self):
         with tempfile.TemporaryDirectory() as root:
             opener=Opener([Response(headers={'x-seo-candidate':'one'}),Response(headers={'x-seo-candidate':'two'})]);client=verify.LoopbackClient('http://127.0.0.1:4440',Path(root),opener=opener)
