@@ -1,16 +1,16 @@
 import {describe,expect,it} from 'vitest';
 import {assertRecoveryAuthority,compareFingerprints,fingerprintSql,recoveryTarget,type DatabaseFingerprint} from '../scripts/seo-local-recovery';
-const token='20261009000000000000000000';
+const token='seo_restore_20261011';
 describe('bounded private local restore proof',()=>{
  it('requires both flags and the established exact disposable target pattern',()=>{
-  expect(recoveryTarget(token,{ALLOW_LOCAL_DB_WRITE:'1',ALLOW_LOCAL_SEO_RESTORE:'1'})).toBe('savinggrace_test_run_'+token);
+  expect(recoveryTarget(token,{ALLOW_LOCAL_DB_WRITE:'1',ALLOW_LOCAL_SEO_RESTORE:'1'})).toBe('savinggrace_test_run_seo_restore_20261011');
   for(const env of [{},{ALLOW_LOCAL_DB_WRITE:'1'},{ALLOW_LOCAL_SEO_RESTORE:'1'}])expect(()=>recoveryTarget(token,env)).toThrow('opt_in');
   for(const value of ['savinggrace_sermons_test','../existing','x','x'.repeat(49)])expect(()=>recoveryTarget(value,{ALLOW_LOCAL_DB_WRITE:'1',ALLOW_LOCAL_SEO_RESTORE:'1'})).toThrow();
  });
  it('refuses execution without the exact approved D181 governance boundary',()=>{
   expect(()=>assertRecoveryAuthority('# No restore authority')).toThrow('governance');
   expect(()=>assertRecoveryAuthority('## D-181\nOrdinary local migration\n## Other\nbackup/restoration demonstration only savinggrace_test_run_<run-token> ALLOW_LOCAL_SEO_RESTORE=1 Never restore over the source')).toThrow('governance');
-  expect(()=>assertRecoveryAuthority('## D-181\nbackup/restoration demonstration only savinggrace_test_run_<run-token> ALLOW_LOCAL_SEO_RESTORE=1 Never restore over the source\n## Other')).not.toThrow();
+  expect(()=>assertRecoveryAuthority('## D-182\nbackup/restoration demonstration only savinggrace_test_run_seo_restore_20261011 ALLOW_LOCAL_SEO_RESTORE=1 Never restore over the source\n## Other')).not.toThrow();
  });
  it('never interpolates an uncontrolled table identifier or returns content rows',()=>{
   expect(fingerprintSql('sermons')).toContain('count(*)::text');expect(fingerprintSql('sermons')).toContain('sha256(');

@@ -7,6 +7,7 @@
  * header and the markup therefore cannot disagree.
  */
 import { createHash } from "node:crypto";
+import {ga4Destinations} from '../../seo/measurement';
 
 const baseResponseHeaders = {
   "Content-Type": "text/html; charset=utf-8",
@@ -41,7 +42,7 @@ export function embeddedStyleHashes(html: string): string[] {
   return hashes(html, stylePattern);
 }
 
-export function contentSecurityPolicy(html: string): string {
+export function contentSecurityPolicy(html: string,options:{ga4?:boolean}={}): string {
   const scriptHashes = embeddedScriptHashes(html);
   const styleHashes = embeddedStyleHashes(html);
   // Only real plate markup (not the enhancement script's selector text) opens the frame source.
@@ -51,7 +52,9 @@ export function contentSecurityPolicy(html: string): string {
   ].filter(Boolean);
   const frame = frameOrigins.length ? ` frame-src ${frameOrigins.join(' ')};` : '';
   // Only a real V5 continuation link permits same-origin page retrieval.
-  const connect = /<a\b[^>]*\sdata-v5-more[\s>]/u.test(html) ? " connect-src 'self';" : "";
+  const connectSources=[...(/<a\b[^>]*\sdata-v5-more[\s>]/u.test(html)?["'self'"]:[]),...(options.ga4?ga4Destinations.collect:[])];
+  const connect=connectSources.length?` connect-src ${connectSources.join(' ')};`:'';
+  if(options.ga4)scriptHashes.push(ga4Destinations.tag);
   return `default-src 'none'; style-src ${styleHashes.length ? styleHashes.join(" ") : "'none'"};${scriptHashes.length ? ` script-src ${scriptHashes.join(" ")};` : ""} img-src 'self' data:; font-src 'self';${frame}${connect} base-uri 'none'; frame-ancestors 'none'; form-action 'self'`;
 }
 

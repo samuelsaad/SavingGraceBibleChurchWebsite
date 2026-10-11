@@ -142,8 +142,9 @@ export function createChurchSiteHandler(repository: PublicSermonRepository, cont
       }
 
       const eventMatch = /^\/events\/([a-z0-9]+(?:-[a-z0-9]+)*)\/$/u.exec(relative);
-      if (eventMatch) {
-        const event = eventBySlug(eventMatch[1]!, context.siteContent?.events);
+      const exactEvent=context.siteContent?.events.find(event=>event.path===relative);
+      if (exactEvent || eventMatch&&!pageByPath(relative,context)) {
+        const event = exactEvent ?? eventBySlug(eventMatch![1]!, context.siteContent?.events);
         if (!event) return boundary(404, "Event not found", "That event does not exist.");
         return page(renderEventPage(event, await data(relative), context));
       }

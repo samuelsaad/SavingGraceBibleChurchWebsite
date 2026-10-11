@@ -5,6 +5,7 @@
  * dates are computed from the schedules for the render's "today".
  */
 import {editAttributes,editField,editSection,fieldPath,hiddenSection,type CmsContentPath,type CmsRenderMetadata} from "../editing";
+import {renderSourceContent} from '../source-content';
 import type { CmsHomeBlock } from "../../cms/model";
 import { renderCmsHomeBlock } from "../pages/home";
 import { renderBlogListing, renderSitemapListing, renderEventCalendar } from "../pages/church";
@@ -124,6 +125,8 @@ function renderBlockContent(block: Block | CmsHomeBlock, env: BlockEnvironment):
   const context = env.context;
   const mark=(key:string,kind:"text"|"richtext"|"image"|"link"|"section"="text",label=key)=>editAttributes(context,fieldPath(block,key),kind,label);
   switch (block.kind) {
+    case 'source-content':
+      return html`<div class="prose">${renderSourceContent(block.nodes,href=>resolveHref(href,context),{image:src=>context.siteContent?.assets[src]?.path??src,mark:(node,path)=>{const key=node.tag==='text'?'text':node.tag==='img'?'src':node.tag==='a'?'href':null;return key?editAttributes(context,fieldPath(block,'nodes',...path,key),node.tag==='img'?'image':node.tag==='a'?'link':'text',node.tag==='img'?'Original image':node.tag==='a'?'Original link':'Original text'):'';}})}</div>`;
     case "home-arrival": case "home-welcome": case "home-about": case "home-sermons": case "home-events":
       return renderCmsHomeBlock(block, {sermons:env.sermons,sermonSelections:env.sermonSelections,options:{books:[],speakers:[],series:[],passages:[],passageVerseAvailability:[]},totalItems:env.sermons.length,today:env.today}, context, (block as {cmsInstanceId?:string}).cmsInstanceId);
     case "paragraph":

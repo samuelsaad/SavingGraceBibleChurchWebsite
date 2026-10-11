@@ -1,3 +1,5 @@
+import {editAttributes} from '../editing';
+import {renderBlocks} from '../components/blocks';
 import {renderSourceContent} from '../source-content';
 /**
  * The sermon page: a reading room. The book tab at the left, the reading
@@ -20,6 +22,7 @@ import { archivePath, contextualPath, publicRenderContext, siteLinks, withFilter
 import { pageShell } from "../shell";
 
 export interface SermonPageOptions {
+  sourceBlocks?: readonly import('../content/types').Block[];
   /** Filter options, for the tab count and the canon strip. */
   options?: PublicSermonFilterOptions;
 }
@@ -65,7 +68,7 @@ export function renderPublicSermonPage(
     ${canonStrip(options, { current: book?.slug, label: book ? `${book.canonicalName} on the shelf` : undefined })}
     ${trail}
     ${passageStamp(sermon, "sermon__stamp")}
-    <h1 class="sermon__title${isLongTitle ? " is-long" : ""}"${contentAttributes}>${sermon.title}</h1>
+    <h1 class="sermon__title${isLongTitle ? " is-long" : ""}"${contentAttributes}${pageOptions.sourceBlocks?editAttributes(context,['heading'],'text','Original sermon title'):html``}>${sermon.title}</h1>
     <p class="sermon__meta">
       <span>${timeElement(sermon.serviceDate)}</span>
       ${when(sermonRecordingDuration(sermon), () => html`<span>${recordingDurationLabel(sermonRecordingDuration(sermon))}</span>`)}
@@ -165,7 +168,7 @@ export function renderPublicSermonPage(
         ${head}
         ${reviewNotice}
         ${description}
-        ${when(sermon.sourcePublic?.content.length,()=>html`<section class="sermon-section"><div class="prose"${contentAttributes}>${renderSourceContent(sermon.sourcePublic!.content)}</div></section>`)}
+        ${pageOptions.sourceBlocks?renderBlocks(pageOptions.sourceBlocks,{context,today:sermon.serviceDate,sermons:[]}):when(sermon.sourcePublic?.content.length,()=>html`<section class="sermon-section"><div class="prose"${contentAttributes}>${renderSourceContent(sermon.sourcePublic!.content,undefined,{image:src=>context.siteContent?.assets[src]?.path??src})}</div></section>`)}
         ${mediaSection(sermon)}
         ${transcript}
         ${questions}

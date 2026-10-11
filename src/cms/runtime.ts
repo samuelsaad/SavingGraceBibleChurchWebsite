@@ -1,3 +1,4 @@
+import {originalSermonPreview} from './source-sermon-preview';
 import {preserveSourceMetadata} from '../seo/source-metadata';
 import type {SourcePublicPage} from '../seo/source-public-model';
 import {publicSermonListQuerySchema} from "../api/contracts/public-sermons";
@@ -69,6 +70,8 @@ export function createCmsRuntimeHandler(options:CmsRuntimeOptions){
     if(entityId){if(!/^[a-f0-9-]{36}$/.test(entityId)||(revisionId&&!/^[a-f0-9-]{36}$/.test(revisionId)))return finish(new Response("Invalid preview selection",{status:400}));selections.set(sessionKey,{entityId,...(revisionId?{revisionId}:{})});}
     const selection=selections.get(sessionKey);if(!selection)return finish(new Response("Choose Preview from a content editor.",{status:400}));
     const context:FrontendRenderContext={mode:"preview",basePath:"/cms-preview",siteContent:await content(selection)};
+    const selectedSnapshot=await repository.getPreviewSnapshot(selection),originalDocument=selectedSnapshot.entities.find(e=>e.id===selection.entityId);
+    if(originalDocument?.content.template==='source-sermon'){const images=(await options.assetStore.list()).filter(a=>a.type.startsWith('image/')).map(a=>({id:a.id,path:a.url,type:a.type,width:a.width??1,height:a.height??1,alt:a.alt}));const snapshot=createCmsFrontendSnapshot(selectedSnapshot,images,false,true);return finish(await originalSermonPreview(originalDocument,await options.sourcePages?.()??[],{...context,siteContent:snapshot}));}
     const preview=createLocalFrontendPreviewHandler(options.sermons,{authorizes:()=>true},{root:"/cms-preview",context});
     return finish((await preview(request))??new Response("Not found",{status:404}));
    }

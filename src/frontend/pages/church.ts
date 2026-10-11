@@ -31,6 +31,7 @@ import type { Block, BlogPost, SitePage } from "../content/types";
 import { formattedDate, html, siteName, timeElement, when, type Html } from "../html";
 import { publicRenderContext, siteLinks, type FrontendRenderContext } from "../routes";
 import { pageShell, type PageShellInput } from "../shell";
+import {adoptedEventMetadata} from '../event-source-metadata';
 
 export interface ChurchPageData {
   /** ISO calendar date in Melbourne. */
@@ -138,7 +139,7 @@ function gatheringTile(event: ChurchEvent, context: FrontendRenderContext): Html
 
 type CalendarBlock=Extract<Block,{kind:"events-calendar"}>;
 function calendarData(block:CalendarBlock,today:string,context:FrontendRenderContext){
- const regular=(context.siteContent?.events ?? events).filter(event=>isRecurring(event)&&occurrencesBetween(event,today,`${Number(today.slice(0,4))+1}${today.slice(4)}`,1).length>0);
+ const regular=((context.siteContent?.events ?? events) as readonly ChurchEvent[]).filter(event=>event.calendarVisible!==false&&isRecurring(event)&&occurrencesBetween(event,today,`${Number(today.slice(0,4))+1}${today.slice(4)}`,1).length>0);
  return {regular: block.showRegular===false?[]:regular,past:block.showPast===false?[]:pastEvents(today,context.siteContent?.events),upcoming:block.showUpcoming===false?[]:upcomingOccurrences(today,{days:block.days??35},context.siteContent?.events)};
 }
 function calendarIds(block:CalendarBlock){const id=(block as {cmsInstanceId?:string}).cmsInstanceId;const prefix=id&&id!=="events-002"?`${id}-`:"";return {upcoming:`${prefix}upcoming-heading`,regular:`${prefix}regular-heading`,past:`${prefix}past-heading`};}
@@ -168,6 +169,9 @@ export function renderEventPage(event: ChurchEvent, data: ChurchPageData, contex
   const venueContext=venueEditing?{...context,visualEditor:{...context.visualEditor!,kind:"venue-fields"}}:context;
   const venueMark=(key:string,kind:"text"|"link"="text",label="Venue details")=>editAttributes(venueContext,venueEditing?[key]:undefined,kind,label);
   const venue = eventVenue(event, context);
+  const adopted=context.siteContent?.sourceContentAdoptedByPath?.[event.path];
+  const source=context.siteContent?.sourceContentByPath?.[event.path]?.find(page=>page.structuredData?.primary?.type==='Event')?.structuredData?.primary;
+  const primary=adopted?adoptedEventMetadata(event,venue,source):null;
   const upcoming = occurrencesBetween(event, data.today, `${Number(data.today.slice(0, 4)) + 1}${data.today.slice(4)}`, 6);
   const ministry = event.page ? availablePages(context).find(page=>page.id===event.page) : null;
   const eventsIndex = availablePages(context).find(page=>page.id==="events");
@@ -197,12 +201,14 @@ export function renderEventPage(event: ChurchEvent, data: ChurchPageData, contex
         </section>
       </div>
       ${event.description.map((text,index) => editField(paragraph(text, context),context,["description",index],"richtext","Event description"))}
+      ${when(event.modules?.length,()=>renderBlocks(event.modules!,{context,today:data.today,sermons:data.sermons,...(data.sermonSelections?{sermonSelections:data.sermonSelections}:{})}))}
       ${when(ministry && pageAvailable(ministry, context), () => html`<p class="event-detail__ministry"><a class="button" href="${links.path(ministry!.path)}">${ministry!.title}</a></p>`)}
       <p>${when(eventsIndex,()=>html`<a href="${links.path(eventsIndex!.path)}">All events</a> · `)}<a href="${links.path("/events/calendar.ics")}">Subscribe to the calendar</a></p>
     </div>
   </article>`;
   return pageShell({
     title: event.title,
+    ...(primary?{sourceMetadata:{primary}}:{}),
     ...(event.seo?{seo:event.seo}:{}),
     description: event.description[0] ?? `${event.title}: ${scheduleLabel(event)} at ${venue.name}.`,
     canonicalPath: event.path,
@@ -240,6 +246,7 @@ export function renderCalendarFeed(context:FrontendRenderContext=publicRenderCon
     "END:VTIMEZONE"
   ];
   for (const event of (context.siteContent?.events ?? events) as readonly ChurchEvent[]) {
+    if(event.calendarVisible===false)continue;
     const venue = eventVenue(event, context);
     const start = event.schedule.kind === "single" ? event.schedule.date : event.schedule.from;
     lines.push("BEGIN:VEVENT", `UID:${event.id}@www.savinggrace.org.au`, `DTSTAMP:20260924T000000Z`, `DTSTART;TZID=Australia/Melbourne:${stamp(start, event.start)}`, `DTEND;TZID=Australia/Melbourne:${stamp(start, event.end)}`, `SUMMARY:${icsEscape(event.title)}`, `LOCATION:${icsEscape(`${venue.name}, ${venue.address}, ${venue.locality}`)}`, `URL:https://www.savinggrace.org.au${event.path}`);

@@ -19,7 +19,7 @@ const preservedSources = [
   [
     "src/frontend/pages/church.ts",
     // Authorized SEO/source metadata controls preserve the existing church layout.
-    "54a3fe979a8c9f1a3325ca1e38137be345e9e336e3f562b4352ccab845e78ecc"
+    "b550a2e869457240840b7217f8d82b90db3721258c0bb93555684c88117d8a66"
   ],
   [
     "src/frontend/styles/core.ts",

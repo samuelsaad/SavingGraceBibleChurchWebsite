@@ -1,3 +1,4 @@
+import {sourceCmsPostgresLifecycle} from './helpers/source-cms-postgres-lifecycle';
 import type {Pool} from 'pg';
 import {expect,it} from 'vitest';
 import {assertDisposableIntegrationTestDatabase} from '../src/migration/local-database-safety';
@@ -56,5 +57,6 @@ export function registerSeoSourcePostgresTests(getPool:()=>Pool){
  const migration=await loadSourcePublicMigration();await client.query('SAVEPOINT down');await expect(client.query(migration.downBody)).rejects.toThrow('Preserve source migration history');await client.query('ROLLBACK TO SAVEPOINT down');
  expect((await client.query("SELECT md5(coalesce(json_agg(to_jsonb(s) ORDER BY id)::text,'[]')) hash FROM sermons s")).rows).toEqual(before);
  expect((await restoreSourcePublicImport(client,initial.bundleSha256,commit)).restored).toBe(1);expect(await readSourcePublicPages(client)).toEqual([]);await expect(importSourcePublicBundle(client,bundle,commit)).rejects.toThrow('explicit_withdrawal');
+ await sourceCmsPostgresLifecycle(client);
  }finally{await client.query('ROLLBACK');client.release();}});
 }

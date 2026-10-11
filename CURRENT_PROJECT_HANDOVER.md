@@ -1,5 +1,17 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
+## D-182 — outstanding SEO remediation in progress
+
+The explicit follow-up authorizes the isolated restore and bounded GA4 scope in
+AGENTS.md. Local backup/assets/application restoration passed; WordPress recovery
+and measurement account evidence remain unavailable. Primary-region extraction
+and source-metadata defaults are corrected; a 620-route no-clobber delta and CMS
+adoption are prepared. They are not yet imported or deployed. The finite observed
+frontier is running. Preserve the original acceptance and its full denominator.
+See [the exact progress record](docs/seo-remediation-progress.md). The prior
+NOT READY verdict remains effective until final acceptance is rerun. Both staging
+runtimes still use the D-181 application below; the separate user workspace is intact.
+
 ## D-181 - whole-site SEO candidate; NOT READY FOR CUTOVER
 
 `codex/whole-site-seo-migration` preserves the integrated CMS, selected website,

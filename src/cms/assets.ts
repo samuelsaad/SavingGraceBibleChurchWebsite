@@ -7,18 +7,19 @@ import {buildCmsEmbeddedAssetSeeds} from "./seed";
 export const cmsUploadMaximum=20*1024*1024;
 const keyPattern=/^[a-f0-9]{64}\.(?:png|jpg|webp|gif|pdf)$/;
 const headers={"Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff","X-Robots-Tag":"noindex, nofollow, noarchive","Referrer-Policy":"no-referrer"};
+export type CmsAssetActor=string|{subject:string;role:'system';correlationId:string};
 export type CmsAsset={id:string;url:string;name:string;type:string;size:number;width:number|null;height:number|null;alt:string;storageKey:string};
-export interface CmsAssetStore{list():Promise<CmsAsset[]>;save(asset:CmsAsset,hash:string,actor?:string):Promise<CmsAsset>;find(key:string):Promise<CmsAsset|null>;}
+export interface CmsAssetStore{list():Promise<CmsAsset[]>;save(asset:CmsAsset,hash:string,actor?:CmsAssetActor):Promise<CmsAsset>;find(key:string):Promise<CmsAsset|null>;}
 export class PostgresCmsAssetStore implements CmsAssetStore{
  constructor(private readonly pool:Pool){}
  private map(row:Record<string,unknown>):CmsAsset{return{id:String(row.id),url:"/cms-assets/"+row.storage_key,name:String(row.original_filename??"Upload"),type:String(row.content_type),size:Number(row.size_bytes),width:row.width_pixels===null?null:Number(row.width_pixels),height:row.height_pixels===null?null:Number(row.height_pixels),alt:String(row.alt_text??""),storageKey:String(row.storage_key)};}
  async list(){return(await this.pool.query("SELECT * FROM media_assets WHERE storage_provider='cms_local' AND availability_status='available' ORDER BY created_at DESC,id LIMIT 1000")).rows.map(r=>this.map(r));}
  async find(key:string){const row=(await this.pool.query("SELECT * FROM media_assets WHERE storage_provider='cms_local' AND storage_key=$1 AND availability_status='available'",[key])).rows[0];return row?this.map(row):null;}
- async save(a:CmsAsset,hash:string,actor="cms-admin"){
+ async save(a:CmsAsset,hash:string,actor:CmsAssetActor="cms-admin"){
   const c=await this.pool.connect();try{await c.query("BEGIN");await c.query("SET LOCAL savinggrace.application_request='on'");
    const inserted=await c.query("INSERT INTO media_assets(id,storage_provider,storage_key,original_filename,content_type,size_bytes,width_pixels,height_pixels,checksum_sha256,alt_text,availability_status) VALUES($1,'cms_local',$2,$3,$4,$5,$6,$7,$8,$9,'available') ON CONFLICT(storage_provider,storage_key) DO NOTHING RETURNING id",[a.id,a.storageKey,a.name,a.type,a.size,a.width,a.height,hash,a.alt]);
-   const row=(await c.query("SELECT * FROM media_assets WHERE storage_provider='cms_local' AND storage_key=$1",[a.storageKey])).rows[0],stored=row?this.map(row):null;if(!stored||stored.type!==a.type||stored.size!==a.size)throw Error("cms_asset_metadata_conflict");
-   if(inserted.rowCount)await c.query("INSERT INTO audit_events(actor_subject,actor_role,action,entity_type,entity_id,changed_fields,request_correlation_id) VALUES($1,'admin','cms.asset.upload','cms_asset',$2,$3::jsonb,$4)",[actor,stored.id,JSON.stringify(["asset"]),randomUUID()]);
+   const row=(await c.query("SELECT * FROM media_assets WHERE storage_provider='cms_local' AND storage_key=$1",[a.storageKey])).rows[0],stored=row?this.map(row):null;if(!stored||stored.type!==a.type||stored.size!==a.size||row.checksum_sha256!==hash)throw Error("cms_asset_metadata_conflict");
+   if(inserted.rowCount)await c.query("INSERT INTO audit_events(actor_subject,actor_role,action,entity_type,entity_id,changed_fields,request_correlation_id) VALUES($1,$2,$3,'cms_asset',$4,$5::jsonb,$6)",[typeof actor==='string'?actor:actor.subject,typeof actor==='string'?'admin':actor.role,typeof actor==='string'?'cms.asset.upload':'cms.asset.import',stored.id,JSON.stringify(["asset"]),typeof actor==='string'?randomUUID():actor.correlationId]);
    await c.query("COMMIT");return stored;
   }catch(error){await c.query("ROLLBACK");throw error;}finally{c.release();}
  }
@@ -50,7 +51,7 @@ export class CmsDiskAssets{
   let current=absolute;while(current!==dirname(current)){if((await lstat(current)).isSymbolicLink())throw Error("cms_asset_symlink_refused");current=dirname(current);}
   if(await realpath(absolute)!==absolute)throw Error("cms_asset_root_refused");return new CmsDiskAssets(absolute,store);
  }
- async upload(bytes:Uint8Array,type:string,filename:string,alt="",actor="cms-admin"){
+ async upload(bytes:Uint8Array,type:string,filename:string,alt="",actor:CmsAssetActor="cms-admin"){
   const info=inspectCmsUpload(bytes,type),hash=createHash("sha256").update(bytes).digest("hex"),key=hash+"."+info.ext,target=resolve(this.directory,key);
   try{const handle=await open(target,"wx",0o600);try{await handle.writeFile(bytes);await handle.sync();}finally{await handle.close();}}
   catch(error){if((error as NodeJS.ErrnoException).code!=="EEXIST")throw error;const stat=await lstat(target);if(!stat.isFile()||stat.isSymbolicLink()||createHash("sha256").update(await readFile(target)).digest("hex")!==hash)throw Error("cms_asset_storage_conflict");}

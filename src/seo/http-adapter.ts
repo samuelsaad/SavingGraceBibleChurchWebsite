@@ -8,11 +8,14 @@ import { renderFrontendBoundaryPage } from "../frontend/pages/boundary";
 import type { FrontendRenderContext } from "../frontend/routes";
 import { createPublicSermonSiteHandler } from "../server/http/public-sermon-page";
 import type { ChurchSiteOptions } from "../server/http/church-site";
-import { frontendResponse } from "../server/http/frontend-response";
+import { frontendResponse,contentSecurityPolicy } from "../server/http/frontend-response";
+import {ga4Script,type VerifiedGa4Configuration} from './measurement';
 import type { PublicSermonRepository } from "../server/repositories/sermon-repository";
 import { createSeoHttpPolicy, type SeoHttpPolicyInput } from "./http-policy";
 
 export interface SeoHttpAdapterOptions extends ChurchSiteOptions {
+  /** Only populated after property/stream/consent verification and cutover approval. */
+  measurement?:VerifiedGa4Configuration;
   policy: SeoHttpPolicyInput;
   /** Exact observed canonical archive query paths; supplied from verified source records. */
   indexableArchivePaths?: readonly string[];
@@ -135,6 +138,13 @@ export function createSeoHttpAdapter(options: SeoHttpAdapterOptions): (request: 
         if (policy.indexable && url.origin !== policy.canonicalOrigin) response.headers.set("Location",target.href);
       } else if (policy.indexable && url.origin !== policy.canonicalOrigin && response.status === 200) {
         response = new Response(null,{status:301,headers:{Location:policy.canonicalOrigin + url.pathname + url.search,"Cache-Control":"no-store"}});
+      }
+      if(options.measurement&&policy.environment==='production'&&url.origin===policy.canonicalOrigin&&response.status===200&&!head&&response.headers.get('Content-Type')?.includes('text/html')&&!url.searchParams.has('s')&&!url.searchParams.has('search')){
+        const document=await response.text();const title=/<title>([\s\S]*?)<\/title>/u.exec(document)?.[1]??'';
+        const excluded=/noindex/iu.test(response.headers.get('X-Robots-Tag')??'')||/<meta\b[^>]*name="robots"[^>]*content="[^"]*noindex/iu.test(document);
+        const script=excluded?'':ga4Script(options.measurement,policy.environment,url.href,title);
+        const marked=script?document.replace('</body>',`<script data-sgbc-ga4>${script}</script></body>`):document;
+        const headers=new Headers(response.headers);if(script)headers.set('Content-Security-Policy',contentSecurityPolicy(marked,{ga4:true}));response=new Response(marked,{status:response.status,headers});
       }
       return finish(response,head);
     } catch { return finish(boundary(503,"Site temporarily unavailable"),head); }

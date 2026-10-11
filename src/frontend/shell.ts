@@ -223,9 +223,15 @@ export function pageShell(input: PageShellInput, context: FrontendRenderContext 
   const headingUnchanged=initial?.seeded&&headingMatch?.[1]===String(initial.heading).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
   if(original?.hasOriginalHeading&&headingUnchanged&&!input.seo?.replaceSourceContent)input={...input,body:sourceHeading(input.body,original.heading)};
   if(initial&&(!initial.seeded||input.title!==initial.title)&&!context.siteContent?.cmsExplicitSeoByPath?.[input.canonicalPath]?.title)input={...input,seo:{...input.seo,title:input.suffixTitle===false?input.title:`${input.title} — ${siteSettings(context).siteName}`}};
-  input={...input,seo:{...context.siteContent?.sourceSeoByPath?.[input.canonicalPath],...input.seo},body:input.sourceContentRendered?input.body:retainedSourceCopy(input.body,input.canonicalPath,input.seo?.replaceSourceContent===true,context),...(original?{sourceMetadata:{language:original.language,publishedAt:original.publishedAt,modifiedAt:context.siteContent?.modifiedAtByPath?.[input.canonicalPath]??original.modifiedAt,...(original.structuredData&&!input.seo?.replaceSourceContent?{primary:original.structuredData.primary,breadcrumbs:original.structuredData.breadcrumbs}:{}),...input.sourceMetadata}}:{})};
+  input={...input,seo:{...context.siteContent?.sourceSeoByPath?.[input.canonicalPath],...input.seo},body:input.sourceContentRendered?input.body:retainedSourceCopy(input.body,input.canonicalPath,input.seo?.replaceSourceContent===true||context.siteContent?.sourceContentAdoptedByPath?.[input.canonicalPath]===true,context),...(original?{sourceMetadata:{language:original.language,publishedAt:original.publishedAt,modifiedAt:context.siteContent?.modifiedAtByPath?.[input.canonicalPath]??original.modifiedAt,...(original.structuredData&&!input.seo?.replaceSourceContent?{primary:original.structuredData.primary,breadcrumbs:original.structuredData.breadcrumbs}:{}),...input.sourceMetadata}}:{})};
   const sourceSeo=context.siteContent?.sourceSeoByPath?.[input.canonicalPath];
-  if(sourceSeo)input={...input,seo:{...sourceSeo,...input.seo}};
+  if(sourceSeo&&/^\/sermons\/(?!page\/)[^/]+\/$/u.test(input.canonicalPath))input={...input,seo:{...sourceSeo,...input.seo}};
+  else if(sourceSeo){
+    const explicit=context.siteContent?.cmsExplicitSeoByPath?.[input.canonicalPath]??{};
+    const defaults:ContentSeo={...sourceSeo};delete defaults.noindex;
+    const editedTitle=initial&&(!initial.seeded||input.title!==initial.title)&&!explicit.title;
+    input={...input,seo:{...input.seo,...defaults,...explicit,...(editedTitle?{title:input.seo!.title!}:{})}};
+  }
   const {branding,footerVisibility}=siteSettings(context);
   const settings=siteSettings(context);
   const headerAction=settings.headerAction ?? defaultSiteSettings.headerAction!;

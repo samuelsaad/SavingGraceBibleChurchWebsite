@@ -62,6 +62,7 @@ export interface IndexItem {
 }
 
 export type Block =
+  | { kind: "source-content"; nodes: import('../../domain/source-content').SourceNode[] }
   | { kind: "paragraph"; text: Markup; lede?: boolean }
   | { kind: "heading"; level: 2 | 3 | 4; text: string; id?: string }
   | { kind: "list"; ordered?: boolean; items: Markup[] }

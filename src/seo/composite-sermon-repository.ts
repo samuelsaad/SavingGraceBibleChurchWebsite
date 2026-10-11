@@ -1,3 +1,5 @@
+import {applyOriginalCmsSerMons} from './source-sermon-cms';
+import type {CmsPublishedDocument} from '../cms/model';
 /** Source originals plus the unchanged, normally approved public editorial projection. */
 import {z} from 'zod';
 import type {PublicSermonListQuery} from '../api/contracts/public-sermons';
@@ -38,7 +40,7 @@ export interface PublicEditorialSermon {
  /** An existing explicit same-sermon 301, verified by the production factory. */
  canonicalSlug?:string;
 }
-interface RecordProjection {detail:SermonDetail;passageTerms:readonly {name:string;slug:string}[];lastModified:string;indexable:boolean;}
+interface RecordProjection {detail:SermonDetail;passageTerms:readonly {name:string;slug:string}[];lastModified:string;indexable:boolean;sourceWordpressId?:number|null;}
 const summary=(detail:SermonDetail):SermonSummary=>{
  const {sourcePublic,seoDescription,body,media,transcript,questionAnswers,relatedSermons,reviewWarnings,reviewProvenance,relatedThemes,...value}=detail;
  return structuredClone(value);
@@ -71,7 +73,7 @@ export class CompositeSourceSermonRepository implements PublicSermonRepository {
  private readonly nativeSlugs=new Map<string,string>();
  private readonly relatedCache=new Map<string,Promise<SermonDetail['relatedSermons']>>();
  private constructor(private readonly disposition:(path:string)=>Promise<PublicSermonPathDisposition|null>,private readonly relatedLoader?:(id:string,slug:string)=>Promise<SermonDetail['relatedSermons']>){}
- static async create(pages:readonly SourcePublicPage[],approved:readonly PublicEditorialSermon[],disposition:(path:string)=>Promise<PublicSermonPathDisposition|null>,acceptedStaging=false,relatedLoader?:(id:string,slug:string)=>Promise<SermonDetail['relatedSermons']>){
+ static async create(pages:readonly SourcePublicPage[],approved:readonly PublicEditorialSermon[],disposition:(path:string)=>Promise<PublicSermonPathDisposition|null>,acceptedStaging=false,relatedLoader?:(id:string,slug:string)=>Promise<SermonDetail['relatedSermons']>,cms:readonly CmsPublishedDocument[]=[]){
   const repository=new CompositeSourceSermonRepository(disposition,relatedLoader),source=new SourcePublicSermonRepository(pages);
   const candidates=pages.map(p=>sourcePageSchema.parse(p)).filter(p=>p.kind==='sermon'&&!p.issues.length);
   const sourceIds=candidates.flatMap(page=>page.sourceId===null?[]:[page.sourceId]);if(new Set(sourceIds).size!==sourceIds.length)throw Error('source_editorial_duplicate_identity');
@@ -103,10 +105,13 @@ export class CompositeSourceSermonRepository implements PublicSermonRepository {
     if(originalSlug!==slug)repository.aliases.set(pathFor(originalSlug),pathFor(slug));
     if(current.slug!==slug)repository.aliases.set(pathFor(current.slug),pathFor(slug));
    }
-   repository.records.push({detail,passageTerms,lastModified,indexable:page.indexable});
+   repository.records.push({detail,passageTerms,lastModified,indexable:page.indexable,sourceWordpressId:page.sourceId});
    if(page.sourceId!==null)repository.sourceShortlinks.set(String(page.sourceId),pathFor(detail.slug));
   }
   for(const item of approved)if(!used.has(item.detail.id))repository.records.push({detail:structuredClone(item.detail),passageTerms:structuredClone(item.passageTerms),lastModified:item.lastModified,indexable:true});
+  applyOriginalCmsSerMons(repository.records,cms,(oldPath,newPath)=>repository.aliases.set(oldPath,newPath));
+  for(const record of repository.records)if(record.sourceWordpressId!==undefined&&record.sourceWordpressId!==null)repository.sourceShortlinks.set(String(record.sourceWordpressId),pathFor(record.detail.slug));
+  for(const [path,target]of repository.aliases){let final=target;const seen=new Set([path]);while(repository.aliases.has(final)){if(seen.has(final))throw Error('source_cms_redirect_loop');seen.add(final);final=repository.aliases.get(final)!;}repository.aliases.set(path,final);}
   const recordIds=new Set<string>();
   for(const record of repository.records){const slug=canonicalStoredSermonSlug(record.detail.slug);if(slug!==record.detail.slug||repository.bySlug.has(slug)||recordIds.has(record.detail.id))throw Error('source_editorial_route_collision');repository.bySlug.set(slug,record);recordIds.add(record.detail.id);}
   for(const [alias,target]of repository.aliases)if(alias===target||repository.bySlug.has(alias.slice(9,-1)))throw Error('source_editorial_route_collision');
@@ -145,7 +150,7 @@ export class CompositeSourceSermonRepository implements PublicSermonRepository {
 }
 
 /** This is the only production constructor: every enrichment detail crosses the normal public gate. */
-export async function createCompositeSourceSermonRepository(pages:readonly SourcePublicPage[],database:SqlExecutor,acceptedStageRepository?:PublicSermonRepository):Promise<CompositeSourceSermonRepository>{
+export async function createCompositeSourceSermonRepository(pages:readonly SourcePublicPage[],database:SqlExecutor,acceptedStageRepository?:PublicSermonRepository,cms:readonly CmsPublishedDocument[]=[]):Promise<CompositeSourceSermonRepository>{
  const editorial=acceptedStageRepository??new PostgresSermonRepository(database,'public'),sql=acceptedStageRepository?publicEditorialBindingsSql.replace(frontendSermonEligibilitySql('s','public'),"s.deleted_at IS NULL AND s.status NOT IN ('unpublished','archived')"):publicEditorialBindingsSql,rows=(await database.query(sql)).rows.map(row=>bindingSchema.parse(row));
  if(rows.length>10000)throw Error('source_editorial_corpus_limit');
  const originals=[...pages],moved=new Set<string>();
@@ -164,5 +169,5 @@ export async function createCompositeSourceSermonRepository(pages:readonly Sourc
  }
  const approved:PublicEditorialSermon[]=[];
  for(let start=0;start<rows.length;start+=4){const batch=await Promise.all(rows.slice(start,start+4).map(async row=>{const detail=await (editorial.findPublishedSnapshotBySlug?.(row.slug)??editorial.findPublishedBySlug(row.slug));if(!detail){if(acceptedStageRepository)return null;throw Error('source_editorial_changed_during_snapshot');}if(detail.id!==row.id)throw Error('source_editorial_changed_during_snapshot');return{detail,sourceWordpressId:row.source_wordpress_id,editorialChanges:row.editorial_changes,passageTerms:row.passage_terms,lastModified:row.last_modified,...(moved.has(row.id)?{canonicalSlug:row.slug}:{})};}));approved.push(...batch.filter((item):item is NonNullable<typeof item>=>item!==null));}
- return CompositeSourceSermonRepository.create(originals,approved,path=>editorial.findPublicPathDisposition(path),Boolean(acceptedStageRepository),async(id,slug)=>{const current=await editorial.findPublishedBySlug(slug);if(current&&current.id!==id)throw Error('source_editorial_related_changed');return current?.relatedSermons??[];});
+ return CompositeSourceSermonRepository.create(originals,approved,path=>editorial.findPublicPathDisposition(path),Boolean(acceptedStageRepository),async(id,slug)=>{const current=await editorial.findPublishedBySlug(slug);if(current&&current.id!==id)throw Error('source_editorial_related_changed');return current?.relatedSermons??[];},cms);
 }

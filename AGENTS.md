@@ -1,5 +1,34 @@
 # Repository Operating Rules
 
+## D-182 — SEO remediation and isolated recovery (11 October 2026)
+
+Samuel's explicit follow-up authorizes continuing D-181 remediation, protected
+staging verification/deployment and normal Git publication, preserving subsequent
+work. Original WordPress remains read-only and serves production throughout.
+Preserve the original acceptance denominator and every reclassification witness.
+
+For backup/restoration demonstration only, the additional disposable target is
+exactly `savinggrace_test_run_seo_restore_20261011` on PostgreSQL 16 at
+`127.0.0.1:5432`, requiring `ALLOW_LOCAL_DB_WRITE=1` and
+`ALLOW_LOCAL_SEO_RESTORE=1`. Refuse an existing target; record this run's created
+database OID and verify it before cleanup. Never restore over the source or any
+existing database. Associated assets/configuration stay in private confined
+storage; restored applications bind loopback with outbound integrations disabled.
+Original-system recovery may use only task-owned Docker objects under
+`sgbc-seo-wp-restore-20261011`, if an authorized backup exists. Keep missing
+WordPress recovery evidence distinct from PostgreSQL proof.
+
+The follow-up separately permits the verified church GA4 configuration with
+existing consent, sanitized public URL/title, pseudonymous client/session and
+standard engagement fields. Document exact official tag/collection destinations.
+Exclude query/fragment, search/form/contact data, administrator/private identities,
+draft/preview/enrichment prose and credentials. Local/staging/private routes emit
+no production telemetry. Intercept/stub locally first; live synthetic verification
+requires a verified church-owned test stream. No advertising, remarketing, Google
+Signals, production activation or change to live WordPress tracking is authorized.
+Missing property/stream/consent evidence prevents activation, not independent work.
+No production cutover, DNS change, force-push or old-system retirement is granted.
+
 ## D-181 — whole-site SEO migration and acceptance (9 October 2026)
 
 Samuel explicitly authorizes the bounded work in `seo-migration-plan.md`: fresh

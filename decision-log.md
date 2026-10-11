@@ -1120,3 +1120,22 @@ Existing withdrawal decisions prevail. Private captures remain outside Git.
 Historic fixed counts are snapshots, not current completeness criteria. Production
 traffic/DNS cutover and WordPress mutation/removal remain prohibited. See
 `seo-migration-plan.md` for execution, evidence and stop conditions.
+
+## D-182 — complete outstanding SEO remediation (11 October 2026)
+
+Samuel separately authorizes completing the preserved D-181 candidate, including
+finite inventory reconciliation, source/content/link/resource corrections, editable
+CMS adoption, local/protected staging verification/deployment and normal Git push.
+Preserve the original denominator, previous decisions and every change witness.
+The follow-up explicitly authorizes the exact isolated PostgreSQL restore database
+and task-owned WordPress recovery environment defined in AGENTS.md. It also defines
+GA4 destinations/data exclusions, existing-consent and verified-test-stream gates.
+These narrowly supersede the previous restoration and measurement rejections;
+they do not authorize production activation, DNS changes, WordPress mutation,
+recording downloads or fabricated content/administrator approvals.
+
+Original public material remains distinct from new enrichment. CMS source adoption
+preserves existing ownership, revisions and withdrawals; imports use truthful
+system provenance. A single empty calendar export is insufficient retirement
+evidence: the 101 previous removal decisions are withdrawn pending subscription
+and future-content reconciliation. WordPress stays live and retained.

@@ -27,7 +27,7 @@ export interface CmsSettingsPayload {
  headerAction?:{enabled:boolean;label:string;href:string};archiveAbout?:{enabled:boolean;heading:string;text:string};footerExtraMenu?:MenuItem[];
  footerVisibility:{contact:boolean;navigation:boolean;services:boolean;recentSermon:boolean;social:boolean;archiveLinks:boolean};siteName:string;
 }
-export type CmsEventPayload = Omit<Assets<ChurchEvent>,'id'|'venue'> & {id:string;venue:string;status?:'published'|'draft'|'private'};
+export type CmsEventPayload = Omit<Assets<ChurchEvent>,'id'|'venue'|'modules'> & {id:string;venue:string;modules?:CmsModule[];status?:'published'|'draft'|'private'};
 export type CmsVenuePayload = Omit<Venue,'id'> & {id:string};
 export type CmsDocument = Record<string,unknown>;
 export interface CmsSeed {key:string;kind:CmsKind;title:string;path?:string;payload:object;publish:boolean}

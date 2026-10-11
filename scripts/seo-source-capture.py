@@ -99,7 +99,10 @@ def content_tree(node,base,heading):
         value=re.sub(r"\s+"," ",node)
         return [{'tag':'text','text':value}] if value else []
     tag=node['tag']; a=node['attrs']
-    if tag in DROP or any(value in classes(node) for value in ('asp-related-sermons-holder','asp-sermon-navigation','post-siblings','tribe-related-events','tribe-events-related-events-title')): return []
+    # This function is called only inside the selected primary content region.
+    # Nested card headers, footers and navigation carry real titles/dates/links;
+    # unwrap their containers rather than dropping all their descendants.
+    if (tag in DROP and tag not in ('header','footer','nav')) or any(value in classes(node) for value in ('asp-related-sermons-holder','asp-sermon-navigation','post-siblings','tribe-related-events','tribe-events-related-events-title')): return []
     if tag=='h1' and clean(text(node))==heading: return []
     children=[item for child in node['children'] for item in content_tree(child,base,heading)]
     if tag=='h1': tag='h2'

@@ -61,6 +61,9 @@ export type Schedule =
 type ChurchEventInput = Omit<ChurchEvent, "id"> & { id: string };
 
 export interface ChurchEvent {
+  /** Imported historical occurrence pages need not duplicate a maintained recurring series. */
+  calendarVisible?: boolean;
+  modules?: import('./types').Block[];
   seo?: import('../seo').ContentSeo;
   id: string;
   title: string;
@@ -339,7 +342,7 @@ export interface UpcomingOptions {
 /** Every occurrence across events from `today`, soonest first. */
 export function upcomingOccurrences(today: string, options: UpcomingOptions = {}, collection: readonly ChurchEvent[] = events): EventOccurrence[] {
   const until = addDays(today, options.days ?? 70);
-  const selected = collection.filter((event) => !options.eventIds || options.eventIds.includes(event.id));
+  const selected = collection.filter((event) => event.calendarVisible!==false&&(!options.eventIds || options.eventIds.includes(event.id)));
   const all = selected.flatMap((event) => occurrencesBetween(event, today, until));
   all.sort((a, b) => (a.date === b.date ? a.start.localeCompare(b.start) : a.date.localeCompare(b.date)));
   return options.limit ? all.slice(0, options.limit) : all;
@@ -358,6 +361,7 @@ export function isRecurring(event: ChurchEvent): boolean {
 /** Past one-off events and ended schedules, most recent first. */
 export function pastEvents(today: string, collection: readonly ChurchEvent[] = events): ChurchEvent[] {
   return collection
+    .filter((event) => event.calendarVisible!==false)
     .filter((event) => (event.schedule.kind === "single" ? event.schedule.date < today : Boolean(event.schedule.until && event.schedule.until < today)))
     .sort((a, b) => eventDateKey(b).localeCompare(eventDateKey(a)));
 }

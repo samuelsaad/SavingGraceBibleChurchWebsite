@@ -2,12 +2,17 @@
 import {createHash,randomBytes} from 'node:crypto';
 import {spawn,execFile} from 'node:child_process';
 import {promisify} from 'node:util';
-import {mkdir,readFile,writeFile,lstat,realpath,chmod} from 'node:fs/promises';
+import {mkdir,readFile,writeFile,lstat,realpath,chmod,readdir} from 'node:fs/promises';
+import {createServer} from 'node:http';
 import {resolve,join,relative,isAbsolute} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {Pool,type PoolClient} from 'pg';
-import {assertReadOnlyLocalDatabase,assertDisposableIntegrationTestDatabase,disposableIntegrationDatabaseName} from '../src/migration/local-database-safety';
+import {assertReadOnlyLocalDatabase} from '../src/migration/local-database-safety';
 import {protectedLocalPostgresPassword,protectedLocalPostgresUser} from '../src/migration/protected-local-postgres';
+import {createVersionedSourceHandler} from '../src/seo/runtime-snapshot';
+import {readSourcePublicPages} from '../src/seo/source-public-store';
+import {sourceOrigin} from '../src/seo/source-public-model';
+import {restoreConstraintCanonical} from './seo-restore-constraint-equivalence';
 
 const sourceDatabase='savinggrace_sermons_test';
 const sourceUrl='postgresql://127.0.0.1:5432/'+sourceDatabase;
@@ -18,13 +23,12 @@ export type DatabaseFingerprint=Record<string,TableFingerprint>;
 
 export function recoveryTarget(token:string,env:NodeJS.ProcessEnv):string {
  if(env.ALLOW_LOCAL_DB_WRITE!=='1'||env.ALLOW_LOCAL_SEO_RESTORE!=='1')throw Error('seo_restore_opt_in_required');
- const name=disposableIntegrationDatabaseName(token);
- assertDisposableIntegrationTestDatabase('postgresql://127.0.0.1:5432/'+name,token,env.ALLOW_LOCAL_DB_WRITE);
- return name;
+ if(token!=='seo_restore_20261011')throw Error('seo_restore_target_refused');
+ return 'savinggrace_test_run_seo_restore_20261011';
 }
 export function assertRecoveryAuthority(governance:string):void {
- const start=governance.indexOf('## D-181'),end=governance.indexOf('\n## ',start+1),scope=governance.slice(start,end<0?undefined:end);
- if(start<0||!scope.includes('backup/restoration demonstration only')||!scope.includes('savinggrace_test_run_<run-token>')||!scope.includes('ALLOW_LOCAL_SEO_RESTORE=1')||!scope.includes('Never restore over the source'))throw Error('seo_restore_governance_required');
+ const start=governance.indexOf('## D-182'),end=governance.indexOf('\n## ',start+1),scope=governance.slice(start,end<0?undefined:end);
+ if(start<0||!scope.includes('backup/restoration demonstration only')||!scope.includes('savinggrace_test_run_seo_restore_20261011')||!scope.includes('ALLOW_LOCAL_SEO_RESTORE=1')||!scope.includes('Never restore over the source'))throw Error('seo_restore_governance_required');
 }
 export function fingerprintSql(table:string):string {
  if(!/^[a-z][a-z0-9_]*$/u.test(table))throw Error('seo_restore_table_identifier');
@@ -47,6 +51,44 @@ async function fingerprints(client:Pick<PoolClient,'query'>):Promise<DatabaseFin
  const result:DatabaseFingerprint={};
  for(const {tablename}of tables){const row=(await client.query<{rows:string;sha256:string}>(fingerprintSql(tablename))).rows[0]!;const count=Number(row.rows);if(!Number.isSafeInteger(count)||count<0||! /^[a-f0-9]{64}$/u.test(row.sha256))throw Error('seo_restore_invalid_fingerprint');result[tablename]={rows:count,sha256:row.sha256};}
  return result;
+}
+async function schemaFingerprint(client:Pick<PoolClient,'query'>,receipt?:string):Promise<string>{
+ const definitions=await client.query(`SELECT 'constraint' AS kind,c.conrelid::regclass::text AS parent,c.conname AS name,pg_get_constraintdef(c.oid) AS definition FROM pg_constraint c JOIN pg_namespace n ON n.oid=c.connamespace WHERE n.nspname='public'
+ UNION ALL SELECT 'index',tablename,indexname,indexdef FROM pg_indexes WHERE schemaname='public'
+ UNION ALL SELECT 'column',table_name,column_name,concat_ws('|',data_type,udt_name,is_nullable,column_default) FROM information_schema.columns WHERE table_schema='public'
+ UNION ALL SELECT 'trigger',event_object_table,trigger_name,action_statement FROM information_schema.triggers WHERE trigger_schema='public'
+ ORDER BY kind,parent,name,definition`);
+ const sequences=(await client.query("SELECT sequencename FROM pg_sequences WHERE schemaname='public' ORDER BY sequencename")).rows;
+ const values=[];for(const {sequencename}of sequences){if(!/^[a-z][a-z0-9_]*$/u.test(sequencename))throw Error('seo_restore_sequence_identifier');values.push({name:sequencename,...(await client.query(`SELECT last_value::text,is_called FROM public."${sequencename}"`)).rows[0]});}
+ const captured={definitions:definitions.rows,sequences:values};if(receipt)await privateFile(receipt,captured);
+ return hash(JSON.stringify({...captured,definitions:definitions.rows.map(row=>({...row,definition:row.kind==='constraint'?restoreConstraintCanonical(row.name,row.definition):row.definition}))}));
+}
+async function restoreAssets(source:string,destination:string):Promise<{files:number;bytes:number;sha256:string}>{
+ const root=await realpath(source),items:Array<{path:string;sha256:string;bytes:number}>=[];
+ const visit=async(path:string)=>{for(const entry of await readdir(path,{withFileTypes:true})){
+  const absolute=join(path,entry.name),stat=await lstat(absolute);if(stat.isSymbolicLink()||await realpath(absolute)!==absolute)throw Error('seo_restore_asset_symlink');
+  const name=relative(root,absolute);if(name.startsWith('..')||isAbsolute(name))throw Error('seo_restore_asset_escape');
+  const output=join(destination,name);
+  if(stat.isDirectory()){await mkdir(output,{recursive:true,mode:0o700});await visit(absolute);}
+  else if(stat.isFile()){
+   const bytes=await readFile(absolute);await writeFile(output,bytes,{flag:'wx',mode:0o600});
+   if(hash(await readFile(output))!==hash(bytes))throw Error('seo_restore_asset_hash');items.push({path:name.replaceAll('\\','/'),sha256:hash(bytes),bytes:bytes.length});
+  }else throw Error('seo_restore_asset_type');
+ }};await mkdir(destination,{mode:0o700});await visit(root);items.sort((a,b)=>a.path.localeCompare(b.path,'en'));
+ return {files:items.length,bytes:items.reduce((n,item)=>n+item.bytes,0),sha256:hash(JSON.stringify(items))};
+}
+async function applicationProof(pool:Pool,directory:string):Promise<{resourceRoutes:number;httpChecks:number}>{
+ const pages=await readSourcePublicPages(pool),handler=await createVersionedSourceHandler({reader:pool,assetDirectory:directory,releaseIdentity:'0'.repeat(40),policy:{environment:'production',canonicalOrigin:sourceOrigin}});
+ let resources=0;for(const page of pages.filter(page=>page.asset)){
+  const response=await handler(new Request(sourceOrigin+page.path));const bytes=Buffer.from(await response.arrayBuffer());
+  if(response.status!==200||hash(bytes)!==page.asset!.sha256||bytes.length!==page.asset!.bytes||response.headers.get('Content-Type')?.split(';')[0]!==page.asset!.contentType)throw Error('seo_restore_resource_response');resources++;
+ }
+ const server=createServer(async(req,res)=>{try{if(req.method!=='GET'||req.headers.host!=='127.0.0.1:4446')throw Error();const response=await handler(new Request(sourceOrigin+(req.url??'/')));res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));}catch{res.writeHead(503);res.end();}});
+ await new Promise<void>((done,reject)=>{server.once('error',reject);server.listen(4446,'127.0.0.1',done);});
+ let checks=0;try{const targets=['/','/sermons/','/robots.txt','/sitemap.xml','/admin/','/frontend-preview/',pages.find(page=>page.kind==='sermon')!.path,pages.find(page=>page.kind==='event')!.path];
+  for(const path of targets){const response=await fetch('http://127.0.0.1:4446'+path,{redirect:'manual'});const expected=/^\/(?:admin|frontend-preview)/u.test(path)?404:200;if(response.status!==expected)throw Error('seo_restore_http_response');const body=await response.text();if(expected===200&&response.headers.get('Content-Type')?.includes('text/html')&&!body.includes(sourceOrigin))throw Error('seo_restore_canonical_response');checks++;}
+ }finally{await new Promise<void>(done=>server.close(()=>done()));}
+ return {resourceRoutes:resources,httpChecks:checks};
 }
 async function privateFile(path:string,value:unknown):Promise<void>{await writeFile(path,JSON.stringify(value,null,2)+'\n',{flag:'wx',mode:0o600});}
 async function runTool(binary:string,args:string[],env:NodeJS.ProcessEnv):Promise<void>{
@@ -71,12 +113,12 @@ async function toolDirectory():Promise<string>{
 
 export async function runLocalRecoveryProof():Promise<void>{
  assertRecoveryAuthority(await readFile('AGENTS.md','utf8'));
- const token=new Date().toISOString().replace(/\D/gu,'')+randomBytes(8).toString('hex'),target=recoveryTarget(token,process.env);
+ const token='seo_restore_20261011',runId=new Date().toISOString().replace(/\D/gu,'')+randomBytes(8).toString('hex'),target=recoveryTarget(token,process.env);
  assertReadOnlyLocalDatabase(sourceUrl);
  const tools=await toolDirectory(),suffix=process.platform==='win32'?'.exe':'',password=await protectedLocalPostgresPassword();
  const connection={host:'127.0.0.1',port:5432,user:protectedLocalPostgresUser,password,max:1,connectionTimeoutMillis:5000,statement_timeout:120000,options:'-c timezone=UTC',application_name:'d181-private-local-recovery-proof'};
  const admin=new Pool({...connection,database:'postgres'}),source=new Pool({...connection,database:sourceDatabase}),restored=new Pool({...connection,database:target});
- const root=await realpath(process.cwd()),directory=resolve(root,'private/seo-recovery',token),relativePath=relative(root,directory);
+ const root=await realpath(process.cwd()),directory=resolve(root,'private/seo-recovery',runId),relativePath=relative(root,directory);
  if(relativePath.startsWith('..')||isAbsolute(relativePath))throw Error('seo_restore_private_directory');
  await mkdir(directory,{recursive:true,mode:0o700});
  // The fixed private tree is ignored; refuse symlinked ancestors or output files.
@@ -95,7 +137,7 @@ export async function runLocalRecoveryProof():Promise<void>{
   if(!/^[A-Fa-f0-9-]+$/u.test(snapshot))throw Error('seo_restore_snapshot_identity');
   await runTool(join(tools,'pg_dump'+suffix),[...args,'--dbname='+sourceDatabase,'--format=custom','--snapshot='+snapshot,'--file='+archive],childEnv);await chmod(archive,0o600);
   const bytes=await readFile(archive);if(bytes.subarray(0,5).toString()!=='PGDMP')throw Error('seo_restore_dump_header');
-  const before=await fingerprints(sourceClient);await sourceClient.query('ROLLBACK');sourceTransaction=false;sourceClient.release();sourceClient=undefined;
+  const before=await fingerprints(sourceClient),beforeSchema=await schemaFingerprint(sourceClient,join(directory,'schema-before.private.json'));await sourceClient.query('ROLLBACK');sourceTransaction=false;sourceClient.release();sourceClient=undefined;
   compareFingerprints(before,before);
   await privateFile(join(directory,'source-snapshot.private.json'),{snapshot,sourceDatabase,tables:before,archiveSha256:hash(bytes),archiveBytes:bytes.length});
   recoveryTarget(token,process.env);await identity(admin,'postgres',false);
@@ -110,7 +152,11 @@ export async function runLocalRecoveryProof():Promise<void>{
   const restoredClient=await restored.connect();let after:DatabaseFingerprint;
   try{await restoredClient.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY');await identity(restoredClient,target,true);after=await fingerprints(restoredClient);await restoredClient.query('ROLLBACK');}finally{restoredClient.release();}
   compareFingerprints(before,after);
-  proof={outcome:'local_recovery_proven',sourceDatabase,archiveSha256:hash(bytes),archiveBytes:bytes.length,tables:after,tableCount:Object.keys(after).length,sourceSnapshotConsistent:true,fingerprintsMatch:true,ownershipAndAclRecreation:'not_tested_on_isolated_local_target'};
+  const afterSchema=await schemaFingerprint(restored,join(directory,'schema-after.private.json'));if(beforeSchema!==afterSchema)throw Error('seo_restore_schema_mismatch');
+  if(!process.env.CMS_STORAGE_DIRECTORY)throw Error('seo_restore_assets_required');
+  const assetDirectory=join(directory,'assets'),assetProof=await restoreAssets(process.env.CMS_STORAGE_DIRECTORY,assetDirectory);
+  await restored.query('SET default_transaction_read_only=on');const application=await applicationProof(restored,assetDirectory);
+  proof={outcome:'local_recovery_proven',sourceDatabase,archiveSha256:hash(bytes),archiveBytes:bytes.length,tables:after,tableCount:Object.keys(after).length,sourceSnapshotConsistent:true,fingerprintsMatch:true,schemaFingerprint:afterSchema,constraintsIndexesTriggersSequencesMatch:true,assetProof,application,outboundIntegrationsEnabled:false,wordpressRecovery:'not_tested_backup_unavailable',ownershipAndAclRecreation:'not_tested_on_isolated_local_target'};
  }catch(error){failure=error;}
  finally{
   if(sourceClient){if(sourceTransaction)await sourceClient.query('ROLLBACK');sourceClient.release();}

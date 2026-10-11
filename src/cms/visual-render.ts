@@ -1,3 +1,4 @@
+import {originalSermonPreview} from './source-sermon-preview';
 import {preserveSourceMetadata} from '../seo/source-metadata';
 import type {SourcePublicPage} from '../seo/source-public-model';
 /** Transient server-rendered canvases. Tokens are session-bound transport only;
@@ -104,10 +105,13 @@ export function createCmsVisualRenderHandler(options:CmsVisualRenderOptions){
    if(entity.rowVersion!==input.expectedRowVersion)return json({error:{code:"version_conflict",message:"This content changed in another session. Reload before continuing.",currentRowVersion:entity.rowVersion}},409);
    const content=validateCmsContent(entity.kind,input.content);
    const snapshot=overlay(await options.repository.getPublishedSnapshot(),entity,content),path=canvasPath(entity,content,snapshot,input.path);
-   const selectedContent=createCmsFrontendSnapshot(snapshot,await options.assets(),input.mode==="edit");
-   const projectedContent=options.sourcePages?preserveSourceMetadata(selectedContent,await options.sourcePages()):selectedContent;
+   const selectedContent=createCmsFrontendSnapshot(snapshot,await options.assets(),input.mode==="edit",true);
+   const originals=options.sourcePages?await options.sourcePages():[];
+   const projectedContent=originals.length?preserveSourceMetadata(selectedContent,originals):selectedContent;
    const context:FrontendRenderContext={mode:"restricted",basePath:"",siteContent:projectedContent,...(input.mode==="edit"?{visualEditor:{entityId:entity.id,kind:entity.kind}}:{})};
-   const response=await createChurchSiteHandler(createCmsRenderSermonRepository(options.sermons),context)(new Request(url.origin+path));
+   let response:Response|null;
+   if(content.template==='source-sermon'){response=await originalSermonPreview(snapshot.entities.find(e=>e.id===entity.id)!,originals,context,selectedContent.pages.find(p=>p.path===path)?.blocks??[]);}
+   else response=await createChurchSiteHandler(createCmsRenderSermonRepository(options.sermons),context)(new Request(url.origin+path));
    if(!response||response.status!==200||!response.headers.get("content-type")?.startsWith("text/html"))return json({error:{code:"preview_unavailable",message:"This content does not currently have a website preview."}},422);
    const html=await response.text(),size=Buffer.byteLength(html);
    if(size>maximumFrameBytes)return json({error:{code:"preview_too_large",message:"This page is too large to preview."}},413);
