@@ -117,7 +117,10 @@ export async function runLocalRecoveryProof():Promise<void>{
  assertReadOnlyLocalDatabase(sourceUrl);
  const tools=await toolDirectory(),suffix=process.platform==='win32'?'.exe':'',password=await protectedLocalPostgresPassword();
  const connection={host:'127.0.0.1',port:5432,user:protectedLocalPostgresUser,password,max:1,connectionTimeoutMillis:5000,statement_timeout:120000,options:'-c timezone=UTC',application_name:'d181-private-local-recovery-proof'};
- const admin=new Pool({...connection,database:'postgres'}),source=new Pool({...connection,database:sourceDatabase}),restored=new Pool({...connection,database:target});
+ // The restored runtime concurrently reads source, CMS and asset snapshots.
+ // Keep source/admin snapshots single-connection; permit only the isolated reader
+ // to use the application's bounded four-connection pool.
+ const admin=new Pool({...connection,database:'postgres'}),source=new Pool({...connection,database:sourceDatabase}),restored=new Pool({...connection,database:target,max:4,options:'-c timezone=UTC -c default_transaction_read_only=on'});
  const root=await realpath(process.cwd()),directory=resolve(root,'private/seo-recovery',runId),relativePath=relative(root,directory);
  if(relativePath.startsWith('..')||isAbsolute(relativePath))throw Error('seo_restore_private_directory');
  await mkdir(directory,{recursive:true,mode:0o700});
@@ -152,11 +155,15 @@ export async function runLocalRecoveryProof():Promise<void>{
   const restoredClient=await restored.connect();let after:DatabaseFingerprint;
   try{await restoredClient.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY');await identity(restoredClient,target,true);after=await fingerprints(restoredClient);await restoredClient.query('ROLLBACK');}finally{restoredClient.release();}
   compareFingerprints(before,after);
+  // Session defaults apply to every pooled connection, including later reads.
+  const readerGuards=await Promise.all(Array.from({length:4},()=>restored.connect()));
+  try{for(const client of readerGuards)await identity(client,target,true);}
+  finally{for(const client of readerGuards)client.release();}
   const afterSchema=await schemaFingerprint(restored,join(directory,'schema-after.private.json'));if(beforeSchema!==afterSchema)throw Error('seo_restore_schema_mismatch');
   if(!process.env.CMS_STORAGE_DIRECTORY)throw Error('seo_restore_assets_required');
   const assetDirectory=join(directory,'assets'),assetProof=await restoreAssets(process.env.CMS_STORAGE_DIRECTORY,assetDirectory);
   await restored.query('SET default_transaction_read_only=on');const application=await applicationProof(restored,assetDirectory);
-  proof={outcome:'local_recovery_proven',sourceDatabase,archiveSha256:hash(bytes),archiveBytes:bytes.length,tables:after,tableCount:Object.keys(after).length,sourceSnapshotConsistent:true,fingerprintsMatch:true,schemaFingerprint:afterSchema,constraintsIndexesTriggersSequencesMatch:true,assetProof,application,outboundIntegrationsEnabled:false,wordpressRecovery:'not_tested_backup_unavailable',ownershipAndAclRecreation:'not_tested_on_isolated_local_target'};
+  proof={outcome:'local_recovery_proven',sourceDatabase,archiveSha256:hash(bytes),archiveBytes:bytes.length,tables:after,tableCount:Object.keys(after).length,sourceSnapshotConsistent:true,fingerprintsMatch:true,readOnlyReaderConnectionsVerified:4,schemaFingerprint:afterSchema,constraintsIndexesTriggersSequencesMatch:true,assetProof,application,outboundIntegrationsEnabled:false,wordpressRecovery:'not_tested_backup_unavailable',ownershipAndAclRecreation:'not_tested_on_isolated_local_target'};
  }catch(error){failure=error;}
  finally{
   if(sourceClient){if(sourceTransaction)await sourceClient.query('ROLLBACK');sourceClient.release();}

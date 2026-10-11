@@ -59,6 +59,13 @@ export const cmsEditorStyles=`
 .cms-editor-section{display:contents}[data-cms-path],[data-cms-global]{cursor:pointer}.cms-editor-hover{outline:1px dashed #527485!important;outline-offset:3px}.cms-editor-selected{outline:2px solid #183d50!important;outline-offset:4px}[contenteditable=true]{cursor:text;caret-color:#183d50;outline:2px solid #183d50!important;outline-offset:4px}.cms-editor-hidden{border:1px dashed #6b7b84;background:#eef3f4;color:#183d50;padding:1rem;margin:1rem 0;font:600 .875rem/1.5 "Bitstream Vera Sans",sans-serif}.cms-editor-hidden span{display:block;font-weight:400}.cms-editor-drop-before{box-shadow:0 -4px 0 #183d50!important}.cms-editor-drop-after{box-shadow:0 4px 0 #183d50!important}::selection{background:#dbe8ec;color:#183d50}.ve-selected{outline:2px solid #90411f!important;outline-offset:3px}.ve-hovered{outline:1px solid #183d50!important;outline-offset:3px}.ve-frame-tools{position:fixed;inset:auto;top:0;left:0;z-index:100000;display:flex;align-items:center;gap:2px;padding:4px;background:#fff;border:1px solid #6b7b84;border-radius:4px;font:400 13px/1.4 "Bitstream Vera Sans",sans-serif;color:#183d50}.ve-frame-tools button{min-height:32px;padding:5px 8px;background:#fff;border:0;border-radius:3px;color:#183d50;cursor:pointer}.ve-frame-tools button:hover{background:#eef3f4}.ve-frame-tools button:focus-visible{outline:2px solid #183d50}.ve-frame-tools button:disabled{color:#53616a;cursor:default}.ve-insertion{position:fixed;height:3px;background:#90411f;pointer-events:none;z-index:100001}.ve-editable{outline:2px solid #90411f!important;outline-offset:3px;caret-color:#90411f}
 `;
 
+// Published render snapshots are replaced whenever their version changes. A weak
+// key releases obsolete inventories; editor frames keep their live scan behavior.
+const presentationSnapshots=new WeakMap<object,boolean>();
 export function hasCmsPresentation(context:FrontendRenderContext):boolean {
- const walk=(value:unknown):boolean=>{if(!value||typeof value!=="object")return false;const item=value as Record<string,unknown>;if(item.presentation||item.cmsPresentation||item.kind==="panel"&&item.columns)return true;return Object.values(item).some(walk);};return walk(context.siteContent);
+ const snapshot=context.siteContent;if(!snapshot)return false;
+ const cached=context.visualEditor?undefined:presentationSnapshots.get(snapshot);
+ if(cached!==undefined)return cached;
+ const walk=(value:unknown):boolean=>{if(!value||typeof value!=="object")return false;const item=value as Record<string,unknown>;if(item.presentation||item.cmsPresentation||item.kind==="panel"&&item.columns)return true;return Object.values(item).some(walk);};
+ const present=walk(snapshot);if(!context.visualEditor)presentationSnapshots.set(snapshot,present);return present;
 }

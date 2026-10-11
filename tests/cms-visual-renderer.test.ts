@@ -51,6 +51,19 @@ describe("actual website visual-editor renderer",()=>{
   expect(published).toContain("cms-panel-columns--2");expect(published).not.toContain("data-cms-");expect(published).not.toContain('style="');
   expect(published).toContain('@media(max-width:45rem){.cms-panel-columns{grid-template-columns:1fr}');
  });
+ it("refreshes presentation CSS across published snapshots and restored layouts",()=>{
+  const source=snapshot(),page=selected(source,"page:about") as unknown as CmsPagePayload;
+  page.modules=[{id:"copy",enabled:true,block:{kind:"paragraph",text:"Anonymous published layout"}}];
+  const first=contexts(source).visitor;
+  expect(renderChurchPage(first.siteContent!.pages.find(p=>p.id==="about")!,data,first)).not.toContain(".cms-presentation{");
+  page.modules[0]!.presentation={background:"soft"};
+  const changed=contexts(source).visitor;
+  const rendered=renderChurchPage(changed.siteContent!.pages.find(p=>p.id==="about")!,data,changed);
+  expect(rendered).toContain(".cms-presentation{");expect(rendered).toContain("cms-presentation--background-soft");
+  delete page.modules[0]!.presentation;
+  const restored=contexts(source).visitor;
+  expect(renderChurchPage(restored.siteContent!.pages.find(p=>p.id==="about")!,data,restored)).not.toContain(".cms-presentation{");
+ });
  it("maps home headings, paragraphs, service links and per-placement images",()=>{
   const source=snapshot(),home=selected(source,"home")as unknown as CmsHomePayload;
   const arrival=home.modules[0]!.block;if(arrival.kind!=="home-arrival")throw new Error("fixture");arrival.mediaAlt="Anonymous congregation image";arrival.mediaFocalPoint={x:25,y:50};

@@ -116,7 +116,13 @@ export function registerRemainingAiReviewPostgresTests(getPool:()=>Pool,runSchem
   }));
   it("serializes identical concurrent packets into a single decision set",async()=>fixture(async(p,s)=>{
     const results=await Promise.allSettled([applyRemainingReview(p,packet(s)),applyRemainingReview(p,packet(s))]);
-    expect(results.filter(r=>r.status==="fulfilled")).toHaveLength(1);
+    const completed=results.filter((r):r is PromiseFulfilledResult<Awaited<ReturnType<typeof applyRemainingReview>>>=>r.status==="fulfilled");
+    expect(completed.filter(r=>r.value.outcome==="recorded")).toHaveLength(1);
+    expect(completed.reduce((count,r)=>count+r.value.recordedComponents,0)).toBe(7);
+    for(const result of results){
+      if(result.status==="rejected")expect(result.reason.message).toBe("remaining_review_scope_evidence_or_concurrency_conflict");
+      else if(result.value.outcome==="unchanged")expect(result.value.recordedComponents).toBe(0);
+    }
     expect((await p.query("SELECT count(*)::int AS n FROM sermon_ai_component_reviews WHERE sermon_id=$1",[id])).rows[0].n).toBe(7);
   }));
   it("keeps scope, member and decision history immutable with guarded deletion and tombstone protection",async()=>fixture(async(p,s)=>{
