@@ -16,6 +16,12 @@ describe('bounded original sources for authenticated CMS preview',()=>{
   const db=database();await readCmsPreviewSources(db as never,'/sermons/renamed/',{template:'source-sermon',source:{link:origin+'/anonymous/'}});expect(db.calls[0]?.paths).toEqual(['/anonymous/']);
   for(const link of ['https://elsewhere.example/anonymous/','http://192.0.2.1/?p=1',origin+'/anonymous/#draft'])await expect(readCmsPreviewSources(db as never,'/sermons/renamed/',{template:'source-sermon',source:{link}})).rejects.toThrow('source_cms_preview_identity');
  });
+ it('decodes bounded text payloads with the same complete schema and identity checks',async()=>{
+  const query=async()=>({rows:[{payload:JSON.stringify(page),version_sha256:sourceVersionHash(page)}]});
+  expect(await readSourcePublicPages({query} as never,[page.path])).toEqual([page]);
+  const altered={...page,title:'Different anonymous source title'};
+  await expect(readSourcePublicPages({query:async()=>({rows:[{payload:JSON.stringify(altered),version_sha256:sourceVersionHash(page)}]})} as never,[page.path])).rejects.toThrow('source_public_version_integrity');
+ });
  it('rejects oversized or unsafe read scopes and verifies every selected payload hash',async()=>{
   const db=database();await expect(readSourcePublicPages(db as never,['/a/','/b/','/c/'])).rejects.toThrow('source_public_read_scope');
   await expect(readSourcePublicPages(db as never,['/admin/'])).rejects.toThrow();expect(await readSourcePublicPages(db as never,[])).toEqual([]);expect(db.calls).toEqual([]);

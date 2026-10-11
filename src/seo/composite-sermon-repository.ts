@@ -83,7 +83,8 @@ export class CompositeSourceSermonRepository implements PublicSermonRepository {
   pages=pages.filter(page=>!withdrawnPaths.has(page.path));
   approved=approved.filter(item=>item.sourceWordpressId===null||!withdrawnIds.has(item.sourceWordpressId));
   const repository=new CompositeSourceSermonRepository(disposition,relatedLoader),source=new SourcePublicSermonRepository(pages);
-  const candidates=pages.map(p=>sourcePageSchema.parse(p)).filter(p=>p.kind==='sermon'&&!p.issues.length);
+  const candidates:SourcePublicPage[]=[];
+  for(const input of pages){const page=sourcePageSchema.parse(input);if(page.kind==='sermon'&&!page.issues.length)candidates.push(page);}
   const sourceIds=candidates.flatMap(page=>page.sourceId===null?[]:[page.sourceId]);if(new Set(sourceIds).size!==sourceIds.length)throw Error('source_editorial_duplicate_identity');
   const bySource=new Map<string,PublicEditorialSermon>(),ids=new Set<string>();
   for(const item of approved){sermonDetailSchema.parse(item.detail);if(item.detail.sourcePublic||!acceptedStaging&&(item.detail.reviewState||item.detail.reviewProvenance))throw Error('source_editorial_private_projection');

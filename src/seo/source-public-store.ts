@@ -38,8 +38,15 @@ export async function importSourcePublicBundle(db:Db,input:unknown,releaseCommit
 }
 export async function readSourcePublicPages(db:Db,paths?:readonly string[]):Promise<SourcePublicPage[]>{
  if(paths){if(paths.length>2)throw Error('source_public_read_scope');paths.forEach(path=>sourcePathSchema.parse(path));if(!paths.length)return [];}
- const rows=(await db.query<{payload:unknown;version_sha256:string}>(`SELECT v.payload,v.version_sha256 FROM source_public_routes r JOIN source_public_versions v USING(version_sha256) WHERE NOT r.withdrawn AND NOT EXISTS(SELECT 1 FROM sermons s WHERE s.source_wordpress_id=r.source_wordpress_id AND s.status IN ('unpublished','archived')) AND NOT EXISTS(SELECT 1 FROM redirects d WHERE d.old_path=r.path)${paths?' AND r.path=ANY($1::text[])':''} ORDER BY r.path`,paths?[paths]:[])).rows;
- return rows.map(row=>{const page=sourcePageSchema.parse(row.payload);if(sourceVersionHash(page)!==row.version_sha256)throw Error('source_public_version_integrity');return page;});
+ const rows=(await db.query<{payload:unknown;version_sha256:string}>(`SELECT v.payload::text AS payload,v.version_sha256 FROM source_public_routes r JOIN source_public_versions v USING(version_sha256) WHERE NOT r.withdrawn AND NOT EXISTS(SELECT 1 FROM sermons s WHERE s.source_wordpress_id=r.source_wordpress_id AND s.status IN ('unpublished','archived')) AND NOT EXISTS(SELECT 1 FROM redirects d WHERE d.old_path=r.path)${paths?' AND r.path=ANY($1::text[])':''} ORDER BY r.path`,paths?[paths]:[])).rows;
+ const pages:SourcePublicPage[]=[];
+ // The decoded corpus remains alive; release each consumed wire payload rather
+ // than retaining a second complete copy throughout validation.
+ for(const row of rows){const payload=row.payload;row.payload=undefined;
+  const page=sourcePageSchema.parse(typeof payload==='string'?JSON.parse(payload):payload);
+  if(sourceVersionHash(page)!==row.version_sha256)throw Error('source_public_version_integrity');pages.push(page);
+ }
+ return pages;
 }
 
 /** Restore only this import's pointers when they still match; content/history stay immutable. */

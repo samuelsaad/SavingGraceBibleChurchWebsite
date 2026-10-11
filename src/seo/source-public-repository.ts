@@ -55,7 +55,11 @@ function termOptions(pages:readonly SourcePublicPage[],pick:(page:SourcePublicPa
 export class SourcePublicSermonRepository implements PublicSermonRepository {
   private readonly pages: SourcePublicPage[];
   constructor(pages:readonly SourcePublicPage[],private readonly disposition?:(path:string)=>Promise<import("../server/repositories/sermon-repository").PublicSermonPathDisposition|null>) {
-    this.pages=pages.map(page=>sourcePageSchema.parse(structuredClone(page))).filter(page=>page.kind==="sermon"&&page.sermon&&page.issues.length===0);
+    // Validate every input, retaining only the repository's sermon projections.
+    // The schema already returns an independent value; do not clone the entire
+    // non-sermon corpus before discarding it.
+    this.pages=[];
+    for(const input of pages){const page=sourcePageSchema.parse(input);if(page.kind==="sermon"&&page.sermon&&page.issues.length===0)this.pages.push(page);}
     if(this.pages.some(page=>canonicalStoredSermonSlug(page.sermon!.slug)!==page.sermon!.slug))throw new Error("source_public_sermon_slug_invalid");
     if(new Set(this.pages.map(page=>page.sermon!.slug)).size!==this.pages.length
       || new Set(this.pages.map(page=>page.sermon!.id)).size!==this.pages.length)throw new Error("source_public_duplicate_sermon");
