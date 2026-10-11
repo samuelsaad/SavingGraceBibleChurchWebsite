@@ -134,3 +134,18 @@ zero private-body, secret/source-class or symlink findings. Exact baseline churc
 quotations in the new maintenance bundle are witnessed through its compiled
 dependency manifest; the scanner does not permit new body exports. Both existing
 staging runtimes remain unchanged until the guarded release rehearsal completes.
+
+## Staging plan-order correction
+
+The first adoption attempt stopped before any adoption because the frozen local
+bundle order differed from PostgreSQL staging path order. Both plans contain
+2,126 documents and hold 239 routes. Independent reconstruction using the actual
+staging path order reproduced plan hash
+`d6d594f037c524a80190ed7516a3d093f9c5547211100b6525b1e3c0e18b1154`.
+Every per-document payload is unchanged; the order-independent payload hash is
+`6b8cb38247ceadaac1eb2eee69f2befae2159b2a87f4df0cb8e509de0b30c1f8`.
+The failed attempt and both exact-order proofs remain private. The operator pin
+correction does not change the application image, imported source or CMS content.
+The application release remains `da7d856231341e5e0f7e0ec628ce0c2c75d66cb2`.
+The committed operator correction is executed separately from the retained
+original operator; no immutable release/recovery file is replaced.
