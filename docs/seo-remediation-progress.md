@@ -170,3 +170,30 @@ read-only root, matching incumbent asset ownership without changing any old
 file or credential. New versioned configuration filenames retain failed-run
 evidence and keep exact-equality drift checks. The adoption-flow test verifies
 this identity and frozen plan for both write and replay.
+
+## Corrected admin asset route and final available freeze
+
+Actual protected CMS authentication/listing succeeded. The entity document returned
+200, but `/_astro/cms-admin.js` returned 404 because source visitor routing did not
+retain the exact admin JS/CSS paths. No edit was made. The correction delegates
+only those two exact paths to the existing authenticated handler; anonymous
+requests remain denied and other visitor assets keep their original routing.
+Two meaningful regression cases pass alongside the existing CMS/runtime tests.
+
+The final freeze retains 11,225 source responses and 16,246 discovered URLs, with
+3,849 of 6,852 fixed outcomes and 3,003 unfinished entries. Two completed records
+were recovered by exact hash without another request. The previous source freeze
+and reports remain intact. Three-second global spacing retained the same two
+workers and two-retry ceiling; repeated source cooldowns still prevent complete
+coverage. The copied search witness is now included by the capture tool, with a
+synthetic no-network regression.
+
+The final source/resource union has 1,736 asset observations, including previously
+omitted captured hostname feed variants. It adds exactly 55 canonical resource
+routes without replacing prior content. The 464 differing retained dynamic alias
+observations remain unresolved raw-byte differences. The prepared bundle has
+3,589 routes, including 1,224 resources. The exact staging/local file hash is
+`1cd8329ab848aee0374d733d20c276af3c594d99e087d1a77a98fda11f082fd3`.
+The archive contains 1,203 unique files (49,629,144 body bytes), SHA-256
+`87b64cc90ee3a84b707b88744645c8a4590f3c51670566edc165bb79c16d16be`.
+No recording body was requested. Final verification is still pending.

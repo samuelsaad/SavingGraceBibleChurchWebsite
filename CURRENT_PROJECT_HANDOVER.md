@@ -1,20 +1,44 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
-## D-182 — outstanding SEO remediation in progress
+## D-182 — final SEO remediation candidate in progress
 
-The explicit follow-up authorizes the isolated restore and bounded GA4 scope in
-AGENTS.md. Local backup/assets/application restoration passed; WordPress recovery
-and measurement account evidence remain unavailable. Primary-region extraction
-and source-metadata defaults are corrected. The local 620-route no-clobber delta
-was imported and replayed without changes. CMS adoption added 2,124 private drafts
-and 292 managed original assets; its replay inserted nothing. Browser/HTTP edit,
-save, reload, publish and restore checks passed for original sermon, ordinary-page
-and event templates, and temporary metadata was restored. Staging has not received
-these D-182 changes yet. The finite observed
-frontier is running. Preserve the original acceptance and its full denominator.
-See [the exact progress record](docs/seo-remediation-progress.md). The prior
-NOT READY verdict remains effective until final acceptance is rerun. Both staging
-runtimes still use the D-181 application below; the separate user workspace is intact.
+The isolated `codex/whole-site-seo-migration` branch preserves the separate dirty
+user worktree and its existing local dashboard. The guarded local source import
+now has 3,534 routes. Source-CMS adoption/refresh and local browser draft, publish
+and restore checks passed; no native sermon review or publication was changed.
+The final local backup restoration proved 65 table hashes, schema/constraints,
+1,444 files and 1,169 resource routes, then removed its exact disposable target.
+Original WordPress backup/account evidence remains missing.
+
+Application `da7d856231341e5e0f7e0ec628ce0c2c75d66cb2` is pushed and deployed to both
+existing sealed staging runtimes as image
+`sha256:a1cac6022938b30990ce3de1e39cc22f5bdfefcd8d7ce53544b1dd6ddb86df3e`.
+The source delta added 112 routes and updated 1,890; replay changed nothing.
+Staging adopted 2,126 source documents and 292 managed assets, repaired the two
+incorrect venue/organizer aliases, and passed canary, activation, compatible
+rollback and reactivation with history/credentials preserved. Actual proxy
+boundaries remain non-indexable and SSH/loopback protected.
+
+Protected CMS browser testing identified that source visitor routing intercepted
+`/_astro/cms-admin.js` and CSS. The exact authenticated asset paths are corrected
+and regression-tested for the next normal release. No browser edit was made before
+that failure. The tested operator also fixes deterministic plan ordering,
+exclusive configuration retry and maintenance asset ownership without changing
+old files, credentials or hardening. These failed attempts remain recorded.
+
+The final available source freeze has 11,225 responses and 16,246 discovered URLs,
+including two hash-verified interrupted records recovered without requests.
+The finite queue retains 3,003 unfinished URLs; server rate-limit cooldowns prevent
+a completeness claim. The next no-clobber bundle adds 55 verified feeds (3,589
+routes/1,224 resources) and retains 464 dynamic hostname byte differences for review.
+Its exact source/resource inputs remain private. The original 15,252-row
+acceptance denominator and earlier evidence are retained.
+
+The earlier NOT READY verdict remains effective. Finish the final corrected
+release, protected CMS browser workflow, full final comparisons, restoration and
+safe evidence publication. See [progress](docs/seo-remediation-progress.md).
+No production traffic, DNS, WordPress mutation, recording-body download or
+old-system retirement occurred.
 
 ## D-181 - whole-site SEO candidate; NOT READY FOR CUTOVER
 

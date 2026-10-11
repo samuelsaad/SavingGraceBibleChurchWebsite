@@ -16,12 +16,12 @@ import tarfile
 import time
 
 UPGRADE_SHA = "e41bbc7b36e883665a4f57c07ed1fbd9b222f018d07af9597f90cebfd4e62fb2"
-PREVIOUS_COMMIT = "52dca271bef9e80c15ee76b9b46e2d85ae15de08"
-PREVIOUS_IMAGE = "sha256:b11affa6ee5f919fea6796512d50f2cd43d0ca53a97133470b8658a172cce38f"
+PREVIOUS_COMMIT = "da7d856231341e5e0f7e0ec628ce0c2c75d66cb2"
+PREVIOUS_IMAGE = "sha256:a1cac6022938b30990ce3de1e39cc22f5bdfefcd8d7ce53544b1dd6ddb86df3e"
 BASE_SCHEMA_ORDER = 28
-EXISTING_SOURCE_SHA = "7a1a5ffca195eb99c587eec12bb8a0903269c94c49794034d38525967c1f6845"
-EXISTING_BUNDLE_SHA = "846be1ce89d93c7b41c153c712cb7ec8f1f4d89244aa8cb9ed8b46f3c4d70442"
-INCOMING_BUNDLE_SHA = "3f34acc4b850884c4fbb44bbb66fc0b42c23bb1dfa7f7416f5840cb80ffb1917"
+EXISTING_SOURCE_SHA = "6f4772fa074f6c67b50e290a5350082e079d5cd0103478856058d3b56042a85e"
+EXISTING_BUNDLE_SHA = "3f34acc4b850884c4fbb44bbb66fc0b42c23bb1dfa7f7416f5840cb80ffb1917"
+INCOMING_BUNDLE_SHA = "1cd8329ab848aee0374d733d20c276af3c594d99e087d1a77a98fda11f082fd3"
 SOURCE_TABLES = ("source_public_versions", "source_public_routes", "source_public_imports")
 ASSET_KEY = re.compile(r"[a-f0-9]{64}\.(?:png|jpg|webp|gif|avif|svg|ico|pdf|doc|docx|xls|xlsx|ppt|pptx|rss|atom|ics|zip|otf)")
 MIGRATION = "0028_source_public_migration"
@@ -173,7 +173,7 @@ def owner_secret_identity(base, path):
 
 def verify_existing_source(actual, bundle_hash):
     # Require the frozen incumbent history and the exact reviewed additive delta.
-    expected={"source_public_versions":3424,"source_public_routes":3422,"source_public_imports":2}
+    expected={"source_public_versions":5426,"source_public_routes":3534,"source_public_imports":3}
     if actual.get("sourceCounts") != expected or actual.get("sourceSha256") != EXISTING_SOURCE_SHA or bundle_hash != INCOMING_BUNDLE_SHA:
         fail("seo_existing_source_drift")
 

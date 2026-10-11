@@ -6,5 +6,5 @@ export async function createSourcePublicVisitor(reader:Pool,assetDirectory:strin
  return createVersionedSourceHandler({reader,assetDirectory,...(acceptedStageRepository?{acceptedStageRepository}:{}),releaseIdentity:process.env.RELEASE_COMMIT??'',policy:{environment:'staging',canonicalOrigin:sourceOrigin,rehearsalOrigins:[origin]}});
 }
 export function retainPrivateRoutes(existing:(request:Request)=>Promise<Response>,visitor:(request:Request)=>Promise<Response>){
- return(request:Request)=>{const path=new URL(request.url).pathname;return /^\/(?:admin|api|cms-preview|cms-editor-frame|cms-assets|frontend-preview|related-themes-evaluation|healthz|health)(?:\/|$)/u.test(path)?existing(request):visitor(request);};
+ return(request:Request)=>{const path=new URL(request.url).pathname;return (/^\/(?:admin|api|cms-preview|cms-editor-frame|cms-assets|frontend-preview|related-themes-evaluation|healthz|health)(?:\/|$)/u.test(path)||/^\/_astro\/cms-admin\.(?:js|css)$/u.test(path))?existing(request):visitor(request);};
 }

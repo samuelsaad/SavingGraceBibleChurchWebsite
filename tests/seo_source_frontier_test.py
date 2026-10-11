@@ -21,6 +21,32 @@ class FixedFrontierTests(unittest.TestCase):
    with patch.object(job,'get',return_value=(metadata,raw)) as get:
     job.capture(O+'fixed/')
    get.assert_called_once_with(O+'fixed/');self.assertIn(O+'new/',job.state['discovered']);self.assertNotIn(O+'new/',job.state['pages'])
+ def test_invalid_intervals_fail_before_reading_source_or_contacting_network(self):
+  for interval in [0,61,True,1.5]:
+   with self.assertRaisesRegex(ValueError,'fixed_request_interval_invalid'):
+    F.run(Path('missing-parent'),Path('missing-output'),interval)
+ def test_slower_global_interval_preserves_shared_serialization(self):
+  clock=[100.];sleeps=[]
+  def sleep(duration):sleeps.append(duration);clock[0]+=duration
+  limiter=F.RateLimiter(3)
+  with patch.object(F.time,'monotonic',side_effect=lambda:clock[0]),patch.object(F.time,'sleep',side_effect=sleep):
+   limiter.acquire();limiter.acquire();limiter.acquire()
+  self.assertEqual(sleeps,[0,3,3])
+ def test_frozen_parent_search_witnesses_copy_without_requests(self):
+  with tempfile.TemporaryDirectory() as root:
+   parent=Path(root)/'private'/'parent';parent.mkdir(parents=True);(parent/'pages').mkdir();(parent/'responses').mkdir();(parent/'supplement-search').mkdir()
+   raw=b'User-agent: *\nDisallow: /\n';(parent/'responses'/'robots.txt').write_bytes(raw)
+   record={'status':200,'responsePath':'responses/robots.txt','bodySha256':F.CAP.digest(raw),'headers':{}}
+   (parent/'pages'/'robots.json').write_text(json.dumps(record));pages={origin+'/robots.txt':{'recordPath':'pages/robots.json','bodySha256':F.CAP.digest(raw)} for origin in F.CAP.ORIGINS}
+   body=b'<html><main><p>Anonymous search witness.</p></main></html>';(parent/'supplement-search'/'response.html').write_bytes(body)
+   (parent/'supplement-search'/'record.json').write_text(json.dumps({'responsePath':'supplement-search/response.html','bodySha256':F.CAP.digest(body)}))
+   pages[O+'?s=sample']={'recordPath':'supplement-search/record.json','bodySha256':F.CAP.digest(body)}
+   source={'htmlPhaseFrozen':True,'pages':pages,'discovered':{},'deferred':{},'excluded':{},'assets':{}}
+   path=parent/'ledger.private.json';path.write_text(json.dumps(source));output=parent.parent/'child'
+   with patch.object(F.FixedCapture,'get',side_effect=AssertionError('network forbidden')):
+    F.run(path,output,3)
+   self.assertEqual((output/'supplement-search'/'response.html').read_bytes(),body)
+   child=json.loads((output/'ledger.private.json').read_text());self.assertEqual(child['requestIntervalSeconds'],3);self.assertTrue(child['frontierComplete'])
  def test_shared_limiter_serializes_request_starts(self):
   clock=[100.];sleeps=[]
   def sleep(duration):sleeps.append(duration);clock[0]+=duration

@@ -73,7 +73,8 @@ def create_state(source,source_file,output):
     state.update({'tool':'scripts/seo-source-frontier.py','parentLedgerSha256':CAP.digest(source_file.read_bytes()),'parentLedgerPath':os.path.relpath(source_file,output),'startedAt':CAP.stamp(),'updatedAt':CAP.stamp(),'fixedFrontier':requests,'fixedFrontierSha256':CAP.digest(json.dumps(list(requests),separators=(',',':'))),'frontierComplete':False,'completed':False,'htmlPhaseFrozen':False,'htmlPhaseComplete':False,'pendingUrls':list(requests),'fixedFrontierOutcomes':{},'newObservedUrls':{},'requestIntervalSeconds':1,'maxRetries':2,'maxConcurrency':2,'discoveryPolicy':{'coverageClaim':'all_prior_deferred_urls_requested_without_new_expansion','newUrls':'retained_as_new_observed_unrequested'}})
     return state
 
-def run(source_file,output):
+def run(source_file,output,request_interval=1):
+    if type(request_interval) is not int or not 1 <= request_interval <= 60:raise ValueError("fixed_request_interval_invalid")
     source_file=source_file.resolve();output=output.resolve()
     if 'private' not in output.parts or output==source_file.parent:raise ValueError('new_private_output_required')
     source=json.loads(source_file.read_text(encoding='utf-8'))
@@ -81,12 +82,12 @@ def run(source_file,output):
     primary_hash=CAP.digest(source_file.read_bytes());output.mkdir(parents=True,exist_ok=True)
     state_file=output/'ledger.private.json'
     if not state_file.exists():
-        for name in ('pages','responses','asset-responses'):
+        for name in ('pages','responses','asset-responses','supplement-search'):
             if (source_file.parent/name).exists():shutil.copytree(source_file.parent/name,output/name,dirs_exist_ok=True)
         if (source_file.parent/'assets-capture.private.json').exists():shutil.copy2(source_file.parent/'assets-capture.private.json',output/'parent-assets-capture.private.json')
     state=json.loads(state_file.read_text(encoding='utf-8')) if state_file.exists() else create_state(source,source_file,output)
     if state.get('parentLedgerSha256')!=primary_hash or state.get('fixedFrontierSha256')!=CAP.digest(json.dumps(list(frontier(source)),separators=(',',':'))):raise ValueError('resume_parent_or_frontier_changed')
-    robots={};interval=1
+    robots={};interval=request_interval
     for origin in CAP.ORIGINS:
         summary=source['pages'].get(origin+'/robots.txt')
         if not summary:raise ValueError('parent_robots_missing')
@@ -160,5 +161,5 @@ def run(source_file,output):
     print(json.dumps({'frontierComplete':state['frontierComplete'],'fixedTotal':len(state['fixedFrontier']),'fixedOutcomes':len(state['fixedFrontierOutcomes']),'newObserved':len(state['newObservedUrls']),'parentUnchanged':True}),flush=True)
 
 def main():
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--source',required=True);parser.add_argument('--output',required=True);args=parser.parse_args();run(Path(args.source),Path(args.output))
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--source',required=True);parser.add_argument('--output',required=True);parser.add_argument('--interval',type=int,default=1,choices=range(1,61));args=parser.parse_args();run(Path(args.source),Path(args.output),args.interval)
 if __name__=='__main__':main()
