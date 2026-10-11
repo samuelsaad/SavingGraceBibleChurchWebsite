@@ -160,3 +160,13 @@ file stays intact. An anonymous regression proves exact retry and drift refusal.
 The direct-invocation diagnostic proposal was rejected by automatic approval;
 it was not executed. Deployment continues only through the standard, hash-checked
 operator entry point after this implementation correction is committed.
+
+The first corrected normal adoption then stopped without changing CMS/media rows:
+the maintenance container used UID 0 with all capabilities dropped, while source
+files/directories belong to UID 1000 with modes 600/700. Read-only mode inspection
+verified the unchanged database credential is group-0 readable (mode 440).
+CMS-only maintenance now runs as `1000:0`, preserving dropped capabilities and
+read-only root, matching incumbent asset ownership without changing any old
+file or credential. New versioned configuration filenames retain failed-run
+evidence and keep exact-equality drift checks. The adoption-flow test verifies
+this identity and frozen plan for both write and replay.

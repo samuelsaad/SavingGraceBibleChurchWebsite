@@ -155,6 +155,7 @@ class SeoDeploymentTest(unittest.TestCase):
             calls = []
             def run(command, timeout):
                 cfg = fixture.load(pathlib.Path(command[3])); operation = command[-1]
+                self.assertEqual(cfg["services"]["app"]["user"], "1000:0")
                 calls.append(operation)
                 if operation == "cms-plan":
                     self.assertNotIn("SOURCE_CMS_PLAN_SHA256", cfg["services"]["app"]["environment"])

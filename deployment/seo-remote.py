@@ -365,9 +365,12 @@ def adopt_cms(base, upgrade, helper, root, recovery):
     before = upgrade.cms_snapshot(base); source_before = source_snapshot(base)
     assets_before = base.assets_manifest()
     config = base.load(root / "source-maintenance.json")
+    # Source assets belong to the incumbent UID; group 0 can read the unchanged
+    # owner credential. Root without capabilities cannot traverse UID-1000 files.
+    config["services"]["app"]["user"] = "1000:0"
     config["services"]["app"]["environment"].update({"SOURCE_CMS_ADOPTION": "1", "CMS_STORAGE_DIRECTORY": "/run/cms-assets"})
     config["services"]["app"]["volumes"].append({"type": "bind", "source": str(base.ASSETS), "target": "/run/cms-assets", "read_only": False})
-    path = root / "source-cms-plan-probe.private.json"
+    path = root / "source-cms-plan-probe-v2.private.json"
     save_verified_configuration(base, path, config)
     command = ["docker", "compose", "-f", str(path), "run", "--rm", "--no-deps", "--pull", "never", "app"]
     plan = json.loads(base.run(command + ["cms-plan"], timeout=600))
@@ -380,7 +383,7 @@ def adopt_cms(base, upgrade, helper, root, recovery):
             fail("seo_cms_plan_scope")
         frozen = plan; base.save(marker, frozen)
     config["services"]["app"]["environment"]["SOURCE_CMS_PLAN_SHA256"] = frozen["planSha256"]
-    path = root / "source-cms-adoption-maintenance.private.json"
+    path = root / "source-cms-adoption-maintenance-v2.private.json"
     save_verified_configuration(base, path, config)
     command = ["docker", "compose", "-f", str(path), "run", "--rm", "--no-deps", "--pull", "never", "app"]
     result = json.loads(base.run(command + ["adopt-cms"], timeout=900))
@@ -410,7 +413,7 @@ def repair_aliases(base, upgrade, helper, root, recovery):
     if set(active_phases(base, helper, root, recovery).values()) != {"bridge"} or not (root / "source-cms-adoption.receipt.json").exists():
         fail("seo_cms_adoption_required")
     before=upgrade.cms_snapshot(base); source=source_snapshot(base); assets=base.assets_manifest()
-    command=["docker","compose","-f",str(root / "source-cms-adoption-maintenance.private.json"),"run","--rm","--no-deps","--pull","never","app","repair-aliases"]
+    command=["docker","compose","-f",str(root / "source-cms-adoption-maintenance-v2.private.json"),"run","--rm","--no-deps","--pull","never","app","repair-aliases"]
     result=json.loads(base.run(command,timeout=600)); replay=json.loads(base.run(command,timeout=600))
     expected={"/venue/saving-grace-bible-church/","/organiser/saving-grace-bible-church/"}
     if {r["path"] for r in result.get("results",[])}!=expected or any(r["outcome"] not in ("repaired","already_repaired") for r in result["results"]) or any(r["outcome"]!="already_repaired" for r in replay.get("results",[])):
