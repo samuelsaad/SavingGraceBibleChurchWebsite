@@ -1,3 +1,4 @@
+import {readCmsPreviewSources} from '../seo/source-preview';
 import {resolve} from "node:path";
 import {randomBytes} from "node:crypto";
 import {createApplicationApiRouter} from "../server/http/application-api-router";
@@ -23,7 +24,7 @@ async function main(){
  const development=process.env.ENABLE_LOCAL_TEST_IDENTITIES==="1";
  const session=new CmsSessionProvider({origin,secret:development?randomBytes(32).toString("hex"):await readCmsSecret(process.env.CMS_SESSION_SECRET_FILE??""),environment:"local",allowLocalDevelopmentEntry:development});
  const existingAdminHandler=createApplicationApiRouter(new PostgresSermonRepository(reader),new PostgresAdminSermonRepository(writer),session);
- const handler=createCmsRuntimeHandler({repository,assetStore,assets,session,sermons:new PostgresSermonRepository(reader,"d175_local_completed"),sourcePages:()=>readSourcePublicPages(reader),dashboardDirectory:resolve(process.env.CMS_DASHBOARD_DIRECTORY??"dist-staging/admin"),environment:"local",release:process.env.RELEASE_COMMIT??"local-working-tree",ready,existingAdminHandler});
+ const handler=createCmsRuntimeHandler({repository,assetStore,assets,session,sermons:new PostgresSermonRepository(reader,"d175_local_completed"),sourcePages:()=>readSourcePublicPages(reader),previewSourcePages:(path,content)=>readCmsPreviewSources(reader,path,content),dashboardDirectory:resolve(process.env.CMS_DASHBOARD_DIRECTORY??"dist-staging/admin"),environment:"local",release:process.env.RELEASE_COMMIT??"local-working-tree",ready,existingAdminHandler});
  const sourceAssets=createSourcePublicAssetHandler(await readSourcePublicPages(reader),assets.directory);
  listenLocalCmsServer({origin,port,handler:async request=>{const response=await sourceAssets(request);if(response){response.headers.set('X-Robots-Tag','noindex, nofollow');return response;}return handler(request);},shutdown:async()=>{await Promise.all([writer.end(),reader.end()]);}});
 }

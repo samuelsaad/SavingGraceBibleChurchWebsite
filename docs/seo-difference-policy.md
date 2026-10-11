@@ -30,3 +30,13 @@ reported rather than treated as passed. Observed covenant document links normali
 to the verified HTTPS www destination without altering query/fragment bytes or CMS
 revisions. These implementation corrections do not approve content or waive traffic,
 source-coverage or metadata-parity gaps.
+
+Absent optional archive social defaults may be explained only when the document
+title is unchanged and the added title exactly equals it, type is `website`, or
+Twitter card is `summary`. Existing differing values, images, headings and dates
+are never accepted by this rule. A malformed single sermon-facet social URL may
+be corrected to the same observed term's self-canonical URL only with matching
+original title/heading. Search, campaigns, compound filters and unrelated archive
+targets do not qualify. `scripts/seo-metadata-difference-policy.py` implements
+these narrow predicates; raw findings remain in the reports and identity/content
+verification is still required separately.

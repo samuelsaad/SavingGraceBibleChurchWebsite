@@ -209,3 +209,20 @@ PostgreSQL regression passed 1,410/1,410 with zero skips, type checking reported
 709 files with zero errors/warnings, and the 45-page build/runtime bundle passed.
 Protected CMS browser checks are incomplete after native preview/tunnel timeouts;
 no staging draft or publication was changed by these failed attempts.
+
+The final protected source-preview failures were traced to three Node heap
+exhaustion crashes (three fatal/allocation markers and four startup markers),
+rather than changed source identity or corrupt content. The same captured CMS
+projection rendered locally. Previews now read only their verified source page
+and, where needed, its owned social-image record. Public eligibility, withdrawal,
+redirect and source-version integrity filters are unchanged; visitor rendering
+still reads the complete active inventory. Existing hosting/memory limits remain.
+The scoped preview tests passed 26/26, all PostgreSQL tests passed 1,413/1,413
+without skips, type checking passed 728 files, and 104 offline SEO tests passed.
+Deployment and actual protected publishing/restore verification remain pending.
+
+The finite crawler's cooldown lock was also corrected: completed responses can
+record Retry-After while another worker waits. Shared request spacing, retry
+limits, robots and the nonexpanding queue are retained. The currently running
+capture uses its original loaded version; the fix is not claimed as executed
+source inspection. Synthetic tests verify exact request-start/backoff deadlines.

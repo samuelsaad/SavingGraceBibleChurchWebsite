@@ -14,8 +14,14 @@ REASONS={'observed_only_on_nonexpanding_response_unverified':0,'source_declared_
 class RateLimiter:
     def __init__(self,interval=1):self.interval=max(1,interval);self.lock=threading.Lock();self.last=0.;self.not_before=0.
     def acquire(self):
-        with self.lock:
-            time.sleep(max(0,self.last+self.interval-time.monotonic(),self.not_before-time.monotonic()));self.last=time.monotonic()
+        # Never hold the shared lock during a cooldown: another completed
+        # response must be able to record Retry-After immediately, not after an
+        # old sleep finishes (which incorrectly restarts its cooldown later).
+        while True:
+            with self.lock:
+                now=time.monotonic();delay=max(0,self.last+self.interval-now,self.not_before-now)
+                if delay<=0:self.last=now;return
+            time.sleep(min(delay,1))
     def defer(self,seconds):
         with self.lock:self.not_before=max(self.not_before,time.monotonic()+seconds)
 

@@ -5,6 +5,24 @@ from unittest.mock import patch
 SPEC=importlib.util.spec_from_file_location('frontier',Path(__file__).parents[1]/'scripts/seo-source-frontier.py');F=importlib.util.module_from_spec(SPEC);SPEC.loader.exec_module(F)
 O='https://www.savinggrace.org.au/'
 class FixedFrontierTests(unittest.TestCase):
+ def test_cooldown_releases_lock_and_preserves_global_interval(self):
+  clock=[10.];limiter=F.RateLimiter(3);limiter.last=10.;sleeps=[]
+  def advance(delay):
+   self.assertTrue(limiter.lock.acquire(blocking=False));limiter.lock.release()
+   sleeps.append(delay);clock[0]+=delay
+  with patch.object(F.time,'monotonic',side_effect=lambda:clock[0]),patch.object(F.time,'sleep',side_effect=advance):
+   limiter.defer(5);limiter.acquire();self.assertEqual(limiter.last,15.)
+   limiter.acquire();self.assertEqual(limiter.last,18.)
+  self.assertEqual(sum(sleeps),8.);self.assertLessEqual(max(sleeps),1.)
+ def test_completed_response_can_extend_backoff_during_another_wait(self):
+  clock=[10.];limiter=F.RateLimiter(3);limiter.last=10.;extended=[False]
+  def advance(delay):
+   clock[0]+=delay
+   self.assertTrue(limiter.lock.acquire(blocking=False));limiter.lock.release()
+   if not extended[0]:extended[0]=True;limiter.defer(5)
+  with patch.object(F.time,'monotonic',side_effect=lambda:clock[0]),patch.object(F.time,'sleep',side_effect=advance):
+   limiter.acquire()
+  self.assertEqual(limiter.last,16.)
  def test_fixed_queue_preserves_requested_priority_and_excludes_known(self):
   source={'pages':{O+'old/':{}},'excluded':{O+'excluded/':'reason'},'deferred':{O+'old/':{},O+'excluded/':{},O+'?p=1':{'reason':'source_declared_shortlink_unverified'},O+'feed/':{'reason':'source_declared_feed_variant_unverified'},O+'secondary/':{'reason':'observed_only_on_nonexpanding_response_unverified'}}}
   self.assertEqual(list(F.frontier(source)),[O+'secondary/',O+'feed/',O+'?p=1'])
@@ -31,7 +49,7 @@ class FixedFrontierTests(unittest.TestCase):
   limiter=F.RateLimiter(3)
   with patch.object(F.time,'monotonic',side_effect=lambda:clock[0]),patch.object(F.time,'sleep',side_effect=sleep):
    limiter.acquire();limiter.acquire();limiter.acquire()
-  self.assertEqual(sleeps,[0,3,3])
+  self.assertEqual(sum(sleeps),6.);self.assertEqual(limiter.last,106.)
  def test_frozen_parent_search_witnesses_copy_without_requests(self):
   with tempfile.TemporaryDirectory() as root:
    parent=Path(root)/'private'/'parent';parent.mkdir(parents=True);(parent/'pages').mkdir();(parent/'responses').mkdir();(parent/'supplement-search').mkdir()
@@ -53,7 +71,7 @@ class FixedFrontierTests(unittest.TestCase):
   limiter=F.RateLimiter(1)
   with patch.object(F.time,'monotonic',side_effect=lambda:clock[0]),patch.object(F.time,'sleep',side_effect=sleep):
    limiter.acquire();limiter.acquire();limiter.acquire()
-  self.assertEqual(sleeps,[0,1,1]);self.assertEqual(limiter.last,102.)
+  self.assertEqual(sum(sleeps),2.);self.assertEqual(limiter.last,102.)
  def test_worker_reset_releases_old_response_discovery_without_loading_global_ledger(self):
   with tempfile.TemporaryDirectory() as root:
    p=Path(root)/'private';p.mkdir();(p/'ledger.private.json').write_text('invalid global ledger is not a worker input')
@@ -65,7 +83,7 @@ class FixedFrontierTests(unittest.TestCase):
   limiter=F.RateLimiter(1)
   with patch.object(F.time,'monotonic',side_effect=lambda:clock[0]),patch.object(F.time,'sleep',side_effect=sleep):
    limiter.acquire();limiter.defer(120);limiter.acquire();limiter.acquire()
-  self.assertEqual(sleeps,[0,120,1])
+  self.assertEqual(sum(sleeps),121.);self.assertEqual(limiter.last,221.)
  def test_parent_state_is_deep_copied_and_hash_bound(self):
   with tempfile.TemporaryDirectory() as root:
    parent=Path(root)/'private'/'original';parent.mkdir(parents=True);source_file=parent/'ledger.private.json';source={'pages':{O:{'recordPath':'pages/one.json'}},'deferred':{O+'next/':{'reason':'source_declared_feed_variant_unverified'}},'excluded':{},'discovered':{}};source_file.write_text(json.dumps(source),encoding='utf-8')

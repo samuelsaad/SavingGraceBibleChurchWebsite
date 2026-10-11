@@ -39,7 +39,7 @@ def archive(path, records):
 
 class SeoDeploymentTest(unittest.TestCase):
     def test_existing_source_retry_refuses_unknown_history_or_bundle(self):
-        valid={'sourceCounts':{'source_public_versions':5481,'source_public_routes':3589,'source_public_imports':4},'sourceSha256':OP.EXISTING_SOURCE_SHA}
+        valid={'sourceCounts':{'source_public_versions':5973,'source_public_routes':4081,'source_public_imports':5},'sourceSha256':OP.EXISTING_SOURCE_SHA}
         OP.verify_existing_source(valid,OP.INCOMING_BUNDLE_SHA)
         with self.assertRaisesRegex(RuntimeError,'seo_existing_source_drift'):OP.verify_existing_source(valid,OP.EXISTING_BUNDLE_SHA)
         for changed,bundle in (({**valid,'sourceSha256':'0'*64},OP.INCOMING_BUNDLE_SHA),(valid,'0'*64),({**valid,'sourceCounts':{}},OP.INCOMING_BUNDLE_SHA)):

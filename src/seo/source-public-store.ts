@@ -1,7 +1,7 @@
 import type {PoolClient} from 'pg';
 import {verifyCmsSchema} from '../cms/migration';
 import {loadSourcePublicMigration} from './source-public-migration';
-import {sourceBundleSchema,sourcePageSchema,sha256,stableJson,sourceVersionHash,type SourcePublicPage} from './source-public-model';
+import {sourceBundleSchema,sourcePageSchema,sourcePathSchema,sha256,stableJson,sourceVersionHash,type SourcePublicPage} from './source-public-model';
 type Db=Pick<PoolClient,'query'>;
 /** Caller holds a verified destination transaction. No provider/network activity. */
 export async function applySourcePublicMigration(db:Db){
@@ -36,8 +36,9 @@ export async function importSourcePublicBundle(db:Db,input:unknown,releaseCommit
  if(!previous)await db.query('INSERT INTO source_public_imports(bundle_sha256,inventory_sha256,release_commit,changes) VALUES($1,$2,$3,$4::jsonb)',[bundleHash,bundle.inventorySha256,releaseCommit,JSON.stringify(changes)]);
  return {bundleSha256:bundleHash,inserted:changes.filter(x=>x.before===null).length,updated:changes.filter(x=>x.before!==null).length,unchanged:bundle.pages.length-changes.length};
 }
-export async function readSourcePublicPages(db:Db):Promise<SourcePublicPage[]>{
- const rows=(await db.query<{payload:unknown;version_sha256:string}>(`SELECT v.payload,v.version_sha256 FROM source_public_routes r JOIN source_public_versions v USING(version_sha256) WHERE NOT r.withdrawn AND NOT EXISTS(SELECT 1 FROM sermons s WHERE s.source_wordpress_id=r.source_wordpress_id AND s.status IN ('unpublished','archived')) AND NOT EXISTS(SELECT 1 FROM redirects d WHERE d.old_path=r.path) ORDER BY r.path`)).rows;
+export async function readSourcePublicPages(db:Db,paths?:readonly string[]):Promise<SourcePublicPage[]>{
+ if(paths){if(paths.length>2)throw Error('source_public_read_scope');paths.forEach(path=>sourcePathSchema.parse(path));if(!paths.length)return [];}
+ const rows=(await db.query<{payload:unknown;version_sha256:string}>(`SELECT v.payload,v.version_sha256 FROM source_public_routes r JOIN source_public_versions v USING(version_sha256) WHERE NOT r.withdrawn AND NOT EXISTS(SELECT 1 FROM sermons s WHERE s.source_wordpress_id=r.source_wordpress_id AND s.status IN ('unpublished','archived')) AND NOT EXISTS(SELECT 1 FROM redirects d WHERE d.old_path=r.path)${paths?' AND r.path=ANY($1::text[])':''} ORDER BY r.path`,paths?[paths]:[])).rows;
  return rows.map(row=>{const page=sourcePageSchema.parse(row.payload);if(sourceVersionHash(page)!==row.version_sha256)throw Error('source_public_version_integrity');return page;});
 }
 

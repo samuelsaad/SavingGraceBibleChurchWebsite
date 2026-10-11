@@ -22,6 +22,7 @@ export interface CmsRuntimeOptions{
  repository:CmsRepository;sermons:PublicSermonRepository;assets:CmsDiskAssets;assetStore:CmsAssetStore;
  session:CmsSessionProvider;dashboardDirectory:string;environment:"local"|"staging";release:string;
  sourcePages?:()=>Promise<readonly SourcePublicPage[]>;
+ previewSourcePages?:(path:string,content:import('./model').CmsDocument)=>Promise<readonly SourcePublicPage[]>;
  ready:()=>Promise<void>;existingAdminHandler?:(request:Request)=>Promise<Response>;evaluation?:(request:Request)=>Promise<Response|null>;
 }
 export function createCmsRuntimeHandler(options:CmsRuntimeOptions){
@@ -29,12 +30,14 @@ export function createCmsRuntimeHandler(options:CmsRuntimeOptions){
  const api=createCmsApiHandler(repository,session,{authorizeMutation:request=>session.authorizeMutation(request)});
  const assets=createCmsAssetHandler(options.assets,session,session,(key,draft)=>repository.canReadAsset(key,draft));
  const dashboard=createCmsDashboardHandler(options.dashboardDirectory,session,options.environment,Boolean(options.existingAdminHandler));
- const visualRender=createCmsVisualRenderHandler({repository,session,sermons:options.sermons,environment:options.environment,...(options.sourcePages?{sourcePages:options.sourcePages}:{}),assets:async()=>(await options.assetStore.list()).filter(a=>a.type.startsWith("image/")).map(a=>({id:a.id,path:a.url,type:a.type,width:a.width??1,height:a.height??1,alt:a.alt}))});
+ const visualRender=createCmsVisualRenderHandler({repository,session,sermons:options.sermons,environment:options.environment,...(options.sourcePages?{sourcePages:options.sourcePages}:{}),...(options.previewSourcePages?{previewSourcePages:options.previewSourcePages}:{}),assets:async()=>(await options.assetStore.list()).filter(a=>a.type.startsWith("image/")).map(a=>({id:a.id,path:a.url,type:a.type,width:a.width??1,height:a.height??1,alt:a.alt}))});
  const selections=new Map<string,{entityId:string;revisionId?:string}>();
  const content=async(selection?:{entityId:string;revisionId?:string})=>{
   const snapshot=selection?await repository.getPreviewSnapshot(selection):await repository.getPublishedSnapshot();
   const images=(await options.assetStore.list()).filter(a=>a.type.startsWith("image/")).map(a=>({id:a.id,path:a.url,type:a.type,width:a.width??1,height:a.height??1,alt:a.alt}));
-  const result=createCmsFrontendSnapshot(snapshot,images);return options.sourcePages?preserveSourceMetadata(result,await options.sourcePages()):result;
+  const result=createCmsFrontendSnapshot(snapshot,images),document=selection?snapshot.entities.find(e=>e.id===selection.entityId):undefined;
+  const originals=document&&options.previewSourcePages?await options.previewSourcePages(typeof document.content.path==='string'?document.content.path:'/',document.content):options.sourcePages?await options.sourcePages():[];
+  return originals.length?preserveSourceMetadata(result,originals):result;
  };
  return async(request:Request):Promise<Response>=>{
   const pathname=new URL(request.url).pathname;
@@ -71,7 +74,7 @@ export function createCmsRuntimeHandler(options:CmsRuntimeOptions){
     const selection=selections.get(sessionKey);if(!selection)return finish(new Response("Choose Preview from a content editor.",{status:400}));
     const context:FrontendRenderContext={mode:"preview",basePath:"/cms-preview",siteContent:await content(selection)};
     const selectedSnapshot=await repository.getPreviewSnapshot(selection),originalDocument=selectedSnapshot.entities.find(e=>e.id===selection.entityId);
-    if(originalDocument?.content.template==='source-sermon'){const images=(await options.assetStore.list()).filter(a=>a.type.startsWith('image/')).map(a=>({id:a.id,path:a.url,type:a.type,width:a.width??1,height:a.height??1,alt:a.alt}));const snapshot=createCmsFrontendSnapshot(selectedSnapshot,images,false,true);return finish(await originalSermonPreview(originalDocument,await options.sourcePages?.()??[],{...context,siteContent:snapshot}));}
+    if(originalDocument?.content.template==='source-sermon'){const images=(await options.assetStore.list()).filter(a=>a.type.startsWith('image/')).map(a=>({id:a.id,path:a.url,type:a.type,width:a.width??1,height:a.height??1,alt:a.alt}));const snapshot=createCmsFrontendSnapshot(selectedSnapshot,images,false,true),originals=options.previewSourcePages?await options.previewSourcePages(String(originalDocument.content.path),originalDocument.content):await options.sourcePages?.()??[];return finish(await originalSermonPreview(originalDocument,originals,{...context,siteContent:snapshot}));}
     const preview=createLocalFrontendPreviewHandler(options.sermons,{authorizes:()=>true},{root:"/cms-preview",context});
     return finish((await preview(request))??new Response("Not found",{status:404}));
    }

@@ -30,6 +30,7 @@ export interface CmsVisualRenderOptions{
  repository:Pick<CmsRepository,"get"|"getPublishedSnapshot">;sermons:PublicSermonRepository;
  session:Pick<CmsSessionProvider,"authenticate"|"authorizeMutation"|"sessionKey">;
  sourcePages?:()=>Promise<readonly SourcePublicPage[]>;
+ previewSourcePages?:(path:string,content:CmsDocument)=>Promise<readonly SourcePublicPage[]>;
  assets:()=>Promise<readonly FrontendAsset[]>;environment:"local"|"staging";now?:()=>number;
 }
 function overlay(snapshot:CmsSnapshot,entity:CmsEntity,content:CmsDocument):CmsSnapshot{
@@ -106,7 +107,7 @@ export function createCmsVisualRenderHandler(options:CmsVisualRenderOptions){
    const content=validateCmsContent(entity.kind,input.content);
    const snapshot=overlay(await options.repository.getPublishedSnapshot(),entity,content),path=canvasPath(entity,content,snapshot,input.path);
    const selectedContent=createCmsFrontendSnapshot(snapshot,await options.assets(),input.mode==="edit",true);
-   const originals=options.sourcePages?await options.sourcePages():[];
+   const originals=options.previewSourcePages?await options.previewSourcePages(path,content):options.sourcePages?await options.sourcePages():[];
    const projectedContent=originals.length?preserveSourceMetadata(selectedContent,originals):selectedContent;
    const context:FrontendRenderContext={mode:"restricted",basePath:"",siteContent:projectedContent,...(input.mode==="edit"?{visualEditor:{entityId:entity.id,kind:entity.kind}}:{})};
    let response:Response|null;

@@ -1,8 +1,8 @@
 # Private local backup and restore proof
 
-`scripts/seo-local-recovery.ts` implements a bounded D-181 recovery demonstration.
+`scripts/seo-local-recovery.ts` implements the explicitly authorized D-182 recovery demonstration.
 It is not a production or staging restore command. Execution requires an approved
-explicit D-181 governance paragraph plus both `ALLOW_LOCAL_DB_WRITE=1` and
+explicit D-182 governance paragraph plus both `ALLOW_LOCAL_DB_WRITE=1` and
 `ALLOW_LOCAL_SEO_RESTORE=1`. Without them it stops before opening a database.
 
 The fixed source is PostgreSQL 16 `savinggrace_sermons_test` on `127.0.0.1:5432`.
@@ -14,8 +14,8 @@ come from the same snapshot, so concurrent ordinary CMS/source updates do not
 produce a misleading comparison or require a write lock on application rows.
 
 After the dump and source fingerprints are retained privately, the script creates
-one absent `savinggrace_test_run_<random-run-token>` database using the existing
-disposable target guard. It restores only into that new database, in one transaction,
+the absent `savinggrace_test_run_seo_restore_20261011` database using the exact
+current-task target guard. It restores only into that new database, in one transaction,
 and compares every public table, including sermon, CMS, migration and source-public
 tables when present. An incomplete source-public table set is rejected. The source
 database is never a restore destination and receives no writes.
@@ -31,7 +31,7 @@ be dropped. A replaced or unknown target is refused. The retained ignored privat
 receipt records archive integrity, table fingerprints, comparison and confirmed
 cleanup. No real source rows or secret-bearing errors are printed or tracked.
 
-When the narrow governance amendment has been explicitly approved, run locally:
+Under the recorded D-182 authorization, run locally:
 
 ```powershell
 $env:ALLOW_LOCAL_DB_WRITE='1'
@@ -43,3 +43,11 @@ Remove-Item Env:ALLOW_LOCAL_DB_WRITE
 
 Record the actual result in the validation plan. Unit tests validate the refusal
 and comparison contracts but are not evidence that restoration was executed.
+
+The corrected 4,081-route candidate's executed restoration matched all 65 table
+fingerprints and schema/constraint/index/trigger/sequence checks. It verified 1,499
+files (89,777,359 bytes), 1,224 resource routes and eight application HTTP checks,
+then removed the exact created target after OID validation. The actual custom
+archive SHA-256 is `335200de4af39bf55ccfdf98441a459771e35cd0a9582b622d05558c227a685b`.
+This does not prove original WordPress recovery or recreation of staging/production
+roles and grants; those remain separate evidence requirements.

@@ -1,3 +1,4 @@
+import {readCmsPreviewSources} from '../seo/source-preview';
 import {readSourcePublicPages} from '../seo/source-public-store';
 import {createSourcePublicVisitor,retainPrivateRoutes} from '../seo/site-integration';
 /** D-179: request-handler integration only. Reuses the incumbent protected
@@ -25,7 +26,7 @@ export async function createStagingCmsIntegration(options:{reader:Pool;sermons:P
   const checkWriter=()=>verifyStagingCmsWriter(writer);
   await checkWriter();const assetStore=new PostgresCmsAssetStore(writer),assets=await CmsDiskAssets.create(process.env.CMS_STORAGE_DIRECTORY,assetStore);
   const session=new CmsSessionProvider({origin:process.env.CMS_ORIGIN??"",secret:await readCmsSecret("/run/secrets/cms_session_secret"),environment:"staging"});
-  const handler=createCmsRuntimeHandler({repository:new PostgresCmsRepository(writer),assetStore,assets,session,sermons:options.sermons,dashboardDirectory:"/app/admin",environment:"staging",release:options.release,ready:async()=>{await verify();await checkWriter();},...(process.env.SOURCE_PUBLIC_ENABLED==='1'?{sourcePages:()=>readSourcePublicPages(options.reader)}:{}),...(options.evaluation?{evaluation:options.evaluation}:{})});
+  const handler=createCmsRuntimeHandler({repository:new PostgresCmsRepository(writer),assetStore,assets,session,sermons:options.sermons,dashboardDirectory:"/app/admin",environment:"staging",release:options.release,ready:async()=>{await verify();await checkWriter();},...(process.env.SOURCE_PUBLIC_ENABLED==='1'?{sourcePages:()=>readSourcePublicPages(options.reader),previewSourcePages:(path,content)=>readCmsPreviewSources(options.reader,path,content)}:{}),...(options.evaluation?{evaluation:options.evaluation}:{})});
   const selected=process.env.SOURCE_PUBLIC_ENABLED==='1'?retainPrivateRoutes(handler,await createSourcePublicVisitor(options.reader,process.env.CMS_STORAGE_DIRECTORY,session.origin,options.sermons)):handler;
   return{handler:selected,origin:session.origin,maximumBodyBytes:cmsUploadMaximum+1024,close:()=>writer.end()};
  }
