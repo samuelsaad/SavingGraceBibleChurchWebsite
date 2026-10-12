@@ -113,10 +113,12 @@ export async function createVersionedSourceHandler(options:{reader:Pool;assetDir
  const assets=await CmsDiskAssets.create(options.assetDirectory,store);
  const assetHandler=createCmsAssetHandler(assets,{authenticate:async()=>null},{authorizeMutation:()=>false},async(key,draft)=>!draft&&await cms.canReadAsset(key,false));
  const select=versionedHandlerCache(()=>sourceRuntimeFingerprint(options.reader),async(version)=>{
-  const [pages,snapshot,images]=await Promise.all([readSourcePublicPages(options.reader),cms.getPublishedSnapshot(),store.list()]);
+  // Release the consumed source wire rows before allocating the full CMS corpus.
+  const pages=await readSourcePublicPages(options.reader);
+  const [snapshot,images]=await Promise.all([cms.getPublishedSnapshot(),store.list()]);
   const sermons=await createCompositeSourceSermonRepository(pages,options.reader,options.acceptedStageRepository,snapshot.entities,snapshot.routes);
   const sourceAssets=createSourcePublicAssetHandler(pages,options.assetDirectory);
-  const content=preserveSourceMetadata(createCmsFrontendSnapshot(snapshot,images.filter(a=>a.type.startsWith('image/')).map(a=>({id:a.id,path:a.url,type:a.type,width:a.width??1,height:a.height??1,alt:a.alt}))),pages);
+  const content=preserveSourceMetadata(createCmsFrontendSnapshot(snapshot,images.filter(a=>a.type.startsWith('image/')).map(a=>({id:a.id,path:a.url,type:a.type,width:a.width??1,height:a.height??1,alt:a.alt})),false,false,{immutableSourceContent:true}),pages);
   const routes=sourceRoutePolicy(pages,snapshot.routes,{...publicRenderContext,siteContent:content});
   routes.sourceShortlinks={...routes.sourceShortlinks,...sermons.verifiedSourceShortlinks()};
   const handler=createSeoHttpAdapter({policy:options.policy,sermons,...routes,content:async()=>content,publicSearch:createLegacySourceSearch(pages,content,sermons,sermons.verifiedSourceShortlinks()),

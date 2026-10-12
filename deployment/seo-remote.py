@@ -16,10 +16,10 @@ import tarfile
 import time
 
 UPGRADE_SHA = "e41bbc7b36e883665a4f57c07ed1fbd9b222f018d07af9597f90cebfd4e62fb2"
-PREVIOUS_COMMIT = "df762c599672a0ed1ba01bad854346d761d4582c"
-PREVIOUS_IMAGE = "sha256:b87fb35f51ea182f2fe43899f0359bb5dc0ff0aeffcd41e694172869e05f3cf3"
+PREVIOUS_COMMIT = "27ab62313d3f36f43bef152d02669c52d6fad4bb"
+PREVIOUS_IMAGE = "sha256:fc45b2568daf53a04ceb379c1f5cf903f6908141b2ba7f90c35e586430dce4e3"
 BASE_SCHEMA_ORDER = 28
-EXISTING_SOURCE_SHA = "a3fd289741ee38991e7ea7e3d3ec7757fba2c5452f749b9043eb11d60fa27d3c"
+EXISTING_SOURCE_SHA = "cda46cc9c363db65db6981fdaf615447647c924d8714179e4217240cb616531d"
 EXISTING_BUNDLE_SHA = "3f34acc4b850884c4fbb44bbb66fc0b42c23bb1dfa7f7416f5840cb80ffb1917"
 INCOMING_BUNDLE_SHA = "cad131cdea84e514135c141a450639114b0ebef5ef7fd29ae965c2bdb48528ce"
 SOURCE_TABLES = ("source_public_versions", "source_public_routes", "source_public_imports")
@@ -177,7 +177,7 @@ def owner_secret_identity(base, path):
 
 def verify_existing_source(actual, bundle_hash):
     # Require the frozen incumbent history and the exact reviewed additive delta.
-    expected={"source_public_versions":5973,"source_public_routes":4081,"source_public_imports":5}
+    expected={"source_public_versions":7640,"source_public_routes":5748,"source_public_imports":6}
     if actual.get("sourceCounts") != expected or actual.get("sourceSha256") != EXISTING_SOURCE_SHA or bundle_hash != INCOMING_BUNDLE_SHA:
         fail("seo_existing_source_drift")
 
@@ -385,7 +385,7 @@ def adopt_cms(base, upgrade, helper, root, recovery):
         frozen = base.load(marker)
         if plan["planned"] and plan != frozen: fail("seo_cms_plan_changed")
     else:
-        if plan.get("planned") != 453 or plan.get("held") != 1221 or plan.get("planSha256") != "98bcfbdcc86fc404b8577dce225a3fd1aca1a407c49cb09b0eff937770757c67":
+        if plan.get("planned") != 0 or plan.get("held") != 1221 or plan.get("planSha256") != "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945":
             fail("seo_cms_plan_scope")
         frozen = plan; base.save(marker, frozen)
     config["services"]["app"]["environment"]["SOURCE_CMS_PLAN_SHA256"] = frozen["planSha256"]

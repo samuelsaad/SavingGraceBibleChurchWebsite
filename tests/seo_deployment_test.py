@@ -39,7 +39,7 @@ def archive(path, records):
 
 class SeoDeploymentTest(unittest.TestCase):
     def test_existing_source_retry_refuses_unknown_history_or_bundle(self):
-        valid={'sourceCounts':{'source_public_versions':5973,'source_public_routes':4081,'source_public_imports':5},'sourceSha256':OP.EXISTING_SOURCE_SHA}
+        valid={'sourceCounts':{'source_public_versions':7640,'source_public_routes':5748,'source_public_imports':6},'sourceSha256':OP.EXISTING_SOURCE_SHA}
         OP.verify_existing_source(valid,OP.INCOMING_BUNDLE_SHA)
         with self.assertRaisesRegex(RuntimeError,'seo_existing_source_drift'):OP.verify_existing_source(valid,OP.EXISTING_BUNDLE_SHA)
         for changed,bundle in (({**valid,'sourceSha256':'0'*64},OP.INCOMING_BUNDLE_SHA),(valid,'0'*64),({**valid,'sourceCounts':{}},OP.INCOMING_BUNDLE_SHA)):
@@ -172,8 +172,8 @@ class SeoDeploymentTest(unittest.TestCase):
                 calls.append(operation)
                 if operation == "cms-plan":
                     self.assertNotIn("SOURCE_CMS_PLAN_SHA256", cfg["services"]["app"]["environment"])
-                    return json.dumps({"planned": 453, "held": 1221, "planSha256": "98bcfbdcc86fc404b8577dce225a3fd1aca1a407c49cb09b0eff937770757c67"})
-                self.assertEqual(cfg["services"]["app"]["environment"]["SOURCE_CMS_PLAN_SHA256"], "98bcfbdcc86fc404b8577dce225a3fd1aca1a407c49cb09b0eff937770757c67")
+                    return json.dumps({"planned": 0, "held": 1221, "planSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"})
+                self.assertEqual(cfg["services"]["app"]["environment"]["SOURCE_CMS_PLAN_SHA256"], "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945")
                 return json.dumps({"result": {"inserted": 0}, "assets": {"inserted": 0}})
             fixture.run = run
             upgrade = SimpleNamespace(cms_snapshot=lambda _: {name: [] for name in ("cms_entities", "cms_revisions", "cms_routes", "media_assets", "audit_events", "schema_migrations")})

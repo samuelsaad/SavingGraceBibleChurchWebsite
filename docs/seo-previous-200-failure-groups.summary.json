@@ -6449,5 +6449,10 @@
   },
   "unreadBodyRecords": 15,
   "missingSourceRecordWitnesses": 0,
-  "sourceUrlsPublishedSeparatelyInSafeLedger": true
+  "sourceUrlsPublishedSeparatelyInSafeLedger": true,
+  "verifiedEmptyMimeCounts": {
+    "text/html": 363
+  },
+  "emptyResponseInterpretation": "Verified zero-length text/html responses; not valid ICS files, not removal evidence, and not proof of intended future subscription behavior.",
+  "dispositionsClearedByMimeDiagnostic": 0
 }

@@ -642,3 +642,28 @@ unchanged. A separately checksum-pinned operator resume uses the already prepare
 27ab623 application/image/recovery directory, retaining the original operator
 files and failed receipts. It does not reimport or rebuild unrelated application
 code or relax any plan, source, history, credential or rollback check.
+
+The363 verified empty calendar observations all have MIMEtext/html, not a
+valid ICS MIME/body. They cannot be imported as calendar assets or cleared by
+returning synthetic empty files. Their current0-byte behavior is captured, but
+active subscription/future recurrence/intended export behavior remains unproved.
+The15 JavaScript/CSS records remain separately classified as bodies deliberately
+unread. No URL disposition or existing finding was cleared by this diagnostic.
+
+CMS adoption inserted453 documents; replay inserted0 and retained2581 adopted
+documents plus1221 held routes. Alias checks passed. The full-source visitor
+canary then failed before activation with independently captured V8 heap
+exhaustion; the task-owned canary was removed and the27ab623 bridge remains
+healthy. No source/native/CMS data was lost. The visitor adapter now optionally
+reuses only immutable source-content trees; default/editor trees remain deep
+copies, and event metadata remains independent. Large source/CMS reads are
+sequenced while every schema/hash and before/after dependency check is retained.
+Anonymous regressions verify identical HTML/Arabic and editor isolation. Final
+gates passed1277 standard cases plus145 PG-gated cases,1422 PostgreSQL cases
+across154 files/zero skips,648 type files/zero errors or warnings/seven hints,
+45 static pages, runtime build, anonymous importer and offline audit.
+The next application-only deployment binds the independently verified current
+source hashcda46cc9/source7640 versions5748 routes6 receipts, existing native398/
+144 publications and CMS2633 entities2666 revisions2676 routes339 assets2979
+audits. Its CMS plan is exactly0 additions/1221 held with the empty-plan hash;
+all previously adopted documents and publication/review/history guards remain.

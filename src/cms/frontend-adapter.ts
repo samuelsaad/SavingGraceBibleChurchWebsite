@@ -5,10 +5,12 @@ import { siteImages } from "../frontend/assets/media";
 import { logoPath, logoWidth, logoHeight, logoAlt } from "../frontend/assets/logo";
 import type { Block, SitePage, BlogPost } from "../frontend/content/types";
 
-function blocks(modules:readonly CmsModule[] = [],collection="modules",visualEditor=false):Block[] {
-  return modules.flatMap((module,index)=>!visualEditor&&!module.enabled?[]:[({...structuredClone(module.block),cmsInstanceId:module.id,...(visualEditor?{cmsPath:[collection,index,"block"],cmsModulePath:[collection,index],cmsEnabled:module.enabled}:{}),...(module.presentation?{cmsPresentation:structuredClone(module.presentation)}:{})}) as unknown as Block]);
+function blocks(modules:readonly CmsModule[] = [],collection="modules",visualEditor=false,immutableSourceContent=false):Block[] {
+  return modules.flatMap((module,index)=>!visualEditor&&!module.enabled?[]:[({...(immutableSourceContent&&!visualEditor&&module.block.kind==="source-content"?module.block:structuredClone(module.block)),cmsInstanceId:module.id,...(visualEditor?{cmsPath:[collection,index,"block"],cmsModulePath:[collection,index],cmsEnabled:module.enabled}:{}),...(module.presentation?{cmsPresentation:structuredClone(module.presentation)}:{})}) as unknown as Block]);
 }
-export function createCmsFrontendSnapshot(snapshot:CmsSnapshot,assets:readonly FrontendAsset[]=[],visualEditor=false,includeOriginalSermons=false):FrontendSiteSnapshot {
+export function createCmsFrontendSnapshot(snapshot:CmsSnapshot,assets:readonly FrontendAsset[]=[],visualEditor=false,includeOriginalSermons=false,options:{immutableSourceContent?:boolean}={}):FrontendSiteSnapshot {
+  // Only the versioned visitor owns immutable trees. Editors retain deep copies.
+  const immutableSourceContent=options.immutableSourceContent===true&&!visualEditor;
   const result:FrontendSiteSnapshot={pages:[],posts:[],events:[],venues:{},home:null,settings:structuredClone(defaultSiteSettings),assets:{},routes:snapshot.routes.map(route=>({...route}))};
   const pages:SitePage[]=[],posts:BlogPost[]=[];
   const initialMetadataByPath:Record<string,{title:string;heading:string;seeded:boolean}>={};
@@ -24,14 +26,14 @@ export function createCmsFrontendSnapshot(snapshot:CmsSnapshot,assets:readonly F
       if(content.template==='source-sermon'&&!includeOriginalSermons)continue;
       const page=content as unknown as CmsPagePayload;
       const {modules,asideModules,...metadata}=page;
-      pages.push({...metadata,status:"published",blocks:blocks(modules,"modules",visualEditor),...(asideModules?.some(module=>visualEditor||module.enabled)?{aside:blocks(asideModules,"asideModules",visualEditor)}:{})} as SitePage);
+      pages.push({...metadata,status:"published",blocks:blocks(modules,"modules",visualEditor,immutableSourceContent),...(asideModules?.some(module=>visualEditor||module.enabled)?{aside:blocks(asideModules,"asideModules",visualEditor,immutableSourceContent)}:{})} as SitePage);
     } else if(entity.kind==="post"){
       const post=content as unknown as CmsPostPayload;
       const {modules,...metadata}=post;
-      posts.push({...metadata,blocks:blocks(modules,"modules",visualEditor)} as BlogPost);
+      posts.push({...metadata,blocks:blocks(modules,"modules",visualEditor,immutableSourceContent)} as BlogPost);
     } else if(entity.kind==="home") result.home=structuredClone(content) as unknown as CmsHomePayload;
     else if(entity.kind==="settings") result.settings=structuredClone(content) as unknown as CmsSettingsPayload;
-    else if(entity.kind==="event"){const {modules,...metadata}=structuredClone(content) as unknown as CmsEventPayload;events.push({...metadata,...(modules?{modules:blocks(modules,'modules',visualEditor)}:{})});}
+    else if(entity.kind==="event"){const {modules,...metadata}=content as unknown as CmsEventPayload;events.push({...structuredClone(metadata),...(modules?{modules:blocks(modules,'modules',visualEditor,immutableSourceContent)}:{})});}
     else if(entity.kind==="venue"){const venue=structuredClone(content) as unknown as CmsVenuePayload;venues[venue.id]=venue;}
   }
   const embedded:FrontendAsset[]=siteImages.map(image=>({id:image.id,path:image.id==="favicon-32"?"/brand/favicon-32.png":image.id==="icon-192"?"/brand/icon-192.png":image.path,type:image.type,width:image.width,height:image.height,alt:image.alt}));
