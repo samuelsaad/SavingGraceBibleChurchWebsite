@@ -1,6 +1,6 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
-## D-182 — final local acceptance; NOT READY FOR CUTOVER
+## D-182 — local acceptance and staging rehearsal; NOT READY FOR CUTOVER
 
 The isolated `codex/whole-site-seo-migration` candidate preserves the selected
 website/CMS/media controls and original dashboard. Application
@@ -55,10 +55,15 @@ All 1,946 migrated resource routes also passed byte/MIME/length/status checks af
 Cold controlled lab LCP outliers (23–27 seconds) and two zero observer samples
 remain failed/unaccepted evidence. A focused resource diagnostic measured 4.5/2.7
 seconds for home/archive; hero/fonts were modestly sized. No field CWV/INP or
-search-performance acceptance is claimed. Final staging is blocked by DNS pin drift;
-normal GitHub publication attempts could not connect. The last verified deployed
-application remains F043/image `sha256:fa3fb43c99f2600b12accbdf6c6cb4a770d81371537a8587d3c7b8ab5a50d7dd`;
-its earlier deployment/compatible rollback is historical, not final-candidate proof.
+search-performance acceptance is claimed. The earlier DNS/GitHub failures were
+resolved without bypassing pins. Remote commit `27ab62313d3f36f43bef152d02669c52d6fad4bb`
+was independently verified; its staging bridge/image
+`sha256:fc45b2568daf53a04ceb379c1f5cf903f6908141b2ba7f90c35e586430dce4e3`
+passed both canaries, activation and18 actual proxy checks. The source delta
+inserted1667/updated0/retained4081; replay changed0 across5748 routes. Source
+history, native/CMS data and credentials passed preservation checks. CMS adoption,
+source-enabled canary/activation/rollback and complete deployed verification are
+still in progress; these are not yet full final-candidate acceptance evidence.
 
 Search Console/Analytics/Tag Manager reports, verified GA4 property/stream/consent/
 test stream and current WordPress database/uploads/configuration backup remain

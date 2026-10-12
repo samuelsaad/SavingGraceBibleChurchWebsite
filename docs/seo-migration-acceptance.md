@@ -302,8 +302,9 @@ experiment is not final-release parity. [Google CWV targets](https://developers.
 - Remaining per-URL content/metadata/indexability/status/internal-link findings and
   the material past-event archive delta and remaining resource equivalence. Useful
   empty subscriptions cannot be retired on zero bytes.
-- Final staging target identity/deployment/proxy/CMS/performance/resource verification:
-  the pinned DNS guard refuses drift before SSH/mutation. Pins were not bypassed.
+- Complete final source-enabled staging/proxy/CMS/performance/resource verification
+  is in progress. Earlier DNS/GitHub failures recovered without pin bypass; the
+  corrected committed bridge and additive import/replay passed.
 - Current WordPress database/uploads/configuration backup and isolated WordPress
   restore; production/staging role/ACL recovery and reviewed production routing/
   individual attributable administrator authentication remain unproven.
@@ -316,7 +317,7 @@ experiment is not final-release parity. [Google CWV targets](https://developers.
 - Durable original recording origin, 17 opaque media IDs, 12 unresolved external
   references, maintainable feed/calendar subscriptions and contact delivery.
 - Failed/unaccepted final LCP observations and missing comparable deployed/field
-  performance; GitHub connectivity prevents verified final publication.
+  performance. Normal Git publication and remote identity verification now passed.
 
 One public Google DNS verification marker was observed at
 2026-10-11T16:06:15.4769305Z without exposing its value or proving account ownership.
@@ -330,15 +331,19 @@ Frozen code SHA-256: `e9789e586edfeb16303c0b8f240e90915b54bd493f8fb30ddbae4686d9
 Independently verified local runtime:
 `c2f72bfd1ab685c6775daa628d097416425b995ec16ae0d98c5ef90c00449a7b`.
 Safe acceptance documentation is a subsequent commit; no application/source data
-change is implied by that documentation commit. Normal publication attempts failed
-to connect to GitHub; the latest remote branch identity is not verified.
+change is implied by that documentation commit. Earlier connectivity failures are
+historical. Normal push and independent remote identity matched the corrected
+operator release `27ab62313d3f36f43bef152d02669c52d6fad4bb`.
 
-Last actually verified staging application:
-`f04329a82491e3f2c67a03158d2022d11def075e`, image
-`sha256:fa3fb43c99f2600b12accbdf6c6cb4a770d81371537a8587d3c7b8ab5a50d7dd`.
-Its 4,081-route deployment/canary/compatible feature-off rollback/reactivation was
-verified historically. It is **not** deployment evidence for the final 5,748 routes
-or latest compact-directory/memory fixes. Do not invent a final staging release.
+Current verified staged bridge application:
+`27ab62313d3f36f43bef152d02669c52d6fad4bb`, image
+`sha256:fc45b2568daf53a04ceb379c1f5cf903f6908141b2ba7f90c35e586430dce4e3`.
+Both bridge canaries, activation, preservation and18 actual proxy responses passed.
+The corrected listener-free bulk worker imported1667 new routes, updated0 and
+retained4081; replay changed0 across5748. CMS adoption and source-enabled final
+verification remain in progress. The former F043 deployment and its smaller
+comparisons remain dated historical evidence. No final source-enabled pass is
+claimed before its actual completed checks.
 
 ## 12. Recovery, monitoring and exact remaining cutover actions
 

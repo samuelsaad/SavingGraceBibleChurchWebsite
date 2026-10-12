@@ -621,3 +621,24 @@ publication, SSH/DNS/database/hash/rollback guards remain unchanged. The actual
 fresh staging backup was separately restored:65 tables/schema fingerprints,1496
 files,1224 resources and eight HTTP checks passed; its created target was removed
 by OID guard. WordPress and role/ACL recreation remain unproved.
+
+The corrected27ab623 package and both bridge canaries/activation passed. All18
+actual proxy responses matched exact denial/login/noindex policy. The bulk worker
+imported1667/updated0/retained4081; replay inserted0/updated0/unchanged5748.
+Full source/native/CMS/history/credential preservation passed. The earlier722
+assets were already installed, so the successful replay added0 files. Source-enabled
+CMS adoption, final canary/activation/rollback and HTTP/browser/resource/recovery
+verification continue; final staged acceptance has not yet been claimed.
+
+The source-backed CMS step refused the historical2126-document/239-held plan
+before any CMS mutation. The exact current read-only planner, bound to application
+27ab623/imagefc45 and source bundlecad131, independently returns453 additional
+documents/1221 held, SHA-256
+`98bcfbdcc86fc404b8577dce225a3fd1aca1a407c49cb09b0eff937770757c67`.
+These match the existing deterministic453-document local cohort and1221 holds
+(46 ownership/1175 runtime projections). The committed operator now pins only
+that current additive plan; existing seeds/revisions/ownership/source data remain
+unchanged. A separately checksum-pinned operator resume uses the already prepared
+27ab623 application/image/recovery directory, retaining the original operator
+files and failed receipts. It does not reimport or rebuild unrelated application
+code or relax any plan, source, history, credential or rollback check.

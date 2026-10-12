@@ -172,8 +172,8 @@ class SeoDeploymentTest(unittest.TestCase):
                 calls.append(operation)
                 if operation == "cms-plan":
                     self.assertNotIn("SOURCE_CMS_PLAN_SHA256", cfg["services"]["app"]["environment"])
-                    return json.dumps({"planned": 2126, "held": 239, "planSha256": "d6d594f037c524a80190ed7516a3d093f9c5547211100b6525b1e3c0e18b1154"})
-                self.assertEqual(cfg["services"]["app"]["environment"]["SOURCE_CMS_PLAN_SHA256"], "d6d594f037c524a80190ed7516a3d093f9c5547211100b6525b1e3c0e18b1154")
+                    return json.dumps({"planned": 453, "held": 1221, "planSha256": "98bcfbdcc86fc404b8577dce225a3fd1aca1a407c49cb09b0eff937770757c67"})
+                self.assertEqual(cfg["services"]["app"]["environment"]["SOURCE_CMS_PLAN_SHA256"], "98bcfbdcc86fc404b8577dce225a3fd1aca1a407c49cb09b0eff937770757c67")
                 return json.dumps({"result": {"inserted": 0}, "assets": {"inserted": 0}})
             fixture.run = run
             upgrade = SimpleNamespace(cms_snapshot=lambda _: {name: [] for name in ("cms_entities", "cms_revisions", "cms_routes", "media_assets", "audit_events", "schema_migrations")})
