@@ -153,3 +153,10 @@ were not overwritten and no final comparator issue was cleared by this diagnosti
 The past-event list has actual text/link/title/image/tree differences and remains
 unresolved. See `seo-held-source-differences.summary.json` and the hashed tree/text
 diagnostics. A source-tree difference alone is not eight missing sermon archives.
+
+
+## First-render readiness gate
+
+A healthy database readiness endpoint does not prove visitor rendering. The final source canary must fetch two actual homepage HTML responses on each runtime, require 200, the expected release label and staging nonindexability, then remove its own canary and verify complete unchanged source/CMS/assets state. Activation must pass the actual proxy matrix before approval. Retain failed attempts and exact recovery receipts; never increase memory, omit source content or relax publication/hash checks merely to make readiness pass. The ECA first-render failure demonstrated why this separate gate is required.
+
+Git archive output on Windows can apply working-tree newline attributes. Production/staging source packages must bind exact committed blob bytes, and every SQL migration byte must match the runtime archive. A source/runtime mismatch stops preparation before image activation. Retain failed task preparation and recovery evidence; correct packaging in a fresh confined directory and repeat all checks.

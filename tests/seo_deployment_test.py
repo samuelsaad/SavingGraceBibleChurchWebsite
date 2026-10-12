@@ -58,6 +58,15 @@ class SeoDeploymentTest(unittest.TestCase):
         self.assertEqual(app["cap_drop"],["ALL"])
         self.assertEqual(app["entrypoint"],["node","source-public-sync.cjs"])
 
+    def test_visitor_heap_is_explicit_within_retained_container_and_socket_bounds(self):
+        source = (ROOT / "deployment/seo-remote.py").read_text()
+        self.assertIn('result["services"]["app"]["environment"]["NODE_OPTIONS"] = "--max-old-space-size=512"', source)
+        # Only the maintenance configuration assigns a container memory bound.
+        bridge = source[source.index("    def bridge("):source.index("    upgrade.candidate = bridge")]
+        self.assertNotIn('mem_limit', bridge)
+        self.assertNotIn('ports', bridge)
+        self.assertNotIn('networks', bridge)
+
     def test_helpers_remain_checksum_pinned_and_only_extend_exact_runtime_scope(self):
         original = (ROOT / "deployment/cms-upgrade-remote.py").read_text(encoding="utf-8").replace("\r\n", "\n").encode()
         self.assertEqual(hashlib.sha256(original).hexdigest(), OP.UPGRADE_SHA)
@@ -148,7 +157,7 @@ class SeoDeploymentTest(unittest.TestCase):
                     calls.append(command)
                     if command[-3:] == ["ps", "-q", "app"]: return b"anonymous-canary\n"
                     if command[:3] == ["docker", "exec", "anonymous-canary"]:
-                        self.assertIn("for(let n=0;n<2;n++)", command[-1])
+                        self.assertIn("for(let n=0;n<12;n++)", command[-1])
                         self.assertIn("x-seo-candidate", command[-1])
                         if failed: raise RuntimeError("anonymous_render_failed")
                     return b""

@@ -17,6 +17,14 @@ async function withHttp(repository:PublicSermonRepository,run:(base:string)=>Pro
  try{await run(base);}finally{server.closeAllConnections();await new Promise<void>((resolve,reject)=>server.close(error=>error?reject(error):resolve()));}
 }
 describe('ordinary approved editorial content with source originals',()=>{
+ it('keeps unfiltered and metadata-filtered listings independent of body normalization while text search still reads approved transcripts',async()=>{
+  const repository=await CompositeSourceSermonRepository.create([original()],[approved()],async()=>null);
+  const nativeNormalize=String.prototype.normalize;
+  String.prototype.normalize=function(form?:string){if(String(this).includes('Approvedtranscripttoken'))throw Error('unfiltered_listing_normalized_transcript');return nativeNormalize.call(this,form);};
+  try{expect((await repository.listPublished(query())).totalItems).toBe(1);expect((await repository.listPublished({...query(),speaker:'original-speaker'})).totalItems).toBe(1);expect((await repository.listPublished({...query(),speaker:'missing-speaker'})).totalItems).toBe(0);}finally{String.prototype.normalize=nativeNormalize;}
+  expect((await repository.listPublished({...query(),query:'Approvedtranscripttoken'})).totalItems).toBe(1);
+  expect((await repository.listPublished({...query(),query:'not-a-fixture-token'})).totalItems).toBe(0);
+ });
  it('keeps original historical dates independent of enrichment and preserves actual original-copy edits',async()=>{
   const source=original();source.modifiedAt='2004-01-01T15:30:00Z';
   const enrichment=approved({editorialChanges:{summary:'2026-01-01T00:00:00Z',summaryStatus:'2026-01-02T00:00:00Z',transcript:'2026-01-03T00:00:00Z',questionAnswers:'2026-01-04T00:00:00Z'}});

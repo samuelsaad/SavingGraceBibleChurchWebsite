@@ -59,6 +59,8 @@ function matches(record:RecordProjection,query?:Partial<PublicSermonListQuery>):
   if(query.passageChapter===undefined){if(!selected.length&&!record.passageTerms.some(p=>resolveBibleBook(p.name)?.id===book.id))return false;}
   else if(!selected.some(p=>(query.passageVerse===undefined||p.startVerse!==null&&p.endVerse!==null)&&biblePassageIntervalsOverlap(p,{canonicalBookId:book.id,startChapter:query.passageChapter!,endChapter:query.passageChapter!,startVerse:query.passageVerse??null,endVerse:query.passageEndVerse??query.passageVerse??null})))return false;
  }
+ // Unfiltered listings need no transcript/body normalization.
+ if(!query.query)return true;
  const text=words([sermon.title,sermon.speaker?.name,...sermon.series.map(t=>t.name),...sermon.books.map(t=>t.name),...sermon.scriptureReferences.map(p=>p.displayText),...record.passageTerms.map(p=>p.name),sermon.body,sermon.summary,sermon.transcript?.bodyText,...sermon.questionAnswers.flatMap(q=>[q.question,q.answer])].filter(Boolean).join(' '));
  return !query.query||words(query.query).split(/\s+/u).every(word=>text.includes(word));
 }

@@ -16,8 +16,8 @@ import tarfile
 import time
 
 UPGRADE_SHA = "e41bbc7b36e883665a4f57c07ed1fbd9b222f018d07af9597f90cebfd4e62fb2"
-PREVIOUS_COMMIT = "eca390a021a979eab404ff6dd787e1f9b2160461"
-PREVIOUS_IMAGE = "sha256:79c7341472aef3b34d41cfcbd0f580f61315a6718d4232225755bb0ac8f1e42f"
+PREVIOUS_COMMIT = "f958aa2f3433d9c7c9adc146e9daf66083dfddc3"
+PREVIOUS_IMAGE = "sha256:c2b7b6855082a242601fcd64daddb4fe6f746f1ff6c77139201aaefbf7f0c73c"
 BASE_SCHEMA_ORDER = 28
 EXISTING_SOURCE_SHA = "cda46cc9c363db65db6981fdaf615447647c924d8714179e4217240cb616531d"
 EXISTING_BUNDLE_SHA = "3f34acc4b850884c4fbb44bbb66fc0b42c23bb1dfa7f7416f5840cb80ffb1917"
@@ -48,6 +48,8 @@ def helpers():
     def bridge(original, image, commit, runtime, assets):
         result = original_candidate(original, image, commit, runtime, assets)
         if commit != PREVIOUS_COMMIT:
+            # Explicit heap within the unchanged 768 MiB visitor container bound.
+            result["services"]["app"]["environment"]["NODE_OPTIONS"] = "--max-old-space-size=512"
             result["services"]["app"]["environment"]["SOURCE_PUBLIC_ENABLED"] = "0"
         return result
     upgrade.candidate = bridge
@@ -272,7 +274,7 @@ def canaries(base, upgrade, helper, root, recovery, phase):
             upgrade.compose_up(base, helper, path, recovery["image"])
             if phase == "candidate":
                 # Readiness alone cannot prove the first visitor render survives.
-                probe = """(async()=>{const a=require('node:assert/strict');for(let n=0;n<2;n++){const r=await fetch('http://127.0.0.1:8080/',{signal:AbortSignal.timeout(60000)});a.equal(r.status,200);a.match(r.headers.get('x-robots-tag')||'',/noindex/);a.match(r.headers.get('x-seo-candidate')||'',/^[a-f0-9]{64}$/);a.match(await r.text(),/<main(?:\s|>)/);}console.log('source_visitor_render_passed')})().catch(()=>{process.exitCode=1})"""
+                probe = """(async()=>{const a=require('node:assert/strict');for(let n=0;n<12;n++){const r=await fetch('http://127.0.0.1:8080/',{signal:AbortSignal.timeout(60000)});a.equal(r.status,200);a.match(r.headers.get('x-robots-tag')||'',/noindex/);a.match(r.headers.get('x-seo-candidate')||'',/^[a-f0-9]{64}$/);a.match(await r.text(),/<main(?:\s|>)/);}console.log('source_visitor_render_passed')})().catch(()=>{process.exitCode=1})"""
                 ids = base.run(["docker", "compose", "-f", str(path), "ps", "-q", "app"]).decode().split()
                 if len(ids) != 1: fail("seo_source_canary_container")
                 base.run(["docker", "exec", ids[0], "node", "-e", probe], timeout=135)

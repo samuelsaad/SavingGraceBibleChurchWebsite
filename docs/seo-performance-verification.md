@@ -146,3 +146,10 @@ cannot be added. It did not reproduce the 25-second delay, still failed the
 trace stays private; safe aggregates are in the final performance JSON. The exact
 cause of the inconsistent cold delays and comparable deployed/field acceptance
 remain unproven.
+
+
+## ECA and F958 allocation evidence
+
+ECA's structural local matrix passed 90 cases, maximum unthrottled LCP 2,348 ms and CLS 0.016700. Its separate 24 mobile trials had all positive valid LCP observations, four above 2,500 ms and maximum 3,624 ms; maximum CLS 0.000064822. Conditions and per-path observations are in `seo-eca390a-local-performance.summary.json`. Earlier controlled outliers and invalid zero observations remain retained. These results are not a quiet-field comparison or real-user CWV acceptance.
+
+The deployed ECA startup canaries did not detect a public first-visitor-render heap exhaustion. Actual proxy and bounded page probes exposed the failure; compatible feature-off recovery passed. F958 removes another complete snapshot copy and presentation traversal of source prose, and changes source canaries to require actual visitor responses. Its final frozen local structural matrix passed 90 cases with zero errors/overflow/external requests, max unthrottled LCP 1,620 ms and CLS 0.016700 during concurrent acceptance work. This is browser correctness evidence, not controlled or field acceptance. Complete final controlled/staged results remain pending and must replace neither earlier failures nor missing field INP/CWV evidence.
