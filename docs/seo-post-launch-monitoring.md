@@ -38,3 +38,6 @@ real church-owned comparable-period reports exist; the operator must review actu
 page/query/device evidence rather than inventing a zero-traffic baseline. Confirm
 Samuel or the named delegate and the church account owner before launch. These are
 prepared responsibilities and checks, not executed future monitoring.
+
+
+Final prepared release: `a257de54b54c29ce3fc5a8fcdce73e954dcafa31`, image `sha256:93e7c5949adf60d97d7506892a4200986830bf9ec614bd749c0f8ceb58bac4cd`. The immutable source baseline remains 21,134 URL observations retaining all original 15,252. Final local/proxy crawl, exact revision restoration and actual staging backup recovery are immediate technical evidence only. Future Search Console, organic-traffic and field-performance monitoring has not occurred. On launch-day approval record Samuel or a named release delegate and a verified church account owner, then execute the full inventory checks and the dated account/device/query comparisons above. Any leaked draft, canonical-origin error, production noindex, critical 5xx or wrong-content redirect triggers immediate operator review and the retained rollback runbook.

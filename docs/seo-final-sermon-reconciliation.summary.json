@@ -3671,5 +3671,8 @@
   "limits": [
     "Known captured identities do not prove complete current stored publication inventory.",
     "Source-backed public content does not approve optional new enrichment."
-  ]
+  ],
+  "currentApplicationCommit": "a257de54b54c29ce3fc5a8fcdce73e954dcafa31",
+  "currentSermonRowsRecheckedAgainstFreshHttp": true,
+  "priorSermonIdentityStatusDispositionFindingsExactlyRetained": true
 }

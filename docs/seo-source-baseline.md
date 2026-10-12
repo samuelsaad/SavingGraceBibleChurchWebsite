@@ -460,3 +460,6 @@ bodies, cookies or credentials were sent/read. Availability headers do not prove
 body identity or rights to copy a third-party theme image, and network failure does
 not prove removal. This is later evidence, not a mutation of the frozen source or
 candidate inputs. See `seo-external-resource-head.summary.json`.
+
+
+Final acceptance reuses the frozen 9–11 October source observations, not a fresh 12 October authoritative database snapshot. The final local and staging candidates independently reverify all available source witness hashes; this does not establish additions, edits or publication changes after capture. A guarded final authoritative delta remains required before production cutover. No additional recursive calendar/query expansion or recording-body retrieval occurred.

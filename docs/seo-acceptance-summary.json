@@ -3,15 +3,15 @@
   "bindings": {
     "baselineSha256": "e2d764ce467651cadfe88c0f12cead17066b43171fe1beb5612d42a18200cae1",
     "assetsSha256": "fea08c9caaad83bd0ba01149fe86492a5610b0e0e1f54b60dcb56f367db37ebe",
-    "candidateSummarySha256": "fb119cadb42c510547bef4f25254c237f9fcca3c59c8d84318b9e85aa9eab4b4",
-    "candidateBindingsSha256": "20070fc0fda6774cf736b5457d0e19983a88610bc1ecfae9c5f0238051e076f9",
+    "candidateSummarySha256": "2f9b4f0681ff30ec8bed63f292636574925034a0a3d41478dc114e5680e86fee",
+    "candidateBindingsSha256": "be0b87f14e9c0831211111211ce53c594d9448bbb754a55f5877a981489e9cc5",
     "candidateUrlLedgerSha256": "f6c8ad1c5c4ad2c72d935ad32ff69ba6cd8d9a6ce9f6c4e072265557fd426780",
     "candidateDiffSha256": "55c7bd0325adc5dfbdd330b6dc03720c714028e96adca4687dc157d89929ef95",
-    "candidateResponsesSha256": "36485e82340d9e4bd081abfc03c88cc4640cada8fb9ee5d0bd0c4184a7d08bb5",
+    "candidateResponsesSha256": "7e54e3c0d743a088380e2026937316270a6100ecc301d4afac243e551f5e11fe",
     "bundleSha256": "cad131cdea84e514135c141a450639114b0ebef5ef7fd29ae965c2bdb48528ce",
     "sourceRecordsProofSha256": "8e8314eda588febf403f9ce9fad5a3d5d59beee4eff1a9ef7c2297b84b6428b1"
   },
-  "reviewFileSha256": "f8c1944fafed5c7334a2b0d14e2abb787a54b206da1fb9fc49ad5538b2ca2531",
+  "reviewFileSha256": "0c4314ecf9c3b752723e01acf836f873ded06723e997ec4b2fe9ae036c6f9f3a",
   "inventoryCount": 21134,
   "dispositionCounts": {
     "intentionally_removed": 389,

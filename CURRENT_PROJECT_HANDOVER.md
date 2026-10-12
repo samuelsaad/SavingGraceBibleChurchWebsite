@@ -1,81 +1,16 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
-## D-182 — local acceptance and staging rehearsal; NOT READY FOR CUTOVER
+## D-182 — final local and protected-staging acceptance; NOT READY FOR CUTOVER
 
-The isolated `codex/whole-site-seo-migration` candidate preserves the selected
-website/CMS/media controls and original dashboard. Application
-`6a654e18e62d6823e21e33753a6f30859e5376c7` is committed locally. Its frozen
-code archive is `e9789e586edfeb16303c0b8f240e90915b54bd493f8fb30ddbae4686d9bbfff2`;
-the independently verified 384 MiB production-policy loopback runtime label is
-`c2f72bfd1ab685c6775daa628d097416425b995ec16ae0d98c5ef90c00449a7b`.
+The selected website/CMS/media controls and original 4430 dashboard remain preserved. Application `a257de54b54c29ce3fc5a8fcdce73e954dcafa31` was normally pushed and verified; both sealed staging runtimes use image `sha256:93e7c5949adf60d97d7506892a4200986830bf9ec614bd749c0f8ceb58bac4cd`. The source union retains every original 15,252 URL hash and contains 21,134 observations, 14,228 captured responses and 5,882 unrequested discoveries. The 5,748 source-backed routes include 457 known original sermons, 1,213 HTML event identities and 1,946 resources; authoritative source completeness remains unproved.
 
-The final source union retains every original 15,252 URL hash and has 21,134
-observations. Its finite 6,852-request continuation completed without recursively
-requesting 5,882 new discoveries. Certified 14,228 response records bind 25,292
-source-file witnesses: 11,225 exact earlier independently parsed records reused,
-3,003 newly independently parsed. Authoritative source completeness remains unproven.
+Final local and staging whole-inventory comparisons completed with fresh HTTP responses and certified before/after/per-read source hashes. URL dispositions: `{"intentionally_removed": 389, "preserved": 3729, "redirected": 2817, "unresolved": 14199}`. All 457 original sermon paths return 200 with matched identity; four metadata dispositions remain unresolved. Per-URL findings and original accounting remain in the safe acceptance package. No generated approval, human review or native publication state was fabricated.
 
-Local import added 1,667 routes without overwriting 4,081 existing routes; replay
-changed zero. The 5,748 routes contain 33 ordinary-page routes/30 identities,
-three posts, 2,096 archives, 457 known sermons, 1,213 HTML event identities and 1,946
-resources. Public REST exposes 1,084 events; every one is represented, while 129
-additional HTML identities require recurrence/stored-source reconciliation.
-Eight held archive differences were traced to a sole Jetpack image URL reconstructed
-as its verified owned original with identical text; the past-event list remains a
-material unresolved delta. No retained source version or comparator issue was changed
-by that diagnostic.
+Final bridge/source canaries, four 18-response proxy matrices, compatible rollback/reactivation and three protected-staging CMS body/SEO draft/publish/exact-restore cycles passed. Both staging runtimes passed 1,946 resources each. The actual final staging backup was restored into the absent-target/OID-guarded authorized disposable database, matching 65 tables/schema and associated assets/application checks; the created target was removed. WordPress and roles/ACL restoration remain unproved.
 
-No new enrichment approval, real human review, production publication or semantic
-eligibility was manufactured. Existing reviews/withdrawals remain independent.
+Release gates: 1,280 standard tests plus 145 PG-gated cases covered by 1,425 PostgreSQL tests/zero skips; 648 type files/zero errors or warnings/seven hints; 45-page build/runtime, importer, offline audit, 173 Python checks and 438-file privacy scan passed. Structural browser checks and final controlled lab results are in the acceptance reports. Field CWV/INP and comparable live-source performance remain unavailable; lab failures are retained.
 
-The source-backed CMS adopted 453 additional documents (439 pages/archive
-projections, 14 events) with zero-change replay and existing ownership preserved.
-Actual local sermon/page/event visual-editor body/SEO save, draft isolation, reload,
-publish and exact restoration passed. The directory projection loads selected full
-documents separately. Visitor presentation detection now caches only per immutable
-snapshot, and source readers release temporary payloads/non-sermon clones while
-retaining every schema/hash check. These fixes allow the actual full dataset to
-start under the unchanged 384 MiB diagnostic/release heap bound.
-
-Final gates passed 1,274 standard tests plus 145 PostgreSQL-gated cases,
-1,419 PostgreSQL tests with zero skips, 647 type-checked files with zero errors/
-warnings, 45 static pages/runtime builds and 405 outgoing files with no private-body/
-secret/proprietary findings. The final browser matrix passed 90 cases with no
-errors/overflow/external requests. All original 975 failed targets were checked:
-552 now 200, 423 still 404. Success statuses do not prove equivalent content.
-The complete 21,134-row comparison and safe ledgers finished: 3729 preserved, 2817 redirected, 389 intentional removals and 14199 unresolved. The original 15,252-row denominator is retained; parity failed.
-
-The final actual backup restored all 65 table/schema fingerprints, 2,221 files,
-all 1,946 byte/MIME/length-checked resource routes and eight isolated HTTP checks;
-all four reader connections were verified read-only. The exact target was removed
-by OID guard. WordPress and production/staging role/ACL recovery remain unproven.
-
-All 1,946 migrated resource routes also passed byte/MIME/length/status checks after a fresh release-bound application process start. This is local proof, not final staging proof.
-
-Cold controlled lab LCP outliers (23–27 seconds) and two zero observer samples
-remain failed/unaccepted evidence. A focused resource diagnostic measured 4.5/2.7
-seconds for home/archive; hero/fonts were modestly sized. No field CWV/INP or
-search-performance acceptance is claimed. The earlier DNS/GitHub failures were
-resolved without bypassing pins. Remote commit `27ab62313d3f36f43bef152d02669c52d6fad4bb`
-was independently verified; its staging bridge/image
-`sha256:fc45b2568daf53a04ceb379c1f5cf903f6908141b2ba7f90c35e586430dce4e3`
-passed both canaries, activation and18 actual proxy checks. The source delta
-inserted1667/updated0/retained4081; replay changed0 across5748 routes. Source
-history, native/CMS data and credentials passed preservation checks. CMS adoption,
-source-enabled canary/activation/rollback and complete deployed verification are
-still in progress; these are not yet full final-candidate acceptance evidence.
-
-Search Console/Analytics/Tag Manager reports, verified GA4 property/stream/consent/
-test stream and current WordPress database/uploads/configuration backup remain
-unavailable. Browser account inspection failed at kernel startup. One public Google
-verification TXT marker was observed without exposing its value or proving account
-ownership; DNS was not changed. Measurement activation remains off.
-
-The prior NOT READY verdict remains effective. See `docs/seo-remediation-progress.md`
-and machine-readable final summaries for actual evidence and pending requirements.
-The original 4430 homepage/readiness returned 200; its files/process remain untouched.
-No production traffic/DNS, WordPress mutation, recording-body download or old-system
-retirement occurred. Historical D-181 milestones below remain dated evidence.
+Missing current authoritative WordPress/permalink/plugin inventory and backup, unresolved URL/content/metadata/assets, durable recording/feed/calendar/contact evidence, church-owned GSC/Analytics reports, verified GA4 property/stream/consent/test stream and reviewed production routing/authentication remain launch blockers. Measurement remains off. The original primary worktree and dashboard are unchanged; no production traffic/DNS, WordPress mutation, recording download or old-system retirement occurred. See `docs/seo-migration-acceptance.md` for final evidence, commands and exact remaining actions. Historical checkpoints below remain dated evidence.
 
 ## D-181 - whole-site SEO candidate; NOT READY FOR CUTOVER
 

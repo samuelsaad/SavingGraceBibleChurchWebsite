@@ -1,482 +1,175 @@
 {
-  "applicationCommit": "6a654e18e62d6823e21e33753a6f30859e5376c7",
-  "controlledTrials": 24,
-  "errors": [],
-  "conditions": {
-    "browser": "headless Edge",
-    "mobileWidth": 390,
-    "cpuSlowdown": 4,
-    "latencyAddedMs": 150,
-    "downloadBytesPerSecond": 200000,
-    "uploadBytesPerSecond": 75000,
-    "externalResources": "blocked",
-    "sameMachine": true,
-    "stageTunnelTransport": "not_used_local_only",
-    "concurrentAcceptanceWork": false,
-    "liveSourceComparison": false,
+  "format": "sgbc-final-a257de5-lab-results-v1",
+  "applicationCommit": "a257de54b54c29ce3fc5a8fcdce73e954dcafa31",
+  "local": {
+    "trials": 24,
+    "validLcpObservations": 24,
+    "invalidOrZeroLcpObservations": 0,
+    "above2500Ms": 6,
+    "maxValidLcpMs": 4248,
+    "maxCls": 6.482173947451726e-05,
+    "errors": [],
+    "conditions": {
+      "browser": "headless Edge",
+      "mobileWidth": 390,
+      "cpuSlowdown": 4,
+      "latencyAddedMs": 150,
+      "downloadBytesPerSecond": 200000,
+      "uploadBytesPerSecond": 75000,
+      "externalResources": "blocked",
+      "sameMachine": true,
+      "stageTunnelTransport": "not_used_local_only",
+      "concurrentAcceptanceWork": true,
+      "liveSourceComparison": false,
+      "fieldEvidence": false,
+      "actualWarmCacheVerified": false,
+      "routingDisablesHttpCache": true,
+      "inp": "not measured"
+    },
+    "capturedAt": "2026-10-12T09:47:48.988Z",
     "fieldEvidence": false,
-    "actualWarmCacheVerified": false,
-    "routingDisablesHttpCache": true,
-    "inp": "not measured",
-    "stagingTrialsPerformed": false,
-    "allSystemBackgroundLoadIndependentlyMeasured": false
-  },
-  "byPath": {
-    "/": {
-      "trials": 6,
-      "lcpMs": [
-        27044,
-        0,
-        26076,
-        3000,
-        24836,
-        1380
-      ],
-      "ttfbMs": [
-        476,
-        247,
-        400,
-        249,
-        435,
-        278
-      ],
-      "zeroLcpSamples": 1,
-      "maxCls": 0.005844605294396962
-    },
-    "/about/": {
-      "trials": 6,
-      "lcpMs": [
-        2704,
-        1216,
-        2828,
-        968,
-        3812,
-        1092
-      ],
-      "ttfbMs": [
-        254,
-        251,
-        247,
-        225,
-        254,
-        243
-      ],
-      "zeroLcpSamples": 0,
-      "maxCls": 0
-    },
-    "/sermons/": {
-      "trials": 6,
-      "lcpMs": [
-        23576,
-        852,
-        23112,
-        920,
-        23776,
-        940
-      ],
-      "ttfbMs": [
-        408,
-        255,
-        421,
-        287,
-        396,
-        276
-      ],
-      "zeroLcpSamples": 0,
-      "maxCls": 0.0004191239316239316
-    },
-    "/sermons/an-uncomfortable-day-to-worship/": {
-      "trials": 6,
-      "lcpMs": [
-        0,
-        1980,
-        3140,
-        2184,
-        4392,
-        1780
-      ],
-      "ttfbMs": [
-        388,
-        242,
-        236,
-        233,
-        229,
-        249
-      ],
-      "zeroLcpSamples": 1,
-      "maxCls": 0.0004102564102564103
+    "acceptance": false,
+    "byPath": {
+      "/": {
+        "trials": 6,
+        "lcpMs": [
+          4248,
+          2620,
+          2492,
+          2520,
+          2512,
+          2480
+        ],
+        "maxCls": 0
+      },
+      "/about/": {
+        "trials": 6,
+        "lcpMs": [
+          1248,
+          788,
+          1304,
+          840,
+          1268,
+          912
+        ],
+        "maxCls": 0
+      },
+      "/sermons/": {
+        "trials": 6,
+        "lcpMs": [
+          1028,
+          948,
+          1240,
+          948,
+          1300,
+          888
+        ],
+        "maxCls": 0
+      },
+      "/sermons/an-uncomfortable-day-to-worship/": {
+        "trials": 6,
+        "lcpMs": [
+          2268,
+          1540,
+          2936,
+          1628,
+          2656,
+          2020
+        ],
+        "maxCls": 6.482173947451726e-05
+      }
     }
   },
-  "coldResourceDiagnostic": {
-    "rows": [
-      {
-        "path": "/",
-        "lcp": {
-          "time": 4524,
-          "tag": "IMG",
-          "src": "http://127.0.0.1:4447/media/congregation.jpg",
-          "width": 1600,
-          "height": 1204
-        },
-        "resources": [
-          {
-            "path": "/media/congregation.jpg",
-            "type": "img",
-            "durationMs": 1228,
-            "transferSize": 188084,
-            "encodedBytes": 187784,
-            "decodedBytes": 187784
-          },
-          {
-            "path": "/brand/fonts/bitstream-vera-sans-bold.ttf",
-            "type": "link",
-            "durationMs": 1130,
-            "transferSize": 59016,
-            "encodedBytes": 58716,
-            "decodedBytes": 58716
-          },
-          {
-            "path": "/brand/fonts/bitstream-vera-sans-regular.ttf",
-            "type": "link",
-            "durationMs": 867,
-            "transferSize": 66232,
-            "encodedBytes": 65932,
-            "decodedBytes": 65932
-          },
-          {
-            "path": "/brand/saving-grace-logo.png",
-            "type": "img",
-            "durationMs": 738,
-            "transferSize": 23540,
-            "encodedBytes": 23240,
-            "decodedBytes": 23240
-          },
-          {
-            "path": "/brand/favicon-32.png",
-            "type": "other",
-            "durationMs": 274,
-            "transferSize": 846,
-            "encodedBytes": 546,
-            "decodedBytes": 546
-          }
-        ]
-      },
-      {
-        "path": "/sermons/",
-        "lcp": {
-          "time": 2660,
-          "tag": "P",
-          "src": null,
-          "width": null,
-          "height": null
-        },
-        "resources": [
-          {
-            "path": "/brand/fonts/bitstream-vera-sans-regular.ttf",
-            "type": "link",
-            "durationMs": 1441,
-            "transferSize": 66232,
-            "encodedBytes": 65932,
-            "decodedBytes": 65932
-          },
-          {
-            "path": "/brand/fonts/bitstream-vera-sans-bold.ttf",
-            "type": "link",
-            "durationMs": 1377,
-            "transferSize": 59016,
-            "encodedBytes": 58716,
-            "decodedBytes": 58716
-          },
-          {
-            "path": "/brand/saving-grace-logo.png",
-            "type": "img",
-            "durationMs": 774,
-            "transferSize": 23540,
-            "encodedBytes": 23240,
-            "decodedBytes": 23240
-          },
-          {
-            "path": "/media/wesam.jpg",
-            "type": "img",
-            "durationMs": 391,
-            "transferSize": 27358,
-            "encodedBytes": 27058,
-            "decodedBytes": 27058
-          },
-          {
-            "path": "/brand/favicon-32.png",
-            "type": "other",
-            "durationMs": 254,
-            "transferSize": 846,
-            "encodedBytes": 546,
-            "decodedBytes": 546
-          }
-        ]
-      }
-    ],
-    "concurrentFullComparison": true,
-    "providerBodiesRequested": false
-  },
-  "lcpTargetPassed": false,
-  "fieldCoreWebVitalsAvailable": false,
-  "limits": [
-    "Cold LCP outliers and zero observer samples remain unaccepted, not silently discarded.",
-    "The resource diagnostic ran during full comparison and is not a quiet before/after result.",
-    "Resource sizes did not show an oversized original image: hero 187784 bytes; fonts 58716 and65932 bytes.",
-    "No field INP/75th-percentile evidence or guarantee of production search performance.",
-    "The retained raw harness labels include an unused SSH transport description; all 24 final controlled rows were local production-policy trials."
-  ],
-  "additionalSafeTimingObservation": {
-    "coldHomeHtmlBytes": 101986,
-    "coldArchiveHtmlBytes": 217515,
-    "observedColdDomContentLoadedMs": [
-      25522,
-      27096
-    ],
-    "coldHomeLongTaskTotalsMs": [
-      514,
-      983,
-      1320
-    ],
-    "causeProven": false,
-    "observationDiscarded": false
-  },
-  "boundedColdNavigationTrace": {
-    "status": 200,
-    "runtimeLabel": "c2f72bfd1ab685c6775daa628d097416425b995ec16ae0d98c5ef90c00449a7b",
-    "lcpMs": 3612,
-    "cls": 0,
-    "elapsedMs": 5494.6659,
-    "ttfbMs": 743.8000000119209,
-    "domContentLoadedMs": 3264.699999988079,
-    "blockedRequests": 0,
-    "failedRequests": 0,
-    "eventAggregates": [
-      {
-        "name": "WebFrameWidgetImpl::UpdateLifecycle",
-        "count": 11,
-        "totalMs": 1445.7889999999998,
-        "maxMs": 702.269
-      },
-      {
-        "name": "LocalFrameView::RunStyleAndLayoutLifecyclePhases",
-        "count": 11,
-        "totalMs": 1067.0220000000002,
-        "maxMs": 537.248
-      },
-      {
-        "name": "LocalFrameView::UpdateStyleAndLayout",
-        "count": 28,
-        "totalMs": 1067.0179999999996,
-        "maxMs": 537.035
-      },
-      {
-        "name": "Blink.Layout.UpdateTime",
-        "count": 7,
-        "totalMs": 898.7869999999999,
-        "maxMs": 434.799
-      },
-      {
-        "name": "LocalFrameView::layout",
-        "count": 7,
-        "totalMs": 897.383,
-        "maxMs": 434.588
-      },
-      {
-        "name": "Layout",
-        "count": 7,
-        "totalMs": 897.3389999999999,
-        "maxMs": 434.583
-      },
-      {
-        "name": "LocalFrameView::performLayout",
-        "count": 7,
-        "totalMs": 894.945,
-        "maxMs": 434.189
-      },
-      {
-        "name": "InlineNode::ShapeTextIncludingFirstLine",
-        "count": 315,
-        "totalMs": 507.9049999999997,
-        "maxMs": 39.106
-      },
-      {
-        "name": "Paint",
-        "count": 12,
-        "totalMs": 276.65999999999997,
-        "maxMs": 149.223
-      },
-      {
-        "name": "LocalFrameView::RunPaintLifecyclePhase",
-        "count": 11,
-        "totalMs": 276.417,
-        "maxMs": 153.578
-      },
-      {
-        "name": "Blink.Paint.UpdateTime",
-        "count": 11,
-        "totalMs": 261.526,
-        "maxMs": 150.228
-      },
-      {
-        "name": "Blink.Style.UpdateTime",
-        "count": 11,
-        "totalMs": 163.368,
-        "maxMs": 96.952
-      },
-      {
-        "name": "UpdateLayoutTree",
-        "count": 11,
-        "totalMs": 162.22899999999998,
-        "maxMs": 96.937
-      },
-      {
-        "name": "HTMLDocumentParser::DeferredPumpTokenizerIfPossible",
-        "count": 36,
-        "totalMs": 162.103,
-        "maxMs": 52.922
-      },
-      {
-        "name": "HTMLDocumentParser::PumpTokenizerIfPossible",
-        "count": 38,
-        "totalMs": 160.195,
-        "maxMs": 52.916
-      },
-      {
-        "name": "Document::updateStyle",
-        "count": 11,
-        "totalMs": 152.808,
-        "maxMs": 96.576
-      },
-      {
-        "name": "HTMLDocumentParser::PumpTokenizer",
-        "count": 38,
-        "totalMs": 139.59,
-        "maxMs": 52.901
-      },
-      {
-        "name": "ParseHTML",
-        "count": 38,
-        "totalMs": 134.15099999999998,
-        "maxMs": 52.891
-      },
-      {
-        "name": "Document::recalcStyle",
-        "count": 10,
-        "totalMs": 132.87,
-        "maxMs": 88.687
-      },
-      {
-        "name": "DocumentLoader::CommitNavigation",
-        "count": 2,
-        "totalMs": 97.682,
-        "maxMs": 93.468
-      },
-      {
-        "name": "LocalWindowProxy::Initialize",
-        "count": 2,
-        "totalMs": 85.07499999999999,
-        "maxMs": 54.931
-      },
-      {
-        "name": "DocumentLoader::StartLoadingResponse",
-        "count": 2,
-        "totalMs": 75.034,
-        "maxMs": 74.786
-      },
-      {
-        "name": "DocumentLoader::CreateParserPostCommit",
-        "count": 2,
-        "totalMs": 74.601,
-        "maxMs": 74.565
-      },
-      {
-        "name": "CSSParserImpl::parseStyleSheet",
-        "count": 8,
-        "totalMs": 56.355999999999995,
-        "maxMs": 49.602
-      },
-      {
-        "name": "CSSParserImpl::parseStyleSheet.parse",
-        "count": 8,
-        "totalMs": 55.763999999999996,
-        "maxMs": 49.394
-      },
-      {
-        "name": "ResponseBodyLoader::OnStateChange",
-        "count": 80,
-        "totalMs": 53.82100000000001,
-        "maxMs": 5.676
-      },
-      {
-        "name": "Blink.ParseStyleSheet.UpdateTime",
-        "count": 2,
-        "totalMs": 51.611000000000004,
-        "maxMs": 49.81
-      },
-      {
-        "name": "NavigationBodyLoader::OnReadable",
-        "count": 22,
-        "totalMs": 49.76999999999999,
-        "maxMs": 16.816
-      },
-      {
-        "name": "NavigationBodyLoader::ReadFromDataPipe",
-        "count": 22,
-        "totalMs": 47.976,
-        "maxMs": 16.806
-      },
-      {
-        "name": "DecodingImageGenerator::getPixels",
-        "count": 4,
-        "totalMs": 41.064,
-        "maxMs": 21.6
-      },
-      {
-        "name": "ImageFrameGenerator::decodeAndScale",
-        "count": 4,
-        "totalMs": 40.913000000000004,
-        "maxMs": 21.574
-      },
-      {
-        "name": "DocumentLoader::BodyDataReceivedImpl",
-        "count": 26,
-        "totalMs": 38.193,
-        "maxMs": 16.504
-      },
-      {
-        "name": "PrePaint",
-        "count": 11,
-        "totalMs": 33.352000000000004,
-        "maxMs": 15.389
-      },
-      {
-        "name": "ImageDecoder::DecodeFrameBufferAtIndex",
-        "count": 5,
-        "totalMs": 32.86,
-        "maxMs": 15.925
-      },
-      {
-        "name": "ImageFrameGenerator::decode",
-        "count": 4,
-        "totalMs": 32.82,
-        "maxMs": 15.931
-      }
-    ],
+  "staging": {
+    "trials": 24,
+    "validLcpObservations": 24,
+    "invalidOrZeroLcpObservations": 0,
+    "above2500Ms": 8,
+    "maxValidLcpMs": 3896,
+    "maxCls": 0,
+    "errors": [],
     "conditions": {
-      "sameFinalCode": true,
-      "concurrentFullComparison": true,
-      "viewportWidth": 390,
+      "browser": "headless Edge",
+      "mobileWidth": 390,
       "cpuSlowdown": 4,
-      "latency": 150,
+      "latencyAddedMs": 150,
       "downloadBytesPerSecond": 200000,
-      "cacheDisabled": true,
-      "providerBodiesRequested": false,
-      "fieldEvidence": false
+      "uploadBytesPerSecond": 75000,
+      "externalResources": "blocked",
+      "sameMachine": true,
+      "stageTunnelTransport": "SSH loopback",
+      "concurrentAcceptanceWork": true,
+      "liveSourceComparison": false,
+      "fieldEvidence": false,
+      "actualWarmCacheVerified": false,
+      "routingDisablesHttpCache": true,
+      "inp": "not measured"
     },
-    "overlappingTraceCategoriesMustNotBeSummed": true,
-    "lcpTargetPassed": false,
-    "twentyFiveSecondDelayReproduced": false,
-    "fieldAcceptance": false
-  }
+    "capturedAt": "2026-10-12T09:36:56.148Z",
+    "fieldEvidence": false,
+    "acceptance": false,
+    "byPath": {
+      "/": {
+        "trials": 6,
+        "lcpMs": [
+          2904,
+          2864,
+          2720,
+          2584,
+          2616,
+          2604
+        ],
+        "maxCls": 0
+      },
+      "/about/": {
+        "trials": 6,
+        "lcpMs": [
+          1148,
+          972,
+          1256,
+          808,
+          1104,
+          848
+        ],
+        "maxCls": 0
+      },
+      "/sermons/": {
+        "trials": 6,
+        "lcpMs": [
+          1280,
+          788,
+          1476,
+          1040,
+          1052,
+          860
+        ],
+        "maxCls": 0
+      },
+      "/sermons/an-uncomfortable-day-to-worship/": {
+        "trials": 6,
+        "lcpMs": [
+          3896,
+          1584,
+          3880,
+          1828,
+          1900,
+          1668
+        ],
+        "maxCls": 0
+      }
+    }
+  },
+  "fieldEvidence": false,
+  "liveSourceComparison": false,
+  "actualWarmCacheVerified": false,
+  "routingDisablesHttpCache": true,
+  "comparisonLimitations": [
+    "same headless browser and throttle settings",
+    "SSH transport differs from local loopback",
+    "concurrent acceptance work",
+    "source WordPress not measured comparably",
+    "no real-user field evidence"
+  ],
+  "inp": "not measured",
+  "performanceAcceptance": false
 }

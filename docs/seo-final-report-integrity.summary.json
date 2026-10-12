@@ -1,0 +1,29 @@
+{
+  "outcome": "final_safe_report_integrity_passed",
+  "rows": 21134,
+  "originalRows": 15252,
+  "dispositions": {
+    "redirected": 2817,
+    "preserved": 3729,
+    "unresolved": 14199,
+    "intentionally_removed": 389
+  },
+  "sameProductionAndStageInventory": true,
+  "knownOriginalSermons": 457,
+  "sermonOutcomes": {
+    "unresolved": 4,
+    "preserved": 453
+  },
+  "authoritativeSourceTotalProven": false,
+  "cmsTypes": 3,
+  "resourcesPerStagingRuntime": 1946,
+  "actualFinalStagingRestorationPassed": true,
+  "originalHistorySha256": "e253651a43bfed28763968aa0e82ee522159eb4f2c519fc4dc65757df37f6b21",
+  "hashes": {
+    "seo-url-migration-map.csv": "861cde60d96034febe7dd7fbd0986efe527e395510827a93e6df31d6126a451a",
+    "seo-content-metadata-diff.csv": "fc221264cd072075bb337329b13f499db02283653b732e5d6d6e642b2441b183",
+    "seo-staging-url-verification.csv": "ad21217757a8a5ff5ba6c05ef7f8b2ba955e26a950e902bf060457c43391c4a8",
+    "seo-final-staging-acceptance.summary.json": "8cc8c791d974f5c53baa1f1df96ff5adb1bf235a5181b6f714c7d0343639e3f9"
+  },
+  "verdict": "NOT READY FOR CUTOVER"
+}

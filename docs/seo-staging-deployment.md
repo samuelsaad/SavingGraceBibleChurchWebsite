@@ -190,3 +190,8 @@ independently reparsed, hash-certified frozen source cache, verifying every sour
 file before/after the run and each source body on read. All candidate HTTP responses
 were fresh. Its full inventory and internal-target checks completed with zero
 internal redirects; no source-data or eligibility bypass was introduced.
+
+
+## Final A257 verification supersedes earlier pending checkpoints
+
+Application `a257de54b54c29ce3fc5a8fcdce73e954dcafa31` and image `sha256:93e7c5949adf60d97d7506892a4200986830bf9ec614bd749c0f8ceb58bac4cd` are the verified source-enabled staging candidate. Both canaries require 12 actual homepage renders at explicit 512 MiB V8 heap within unchanged 768 MiB containers. Four 18-response proxy matrices, compatible rollback/reactivation, three exact CMS body/SEO revision cycles, 1,946 resources on each runtime and the complete 21,134-row proxy crawl completed. The verdict remains NOT READY; consult `seo-final-staging-acceptance.summary.json` and `seo-migration-acceptance.md`. Earlier failures and smaller releases above remain historical evidence. Exact Git blob packaging and all 56 SQL migration bytes match. No production traffic/DNS or WordPress mutation occurred.

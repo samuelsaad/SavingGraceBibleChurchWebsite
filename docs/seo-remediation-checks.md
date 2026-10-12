@@ -123,3 +123,19 @@ The final application is `eca390a021a979eab404ff6dd787e1f9b2160461`. Production-
 Use a fresh private output for every comparator run. Require exactly 21,134 checked rows, a complete internal-target report, every original 15,252 URL hash, and before/after plus per-read source/candidate witness verification. A partially populated report that includes placeholder rows does not count as complete. A matching runtime label proves release provenance, not equivalent content or source completeness. Retain all unresolved findings and prior failures.
 
 The immutable-source allocation change keeps editor/default content trees independent and visitor event metadata separate. It must not remove source validation, change review/publication states or replace source-backed content with generated enrichment. The ECA test suite has 154 files and 1,422 PostgreSQL cases with zero skips; three anonymous tests cover immutable visitor rendering and editable-tree isolation.
+
+
+## Final A257 verification supersedes earlier pending checkpoints
+
+Application `a257de54b54c29ce3fc5a8fcdce73e954dcafa31` and image `sha256:93e7c5949adf60d97d7506892a4200986830bf9ec614bd749c0f8ceb58bac4cd` are the verified source-enabled staging candidate. Both canaries require 12 actual homepage renders at explicit 512 MiB V8 heap within unchanged 768 MiB containers. Four 18-response proxy matrices, compatible rollback/reactivation, three exact CMS body/SEO revision cycles, 1,946 resources on each runtime and the complete 21,134-row proxy crawl completed. The verdict remains NOT READY; consult `seo-final-staging-acceptance.summary.json` and `seo-migration-acceptance.md`. Earlier failures and smaller releases above remain historical evidence. Exact Git blob packaging and all 56 SQL migration bytes match. No production traffic/DNS or WordPress mutation occurred.
+
+
+Current completed private runs: local `private/seo-verification/ph`, staging `private/seo-verification/sg`; local resource/browser/target outputs `rpg/bpg/tpg`, staging `rg4450/rg4451/bg/tg`. CMS proof is the three-type `d182-final-a257de5-staging-cms-browser-v3.private.json`; final recovery is `private/seo-recovery/staging-a257de5-final`. These names identify private evidence and carry no source bodies into Git. Repeating must choose fresh outputs and rederive labels from actual current state.
+
+```powershell
+python private/seo/compare-cached-frontier-sharing-retry.private.py --baseline private/seo-baseline/d182-final-frontier-frozen/ledger.private.json --assets private/seo-baseline/d182-final-frontier-frozen/assets-frontier-final.private.json --candidate http://127.0.0.1:4447 --environment production --candidate-id a257de54b54c29ce3fc5a8fcdce73e954dcafa31 --expected-runtime-label VERIFIED_CURRENT_LABEL --request-limit 50000 --concurrency 4 --timeout 30 --output private/seo-verification/NEW-a257-production
+python private/seo/compare-cached-frontier-sharing-retry.private.py --baseline private/seo-baseline/d182-final-frontier-frozen/ledger.private.json --assets private/seo-baseline/d182-final-frontier-frozen/assets-frontier-final.private.json --candidate http://127.0.0.1:4450 --environment staging --candidate-id a257de54b54c29ce3fc5a8fcdce73e954dcafa31 --expected-runtime-label VERIFIED_CURRENT_LABEL --request-limit 50000 --concurrency 4 --timeout 30 --output private/seo-verification/NEW-a257-staging
+python scripts/seo-classify-inventory.py --input docs/seo-url-migration-map.csv --output private/seo-verification/NEW-classification.csv
+```
+
+The certified cache wrapper delegates to the tracked comparator unchanged and checks every frozen source witness before/after and each candidate response. Its Windows retry is restricted to transient sharing errors; it never accepts a missing or changed witness. The tracked `scripts/seo-verify-candidate.py` command above remains the portable uncached rerun.
