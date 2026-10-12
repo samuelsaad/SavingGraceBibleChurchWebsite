@@ -66,6 +66,8 @@ export function hasCmsPresentation(context:FrontendRenderContext):boolean {
  const snapshot=context.siteContent;if(!snapshot)return false;
  const cached=context.visualEditor?undefined:presentationSnapshots.get(snapshot);
  if(cached!==undefined)return cached;
- const walk=(value:unknown):boolean=>{if(!value||typeof value!=="object")return false;const item=value as Record<string,unknown>;if(item.presentation||item.cmsPresentation||item.kind==="panel"&&item.columns)return true;return Object.values(item).some(walk);};
+ const walk=(value:unknown):boolean=>{if(!value||typeof value!=="object")return false;const item=value as Record<string,unknown>;if(item.presentation||item.cmsPresentation||item.kind==="panel"&&item.columns)return true;// SourceNode trees contain prose/link/image fields, never CMS presentation.
+  if(item.kind==="source-content")return false;
+  return Object.keys(item).some(key=>key!=="sourceContentByPath"&&walk(item[key]));};
  const present=walk(snapshot);if(!context.visualEditor)presentationSnapshots.set(snapshot,present);return present;
 }

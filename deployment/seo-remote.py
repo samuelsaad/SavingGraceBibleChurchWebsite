@@ -16,8 +16,8 @@ import tarfile
 import time
 
 UPGRADE_SHA = "e41bbc7b36e883665a4f57c07ed1fbd9b222f018d07af9597f90cebfd4e62fb2"
-PREVIOUS_COMMIT = "27ab62313d3f36f43bef152d02669c52d6fad4bb"
-PREVIOUS_IMAGE = "sha256:fc45b2568daf53a04ceb379c1f5cf903f6908141b2ba7f90c35e586430dce4e3"
+PREVIOUS_COMMIT = "eca390a021a979eab404ff6dd787e1f9b2160461"
+PREVIOUS_IMAGE = "sha256:79c7341472aef3b34d41cfcbd0f580f61315a6718d4232225755bb0ac8f1e42f"
 BASE_SCHEMA_ORDER = 28
 EXISTING_SOURCE_SHA = "cda46cc9c363db65db6981fdaf615447647c924d8714179e4217240cb616531d"
 EXISTING_BUNDLE_SHA = "3f34acc4b850884c4fbb44bbb66fc0b42c23bb1dfa7f7416f5840cb80ffb1917"
@@ -268,7 +268,14 @@ def canaries(base, upgrade, helper, root, recovery, phase):
     before = state_hash(base, upgrade)
     for runtime in ("public", "protected"):
         path = root / (runtime + ("-canary.json" if phase == "bridge" else "-source-canary.json"))
-        try: upgrade.compose_up(base, helper, path, recovery["image"])
+        try:
+            upgrade.compose_up(base, helper, path, recovery["image"])
+            if phase == "candidate":
+                # Readiness alone cannot prove the first visitor render survives.
+                probe = """(async()=>{const a=require('node:assert/strict');for(let n=0;n<2;n++){const r=await fetch('http://127.0.0.1:8080/',{signal:AbortSignal.timeout(60000)});a.equal(r.status,200);a.match(r.headers.get('x-robots-tag')||'',/noindex/);a.match(r.headers.get('x-seo-candidate')||'',/^[a-f0-9]{64}$/);a.match(await r.text(),/<main(?:\s|>)/);}console.log('source_visitor_render_passed')})().catch(()=>{process.exitCode=1})"""
+                ids = base.run(["docker", "compose", "-f", str(path), "ps", "-q", "app"]).decode().split()
+                if len(ids) != 1: fail("seo_source_canary_container")
+                base.run(["docker", "exec", ids[0], "node", "-e", probe], timeout=135)
         finally: base.run(["docker", "compose", "-f", str(path), "down", "--remove-orphans"])
     if state_hash(base, upgrade) != before: fail("seo_canary_changed_content")
     receipt = root / (phase + "-canary.receipt.json")

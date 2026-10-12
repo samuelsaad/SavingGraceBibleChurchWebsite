@@ -1,6 +1,8 @@
 
 import {describe,it,expect} from 'vitest';
 import {createCmsFrontendSnapshot} from '../src/cms/frontend-adapter';
+import {preserveSourceMetadata} from '../src/seo/source-metadata';
+import {hasCmsPresentation} from '../src/frontend/editing';
 import {renderSourceContent} from '../src/frontend/source-content';
 import type {CmsSnapshot,CmsDocument} from '../src/cms/model';
 import type {SourceNode} from '../src/domain/source-content';
@@ -23,6 +25,17 @@ describe('immutable visitor source content',()=>{
   for(const block of blocks){expect(sourceNodes(block)).toBe(nodes);expect(String(renderSourceContent(sourceNodes(block)))).toBe(String(renderSourceContent(nodes)));}
   expect(String(renderSourceContent(sourceNodes(regular.pages[0]!.blocks[0])))).toBe(String(renderSourceContent(nodes)));
   expect(JSON.stringify(snapshot)).toBe(before);
+ });
+ it('overlays metadata on frozen visitor containers without copying source trees or mutating the input',()=>{
+  const {nodes,snapshot}=fixture();const initial=createCmsFrontendSnapshot(snapshot,[],false,false,{immutableSourceContent:true});const before=JSON.stringify(initial);freeze(initial);
+  const result=preserveSourceMetadata(initial,[]);expect(result).not.toBe(initial);expect(result.pages).not.toBe(initial.pages);expect(sourceNodes(result.pages[0]!.blocks[0])).toBe(nodes);expect(JSON.stringify(initial)).toBe(before);
+ });
+ it('detects presentation on modules without traversing immutable source prose',()=>{
+  const {snapshot}=fixture();const result=createCmsFrontendSnapshot(snapshot,[],false,false,{immutableSourceContent:true});
+  const block=result.pages[0]!.blocks[0]!;Object.defineProperty(block,'nodes',{get:()=>{throw Error('source_prose_must_not_be_scanned_for_presentation');}});
+  expect(hasCmsPresentation({mode:'public',basePath:'',siteContent:result})).toBe(false);
+  const editor={...result,pages:[{...result.pages[0]!,blocks:[{kind:'source-content',nodes:[],cmsPresentation:{spacing:'roomy'}} as unknown as typeof block]}]};
+  expect(hasCmsPresentation({mode:'public',basePath:'',siteContent:editor})).toBe(true);
  });
  it('keeps default and editor trees independent even when the immutable visitor option is supplied to an editor',()=>{
   const {nodes,snapshot}=fixture();

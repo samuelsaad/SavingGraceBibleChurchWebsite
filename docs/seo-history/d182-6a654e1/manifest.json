@@ -1,0 +1,71 @@
+{
+  "applicationCommit": "6a654e18e62d6823e21e33753a6f30859e5376c7",
+  "purpose": "Retain previous complete acceptance witnesses before ECA final replacement.",
+  "files": [
+    {
+      "name": "seo-url-migration-map.csv",
+      "sha256": "2bd5f80a53b7985adcc5dc69a4391096c991b3d3020eb3d0415ffad7e3c03ace",
+      "bytes": 26422602
+    },
+    {
+      "name": "seo-content-metadata-diff.csv",
+      "sha256": "3495c688a31c07b917e3043d9dc6114b9273f2e2f186c6430208c7a1f44468eb",
+      "bytes": 38755040
+    },
+    {
+      "name": "seo-acceptance-summary.json",
+      "sha256": "d5082a694bd8887254273dbaf58a7aebcd44c538b2a59e77f5b1f6f0c0e458fb",
+      "bytes": 3623
+    },
+    {
+      "name": "seo-acceptance-combined-summary.json",
+      "sha256": "9f6b4009708cce51a331e3b707f77986b3b297a1d7b18b02d836063019d9eed2",
+      "bytes": 1229
+    },
+    {
+      "name": "seo-final-release-checks.summary.json",
+      "sha256": "e7a9f6112dad9c7bc04aac243f514c8f547612a6ec7e1a570e8684eec97d01a3",
+      "bytes": 2627
+    },
+    {
+      "name": "seo-performance-final.summary.json",
+      "sha256": "b17b2b2550b659b9e37166974da105d81115c027b295c7712d9817da3f268637",
+      "bytes": 12377
+    },
+    {
+      "name": "seo-final-resource-restart.summary.json",
+      "sha256": "6854c7b53c90d5514a23c0fde91f3226c90bbe990b66918aea01589640a2f870",
+      "bytes": 598
+    },
+    {
+      "name": "seo-final-recovery.summary.json",
+      "sha256": "804cbc6b675fedc0e788acfe4dd8f86f767ae68e396dc0d237b3d882d670106e",
+      "bytes": 738
+    },
+    {
+      "name": "seo-original-cohort-final.summary.json",
+      "sha256": "8c3c9f245d17f50a706ca46400ae5c9fd776da56ffd4f0186ccbc3ade5225703",
+      "bytes": 102014
+    },
+    {
+      "name": "seo-original-cohort-final.csv",
+      "sha256": "86ebfbf011058d91a32933ce3b75b33683525077813c63e0a110b44039d8dfa1",
+      "bytes": 1828037
+    },
+    {
+      "name": "seo-final-finding-groups.summary.json",
+      "sha256": "f0d9c76be36e20d3dab19cbfc427bc39610ab84224502844f30b050cd8f76d2d",
+      "bytes": 896780
+    },
+    {
+      "name": "seo-final-inventory-classification.summary.json",
+      "sha256": "0a19cb93a546c6fb7859a250319165dcca2bf263654d8110a2f7c320c56d2af5",
+      "bytes": 958
+    },
+    {
+      "name": "seo-final-inventory-classification.csv",
+      "sha256": "5c91bae7ad2e3024c9168e4af2efcf5304fb33193743724ad2dbe5b01ddd138c",
+      "bytes": 7620238
+    }
+  ]
+}

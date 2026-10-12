@@ -14,7 +14,8 @@ export function sourceSeo(page:SourcePublicPage,pages:readonly SourcePublicPage[
  return{title:page.title,...(page.socialType?{socialType:page.socialType}:{}),description:page.description??'',...(page.socialTitle?{socialTitle:page.socialTitle}:{}),...(page.socialDescription?{socialDescription:page.socialDescription}:{}),...(image?{image}:{}),...(!page.indexable?{noindex:true}:{})};
 }
 export function preserveSourceMetadata(snapshot:FrontendSiteSnapshot,pages:readonly SourcePublicPage[]):FrontendSiteSnapshot{
- const result=structuredClone(snapshot),source=new Map(pages.filter(p=>p.kind!=='asset'&&p.issues.length===0).map(p=>[p.path,p]));
+ // Metadata overlay replaces containers; immutable content trees stay shared.
+ const result={...snapshot,home:snapshot.home?{...snapshot.home}:null},source=new Map(pages.filter(p=>p.kind!=='asset'&&p.issues.length===0).map(p=>[p.path,p]));
  result.assets={...result.assets,...sourceSocialAssets(pages,result.assets)};
  result.cmsExplicitSeoByPath={...Object.fromEntries([...snapshot.pages,...snapshot.posts,...snapshot.events].filter(page=>page.seo).map(page=>[page.path,page.seo!])),...(snapshot.home?.seo?{'/':snapshot.home.seo}:{})};
  const merge=<T extends {path:string;seo?:ContentSeo}>(page:T):T=>{const original=source.get(page.path);return original?{...page,seo:{...sourceSeo(original,pages),...page.seo}}:page;};

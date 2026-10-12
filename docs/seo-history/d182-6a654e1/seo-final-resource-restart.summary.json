@@ -1,0 +1,15 @@
+{
+  "bundleFileSha256": "cad131cdea84e514135c141a450639114b0ebef5ef7fd29ae965c2bdb48528ce",
+  "expectedLabel": "c2f72bfd1ab685c6775daa628d097416425b995ec16ae0d98c5ef90c00449a7b",
+  "checked": 1946,
+  "requests": 1946,
+  "failed": 0,
+  "capturedAt": "2026-10-11T17:13:18.803966Z",
+  "recordingBodyRequests": 0,
+  "format": "sgbc-seo-fresh-process-resource-proof-v1",
+  "applicationCommit": "6a654e18e62d6823e21e33753a6f30859e5376c7",
+  "freshProcess": true,
+  "sameFrozenCodeDatabaseAndPolicyVerified": true,
+  "existingComparisonProcessInterrupted": false,
+  "stagingProof": false
+}

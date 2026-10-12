@@ -1,0 +1,29 @@
+{
+  "format": "sgbc-seo-final-and-original-history-v1",
+  "inventoryCount": 21134,
+  "originalDenominator": 15252,
+  "dispositionCounts": {
+    "intentionally_removed": 389,
+    "preserved": 3729,
+    "redirected": 2817,
+    "unresolved": 14199
+  },
+  "originalEvidence": {
+    "urlLedger": "seo-history/d181-seo-url-migration-map.csv",
+    "combinedSummary": "seo-history/d181-seo-acceptance-combined-summary.json",
+    "urlLedgerSha256": "e253651a43bfed28763968aa0e82ee522159eb4f2c519fc4dc65757df37f6b21"
+  },
+  "finalSafeSummarySha256": "d5082a694bd8887254273dbaf58a7aebcd44c538b2a59e77f5b1f6f0c0e458fb",
+  "outputHashes": {
+    "seo-url-migration-map.csv": "2bd5f80a53b7985adcc5dc69a4391096c991b3d3020eb3d0415ffad7e3c03ace",
+    "seo-content-metadata-diff.csv": "3495c688a31c07b917e3043d9dc6114b9273f2e2f186c6430208c7a1f44468eb"
+  },
+  "originalCohortAccounting": "seo-original-cohort-final.summary.json",
+  "fullHttpComparison": "seo-http-verification-summary.json",
+  "verdict": "NOT_READY",
+  "limits": [
+    "Historical rows and findings remain immutable.",
+    "Categories overlap; final inventory grew through observed discoveries.",
+    "No production cutover or ranking guarantee."
+  ]
+}

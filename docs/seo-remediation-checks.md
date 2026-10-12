@@ -115,3 +115,11 @@ Private evidence/release archives are excluded from test/type discovery. Applica
 tests use four workers with unchanged assertions and timeouts. All tracked 153 test
 files remain included; PostgreSQL execution requires zero skips. Preserve any failed
 concurrent-run logs and disclose the exact final successful commands.
+
+## ECA release and fresh comparison requirements
+
+The final application is `eca390a021a979eab404ff6dd787e1f9b2160461`. Production-policy local verification uses explicit loopback port 4448; sealed staging verification uses the task SSH loopback path on 4450/4451. The ordinary dashboard on 4430 belongs to the user's existing work and must remain untouched. The final expected labels must be independently calculated from the exact code/image, database dependency state and environment policy.
+
+Use a fresh private output for every comparator run. Require exactly 21,134 checked rows, a complete internal-target report, every original 15,252 URL hash, and before/after plus per-read source/candidate witness verification. A partially populated report that includes placeholder rows does not count as complete. A matching runtime label proves release provenance, not equivalent content or source completeness. Retain all unresolved findings and prior failures.
+
+The immutable-source allocation change keeps editor/default content trees independent and visitor event metadata separate. It must not remove source validation, change review/publication states or replace source-backed content with generated enrichment. The ECA test suite has 154 files and 1,422 PostgreSQL cases with zero skips; three anonymous tests cover immutable visitor rendering and editable-tree isolation.

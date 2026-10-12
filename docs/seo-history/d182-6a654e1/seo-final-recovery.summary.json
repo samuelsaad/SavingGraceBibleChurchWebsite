@@ -1,0 +1,22 @@
+{
+  "outcome": "local_recovery_proven",
+  "archiveSha256": "a54263dc4b35d3addf71ed633ed2142f4bf5a6affb87990a244ba3167ded7726",
+  "archiveBytes": 24009758,
+  "tableCount": 65,
+  "fingerprintsMatch": true,
+  "constraintsIndexesTriggersSequencesMatch": true,
+  "readOnlyReaderConnectionsVerified": 4,
+  "assetProof": {
+    "files": 2221,
+    "bytes": 100464423,
+    "sha256": "1e6ffb43a1b755e0e1d84f2690af9cd27a9e3f79ca888c28a1ec804e7891ade5"
+  },
+  "application": {
+    "resourceRoutes": 1946,
+    "httpChecks": 8
+  },
+  "outboundIntegrationsEnabled": false,
+  "wordpressRecovery": "not_tested_backup_unavailable",
+  "ownershipAndAclRecreation": "not_tested_on_isolated_local_target",
+  "createdTargetRemoved": true
+}

@@ -139,6 +139,29 @@ class SeoDeploymentTest(unittest.TestCase):
                 operation(base_mock, upgrade, Mock(), pathlib.Path("/fixture"), {"commit": COMMIT, "image": IMAGE}, "candidate")
         upgrade.compose_up.assert_not_called(); base_mock.run.assert_not_called()
 
+    def test_source_canary_requires_real_render_and_cleans_up_on_render_failure(self):
+        root = pathlib.Path("/fixture")
+        for failed in (False, True):
+            with self.subTest(failed=failed):
+                fixture = Mock(); upgrade = Mock(); calls = []
+                def run(command, **kwargs):
+                    calls.append(command)
+                    if command[-3:] == ["ps", "-q", "app"]: return b"anonymous-canary\n"
+                    if command[:3] == ["docker", "exec", "anonymous-canary"]:
+                        self.assertIn("for(let n=0;n<2;n++)", command[-1])
+                        self.assertIn("x-seo-candidate", command[-1])
+                        if failed: raise RuntimeError("anonymous_render_failed")
+                    return b""
+                fixture.run.side_effect = run
+                fixture.load.return_value = {}
+                with patch.object(OP, "verify_source_ready"), patch.object(OP, "state_hash", return_value=("cms", "source", {})):
+                    if failed:
+                        with self.assertRaisesRegex(RuntimeError, "anonymous_render_failed"):
+                            OP.canaries(fixture, upgrade, Mock(), root, {"commit": COMMIT, "image": IMAGE}, "candidate")
+                    else: OP.canaries(fixture, upgrade, Mock(), root, {"commit": COMMIT, "image": IMAGE}, "candidate")
+                self.assertEqual(sum(command[-2:] == ["down", "--remove-orphans"] for command in calls), 1 if failed else 2)
+                if failed: fixture.save.assert_not_called()
+
     def test_cms_configuration_retry_reuses_exact_bytes_and_refuses_drift(self):
         with tempfile.TemporaryDirectory() as folder:
             path = pathlib.Path(folder) / "configuration.json"
