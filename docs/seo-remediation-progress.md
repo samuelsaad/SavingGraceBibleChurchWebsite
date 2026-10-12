@@ -600,3 +600,10 @@ checksum. The operator now binds the verified final
 the incumbent history/count/hash, SSH/DNS/database/secret/mount and rollback guards
 are unchanged. No container/database mutation occurred during the refused prepare.
 Browser account inspection still failed at trusted-kernel startup before access.
+
+The next guarded preparation refused `cms_upgrade_incumbent_changed` before
+creating the recovery/release directory or mutating data. The fresh inventory
+independently confirms the actual incumbent F043 release and immutable image
+`sha256:fa3fb43c99f2600b12accbdf6c6cb4a770d81371537a8587d3c7b8ab5a50d7dd`.
+The operator now pins that exact release/image; original source snapshot, counts,
+all configuration/credential/mount/history and rollback checks stay unchanged.
