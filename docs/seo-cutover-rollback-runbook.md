@@ -88,10 +88,10 @@ verified retained origin is required before activating that configuration.
 
 The two ZIP archives and one OTF download are captured, structurally validated and
 included in the final source asset archive. All old source resource witnesses stay
-retained. The 17 publicly unexposed media identities and nine unresolved external
-image/theme identities remain evidence gaps; 396 transformed CDN references have
-verified owned-original replacements, and three broken social-logo dependencies
-have a recorded correction. Transformed CDN byte identity is not claimed.
+retained. The 17 publicly unexposed media identities and 12 unresolved external
+references remain evidence gaps; 396 transformed CDN references have verified
+owned-original replacements. Earlier logo corrections do not establish that every
+remaining staging-host resource has an exact verified replacement. Transformed CDN byte identity is not claimed.
 
 D-182 explicitly authorized the exact isolated restore target. The final actual
 local PostgreSQL backup was restored and matched across 65 tables, schema,
@@ -117,3 +117,39 @@ all acceptance checks. Do not infer freshness or completeness from this partial
 frozen snapshot. Record the precise freeze UTC time and a church operator's
 no-change confirmation; alternatively capture a new delta after the last source
 edit. The current task does not enact a production content freeze.
+
+
+## Final finite-source candidate gate
+
+Use the final 21,134-URL source union, retaining all 15,252 original hashes. The final
+5,748-route bundle adds 1,667 missing routes without overwriting any prior route;
+exact replay must remain a no-op. The private resource package binds 1,946 routes/
+1,925 files by hash. Keep the 265 existing source-version differences held unless
+their exact changes are resolved; 256 are source-ID-only omissions in reconstruction
+with unchanged asset facts, while nine archive content differences remain unproven.
+
+The staging hostname currently fails its pinned DNS check. Do not bypass the pin,
+guess a new instance or transfer credentials/data until the existing target's
+instance/host-key/database/mount/configuration identity is verified. Git publication
+and the final deployed release must be checked again after connectivity returns.
+Earlier F043 deployment/canary/compatible rollback proof is historical; it is not
+proof of the expanded candidate. Retest the slim directory, all three CMS body/SEO
+cycles, actual source/asset responses after restart and the complete proxy inventory.
+
+Original WordPress remains production. Exact cutover still requires authoritative
+source/delta reconciliation, explained content/metadata/URL findings, verified account
+reports/measurement configuration, original-system backup/restore and the separately
+reviewed production proxy/authentication configuration. Do not retire WordPress while
+117 MP3/one MP4 URLs or maintainable feeds/calendar subscriptions remain dependent.
+Retain WordPress, uploads, TLS/domain configuration and post-launch edits for recovery.
+
+
+Final held-delta diagnostics narrowed the nine archive differences: eight speaker
+archive trees have identical text sequences and every content leaf unchanged except
+one Jetpack image URL reconstructed as its verified owned-original path. Both
+owned portrait resources are captured/hash-verified and passed fresh-process HTTP
+checks. Transformed-CDN byte equality is not claimed. The retained source versions
+were not overwritten and no final comparator issue was cleared by this diagnostic.
+The past-event list has actual text/link/title/image/tree differences and remains
+unresolved. See `seo-held-source-differences.summary.json` and the hashed tree/text
+diagnostics. A source-tree difference alone is not eight missing sermon archives.

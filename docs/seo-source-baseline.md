@@ -5,7 +5,60 @@ relevant read-only account/source evidence. D-110 remains the production launch
 gate. A captured source response is evidence of the old public website, not a new
 content review, approval, production deployment or claim of SEO parity.
 
-## Current acceptance checkpoint - 10 October 2026
+## D-182 final finite-source checkpoint — 11 October 2026
+
+The source remains the verified https://www.savinggrace.org.au WordPress website.
+The fixed 6,852-URL continuation completed at 11:41:46 UTC without expanding its
+request set. It retains 14,228 response records and 5,882 new observed, unrequested
+URLs. The final union has 21,134 distinct URL observations, including every original
+15,252-row ledger hash. See `seo-source-final-union.summary.json`. Completing this
+queue does not prove authoritative whole-site coverage.
+
+The closed queue ledger SHA-256 is
+`4c5c4f4a8a311922fff3d65b0a02f637837967d03172f6d87312733bd4a9f396`.
+A copied directory lacked one inherited search record. Its exact URL, status, body
+hash and capture time matched the earlier frozen witness; that retained record
+was reused without a new source request. All records are registered in a fresh
+confined directory, preserving raw record bytes and original capture times. Its
+normalized ledger SHA-256 is
+`e2d764ce467651cadfe88c0f12cead17066b43171fe1beb5612d42a18200cae1`.
+Independent parser certification completed: 14,228 records and 25,292 current file
+witnesses. It reused 11,225 exact previously independently parsed records and newly
+parsed 3,003. The cache SHA-256 is
+`2f6545e67e169e2662f5032f943fe1fbb35e6616eb8a7dbbf7da8bd10f72d1e1`;
+certificate SHA-256 is
+`70c71243281458dc14153bd24882330d7e18b6f055420b192f3aa909e4f62108`.
+All source witnesses are verified before/after comparison and on every source read.
+The final local import added 1,667 routes, changed none, retained 4,081, and replayed
+with zero changes. Its 5,748 routes include 33 pages, three posts, 2,096 archives,
+457 sermons, 1,213 event/date projections and 1,946 resources. This does not resolve
+the 265 held existing source-version differences or prove authoritative coverage.
+
+The final resource manifest retains all 1,736 preceding observations and adds
+500 valid calendar and 252 feed responses, totaling 2,488. It binds the normalized
+ledger and has SHA-256
+`fea08c9caaad83bd0ba01149fe86492a5610b0e0e1f54b60dcb56f367db37ebe`.
+These are response observations, not unique files or migrated route counts.
+No recording bodies were requested. Empty HTML exports and source rate limits
+remain evidence gaps; no empty endpoint is retired merely for being empty today.
+
+The 11 October public REST reconciliation retained 30 pages, three posts, 1,084
+authored public events, three venues, one organizer and 420 readable media records
+of 437 header-reported identities. Thirty-seven successful REST/sitemap responses
+were compared with older retained identity/link/status/slug/date/media fields; no
+change was observed in those fields. This did not compare all raw bodies or prove
+complete custom post-type coverage. The source sermon sitemap has 457 actual
+unique `<url>` entries, all known to the migration, but the stored public sermon
+count remains unproven: the sermon type is not exposed through the inspected REST
+API and the configured SQL account still fails the SELECT/USAGE-only guard.
+
+Search Console/Analytics/Tag Manager reports, a verified GA4 property/stream/consent
+configuration and test stream, access-log history, complete WXR and current original
+WordPress database/uploads/configuration recovery backup remain unavailable. Public
+measurement/verification identifiers do not prove account ownership. Retained older
+source snapshots below are historical and retain their actual capture dates.
+
+## Historical D-181 acceptance checkpoint — 10 October 2026
 
 The final frozen union supersedes the smaller historical checkpoints below; their
 original evidence remains retained. The public REST root at 05:59:35 UTC explicitly
@@ -333,3 +386,77 @@ stream/consent mapping and church-owned test stream remain missing. No live test
 measurement or production activation occurred. The repository ZIP is not a
 WordPress backup: 43 SQL files are application migrations, with zero verified
 WordPress table dumps and no uploads/config backup.
+
+
+### Explicit event-source count reconciliation
+
+All 1,084 identities in the current public REST event collection have captured HTML
+projections. The full retained HTML union additionally has129 distinct numeric body-
+class event identities not present in that REST collection; 125 use date-suffix
+paths. Thus the 1,213 migrated event routes are neither proof of 1,213 authored
+stored posts nor proof that the REST collection covers every public occurrence.
+`seo-event-source-reconciliation.summary.json` preserves every extra URL/identity/
+capture/hash. SQL and recurrence behavior remain unavailable to resolve this gap.
+The 33 ordinary-page routes represent 30 distinct known WordPress identities; the
+three posts and 457 known sermons each have distinct source identities.
+
+
+## Completed finite continuation — final available source freeze
+
+The previously observed 6,852-request queue completed at
+2026-10-11T11:41:46.912378Z without recursively expanding newly discovered URLs.
+The normalized final union contains 21,134 distinct URL hashes, including all
+15,252 original acceptance URLs. It contains 14,228 captured response records:
+10,083 successful, 3,423 permanent redirects, 57 temporary redirects, 389 not found
+and 276 rate-limited. Another 5,882 observed URLs were retained without requesting
+them, 122 discovered URLs lack captures, 408 resource dependencies remain explicit,
+and excluded/asset-captured observations remain in the denominator. See
+`seo-final-inventory.summary.json`; completing a finite queue does not prove full
+WordPress content or public-calendar coverage.
+
+Final ledger SHA-256: `e2d764ce467651cadfe88c0f12cead17066b43171fe1beb5612d42a18200cae1`.
+The certified cache binds 14,228 records and 25,292 file witnesses: 11,225 exact
+previously independently parsed records reused, 3,003 additional records parsed.
+Certificate SHA-256: `70c71243281458dc14153bd24882330d7e18b6f055420b192f3aa909e4f62108`.
+All witness hashes are checked before/after and per read by the final comparator.
+The normalization reused one byte-identical dated search witness from an earlier
+frozen receipt; no new GET was made. Earlier ledgers and failed partial reports
+remain retained.
+
+The final local release contains 5,748 routes: 33 ordinary-page routes for 30 known
+identities, three posts, 2,096 archive/query projections, 457 known sermons, 1,213
+HTML event identities and 1,946 resource routes. It added 1,667 routes and changed
+zero existing routes; exact replay changed zero. The bundle file SHA-256 is
+`cad131cdea84e514135c141a450639114b0ebef5ef7fd29ae965c2bdb48528ce`.
+The resource package binds 1,925 unique files/60,316,208 bytes, SHA-256
+`51ecda12026719eb366c1516fc2979528833419b3ff205ed0c3d7a707cb7ed37`.
+No recording bodies were downloaded.
+
+The fresh REST reconciliation was captured 2026-10-10T22:38:49–22:39:36 UTC.
+Its 37 successful witnesses support unchanged exposed identity/link/status/slug/date/
+media fields, not raw-body or authoritative custom-post-type completeness.
+The guarded SQL account still cannot be used; missing source coverage is not a
+removal decision. Nine archive content deltas remain held, and 256 newer resource
+reconstructions omitted earlier verified IDs while preserving all other facts.
+Neither group overwrote retained versions.
+
+
+Final held-delta diagnostics narrowed the nine archive differences: eight speaker
+archive trees have identical text sequences and every content leaf unchanged except
+one Jetpack image URL reconstructed as its verified owned-original path. Both
+owned portrait resources are captured/hash-verified and passed fresh-process HTTP
+checks. Transformed-CDN byte equality is not claimed. The retained source versions
+were not overwritten and no final comparator issue was cleared by this diagnostic.
+The past-event list has actual text/link/title/image/tree differences and remains
+unresolved. See `seo-held-source-differences.summary.json` and the hashed tree/text
+diagnostics. A source-tree difference alone is not eight missing sermon archives.
+
+
+A separate bounded supplemental resource HEAD recheck captured
+2026-10-11T18:16:23.032101Z inspected exactly the 12 unresolved external references.
+Four unchanged theme-host JPEG references returned 200; five Jetpack and three
+staging-host references had unavailable network responses. No resource/recording
+bodies, cookies or credentials were sent/read. Availability headers do not prove
+body identity or rights to copy a third-party theme image, and network failure does
+not prove removal. This is later evidence, not a mutation of the frozen source or
+candidate inputs. See `seo-external-resource-head.summary.json`.

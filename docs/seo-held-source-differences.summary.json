@@ -1,0 +1,3800 @@
+{
+  "heldRows": 265,
+  "byKind": {
+    "archive": 9,
+    "asset": 256
+  },
+  "changedFieldCounts": {
+    "content": 9,
+    "canonicalSource": 1,
+    "capturedAt": 1,
+    "links": 1,
+    "responseSha256": 1,
+    "sourceUrl": 1,
+    "sourceId": 256
+  },
+  "fieldSets": {
+    "content": 8,
+    "canonicalSource,capturedAt,content,links,responseSha256,sourceUrl": 1,
+    "sourceId": 256
+  },
+  "rows": [
+    {
+      "path": "/sermons/?sermon_speaker=wesam-saad",
+      "kind": "archive",
+      "sourceId": null,
+      "changedFields": [
+        "content"
+      ],
+      "retainedSha256": "0e5c9e8f768b608788c311870cd61c925c39288af1ee126f5f1bb4ff14600be5",
+      "freshSha256": "a09e849f78811a83dcc15c51be892d058dd9664ff99bde7051304217a0167987",
+      "outcome": "retained_pending_material_content_review",
+      "hostNormalizedContentEqual": false,
+      "hostNormalizedLinksEqual": true,
+      "diagnosticClassification": "sole_jetpack_to_verified_owned_original_reference_reconstruction",
+      "textSequenceVerifiedEqual": true,
+      "soleChangedContentLeaf": "src",
+      "ownedOriginalPath": "/wp-content/uploads/2023/11/Wesam-Profile-Image.jpg",
+      "ownedOriginalSha256": "9757099aae9f3e8a32b4b0b404e2f7deed24d12acc0a5d3c7c0fcb018451fcbb",
+      "transformByteIdentityClaimed": false,
+      "sourceVersionsOverwritten": false
+    },
+    {
+      "path": "/sermons/?sermon_speaker=ralph-gambardella",
+      "kind": "archive",
+      "sourceId": null,
+      "changedFields": [
+        "content"
+      ],
+      "retainedSha256": "a05a6d5ed652b90f273a7e9a545048588415b6b40eac172707bc8af7ba5c08da",
+      "freshSha256": "207e7eafb354e95523321705f77d5533f5cf7decb482880a225dd87a31969feb",
+      "outcome": "retained_pending_material_content_review",
+      "hostNormalizedContentEqual": false,
+      "hostNormalizedLinksEqual": true,
+      "diagnosticClassification": "sole_jetpack_to_verified_owned_original_reference_reconstruction",
+      "textSequenceVerifiedEqual": true,
+      "soleChangedContentLeaf": "src",
+      "ownedOriginalPath": "/wp-content/uploads/2023/11/Ralph-Profile-Image.jpg",
+      "ownedOriginalSha256": "d3bcb6421d862144be492a3451cfdcae108420d67f58317c97e6147ac5ad31ae",
+      "transformByteIdentityClaimed": false,
+      "sourceVersionsOverwritten": false
+    },
+    {
+      "path": "/sermons/page/14/?sermon_speaker=ralph-gambardella",
+      "kind": "archive",
+      "sourceId": null,
+      "changedFields": [
+        "content"
+      ],
+      "retainedSha256": "6409575013a617c8e46b5b80d6352b30ded8e9edca29dd566b768f57837ea739",
+      "freshSha256": "7710af2ef5bcafcef057b56fab5dcef1bedf5e1120a79ade66282f67ddffd49e",
+      "outcome": "retained_pending_material_content_review",
+      "hostNormalizedContentEqual": false,
+      "hostNormalizedLinksEqual": true,
+      "diagnosticClassification": "sole_jetpack_to_verified_owned_original_reference_reconstruction",
+      "textSequenceVerifiedEqual": true,
+      "soleChangedContentLeaf": "src",
+      "ownedOriginalPath": "/wp-content/uploads/2023/11/Ralph-Profile-Image.jpg",
+      "ownedOriginalSha256": "d3bcb6421d862144be492a3451cfdcae108420d67f58317c97e6147ac5ad31ae",
+      "transformByteIdentityClaimed": false,
+      "sourceVersionsOverwritten": false
+    },
+    {
+      "path": "/sermons/page/2/?sermon_speaker=ralph-gambardella",
+      "kind": "archive",
+      "sourceId": null,
+      "changedFields": [
+        "content"
+      ],
+      "retainedSha256": "8afbc6c926e4190f5a117f54f95b6ebf14562d3397c55c5027aa28837faa3b18",
+      "freshSha256": "af019729e36f3b1b41948071b314efe111a80db8cd436b2b3122c11cf283d155",
+      "outcome": "retained_pending_material_content_review",
+      "hostNormalizedContentEqual": false,
+      "hostNormalizedLinksEqual": true,
+      "diagnosticClassification": "sole_jetpack_to_verified_owned_original_reference_reconstruction",
+      "textSequenceVerifiedEqual": true,
+      "soleChangedContentLeaf": "src",
+      "ownedOriginalPath": "/wp-content/uploads/2023/11/Ralph-Profile-Image.jpg",
+      "ownedOriginalSha256": "d3bcb6421d862144be492a3451cfdcae108420d67f58317c97e6147ac5ad31ae",
+      "transformByteIdentityClaimed": false,
+      "sourceVersionsOverwritten": false
+    },
+    {
+      "path": "/sermons/page/2/?sermon_speaker=wesam-saad",
+      "kind": "archive",
+      "sourceId": null,
+      "changedFields": [
+        "content"
+      ],
+      "retainedSha256": "18d415abd7c4ddae74fffa345b20fe8d9a4e03cec65afeef87a896f35f6f3891",
+      "freshSha256": "24a1c55413fcea3c3c5c5da3c5c0b0d14fee00240be1c124dabed3b703891655",
+      "outcome": "retained_pending_material_content_review",
+      "hostNormalizedContentEqual": false,
+      "hostNormalizedLinksEqual": true,
+      "diagnosticClassification": "sole_jetpack_to_verified_owned_original_reference_reconstruction",
+      "textSequenceVerifiedEqual": true,
+      "soleChangedContentLeaf": "src",
+      "ownedOriginalPath": "/wp-content/uploads/2023/11/Wesam-Profile-Image.jpg",
+      "ownedOriginalSha256": "9757099aae9f3e8a32b4b0b404e2f7deed24d12acc0a5d3c7c0fcb018451fcbb",
+      "transformByteIdentityClaimed": false,
+      "sourceVersionsOverwritten": false
+    },
+    {
+      "path": "/sermons/page/3/?sermon_speaker=ralph-gambardella",
+      "kind": "archive",
+      "sourceId": null,
+      "changedFields": [
+        "content"
+      ],
+      "retainedSha256": "c8f3566653ce5709710b08bdb1478373697632ebcf07187786d81135a19ce70d",
+      "freshSha256": "cdafaeab0640e69af23aa0402c1d0caef1567020908acf81e120e46a2e0c9a9d",
+      "outcome": "retained_pending_material_content_review",
+      "hostNormalizedContentEqual": false,
+      "hostNormalizedLinksEqual": true,
+      "diagnosticClassification": "sole_jetpack_to_verified_owned_original_reference_reconstruction",
+      "textSequenceVerifiedEqual": true,
+      "soleChangedContentLeaf": "src",
+      "ownedOriginalPath": "/wp-content/uploads/2023/11/Ralph-Profile-Image.jpg",
+      "ownedOriginalSha256": "d3bcb6421d862144be492a3451cfdcae108420d67f58317c97e6147ac5ad31ae",
+      "transformByteIdentityClaimed": false,
+      "sourceVersionsOverwritten": false
+    },
+    {
+      "path": "/sermons/page/3/?sermon_speaker=wesam-saad",
+      "kind": "archive",
+      "sourceId": null,
+      "changedFields": [
+        "content"
+      ],
+      "retainedSha256": "66e124dd83d642f095a3fe7180baeb2845836d7bf127cecaad3cc96af0899ff0",
+      "freshSha256": "3035a68741c47a120c061a664d8b256e4771b3a736edeea08a4e9e5ef81bf6b1",
+      "outcome": "retained_pending_material_content_review",
+      "hostNormalizedContentEqual": false,
+      "hostNormalizedLinksEqual": true,
+      "diagnosticClassification": "sole_jetpack_to_verified_owned_original_reference_reconstruction",
+      "textSequenceVerifiedEqual": true,
+      "soleChangedContentLeaf": "src",
+      "ownedOriginalPath": "/wp-content/uploads/2023/11/Wesam-Profile-Image.jpg",
+      "ownedOriginalSha256": "9757099aae9f3e8a32b4b0b404e2f7deed24d12acc0a5d3c7c0fcb018451fcbb",
+      "transformByteIdentityClaimed": false,
+      "sourceVersionsOverwritten": false
+    },
+    {
+      "path": "/sermons/page/36/?sermon_speaker=wesam-saad",
+      "kind": "archive",
+      "sourceId": null,
+      "changedFields": [
+        "content"
+      ],
+      "retainedSha256": "e8ab173ce9243b2c0efb3485a7073ba46c73b7984786cc60c0f5b3b2e817b044",
+      "freshSha256": "468e9ab53292eec85b3c15b0021dcfc0e32b034f1e80d551a05905f0d4f529f4",
+      "outcome": "retained_pending_material_content_review",
+      "hostNormalizedContentEqual": false,
+      "hostNormalizedLinksEqual": true,
+      "diagnosticClassification": "sole_jetpack_to_verified_owned_original_reference_reconstruction",
+      "textSequenceVerifiedEqual": true,
+      "soleChangedContentLeaf": "src",
+      "ownedOriginalPath": "/wp-content/uploads/2023/11/Wesam-Profile-Image.jpg",
+      "ownedOriginalSha256": "9757099aae9f3e8a32b4b0b404e2f7deed24d12acc0a5d3c7c0fcb018451fcbb",
+      "transformByteIdentityClaimed": false,
+      "sourceVersionsOverwritten": false
+    },
+    {
+      "path": "/events/list/?shortcode=9ddfb0dc&eventDisplay=past",
+      "kind": "archive",
+      "sourceId": null,
+      "changedFields": [
+        "canonicalSource",
+        "capturedAt",
+        "content",
+        "links",
+        "responseSha256",
+        "sourceUrl"
+      ],
+      "retainedSha256": "9d695ebcd85fac47f177033606b23c06d04dc3638c257ca07357bfc553a2ea22",
+      "freshSha256": "2bda4ca444a118d53981b94ff30c73a13e0b8f646aa622a10beb3e6a094c1b43",
+      "outcome": "retained_pending_material_content_review",
+      "hostNormalizedContentEqual": false,
+      "hostNormalizedLinksEqual": false
+    },
+    {
+      "path": "/wp-content/uploads/2024/01/Saving-Grace-Bible-Church-Doctrinal-Statement-V1_.pdf",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "296fae2ece717000d428ac8b3d502083da7dd8ffe3102a2f991f3a736d0dcf06",
+      "freshSha256": "f41f104032c7b6a249c936eb984e1ea4d1f0030837424d15776b1f9f6b825fb9",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2024/06/SGBC-Teaching-and-Preaching.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "6dca58e53cc8a7a42be968c44f029ecf1d152736e7558ce783d69a3008c7ef27",
+      "freshSha256": "926042866940d351f06f44eceee4a791167ca30bc42317d53ba43efa46cc9bea",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2026/09/Our-Ability-To-Enjoy-Heaven.docx",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "c89904505acee574f08b18fa233f32c28e9041d8b70eff4bf1a9c3c98f5305ea",
+      "freshSha256": "e2eb2d15d108421f15bd82d781ed37f4723ed811d3cb8400521d577153d33430",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2025/11/ChatGPT-Image-Nov-3-2025-05_08_10-PM.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "892119bf6e62e784df9cacc63945f0461e0c6d069f743019393f5b11fac50bea",
+      "freshSha256": "911ccea4887971fc9457016b3bf0fba144718138b8286193f623477e06fcb2c2",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2025/09/church_background.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "fac3648f81700bebf09e58d5119765cf58d028cf0e4efe8fe4f4bab8e4e1b4a9",
+      "freshSha256": "230b42f6fd8eb2698f010470c8191772feef07420ac4814f0e2a6f7e234fe5e5",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2025/08/Bible-Study-Invitation-by-Candlelight-e1754443070823.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "e02256be809aeea6b83e897b38285ac38208e145cf9895af04fa9d08598096b3",
+      "freshSha256": "35665b3debf51a739d7f4911818a6b6ee2c47178c0ee6aea93daa5f2677b5057",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2025/08/SGBC-End-Times-Bible-Study-e1754438712750.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "7eeff1971df1264cb635512f6b0f66208f811fc2e4f6d57f7f57975e9a7b3f40",
+      "freshSha256": "9f0034c279bf9d3408e1f9902933f08d6bf1f6c22e5b1eed51a2e17a940e9c1a",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2025/01/Respectable-Sins-e1735788299511.jpeg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "4e78b7712aca6a63555a5b93c5f77ad3d8e2c4e4a6970a18357e8c90edd3b7b3",
+      "freshSha256": "804272d346a490655f3a0d966d182773d88cce4c0c5205367490cb48df3861da",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2024/06/Called-To-Preach-SGBC-e1718157549928.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "f3fa6db9f5f2154e7353625a7ba3806fa5b212a5e0410b7d91c73504a8ab9bfe",
+      "freshSha256": "d205162bc8fad39aa3b5a5973d5baa4f0e5b4a5545845e6d15700006169c7b94",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2024/06/claa-z0x52w.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "2294859211b8e8d21791276750c10effbfc2ef4f4b081e857eec72e0899995bc",
+      "freshSha256": "2f8e666ca685f9214861199f1d55f1693ea12e6ace5c4cb4805b798f1ddf81e6",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2024/01/wb_eymllxve.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "6416f4978c90f253430bbd3385b83c7be1848cdefd5ede3551b8501773bf4980",
+      "freshSha256": "1ae17eae4f1d1f285d83ee5f0bb6fde2b2905a5f1777646866fd4a08c47d53d3",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2024/01/Wesam-Saad-Saving-Grace-Bible-Church-Preacher.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "a30a7e93a7195dc1e2ad183175e594c1baf8cc1f51c0490142f8a1883437b986",
+      "freshSha256": "8e7353258382ade12d18cfbf9d16bea7171b30ed5c10912db7ffa3e3597c671e",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/Saving-Grace-Bible-Church-background.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "0356e000a1c33c56a11711c389a987eaffd0c518e4862f20c32f631528239485",
+      "freshSha256": "32c34906b97f7944ead30a8e01644c874c3f9ab39bf6c3c68600f2a29b8e0063",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/BG-1-scaled.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "16ca88ce5f9c80c88ecbabbe9724eff0bf899daeddf803b4034443065cb80034",
+      "freshSha256": "d32a49ee31bcca373382ae4cffe407ca5098b8a3c0756e088aa682879dfe2268",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/SGBC-Homepage-background-33-scaled.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "0dfafbb648e08968aa463959fc958f6a9b5ad8a6d1395d8e4a5c29c720cedcad",
+      "freshSha256": "e5c47ffa9ed76feb5ec17d1e5ffd3d523fcc85a813bde462752a53d68ec66e2b",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/SGBC-Homepage-background-22.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "4e3e5f060c4e1efa0c9598944bac38458fc61e500691f3961f752b691875a16e",
+      "freshSha256": "4c8670d77257b9719ada35770648b6dbf073a2221eec70cc669e01f7fcd19085",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/SGBC-Homepage-background-1.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "58a0970ff4c1b92c37b15a96bfa7030a01f331bda7b62381d3987ad58f9d0722",
+      "freshSha256": "7f20d0055d741d45ba5389efc176329e99d17fa6085ff753c5711cdc123cbf96",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/SGBC-Homepage-background.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "def51f30ffd47e7ef4f097fbd2b33947e666c40ac286746f772318974ad6cb01",
+      "freshSha256": "0094f3ae40c6c9cbb740917a6f1cf37a8a31f673b5b342fac10d599a1d6cef1a",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/WhatsApp-Image-2023-11-10-at-2.29.36-PM.jpeg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "405c5605376f0fc370b03f56ce505643f05462c9c54c5094054a5ce368290d61",
+      "freshSha256": "e077b4954a5f2239627858583d3e3734bbc1db47551bffbecae023ab71a7acf4",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/owq8w3bymfy.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "dc1fc9e1b661de1a7e8da320ab9586ee93e4f1adcfffa9db67f2087d0f99af3c",
+      "freshSha256": "f414f07bec784f0fb501d8dc775bcb3e06448603ceb6553af6ad5bdc20557c32",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/koy6flccy5s.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "cb9a30dbb47711220a4d87e4179394d16580fcb0042460251402ba3fac6726ae",
+      "freshSha256": "1253e60e89c25933dc2e0e7342f0742d0311c8a81c8f4df1765fda956d45751a",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/eau0ta0xtxi.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "2caee8b6059bc70286b57626df64e3b66517ea2469c0417a9ec521524a38253d",
+      "freshSha256": "faf03d9a953f78f596dd73b8cec97b6db6d642417da8a2b5fef52ce0b90281a7",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/uwfjqxywama.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "d235f5c2d9e5e8cde0e95faf8691721284b23087c40f3ccdbf5edf43d18ef853",
+      "freshSha256": "8999fdd404b441423901335d021ea7b80ea691a309a0aae63434aef01f300c4d",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/sjhdn0oakcc.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "ce51947908245aa95aebcfca37c4e3de0d17cec0af2effd5b1fb0b383a82a309",
+      "freshSha256": "bef797b6f252415267368d97f10ebb17339aaee03cf9e503589b5c0a822d6b4a",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/st-cxzrkn5c.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "ad5165b3c09dcf4f16b499d5a12489ff6c8723f0646886871ef278bfbc2ed317",
+      "freshSha256": "bb0720191f363763065a39a265463d50f1298f0b4853dafcb43959da37f360b2",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/v75yeqjp4pe.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "bd1447603f1ac60cbd48418742fc5a4f7f08ef9372c3db68aa3ccad0ef68a4ab",
+      "freshSha256": "dbf4d349e4370c0d21fa11be4f01427f0f927d34d3057bde5d62eb4270ae3e77",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/hahsexfw1m0.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "149d979b3196eed71b41c6ddf689c3293af252968981fd99e166ab5fa612d7fc",
+      "freshSha256": "e19050857d7f299a3de14bf936789d54dcfaf60f17b9fd78d67dae619346c377",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/SGBC-Logo-White-1.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "f022f923bbe6661d0b53d760b9ad8b98b75d59f76a9df7b17e280b960f31b1e6",
+      "freshSha256": "c1c6a1074c50a160b50ca50cdaebbcef1fed009fbf2f0189c7a34ca375f88150",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/SGBC-Sermon-Header-1.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "d45857ee2634678d6e815a7fa664cf22f3bdb0bbfc515143b76c7aaf06ebb845",
+      "freshSha256": "5fbe752979e51473d712229ff450a6e31a9e115763d6c8b27a372ba0d84dfcfb",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/deniz-fuchidzhiev-SbxO-MsVVZE-unsplash.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "6f71d81d73bd25c5834f0c484122db9c48ff50730eba1303a0fe5d389e6ffed2",
+      "freshSha256": "88efe10d6ae6e8c783a7eb173486478226a3d5867b30a8b5bf04e31fa06d6b9b",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/SGBC-Logo-White.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "78c776129fc4b4abe8bec87aa1bd2bfbbf264b8817b808cbe2ae89f58fa89b67",
+      "freshSha256": "4d66df57b8175e19a89c20866ca62cdaa19d639e59b9534ce76567e5bdb179cf",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/SGBC-Building-Reduced-1.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "b6af2974d133c0e2aa2ad395caed8138d6a4866291ac65ce7d0d37baf1411fde",
+      "freshSha256": "7e3b04d72165ee4cce7b3ce00ec5322292be3a00fa1b2570042783624e88485b",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/Good-news-e1701656241411.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "2e9374027e4c3f3f578761929ed9338689c52766383e7739125b840de7a72c65",
+      "freshSha256": "bf9a6a69ea277c553d3106053ca83fac0bbd679bb9db1b280c02f1920d3f5787",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/h8s0pf2rcqs-e1701650242850.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "da26d220a9c96e4d63135a4923004a8ab0276e584188a717e194214def8c6c97",
+      "freshSha256": "86a5784193bd84812f9d63659a8cfeb4352489fb53867d68940f50434b4d567c",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/rpomlgwai2w.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "7f3c834f7399e665bebb0d776f4fe1a1a38078ffdd3d11b69c76df410b110b7f",
+      "freshSha256": "53c00a76ac38fdf52e12899e86dbda1a2c975ed2fc43441cc5dc1955356e1b9d",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/Widget-Code.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "678067789af3bb0a456f36b8a7dc2bb6438d86fdf65a4abd7b12d4ece00ddc7a",
+      "freshSha256": "ddf741c5215c6c4aecb3524501295c2e595a826e9a732170900a7cf037b53291",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/Footer-Widget.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "1de281074ff0f54cb8b138ab9ff881727252248a3733fcdea626e023d204391e",
+      "freshSha256": "cd19264f37dd2f99ec6ad5256a340ee033551230d9b58ddee6c8377294c00734",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/womens-prayer-group-1.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "7dd07a0198e366fa7b341ec6dd00eee55bbdd914e566eb0f99f456fe9d43c334",
+      "freshSha256": "26e5928562e39e419dede80ee58ee7ea8aa34503cfc3b6c24e86062fc9a7bf58",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/11/John-Macarthur-Fundamentals-of-the-faith-book-1.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "44dbdc4349ced736a42afbbf0ed46e6b462180c65219b7f0952d00ceae244267",
+      "freshSha256": "cce0944885c3acd1be746c5ffa59b330ab13e57c3236f129f1040055de363547",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/Mens-Theological-Study-small.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "f9f57b6d4b0088856b5ccb4383096bad32867e7ba977e31c808fdb305962b324",
+      "freshSha256": "bdc65b4f8388ba29227573b80842452a40f4f7a48a58672ccb7354fe4ae153ba",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/Spiritual-leadership-Saving-Grace-Bible-Church-1.jpeg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "a74c1cebf120af9ca73c7cb16e778b5f5b7b8cee7850da2a1c44024ef35d8eb4",
+      "freshSha256": "c481224dc6f6f754d24dcc9060a1335f05d1dd40d47ffa17db1a7276a305e437",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/Womans-Study-1.jpeg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "fd6cb80e0dc275e480f93c5d7812954ff913b7194a6ffeb757035e8042af1e30",
+      "freshSha256": "b98cc6819eb523a16128ff4fa2b040569eb27b82eb132a159e14efef140a1524",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/womens-prayer-group.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "d9d646da9bece6141f3c50f6a933582df0f16f72acb115ef8171928575b4708b",
+      "freshSha256": "7bc7d3223e397eff4bc216d86667f4996abdefc8980b05dc1f92217e7acce751",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/Womans-Study.jpeg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "05abda66f1deb4d3b9f3eebeaae7a1061126800b5029d21bbf033fd290c60bd4",
+      "freshSha256": "fa1f0116dd164e4f9d38fe1ab7e1a6d42a3e0dcf74384e057796024fbce6320f",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/Spiritual-leadership-Saving-Grace-Bible-Church-reduced.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "c6fa02390be57f629ce5b523c2b6efab136bb14f3ba8ba0300046615e3ea2566",
+      "freshSha256": "5803b283a8696a49121d53fad7b8343b268f2ff0e1749bb428d38a8332742c60",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/Mens-Bible-Study.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "715b3174084f20eb8282efddef539841171fe77123624ed53cecaa9c724aa909",
+      "freshSha256": "9346e014f0e6c7baae7bceda002875a89b3c3d28e6728b374b36ff941cc53b4c",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/12/Spiritual-leadership-Saving-Grace-Bible-Church.jpeg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "0efddf159150f20fb9a7c09783eb8107d76a1cfd4be06edef1ff666ffe4585dc",
+      "freshSha256": "03124e304e16ffde8add7717a0234ea7e1e1898b11d78b8f469e1a8690f36759",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/11/John-Macarthur-Fundamentals-of-the-faith-book.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "b407e9923fed4042b546556f47c308289c17624b1dc033264d9b163edef31362",
+      "freshSha256": "986acb1fa922a33c86b36779d1786036106f15b8738f4270b088cb6216092aa3",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/11/mandated-church.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "003213ead2b9be3281a6d2260aefd8a897a3d24c37ceae9c9540ebb464f3ec0d",
+      "freshSha256": "dccfe4d5bc8807c3eb313fa0625ba2c7286b8d98770b622989c95f0dc9f33e27",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/11/Lordship-Salvation-1.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "49705989380d37fe796c58a23418eccd22df83d2ca4d508cf09a5db83ed6b3b6",
+      "freshSha256": "e6179dd830fb01388bc320539ba5915fbb16205c19d0f1266033e1e220d0bee5",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/11/Scripture-1.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "61f738210385ef6977a03a836cdf552c806b9a90382ede2762da69c63d86d391",
+      "freshSha256": "8a142aefa12f679eadc2fa924f79217a78bff637f7d7f0538052aaa812a0a352",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/10/SGBC-Building-1.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "f24974bcd5c5d9c8031818ddb45c1a24a6b6283adc7dd9a0b8a0d7b28b57b092",
+      "freshSha256": "56592a289f9c3766698b9efdc14c4f24de7edc127a1a60b74d953391589c2410",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/10/SGBC-Building-e1701228047344.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "26753370d6ccd8f401e095dbdb56ed173c7bfdee4757e55675c0949f6b5ab818",
+      "freshSha256": "c2063a60e3a05e082b00da207aba70088f7bca12c15bfe4415ad079aa6929d21",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/11/Ralph-Profile-Photo.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "fa5f94b07650cffa725bfe8a0506e1ae45f509f6caadf09ae4d5c22a0b3bb6bb",
+      "freshSha256": "651b85bb83ce7346580730e6ddc45dced6e56180d4bb9f20a725fd8a532060e7",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/11/Wesam-Profile-Photo.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "e3c4d8ab5b9485c6e2e520951ccd75ee5205fe0c7515d56aea3f27c68303167b",
+      "freshSha256": "4f1bad9b6bfdd33f109620231ff586fbe80b6a00ab20a6eee78daaa60398801c",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/11/xmmsdtigsfo-e1701128615369.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "65e760d1987cd02738db08ae6e8dde53e5afcc6a1ea2d1eaf4399f66a1e4e2a1",
+      "freshSha256": "955db5f041e817898e918558da81b8202f36fba92d1797f3f0ddaffd32f7c401",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/11/Welcome-1-e1701127804293.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "903be81a43bc608cc3706cb1212303051d692f906ef61a1de26add2be5211989",
+      "freshSha256": "89b28d6a72519794ee6a2523ed9509fc9bb0ffc0004bde7f242bb5b13ceab991",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/11/viber_image_2023-11-27_14-18-21-471-1.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "e67f52924205056e02a37ee4fb70215dcf6a26f9aabe2a3e22fa0c6792ad2dd1",
+      "freshSha256": "43482ce8e4aaf5ebdea5416d4baa288330c647a948e800e2a1662f634ce36ac4",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/11/viber_image_2023-11-27_14-15-27-337.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "4712b8c9ba8e37aed77c5be7c2d17eadae7daeb298e0abab2f51dd8ee679f897",
+      "freshSha256": "5fc9a07c1cc31b0b5135de40b2bf045b42e63160db3dd5286deba9174dbe4ff8",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/11/SGBC-Logo-small.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "d8d571259d68a6d22f40f7cdf3218cd877c5b96d6b3ae09b31adc197395f621b",
+      "freshSha256": "599b2e57d0e2c60ca50c27454817cdc8931ed3a200263678ccc8aa8bb320362d",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/11/favicon-32x32-1.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "030d073ad33c95adb4523237af843332fa9f347e862179c67c825405c500e08a",
+      "freshSha256": "a0b949d88d75b4e6994dc4127b6c98b8635ac11976f21be83e5b7cfe77ec2eb7",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/11/cropped-SGBC-Logo-new-no-flick-favicon-small-1.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "9cbed7adf47af860e7c65b5db0d95b1381f8fa97c76b491e388b4948c8a1cb9c",
+      "freshSha256": "83ce322f795470eabf9f0da16e3a4b503c3f6d8111433ba78f6a9fc9bc449243",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/11/SGBC-Logo-new-no-flick-favicon-small-1.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "74d30a8c1d54e9a94ec68b48d4f5fa0a37b2aeb9ac8813951830a61c93026d65",
+      "freshSha256": "a15c0e3f78c7fb48704a39a9a264c847476332f2ca665b9efb67ee4c7c2cd03b",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/11/SGBC-Logo-new-no-flick-favicon-small.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "3cf7a824b9b751920425d28e55cb7005b6a9cbc0d3eb982b17056db9759e8580",
+      "freshSha256": "df17685e5e241bba1ecd0f8d8dd70b21bb810970008cb07ca179627b98e70ca5",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/11/SGBC-Logo-new-no-flick-favicon-scaled.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "7932505505358629b463192c3060f61b9cfe9cdcc00a12771c044da4f0663a81",
+      "freshSha256": "47da8e9313029fb25fffc4c6297f37297c8cf450b99235524a8586be01867c71",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/11/SGBC-Application-for-Membership-and-Baptism-2023.pdf",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "18cea075520252aadae65942c58679aa98d9eecaa0a676cb152e38d434f9784b",
+      "freshSha256": "9e3ce7b5540536aaa2b9325d7b2cb0998dede8b5cf31a6f06e0e577e150e48c5",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/11/SGBC-Merge-1.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "1fcd76cdefed9a5a1d548519ee8f68db8c2b4c049448f79d465addbdd50420be",
+      "freshSha256": "cb6d01fa29748136db4f524f51ec367f9a2dc03eebbf73a9b50a60b30761de8f",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/11/SGBC-Merge.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "3b7da4f8dbe78d065a9aa1067f9b5dfdd30fa32db0f8ba4f5af48a9f847e8d79",
+      "freshSha256": "2236cab73d6c88024728afb4cbfd6bb40b2283529a1c8fd351a5fa55f838282b",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/10/Youre-Invited-Bible.jpeg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "3f3ac8e3f946da740efb7b5eafafe9da00cd3f642583a3f943d70412c1c0fb31",
+      "freshSha256": "6996b772c1a707213cc517e9a7ab8ef8e88b04e0633bad5033af1ca04bde5902",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/10/u4uwzrsns6m.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "7e5364a526fae34ad6236d46352ee81b9642ae24ae6931bfcc5ca92c71e7901d",
+      "freshSha256": "a08e8a39e72339790e909252dc9710356f91111f2d1c04a6dd1bcebe623e37e5",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/10/ls-project-9-slide-1.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "1821cc34ac0fd6bef68709cdbb23828677f92e4bd1382284c0512e685fe5041e",
+      "freshSha256": "1bfc2022f5d450b2d3c04e0ff3b20925c342c32f1c2d6beb94edf96ba16f764c",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/10/1sanrixw5oy.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "0c1cdc9d3d7863c604833ce101e2ec2cb19e2ad3d5fbadafaffb9168e3dfd1fb",
+      "freshSha256": "d4b127fd805f5e925cce00f5396d190872f9aaf61cadb7ce4218c2d26e3bf65e",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/10/ytg-p_oadhm.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "d047a8760339d3d3c75e55050af769d5aef9eb3ea1d883c143a12379bf10edc3",
+      "freshSha256": "ec2bf1ce3f709e47a56de5507d856c5206a52996633b413bd91435727ac67151",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/10/SGBC-Logo-Black-300-Copy-Copy.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "79dd535a59d3d74121a1fe3e218a28314077aee6f2ffa127a3417740cffd3123",
+      "freshSha256": "41e7232275901aef56b1a472ad75c71bdaf3bc04facafeb36cedf3508ee7ad9d",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/10/Application-for-Membership-and-Baptism-SGBC.pdf",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "6603c026d519227efcd3956ee95da1cdd5bbe33eaeba445d8706e40d7bf7e4f9",
+      "freshSha256": "b6069b9f90d1c17419ce30cdb06471bfb6efcc3190f0194318c13cf2731eedfa",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/10/Saving-Grace-Bible-Church-Doctrinal-Statement.doc.pdf",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "dc86959dbbb453917e6650dcb89f61867b3a5d046648191697c36a5a3381e644",
+      "freshSha256": "cfe0a0b4f6c202f58769276201349c28fca13bf1726a35c83688b6755e27929a",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/10/Ralph-Profile-Picture-1.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "4623fe7985fd34ab578035b2674e9cf794cdb05e64e8436f584e247fc7ecf78b",
+      "freshSha256": "8884ffe0c9c15122be5d4a5bb402e2eebab590ec3b9f7d1d16a90091b3aa37a9",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/10/Ralph-Profile-Picture-Reduced.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "6b128ea9178f2eb0010af591bea7df0097cb29d82cf5fcd4834362f155827da9",
+      "freshSha256": "f1d4604ca9c601fa96db90035ed251125a487a1340c31ae130d46d6f535b5f77",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/10/Wes-Profile-Picture-reduced.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "ad5d8d3820417eaac8ff21b110cd57c4d8bb0d41f0582e2508dc12c6bdc7ee46",
+      "freshSha256": "59fdd0cfc402a5dfd8abb2015567189cae286aabbc77f6902a89cada3ad40582",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/10/6-c0vrsaguw.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "e6ec2ba84afedada83e287ffe1a23e7226cb24c2d336a4501612aa9449a89aa5",
+      "freshSha256": "7d6da86cb67d5ceb6dbef70269709546e532cec063cd045deb73fc7eb3b1e67b",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/10/jpiaxbsuwk0.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "0dbe1812ab76ab2a35bd05fd674c4eec955e139621afbe5a1864f34b4a2406e0",
+      "freshSha256": "c1780723ca07a351670c9d263572be3c5b1b3fe6466e0d44d56f553b9441f09d",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/10/Bible-1.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "7488d79f50ee63432283a0bf918448b13efab0629a68e5943942805668696091",
+      "freshSha256": "3760912b2f7ea0dfde2642c762d2df350f4c77cec015b11c4f6776ebb55951b4",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/10/pcfjkub5bes.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "be9b6035466d6fc8c3336224fd27692717474f7e92ad32b94764ffd44b8ce12a",
+      "freshSha256": "907bbe19a631090131fa1e60cbe3cc31895c7e3c0ca93f722b66c7416214d331",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/10/Church-Membership-Saving-Grace-Bible-Church-2.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "81a6168d70d8f945f2ffbbceb24cc2597e8e681fdcb17ad1d713738f9d50c550",
+      "freshSha256": "f519dbf9ba60f7f06219097981e273a54a909ae2a16221126677c023238bcd28",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/10/Children_s-Ministry-Saving-Grace-Bible-Church.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "5f85141ae5f706b95a180f8a61580937e175908696ebeac0cd446325a7d2ec06",
+      "freshSha256": "f3a33481f00ab1c796c5ee12c95d5a94af7c8341bf5f823e9f751e4ca4e49e0c",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/10/Church-Membership-Saving-Grace-Bible-Church-1.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "db8775b0872004d9dc9eddcebd6c4bb952ddf6b03143c6dec09c88503465cb6c",
+      "freshSha256": "458214a6fa2956bbfed656d55eef8541bc660479e97c5fd96f8e00bc5eb20745",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/10/Church-Membership-Saving-Grace-Bible-Church.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "e24aeb004899f7389785849a5e895bacf31046789e88de09aafdf54f0e1d4d01",
+      "freshSha256": "22474f9cb46d1d7f25adbb38fe176bfd4a15fc0d418a752df35cb04ca14f2025",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/10/Evangelism-Ministry-Saving-Grace-Bible-Church-1.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "eac81522d63866d53616f9273ba048f68162941f1bc0bb1d6e6067ca40b06996",
+      "freshSha256": "c41621e371f970f95b9e6f84bdc5ae30b459d12fa52fa6f1cf1112ac8039f89e",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/10/womans-bible-study-Saving-Grace-Bible-Church.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "c5347aae100cccda96c47a6b0a224bbf824748cb5e18c3e75e7ba084a8e96abb",
+      "freshSha256": "f68fba59a5823a2c33522fa73d43c7000cc9d70e8ea78207103f17e23da81871",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/10/Mens-Bible-Study-Saving-Grace-Bible-Church-Reduced.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "408b2b9aea64c05e371a4d7ccc416c996721370198b07265e301eea60f527fec",
+      "freshSha256": "07371d715bc2bf9e3a589346e61233a275300b55ce99fdec234eb1daa4b6a676",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/10/Bible-Study-Reduced-Saving-Grace-Bible-Church.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "998c1febb1991e3e6856457ee7c5b72b89c91ad009a93d68de307536eb004c3b",
+      "freshSha256": "2efc9a430ef47c6f4b7119bd50b64962a2fdb6e773cb824bfc51dc9fb40891c1",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/SGBC-Logo-Black-1-1.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "9616b8f35d2a8cec792895cb253ac320d7cbdebd340e85149b77eb7d2c6fb1a8",
+      "freshSha256": "55a525290fe56c4ace8e2e6c55793b2ec94d23120298a16f738b23aed7c54ab6",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/SGBC-Logo-White-300-Copy.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "8d1de6029a10aa26398a625cb174c202cea470cb068972c51d7aea640f7b7375",
+      "freshSha256": "1da3eaf3a51cc2541ef6782cbb893e651271e326c41f45880bbdc47a6e426952",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/SGBC-Logo-Black-300-Copy.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "24f2a15e533c3c420a23d196d0f5981cd3547ab6f0ad06dcb6423f69ca315402",
+      "freshSha256": "29b20c23cff6c632b5b49108de4b0692ffb98927435a68d35624d6691dc99fcb",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/SGBC-Logo-White-300.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "892607193770c6cbce258bc53cce4a148a21004e3df54b96340a8cd3b1b968f5",
+      "freshSha256": "e37a7e3d32fe29e36f0a34cf4867813c19b9af7161607ef205a94bee63860ef5",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/SGBC-Logo-Black-300.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "f342c1268d2b6bdf05cda6daa9df23368146d2352b3df35f5bd3521ddea37c36",
+      "freshSha256": "404246ff287670d742dfbc08bb83dfb10cabe3c84e9d07dee5e1e1b8d54e81e3",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/SGBC-Logo-Black-1.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "9d959499eb6a532c184a7da7cf057149cd9a1713bed69988942568d64659f048",
+      "freshSha256": "2ba17251dd62bd96834ae125c2c0b8894fda815705b96d7486110e84950433a4",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/SGBC-Logo-White-1-Copy-1.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "ae984ddd70945c64c36e7a3ec8cafde02bedc8f1008e7a6f764d94b6a25b4388",
+      "freshSha256": "3e01772c27c8efadc7023cc42b5333bf4d88e88f5b315829c4822d9ccc67eadc",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/SGBC-Logo-White-1-Copy.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "3d9b5bd8d367d8dd92ad8426dc4209beb9012024a0baf9bc677e285d08b60700",
+      "freshSha256": "95872344f38fe546a6d3c4fd6d7cf03360be32050e4de2d73ba2b5eda2fdb7e2",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/SGBC-Logo-White-1.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "52c9f2515b0748d4ba235b7a891c3d27114ae76288ea1d1630c3f97fd862d652",
+      "freshSha256": "60e747f24537208da648049441cff9190002288fbc4eefea2dc94633cd76cda4",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/SGBC-Logo-White.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "7f1797e0e3673085cd6f2636ed70b8493ef6ddc7ec67f305964b2eeab2d70b3e",
+      "freshSha256": "2dfd1b8e26fed50d5a5ce42c61f69aefbb81e45b19caad904fb12712763bad57",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/Statement-of-faith-2.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "2e9cb8941be3d59e8fbf0b7a1769759977b6c9952df541cd3cff031f45128610",
+      "freshSha256": "8a308bce6884dfa152dab69019415c987902707a4ad72e965f7b89dbea8e754c",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/Statement-of-faith-1.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "c52d09c9cc0e1a9a2a77c237d294222bc0a8f64c7509e1e2cb7218567d6a9f66",
+      "freshSha256": "1fd2fd001b18170d9ec7194780959e4c2ce1e9359eea7c25c3eb0c2c6e7a66b5",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/Statement-of-faith.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "33239ea9ffd747204a5f8c708e51e593589d4beb1a91bad8e986099bb792b186",
+      "freshSha256": "1a22fa13831f0b44c1668fe7b74a6db55f6e32b6e59da91a3c4230e36c1bc55c",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/The-Gospel-2.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "35dfec8eb8aa1caed6b90a1f247bde2f46577f90e3df8bc7cab4e44418cf855e",
+      "freshSha256": "31a7dfeeba47c213d682d906d16e10ffa57bcdec588f78a1ea4cf161fc3529be",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/The-Gospel-1.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "cd14de50763fa34c90ef0db5542c925d4b0f16844e8e27a5457a03bddac909c1",
+      "freshSha256": "8c24b702c301909c396739ef3e735cde7fb52f8f9113b592577f6566fb221c41",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/The-Gospel.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "c743d6a65a55c31dc1752108b2721b03523f5d5d5ae6019c144b537fce839637",
+      "freshSha256": "24e09bda6dc2e05271e495febe5127b9a82cd889949af92eeb842c5a82d2449e",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/41dpo2hmeye-1.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "d1599f3ff068ed6c26d3d1f9822f7247bf57820967dd658a5f135dc25319a86b",
+      "freshSha256": "ed4ddafa5fec17037c2a6e5cdde2c023b03eebe32570832435c1e375488787a8",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/41dpo2hmeye.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "2df5de991ede1826c451788438193903873ba16831c64e3d20f66798846999e1",
+      "freshSha256": "a45cf8088d2869db05d5d2282fad76c524d16078f34e00835d178606f91afa46",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/TULIp-Theology-Saving-Grace-Bible-Church.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "d6d44b2a1ebdba270b7e6561fc3f99c9841111339eb3ab70c8ccedc38fb7397b",
+      "freshSha256": "ac3d4d593ace705c5398d10850e545b6fbfbcf44b284f355fc6038d8e8473561",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/d3c86xpipvs.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "25e1ff1b5a739419070a0a57347cff8e30d62dad77fd22c485c8524fc42d469d",
+      "freshSha256": "4e8c0e4808db2bce5fed3bdea2c4096a52ade3206c320fd3e0af6d6b0926233c",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/gmlfnd3iums.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "a463823073be4c6848807c9e21b904ace0f80480c53910afd9ff4f9449e19c98",
+      "freshSha256": "a96f0e4f4ce0a0e7efbecb95a2498dff124dac1d46c779cf420aed22b1258c05",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/atgfrqpfffi-e1695259242353.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "8333497813e4ed000543f44baa2ee11a13f65211363b8d45c088cb82ad539e9b",
+      "freshSha256": "3dd07bc77254f52207ac5c6f27bf868529d4fa5977446915a5632551b290f9e0",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/big6.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "5e361cf55ed83ccaa715be9ce65dbc6b70c3c718660099a5fb2d312b82357992",
+      "freshSha256": "407d14f770377c8ba800cac59454054422cb296e25dcd503172c3cdcdf964607",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/u4.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "b6bd4f9dfce173b28280edb35caa14f802ed8bfba0cd70d63ab061d1cf8b5b84",
+      "freshSha256": "e857fb88789c5df6085d63118532aeb527db92a6eb02d4a2211fdb62affb902d",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/y8.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "04f4375c4b20b310c9440c2bfbc62cb7e44d012cb1f15b25f84a326eb9dd027e",
+      "freshSha256": "99061ae2ae7243a851a07d7d183e4f530eecf1ffe936b6d42ab1b01ca4019d1a",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/meduza2.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "d4ace53b6ccc2ab2354e3a06b26639d30f1366c4afe8f1308a7c2d14658fd25c",
+      "freshSha256": "f21f447e509b6759aa800f2a2e432f192f66cdeaaf92be7215deedf39204173f",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/y6.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "460143b7374a517ef282123fb90753a3b5b89daef9ab69ae00315f24d95266c5",
+      "freshSha256": "da7fad814644f7d74860870d928dfb50c3d5ad665f2c1c0b6f44a8361fd774ea",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/Image-Testemonials.jpeg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "382e87e4c9fa46f7edfb43f7084966723aac4b6a0455b5cdc5bb34f15979ce38",
+      "freshSha256": "e0862b04ad63e133c9b7f8aca8a81461a9e3557d46ee98ad0410add314d7e5d4",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/Image_Placeholder-about.jpeg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "35866810514c9fcc3666accaa78f9e9c9e9f208a8f28a764deacfd3904d9351b",
+      "freshSha256": "98fd21efd85be97b049f90fabbf02a635a7e305da273fe7df1bbacf330b64cab",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/Image_Placeholder_Hero.jpeg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "61bcbc16167f382f2899bfb498d38d6621bc363c4fdd946ddd3b14abfc49722b",
+      "freshSha256": "39073d389497c786d37624a09c9bc5faaeca620f569f279dfb2a5acb993bb6ac",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/qr2.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "1833722586c0a74e6ce24f1accfb57db817a11d4d5454e9951744efba463791f",
+      "freshSha256": "c69a4c59fc2c123d8f381c3b5754b234a7174594d0070b3983e39da24a954727",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/qw2.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "017a7518e16fc56aa29fd3aee6829f129710f9b77c1f8bd5ecf8d68343f02cf0",
+      "freshSha256": "40a1787bb584f230abdb0f9d10cce7928b2f8d6ec5637177ed51d78cabf87516",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/qw1.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "93226052a0d3b966a47e15302f1d6f1604c41b1fa5fbf9918bb41f3584f9bdfe",
+      "freshSha256": "3cfc9c96ee6d7db16b1e7c323d2218aa470f3f737bb98b43ac4fce5f7689184d",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/phone-x.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "7e86723398af4a0672b4cf128717791404fc2d840bb3c6fe397c5bf551615fe2",
+      "freshSha256": "ebedc1aab2ec58a46699396d9276cade52c67893df206106b80746a6ac3010b7",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/pcfjkub5bes-2.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "be5c680512436174aa9c00a6495cb6350cc050deb3db0084f7c931ff703ac83d",
+      "freshSha256": "130e8dcfab23bc6bebb6ec65766a868084c6917c1c5989ea796d518449105061",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/pcfjkub5bes-1.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "24a5821721abeedcb75f12f7d3080f2ac179e27fe87e95551b6e01fa918ba461",
+      "freshSha256": "0a648409f88b5b34a3733947c41507ad83be937f268e129f14f52ab03c9854fb",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/pcfjkub5bes.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "b9e2a44496e9ce7d5005610453454954b092bc4fb09a380a26c9c3e5803cfecd",
+      "freshSha256": "812f09a44d515caba83663373fc72d5b6100af3ffd05c059811bdd1e1bf22e5e",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/cmiqkmpfpmq.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "23ba11ab12d91c62df9672a5cabf7a6245590ae004988e7e0b1e385c90b20801",
+      "freshSha256": "19d9fa6fdb2febc8954d05846c38edfbab8fc63288eef706d7316f9bbb577bcf",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/09/Sunset.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "3004490941f468b112f33a30a279e8705ae3bd16462215f63983ab2d87ae71d4",
+      "freshSha256": "bfde18d9089e0fc458f14650b2e1702baef12c3fd359e6acfa71e2392de9d175",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/03/Saving-Grace-Bible-Church-transparent-4-large.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "3e28ab9267e8466ab3bea1fad72affe375621673a50eb0d30929c490a4e639ee",
+      "freshSha256": "5b02e0c615764529ef769abe5f13494ff9519eace46f21012d8a5b7786e57624",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/03/Saving-Grace-Bible-Church-transparent-3-large.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "2fdc28d2354bc1ddb681d198e73972b72819c29ecee56366fb57c0455a1c9840",
+      "freshSha256": "91dac67f4f46bac4894f930d7f3cbb561ef4abc02f0fe9e29f068c6f9a0c1eda",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/03/Saving-Grace-Bible-Church-transparent-2-large.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "e9c5a4cb07ed1aabe119f8540109732dcb0df3a508387f5199756ab71caf7305",
+      "freshSha256": "c35f41f0133a5281e5a1e401fc787c920d27b59555fa9c45da876503bac115e0",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/03/Saving-Grace-Bible-Church-transparent-2.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "a6fed0161e19e8f7a0963af779c92565cd6ef7f291f3998afcbacdd8a9556594",
+      "freshSha256": "5e5cf0eed9b80141539c9b627fc713c453fd26fcde6e2776a386fc195b458c1a",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/03/Saving-Grace-Bible-Church-transparent-1.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "fc0ab59348e76ad3b976cd0beb0b3c050304f6f887456d4e258ccac4cb8b2b99",
+      "freshSha256": "0234850579e02ada1b103cb6de6b374a839591813138b89e2f5d0a874436c4f2",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/03/Saving-Grace-Bible-Church-transparent.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "bee0f7b7b45863fd1c92021fdced4e2100b4b1880958cf1aa5983e91df77153e",
+      "freshSha256": "b2c0b074b055f3eed4a204dc61970d5ffbfe58cefcbdfdef9456cdd34770536c",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/03/cropped-Saving-Grace-Bible-Church-Logo-Favicon-1.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "c1ae49ff97362370a47fd1c2fe7490de6327c2da151448c756987785d294c9d1",
+      "freshSha256": "89083b7cdf4e5e1b31007643ee56c48fc76a8cf01fdf017dc03fccca2fed729f",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/03/Saving-Grace-Bible-Church-Logo-Favicon-1.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "740f7b0725e8fdc27b52e0510d2681d0622e9db788b973aeb85264a86c3c19fb",
+      "freshSha256": "02089d8c64e8384a17f0ffaf08f89c19bf51898d3bb37f8b0a557ab4d1f4a416",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/03/Saving-Grace-Bible-Church-Logo-2.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "974f5162527ec87c99fcb73f591c44ad954198b10e8d7ddefedb948bc2285b8d",
+      "freshSha256": "49879dd87f6e5da824902fa3507fea020516cbb01f19c135c860d21faa52decf",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/03/Saving-Grace-Bible-Church-Logo-1.webp",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "bbd16f4c4d40eb247342ed093231b7c85077821de58ee3489855391b5fc592bb",
+      "freshSha256": "39ff1bd50893821ae0da91b5d37b94ab1958c19041b5f71a247423a00798fa5a",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/03/Saving-Grace-Bible-Church-Cross-1-1.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "37bb1d34804244cb68cfbaee03e91e3145f43c33c023e14c5a378d048ce64a24",
+      "freshSha256": "1bcfe89039b9d1690bca006fea10babfe5b6ec7d84d622bb90a765efaa066e1d",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/03/Saving-Grace-Bible-Church-Cross-1.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "f16a92d774a6062d95daab9e4813a738a9f0844f89db0f89305788353d7432a8",
+      "freshSha256": "1d780dc42e9870f2653e59e2564d16747c4b7f7647fcd0d233542c6f11d57d14",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/03/Saving-Grace-Bible-Church-Cross.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "cee16ddf409510437f99ebf2f3379e54494cdc228fb4156c48a00da70d53da6e",
+      "freshSha256": "fb1bacd202b38a068f842e818b59edef28a42f8a334a6151e5708060121d9137",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/03/5536-cross-unsplashaliciaquan-removebg-preview.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "0f42d8131ba7081d47bdbe795ecc58c877d124d5774e33a9e4ca222c9514934b",
+      "freshSha256": "5478892ce798b67205df08d2dc6e67fb1e3eb2897d09a8c07d4dfe34ec31abff",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/03/Bible-Image.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "0c558a087f3a216e9a0377f77da20f0e44bd3ba2574e0442878706dba9d2dc72",
+      "freshSha256": "674130f9ea17a843b838f6c6ff59f5c7a10064ae1b2e22336b2c09886ca0072b",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/woocommerce-placeholder.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "56e7b3f08413a6822dfaa80b627fc9f47f3d94391ecfb91372ce9e8248b1bb99",
+      "freshSha256": "336ac191b16a6d0ab9a193b418dcf45ee2fa00326bbc9edb8ade24c4eb06bc71",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2022/09/9780802416704_1339265.jpeg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "c8090ff45cfa9477d904b9f6822c383b6cfbb43220b001bb48be3252c1f22428",
+      "freshSha256": "b0668d1af13761e4fc85f2264dff6986fe97f0354c43d63e1300a211a4ae89ee",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2022/09/81yoCYHP-BL.jpeg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "66098af346cfe268706d5ca72c083972594a53ccfebd4d5f1aa28b4ed2747614",
+      "freshSha256": "bc69d646aa5e833f5b3dfafcac1ce40cd50e1a5f6ee83cb4aba3acdcac0915bb",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2022/04/24.04.2022-SGBC-announcements.pptx",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "dbe4ca1e93d9436faebea288efe7e58a6ca092c016c94af9f3087cfc5b0382a9",
+      "freshSha256": "e9ca037f6fedd61d1a969dfbda3439405b788ba0c7bf6e27818b1eaf156cf316",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2022/04/dgueiiwli5m-edited-3.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "8787738f20535a920dbeb07f0f5f6076404f725459c900983dc2e2b1964d9f83",
+      "freshSha256": "e8584e5f021c7657d00fc11902a011e90a2d9a08033bea9277defe889f2d5f01",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2022/04/34734F1E-E8CF-4912-AEBE-61096AE36B6E-edited-2.jpeg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "40aca48cba1d5fe4780a6951a63cdfb33c1067f122342e527b74a28ef6d1c87e",
+      "freshSha256": "8568746477dd7f429755afd9e71750aedeb104f06d1c7987968a6a0cab8f9959",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2022/04/Screen-Shot-2021-06-07-at-1.13.47-pm-edited-2.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "5034aa0371fc764c76ed4fd92d017c6f335d23dd3106b6389d59326bc8325550",
+      "freshSha256": "3d3962fb74b367bc6b8b2e7367be5f9e82aeae8c8cc73e162f513621bc3f778c",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2022/04/images-edited-1.jpeg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "c5514288115f919014c8e9f7295a44378011774bf1e28fc529047aad7bd018f9",
+      "freshSha256": "6304bf007ccc29865fa1c8787ffda053a15cb31dcd431e20dc44ef1e7b265898",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2022/04/dgueiiwli5m-edited-2.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "eec141fa05648049fe783e71272ae098c3bce34ae9f12730b167399b619378c2",
+      "freshSha256": "efc7927dd520e2e52a2303b73345fc7d0d7bec163b1c9ce0f79a1ae8f9a196c3",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2022/04/Screen-Shot-2021-06-07-at-1.13.47-pm-edited-1.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "12d39130817735eb6b54975a725137315ecb4547cac227b1a57bed8a317834ea",
+      "freshSha256": "f995f5f8c90014b07e435756ba91fba651f3d8dbd76cbeb235ed9b5f50657daa",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2022/04/images-edited.jpeg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "9f3cd7a7377ba550938854bea9a25d740307189c03beb335caeae6c4187b21bf",
+      "freshSha256": "a797b5649ac2df246b6f3581c092d882297eae16e05bba49c9c88ed2044ebcd6",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2022/04/34734F1E-E8CF-4912-AEBE-61096AE36B6E-edited-1.jpeg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "e28a26260df245db5b97b2c81d338d80c8aea405feb73b99ebe75479fa38a1b4",
+      "freshSha256": "63532528b31ea3427a05dd1c2486fb5b8f496c084f52e98b2be66d8708b61da9",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2022/04/dgueiiwli5m-edited-1.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "4a73e7615a1200959be02f4a793658a5d6db96874e23453008d77d3308cf9b40",
+      "freshSha256": "b61013576522f4d9c0805dae324a53bfa845723a184d295a6987288048770da1",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2022/04/Screen-Shot-2021-06-07-at-1.13.47-pm-edited.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "5de45aab63e20252640ca3c353798727501257313396884878bff5b346d4a3b9",
+      "freshSha256": "207f5e069327603cb1d68dcd5e60c46db130c6c763432b2434a48a40f9d5c083",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2022/04/34734F1E-E8CF-4912-AEBE-61096AE36B6E-edited.jpeg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "a0256a272ab1a2154324514489166f011edb306c0c6cad83bcefdbb0633e281c",
+      "freshSha256": "3e3857bd4afbbaee237ff67dc0e595a97ad9c70ebb96b360964fec0aa4f38d94",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2022/04/dgueiiwli5m-edited.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "9bcdfeeadc682aaf2195507863af5e9235e2343fe3c78531521986591efe7d4b",
+      "freshSha256": "fc20ccbf84e384c800e687b2685daf96a44c83e581b43cbeaf5bb4f85f08a7db",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2022/04/dgueiiwli5m.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "4202b63046294c9f63efc11a73c5b54e12d90e354b7d761076f2b200f2750770",
+      "freshSha256": "5eb0f60bd21cdc54d4c4c3abb6e0b5300cbe6440ddb487caca0c3c5f6912fef3",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2022/04/Cross_3D_Fix_Trans.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "ef41dfa8c89f56b361f050115682fe7e7456ce80b276452ebbbe59f86a66feb4",
+      "freshSha256": "c8f2cf0904d55e1894a83943aee558fbf1674bbacce7ea08cc9db6c9de8c438c",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2021/03/photo-1519681393784-d120267933ba-e1614743668935.jpeg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "84a36b30ecfb848601726f2ba0044aef8dcd401de0a5a6f350421d4ab618622c",
+      "freshSha256": "ac73ecae1d989366c3d385f97126ca94e428c90aec4327190cf73e16e1eba4bd",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/09/viber_image_2020-09-20_11-47-04.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "639537a45f5323acf78d58e0129179a8b0296a4d75bff4dac819afed740480b7",
+      "freshSha256": "c251e4beb824303fe0f5fc96cff2a07a90d38706efa9e8d7613eb5a307b01f1e",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/09/viber_image_2020-09-06_11-41-58.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "de245bec169025fd6a9184dc3b0c66b5a9da5e12946bbe287360314587d06964",
+      "freshSha256": "27d5e8bdc65ef5f26693ec81ab6c231a83e8a79d02edbb2861adc0b3ccfe20a9",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/09/viber_image_2020-09-13_11-52-20.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "1dd16faaebf2ef0987bd69a11a9e588a92ea810ae0031ed57f13fd649e6b8258",
+      "freshSha256": "9fd1fec91cc79c1795c4493be8b6fff6db976891a291181d538cbcd0e38a6b60",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/08/viber_image_2020-08-23_11-59-25.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "13ae0da6d21da900c99a5d0992b4c6043b137407a0bd974d606f78a1ccc3e821",
+      "freshSha256": "cfc9a56c8374518fe61c70c1e7b337af5e43ee10730258ae89ef4716ae35f538",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/08/viber_image_2020-08-16_11-47-06.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "defc79927e0e5415352b64b15e31e4fd704f5c3ad58acd50ad35c1146bf93b19",
+      "freshSha256": "2337f7ca8516671020fbef5515b0acf966432d5948c9f5dc6c076cbdd9333f69",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/08/viber_image_2020-08-09_12-02-53.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "48520dfe10375e54f1e706c588337a901835bfc7de364497c48cc64060f34f14",
+      "freshSha256": "a08276ffd52f5e72a9a0f3eedda308b5418e1103e8f478d74f36fdacead66548",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/08/viber_image_2020-08-09_11-03-52.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "1b8ec451ba6cdee880c1eed8383b0c346ae0d13c5cbd0cdbbc095ca88604a1b1",
+      "freshSha256": "41544c4beed429b6db50731b4afa57bbdd463661a9942c05955e2ab2ef9e3714",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/08/viber_image_2020-08-02_11-56-37.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "3dd0355db64baab038b36b6f03469a8135c67076c9cc239f5131e4b368185d2a",
+      "freshSha256": "7670aad14aab125cf0b411565ca4782dadf4fd3cfd913607fb464d5ac3125575",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/07/viber_image_2020-07-19_12-06-00.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "387d7c15b600a8a844b9d969472a1fcc601b73cac326f0de3cf080f84fb2a4f8",
+      "freshSha256": "508a10095e3f6312486e4a7f5c89fe9ca3f23273c0fb53b207c15bbac16e571b",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/07/viber_image_2020-07-05_11-50-26-2.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "b7da60a0e19ab4f7d5cce37ba62c9d3d27779b02fa18215b56e8898005e7c7d9",
+      "freshSha256": "4d84f0551a9bb27299164c6c987819cb2b5b2f20cd98de0302fe153d4a3f7924",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/07/viber_image_2020-07-05_11-57-45.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "cffd629093738ce5bbab8453cc3c8b0074bf6f994d3935ea9602715a7281b6b2",
+      "freshSha256": "cf94b46841adf51dff3f4cdfc24b578e47aee46d2bb379f4facb3624a9abdbd4",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/07/viber_image_2020-07-05_11-58-41.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "a9042fd12e2b10edd987f140f850e48338ac156e502f60bb870a56e57c8335d0",
+      "freshSha256": "af8d41c7c270d607a23f1d55ebcd59933315f6e2648766c0284a7b94d7ca7d70",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/07/viber_image_2020-07-05_11-58-40.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "fcae9d75e947b48a690127446886260abafc29ef66da4600169ee5f1f03fc4c3",
+      "freshSha256": "281e665b834fd99d3f230206227041762e680aa295aab77d858f28716f3ef34c",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/07/viber_image_2020-07-05_11-50-26-1.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "55bf15e2c30c54385cefcf317bfd03315db94b16c9ac97e7b33409505f8404b6",
+      "freshSha256": "4b67c4a80680579dc11081168d1076a9974a793c27c5579ba4a6a63838ef5430",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/07/Screen-Shot-2020-07-05-at-11.53.36-am.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "dc4723e54fdbdc853392c4b09830cd4e872b9ce68ac05ae887369ca4b11efb4e",
+      "freshSha256": "f899c26f75cf5a6845e489713e3ec98000d6aa566428f2f1807766f4869558d3",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/07/viber_image_2020-07-05_11-50-26.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "8bf3c06fcbc48bd0ee6f994247a9854cd65eaa90b5b0300f0e247fc8655fdbde",
+      "freshSha256": "e2827ef9f7a2a741752b82c4a1e04e37873f383fa5cddd574502d98f155792c0",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/07/viber_image_2020-06-28_11-50-01.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "38fdf370125cf9b10704eb50ff33e7de3de05f51b886daf198ab21900e0a2d33",
+      "freshSha256": "803f02151a121854aef06aeac6bbc5169f03f425537d00ae27699796d7201c61",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/07/viber_image_2020-06-21_12-01-58.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "6b4fe6d67ee381413e4ed48c81a49912c7b21e26d5bcc64b604f84f66c2a56ff",
+      "freshSha256": "1e1c4741636bd5080b6719d9c1001c26cb6227959c149dc0f0bf8396f3da5b74",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/07/viber_image_2020-06-21_12-01-51.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "0ac11934a0a972b3e00b21f02620737cf59a2c204a9d61941c8c2ae4f169b74e",
+      "freshSha256": "f7f1fce747fe9576c8ec2dddfa847f0f9ad09549d9908b13111048fa941c4e81",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/05/Screen-Shot-2020-05-17-at-10.51.30-am.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "e8387ea9f4c20b5076f5eccae14af2e6f9ea1c65738c37ff7c118cbf67d0433f",
+      "freshSha256": "eb838808ca7cdac69b5e3e5a55af20af425f2aeec069c9f650af4efb308621d5",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/05/Screen-Shot-2020-05-17-at-10.51.01-am.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "2903a956776db2db36fcf31100f1c00f4b9fbc64cceb3c15a12176f715024d30",
+      "freshSha256": "f24c6f5615808a831e3ef76bf0dee6a58ae564818b97b73126da9b4f3bac8ee2",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/05/Screen-Shot-2020-05-03-at-11.25.10-am.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "3ee17a3cfa89da013323668eccd772c3816ed9c9cc8ed08ff6b1eebf7ed18908",
+      "freshSha256": "4fc8d7c295be099d365a87ea3f929fef5d473f8ce3845d283a53e62ffafa64f0",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/05/viber_image_2020-04-19_16-47-25.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "f45fc175f6bb84b5c694c5d4ba04ff3c07ebfb0e8e63e7139c66844a9e2220dc",
+      "freshSha256": "53fe54e4555ca5d6f41dd6c3e8a9ee826d82bff5361d50283d38739a2bdf1c75",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/04/Screen-Shot-2020-04-15-at-10.49.58-pm.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "e6b0e1a7423b8bd86754606d3c10465e50de78521579871ae6c5170fd6b364ad",
+      "freshSha256": "6c483bd17da075071e6577842861045bb900fd3860d0353ad29136848f303509",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/04/Screen-Shot-2020-04-15-at-10.48.36-pm.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "ede304035848b8748f4fb52e536ae1f94a881636cdace85defab12203ad1b5f7",
+      "freshSha256": "d2dd90828a632d3e87e6b3583160a200ef01d9810b23d433e34842a636605b3e",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/04/Screen-Shot-2020-04-15-at-10.41.20-pm-e1586954624285.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "e7f661cf2cfab9c2b73b1147a6db0c5052ccc386f79d3bd4e33f7f3d38eb37f0",
+      "freshSha256": "f08ab0dd26fec899af34a8eb8d43a4fbac2aba5a3acde2a811707544f055f196",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/04/viber_image_2020-04-07_16-28-19.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "c964201c5e29b88ecf6c0e2fefca02d1a5e16fd507acc2a34db0d3c446ec35e6",
+      "freshSha256": "5a7437e44ef859c1aad8d1fab76353f5d7833c73fc4b610ebb28ca22826db92d",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/02/viber_image_2020-02-19_11-47-01.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "bc4aeb587eaed813e1ce297ab6ca34041b0bb1fc7062f52571d87b3688aff5ab",
+      "freshSha256": "4e9c073ee5fb849b30c3b1821f96ecab20b27a21d5d143ddf7461c6570a01103",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/02/viber_image_2020-02-17_21-02-41.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "c6b4c89536e520d58a60e7ed8b091d69ba5d4566ee9b7bc0e48ce5f158188456",
+      "freshSha256": "3129807ddcfa4c41e523d7b975b35f658e0f1e61eb558d2a805745fc4d3a8bf5",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/02/viber_image_2020-02-12_20-29-18.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "e74c48112539e2a98e3f6c50890db126d03bea80ff4a3cb91274d5f8c08dcb64",
+      "freshSha256": "7a0b9471df93ef3c41e5cd476f2def9891f6ba8544794062d2b68a2e63a993d1",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/02/viber_image_2020-01-29_20-35-13.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "3990871665d46b6cbd3bfaf4c045839503696077b9300254363227e3d52e5dd0",
+      "freshSha256": "bee2906822636beeb21e78f57dfdb83fee74d3b1a1fdeddeee977f5cc2a3584e",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/01/Cross_3D_Fix_Trans.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "e240c4205f19e5589f68ba5fbbb76952433169f6c88d7fdba8b368a4fcb4aa4e",
+      "freshSha256": "fb5132a1898682f3bad8e5503097205c7641a300b80be4c695cf2441453fb553",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/01/viber_image_2020-01-13_17-51-23.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "828fb3c57ffb5186c3d8bd28233ee3675b9a561e2c923872b7d0ff8752d17b9d",
+      "freshSha256": "861ab670250e02b14f9dc76bb5de2de36c3ac224d60d7b059f5b030e0a015492",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/01/viber_image_2020-01-22_20-20-50.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "d38004e2aa1bb39358fd193585db4541d7bf086aebfdc9d8505a1aedb5f8d333",
+      "freshSha256": "98368baeaf4b73753a46af6870fc19639f207628cd3c2e2a0a81ab14e11d26bf",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/01/viber_image_2020-01-08_12-23-23.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "51f29e00c73e269b4959c0b731274f7770493f028e3e893ef378e359c37f2a74",
+      "freshSha256": "860dc2397e9c40256661bbcf0598087f93337c3b3aa89853ea50fa35e8b63771",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/01/viber_image_2020-01-02_20-08-02.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "ff5793ddfa9825692e69ed23271056773c2e927c28adc688808b0937cdeda65c",
+      "freshSha256": "fc72358ad73612e183058cab4c4337c0eb78193ed75a1fb8dcbb8645d13973d7",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/01/SGBC-Banner-website.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "9392d0486ca10aa9eeb996e0e93c642798086ca6d73d77f435a693327cfbca3f",
+      "freshSha256": "5fc878d02b388e48eae40d5e33a5e4ebd6ffedc998706443f3918a0379520f09",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/01/viber_image_2020-01-01_14-58-27.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "b74856f6043c92d09b76fee977f73dc7c168d81600d17e5d01daeb2c27ca948d",
+      "freshSha256": "e89c64797ad856d9c12a1dd5c4ab60fa5dd2528e867d7a9542f12d8cfe290a8a",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2019/12/viber_image_2019-12-25_08-38-42.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "9d511c6f2a53b448b55be56f549291e23995907c83bf35973006a3b6d422ebb8",
+      "freshSha256": "d11dbf5f7dd2dd235f329d270c0b77abf9a23e3f58737415ea8077b21a0c815b",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2019/12/viber_image_2019-12-23_23-10-44.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "e29adf93b2ee14eb4c19f554afd87ef9aa10ba5a8fe6c6019bac060a8eb76b67",
+      "freshSha256": "885b2d2446f65e5c046cbaafce5e890c73c785b075f86a6c4ae296fd6261ddcb",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2019/12/viber_image_2019-12-03_23-28-20.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "ca2c958f6a37ff6531f1ae7eec0206e1306f0978a6c7ba04489b4a7123800325",
+      "freshSha256": "f301acfb9ed9081ba7f224074c7e10dd045053bc283d2571c129245c542291a3",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2019/12/SGBC-Banner-website.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "8ed5b208d15a7f285a7629c439f8758f93e27ebc27fb1264939946385a39e6ff",
+      "freshSha256": "3ffdd5dab2e2a148623df56b75cf35915ce6bb24b2968895ab1eac66ab1d9983",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2019/12/viber_image_2019-11-27_15-14-24.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "786347027a585b74d2327c0088358882fbfdbbf0a73536ea119fbc359bb64f7a",
+      "freshSha256": "e2fff037392ab484eb9a3166014256c48f3bd73ac59c5f80e56568464aac59da",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2019/11/viber_image_2019-11-20_11-00-09.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "9eda212d8d6c2f7db0851eac5396d24e25216a6b7aae62fabdf94f7e07b6803d",
+      "freshSha256": "e7bf59111abfece8393830a08761ffb503c9d2fef63b870a0f9b09818d172205",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2019/11/viber_image_2019-11-14_14-30-52.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "d79f53a44d4c78e9c795b1e7ed1076c113d005f9a9ea39735296c4b2f933d2eb",
+      "freshSha256": "f08765bae82d11c041c07f37e7b6d20b1ba84ccb1436168030db378a1c63624b",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2019/05/Cross-3D-Fix-Trans-1.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "3aebb111a7c21242bb7eac0c2f9a642f32084a017a6428daaa0154111be09552",
+      "freshSha256": "bfad19751f8333b522e12e65f1f48505cf8d3a32b9cf20757e8225b1d63f9c74",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2019/05/Cross-3D-Fix-Trans.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "e257ea32d5a21e8f17a69e0b8b3b0b7c6ec596828ad7ea37bc97363a3aac75c8",
+      "freshSha256": "64e1d1868711c4c27ceb3e7ac8b1b99cd9dcae05db80978277c6e2c322ab5508",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2017/01/Ralph.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "c1fa3fa06cdbebdc6b77dccd011d28778b595447a9c33566a5ecafd86c160a55",
+      "freshSha256": "dc2596fa411c4c2dac7e096d0c79f3306f6bf7f840ab4eec630631bb39462b55",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2017/01/036A7345.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "3e22599b66f72efc24e724c09bca353eb3488ddad32de7ed8d867ef58bc9d245",
+      "freshSha256": "09b882d794e4244532150b564fd9acb5b424f1a015a1948a626cf33cfbbf4320",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2019/02/green-nature-tree-91153-1-1.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "ae82b6f1e4171a41d500057e3f7c3df4472a77334243d708052ae029cb378be3",
+      "freshSha256": "e0dedfa6128ead7898efc5a22341b8c68a6705cf42774a641940b97336df7976",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2019/01/hqdefault.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "e8ebd22849ab7bce571a45f61b2041e50ec2839afb7ade8ebc7ef19d796cd67f",
+      "freshSha256": "9078afa0bad0e70947446e1d5b12702e85875901c14f7e5273c740aa7798cc13",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2018/12/1corinthians.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "929a06d255463e064bd243d969163a46cc0ae4c79f6903077b689afaf96fabdd",
+      "freshSha256": "4c0cf7191572dea8e0a87d60f10a2220a895fd35602ac22716665c94ae37e232",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2018/11/unity-720x360.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "134809751d2146b52fc071d4575fde687e7cb9ef9c3896fd88ade0c67041d386",
+      "freshSha256": "69d1ec2e10d4908e1dd12c1a688c7c00259530c7099f97195243846ddb2e18ec",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2018/10/d_Fotor-1.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "6f5772addf978f455236c76ecccc6901ef47cf01abcf28c71444dc772fa5391f",
+      "freshSha256": "d23ae83aba6d4f3f17f2033ba468fcd8230d7f28f7b769fcb47a070ec62fba82",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2018/09/f8a46dd82d4556d0dee5d5441383cb1f.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "d86ee0225e367e71db2755112e8057147a47df861bf29d59e2f8228e4502f8e5",
+      "freshSha256": "7a0915cce1903204e4eaf85d09467362f136b02e64ff9d979a1fc3be2f646b32",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2018/07/crossroads.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "95dee918381d8de9a8bca3748ca0464543608cd136e0c033f4efe19fa703e589",
+      "freshSha256": "fd5c7964eec370e7d4505942f8333dc2cc8cce5085bbc799bbb02efeb470ad8f",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2018/06/IMG_0295.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "32b1be2e28c7d826b8bd302fea7f61a625d77c00361aa503d28eddd636b1aeed",
+      "freshSha256": "3adf91492b0942e7481209428156e16840050bdd98cdfd9d1f0dd2f17df6f587",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2018/03/ralph.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "ea72529baadfade6eabb5b0c0f3dbe47ebeaae154a6a3577a3db31e436b9ede7",
+      "freshSha256": "37100ff0bceb49786bfee4fc64683bd9f90605cfc8fffd021d03f178d510d92b",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2018/01/e83cb70f2ef7043ecd0b4204e2445b97e676e7dc1ab3144592_1920.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "0b2a977be2ecb0a6057f5f069218b5f0f392f6eadca6fc8fdd9405e58d53cb88",
+      "freshSha256": "a2de75cdfa0d9a01eab685d9c79f02bf4bf35b98fb647721eda9879b6c3be8c0",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2017/12/sheep.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "b1cb0706347883690cd43e587271cc6517338fa22e559d7a316dec9195c8b9f0",
+      "freshSha256": "60c7024c22f6b288b0f85e127d86f3ade89b16d574017a86f99ec019859bedcc",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2017/01/parable-of-the-sower.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "5623e6e6e735ee9b430265e8ffced4134c0e1f9cf307b97d3169765faba2c005",
+      "freshSha256": "fa96b61b560386c4c03a4a7f9f8a2b3a2443a118584179d9c6b27a13ac8e6b75",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2017/12/1_john_title.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "ade01fd46ad2bc5d36f37d34932de8ace72720df38d5decacb472ca6aac76444",
+      "freshSha256": "70d4865117826a153e0b8d157112044fbee924ff7731da008e587028e8636a73",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2017/11/Bible-Book-of-Romans.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "2ae8f3daf9ea1306d553cf7d409658cc26dea9d6856891b326944a1c8524d75f",
+      "freshSha256": "4ce1e5f8e5335412a13add58ceb378f246a3b916fe155768dd86984741ea7fde",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2017/10/church.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "599bd3caaf28336ec83d5e35a5129b26bc62bf14f8d2fd64b4cbd35ea1989d87",
+      "freshSha256": "0dd05e0216cf0e230ddf05f8eee6e79bad4b3982b4a3843854c57df8d61a95c4",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2017/10/The-Local-Church-AVATAR-300x300.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "6517479a18cc8a6dce344bd44efe9ef3489db04cf24d255ab3033a8e84c690ce",
+      "freshSha256": "f8736f424641847ad285867561377f5aed520bb6d5908009f4c39302989b5a69",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2017/10/BIble-Jesus-Disciples1-scaled.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "a240c5f8cd4f6f296ae4efcbfb1b9dd9c17b45a4cf00d392c7e251599097b405",
+      "freshSha256": "ba38240e027d5e2f065648c60d5194f925063494d5cad07068ad6355c8d5c7bd",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2017/10/Isaiah-713x509-1.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "bfa8daec3a40714e74bda52761ba21b0a6850fc42b8cb990003254f97577b2dd",
+      "freshSha256": "ae189cf633e103ad3c9099d01be9b4a917fe9d6094221834ae9d139a70819b6e",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2017/10/Isaiah-713x509.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "438fd6782f60ef20bd6e409483da827acc317b079c5ae4c0aa1d46dd3851efab",
+      "freshSha256": "e4507b5891cc5dd9b72e178bbbdcba1acbcd9d2260cdcb4fc6f989846e02378f",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2017/09/acts.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "05ed0e92c46ca606691f5d5428063d47a68f4ba2990218ca4e6a5b1aa67c839c",
+      "freshSha256": "d42663d55a25859a242ad0ae1c1dccd1ccf600db12641055ba783cb80acc3e2b",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2017/08/web-logo-e1486384300161.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "d4ef26315b0b8a861ce8b49a831baa33290b8571c40598d4f649a257f31b3d59",
+      "freshSha256": "b69194f4f16fa2f516c598a9371c348ffed1cbff9d549315995633e698ab9ff1",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2017/01/IMG20170730103903-1.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "8de766a26f9774e632e08db369daeab51a6ff8442f53cf95566878de02ac0c03",
+      "freshSha256": "01847de5a73de474ace62d7a64b85c02cedca10f2fef83068141e1223d5280cb",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2017/01/IMG20170730103903.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "6f76cb63bc9970958b7ffb76997d3223026dc98456397cdadbb367d1f2733d3a",
+      "freshSha256": "3b9ab58720dee41913b01806b63a63c4750354a6d61069f030c053235c508fc5",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2017/07/luke.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "c90dfe4787a5acc721666af6acf40762bfbc9adaf8c695a4cfdcbb26fdfe09f2",
+      "freshSha256": "118a950e94fb5f04aa885b9ccb0de6d3156963a085c722c19ec36a74e8e22e3b",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2017/01/IMG_0112-e1520248163449.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "7aac3f750b142d541ccbb387ce441724cef51db46e0039c39c199b234a33681a",
+      "freshSha256": "a40284a504859c074d03c01e96755e20e2c21f9408677c5526931b8c993af265",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2017/06/6ae866f9fa1fc79cb2c35213b0deee50.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "acba76d6ff13df92f3c8d8b21a4e5b0c0fe0ff5d6e6b733a75badf30a20e969c",
+      "freshSha256": "2216e03cf6b9742e84a1047a9688ed6a2baaada13208a071cd2952bf0a80c4c5",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2017/04/Gospel-of-Mark-Graphic.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "eac47854226005ee199cc1a49ff185673c268cc51002192244aeeb4ffc7916db",
+      "freshSha256": "b9a9adab6e8e5b7b88e58c8d05a0d32363c46187655faa7fd7cc7b2cc942f63f",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2017/02/Gospel-of-Mark-Graphic-2.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "132166fe1c7d6c0ed416706dbbe33f5ae1137f9171ec0f6f829372093ecf8614",
+      "freshSha256": "a25eed3055fcab5d402526bd5a5f6414928ac634489cd90c9df84ec9f5cfd151",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2017/04/good-friday-austria.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "e2cfaf12e1515799872d6e4bb241dc45853d46873334c5920d535dd419faba06",
+      "freshSha256": "7e13f899736acb39c12494259e53792be8e284cc08b63bb489a685bf2721583b",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2017/01/bible.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "eb6c5385864151541cbb4e7cd0ead19ed423b4dfcd50b935becf583ee20b3426",
+      "freshSha256": "93753f676d4c33f93ac7bea98aaff4ec88c2321c5f492d66526634d397181890",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2017/01/whatisgosepl.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "8a4162a9e0d588b6ff43f9a904ceaac85fadfbf0991e0f004ed35b58ca5dfb57",
+      "freshSha256": "0a7542c7dae659ef71dab2f5a8af3dde267d8e91c76b7995e8ae73f2fe714db1",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2017/02/SavingGraceBC-Doctrinal-Statement.pdf",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "9a831543da0f69a11e340234e6b78c47c544220528a06aa7c20f0f46006aa3fa",
+      "freshSha256": "ba092f58e42c8f07575f3d2998327e42cc8e61ba5993c5bc624f31cf79253489",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2017/01/Untitled-1.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "4b0c3b5a3fd3294d7a416df13b8a2d82af50b724dfb11bb0556eb5d3a0690d85",
+      "freshSha256": "db0d324ead9756a4d821f129908cc8be01818b66e7fd471721ae246aa7975bd5",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2017/01/worship3.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "7f60aeaebd986ccecba2e3e3139800ffdb98bb2adc7b058ad89fc09ffaf07b56",
+      "freshSha256": "aa20d495c80706b843122ca4f44d8a17e5c1b9a67bb531f443e8125e9f7d6a6b",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2017/01/Evangelism-2.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "b4f3eb4900f2e1c744476a202a1c047abb4c445b66e6e67b22b4d5c0ee45eab2",
+      "freshSha256": "2d7d3c137b435b03e8e40a10ff2a854451d078d0f0e403ae62523e6dd9edf9ae",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2017/01/Discipleship-2.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "f76d12f74db6c07ffa5462421963897fb84fa298e4f12e61f68d79cdc3e90704",
+      "freshSha256": "8ad752d5746288fe0c849123e9ed635a4d06873eaf8bbf6f1650e4e0d156241d",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2017/02/web-logo-e1486384300161.png",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "f3a5d8d4204ed012ad4ac0c182af2a360b323ab0cd53c1b2a1ed64e4fcde2aa7",
+      "freshSha256": "585a818f0effa1cf314620d5adce7e0113dbb2e48d0a91bcebe2bc8e62b02229",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2017/01/bible.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "b49e18715ed0f976a14b865721176299fd1db8ea71b4c00d6880def3212ba3c6",
+      "freshSha256": "4065825c0d2ca7f649764dfd3c602bd5f1aef65795ca703087339006f1dc8c89",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2017/01/bible_1500_thinkstockphotos-486697386-1.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "14f6cd58bd1673af6049c472b33ab0f5a740069ac93d4779f52634d40aee4ef3",
+      "freshSha256": "8a628a4c77a3523da1989612a797cca126c08d0e16c410770cda13048c87e926",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2017/01/gracewalk.jpg",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "2f88c0593f2e9f2d1b761eefeff12e00a0053619ba66ed061567c4e8db454041",
+      "freshSha256": "e15a92ee5dbb930c9c39ae371979a35dccb71f900449cbf4be96e4f7f73e6195",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/10/icomoon-v1.0.zip",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "4b9abaf5d3f4fef12e46943717c373665f86433de3e72e2ace9e1c9894e495aa",
+      "freshSha256": "0e4f3a15964a833fc1d71d1c1d7baf80f1d4873f79f7e93a535efaeb9c434c27",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2023/10/icomoon.zip",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "5ae098ccc4a68a289393fa8f84092235398b1f15f5d0f6ba84bcc8abb14ba967",
+      "freshSha256": "23a20b0700722e51e8aecd76f9b881ffcad986b6128e6c582c0c66b092c1269e",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    },
+    {
+      "path": "/wp-content/uploads/2020/01/Merriweather-Regular.otf",
+      "kind": "asset",
+      "sourceId": null,
+      "changedFields": [
+        "sourceId"
+      ],
+      "retainedSha256": "0d634a4d218cc097787b6a43f8eaa85697802ae003aea5fd5e770c2cca69dd9a",
+      "freshSha256": "93aeea138617be830e2aebb79acda6f000b5e8a994595af0e9c3f1da48f01eb0",
+      "outcome": "retained_original_identity_asset_bytes_and_metadata_unchanged",
+      "freshSourceIdOmitted": true,
+      "assetIdentityBytesMatch": true,
+      "retainedSourceIdPresent": true
+    }
+  ],
+  "limits": [
+    "Different capture provenance alone is not a material editorial change.",
+    "Content/metadata/date/resource differences are retained; this classification grants no overwrite.",
+    "The source-ID presence flag preserves the prior imported identity; it does not newly verify that identity against authoritative SQL."
+  ],
+  "outcomeCounts": {
+    "retained_pending_material_content_review": 9,
+    "retained_original_identity_asset_bytes_and_metadata_unchanged": 256
+  },
+  "diagnosticClassifications": {
+    "asset_source_id_omission_only": 256,
+    "sole_jetpack_to_verified_owned_original_reference_reconstruction": 8,
+    "material_past_event_list_delta_unresolved": 1
+  },
+  "retainedVersionsChanged": 0
+}

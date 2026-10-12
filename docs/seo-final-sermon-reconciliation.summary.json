@@ -1,0 +1,3675 @@
+{
+  "knownSermonIdentities": 457,
+  "authoritativeCurrentSourceTotalProven": false,
+  "candidateStatuses": {
+    "200": 457
+  },
+  "outcomes": {
+    "unresolved": 4,
+    "preserved": 453
+  },
+  "missingLedger": 0,
+  "identityMismatch": 0,
+  "rows": [
+    {
+      "sourceId": 29140,
+      "path": "/sermons/%d8%af%d8%b9%d9%88%d8%a9-%d9%84%d9%84%d8%b9%d8%b7%d8%b4-%d9%84%d9%84%d9%87/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "unresolved"
+    },
+    {
+      "sourceId": 29415,
+      "path": "/sermons/a-biblical-view-of-the-word-leads-to-true-fellowship-with-jesus-part-1/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29414,
+      "path": "/sermons/a-biblical-view-of-the-word-leads-to-true-fellowship-with-jesus-part-2/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29150,
+      "path": "/sermons/a-call-for-discernment/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28651,
+      "path": "/sermons/a-call-for-unity-in-the-church/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29194,
+      "path": "/sermons/a-call-to-be-members/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28959,
+      "path": "/sermons/a-call-to-fellowship-with-god/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 27763,
+      "path": "/sermons/a-call-to-rejoice/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28906,
+      "path": "/sermons/a-call-to-self-examine/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29148,
+      "path": "/sermons/a-call-to-the-pursuit-of-holiness/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29395,
+      "path": "/sermons/a-call-to-thirst-after-god/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29015,
+      "path": "/sermons/a-call-to-worship-that-comes-with-a-warning/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30019,
+      "path": "/sermons/a-christian-character-to-imitate/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29651,
+      "path": "/sermons/a-faithful-servants-letter-of-hope/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30060,
+      "path": "/sermons/a-healthy-disciple-is-a-disciple-maker/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29550,
+      "path": "/sermons/a-joyful-giving-church/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28936,
+      "path": "/sermons/a-joyful-healthy-church/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29982,
+      "path": "/sermons/a-living-hope-for-living-stones/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29377,
+      "path": "/sermons/a-message-for-young-and-old/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29218,
+      "path": "/sermons/a-new-heart-brings-security-part-1/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29201,
+      "path": "/sermons/a-new-heart-brings-security-part-2/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29199,
+      "path": "/sermons/a-new-heart-brings-security-part-3/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29197,
+      "path": "/sermons/a-new-heart-brings-security-part-4/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29192,
+      "path": "/sermons/a-new-heart-leads-to-a-sin-less-life-part-1/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28904,
+      "path": "/sermons/a-plea-to-the-unconverted/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29405,
+      "path": "/sermons/a-prayer-of-hope/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29137,
+      "path": "/sermons/a-superficial-seeker-vs-a-genuine-seeker/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28971,
+      "path": "/sermons/a-test-for-true-biblical-wisdom/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29381,
+      "path": "/sermons/a-test-of-love/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28961,
+      "path": "/sermons/a-warning-not-to-befriend-the-world/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28105,
+      "path": "/sermons/almost-a-christian/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29429,
+      "path": "/sermons/am-i-a-christian/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28106,
+      "path": "/sermons/an-example-of-the-gospel-truth/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30020,
+      "path": "/sermons/an-uncomfortable-day-to-worship/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30130,
+      "path": "/sermons/andrew-the-unnoticeable-disciple/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28914,
+      "path": "/sermons/are-you-a-false-convert-pt-1/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28912,
+      "path": "/sermons/are-you-a-false-convert-pt-2/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30013,
+      "path": "/sermons/are-you-willing-to-fully-embrace-christ/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29621,
+      "path": "/sermons/aristarchus-the-encouraging-minister/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29190,
+      "path": "/sermons/at-the-brink-of-despair/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29031,
+      "path": "/sermons/attitudes-towards-believers/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30115,
+      "path": "/sermons/authority-over-sin-part-2/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30109,
+      "path": "/sermons/authority-over-sin/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28078,
+      "path": "/sermons/avoid-ungodly-examples/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28899,
+      "path": "/sermons/awake-you-sleeping-soldiers/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29213,
+      "path": "/sermons/be-anxious-for-nothing/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29143,
+      "path": "/sermons/be-consecrated/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28099,
+      "path": "/sermons/be-filled-with-the-knowledge-of-gods-will/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30075,
+      "path": "/sermons/beggars-bound-blind-and-bruised-part-2/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28900,
+      "path": "/sermons/behold-the-agony-of-christ/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28463,
+      "path": "/sermons/behold-the-exalted-christ/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28894,
+      "path": "/sermons/behold-the-excellency-of-jesus-christ/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29177,
+      "path": "/sermons/behold-the-glory-of-christ/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29081,
+      "path": "/sermons/being-great-in-gods-kingdom/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28994,
+      "path": "/sermons/beware-of-false-teachers/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28342,
+      "path": "/sermons/biblical-assurance-of-salvation/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29139,
+      "path": "/sermons/biblical-ground-for-divorce/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28350,
+      "path": "/sermons/bless-yahweh/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30132,
+      "path": "/sermons/breakfast-on-the-beach/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30096,
+      "path": "/sermons/catching-men-by-the-net-of-grace/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29993,
+      "path": "/sermons/chosen-by-christ-to-display-christ/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29557,
+      "path": "/sermons/christ-centered-life/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29603,
+      "path": "/sermons/christ-centered-slaves/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29658,
+      "path": "/sermons/christ-is-everything/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28901,
+      "path": "/sermons/christ-is-the-purpose-driven-life/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30073,
+      "path": "/sermons/christ-is-worth-our-suffering/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30080,
+      "path": "/sermons/christ-our-hope-in-suffering/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29338,
+      "path": "/sermons/christ-the-approachable-healer/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28643,
+      "path": "/sermons/christ-the-example-of-humilty-for-church-unity/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29786,
+      "path": "/sermons/christ-the-fount-of-every-blessing/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28077,
+      "path": "/sermons/christian-liberty/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30079,
+      "path": "/sermons/christs-authority-over-disease/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30078,
+      "path": "/sermons/christs-authority-over-evil-powers/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29420,
+      "path": "/sermons/come-but-how/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29220,
+      "path": "/sermons/commitment-to-a-local-church-is-not-an-option-video-player/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29416,
+      "path": "/sermons/commitment-to-the-local-church-is-not-an-option/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29228,
+      "path": "/sermons/compassionate-healer/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28093,
+      "path": "/sermons/complete-devotion-to-god/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 27767,
+      "path": "/sermons/complete-in-christ/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29662,
+      "path": "/sermons/confidence-in-the-triune-god-part-1/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29763,
+      "path": "/sermons/confidence-in-the-triune-god-part-3/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29668,
+      "path": "/sermons/confidence-in-the-triune-god/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29546,
+      "path": "/sermons/connecting-virtues-to-christ-part-1/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29552,
+      "path": "/sermons/connecting-virtues-to-christ-part-2/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29551,
+      "path": "/sermons/connecting-virtues-to-christ-part-3/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29210,
+      "path": "/sermons/conquering-anger-and-its-fruits/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29559,
+      "path": "/sermons/courageous-for-the-gospel/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29193,
+      "path": "/sermons/dangers-of-being-focused-on-earthly-matters/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29735,
+      "path": "/sermons/davids-example-of-genuine-repentance/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29765,
+      "path": "/sermons/davids-example-of-genuine-restoration/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29783,
+      "path": "/sermons/davids-example-of-genuine-worship/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29428,
+      "path": "/sermons/deceived-devil-or-divine/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29655,
+      "path": "/sermons/demas-the-deserter/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29401,
+      "path": "/sermons/dependence-upon-god-in-witnessing/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28091,
+      "path": "/sermons/desiring-true-blessings-within-gods-law/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30034,
+      "path": "/sermons/discipleship-is-a-community-project/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29544,
+      "path": "/sermons/do-not-lie-to-one-another/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29411,
+      "path": "/sermons/does-church-membership-matter/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29068,
+      "path": "/sermons/does-god-hear-my-prayer/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28972,
+      "path": "/sermons/earthquakes-famines-and-pestilence/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29179,
+      "path": "/sermons/easter-who-cares/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29611,
+      "path": "/sermons/effective-evangelism-part-1/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29613,
+      "path": "/sermons/effective-evangelism-part-2/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30071,
+      "path": "/sermons/eggars-bound-blind-and-bruised-part-1/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28987,
+      "path": "/sermons/encountering-a-holy-god-part-2/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28990,
+      "path": "/sermons/encountering-a-holy-god/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29400,
+      "path": "/sermons/endurance-to-win/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29652,
+      "path": "/sermons/epaphras-the-prayer-warrior/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29214,
+      "path": "/sermons/exercising-your-spiritual-gifts-is-not-an-option/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28916,
+      "path": "/sermons/expressions-of-true-joy-in-a-growing-church-pt-1/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28910,
+      "path": "/sermons/expressions-of-true-joy-in-a-growing-church-pt-2/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29020,
+      "path": "/sermons/faith-produces-obedience/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29798,
+      "path": "/sermons/faith-wrapped-in-love/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29795,
+      "path": "/sermons/faithfulness-in-the-darkest-season/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 27929,
+      "path": "/sermons/five-weapons-against-false-teaching/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28081,
+      "path": "/sermons/follow-godly-examples/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29181,
+      "path": "/sermons/follow-jesus-no-thanks/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28460,
+      "path": "/sermons/forsaken-by-god/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29664,
+      "path": "/sermons/from-fear-to-faith/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29832,
+      "path": "/sermons/from-mega-fear-to-mega-joy/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30059,
+      "path": "/sermons/from-sinking-to-singing/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28087,
+      "path": "/sermons/from-spiritual-descension-to-ascension/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29653,
+      "path": "/sermons/gladness-in-the-heart/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29092,
+      "path": "/sermons/god-hates-divorce/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29010,
+      "path": "/sermons/god-is-sovereign-over-our-salvation-part-2/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29451,
+      "path": "/sermons/gods-call-for-repentance-leads-to-true-worship/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29025,
+      "path": "/sermons/gods-goodness-and-the-vine-growers-corruption/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29614,
+      "path": "/sermons/gods-goodness-in-a-sin-cursed-world/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28074,
+      "path": "/sermons/gods-matchless-mercy/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29083,
+      "path": "/sermons/gods-predestined-suffering-and-death/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29141,
+      "path": "/sermons/gods-purpose-of-marriage/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29072,
+      "path": "/sermons/gods-testimony-concerning-his-son/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29067,
+      "path": "/sermons/gods-will-for-the-local-church/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29485,
+      "path": "/sermons/good-friday/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29807,
+      "path": "/sermons/grace-that-gives-beyond-expectations/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29470,
+      "path": "/sermons/great-impact-despite-weakness/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29071,
+      "path": "/sermons/having-security-of-eternal-life/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29648,
+      "path": "/sermons/he-is-all-you-need/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29391,
+      "path": "/sermons/hope-for-a-miserable-sinner/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29059,
+      "path": "/sermons/hope-in-the-faithfulness-of-the-lord/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29535,
+      "path": "/sermons/how-do-i-know-my-spiritual-gift/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29195,
+      "path": "/sermons/how-do-i-know/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28458,
+      "path": "/sermons/how-do-you-respond-to-jesus-death/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28098,
+      "path": "/sermons/how-to-apply-the-knowledge-of-gods-will/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29138,
+      "path": "/sermons/how-to-enter-the-kingdom-of-god/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29471,
+      "path": "/sermons/how-to-know-jesus/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29041,
+      "path": "/sermons/how-to-live-out-our-devotion/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29732,
+      "path": "/sermons/how-to-rest-in-god-part-1/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29733,
+      "path": "/sermons/how-to-rest-in-god-part-2/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29156,
+      "path": "/sermons/how-you-grow-in-humility/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29661,
+      "path": "/sermons/i-love-you-oh-yahweh/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29066,
+      "path": "/sermons/identifying-the-local-church/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29173,
+      "path": "/sermons/if-god-is-sovereign-why-suffering/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29486,
+      "path": "/sermons/illustration-of-salvation/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29091,
+      "path": "/sermons/impossible-to-believe/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "unresolved"
+    },
+    {
+      "sourceId": 30076,
+      "path": "/sermons/in-christ-alone/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 27937,
+      "path": "/sermons/in-the-presence-of-a-holy-god/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29514,
+      "path": "/sermons/intro-to-marks-gospel/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29425,
+      "path": "/sermons/introduction-to-1-john-the-apostle-john-and-the-truth-of-god/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28343,
+      "path": "/sermons/introduction-to-colossians/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30099,
+      "path": "/sermons/is-jesus-willing-to-make-me-clean/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28966,
+      "path": "/sermons/israel-under-attack/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29462,
+      "path": "/sermons/james-and-thadeus-the-greats/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29456,
+      "path": "/sermons/james-the-zealous/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29027,
+      "path": "/sermons/jesus-authority-challenged/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29062,
+      "path": "/sermons/jesus-confronts-false-worship/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28893,
+      "path": "/sermons/jesus-illegitimate-trial/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29341,
+      "path": "/sermons/jesus-in-the-midst-of-the-storm/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30118,
+      "path": "/sermons/jesus-is-calling-you/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29378,
+      "path": "/sermons/jesus-is-sovereign/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28997,
+      "path": "/sermons/jesus-is-the-god-man/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28909,
+      "path": "/sermons/jesus-is-the-passover/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28960,
+      "path": "/sermons/jesus-might-come-back-today/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30074,
+      "path": "/sermons/jesus-overcame-the-devils-temptations/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29012,
+      "path": "/sermons/jesus-the-chief-cornerstone-part-1/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29202,
+      "path": "/sermons/jesus-the-priceless-treasure-full-of-pleasure/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29663,
+      "path": "/sermons/jesus-the-supreme-king/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28984,
+      "path": "/sermons/jesus-warning-against-false-professors/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29789,
+      "path": "/sermons/joy-before-the-grave/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29802,
+      "path": "/sermons/joy-in-believing/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29450,
+      "path": "/sermons/judas-the-unsaved-apostle-part-1/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29449,
+      "path": "/sermons/judas-the-unsaved-apostle-part-2/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29382,
+      "path": "/sermons/kindling-a-passion-for-evangelism/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 27934,
+      "path": "/sermons/knitted-together-in-love/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29788,
+      "path": "/sermons/knowing-god/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 27933,
+      "path": "/sermons/knowing-jesus/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 27935,
+      "path": "/sermons/labouring-on-through-christs-power/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 27766,
+      "path": "/sermons/legalism-and-mysticism/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29834,
+      "path": "/sermons/let-us-now-praise-christ-part-2/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29823,
+      "path": "/sermons/let-us-now-praise-christ/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29806,
+      "path": "/sermons/let-us-praise-the-lord-part-2/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29804,
+      "path": "/sermons/let-us-praise-the-lord/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29466,
+      "path": "/sermons/listening-with-your-heart/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30024,
+      "path": "/sermons/living-a-crucified-life/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29328,
+      "path": "/sermons/living-faith-that-exalts-jesus/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29329,
+      "path": "/sermons/living-faith-that-pleases-jesus/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29831,
+      "path": "/sermons/living-in-holiness/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29981,
+      "path": "/sermons/living-out-a-meaningful-membership/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28088,
+      "path": "/sermons/living-out-our-devotion-to-god/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29826,
+      "path": "/sermons/living-today-with-hope-for-tomorrow/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29619,
+      "path": "/sermons/longing-for-god-in-afflictions/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 27756,
+      "path": "/sermons/look-up/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29145,
+      "path": "/sermons/love-is-a-christian-quality/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29960,
+      "path": "/sermons/loved-by-christ-to-love-like-christ/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29004,
+      "path": "/sermons/loving-god/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29003,
+      "path": "/sermons/loving-others/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29654,
+      "path": "/sermons/luke-the-faithful/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29912,
+      "path": "/sermons/make-way-for-the-king/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28991,
+      "path": "/sermons/managing-the-tongue/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "unresolved"
+    },
+    {
+      "sourceId": 29650,
+      "path": "/sermons/mark-the-minister-of-second-chance/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29460,
+      "path": "/sermons/matthew-the-big-loser/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29825,
+      "path": "/sermons/meekness-and-majesty/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29393,
+      "path": "/sermons/mega-god/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29159,
+      "path": "/sermons/message-from-heaven/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28993,
+      "path": "/sermons/money-given-rewards-gained/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29909,
+      "path": "/sermons/more-than-awe-finish-strong/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28645,
+      "path": "/sermons/my-perfect-substitute/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29183,
+      "path": "/sermons/new-heart-leads-to-a-sin-less-life-part-2/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28999,
+      "path": "/sermons/not-far-but-not-in-the-kingdom/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29992,
+      "path": "/sermons/one-is-coming-who-is-mightier/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29618,
+      "path": "/sermons/onesimus-the-restored-slave/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29545,
+      "path": "/sermons/our-calling-to-practical-christianity/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29075,
+      "path": "/sermons/our-glorious-christ/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29571,
+      "path": "/sermons/our-god-provides/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29764,
+      "path": "/sermons/our-hope-beyond-the-grave/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29541,
+      "path": "/sermons/our-promised-privilege-in-christ/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28352,
+      "path": "/sermons/paul-the-exemplary-servant/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30063,
+      "path": "/sermons/perservering-by-faith/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30131,
+      "path": "/sermons/philip-the-low-risk-taker/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28937,
+      "path": "/sermons/praising-him-with-all-she-could/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28089,
+      "path": "/sermons/praising-the-god-of-salvation/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28988,
+      "path": "/sermons/prayer-the-innermost-devotion/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28907,
+      "path": "/sermons/praying-for-spiritual-growth/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29389,
+      "path": "/sermons/proof-of-a-new-nature/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29402,
+      "path": "/sermons/pursuit-of-heavenly-reward/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29208,
+      "path": "/sermons/putting-to-death-immorality/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28079,
+      "path": "/sermons/rejoicing-in-suffering/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28094,
+      "path": "/sermons/rescued-from-darkness-into-light/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28908,
+      "path": "/sermons/rightly-approaching-god-in-worship/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29784,
+      "path": "/sermons/run-the-race-of-life/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30120,
+      "path": "/sermons/sabbath-a-day-of-mercy/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29037,
+      "path": "/sermons/sacrificial-worship-and-church-life-are-inseparable-part-2/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29039,
+      "path": "/sermons/sacrificial-worship-and-church-life-are-inseparable/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29030,
+      "path": "/sermons/safe-in-the-hands-of-god/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29805,
+      "path": "/sermons/salvation-a-wonder-to-behold/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29386,
+      "path": "/sermons/satans-strategy-and-the-saviours-sovereignty/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29572,
+      "path": "/sermons/satisfied-in-him/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29001,
+      "path": "/sermons/saving-faith-works/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29063,
+      "path": "/sermons/scripture-alone-produces-blessings/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29224,
+      "path": "/sermons/seeking-a-sign-to-believe/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29477,
+      "path": "/sermons/self-righteous-living/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29533,
+      "path": "/sermons/serving-the-local-church-is-not-an-option-2/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29217,
+      "path": "/sermons/serving-the-local-church-is-not-an-option/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28965,
+      "path": "/sermons/setting-the-stage-for-jesus-return/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29453,
+      "path": "/sermons/simon-peter-the-screw-up/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29455,
+      "path": "/sermons/simon-the-zealot/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29907,
+      "path": "/sermons/sojourn-in-fear-arrive-in-glory/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29657,
+      "path": "/sermons/strangers-with-heavenly-hope/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30069,
+      "path": "/sermons/submit-to-earthly-authorities-for-christs-sake/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29824,
+      "path": "/sermons/tender-mercies-of-the-living-god/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29821,
+      "path": "/sermons/testing-god-at-rephidim/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29412,
+      "path": "/sermons/tests-of-true-fellowship-part-1-2/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29403,
+      "path": "/sermons/tests-of-true-fellowship-part-1/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29397,
+      "path": "/sermons/tests-of-true-fellowship-part-2/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28967,
+      "path": "/sermons/the-abomination-of-desolation/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28441,
+      "path": "/sermons/the-all-sufficiency-of-god/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29342,
+      "path": "/sermons/the-all-sufficient-saviour/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30095,
+      "path": "/sermons/the-amazing-jesus/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29227,
+      "path": "/sermons/the-antichrists-vs-the-followers-of-christ-part-2/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29464,
+      "path": "/sermons/the-apostle-nathaniel-from-prejudice-to-passsionate/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29457,
+      "path": "/sermons/the-apostle-paul-from-sinner-to-saint/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29465,
+      "path": "/sermons/the-apostle-philip/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28648,
+      "path": "/sermons/the-appropriate-response-to-sin/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29507,
+      "path": "/sermons/the-authority-of-the-king-in-his-command/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29505,
+      "path": "/sermons/the-authority-of-the-king-over-diseases/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29515,
+      "path": "/sermons/the-authority-of-the-king/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28979,
+      "path": "/sermons/the-beginning-of-the-end/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29667,
+      "path": "/sermons/the-benefits-and-the-blessings-of-the-lord/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29074,
+      "path": "/sermons/the-best-christmas-present/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30116,
+      "path": "/sermons/the-blessed-life/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29616,
+      "path": "/sermons/the-bookend-of-a-joyful-healthy-church/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28652,
+      "path": "/sermons/the-bride-and-the-gospel-living-life-part-2/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28897,
+      "path": "/sermons/the-bride-and-the-gospel-living-life/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28456,
+      "path": "/sermons/the-burial-of-the-son-of-god/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29373,
+      "path": "/sermons/the-call-to-serve-part-2/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29374,
+      "path": "/sermons/the-call-to-serve/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29187,
+      "path": "/sermons/the-centrality-of-the-cross-2/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28641,
+      "path": "/sermons/the-centrality-of-the-cross/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29790,
+      "path": "/sermons/the-certainty-of-christ-and-the-gospel/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28451,
+      "path": "/sermons/the-characteristics-of-true-love/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29567,
+      "path": "/sermons/the-christ-centered-child/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29566,
+      "path": "/sermons/the-christ-centered-husband/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29569,
+      "path": "/sermons/the-christ-centered-parents/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29558,
+      "path": "/sermons/the-christ-centered-wife/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30107,
+      "path": "/sermons/the-christ-centred-husband/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30097,
+      "path": "/sermons/the-christ-centred-wife/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 27941,
+      "path": "/sermons/the-christian-hope/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29222,
+      "path": "/sermons/the-church-united/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29513,
+      "path": "/sermons/the-coming-king/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30021,
+      "path": "/sermons/the-commissioning-of-the-son-of-god/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29226,
+      "path": "/sermons/the-compassion-of-the-christ/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 27783,
+      "path": "/sermons/the-compassionate-christian/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29385,
+      "path": "/sermons/the-compassionate-saviour/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 27940,
+      "path": "/sermons/the-consuming-jealousy-of-god/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29509,
+      "path": "/sermons/the-coronation-of-the-king/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30033,
+      "path": "/sermons/the-cost-of-being-a-disciple/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29976,
+      "path": "/sermons/the-costly-redemption-that-leads-to-holiness/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29088,
+      "path": "/sermons/the-costly-rewards/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29008,
+      "path": "/sermons/the-damnable-sin-of-hypocrisy/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28983,
+      "path": "/sermons/the-danger-of-the-sin-of-gossip-part-1/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28981,
+      "path": "/sermons/the-danger-of-the-sin-of-gossip-part-2/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29480,
+      "path": "/sermons/the-dangers-of-self-righteousness/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30068,
+      "path": "/sermons/the-deceptive-dangers-of-gossip/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28650,
+      "path": "/sermons/the-denial-of-the-ages/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29488,
+      "path": "/sermons/the-desire-of-priority-of-the-king/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29065,
+      "path": "/sermons/the-destructive-sin-of-gossip/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30066,
+      "path": "/sermons/the-destructiveness-of-gossip/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29375,
+      "path": "/sermons/the-devastating-sin-of-unbelief/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28107,
+      "path": "/sermons/the-effect-of-the-gospel-truth/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 27781,
+      "path": "/sermons/the-emptiness-of-human-wisdom/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29086,
+      "path": "/sermons/the-eternal-paradox-first-or-last/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29185,
+      "path": "/sermons/the-exclusivity-of-christ/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29048,
+      "path": "/sermons/the-faithfulness-of-god/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30022,
+      "path": "/sermons/the-family-tree-of-salvation/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28096,
+      "path": "/sermons/the-father-who-qualifies-the-unqualified/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29427,
+      "path": "/sermons/the-final-warning/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29046,
+      "path": "/sermons/the-final-words-of-a-dying-man/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28903,
+      "path": "/sermons/the-first-communion/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30064,
+      "path": "/sermons/the-fools-gold/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29154,
+      "path": "/sermons/the-fruits-of-pride/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29410,
+      "path": "/sermons/the-fulfilment-of-the-final-warnings/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28103,
+      "path": "/sermons/the-glory-of-the-god-man/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29211,
+      "path": "/sermons/the-goodness-of-god/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29801,
+      "path": "/sermons/the-grace-glory-and-grandeur-of-the-king/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28977,
+      "path": "/sermons/the-great-deception/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28968,
+      "path": "/sermons/the-great-persecution-part-2/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28970,
+      "path": "/sermons/the-great-persecution/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29078,
+      "path": "/sermons/the-greatest-person/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29796,
+      "path": "/sermons/the-greatness-of-john-the-baptist/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28101,
+      "path": "/sermons/the-growing-christian-part-1/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28097,
+      "path": "/sermons/the-growing-christian-part-2/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29090,
+      "path": "/sermons/the-hand-of-the-almighty-and-the-arrows-of-the-wicked-one/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29334,
+      "path": "/sermons/the-heart-of-externalism/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29158,
+      "path": "/sermons/the-heart-of-pride/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29044,
+      "path": "/sermons/the-holiness-of-god/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28339,
+      "path": "/sermons/the-hope-of-the-gospel-truth-2/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28080,
+      "path": "/sermons/the-hope-of-the-gospel-truth/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30108,
+      "path": "/sermons/the-hot-jealousy-of-god/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29060,
+      "path": "/sermons/the-immutability-of-god/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29050,
+      "path": "/sermons/the-jealousy-of-god/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28340,
+      "path": "/sermons/the-joy-of-a-christian-life/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29043,
+      "path": "/sermons/the-king-and-his-kingdom-will-stand/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29483,
+      "path": "/sermons/the-kings-authority-to-forgive-sins/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28344,
+      "path": "/sermons/the-life-of-the-apostle-paul/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29212,
+      "path": "/sermons/the-local-church-and-its-privileges/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29369,
+      "path": "/sermons/the-love-god-hates/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30070,
+      "path": "/sermons/the-love-that-god-hates/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28102,
+      "path": "/sermons/the-love-within-the-gospel-truth/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28085,
+      "path": "/sermons/the-loving-redeemer/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29822,
+      "path": "/sermons/the-manifold-mercies-of-god/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29399,
+      "path": "/sermons/the-meaning-of-easter/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29511,
+      "path": "/sermons/the-messenger-of-the-king/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30012,
+      "path": "/sermons/the-mighty-farmer-of-salvation/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 27939,
+      "path": "/sermons/the-mystery-of-christ-in-us/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29189,
+      "path": "/sermons/the-one-million-dollar-question/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29080,
+      "path": "/sermons/the-overcomers/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 27780,
+      "path": "/sermons/the-peace-making-christian/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29085,
+      "path": "/sermons/the-perseverance-of-a-saint/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28348,
+      "path": "/sermons/the-persistent-servant/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29006,
+      "path": "/sermons/the-pleasures-of-the-resurrection/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29061,
+      "path": "/sermons/the-power-of-prayer/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29506,
+      "path": "/sermons/the-power-of-the-king/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30062,
+      "path": "/sermons/the-precious-gospel/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29785,
+      "path": "/sermons/the-pricelessness-of-christ-centred-unity/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29542,
+      "path": "/sermons/the-primary-purpose-of-the-church/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29053,
+      "path": "/sermons/the-progression-and-necessity-of-true-confession/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28443,
+      "path": "/sermons/the-proof-of-the-resurrection/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30081,
+      "path": "/sermons/the-purposeful-christ/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28911,
+      "path": "/sermons/the-real-christmas-gift/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29479,
+      "path": "/sermons/the-recieved-and-the-rejected/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28083,
+      "path": "/sermons/the-reconciled-enemy/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29368,
+      "path": "/sermons/the-rest-that-god-commands/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28346,
+      "path": "/sermons/the-resume-of-a-humble-servant/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30061,
+      "path": "/sermons/the-sacrificial-cost-of-making-disciples/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29666,
+      "path": "/sermons/the-salvation-of-the-world/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29380,
+      "path": "/sermons/the-saviour-who-cares/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28964,
+      "path": "/sermons/the-second-coming-of-christ/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29560,
+      "path": "/sermons/the-secret-to-christian-contentment/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30121,
+      "path": "/sermons/the-secret-to-the-greatest-success/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29058,
+      "path": "/sermons/the-self-sufficiency-of-god/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29332,
+      "path": "/sermons/the-shocking-truth-of-the-heart/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29734,
+      "path": "/sermons/the-sign-of-christmas/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28461,
+      "path": "/sermons/the-simplicity-of-the-gospel/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29336,
+      "path": "/sermons/the-sin-of-externalism/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29054,
+      "path": "/sermons/the-sovereignty-of-god/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30077,
+      "path": "/sermons/the-supreme-god/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30098,
+      "path": "/sermons/the-surpassing-worth-of-christ/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28086,
+      "path": "/sermons/the-sustaining-creator/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28942,
+      "path": "/sermons/the-test-of-two-wills/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29147,
+      "path": "/sermons/the-torment-of-hell/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29052,
+      "path": "/sermons/the-transcendence-and-immanence-of-god/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30025,
+      "path": "/sermons/the-true-role-of-a-biblical-husband/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30023,
+      "path": "/sermons/the-true-role-of-a-biblical-wife/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29474,
+      "path": "/sermons/the-ugliness-of-legalism-part-2/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29476,
+      "path": "/sermons/the-ugliness-of-legalism/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28084,
+      "path": "/sermons/the-ultimate-reconciler/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29468,
+      "path": "/sermons/the-useless-made-useful-in-the-hands-of-the-master/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29977,
+      "path": "/sermons/the-word-of-god-for-life/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28439,
+      "path": "/sermons/the-work-of-sanctification-and-its-purposes/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28454,
+      "path": "/sermons/the-work-of-sanctification/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29056,
+      "path": "/sermons/the-wrath-of-god-2/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28075,
+      "path": "/sermons/the-wrath-of-god/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28963,
+      "path": "/sermons/this-generation/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29459,
+      "path": "/sermons/thomas-the-brave/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29084,
+      "path": "/sermons/three-steps-of-biblical-faith/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29339,
+      "path": "/sermons/three-steps-to-healthy-christian-home/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29146,
+      "path": "/sermons/time-to-pray/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29152,
+      "path": "/sermons/together-for-christ/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28076,
+      "path": "/sermons/transcendence-and-immanence/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29216,
+      "path": "/sermons/transforming-glory-corinthians/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29036,
+      "path": "/sermons/trials-are-good/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28104,
+      "path": "/sermons/truly-a-christian/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30124,
+      "path": "/sermons/trusting-god-in-afflictions/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29371,
+      "path": "/sermons/two-roads-one-choice/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29473,
+      "path": "/sermons/two-roads-two-people-one-god-part-1/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29467,
+      "path": "/sermons/two-roads-two-people-one-god-part-2/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29617,
+      "path": "/sermons/tychicus-the-beloved-servant/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29032,
+      "path": "/sermons/use-your-spiritual-gifts-part-2/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29034,
+      "path": "/sermons/use-your-spiritual-gifts/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29534,
+      "path": "/sermons/using-your-spiritual-gifts-is-not-an-option/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28973,
+      "path": "/sermons/wars-and-rumors-of-wars/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28100,
+      "path": "/sermons/we-need-to-run-to-jesus/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 27938,
+      "path": "/sermons/we-proclaim-him/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28939,
+      "path": "/sermons/we-will-still-praise-him/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30125,
+      "path": "/sermons/weak-men-in-the-mighty-hands-of-christ/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29175,
+      "path": "/sermons/what-god-is-this/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29076,
+      "path": "/sermons/what-is-genuine-faith/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "unresolved"
+    },
+    {
+      "sourceId": 27765,
+      "path": "/sermons/what-is-legalism/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28353,
+      "path": "/sermons/what-is-the-lords-supper-all-about/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28647,
+      "path": "/sermons/what-is-truth/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29408,
+      "path": "/sermons/what-is-your-primary-purpose-in-life-part-1/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30094,
+      "path": "/sermons/what-is-your-purpose/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28640,
+      "path": "/sermons/what-man-despises-god-honours/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29984,
+      "path": "/sermons/what-true-repentance-is-no/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29908,
+      "path": "/sermons/what-would-simeon-do/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29407,
+      "path": "/sermons/whats-up-with-heavenly-rewards/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29660,
+      "path": "/sermons/when-christ-becomes-your-source-of-joy/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29458,
+      "path": "/sermons/when-grace-met-little-johnny/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29800,
+      "path": "/sermons/when-unbelief-collides-with-god/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 30119,
+      "path": "/sermons/who-rules-sabbath/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29421,
+      "path": "/sermons/whoever-thirsts-come/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29064,
+      "path": "/sermons/why-did-jesus-curse-the-fig-tree/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 27755,
+      "path": "/sermons/why-seek-heaven/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29424,
+      "path": "/sermons/x-ray-of-the-heart-pt-2/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 28975,
+      "path": "/sermons/yahweh-the-strength-of-the-pilgrim/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29172,
+      "path": "/sermons/yes-he-can/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    },
+    {
+      "sourceId": 29540,
+      "path": "/sermons/your-calling-to-radical-thinking/",
+      "ledgerPresent": true,
+      "sourceIdentityMatches": true,
+      "candidateStatus": "200",
+      "disposition": "preserved"
+    }
+  ],
+  "limits": [
+    "Known captured identities do not prove complete current stored publication inventory.",
+    "Source-backed public content does not approve optional new enrichment."
+  ]
+}

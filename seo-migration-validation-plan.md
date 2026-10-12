@@ -263,3 +263,64 @@ checks agree on identities, dispositions, counts, hashes and unavailable metrics
 Failed harness attempts (missing source witnesses, relative-path portability,
 Windows output path length and an export wait timeout) remain separately retained.
 No failed or missing requirement is converted into launch acceptance.
+
+
+## D-182 final available verification — 12 October 2026 Sydney
+
+This checkpoint supersedes earlier implementation/gate counts without deleting their
+historical findings. Application `6a654e18e62d6823e21e33753a6f30859e5376c7` has frozen code
+SHA-256 `e9789e586edfeb16303c0b8f240e90915b54bd493f8fb30ddbae4686d9bbfff2`.
+The independently computed production-policy code/database label matched actual
+HTTP: `c2f72bfd1ab685c6775daa628d097416425b995ec16ae0d98c5ef90c00449a7b`.
+The complete frozen 21,134-URL comparison is in progress; no parity pass is claimed.
+All 15,252 original URL hashes are retained.
+
+Executed final gates: `npm test` 1,274 pass/145 PostgreSQL-gated skips;
+`npm run test:postgres` 1,419 pass across 153 files, zero skips and exact disposable
+target cleanup; `npm run check` 647 files, zero errors/warnings, seven hints;
+`npm run build` 45 static pages and `npm run staging:bundle` pass. Anonymous
+importer dry run retains three included/two excluded/zero rejected, offline audit
+zero cached known vulnerabilities, and 115 offline Python SEO checks passed on
+unchanged Python code. Final outgoing 405-file scan found zero secrets/private
+bodies/proprietary material; designated dataset scope remained unchanged.
+
+Actual local source sermon/page/event CMS body and SEO save, draft isolation, reload,
+publish and exact audited restoration passed, three types/zero errors. No private
+editorial draft, native approval or production publication was manufactured. Final
+browser structural checks passed 90 cases across 15 paths, 1440/390/320 widths and
+JavaScript on/off, with no errors/overflow/external requests. All original 975
+failed internal targets were fetched directly: 552 final 200, 423 final 404 and zero
+redirect issues; status success alone is not content equivalence.
+
+The exact authorized local recovery target restored all 65 table hashes and schema
+objects, 2,221 files, 1,946 byte/MIME/length-checked resource routes and eight HTTP
+checks. All four restored reader connections were verified read-only; outbound
+integrations were disabled and the created target removed by OID guard. WordPress
+and production/staging role/ACL recovery remain unproven.
+
+Profiling fixed repeated full-tree visitor presentation scans and redundant source
+payload/non-sermon copies, preserving schema/hash checks. The full dataset starts
+under the unchanged 384 MiB heap. Earlier OOMs, duplicate-private-test discovery,
+concurrent timeouts and the corrected anonymous idempotent-concurrency assertion
+remain recorded separately. No production service/review decision was weakened.
+Cold controlled lab LCP outliers and two invalid zero observations remain failed/
+unaccepted; field INP/CWV and comparable live-source measurements are unavailable.
+
+Final staging verification refused pinned DNS drift before mutation. Current normal
+GitHub operations could not connect. Historical F043 staging proof cannot substitute
+for final-candidate deployment. Source/measurement/account/WordPress recovery gaps
+and unexplained per-URL differences continue to block launch. Production traffic,
+DNS and WordPress have not changed. Final ledgers/counts are recorded separately
+after the complete comparison and safe-export integrity checks finish.
+
+
+Final D-182 evidence completed: 21,134/21,134 rows, 22,082 requests, 2,984 sitemap
+URLs and 10,592 internal targets; source hashes verified before/after/per read.
+Reviewed outcomes 3,729 preserved/2,817 redirected/389 pre-existing source404
+removals/14,199 unresolved. Complete original cohort accounting, both ledgers and
+the12-part acceptance report are published in `docs`; all original15,252 URL hashes
+remain. All457 known original sermon identities return200; four metadata-only
+outcomes remain unresolved. Parity failed and no cutover is authorized. Final
+421-file documentation privacy scan passed zero findings; explanatory additions
+are rescanned before the safe Git commit. External staging/Git/account/source/
+WordPress restoration/performance gates remain unresolved.

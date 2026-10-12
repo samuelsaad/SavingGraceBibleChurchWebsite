@@ -1,0 +1,50 @@
+{
+  "capturedResponseRecords": 14228,
+  "sourceStatusCounts": {
+    "200": 10083,
+    "404": 389,
+    "301": 3423,
+    "429": 276,
+    "302": 57
+  },
+  "sourceCoverageComplete": false,
+  "sourceQueueComplete": true,
+  "newObservedNotRequested": 5882,
+  "importedRoutesByKind": {
+    "page": 33,
+    "archive": 2096,
+    "post": 3,
+    "asset": 1946,
+    "event": 1213,
+    "sermon": 457
+  },
+  "routes": 5748,
+  "sermons": 457,
+  "resourceObservations": 2488,
+  "certifiedFiles": 25292,
+  "sourceParsedRecords": 14228,
+  "exactPreviouslyParsedReused": 11225,
+  "newlyIndependentlyParsed": 3003,
+  "bundleFileSha256": "cad131cdea84e514135c141a450639114b0ebef5ef7fd29ae965c2bdb48528ce",
+  "bundleSemanticSha256": "202cad2138c505a61150e3ccac143e98c08a9e9b306bdf91c6fc1178dd6b2b24",
+  "distinctNonNullSourceIdsByKind": {
+    "archive": 19,
+    "asset": 256,
+    "event": 1213,
+    "page": 30,
+    "post": 3,
+    "sermon": 457
+  },
+  "nullSourceIdRouteCountsByKind": {
+    "archive": 2047,
+    "asset": 1690,
+    "event": 0,
+    "page": 0,
+    "post": 0,
+    "sermon": 0
+  },
+  "limits": [
+    "Multiple routes may represent one source identity; dates/archives and aliases are not counted as new authored records.",
+    "Sermon sitemap/public captures prove the known 457, not authoritative WordPress completeness."
+  ]
+}

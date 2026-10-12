@@ -1,0 +1,19 @@
+{
+  "originalRows": 15252,
+  "originalRowsPresentInFinalSourceUnion": 15252,
+  "finalObservedUnionUrls": 21134,
+  "newUnionUrls": 5882,
+  "coverageComplete": false,
+  "format": "sgbc-seo-final-source-union-v1",
+  "normalizedSourceLedgerSha256": "e2d764ce467651cadfe88c0f12cead17066b43171fe1beb5612d42a18200cae1",
+  "resourceManifestSha256": "fea08c9caaad83bd0ba01149fe86492a5610b0e0e1f54b60dcb56f367db37ebe",
+  "fixedQueueOutcomes": 6852,
+  "newObservedRequested": 0,
+  "capturedResponseRecords": 14228,
+  "closedQueueAt": "2026-10-11T11:41:46.912378Z",
+  "limits": [
+    "Original rows retained; migration dispositions still require final candidate HTTP comparison.",
+    "The finite queue did not recursively request new observations.",
+    "Authoritative WordPress stored inventory remains unavailable."
+  ]
+}

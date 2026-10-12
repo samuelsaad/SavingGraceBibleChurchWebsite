@@ -90,3 +90,59 @@ LCP was 3368/2396/5308 ms, with CLS 0.000350/0.003235/0. These SSH/bulk-load lab
 results are not comparable field measurements; some deployed cases exceed the
 2.5-second LCP target. INP and production real-user Core Web Vitals remain missing.
 The rendering correction changes only canonical download-button destinations.
+
+
+## D-182 final dataset and failed controlled observations
+
+Final application `6a654e18e62d6823e21e33753a6f30859e5376c7` retains the selected
+design. CPU profiling identified presentation detection walking the entire
+immutable CMS/source snapshot on every visitor response (54% of sampled frames).
+A WeakMap caches only that snapshot's result; editable live documents still scan
+every time. Fifteen diagnostic responses retained statuses and byte counts, with
+median handler time changing 709 to 348 ms under different concurrent loads. This
+is diagnostic evidence, not a controlled field-speed claim or exact HTML identity.
+
+The actual 85,438,888-byte source bundle previously exceeded the 384 MiB heap at
+startup. Source reads retained wire payloads alongside decoded data, and sermon
+repositories cloned every archive/resource projection before filtering. Sequential
+validation/release of temporary values fixes that redundant retention while keeping
+all schema and exact version-hash checks. The final frozen full dataset starts
+under the unchanged limit, and fresh-process resource verification passes. Actual
+sealed staging capacity still requires final deployment; local native/CMS state
+and staging state differ.
+
+The final 90-case structural browser matrix passed at 1440/390/320 pixels with
+JavaScript on/off and no errors/overflow/external requests. Under concurrent
+acceptance work max LCP was 22,516 ms and CLS 0.016700240483539092. These timings
+do not establish performance acceptance. A separate quiet 24-trial mobile lab
+used 4x CPU slowdown, 150 ms latency and 200,000/75,000 bytes per second down/up.
+Cold home/archive LCP remained 23–27 seconds; two zero observer observations are
+invalid/unaccepted. Routing disables HTTP caching, so labels called warm do not
+prove actual warm-cache conditions. All observations remain recorded.
+
+The focused cold resource diagnostic measured home/archive LCP at 4,524/2,660 ms
+while the full comparison was running. The home hero was 187,784 bytes, fonts
+58,716/65,932 bytes and logo 23,240 bytes, with resource durations around 0.7–1.4
+seconds. Thus an oversized image explanation was not reproduced. The quiet home
+HTML was 101,986 bytes and archive 217,515 bytes, TTFB generally 225–476 ms; cold
+DOMContentLoaded also delayed around 25–27 seconds despite measured long-task
+totals below 1.4 seconds on those cases. This narrows the observation but does not
+prove a cause or justify discarding it. Final controlled lab details are in
+`seo-performance-final.summary.json`.
+
+Historical small source/candidate SSR experiments above are not a comparable
+measurement of this final release. Field INP/CWV, representative 75th-percentile
+data and final deployed performance remain unavailable. LCP acceptance has failed;
+CLS lab results alone cannot satisfy the performance gate. No ranking guarantee,
+video indexing certification or field-performance pass is claimed.
+
+
+A bounded cold-home CDP trace on the same final runtime measured LCP 3,612 ms,
+no blocked or failed resource requests and about 1.1 seconds of style/layout work
+with a largest lifecycle task around 702 ms. It ran during full comparison at the
+same 4x CPU/150 ms/200,000-byte downlink settings; trace categories overlap and
+cannot be added. It did not reproduce the 25-second delay, still failed the
+2.5-second target and does not justify discarding earlier cold outliers. Detailed
+trace stays private; safe aggregates are in the final performance JSON. The exact
+cause of the inconsistent cold delays and comparable deployed/field acceptance
+remain unproven.

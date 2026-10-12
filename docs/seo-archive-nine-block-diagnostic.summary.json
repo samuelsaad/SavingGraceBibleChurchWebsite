@@ -1,0 +1,97 @@
+{
+  "sourceUrlSha256": "2357fec510fe030a9a24b6ef9eb7aa3ba1807d2e46d56687c0847dd44912debc",
+  "rows": [
+    {
+      "hash": "d8d16b6208b83bef95a1318c474d69dd1c4e198670ff9dc70456545f09e332ed",
+      "words": 2,
+      "knownSermonTitleSourceId": null,
+      "exactTextInCandidateMain": true,
+      "labelValueInCandidateMain": true,
+      "exactHeadingPresent": true,
+      "sourceTag": "h1"
+    },
+    {
+      "hash": "2dbf1f2351119eeec6b94ca84988da02baf62981172ce14648a15287c226db2b",
+      "words": 2,
+      "knownSermonTitleSourceId": null,
+      "exactTextInCandidateMain": false,
+      "labelValueInCandidateMain": true,
+      "exactHeadingPresent": false,
+      "sourceTag": "p"
+    },
+    {
+      "hash": "d8d16b6208b83bef95a1318c474d69dd1c4e198670ff9dc70456545f09e332ed",
+      "words": 2,
+      "knownSermonTitleSourceId": null,
+      "exactTextInCandidateMain": true,
+      "labelValueInCandidateMain": true,
+      "exactHeadingPresent": true,
+      "sourceTag": "p"
+    },
+    {
+      "hash": "97f1a77e73e378316789e006746d0460632db42ebefc742db8758181f9e647a8",
+      "words": 19,
+      "knownSermonTitleSourceId": null,
+      "exactTextInCandidateMain": false,
+      "labelValueInCandidateMain": false,
+      "exactHeadingPresent": false,
+      "sourceTag": "li"
+    },
+    {
+      "hash": "02b5cdb05b274cc11debe793e4ee3250c437c5dd2921abcd1d786d901a1423a4",
+      "words": 3,
+      "knownSermonTitleSourceId": null,
+      "exactTextInCandidateMain": false,
+      "labelValueInCandidateMain": false,
+      "exactHeadingPresent": false,
+      "sourceTag": "p"
+    },
+    {
+      "hash": "2c90b4ddad402eb362aebee2c4dea32f9e0f4efe570fe5f09a359b95554f4c71",
+      "words": 2,
+      "knownSermonTitleSourceId": null,
+      "exactTextInCandidateMain": false,
+      "labelValueInCandidateMain": true,
+      "exactHeadingPresent": false,
+      "sourceTag": "p"
+    },
+    {
+      "hash": "aaa06600df0092557f9cef57335c488d3456e26314c47f18b393f8c4cc8fb1b6",
+      "words": 3,
+      "knownSermonTitleSourceId": null,
+      "exactTextInCandidateMain": false,
+      "labelValueInCandidateMain": true,
+      "exactHeadingPresent": false,
+      "sourceTag": "p"
+    },
+    {
+      "hash": "d3a094eeea9de5b5a1f7dbab5b212c04112174a569f0427a8b6779cd8b39767e",
+      "words": 3,
+      "knownSermonTitleSourceId": null,
+      "exactTextInCandidateMain": false,
+      "labelValueInCandidateMain": false,
+      "exactHeadingPresent": false,
+      "sourceTag": "p"
+    },
+    {
+      "hash": "d8d16b6208b83bef95a1318c474d69dd1c4e198670ff9dc70456545f09e332ed",
+      "words": 2,
+      "knownSermonTitleSourceId": null,
+      "exactTextInCandidateMain": true,
+      "labelValueInCandidateMain": true,
+      "exactHeadingPresent": true,
+      "sourceTag": "p"
+    },
+    {
+      "hash": "d9be6f4cfaabfa7fa5a1bc1059c301a787201ededc33e18d16a2767bf921f7ea",
+      "words": 2,
+      "knownSermonTitleSourceId": null,
+      "exactTextInCandidateMain": false,
+      "labelValueInCandidateMain": false,
+      "exactHeadingPresent": false,
+      "sourceTag": "p"
+    }
+  ],
+  "candidateStatus": 200,
+  "findingsCleared": false
+}

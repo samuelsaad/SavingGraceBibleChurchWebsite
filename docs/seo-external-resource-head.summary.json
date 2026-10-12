@@ -1,0 +1,126 @@
+{
+  "capturedAt": "2026-10-11T18:16:23.032101+00:00",
+  "references": 12,
+  "requests": 12,
+  "bodyBytesRead": 0,
+  "recordingBodyRequests": 0,
+  "frozenComparisonInputsChanged": false,
+  "rows": [
+    {
+      "sourceUrlSha256": "5a09b6a0b5ff0368ce87c67016e81c56eda092a4e504adb516ed1d3347ed2815",
+      "host": "church-event.vamtam.com",
+      "method": "HEAD",
+      "bodyBytesRead": 0,
+      "status": 200,
+      "contentType": "image/jpeg",
+      "error": null,
+      "redirectObserved": false
+    },
+    {
+      "sourceUrlSha256": "64b89abd5997591fd4e19f8ae1a37b11d2b44f0ff6e1dd4d0cf38989c490c8cb",
+      "host": "church-event.vamtam.com",
+      "method": "HEAD",
+      "bodyBytesRead": 0,
+      "status": 200,
+      "contentType": "image/jpeg",
+      "error": null,
+      "redirectObserved": false
+    },
+    {
+      "sourceUrlSha256": "9d882f6996735df02683987b70d3bdbeb81430778ccdbf96aa0f9504e8e12d3b",
+      "host": "church-event.vamtam.com",
+      "method": "HEAD",
+      "bodyBytesRead": 0,
+      "status": 200,
+      "contentType": "image/jpeg",
+      "error": null,
+      "redirectObserved": false
+    },
+    {
+      "sourceUrlSha256": "1356ebe2d635e48a3c12fb6e024d39c8a8075da1bb9f5c2434e44cb936ed316c",
+      "host": "church-event.vamtam.com",
+      "method": "HEAD",
+      "bodyBytesRead": 0,
+      "status": 200,
+      "contentType": "image/jpeg",
+      "error": null,
+      "redirectObserved": false
+    },
+    {
+      "sourceUrlSha256": "ac426b0c02dcad7485e25e50308a45e474c34d9dd8c68438d5c1728cf1612064",
+      "host": "i0.wp.com",
+      "method": "HEAD",
+      "bodyBytesRead": 0,
+      "status": null,
+      "contentType": null,
+      "error": "network_response_unavailable"
+    },
+    {
+      "sourceUrlSha256": "92205ecd41b73f6bae973d35ab44671e7549289f803ce016590cb06f42ac9c89",
+      "host": "i0.wp.com",
+      "method": "HEAD",
+      "bodyBytesRead": 0,
+      "status": null,
+      "contentType": null,
+      "error": "network_response_unavailable"
+    },
+    {
+      "sourceUrlSha256": "e3abd196dab65b0638380d43f94e676ae4414032949182377184a526f58f9f8a",
+      "host": "i0.wp.com",
+      "method": "HEAD",
+      "bodyBytesRead": 0,
+      "status": null,
+      "contentType": null,
+      "error": "network_response_unavailable"
+    },
+    {
+      "sourceUrlSha256": "d1abff37f6a65f19c2b1ab5290396930d3d532a08d7bd271904e4ddf8c9f6e8d",
+      "host": "i0.wp.com",
+      "method": "HEAD",
+      "bodyBytesRead": 0,
+      "status": null,
+      "contentType": null,
+      "error": "network_response_unavailable"
+    },
+    {
+      "sourceUrlSha256": "3be43b0f76fcb9c27f212a3622ab63961984b5952412c23eaf2779d9cc6b351b",
+      "host": "i0.wp.com",
+      "method": "HEAD",
+      "bodyBytesRead": 0,
+      "status": null,
+      "contentType": null,
+      "error": "network_response_unavailable"
+    },
+    {
+      "sourceUrlSha256": "a756a4a2438937f42abb917c46d684527e588b5c1788de4cac1058b6446804aa",
+      "host": "stage.savinggrace.org.au",
+      "method": "HEAD",
+      "bodyBytesRead": 0,
+      "status": null,
+      "contentType": null,
+      "error": "network_response_unavailable"
+    },
+    {
+      "sourceUrlSha256": "03735a3d151bac38a4f6f1858e17a31fa66f063f978e9dff3ba3d850ffb59d78",
+      "host": "stage.savinggrace.org.au",
+      "method": "HEAD",
+      "bodyBytesRead": 0,
+      "status": null,
+      "contentType": null,
+      "error": "network_response_unavailable"
+    },
+    {
+      "sourceUrlSha256": "bd28e486f113a1ded4a8a289343b78d700b8c86dcf4894f2e53f6075a71d5f94",
+      "host": "stage.savinggrace.org.au",
+      "method": "HEAD",
+      "bodyBytesRead": 0,
+      "status": null,
+      "contentType": null,
+      "error": "network_response_unavailable"
+    }
+  ],
+  "limits": [
+    "HEAD status does not prove body identity or acceptable replacement.",
+    "Network failures are not evidence that the original resource is gone."
+  ]
+}

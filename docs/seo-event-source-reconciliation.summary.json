@@ -1,0 +1,789 @@
+{
+  "publicRestCaptureEnd": "2026-10-10T22:39:36.486243+00:00",
+  "restPublicEventIdentities": 1084,
+  "capturedHtmlEventIdentities": 1213,
+  "intersection": 1084,
+  "restEventsWithoutHtmlProjection": [],
+  "htmlEventIdsNotInCurrentRest": 129,
+  "extraHtmlDateSuffixRoutes": 125,
+  "extraHtmlEvidence": [
+    {
+      "sourceId": 10001344,
+      "path": "/event/mens-leadership-study-2-2/2026-06-06/",
+      "capturedAt": "2026-10-09T11:58:21.828Z",
+      "responseSha256": "d53ad729cf85f7309a711247b2ec23fa287dfd55e973ebc34ad3b0b0039733a2"
+    },
+    {
+      "sourceId": 10001345,
+      "path": "/event/mens-leadership-study-2-2/2026-07-04/",
+      "capturedAt": "2026-10-09T12:12:43.642Z",
+      "responseSha256": "92296a51c0059e42b4d5ab0b10ca49f301230c482a74e40ad3c2ec0605163075"
+    },
+    {
+      "sourceId": 10001346,
+      "path": "/event/mens-leadership-study-2-2/2026-08-01/",
+      "capturedAt": "2026-10-09T12:05:33.116Z",
+      "responseSha256": "953bbffa6411c0c4a3625a4b76a6cf4d9a44d167869370255936bb3c8f5a07a4"
+    },
+    {
+      "sourceId": 10001347,
+      "path": "/event/mens-leadership-study-2-2/2026-09-05/",
+      "capturedAt": "2026-10-09T14:09:48.375Z",
+      "responseSha256": "951e7a1311cb226f9df3b69ace31e001610c3af39080297af722428326fc96bb"
+    },
+    {
+      "sourceId": 10001348,
+      "path": "/event/mens-leadership-study-2-2/2026-10-03/",
+      "capturedAt": "2026-10-09T12:06:33.319Z",
+      "responseSha256": "11de4fadf782206e2b10d2611cf9ff4cd1d48b9a759aa370efe056db9da4b418"
+    },
+    {
+      "sourceId": 10003923,
+      "path": "/event/mens-teaching-and-preaching-study-2-2/2026-06-30/",
+      "capturedAt": "2026-10-09T11:58:20.730Z",
+      "responseSha256": "4b751ca4838c3c2dbfa54afa05386a9bd1e792b28c36fc97909f26306d2b9b62"
+    },
+    {
+      "sourceId": 10003925,
+      "path": "/event/mens-teaching-and-preaching-study-2-2/2026-07-14/",
+      "capturedAt": "2026-10-09T12:05:19.550Z",
+      "responseSha256": "548a0195bfec2fd1f439518a4df5eef58cfd53e3483ada9ddcf3f58fce90da9b"
+    },
+    {
+      "sourceId": 10003926,
+      "path": "/event/mens-teaching-and-preaching-study-2-2/2026-07-21/",
+      "capturedAt": "2026-10-11T00:32:06.946Z",
+      "responseSha256": "25d5d06fa64c770b9b4a8ac6ed681b5ed3df68737cbaea330df9f0d61137ad81"
+    },
+    {
+      "sourceId": 10003927,
+      "path": "/event/mens-teaching-and-preaching-study-2-2/2026-07-28/",
+      "capturedAt": "2026-10-09T12:13:56.576Z",
+      "responseSha256": "b2105aa132463eee6f55192b58a79a52aab09c845a6a1b0ff3fe228d6f3b9e9d"
+    },
+    {
+      "sourceId": 10003928,
+      "path": "/event/mens-teaching-and-preaching-study-2-2/2026-08-04/",
+      "capturedAt": "2026-10-09T12:06:07.043Z",
+      "responseSha256": "e11474231f6a507ea13adb2db5dd51eef680d0084dbe551fcb0b77b96376803a"
+    },
+    {
+      "sourceId": 10003929,
+      "path": "/event/mens-teaching-and-preaching-study-2-2/2026-08-11/",
+      "capturedAt": "2026-10-09T12:05:09.002Z",
+      "responseSha256": "a86cc5b7ba399a40380d0a5543e9c2d829451d6e5e055b9c2db1aceafe8abeff"
+    },
+    {
+      "sourceId": 10003930,
+      "path": "/event/mens-teaching-and-preaching-study-2-2/2026-08-18/",
+      "capturedAt": "2026-10-09T14:10:05.961Z",
+      "responseSha256": "cef823489968a191deef4d636c5ad231dde966a6be752873e91f80413f02d675"
+    },
+    {
+      "sourceId": 10003931,
+      "path": "/event/mens-teaching-and-preaching-study-2-2/2026-08-25/",
+      "capturedAt": "2026-10-11T00:32:10.688Z",
+      "responseSha256": "752167ab4c333cfd1d17009237cb80c8f51815bcffd90a22f0e11ad2cebae54a"
+    },
+    {
+      "sourceId": 10003932,
+      "path": "/event/mens-teaching-and-preaching-study-2-2/2026-09-01/",
+      "capturedAt": "2026-10-09T14:10:07.203Z",
+      "responseSha256": "a6d9e51c8df3e75745cfc0cc1057fc593ca3437d4c0af731398135bf2a7102de"
+    },
+    {
+      "sourceId": 10003933,
+      "path": "/event/mens-teaching-and-preaching-study-2-2/2026-09-08/",
+      "capturedAt": "2026-10-09T14:10:08.450Z",
+      "responseSha256": "176da17955ec18a4fca9ed0874f5c952a45c4b86e98add10f244caa5ee4ba346"
+    },
+    {
+      "sourceId": 10003934,
+      "path": "/event/mens-teaching-and-preaching-study-2-2/2026-09-15/",
+      "capturedAt": "2026-10-09T14:10:09.223Z",
+      "responseSha256": "8c3cb4cf5cdcdbe93bf6de39820c866943eeec06abc97386a8cc800de4c305a9"
+    },
+    {
+      "sourceId": 10003935,
+      "path": "/event/mens-teaching-and-preaching-study-2-2/2026-09-22/",
+      "capturedAt": "2026-10-09T14:10:10.468Z",
+      "responseSha256": "97c00c913a3be818a4c9b25e91fc24a9835c9104b85f13e2d8634b382599e7b5"
+    },
+    {
+      "sourceId": 10003936,
+      "path": "/event/mens-teaching-and-preaching-study-2-2/2026-09-29/",
+      "capturedAt": "2026-10-09T12:06:29.214Z",
+      "responseSha256": "c0a9a5a7417385a1c7fbecaea24cd3885b0c0588d5fe857097b30fb75cebbe60"
+    },
+    {
+      "sourceId": 10003937,
+      "path": "/event/mens-teaching-and-preaching-study-2-2/2026-10-06/",
+      "capturedAt": "2026-10-09T12:06:38.432Z",
+      "responseSha256": "c05b9f7fc84d8a87167aec654d8a5f6edf6f1c0bd9e98386637b588010fe1172"
+    },
+    {
+      "sourceId": 10003918,
+      "path": "/event/mens-teaching-and-preaching-study-2/2026-05-26/",
+      "capturedAt": "2026-10-09T11:58:24.718Z",
+      "responseSha256": "8e5a37277ad3b24925fcf734ef517fb32e7082d53f1cfce7b0640a41e7bc85e1"
+    },
+    {
+      "sourceId": 10003919,
+      "path": "/event/mens-teaching-and-preaching-study-2/2026-06-02/",
+      "capturedAt": "2026-10-09T12:03:01.748Z",
+      "responseSha256": "6b6802343a33f6805738f5d9e9c700634e0b3313c9a5255bdfd9f5cbafba7d6c"
+    },
+    {
+      "sourceId": 10003920,
+      "path": "/event/mens-teaching-and-preaching-study-2/2026-06-09/",
+      "capturedAt": "2026-10-09T12:05:34.250Z",
+      "responseSha256": "12595b8540d9e2b069b38a465493cc36908695bfce4b1d105a4ec77046b2ab9c"
+    },
+    {
+      "sourceId": 10003921,
+      "path": "/event/mens-teaching-and-preaching-study-2/2026-06-16/",
+      "capturedAt": "2026-10-09T12:14:33.632Z",
+      "responseSha256": "137f1cdb8f7f264cd9d7954ba005b7c67507fb4aaff8a6e94e8518e3d5a7e28a"
+    },
+    {
+      "sourceId": 10003922,
+      "path": "/event/mens-teaching-and-preaching-study-2/2026-06-23/",
+      "capturedAt": "2026-10-09T12:05:57.118Z",
+      "responseSha256": "d398e74742b89e54ff8b156b6217ee1540342878b20158281e617f95bf2c7561"
+    },
+    {
+      "sourceId": 10001794,
+      "path": "/event/mens-teaching-and-preaching-study/2024-06-18/",
+      "capturedAt": "2026-10-09T11:58:27.731Z",
+      "responseSha256": "e84c9bef2468ca6b0f70dc6644f893c491d564c839102d524719672525443bdc"
+    },
+    {
+      "sourceId": 10001795,
+      "path": "/event/mens-teaching-and-preaching-study/2024-06-22/",
+      "capturedAt": "2026-10-09T12:03:07.022Z",
+      "responseSha256": "4d9273062dd0774c1f9a967df8e4815c23b07760992650490331b8a52fa48bd6"
+    },
+    {
+      "sourceId": 10001796,
+      "path": "/event/mens-teaching-and-preaching-study/2024-06-25/",
+      "capturedAt": "2026-10-09T14:10:30.814Z",
+      "responseSha256": "503bdb1c148d1cd1cd38aeaf5cfb1532492d252b143911f5310a84faf07ebb1c"
+    },
+    {
+      "sourceId": 10001799,
+      "path": "/event/mens-teaching-and-preaching-study/2024-07-06/",
+      "capturedAt": "2026-10-09T14:10:32.186Z",
+      "responseSha256": "b785c0d8846169ef0a1ae775bcf117acb383e704ce13788c42df27acb00324fa"
+    },
+    {
+      "sourceId": 10001800,
+      "path": "/event/mens-teaching-and-preaching-study/2024-07-09/",
+      "capturedAt": "2026-10-09T12:06:13.143Z",
+      "responseSha256": "532b06c00c6a4bc9dd6e26165f5a70f889547007cdf81e53aac06286c1c15f2b"
+    },
+    {
+      "sourceId": 10001801,
+      "path": "/event/mens-teaching-and-preaching-study/2024-07-13/",
+      "capturedAt": "2026-10-09T12:06:12.212Z",
+      "responseSha256": "ae99048cdf897c954d22b2f841ce6ce43b0eee9c8dd013be59b8685fbfe544e1"
+    },
+    {
+      "sourceId": 10001184,
+      "path": "/event/mens-theological-study-2/2026-06-07/",
+      "capturedAt": "2026-10-09T11:58:22.759Z",
+      "responseSha256": "7e9404bc53b08c95e72962ab22a4e0cc3e6f96735d669125d7dd2ece66e9433c"
+    },
+    {
+      "sourceId": 10001185,
+      "path": "/event/mens-theological-study-2/2026-06-14/",
+      "capturedAt": "2026-10-09T14:10:36.366Z",
+      "responseSha256": "0b92a41eaa1ffd5a29982bac7312cba0b03ddf937e1b1c7f3cf7dc7fea0ced38"
+    },
+    {
+      "sourceId": 10001186,
+      "path": "/event/mens-theological-study-2/2026-06-21/",
+      "capturedAt": "2026-10-09T12:05:44.684Z",
+      "responseSha256": "b5883e6c988151ed3f2fa416ce7ef739188b5d184f5a27392ff570bc07ae7c83"
+    },
+    {
+      "sourceId": 10001187,
+      "path": "/event/mens-theological-study-2/2026-06-28/",
+      "capturedAt": "2026-10-09T12:05:11.930Z",
+      "responseSha256": "e30d85f9bd9290645fa946ced261db2e30f755126228c818fad94a7ab0f375eb"
+    },
+    {
+      "sourceId": 10001188,
+      "path": "/event/mens-theological-study-2/2026-07-05/",
+      "capturedAt": "2026-10-09T12:05:07.706Z",
+      "responseSha256": "6c1c8b4d20cea5e8fa20e2f85fccd816b00d8743e39094aa50d2a0a34a13edc2"
+    },
+    {
+      "sourceId": 10001189,
+      "path": "/event/mens-theological-study-2/2026-07-12/",
+      "capturedAt": "2026-10-09T12:13:24.627Z",
+      "responseSha256": "c6caa4e3e80b88a40c338e6972314de92e9e83f6e865d429261a2fc9da848273"
+    },
+    {
+      "sourceId": 10001190,
+      "path": "/event/mens-theological-study-2/2026-07-19/",
+      "capturedAt": "2026-10-09T12:13:25.734Z",
+      "responseSha256": "c4fc88974ca631b01561d68e148b9d21b854727fa5052651ad748058da78d799"
+    },
+    {
+      "sourceId": 10001192,
+      "path": "/event/mens-theological-study-2/2026-08-02/",
+      "capturedAt": "2026-10-09T12:05:32.227Z",
+      "responseSha256": "cf4e8ff6146e17cf04ea6a6530707c3d09e5dc374c9d483318e9b5f43d9d4686"
+    },
+    {
+      "sourceId": 10001193,
+      "path": "/event/mens-theological-study-2/2026-08-09/",
+      "capturedAt": "2026-10-09T14:10:37.305Z",
+      "responseSha256": "9d9a0e8816a91972ccd3569f613e56e3f979dccf1a4f010c26d64d7f3f3a6ce0"
+    },
+    {
+      "sourceId": 10001194,
+      "path": "/event/mens-theological-study-2/2026-08-16/",
+      "capturedAt": "2026-10-09T12:05:09.934Z",
+      "responseSha256": "4b1d498aaaa852bf2f752180abc870382d04646c471d2fe7ddf098287d95fcc5"
+    },
+    {
+      "sourceId": 10001197,
+      "path": "/event/mens-theological-study-2/2026-09-06/",
+      "capturedAt": "2026-10-09T12:05:54.218Z",
+      "responseSha256": "4ce085ac38cca269eee4eba96fb9e1dbfe9f7d420d733e2a65cbf397687c3a83"
+    },
+    {
+      "sourceId": 10001198,
+      "path": "/event/mens-theological-study-2/2026-09-13/",
+      "capturedAt": "2026-10-09T14:10:38.582Z",
+      "responseSha256": "3eba39e7578594a8bb9925c8aa02e643fbc84c03c294c58181304f9b7ae29ebd"
+    },
+    {
+      "sourceId": 10001199,
+      "path": "/event/mens-theological-study-2/2026-09-20/",
+      "capturedAt": "2026-10-09T14:10:39.248Z",
+      "responseSha256": "1ef63e6f197ab3c10cd22f16de727a826fd39e027ab921f2012e68fbef93fbbd"
+    },
+    {
+      "sourceId": 10001200,
+      "path": "/event/mens-theological-study-2/2026-09-27/",
+      "capturedAt": "2026-10-09T14:10:40.546Z",
+      "responseSha256": "37b37bca22fd001258b6c2f9adc9e31ca79a1cf81d9e405ebf5493b3efc8c786"
+    },
+    {
+      "sourceId": 10001201,
+      "path": "/event/mens-theological-study-2/2026-10-04/",
+      "capturedAt": "2026-10-09T12:06:35.247Z",
+      "responseSha256": "2816e2f76569298312e03875e0b32134f963abaa9e16e0b9610ab1d889e833ad"
+    },
+    {
+      "sourceId": 29099,
+      "path": "/event/music-team-meeting/",
+      "capturedAt": "2026-10-09T11:58:31.796Z",
+      "responseSha256": "ae85f249d48036b52dda85b15c637daa2eaf1b1cfdff96032f19df2618d07511"
+    },
+    {
+      "sourceId": 29101,
+      "path": "/event/sgbc-members-meeting/",
+      "capturedAt": "2026-10-09T11:58:30.774Z",
+      "responseSha256": "d5e8c281d58ebaf06f10bbafd00e427c363ee561e6994546900752ab5a04fe0a"
+    },
+    {
+      "sourceId": 29103,
+      "path": "/event/sgbc-picnic-rye/",
+      "capturedAt": "2026-10-09T11:58:29.848Z",
+      "responseSha256": "a958ee66edc310d7ea0b94602d2e041d297b2bf5b3ed72a73a56e38c0f31656f"
+    },
+    {
+      "sourceId": 30090,
+      "path": "/event/street-evangelism-outreach/",
+      "capturedAt": "2026-10-09T11:58:25.676Z",
+      "responseSha256": "8d7c612dbb3a2f280c73f67c70f57214d33f1955e78e165cb8bc3b8859bc968c"
+    },
+    {
+      "sourceId": 10000660,
+      "path": "/event/sunday-evening-service-2/2026-05-24/",
+      "capturedAt": "2026-10-09T11:58:26.711Z",
+      "responseSha256": "e4f626095d463b38b09c0d3794658f87279aa71d05d4d2f478370fdbac71593e"
+    },
+    {
+      "sourceId": 10000662,
+      "path": "/event/sunday-evening-service-2/2026-06-07/",
+      "capturedAt": "2026-10-09T12:02:55.032Z",
+      "responseSha256": "3e1c9147c4da9c6311d0a6bb452b04499ca3e24874e26d1b3ed9ffc8698639db"
+    },
+    {
+      "sourceId": 10000663,
+      "path": "/event/sunday-evening-service-2/2026-06-14/",
+      "capturedAt": "2026-10-09T14:11:06.294Z",
+      "responseSha256": "1c4f33594d627ff1efd46e7dc54183f48360e319174a1de25b0e02e561736908"
+    },
+    {
+      "sourceId": 10000664,
+      "path": "/event/sunday-evening-service-2/2026-06-21/",
+      "capturedAt": "2026-10-09T12:05:43.658Z",
+      "responseSha256": "4b3d93a18771bee9a0cef7cf7a69c4231529d25e235d15bfdda935cefba38d36"
+    },
+    {
+      "sourceId": 10000665,
+      "path": "/event/sunday-evening-service-2/2026-06-28/",
+      "capturedAt": "2026-10-09T12:02:47.672Z",
+      "responseSha256": "0c9b1e964c89f6e1817548c5763fca82f2e73f8276e4db023f40478b50cc10cb"
+    },
+    {
+      "sourceId": 10000666,
+      "path": "/event/sunday-evening-service-2/2026-07-05/",
+      "capturedAt": "2026-10-09T12:12:44.679Z",
+      "responseSha256": "403ce197cc29d63cf5d8a6fd5c9c824073ffcd1704b9b7b7679f5376b9ec140c"
+    },
+    {
+      "sourceId": 10000667,
+      "path": "/event/sunday-evening-service-2/2026-07-12/",
+      "capturedAt": "2026-10-09T12:05:17.463Z",
+      "responseSha256": "4ff468ba265068a6c0b0c147732a45aa2cb7d9df74172fe4675b77200841f97b"
+    },
+    {
+      "sourceId": 10000668,
+      "path": "/event/sunday-evening-service-2/2026-07-19/",
+      "capturedAt": "2026-10-09T14:11:07.656Z",
+      "responseSha256": "aee9ce12040f70824d83a66b21642d1d22e200a0b9ad0c11d448d380709eedd1"
+    },
+    {
+      "sourceId": 10000669,
+      "path": "/event/sunday-evening-service-2/2026-07-26/",
+      "capturedAt": "2026-10-09T14:11:08.408Z",
+      "responseSha256": "474c5573e62df56539411687898d3a6a26740adfca28269d5547a5d3781048bd"
+    },
+    {
+      "sourceId": 10000670,
+      "path": "/event/sunday-evening-service-2/2026-08-02/",
+      "capturedAt": "2026-10-09T12:06:07.981Z",
+      "responseSha256": "35ae1087e6023576b267ea5de0d29ee420aecad1fc48174f2e1110841ad27550"
+    },
+    {
+      "sourceId": 10000671,
+      "path": "/event/sunday-evening-service-2/2026-08-09/",
+      "capturedAt": "2026-10-09T12:12:45.667Z",
+      "responseSha256": "9c326947dd9f80cbc63a04f688812825fdc697d72842c1a5dda345f079491593"
+    },
+    {
+      "sourceId": 10000672,
+      "path": "/event/sunday-evening-service-2/2026-08-16/",
+      "capturedAt": "2026-10-09T12:12:46.718Z",
+      "responseSha256": "ae5b65cc898f22b3097914ba6b23c0725c67861a369e14b21fadfa5ca133cc27"
+    },
+    {
+      "sourceId": 10000675,
+      "path": "/event/sunday-evening-service-2/2026-09-06/",
+      "capturedAt": "2026-10-09T14:11:09.622Z",
+      "responseSha256": "7d607d0533b870e4cb5efd138b825c39b344922c5641827d091a7723e321a78c"
+    },
+    {
+      "sourceId": 10000676,
+      "path": "/event/sunday-evening-service-2/2026-09-13/",
+      "capturedAt": "2026-10-09T14:11:10.300Z",
+      "responseSha256": "9b3287292f7c96ae2fefe45076bfd25332a970a1f8197a526ceaf607930b1dc6"
+    },
+    {
+      "sourceId": 10000677,
+      "path": "/event/sunday-evening-service-2/2026-09-20/",
+      "capturedAt": "2026-10-09T14:11:11.559Z",
+      "responseSha256": "87baa41fbc5d65a892cf3429d33ffcc01bea887daab0d91159ff80544999e5ac"
+    },
+    {
+      "sourceId": 10000678,
+      "path": "/event/sunday-evening-service-2/2026-09-27/",
+      "capturedAt": "2026-10-09T14:11:12.766Z",
+      "responseSha256": "1da271f850b15c56c8d2189da1d932445ed3ee9af0798706bd5eab864f39a7ca"
+    },
+    {
+      "sourceId": 10000679,
+      "path": "/event/sunday-evening-service-2/2026-10-04/",
+      "capturedAt": "2026-10-09T12:06:36.236Z",
+      "responseSha256": "63c64d41f48c269e318a205d21b52d994b1480102be124a7bad292d4e277253f"
+    },
+    {
+      "sourceId": 10000531,
+      "path": "/event/sunday-evening-service/2023-12-03/",
+      "capturedAt": "2026-10-09T11:58:28.984Z",
+      "responseSha256": "a4a30cca1251f2bad80b1cd37853ad507ab84fdc4506fc6f47b75ef1e56d64e9"
+    },
+    {
+      "sourceId": 10000532,
+      "path": "/event/sunday-evening-service/2023-12-10/",
+      "capturedAt": "2026-10-09T12:03:09.125Z",
+      "responseSha256": "a53e1786ac3252627f2fa3bd6bee6a080df8d9756c8cfa1213d4584fba685c8e"
+    },
+    {
+      "sourceId": 10000533,
+      "path": "/event/sunday-evening-service/2023-12-17/",
+      "capturedAt": "2026-10-09T12:06:14.152Z",
+      "responseSha256": "e047f6b8241863bf99a868c1448c44e4f010124cc84e967222cc216815448f0e"
+    },
+    {
+      "sourceId": 10000534,
+      "path": "/event/sunday-evening-service/2023-12-24/",
+      "capturedAt": "2026-10-09T14:11:31.223Z",
+      "responseSha256": "49377b1c37f0624e300e9b21b01ce89e500ba73aa0cfe972ed16b958c1ff097c"
+    },
+    {
+      "sourceId": 10000535,
+      "path": "/event/sunday-evening-service/2023-12-31/",
+      "capturedAt": "2026-10-09T14:11:32.429Z",
+      "responseSha256": "ddd334cdb02aa33e8ffa77f6c32f4e9ba5f5b3b6fa28fd5c45bd77d1dbb7f5ea"
+    },
+    {
+      "sourceId": 10000536,
+      "path": "/event/sunday-evening-service/2024-01-07/",
+      "capturedAt": "2026-10-09T12:06:15.152Z",
+      "responseSha256": "f5d9bbe8260bf160891c867b4626937bf177bd5b485769b16b5d11cbb19c67a3"
+    },
+    {
+      "sourceId": 10000537,
+      "path": "/event/sunday-evening-service/2024-01-14/",
+      "capturedAt": "2026-10-09T12:06:17.162Z",
+      "responseSha256": "0c0d7c8846de9c44cffdf83842ddd9bcd6f260bd5369042a36a7ea4b498559b9"
+    },
+    {
+      "sourceId": 10000538,
+      "path": "/event/sunday-evening-service/2024-01-21/",
+      "capturedAt": "2026-10-09T12:06:16.154Z",
+      "responseSha256": "ac54f62e7bfdc5fa79a258e466675873cf4a72025ffafe68ddc6de2b1d58f12e"
+    },
+    {
+      "sourceId": 10000539,
+      "path": "/event/sunday-evening-service/2024-01-28/",
+      "capturedAt": "2026-10-09T14:11:33.682Z",
+      "responseSha256": "6855834ad9643b673e8dc839845f50590d03e9a50c93ec5ccab0461664c963b5"
+    },
+    {
+      "sourceId": 10000540,
+      "path": "/event/sunday-evening-service/2024-02-04/",
+      "capturedAt": "2026-10-09T14:11:35.001Z",
+      "responseSha256": "e0556d4ec4aada806701f8f15df9577121473d20e420f9f8b4278c04fc066127"
+    },
+    {
+      "sourceId": 10000541,
+      "path": "/event/sunday-evening-service/2024-02-11/",
+      "capturedAt": "2026-10-09T12:06:19.160Z",
+      "responseSha256": "1d87842050208f889d17e0e72df0819a55ccfc30ad40c80b3e01abbd3d961e2b"
+    },
+    {
+      "sourceId": 10000542,
+      "path": "/event/sunday-evening-service/2024-02-18/",
+      "capturedAt": "2026-10-09T12:03:15.365Z",
+      "responseSha256": "01d9a50728e7df8a76193f242cba0e7868d7026665a98c7760a41ff2e70bfa82"
+    },
+    {
+      "sourceId": 10000543,
+      "path": "/event/sunday-evening-service/2024-02-25/",
+      "capturedAt": "2026-10-09T12:03:16.392Z",
+      "responseSha256": "0c982d99cced127e8d944205f95403120ca7c1563d363e358fd6bc57b88260f2"
+    },
+    {
+      "sourceId": 10000544,
+      "path": "/event/sunday-evening-service/2024-03-03/",
+      "capturedAt": "2026-10-09T12:03:13.309Z",
+      "responseSha256": "f5eba7a6b5c0919ffaf172db092431ffc279d15ae4b18e95e1e92e3dcc38c735"
+    },
+    {
+      "sourceId": 10000545,
+      "path": "/event/sunday-evening-service/2024-03-10/",
+      "capturedAt": "2026-10-09T12:03:14.348Z",
+      "responseSha256": "ad4165591b3fee30293d37745f75b92e9fc8325b8355dc427ab75a5035848f43"
+    },
+    {
+      "sourceId": 10000546,
+      "path": "/event/sunday-evening-service/2024-03-17/",
+      "capturedAt": "2026-10-09T12:03:11.176Z",
+      "responseSha256": "510e93e1156f68669a6180d32b07f48fcf6eab1cfa126b0dfe7b35b1d9aad640"
+    },
+    {
+      "sourceId": 10000547,
+      "path": "/event/sunday-evening-service/2024-03-24/",
+      "capturedAt": "2026-10-09T12:03:12.203Z",
+      "responseSha256": "45b67aa641fb5701f4014f1bea382989cc33766678141e495657ae804061acbc"
+    },
+    {
+      "sourceId": 10000548,
+      "path": "/event/sunday-evening-service/2024-03-31/",
+      "capturedAt": "2026-10-09T12:06:18.172Z",
+      "responseSha256": "b4a2ee88157b89acf381ea4af9db1b8b6e3ae6bcfdf414ffd2ef36bb61377c80"
+    },
+    {
+      "sourceId": 10000549,
+      "path": "/event/sunday-evening-service/2024-04-07/",
+      "capturedAt": "2026-10-09T14:11:36.308Z",
+      "responseSha256": "c8032723aef3d3479c6750947a37f9d2d0c1755c69676f633a6a59d2dad42eb0"
+    },
+    {
+      "sourceId": 10000557,
+      "path": "/event/sunday-evening-service/2024-06-02/",
+      "capturedAt": "2026-10-09T14:11:37.037Z",
+      "responseSha256": "a5747ecc481e09ce15ed755bfe7d69578f8edbeccbd8a394394bb648e222a1a5"
+    },
+    {
+      "sourceId": 10000558,
+      "path": "/event/sunday-evening-service/2024-06-09/",
+      "capturedAt": "2026-10-09T12:06:09.093Z",
+      "responseSha256": "1680bacbf89635d114a65c20409fa0379fb0290cbe1471241639f968ef8967fd"
+    },
+    {
+      "sourceId": 10000559,
+      "path": "/event/sunday-evening-service/2024-06-16/",
+      "capturedAt": "2026-10-09T12:03:05.980Z",
+      "responseSha256": "e04aee9d83d3477c0702a3b140f31fa6364f6198b463a3dda6f73d397c1110d2"
+    },
+    {
+      "sourceId": 10000560,
+      "path": "/event/sunday-evening-service/2024-06-23/",
+      "capturedAt": "2026-10-09T12:06:10.194Z",
+      "responseSha256": "1c832d48d99597ab61f9d546e3e21082550d20557ac4f656a11b1529fc054648"
+    },
+    {
+      "sourceId": 10000562,
+      "path": "/event/sunday-evening-service/2024-07-07/",
+      "capturedAt": "2026-10-09T12:06:11.210Z",
+      "responseSha256": "dc6431bca690d9eedac77327c296a2663855479de768190c31414d6020fd1655"
+    },
+    {
+      "sourceId": 10000563,
+      "path": "/event/sunday-evening-service/2024-07-14/",
+      "capturedAt": "2026-10-09T14:11:38.321Z",
+      "responseSha256": "4ef0e75ec22fe65bae697aca9c08f75b37ead064f7b287ee685aecd71589b8fc"
+    },
+    {
+      "sourceId": 10000657,
+      "path": "/event/sunday-evening-service/2026-05-03/",
+      "capturedAt": "2026-10-09T14:11:38.900Z",
+      "responseSha256": "36d5487ad0f568ad212df0fc2fb3fcfb3bf9fb51393a5acd10a69b775500f919"
+    },
+    {
+      "sourceId": 10000658,
+      "path": "/event/sunday-evening-service/2026-05-10/",
+      "capturedAt": "2026-10-09T12:06:05.784Z",
+      "responseSha256": "34ab47c8f6a2e1052a0fde0a54211557fe59c7b645d440b750badd0ea8aa49a1"
+    },
+    {
+      "sourceId": 10000659,
+      "path": "/event/sunday-evening-service/2026-05-17/",
+      "capturedAt": "2026-10-09T12:03:03.966Z",
+      "responseSha256": "889fa3979dcf019f180af2af65ca0227c36bcbecc2a04befc50426aef613deca"
+    },
+    {
+      "sourceId": 10000926,
+      "path": "/event/tuesday-bible-study-2-2-2/2026-06-30/",
+      "capturedAt": "2026-10-09T11:58:19.700Z",
+      "responseSha256": "5e12c54aa94f6e57123b73f06c896a306654785058d0750ac91833b3ef4bfd5c"
+    },
+    {
+      "sourceId": 10000928,
+      "path": "/event/tuesday-bible-study-2-2-2/2026-07-14/",
+      "capturedAt": "2026-10-09T12:05:18.591Z",
+      "responseSha256": "00dd2785a0872faacacba62f9d680f141c44d219e44e64893661d0986f21ea06"
+    },
+    {
+      "sourceId": 10000930,
+      "path": "/event/tuesday-bible-study-2-2-2/2026-07-28/",
+      "capturedAt": "2026-10-09T12:05:31.189Z",
+      "responseSha256": "3556e6e80ba4a41a0c66fe3255c31f189c4b9ae5efd6285569cf58c052b17c8e"
+    },
+    {
+      "sourceId": 10000931,
+      "path": "/event/tuesday-bible-study-2-2-2/2026-08-04/",
+      "capturedAt": "2026-10-09T14:11:43.333Z",
+      "responseSha256": "8ddf6afd3b9d82228e46ea7f1bca6432e5c926c619a0293cc7e06da2240f554c"
+    },
+    {
+      "sourceId": 10000932,
+      "path": "/event/tuesday-bible-study-2-2-2/2026-08-11/",
+      "capturedAt": "2026-10-09T12:05:10.928Z",
+      "responseSha256": "ab872c9bf583ea909e728a0c6c7ec9ec3c501fb90eab4cc48e96faaeceac6638"
+    },
+    {
+      "sourceId": 10000935,
+      "path": "/event/tuesday-bible-study-2-2-2/2026-09-01/",
+      "capturedAt": "2026-10-09T12:05:53.086Z",
+      "responseSha256": "79f0a96dd8d512d89d021d158f3ff3a4a9771f1d7150c01b341ead26d08daeb3"
+    },
+    {
+      "sourceId": 10000936,
+      "path": "/event/tuesday-bible-study-2-2-2/2026-09-08/",
+      "capturedAt": "2026-10-09T14:11:44.604Z",
+      "responseSha256": "ed3b8b90cb6cea5c71c1494af8a8162f3a5083c38d38da99cb9ba08e1c2675c3"
+    },
+    {
+      "sourceId": 10000937,
+      "path": "/event/tuesday-bible-study-2-2-2/2026-09-15/",
+      "capturedAt": "2026-10-09T14:11:45.278Z",
+      "responseSha256": "4bfcbcd4dba9a1b5b8bc922f06191209e1d278a5d449a64fe50df51db196fb74"
+    },
+    {
+      "sourceId": 10000938,
+      "path": "/event/tuesday-bible-study-2-2-2/2026-09-22/",
+      "capturedAt": "2026-10-09T14:11:46.519Z",
+      "responseSha256": "fa7371afec9c2d33bb6d7265664059bb36ee7ed9ed77fb53ee88181431f47459"
+    },
+    {
+      "sourceId": 10000939,
+      "path": "/event/tuesday-bible-study-2-2-2/2026-09-29/",
+      "capturedAt": "2026-10-09T12:06:30.239Z",
+      "responseSha256": "cef81645dcb7d8be5039f928fc1d3df96a4e570631501fefeef761c809432a8b"
+    },
+    {
+      "sourceId": 10000940,
+      "path": "/event/tuesday-bible-study-2-2-2/2026-10-06/",
+      "capturedAt": "2026-10-09T12:04:40.008Z",
+      "responseSha256": "51440c0f6e4f1dc70ee02908071448eb839b1b02122fec3f93a66070fccfb6e9"
+    },
+    {
+      "sourceId": 10000921,
+      "path": "/event/tuesday-bible-study-2-2/2026-05-26/",
+      "capturedAt": "2026-10-09T11:58:18.810Z",
+      "responseSha256": "c0887b0e402cb005422a75ccdea0ecfb3d83e6d4ec0ae68eaca741cc5876297f"
+    },
+    {
+      "sourceId": 10000922,
+      "path": "/event/tuesday-bible-study-2-2/2026-06-02/",
+      "capturedAt": "2026-10-09T12:02:50.921Z",
+      "responseSha256": "f0cc0f7512f0c3a4ec6145a060ff3dfa20daeaa0807ac64e82c6bb93c890bf29"
+    },
+    {
+      "sourceId": 10000923,
+      "path": "/event/tuesday-bible-study-2-2/2026-06-09/",
+      "capturedAt": "2026-10-09T12:13:59.096Z",
+      "responseSha256": "e78c3939cc00a921a3d78c919d3e34a1ee141d7545eb8625ab17dd37b19c5991"
+    },
+    {
+      "sourceId": 10000924,
+      "path": "/event/tuesday-bible-study-2-2/2026-06-16/",
+      "capturedAt": "2026-10-09T12:05:42.645Z",
+      "responseSha256": "8b54a93d77b28cf1ec64997d674e4affe63688c0cb35bf25874dae137a6701cd"
+    },
+    {
+      "sourceId": 10000925,
+      "path": "/event/tuesday-bible-study-2-2/2026-06-23/",
+      "capturedAt": "2026-10-09T12:05:56.111Z",
+      "responseSha256": "c9262fd6a8ee95427b055091dcd90afc3108a27335c3938faf4e256ae952508a"
+    },
+    {
+      "sourceId": 10001404,
+      "path": "/event/womans-study-2-2-2/2026-06-06/",
+      "capturedAt": "2026-10-09T11:58:23.706Z",
+      "responseSha256": "b0855a6cbce2d0badf37a9e73adc24a60f690c483f1797b4c1f52ad1f872d603"
+    },
+    {
+      "sourceId": 10001405,
+      "path": "/event/womans-study-2-2-2/2026-07-04/",
+      "capturedAt": "2026-10-09T12:02:45.250Z",
+      "responseSha256": "d67f0f7695f88540e4688c2758b39954e482f59ab137cfbce688d0b68f8d812d"
+    },
+    {
+      "sourceId": 10001406,
+      "path": "/event/womans-study-2-2-2/2026-08-01/",
+      "capturedAt": "2026-10-09T12:13:57.797Z",
+      "responseSha256": "3259a75ba028c6925809ae4edb7eca37225de2728b8529365d4fe4817c2a426e"
+    },
+    {
+      "sourceId": 10001407,
+      "path": "/event/womans-study-2-2-2/2026-09-05/",
+      "capturedAt": "2026-10-09T12:05:55.095Z",
+      "responseSha256": "08b25777035b8c79b7a569a797e3a1d27146c9a5591a99be1a210829fd3750cb"
+    },
+    {
+      "sourceId": 10001408,
+      "path": "/event/womans-study-2-2-2/2026-10-03/",
+      "capturedAt": "2026-10-09T12:06:32.224Z",
+      "responseSha256": "0aad2ed5f8e21658e10ee5ac908b40474c280053715fb0330c8e339dc953e930"
+    },
+    {
+      "sourceId": 10001797,
+      "path": "/event/mens-teaching-and-preaching-study/2024-06-29/",
+      "capturedAt": "2026-10-11T05:22:13.449Z",
+      "responseSha256": "8314a91de908c47ac8556306cf19d57e2a509f71f4cebe917c225bb0e453fbef"
+    },
+    {
+      "sourceId": 10001798,
+      "path": "/event/mens-teaching-and-preaching-study/2024-07-02/",
+      "capturedAt": "2026-10-11T05:22:16.459Z",
+      "responseSha256": "ca14badbc74f91a849247748a05f573baf12792c36f43f18688f8a2ca433c9c1"
+    },
+    {
+      "sourceId": 10001802,
+      "path": "/event/mens-teaching-and-preaching-study/2024-07-16/",
+      "capturedAt": "2026-10-11T05:22:22.498Z",
+      "responseSha256": "bcd3e21557b4d04c850545b4e913989cc8d64eade8a7539281003a182c410137"
+    },
+    {
+      "sourceId": 10001191,
+      "path": "/event/mens-theological-study-2/2026-07-26/",
+      "capturedAt": "2026-10-11T05:22:40.481Z",
+      "responseSha256": "d4f9d12a283a09d3ec787eb292905d6ada4dddd6148ebe3b2122c1063a610bff"
+    },
+    {
+      "sourceId": 10001195,
+      "path": "/event/mens-theological-study-2/2026-08-23/",
+      "capturedAt": "2026-10-11T05:22:49.451Z",
+      "responseSha256": "5d101d40f17a989a0cd675b0cebd323e8bba697da74d507deca31d98d93e28ea"
+    },
+    {
+      "sourceId": 10001196,
+      "path": "/event/mens-theological-study-2/2026-08-30/",
+      "capturedAt": "2026-10-11T05:22:52.458Z",
+      "responseSha256": "b72bee91de9811d7a51d1cae71ca03f1c70ea03893d4c224ac0cf3375fc9c933"
+    },
+    {
+      "sourceId": 10000673,
+      "path": "/event/sunday-evening-service-2/2026-08-23/",
+      "capturedAt": "2026-10-11T08:58:29.995Z",
+      "responseSha256": "62b0320207c3d37d412a3d57969b9a3640adef41faeeda7c9c7396b652384d58"
+    },
+    {
+      "sourceId": 10000674,
+      "path": "/event/sunday-evening-service-2/2026-08-30/",
+      "capturedAt": "2026-10-11T08:58:33.118Z",
+      "responseSha256": "a5a23b6a37763e8c17553475f5235c8228b1e78222e84cd8516383276043291a"
+    },
+    {
+      "sourceId": 10000550,
+      "path": "/event/sunday-evening-service/2024-04-14/",
+      "capturedAt": "2026-10-11T08:58:54.333Z",
+      "responseSha256": "2ff86ac05c3ec09464941d20f11bf0b881ed1a84d878a82027ef8f4e66417e51"
+    },
+    {
+      "sourceId": 10000556,
+      "path": "/event/sunday-evening-service/2024-05-26/",
+      "capturedAt": "2026-10-11T08:58:56.956Z",
+      "responseSha256": "cd54fc7d52f0995500108b3409d60ae553ce99aa601399f8ed5c07f7e3b7240f"
+    },
+    {
+      "sourceId": 10000656,
+      "path": "/event/sunday-evening-service/2026-04-26/",
+      "capturedAt": "2026-10-11T08:58:59.997Z",
+      "responseSha256": "bb5e19888e13f4ab772eab093943879b6e3516468beeb3a4e2b93b24fa8c4622"
+    },
+    {
+      "sourceId": 10000929,
+      "path": "/event/tuesday-bible-study-2-2-2/2026-07-21/",
+      "capturedAt": "2026-10-11T08:59:12.008Z",
+      "responseSha256": "34574874ee48e15eb8f017846d568816195cf250b78362d72ec34c576c6f188a"
+    },
+    {
+      "sourceId": 10000933,
+      "path": "/event/tuesday-bible-study-2-2-2/2026-08-18/",
+      "capturedAt": "2026-10-11T08:59:15.127Z",
+      "responseSha256": "65d3e3d0da4b19c3cf23b94845543bfa4cd6949c44ad503de0e864fe6ee88812"
+    },
+    {
+      "sourceId": 10000934,
+      "path": "/event/tuesday-bible-study-2-2-2/2026-08-25/",
+      "capturedAt": "2026-10-11T08:59:17.952Z",
+      "responseSha256": "05ce58af093a1d7cc3a4fc3525949711309193981c5afff1a9d83a046ce5044d"
+    }
+  ],
+  "limits": [
+    "HTML body-class identities prove these captured public responses, not authoritative stored post membership or recurrence implementation.",
+    "REST and HTML observations are retained independently; unavailable SQL prevents resolving the remaining count difference."
+  ]
+}

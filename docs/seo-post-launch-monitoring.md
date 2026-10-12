@@ -21,8 +21,20 @@ A successful technical migration cannot guarantee identical rankings during recr
 Use a fresh ignored output directory for every run. Supply the protected frozen ledger/assets paths and require the runtime label returned by the bound release. Both commands refuse non-loopback destinations; verify actual public DNS/TLS separately after authorized cutover.
 
 ```powershell
-python scripts/seo-verify-candidate.py --baseline private/seo-baseline/d182-final-release-frozen/ledger.private.json --assets private/seo-baseline/d182-final-release-frozen/assets-final-d182.private.json --candidate http://127.0.0.1:4440 --environment production --expected-runtime-label <verified-label> --concurrency 4 --timeout 60 --request-limit 30000 --output private/seo-candidate/<fresh-run>
-python scripts/seo-verify-candidate.py --baseline private/seo-baseline/d182-final-release-frozen/ledger.private.json --assets private/seo-baseline/d182-final-release-frozen/assets-final-d182.private.json --candidate http://127.0.0.1:4450 --environment staging --expected-runtime-label <verified-label> --concurrency 4 --timeout 60 --request-limit 30000 --output private/seo-candidate/<fresh-staging-run>
+python scripts/seo-verify-candidate.py --baseline private/seo-baseline/d182-final-frontier-frozen/ledger.private.json --assets private/seo-baseline/d182-final-frontier-frozen/assets-frontier-final.private.json --candidate http://127.0.0.1:4447 --environment production --expected-runtime-label <verified-label> --concurrency 4 --timeout 60 --request-limit 50000 --output private/seo-candidate/<fresh-run>
+python scripts/seo-verify-candidate.py --baseline private/seo-baseline/d182-final-frontier-frozen/ledger.private.json --assets private/seo-baseline/d182-final-frontier-frozen/assets-frontier-final.private.json --candidate http://127.0.0.1:4450 --environment staging --expected-runtime-label <verified-label> --concurrency 4 --timeout 60 --request-limit 50000 --output private/seo-candidate/<fresh-staging-run>
 ```
 
 A nonzero comparator exit is an unresolved finding, not a deployment success. Retain its complete machine-readable issue ledger. The responsible operator must classify original defects, planned private-environment differences and new regressions individually; never clear the report just to reach a pass. On launch day run the full mapping, then repeat critical-page/status/asset checks during the first day, daily through week one and with the account/field comparisons in the table above.
+
+D-182 adds [the repeatable evidence workflow](seo-remediation-checks.md), original
+cohort accounting and direct verification of all 975 historically failed internal
+targets. Use the reconciled final ledger, preserving the dated original history and
+source continuation. Alert immediately on any critical landing-page outage, leaked
+draft/admin content, unexpected indexing exclusion or wrong-content redirect.
+Compare noncritical failures with the exact baseline before assigning migration
+causality. A numerical organic-traffic rollback threshold remains unapproved until
+real church-owned comparable-period reports exist; the operator must review actual
+page/query/device evidence rather than inventing a zero-traffic baseline. Confirm
+Samuel or the named delegate and the church account owner before launch. These are
+prepared responsibilities and checks, not executed future monitoring.

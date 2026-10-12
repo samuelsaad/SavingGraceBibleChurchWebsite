@@ -1,4 +1,8 @@
-# D-182 remediation — work in progress, 11 October 2026
+# D-182 remediation execution record — 11–12 October 2026
+
+The dated original acceptance and its 15,252-row ledgers remain byte-preserved in
+`docs/seo-history/`. Earlier checkpoints below are historical; the final finite-source
+checkpoint at the end records the latest implementation and verification.
 
 The prior acceptance and its 15,252-row ledgers remain unchanged. The new
 classification ledger retains every distinct URL and original outcome; grouping
@@ -350,3 +354,236 @@ pointer/content stayed unchanged. Future rehearsals select matching draft/public
 revisions so they cannot accidentally publish pre-existing private drafts.
 The source-sermon body/SEO cycles remained fully restored; native 398/144 and
 source 5,973 versions/4,081 routes/five receipts are unchanged.
+
+## Final evidence continuation and retained failures
+
+The final `f04329a` local browser matrix passed 90 cases across desktop/mobile
+and JavaScript on/off, with zero browser errors, overflow or external requests.
+Its unthrottled maximum LCP was 1,328 ms and CLS 0.016701; these are lab values,
+not field/INP acceptance. The exact original 975-target recheck returned 972 real
+404s and three 200s, with no redirect-chain issues. An initial recheck selected a
+historical intermediate report rather than the exact original report and refused
+before requests because its denominator differed; that failed attempt is retained.
+The corrected input SHA-256 is
+`3aac3a5615030be9c3522be7f2b55688b5057b8c5ae1bb31c834ac7e9165412a`.
+
+The redundant `c6dc11d` safe-export continuation was stopped after the final
+`f04329a` run became available; its partial output is not acceptance evidence.
+The completed C6 full HTTP comparison and all previous failures remain retained.
+Only obsolete task-owned loopback listeners 4443/4447 were stopped. The user's
+original 4430 dashboard and separate dirty worktree remain untouched.
+
+New offline tools freeze the completed finite source queue's later witnesses and
+all newly observed URLs without more source requests. Hash-bound reconciliation
+retains every prior row, explicitly records later-evidence updates and keeps
+unverified outcomes unresolved. It refuses an incomplete queue, altered bindings,
+unsafe CSV headers or any changed denominator. The 115-test offline SEO suite
+passed. The final source/CMS release scan covered 392 source/build files with
+zero private-body/secret/proprietary findings. Complete source continuation,
+staged publishing and final acceptance publication are still pending here.
+
+## Final finite-source resource remediation
+
+F043 completed source canary, activation, compatible rollback, reactivation and
+independent verification on both sealed runtimes, image
+`sha256:fa3fb43c99f2600b12accbdf6c6cb4a770d81371537a8587d3c7b8ab5a50d7dd`.
+The protected three-template CMS browser workflow then started. Full final F043
+comparison/export is still incomplete and is not claimed as acceptance.
+
+Further source captures changed the available remediation scope: among the exact
+975 original failed targets, a dated bounded inspection found 388 nonempty valid
+VCALENDAR responses. Other observations included 329 empty responses, 98 nonempty
+HTML pages, 31 rate-limit results and 127 still uncaptured at that checkpoint; the
+counts are overlapping status/body categories, not a final inventory. These valid
+calendar bytes will be added with eligible missing page projections after the
+fixed queue completes. Existing source versions and CMS edits remain untouched.
+The smaller waiting continuation-only workflow was stopped in favor of full final
+source reconciliation; no source request, database write or cutover occurred there.
+Newly observed URLs remain explicit unresolved evidence without recursive expansion.
+
+## CMS directory transfer correction
+
+The F043 staged source-sermon and ordinary-page body/SEO cycles passed and restored
+their original content. The event cycle saved a private test draft, then timed out
+waiting for the SEO field after reload. Its exact original draft was restored
+through the audited API; public content and its original pointer stayed unchanged.
+The restoration helper's trailing zero-workflow message is not a workflow pass.
+An event-only retry subsequently timed out loading the complete collection before
+any mutation; its result has zero completed types and no active restore. These
+failed attempts are retained. Event publication/restore remains unverified.
+
+The editor previously transferred every entity's complete draft and published
+section trees just to build its page chooser. A protected `projection=directory`
+query now returns only identity, names, paths and revision/publication state directly
+from PostgreSQL. Full collection reads remain available to existing migration
+contracts; visual and advanced editors always fetch the selected full document
+through the existing entity endpoint before editing. Authentication, private
+headers, optimistic concurrency and privileges stay unchanged. Synthetic tests
+verify no unrelated body is transferred; the real PostgreSQL HTTP fixture proves
+selected saved content remains complete and unauthorized directory access fails.
+
+Focused tests passed 15/15; complete PostgreSQL regression passed 1,417/1,417 with
+zero skips, standard tests passed 1,272 with 145 gated skips covered there, type
+checking passed 758 files with zero errors/warnings, and 45-page/runtime builds
+passed. Actual protected directory/editor retest follows the additive resource
+release. This correction has not yet been committed or deployed here.
+
+The fixed queue completed all 6,852 outcomes at 11 October 11:41:46 UTC; its
+14,228 retained response records preserve old capture times. The 5,882 newly
+observed URLs were not recursively requested. The closed ledger SHA-256 is
+`4c5c4f4a8a311922fff3d65b0a02f637837967d03172f6d87312733bd4a9f396`.
+A missing inherited search witness stopped the strict parser/resource attempts;
+its exact URL/status/hash/time matched the previous frozen record. Original
+files and failed partial outputs are retained. The normalizer now registers raw
+records and response files inside a fresh confined root; the independent parser
+must verify every body before/after and bind the source/cache hashes before any
+bundle/import. Registration alone is not body-validation acceptance.
+
+F043's complete production-policy comparison checked all 16,680 rows through
+17,459 actual requests, 2,555 sitemap URLs and 6,849 internal targets. Runtime
+identity and certified source hashes passed before/after; parity still failed.
+The superseded safe-export continuation was stopped without claiming its partial
+review complete. New final comparisons follow the next source/resource delta.
+
+The final source union retains every original URL hash: 15,252 original rows plus
+5,882 newly observed URLs, totaling 21,134. This is denominator preservation, not
+complete source or migration acceptance. The normalized source ledger SHA-256 is
+`e2d764ce467651cadfe88c0f12cead17066b43171fe1beb5612d42a18200cae1`;
+resource manifest SHA-256 is
+`fea08c9caaad83bd0ba01149fe86492a5610b0e0e1f54b60dcb56f367db37ebe`.
+The resource freeze retains 1,736 previous observations and adds 500 verified
+calendar and 252 feed responses (2,488 observations); these have not yet been
+imported. No new source/provider requests or recording-body downloads occurred.
+
+
+## Final finite source delta and compact editor release — 11–12 October
+
+The normalized source ledger is frozen at `e2d764ce467651cadfe88c0f12cead17066b43171fe1beb5612d42a18200cae1`. The certified cache binds 14,228 records and 25,292 current file witnesses, verified before/after and per read. This run reused 11,225 exact previously independently parsed records and independently parsed 3,003 additional records; it does not claim newly reading every source response. The union retains all original 15,252 URL hashes and adds 5,882 observed URLs (21,134 total), without recursively requesting them. Authoritative completeness remains unproven.
+
+The guarded local import validated 5,748 routes and inserted 1,667 without updating any existing route; all 4,081 prior routes were unchanged. Exact replay inserted/updated zero and retained all 5,748. The source-backed CMS no-clobber adoption inserted 453 documents (439 page/archive projections and 14 events); replay planned and inserted zero. Existing editorial ownership held 46 routes; 1,175 runtime archive/query projections were deliberately outside ordinary-document adoption. Assets inserted zero/retained 292 in the CMS asset catalog.
+
+The complete resource package contains 1,946 routes, 1,925 unique files and 60,316,208 bytes, with SHA-256 `51ecda12026719eb366c1516fc2979528833419b3ff205ed0c3d7a707cb7ed37`. No recording bodies were downloaded. Its local storage added only missing content-addressed files. This package is prepared for staging; do not claim final staged deployment.
+
+Application `cc5bf56a23ce69319010f8fc7a77f277673e5fc6` commits the compact CMS directory and finite reconciliation tools. Its frozen local code archive SHA-256 is `acae89a071ed6898a18cdc94fc33263e61799f8d6fb5268c22346b21fa9aaf52`. The final outgoing scan passed 395 files with zero findings. A normal GitHub push/remote verification failed to connect; current remote identity must be reverified.
+
+The final staging inventory stopped before mutation because DNS no longer matched the existing pin (`cms_dns_drift`). Existing SSH loopback tunnels were unavailable. No pin was bypassed or new address guessed. Final deployed comparison, resource restart proof and three-type CMS rerun remain pending verified staging identity. Independent local work continues.
+
+
+The final local visual-editor workflow completed source sermon, ordinary page and
+event body/SEO draft/reload/publish/restore checks (three types, zero errors or
+external requests). A preceding visitor-path mismatch returned a real404 after
+draft save; the draft was restored through audited history before rerunning with
+the source-aware production rehearsal. One unchanged original-public source-sermon
+migration draft was first published only after exact reconstructed-source payload
+comparison; no existing private editorial draft or native approval was published.
+
+All original 975 failed internal targets were checked directly: 552 successful200s
+and 423 real404s, no redirect issues. Success status alone is not content equivalence.
+The final browser matrix passed 90 status/heading/canonical/mobile/no-JS cases with
+zero errors, overflow or external requests. During concurrent source integrity and
+recovery work, its largest LCP was 24,220 ms at the first desktop homepage and CLS
+0.016700240483539092. This is a failed performance observation under contention,
+not a field result or a controlled comparison; a quiet controlled rerun is required.
+
+Held source deltas were classified without overwrite:256 resources differ only in
+`sourceId`, with unchanged asset bytes/metadata (the newer construction omitted
+previous identities). Nine archive content differences remain held, including eight
+sermon-speaker query projections and one dated past-event list. Host normalization
+alone did not prove their content equal. Exact safe hashes/fields/identities are in
+`seo-held-source-differences.summary.json`; the original versions remain retained.
+
+
+## Measured visitor scale corrections
+
+Profiling identified repeated whole-site presentation detection on every visitor
+page. A weak-key memo per immutable version-selected snapshot preserves live editor
+scanning and releases old inventories. Fifteen diagnostic responses retained their
+statuses and byte counts; median handler time changed709 to348ms under differing
+concurrent loads. This is diagnostic evidence, not controlled browser/field proof.
+Public-layout CSS appearance/disappearance after new snapshots/restoration is tested.
+
+The85,438,888-byte final source bundle exceeded384MiB during startup, both with
+TypeScript loading and a private compiled diagnostic. Source loading retained both
+wire payloads and decoded trees, and sermon constructors cloned the complete archive/
+resource corpus before discarding non-sermons. The fix validates every page, releases
+consumed wire payloads and retains only sermon projections in those repositories.
+Schema and exact version hashes remain mandatory; no source fields are omitted.
+The full5,748-route working-code diagnostic now starts under384MiB and returns
+real200 homepage/archive/about/sitemap responses. Its all-zero identity is explicitly
+not release acceptance. Final code freeze, complete comparison and quiet lab remain
+required. Earlier interrupted comparison and failed startup evidence are retained.
+
+Private frozen-code archives were inadvertently collected as tests. Private evidence
+is now excluded from application test/type discovery; all 153 tracked test files
+remain covered. Concurrent suites hit5-second filesystem timeouts; sequential standard
+tests passed 1,273 plus 145 gated tests. A separate pre-existing D-157 assertion expected
+one fulfilled request although an identical serialized replay may return unchanged.
+Its anonymous test now requires exactly one recorded seven-component set, with only
+unchanged replay or the existing guarded conflict allowed. No review service or real
+decision changed. Complete PostgreSQL then passed 1,418/1,418, zero skips and exact
+temporary-database cleanup. Subsequent memory changes require their own final gates.
+
+The original 4430 homepage and readiness endpoint returned200; unauthenticated CMS
+returned its expected303 sign-in redirect. Its process and working files were not
+changed. The protected staging recheck still refused DNS drift before mutation;
+GitHub remained unreachable. Public DNS inspection found one Google verification TXT
+marker without exposing its value or proving account ownership. No DNS/account changes
+occurred. The captured homepage had no Google/Bing/Yandex verification meta tags;
+account reports and verified measurement configuration remain missing.
+
+
+The final allocation-corrected application is committed as
+`6a654e18e62d6823e21e33753a6f30859e5376c7`, with frozen code archive
+`e9789e586edfeb16303c0b8f240e90915b54bd493f8fb30ddbae4686d9bbfff2`.
+Its actual384MiB loopback runtime started and independently matched label
+`c2f72bfd1ab685c6775daa628d097416425b995ec16ae0d98c5ef90c00449a7b`.
+Final automated gates passed 1,274 standard tests plus 145 covered gated cases,
+1,419 PostgreSQL tests with zero skips, 647 type-checked files (zero errors/warnings),
+45 static pages and runtime builds. The outgoing405-file privacy scan passed
+without secret/private-body/proprietary findings. Worker concurrency is bounded
+to four; no assertion or timeout was relaxed. Complete final comparison is pending.
+
+A current browser-account-access attempt failed with the tool's trusted Node kernel
+exit/reset before any account inspection. No Google account ownership or report
+access was inferred. The captured public DNS Google verification marker is separate
+from missing Search Console/Analytics/Tag Manager account evidence.
+
+
+Final held-delta diagnostics narrowed the nine archive differences: eight speaker
+archive trees have identical text sequences and every content leaf unchanged except
+one Jetpack image URL reconstructed as its verified owned-original path. Both
+owned portrait resources are captured/hash-verified and passed fresh-process HTTP
+checks. Transformed-CDN byte equality is not claimed. The retained source versions
+were not overwritten and no final comparator issue was cleared by this diagnostic.
+The past-event list has actual text/link/title/image/tree differences and remains
+unresolved. See `seo-held-source-differences.summary.json` and the hashed tree/text
+diagnostics. A source-tree difference alone is not eight missing sermon archives.
+
+
+## Completed final local acceptance evidence
+
+The complete 21,134-row comparison made 22,082 actual requests, checked 2,984 sitemap
+URLs and 10,592 internal/sitemap targets, with expected runtime identity on every
+response. It finished 2026-10-11T18:54:13.218004Z and failed parity. Independent
+source witness checks passed before/after and per read. Final reviewed export
+completed with 3,729 preserved/2,817 redirected/389 pre-existing source404 removals/
+14,199 unresolved. All original 15,252 hashes remain; all 101 former empty-calendar
+removal decisions are excluded. No loop/avoidable-chain/canonical/sitemap-control
+issue code was recorded, but 3,831 target responses remain non-200.
+
+The original cohorts retain 855 metadata/2,114 block/76 image/120 indexing findings.
+Metadata explanations reclassified 1,854; block fixes/reclassifications are 556/97;
+indexing fixes are 1,808. Original capture gaps resolved 6,837, while 5,882 newly
+observed URLs remain explicitly unrequested. Categories overlap. Original failed
+internal targets: 552 final200, two justified source404s and 421 unresolved404s.
+All 457 known sermons return200 with matching IDs; 453 outcomes are preserved, four
+metadata-only outcomes remain unresolved. Actual authoritative total is unproved.
+
+The378 raw previous200 failures are 363 real empty calendar responses plus15
+deliberately unread JavaScript/CSS records, not378 lost nonempty pages. The raw
+block set is overwhelmingly archive markup/metadata; a bounded diagnostic preserves
+the exact source/candidate hash/presence evidence without clearing all formatting
+or date/passage differences. All machine summaries and affected URL hashes are in
+the final safe evidence package. The first final documentation scan passed421
+files/zero findings; final explanatory prose is rescanned before commit. Staging
+DNS verification and GitHub connectivity remain genuine external blockers.
