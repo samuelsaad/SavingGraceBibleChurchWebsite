@@ -587,3 +587,16 @@ or date/passage differences. All machine summaries and affected URL hashes are i
 the final safe evidence package. The first final documentation scan passed421
 files/zero findings; final explanatory prose is rescanned before commit. Staging
 DNS verification and GitHub connectivity remain genuine external blockers.
+
+
+The normal Git push later succeeded; remote branch identity independently matched
+evidence commit `34b944863164aa21168954027e452885c95dcebf`. The staging DNS pin
+also matched again without any pin/configuration change. Full guarded inventory
+verified both healthy F043 runtimes, native398/144 publications, source5973 versions/
+4081 routes/five receipts and unchanged incumbent source hash. Final package transfer
+passed checksum verification; preparation refused only the earlier incoming-bundle
+checksum. The operator now binds the verified final
+`cad131cdea84e514135c141a450639114b0ebef5ef7fd29ae965c2bdb48528ce` package;
+the incumbent history/count/hash, SSH/DNS/database/secret/mount and rollback guards
+are unchanged. No container/database mutation occurred during the refused prepare.
+Browser account inspection still failed at trusted-kernel startup before access.
