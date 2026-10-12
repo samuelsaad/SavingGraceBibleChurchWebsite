@@ -607,3 +607,17 @@ independently confirms the actual incumbent F043 release and immutable image
 `sha256:fa3fb43c99f2600b12accbdf6c6cb4a770d81371537a8587d3c7b8ab5a50d7dd`.
 The operator now pins that exact release/image; original source snapshot, counts,
 all configuration/credential/mount/history and rollback checks stay unchanged.
+
+The committed DF762 bridge passed both canaries, activation, identity/history
+checks and 18 actual proxy-boundary responses. An incorrect first private harness
+expectation was corrected against the existing denial/login code; the failed
+attempt remains retained. Bulk source import then aborted with V8 heap exhaustion
+(exit134); a guarded diagnostic confirmed the exact failure and unchanged5973
+source versions/4081 routes/five receipts. All722 appended assets are verified.
+The verified4GiB host reported2.54GiB available. Only the temporary listener-free
+maintenance worker now has a768MiB heap/1536MiB container bound; preparation
+requires2GiB available. Visitor limits, source/CMS/native history, secrets and all
+publication, SSH/DNS/database/hash/rollback guards remain unchanged. The actual
+fresh staging backup was separately restored:65 tables/schema fingerprints,1496
+files,1224 resources and eight HTTP checks passed; its created target was removed
+by OID guard. WordPress and role/ACL recreation remain unproved.

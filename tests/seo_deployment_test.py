@@ -45,6 +45,19 @@ class SeoDeploymentTest(unittest.TestCase):
         for changed,bundle in (({**valid,'sourceSha256':'0'*64},OP.INCOMING_BUNDLE_SHA),(valid,'0'*64),({**valid,'sourceCounts':{}},OP.INCOMING_BUNDLE_SHA)):
             with self.assertRaisesRegex(RuntimeError,'seo_existing_source_drift'):OP.verify_existing_source(changed,bundle)
 
+    def test_bulk_worker_memory_is_bounded_and_does_not_change_visitor_configuration(self):
+        original={"name":"anonymous", "services":{"app":{"read_only":True,"cap_drop":["ALL"],"mem_limit":768*1024**2,"ports":["127.0.0.1:8082:8080"],"networks":{"private":{}},"environment":{"NODE_OPTIONS":"--max-old-space-size=384"}}},"secrets":{}}
+        retained=copy.deepcopy(original)
+        worker=OP.maintenance_configuration(original,IMAGE,COMMIT,"/anonymous/owner",pathlib.Path("/anonymous/release"),"b"*64)
+        self.assertEqual(original,retained)
+        app=worker["services"]["app"]
+        self.assertEqual(app["mem_limit"],1536*1024**2)
+        self.assertEqual(app["environment"]["NODE_OPTIONS"],"--max-old-space-size=768")
+        self.assertNotIn("ports",app)
+        self.assertTrue(app["read_only"])
+        self.assertEqual(app["cap_drop"],["ALL"])
+        self.assertEqual(app["entrypoint"],["node","source-public-sync.cjs"])
+
     def test_helpers_remain_checksum_pinned_and_only_extend_exact_runtime_scope(self):
         original = (ROOT / "deployment/cms-upgrade-remote.py").read_text(encoding="utf-8").replace("\r\n", "\n").encode()
         self.assertEqual(hashlib.sha256(original).hexdigest(), OP.UPGRADE_SHA)

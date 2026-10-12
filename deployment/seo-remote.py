@@ -16,8 +16,8 @@ import tarfile
 import time
 
 UPGRADE_SHA = "e41bbc7b36e883665a4f57c07ed1fbd9b222f018d07af9597f90cebfd4e62fb2"
-PREVIOUS_COMMIT = "f04329a82491e3f2c67a03158d2022d11def075e"
-PREVIOUS_IMAGE = "sha256:fa3fb43c99f2600b12accbdf6c6cb4a770d81371537a8587d3c7b8ab5a50d7dd"
+PREVIOUS_COMMIT = "df762c599672a0ed1ba01bad854346d761d4582c"
+PREVIOUS_IMAGE = "sha256:b87fb35f51ea182f2fe43899f0359bb5dc0ff0aeffcd41e694172869e05f3cf3"
 BASE_SCHEMA_ORDER = 28
 EXISTING_SOURCE_SHA = "a3fd289741ee38991e7ea7e3d3ec7757fba2c5452f749b9043eb11d60fa27d3c"
 EXISTING_BUNDLE_SHA = "3f34acc4b850884c4fbb44bbb66fc0b42c23bb1dfa7f7416f5840cb80ffb1917"
@@ -137,6 +137,10 @@ def maintenance_configuration(original, image, commit, owner_file, root, bundle_
     result["name"] = "savinggrace-seo-maintenance-" + commit[:12]
     app.update({"image": image, "entrypoint": ["node", "source-public-sync.cjs"], "user": "0:0", "restart": "no"})
     for name in ("container_name", "healthcheck", "depends_on", "ports", "hostname"): app.pop(name, None)
+    # The bounded bulk importer validates/clones a complete <=128 MiB bundle.
+    # Its heap is independent of visitor limits; this worker has no listener.
+    app["mem_limit"] = 1536 * 1024**2
+    app["environment"]["NODE_OPTIONS"] = "--max-old-space-size=768"
     app["networks"] = {name: {} for name in app["networks"]}
     app["volumes"] = [{"type": "bind", "source": str(root / "source-public.bundle.private.json"), "target": "/run/source-public/bundle.json", "read_only": True}]
     app["secrets"] = ["db_owner_password"]; result["secrets"] = {"db_owner_password": {"file": owner_file}}
@@ -186,6 +190,8 @@ def prepare(base, upgrade, helper, root, incoming, commit, source_hash, inventor
     if base.sha(incoming / "source-public.bundle.private.json") != bundle_hash or base.sha(incoming / "source-public-assets.private.tar") != assets_hash: fail("seo_private_transfer_hash")
     required_bytes = 2 * 1024**3 + 2 * sum((incoming / name).stat().st_size for name in ("source-public.bundle.private.json", "source-public-assets.private.tar"))
     if actual["storage"]["availableBytes"] < required_bytes: fail("seo_source_storage_insufficient")
+    available_memory = next((int(line.split()[1]) * 1024 for line in pathlib.Path("/proc/meminfo").read_text().splitlines() if line.startswith("MemAvailable:")), 0)
+    if available_memory < 2 * 1024**3: fail("seo_source_memory_insufficient")
     bundle = base.load(incoming / "source-public.bundle.private.json")
     verify_asset_archive(base, incoming / "source-public-assets.private.tar", bundle)
     upgrade.prepare(base, helper, root, incoming, commit, source_hash, inventory_hash, runtime_hash)
