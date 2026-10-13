@@ -1,0 +1,22 @@
+{
+  "htmlSourceCapturedAt": "2026-10-09T11:49:19.334153Z",
+  "htmlResponseSha256": "f9c47c81b8d2e44ca0f474b560b72ab8e06bd5fa4ca3f76eb80e7be27f92c43a",
+  "verificationMetaCounts": {
+    "google-site-verification": 0,
+    "msvalidate.01": 0,
+    "yandex-verification": 0
+  },
+  "tokenValuesExposed": false,
+  "accountOwnershipProven": false,
+  "publicDnsEvidence": {
+    "publicTxtResponses": 1,
+    "googleVerificationTxtRecords": 1,
+    "accountOwnershipProven": false,
+    "dnsMutation": false,
+    "capturedAt": "2026-10-11T16:06:15.4769305Z"
+  },
+  "limits": [
+    "A public DNS verification marker does not prove account access or available indexed-page reports.",
+    "The production domain/DNS was not changed; verify this mechanism again at separately authorized cutover."
+  ]
+}

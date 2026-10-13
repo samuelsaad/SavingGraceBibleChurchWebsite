@@ -1,0 +1,352 @@
+{
+  "format": "sgbc-final-staging-acceptance-v1",
+  "applicationCommit": "a257de54b54c29ce3fc5a8fcdce73e954dcafa31",
+  "image": "sha256:93e7c5949adf60d97d7506892a4200986830bf9ec614bd749c0f8ceb58bac4cd",
+  "package": {
+    "sourceArchiveSha256": "2f3db5ae78a86dc5d84a0da09469aa9378a6939f3310e02e8d4843a63a3591da",
+    "runtimeArchiveSha256": "bfb26730faece533bc08f95e809f521986ebcd51b22a01992cf277d209680578",
+    "runtimeManifestSha256": "719d4a0f0d918028f590cc263e6f3b4d5be098e73244aeef83419553c5b3cbc6",
+    "scanManifestSha256": "7a1786cc637a0d23da9c3cd275b85e0c9e8565372d758680406df8ec2bd9dc7e",
+    "migrationFilesExactByteMatch": 56
+  },
+  "canaryPolicy": {
+    "actualHomepageRendersPerRuntime": 12,
+    "v8HeapMiB": 512,
+    "containerMemoryMiB": 768,
+    "readinessAndHistoryChecksPreserved": true
+  },
+  "sourceLedgerSha256": "e2d764ce467651cadfe88c0f12cead17066b43171fe1beb5612d42a18200cae1",
+  "sourceBundleFileSha256": "cad131cdea84e514135c141a450639114b0ebef5ef7fd29ae965c2bdb48528ce",
+  "assetPackageSha256": "51ecda12026719eb366c1516fc2979528833419b3ff205ed0c3d7a707cb7ed37",
+  "runtimeProof": {
+    "databaseStateSha256": "7b29f850c42b734d2e386530df080778ee5dd378e4c9184d274856d218615e8a",
+    "capturedAt": "2026-10-12T09:23:28.836Z",
+    "runtimes": {
+      "public": {
+        "release": "a257de54b54c29ce3fc5a8fcdce73e954dcafa31",
+        "image": "sha256:93e7c5949adf60d97d7506892a4200986830bf9ec614bd749c0f8ceb58bac4cd",
+        "healthy": true,
+        "readonlyRoot": true,
+        "runtimeLabel": "7a356337f35aef70fd5e85ad4d7b1c93bc19d8d3a67c1e22c06fb289337ecc38",
+        "independentlyComputedLabelMatchesHttp": true
+      },
+      "protected": {
+        "release": "a257de54b54c29ce3fc5a8fcdce73e954dcafa31",
+        "image": "sha256:93e7c5949adf60d97d7506892a4200986830bf9ec614bd749c0f8ceb58bac4cd",
+        "healthy": true,
+        "readonlyRoot": true,
+        "runtimeLabel": "28177118766124c68bf5b96003e9673e32bcd15dc31c6564eebe369d52035362",
+        "independentlyComputedLabelMatchesHttp": true
+      }
+    }
+  },
+  "operations": {
+    "bridge-canary": {
+      "receiptSha256": "0b8b40063a81b9b12337ae87da33d374844bb44aa1302ce77e3de74d9e43fb42",
+      "historyPreserved": true,
+      "credentialsRetained": true
+    },
+    "activate-bridge": {
+      "receiptSha256": "a63a820ebac9dbe3bd39deb013bdaa068a9a4627f0c3312951f068c3d5bee64e",
+      "historyPreserved": true,
+      "credentialsRetained": true
+    },
+    "canary": {
+      "receiptSha256": "455a350762ec408680a21f5db11061d63bc471fabe81c261211463ee15de98a1",
+      "historyPreserved": true,
+      "credentialsRetained": true
+    },
+    "activate": {
+      "receiptSha256": "7ce1a940610da69fb36c4238cf93087cf727f45ec2ee668782b19fdb384f6503",
+      "historyPreserved": true,
+      "credentialsRetained": true
+    },
+    "rollback": {
+      "receiptSha256": "860ae37c1c6c40aae0b2812d4e9805b244db50c340ed980f48d784843e1214d7",
+      "historyPreserved": true,
+      "credentialsRetained": true
+    },
+    "reactivate": {
+      "receiptSha256": "51f40b9554bc6db0cac5b5026acb242f95f47d92b9f8f50a778118fa7eb4ff8b",
+      "historyPreserved": true,
+      "credentialsRetained": true
+    },
+    "verify": {
+      "receiptSha256": "cbe523b37be72a4932138bc8c79797e690c5008a1bb3927ea7af485f62234289",
+      "historyPreserved": true,
+      "credentialsRetained": true
+    }
+  },
+  "actualProxySwitchChecks": [
+    {
+      "switch": 1,
+      "responses": 18,
+      "evidenceSha256": "0d5c53ca4a27a0e36552355fc4aa1d5fdac5a3a768df55ad57b33585752b11c1",
+      "allResponsesNoindex": true,
+      "statuses": {
+        "200": 6,
+        "404": 5,
+        "401": 3,
+        "303": 4
+      }
+    },
+    {
+      "switch": 2,
+      "responses": 18,
+      "evidenceSha256": "4f6cf28ae0e93fb6458772fbdb44e3f92e4355909a38b2fd2e77f4e343f24490",
+      "allResponsesNoindex": true,
+      "statuses": {
+        "200": 6,
+        "404": 5,
+        "401": 3,
+        "303": 4
+      }
+    },
+    {
+      "switch": 3,
+      "responses": 18,
+      "evidenceSha256": "1dd3c5c49fa2f730f78432849e2c4875944ff6ed44338d558a28c4ab35e26754",
+      "allResponsesNoindex": true,
+      "statuses": {
+        "200": 6,
+        "404": 5,
+        "401": 3,
+        "303": 4
+      }
+    },
+    {
+      "switch": 4,
+      "responses": 18,
+      "evidenceSha256": "282a59b2d75b0d6d5a39536f0d264d221ec8314177c78a940835b10a48620d61",
+      "allResponsesNoindex": true,
+      "statuses": {
+        "200": 6,
+        "404": 5,
+        "401": 3,
+        "303": 4
+      }
+    }
+  ],
+  "migration": {
+    "import": {
+      "bundleSha256": "202cad2138c505a61150e3ccac143e98c08a9e9b306bdf91c6fc1178dd6b2b24",
+      "inserted": 0,
+      "updated": 0,
+      "unchanged": 5748
+    },
+    "replay": {
+      "bundleSha256": "202cad2138c505a61150e3ccac143e98c08a9e9b306bdf91c6fc1178dd6b2b24",
+      "inserted": 0,
+      "updated": 0,
+      "unchanged": 5748
+    },
+    "assetsAddedInSuccessfulAttempt": 0,
+    "assetsPreviouslyAppendedAndVerified": 722
+  },
+  "cmsAdoption": {
+    "result": {
+      "outcome": "source_cms_adopted",
+      "result": {
+        "inserted": 0,
+        "unchanged": 0
+      },
+      "alreadyAdopted": 2581,
+      "assets": {
+        "inserted": 0,
+        "unchanged": 292,
+        "held": 0
+      }
+    },
+    "replay": {
+      "outcome": "source_cms_adopted",
+      "result": {
+        "inserted": 0,
+        "unchanged": 0
+      },
+      "alreadyAdopted": 2581,
+      "assets": {
+        "inserted": 0,
+        "unchanged": 292,
+        "held": 0
+      }
+    },
+    "priorRowsPreserved": true
+  },
+  "cmsBrowser": {
+    "types": [
+      "source_sermon",
+      "page",
+      "event"
+    ],
+    "caseCount": 3,
+    "bodyAndSeoDraftPublishRestorePassed": true,
+    "errors": 0,
+    "externalRequests": 0,
+    "finishedAt": "2026-10-12T09:22:28.501Z",
+    "identity": "existing_staging_operator_not_personal_production_authentication"
+  },
+  "resources": [
+    {
+      "bundleFileSha256": "cad131cdea84e514135c141a450639114b0ebef5ef7fd29ae965c2bdb48528ce",
+      "expectedLabel": "7a356337f35aef70fd5e85ad4d7b1c93bc19d8d3a67c1e22c06fb289337ecc38",
+      "checked": 1946,
+      "requests": 1946,
+      "failed": 0,
+      "capturedAt": "2026-10-12T09:27:34.308803Z",
+      "recordingBodyRequests": 0
+    },
+    {
+      "bundleFileSha256": "cad131cdea84e514135c141a450639114b0ebef5ef7fd29ae965c2bdb48528ce",
+      "expectedLabel": "28177118766124c68bf5b96003e9673e32bcd15dc31c6564eebe369d52035362",
+      "checked": 1946,
+      "requests": 1946,
+      "failed": 0,
+      "capturedAt": "2026-10-12T09:31:49.754647Z",
+      "recordingBodyRequests": 0
+    }
+  ],
+  "browser": {
+    "cases": 90,
+    "errors": 0,
+    "overflowCases": 0,
+    "externalRequestsBlocked": 0,
+    "maxCls": 0.016700240483539092,
+    "capturedAt": "2026-10-12T09:35:13.327Z",
+    "fieldEvidence": false
+  },
+  "performance": {
+    "trials": 24,
+    "validLcpObservations": 24,
+    "invalidOrZeroLcpObservations": 0,
+    "maxValidLcpMs": 3896,
+    "maxCls": 0,
+    "errors": [],
+    "conditions": {
+      "browser": "headless Edge",
+      "mobileWidth": 390,
+      "cpuSlowdown": 4,
+      "latencyAddedMs": 150,
+      "downloadBytesPerSecond": 200000,
+      "uploadBytesPerSecond": 75000,
+      "externalResources": "blocked",
+      "sameMachine": true,
+      "stageTunnelTransport": "SSH loopback",
+      "concurrentAcceptanceWork": true,
+      "liveSourceComparison": false,
+      "fieldEvidence": false,
+      "actualWarmCacheVerified": false,
+      "routingDisablesHttpCache": true,
+      "inp": "not measured"
+    },
+    "capturedAt": "2026-10-12T09:36:56.148Z",
+    "fieldEvidence": false,
+    "performanceAcceptance": false
+  },
+  "fullComparison": {
+    "finishedAt": "2026-10-12T11:58:59.098894Z",
+    "baselineComplete": false,
+    "sourcePendingCount": 0,
+    "sourceDeferredCount": 5882,
+    "inventoryCount": 21134,
+    "checkedInventoryRows": 21134,
+    "inventoryReportRows": 21134,
+    "candidateRequests": 25462,
+    "sitemapUrlCount": 0,
+    "internalTargetCount": 16153,
+    "sourceStateCounts": {
+      "asset_dependency_unverified": 408,
+      "captured": 14228,
+      "deferred:new_observed_fixed_frontier_no_expansion": 5882,
+      "excluded:asset_reference_only": 124,
+      "discovered_uncaptured": 122,
+      "asset_captured": 364,
+      "excluded:administrative_endpoint": 6
+    },
+    "issueCounts": {
+      "asset_bytes_not_captured": 129,
+      "external_dependency_not_requested": 408,
+      "internal_target_not_200": 4158,
+      "metadata_change_requires_review": 7517,
+      "non_html_mime_changed": 49,
+      "non_html_source_bytes_changed_requires_review": 922,
+      "previous_200_not_preserved": 410,
+      "recording_not_requested": 118,
+      "source_asset_dependencies_unresolved": 408,
+      "source_baseline_incomplete": 1,
+      "source_capture_pending_or_missing": 5881,
+      "source_content_image_or_alt_missing": 1164,
+      "source_deferred_urls_unresolved": 5882,
+      "source_excluded_no_comparison_evidence": 6,
+      "source_semantic_blocks_missing": 3250,
+      "status_mapping_change_requires_review": 1506
+    },
+    "runtimeIdentityVerified": true,
+    "passed": false,
+    "limitations": [
+      "No JavaScript/browser rendering or account analytics.",
+      "Exact normalized block coverage does not assert content correctness.",
+      "Metadata/status differences require an explicit reviewed migration decision.",
+      "Provider recordings and external dependencies were not retrieved."
+    ]
+  },
+  "sourceCacheProof": {
+    "format": "sgbc-verified-frozen-source-cache-v1",
+    "certificateSha256": "70c71243281458dc14153bd24882330d7e18b6f055420b192f3aa909e4f62108",
+    "sourceLedgerSha256": "e2d764ce467651cadfe88c0f12cead17066b43171fe1beb5612d42a18200cae1",
+    "parserSha256": "d1b51a175b38943aef918cbce855b04bcd32086f72f291b3e18095d966a62d13",
+    "cacheSha256": "2f6545e67e169e2662f5032f943fe1fbb35e6616eb8a7dbbf7da8bd10f72d1e1",
+    "sourceRecordCount": 14228,
+    "sourceFileWitnesses": 25292,
+    "beforeAndAfterSourceHashesVerified": true,
+    "perReadSourceHashesVerified": true,
+    "candidateHttpResponsesReused": false,
+    "comparisonExitCode": 1
+  },
+  "originalTargetRecheck": {
+    "originalFailedTargets": 975,
+    "checkedTargets": 975,
+    "requests": 975,
+    "runtimeLabel": "7a356337f35aef70fd5e85ad4d7b1c93bc19d8d3a67c1e22c06fb289337ecc38",
+    "originalCsvSha256": "3aac3a5615030be9c3522be7f2b55688b5057b8c5ae1bb31c834ac7e9165412a",
+    "statuses": {
+      "404": 423,
+      "200": 552
+    },
+    "issueCounts": {},
+    "finishedAt": "2026-10-12T09:39:11.990414Z",
+    "limits": [
+      "Successful HTTP alone does not prove equivalent content."
+    ]
+  },
+  "actualFinalStagingRecovery": {
+    "outcome": "specific_staging_backup_recovery_proven",
+    "archiveSha256": "803495e9231365bde80cd4b33364e397c775b647f506dbfe5df6fe478ad15e62",
+    "archiveBytes": 18084021,
+    "tableCount": 65,
+    "fingerprintsMatch": true,
+    "constraintsIndexesTriggersSequencesMatch": true,
+    "schemaSha256": "c366b3401dcc3bd8e1785ab2dc4350c61cc08b2af63cb74132f883a5b637b0d8",
+    "assetCount": 2218,
+    "application": {
+      "resourceRoutes": 1946,
+      "httpChecks": 8
+    },
+    "ownershipAndAclRecreation": "not_tested_no_global_roles_changed",
+    "wordpressRecovery": "not_tested_backup_unavailable",
+    "outboundIntegrationsEnabled": false,
+    "createdTargetRemoved": true
+  },
+  "completeStagingCsvSha256": "ad21217757a8a5ff5ba6c05ef7f8b2ba955e26a950e902bf060457c43391c4a8",
+  "originalProductionMapSha256": "861cde60d96034febe7dd7fbd0986efe527e395510827a93e6df31d6126a451a",
+  "environmentPolicy": {
+    "stagingNoindex": true,
+    "stagingPublicSitemapDenied": true,
+    "publicAdminDenied": true,
+    "protectedAdminRequiresExistingOperatorSession": true,
+    "productionPolicyRehearsedOnlyOnLoopback": true,
+    "productionTelemetryDisabledOnStaging": true
+  },
+  "sourceWordpressMutation": false,
+  "productionTrafficOrDnsChanged": false,
+  "verdict": "NOT READY FOR CUTOVER"
+}

@@ -1,0 +1,45 @@
+{
+  "dispositionCounts": {
+    "intentionally_removed": 389,
+    "preserved": 3729,
+    "redirected": 2817,
+    "unresolved": 14199
+  },
+  "format": "sgbc-seo-combined-safe-acceptance-v1",
+  "inputs": [
+    {
+      "bindings": {
+        "assetsSha256": "fea08c9caaad83bd0ba01149fe86492a5610b0e0e1f54b60dcb56f367db37ebe",
+        "baselineSha256": "e2d764ce467651cadfe88c0f12cead17066b43171fe1beb5612d42a18200cae1",
+        "bundleSha256": "cad131cdea84e514135c141a450639114b0ebef5ef7fd29ae965c2bdb48528ce",
+        "candidateBindingsSha256": "be0b87f14e9c0831211111211ce53c594d9448bbb754a55f5877a981489e9cc5",
+        "candidateDiffSha256": "55c7bd0325adc5dfbdd330b6dc03720c714028e96adca4687dc157d89929ef95",
+        "candidateResponsesSha256": "7e54e3c0d743a088380e2026937316270a6100ecc301d4afac243e551f5e11fe",
+        "candidateSummarySha256": "2f9b4f0681ff30ec8bed63f292636574925034a0a3d41478dc114e5680e86fee",
+        "candidateUrlLedgerSha256": "f6c8ad1c5c4ad2c72d935ad32ff69ba6cd8d9a6ce9f6c4e072265557fd426780",
+        "sourceRecordsProofSha256": "8e8314eda588febf403f9ce9fad5a3d5d59beee4eff1a9ef7c2297b84b6428b1"
+      },
+      "csvHashes": {
+        "seo-content-metadata-diff.csv": "3495c688a31c07b917e3043d9dc6114b9273f2e2f186c6430208c7a1f44468eb",
+        "seo-url-migration-map.csv": "2bd5f80a53b7985adcc5dc69a4391096c991b3d3020eb3d0415ffad7e3c03ace"
+      },
+      "dispositionCounts": {
+        "intentionally_removed": 389,
+        "preserved": 3729,
+        "redirected": 2817,
+        "unresolved": 14199
+      },
+      "inventoryCount": 21134,
+      "summarySha256": "c5b77b199d7057783b971b94ddd713b69bee5594d8bbd679340f44b282599eb6"
+    }
+  ],
+  "inventoryCount": 21134,
+  "limitations": [
+    "Merged dispositions remain unchanged. Source, account, restoration and staging gates are assessed separately. No cutover or ranking guarantee."
+  ],
+  "outputHashes": {
+    "seo-content-metadata-diff.csv": "fc221264cd072075bb337329b13f499db02283653b732e5d6d6e642b2441b183",
+    "seo-url-migration-map.csv": "861cde60d96034febe7dd7fbd0986efe527e395510827a93e6df31d6126a451a"
+  },
+  "verdict": "NOT_READY"
+}

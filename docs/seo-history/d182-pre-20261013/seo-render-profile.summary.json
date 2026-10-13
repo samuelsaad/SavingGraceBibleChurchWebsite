@@ -1,0 +1,7 @@
+{
+  "responseBytesAndStatusesUnchangedAcross15Trials": true,
+  "beforeMedianMs": 709,
+  "afterMedianMs": 348,
+  "conditions": "same machine/data/paths; varying concurrent work; read-only handler calls; not controlled browser or field CWV",
+  "exactHtmlBytesCompared": false
+}

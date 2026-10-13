@@ -1,0 +1,41 @@
+{
+  "format": "sgbc-provisional-evidence-history-v1",
+  "files": [
+    {
+      "path": "seo-acceptance-summary.json",
+      "sha256": "200128642bb02141013bcfef5e3d6f512f26ad972f22bb5a1241115396d4eb06",
+      "bytes": 3637
+    },
+    {
+      "path": "seo-content-metadata-diff.csv",
+      "sha256": "52bb244bd63b906307abf9f063ab9de15609672ad1b907138662969f6e87d3c9",
+      "bytes": 38467446
+    },
+    {
+      "path": "seo-current-inventory-classification.csv",
+      "sha256": "f21dbfa74a773f4599892b06c82374bf608b32462904cd362794f6a9fe40713e",
+      "bytes": 7621161
+    },
+    {
+      "path": "seo-current-inventory-classification.summary.json",
+      "sha256": "0156ad6f695877f689858902157ff86b32c28284c67dee7fc4f3c331c8b109d1",
+      "bytes": 958
+    },
+    {
+      "path": "seo-final-inventory.summary.json",
+      "sha256": "6d52ae22682d6becfc6d4bd99a6d87eb0839c9aff6a95352a3c29f65f7854466",
+      "bytes": 475
+    },
+    {
+      "path": "seo-source-baseline.md",
+      "sha256": "978d5afe53011bace16d4ea78363a54d303da4446c0e298335ce7acac14cfdc5",
+      "bytes": 38064
+    },
+    {
+      "path": "seo-url-migration-map.csv",
+      "sha256": "c258ad296dfecf0f03b25e0b36c0d8d1bcd13dac61308ae94184f9f357af4653",
+      "bytes": 26426289
+    }
+  ],
+  "status": "superseded_21137_inventory_not_current_acceptance"
+}

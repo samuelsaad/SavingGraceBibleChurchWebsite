@@ -1,0 +1,86 @@
+{
+  "applicationCommit": "a257de54b54c29ce3fc5a8fcdce73e954dcafa31",
+  "codeArchiveSha256": "61f3de30ff2319fff128305c26052ce491af9fb2b33e0696ccbba2a0b7cf76e9",
+  "runtimeLabel": "a58b9a513a94aa3119e82174b32f7e65d27e95586bb3ea93c9757b8279c086d7",
+  "independentlyComputedLabelMatchesHttp": true,
+  "heapLimitMiB": 384,
+  "standardTests": {
+    "passed": 1280,
+    "gatedSkipped": 145,
+    "gatedCasesCoveredByPostgres": true
+  },
+  "postgresTests": {
+    "passed": 1425,
+    "skipped": 0,
+    "files": 154,
+    "exactDisposableTargetRemoved": true
+  },
+  "typeCheck": {
+    "files": 648,
+    "errors": 0,
+    "warnings": 0,
+    "hints": 7
+  },
+  "staticBuildPages": 45,
+  "runtimeBuildPassed": true,
+  "outgoingPrivacyScan": {
+    "files": 438,
+    "findings": 0,
+    "manifestSha256": "425244e1cecbda3dec05b43e409ac7649b667ba4cdd4e683ac17ab21d8f4b83e"
+  },
+  "originalFailedTargets": {
+    "originalFailedTargets": 975,
+    "checkedTargets": 975,
+    "requests": 975,
+    "runtimeLabel": "a58b9a513a94aa3119e82174b32f7e65d27e95586bb3ea93c9757b8279c086d7",
+    "originalCsvSha256": "3aac3a5615030be9c3522be7f2b55688b5057b8c5ae1bb31c834ac7e9165412a",
+    "statuses": {
+      "404": 423,
+      "200": 552
+    },
+    "issueCounts": {},
+    "finishedAt": "2026-10-12T07:37:12.608451Z",
+    "limits": [
+      "Successful HTTP alone does not prove equivalent content."
+    ]
+  },
+  "fullComparisonCompleted": true,
+  "stagingFinalDeploymentCompleted": false,
+  "remotePublicationVerified": true,
+  "sourceWordpressMutation": false,
+  "productionTrafficOrDnsChanged": false,
+  "browser": {
+    "cases": 90,
+    "errors": 0,
+    "externalRequestsBlocked": 0,
+    "overflowCases": 0,
+    "maxCls": 0.016700240483539092,
+    "maxLcpMs": 824,
+    "conditions": {
+      "browser": "headless Edge",
+      "cpuThrottle": false,
+      "networkThrottle": false,
+      "concurrentAcceptanceWork": true,
+      "externalResources": "blocked",
+      "fieldEvidence": false,
+      "inp": "not measured",
+      "comparisonToLiveSource": "not performed"
+    },
+    "performanceAcceptance": false
+  },
+  "finalRecoverySummary": "seo-final-recovery.summary.json",
+  "resourceFreshProcessSummary": "seo-final-resource-restart.summary.json",
+  "comparisonPassed": false,
+  "comparisonCheckedRows": 21134,
+  "comparisonCandidateRequests": 22082,
+  "comparisonFinishedAt": "2026-10-12T09:37:01.038830Z",
+  "sourceCacheProof": {
+    "sourceRecordCount": 14228,
+    "sourceFileWitnesses": 25292,
+    "beforeAndAfterSourceHashesVerified": true,
+    "perReadSourceHashesVerified": true,
+    "candidateHttpResponsesReused": false,
+    "comparisonExitCode": 1
+  },
+  "pythonTests": 173
+}

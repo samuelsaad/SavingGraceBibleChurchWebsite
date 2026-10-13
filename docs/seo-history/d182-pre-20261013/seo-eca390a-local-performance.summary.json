@@ -1,0 +1,109 @@
+{
+  "applicationCommit": "eca390a021a979eab404ff6dd787e1f9b2160461",
+  "capturedAt": "2026-10-12T05:15:50.699Z",
+  "trials": 24,
+  "errors": [],
+  "validLcpObservations": 24,
+  "invalidOrZeroLcpObservations": 0,
+  "maxValidLcpMs": 3624,
+  "overLcp2500ms": 4,
+  "maxCls": 6.482173947451726e-05,
+  "conditions": {
+    "browser": "headless Edge",
+    "mobileWidth": 390,
+    "cpuSlowdown": 4,
+    "latencyAddedMs": 150,
+    "downloadBytesPerSecond": 200000,
+    "uploadBytesPerSecond": 75000,
+    "externalResources": "blocked",
+    "sameMachine": true,
+    "stageTunnelTransport": "not_used_local_only",
+    "concurrentAcceptanceWork": true,
+    "liveSourceComparison": false,
+    "fieldEvidence": false,
+    "actualWarmCacheVerified": false,
+    "routingDisablesHttpCache": true,
+    "inp": "not measured"
+  },
+  "fieldAcceptance": false,
+  "labAcceptance": false,
+  "groups": {
+    "/ cold": {
+      "trials": 3,
+      "lcpMs": [
+        3624,
+        2452,
+        2456
+      ],
+      "maxCls": 0
+    },
+    "/ repeat": {
+      "trials": 3,
+      "lcpMs": [
+        2508,
+        2936,
+        2596
+      ],
+      "maxCls": 0
+    },
+    "/about/ cold": {
+      "trials": 3,
+      "lcpMs": [
+        1160,
+        1124,
+        1040
+      ],
+      "maxCls": 0
+    },
+    "/about/ repeat": {
+      "trials": 3,
+      "lcpMs": [
+        816,
+        808,
+        856
+      ],
+      "maxCls": 0
+    },
+    "/sermons/ cold": {
+      "trials": 3,
+      "lcpMs": [
+        1212,
+        1108,
+        1220
+      ],
+      "maxCls": 0
+    },
+    "/sermons/ repeat": {
+      "trials": 3,
+      "lcpMs": [
+        900,
+        864,
+        864
+      ],
+      "maxCls": 0
+    },
+    "/sermons/an-uncomfortable-day-to-worship/ cold": {
+      "trials": 3,
+      "lcpMs": [
+        2240,
+        2412,
+        2448
+      ],
+      "maxCls": 0
+    },
+    "/sermons/an-uncomfortable-day-to-worship/ repeat": {
+      "trials": 3,
+      "lcpMs": [
+        1980,
+        1612,
+        1664
+      ],
+      "maxCls": 6.482173947451726e-05
+    }
+  },
+  "limits": [
+    "Earlier failed controlled observations are retained.",
+    "No comparable live-source, real-user INP or 75th-percentile field data.",
+    "Repeat labels do not prove warm HTTP cache; routing disables caching."
+  ]
+}

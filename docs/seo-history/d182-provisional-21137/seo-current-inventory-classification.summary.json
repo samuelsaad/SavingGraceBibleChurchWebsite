@@ -1,0 +1,31 @@
+{
+  "format": "sgbc-seo-inventory-classification-v1",
+  "sourceLedgerFileSha256": "c258ad296dfecf0f03b25e0b36c0d8d1bcd13dac61308ae94184f9f357af4653",
+  "originalRows": 21137,
+  "distinctUrls": 21137,
+  "originalDispositions": {
+    "unresolved": 14199,
+    "redirected": 2818,
+    "intentionally_removed": 389,
+    "preserved": 3731
+  },
+  "unresolvedCategories": {
+    "external_resource": 408,
+    "alternate_hostname": 3306,
+    "observed_redirect_alias": 893,
+    "captured_public_content": 508,
+    "owned_resource": 243,
+    "uncaptured_page": 217,
+    "protected_control": 6,
+    "tracking_variant": 1184,
+    "query_or_filter": 1774,
+    "source_identity_query": 16,
+    "calendar_projection": 5543,
+    "authored_event_or_taxonomy": 31,
+    "pagination": 70
+  },
+  "unresolvedExplicitWordPressIdentities": 978,
+  "unresolvedObservedGroups": 11854,
+  "groupingProvesContentEquivalence": false,
+  "outcomesChanged": 0
+}

@@ -452,3 +452,36 @@ its failed directory remains, and the verified union uses a short confined path.
 Two later PostgreSQL runs retained existing 5-second filesystem/concurrency timeouts;
 no test timeout or guard was relaxed. Final execution/results follow once the new
 application/content release and staging rehearsal finish.
+
+
+## D-182 final available SEO rehearsal — 14 October 2026 (source baseline: 13 October)
+
+Application `d068c2214e2d53b6c50de4788305acaf7fa052ed`, operator
+`eaf5b9bdb2c29d44cd54345d13e6c7462737d9cf`, image
+`sha256:cfdcd574a493753c73a349da9710fd44f489a07d4dbde3562c7029132201b2ff`, completed protected staging bridge/canary, activation,
+compatible rollback, reactivation, exact history and credential preservation.
+Both complete comparisons checked 23,017 observed URLs, preserving all original
+15,252 hashes. Final dispositions: {'intentionally_removed': 704, 'preserved': 3731, 'redirected': 3092, 'unresolved': 15490}. This is NOT READY FOR CUTOVER:
+complete stored source coverage, remaining content/calendar findings, recording
+recovery, WordPress restoration and church account/field evidence remain missing.
+
+All 458 known public sermon identities remain independent of new enrichment.
+The retained WXR was located and reconciled, not described as a current backup.
+All 2,335 resource paths passed local and both staged runtime byte/MIME checks;
+298 exact resource redirects replayed unchanged. CMS source adoption totals 2,583,
+with 1,223 held projections. Three staged body/SEO save, reload, draft isolation,
+publish and exact revision restoration cycles passed. Final structural browser
+matrices cover 108 cases per environment, with zero errors/overflow.
+
+Actual final staging backup 48bd98ed95c9803880687a985b47e2b1f744b81ba4f6a597e2281844eac71dc3 restored all
+65 tables and 2252 assets with schema,
+fingerprint and isolated application checks; exact created OID target was removed.
+This does not prove WordPress or global-role/ACL recovery. Outbound integrations
+were disabled. Final controlled lab evidence is separate from missing field INP/CWV.
+
+Checks: 1,287 standard passes, 146 gated skips covered by 1,433 PostgreSQL passes
+with zero skips; 182 Python tests, type/build/importer/offline audit/privacy passed.
+The original primary checkout retains all 18 unrelated user changes. No DNS,
+production traffic, WordPress mutation, recording bodies or new approval occurred.
+See docs/seo-migration-acceptance.md and machine-readable evidence for exact hashes,
+counts and remaining actions. Final documentation commit is separate from runtime.

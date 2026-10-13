@@ -1,0 +1,175 @@
+{
+  "format": "sgbc-final-a257de5-lab-results-v1",
+  "applicationCommit": "a257de54b54c29ce3fc5a8fcdce73e954dcafa31",
+  "local": {
+    "trials": 24,
+    "validLcpObservations": 24,
+    "invalidOrZeroLcpObservations": 0,
+    "above2500Ms": 6,
+    "maxValidLcpMs": 4248,
+    "maxCls": 6.482173947451726e-05,
+    "errors": [],
+    "conditions": {
+      "browser": "headless Edge",
+      "mobileWidth": 390,
+      "cpuSlowdown": 4,
+      "latencyAddedMs": 150,
+      "downloadBytesPerSecond": 200000,
+      "uploadBytesPerSecond": 75000,
+      "externalResources": "blocked",
+      "sameMachine": true,
+      "stageTunnelTransport": "not_used_local_only",
+      "concurrentAcceptanceWork": true,
+      "liveSourceComparison": false,
+      "fieldEvidence": false,
+      "actualWarmCacheVerified": false,
+      "routingDisablesHttpCache": true,
+      "inp": "not measured"
+    },
+    "capturedAt": "2026-10-12T09:47:48.988Z",
+    "fieldEvidence": false,
+    "acceptance": false,
+    "byPath": {
+      "/": {
+        "trials": 6,
+        "lcpMs": [
+          4248,
+          2620,
+          2492,
+          2520,
+          2512,
+          2480
+        ],
+        "maxCls": 0
+      },
+      "/about/": {
+        "trials": 6,
+        "lcpMs": [
+          1248,
+          788,
+          1304,
+          840,
+          1268,
+          912
+        ],
+        "maxCls": 0
+      },
+      "/sermons/": {
+        "trials": 6,
+        "lcpMs": [
+          1028,
+          948,
+          1240,
+          948,
+          1300,
+          888
+        ],
+        "maxCls": 0
+      },
+      "/sermons/an-uncomfortable-day-to-worship/": {
+        "trials": 6,
+        "lcpMs": [
+          2268,
+          1540,
+          2936,
+          1628,
+          2656,
+          2020
+        ],
+        "maxCls": 6.482173947451726e-05
+      }
+    }
+  },
+  "staging": {
+    "trials": 24,
+    "validLcpObservations": 24,
+    "invalidOrZeroLcpObservations": 0,
+    "above2500Ms": 8,
+    "maxValidLcpMs": 3896,
+    "maxCls": 0,
+    "errors": [],
+    "conditions": {
+      "browser": "headless Edge",
+      "mobileWidth": 390,
+      "cpuSlowdown": 4,
+      "latencyAddedMs": 150,
+      "downloadBytesPerSecond": 200000,
+      "uploadBytesPerSecond": 75000,
+      "externalResources": "blocked",
+      "sameMachine": true,
+      "stageTunnelTransport": "SSH loopback",
+      "concurrentAcceptanceWork": true,
+      "liveSourceComparison": false,
+      "fieldEvidence": false,
+      "actualWarmCacheVerified": false,
+      "routingDisablesHttpCache": true,
+      "inp": "not measured"
+    },
+    "capturedAt": "2026-10-12T09:36:56.148Z",
+    "fieldEvidence": false,
+    "acceptance": false,
+    "byPath": {
+      "/": {
+        "trials": 6,
+        "lcpMs": [
+          2904,
+          2864,
+          2720,
+          2584,
+          2616,
+          2604
+        ],
+        "maxCls": 0
+      },
+      "/about/": {
+        "trials": 6,
+        "lcpMs": [
+          1148,
+          972,
+          1256,
+          808,
+          1104,
+          848
+        ],
+        "maxCls": 0
+      },
+      "/sermons/": {
+        "trials": 6,
+        "lcpMs": [
+          1280,
+          788,
+          1476,
+          1040,
+          1052,
+          860
+        ],
+        "maxCls": 0
+      },
+      "/sermons/an-uncomfortable-day-to-worship/": {
+        "trials": 6,
+        "lcpMs": [
+          3896,
+          1584,
+          3880,
+          1828,
+          1900,
+          1668
+        ],
+        "maxCls": 0
+      }
+    }
+  },
+  "fieldEvidence": false,
+  "liveSourceComparison": false,
+  "actualWarmCacheVerified": false,
+  "routingDisablesHttpCache": true,
+  "comparisonLimitations": [
+    "same headless browser and throttle settings",
+    "SSH transport differs from local loopback",
+    "concurrent acceptance work",
+    "source WordPress not measured comparably",
+    "no real-user field evidence"
+  ],
+  "inp": "not measured",
+  "performanceAcceptance": false
+}

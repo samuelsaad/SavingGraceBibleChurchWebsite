@@ -1,0 +1,21 @@
+{
+  "format": "sgbc-retained-stored-rendered-seo-v1",
+  "retainedExportDate": "2026-09-24",
+  "retainedExportSha256": "fd15e0553349f40fa74264b0cb1ab70560cf48ae7ef18101cccb7b0514876e0e",
+  "freshStoredSourceInspection": false,
+  "rows": 56,
+  "recordedIdentities": 33,
+  "outcomes": {
+    "stored_template_requires_plugin_expansion": 16,
+    "same_normalized_value": 35,
+    "no_current_rendered_identity_witness": 5
+  },
+  "currentActivePlugin": "All in One SEO",
+  "pluginEvidence": [
+    "2026-10-13 public REST aioseo/v1 namespace",
+    "captured homepage All in One SEO HTML marker; no Yoast marker"
+  ],
+  "currentStoredPluginSettingsVerified": false,
+  "valuesPublished": false,
+  "comparisonCsvSha256": "a6bc00827a940bd3db72d701100ac77cf5b54fe55fda6fc4faa52e0d8e57dddb"
+}

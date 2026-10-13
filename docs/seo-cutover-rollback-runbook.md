@@ -165,3 +165,36 @@ Git archive output on Windows can apply working-tree newline attributes. Product
 ## Final A257 verification supersedes earlier pending checkpoints
 
 Application `a257de54b54c29ce3fc5a8fcdce73e954dcafa31` and image `sha256:93e7c5949adf60d97d7506892a4200986830bf9ec614bd749c0f8ceb58bac4cd` are the verified source-enabled staging candidate. Both canaries require 12 actual homepage renders at explicit 512 MiB V8 heap within unchanged 768 MiB containers. Four 18-response proxy matrices, compatible rollback/reactivation, three exact CMS body/SEO revision cycles, 1,946 resources on each runtime and the complete 21,134-row proxy crawl completed. The verdict remains NOT READY; consult `seo-final-staging-acceptance.summary.json` and `seo-migration-acceptance.md`. Earlier failures and smaller releases above remain historical evidence. Exact Git blob packaging and all 56 SQL migration bytes match. No production traffic/DNS or WordPress mutation occurred.
+
+## 13 October source delta and release preparation
+
+The current frozen application is `d068c2214e2d53b6c50de4788305acaf7fa052ed`;
+operator implementation is independently pinned at
+`eaf5b9bdb2c29d44cd54345d13e6c7462737d9cf`. Its bounded full-row snapshot fix
+changes no runtime/migration/dependency bytes and preserves every row twice.
+Final receipts govern activation; earlier failed switches returned to the bridge. Prepared image:
+`sha256:cfdcd574a493753c73a349da9710fd44f489a07d4dbde3562c7029132201b2ff`.
+Final acceptance evidence must confirm activation and recovery, rather than this
+preparation record being treated as a passed rehearsal.
+
+The dated source union contains 23,017 observed URLs, 458 known public sermons and
+2,335 resource paths. Retain all earlier captures and the original 15,252 URL hashes.
+After an authorized content freeze, repeat sitemap/publication/identity comparison
+and the guarded authoritative source extraction; apply additions/edits with expected
+source hashes and CMS no-clobber checks. Review withdrawals individually. Reconcile
+all URL and content differences before go/no-go; do not reuse a stale successful
+snapshot as the final delta. CMS adoption of original content does not approve AI
+transcripts, descriptions or Q&A.
+
+Staging inventory buffers may be reclaimed only in the operator's own process.
+The unchanged readiness guard requires 2 GiB of available host memory and stops
+preparation if it cannot settle within the bounded wait. No VM, container or network
+resize, unrelated process termination, cache flush or lowered gate is part of this
+rehearsal. Every package file and transfer directory must match its frozen app and
+operator Git bytes, confined location, owner and helper checksums.
+
+Production actions remain unexecuted. Before any later cutover, a named operator
+must close the acceptance blockers, verify WordPress/database/uploads/configuration
+backups and restoration, production authentication/MFA and measurement configuration,
+record exact final database/content/release hashes, and obtain separate cutover
+permission. Keep WordPress and recording/resource dependencies available for recovery.

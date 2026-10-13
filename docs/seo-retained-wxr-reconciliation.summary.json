@@ -1,0 +1,31 @@
+{
+  "format": "sgbc-retained-wxr-public-reconciliation-v1",
+  "retainedDate": "2026-09-24",
+  "sourceSha256": "fd15e0553349f40fa74264b0cb1ab70560cf48ae7ef18101cccb7b0514876e0e",
+  "fileBytes": 9517272,
+  "items": 1357,
+  "publicCountsByType": {
+    "page": 30,
+    "post": 3,
+    "sermons": 454,
+    "tribe_events": 14,
+    "tribe_event_series": 5
+  },
+  "historicalAttachments": 437,
+  "currentReadableRestAttachments": 420,
+  "reportedMediaCount": 437,
+  "historicalMediaAbsentFromCurrentReadableSet": 17,
+  "historicalPublicSermons": 454,
+  "currentKnownPublicSermons": 458,
+  "historicalPublicSermonsMissingFromKnownCurrentSet": 0,
+  "currentStoredCompletenessProven": false,
+  "currentOriginalFilesHeadSuccess": 437,
+  "bodyVerifiedOriginalFiles": 317,
+  "unchangedExistingBinaries": 300,
+  "newOriginalImageRoutes": 17,
+  "newOriginalUniqueFiles": 16,
+  "recordingBodyRequests": 0,
+  "metadataOnlyRecordingFiles": 118,
+  "metadataOnlyUninspectedZipFiles": 2,
+  "retainedWxrIsRecoveryBackup": false
+}

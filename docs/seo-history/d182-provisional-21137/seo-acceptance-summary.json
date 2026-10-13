@@ -1,0 +1,89 @@
+{
+  "format": "sgbc-seo-safe-acceptance-v1",
+  "bindings": {
+    "baselineSha256": "56cc226824adc622be275bdec974dd4aeb562c1249c72a1d75898e6ebe34b858",
+    "assetsSha256": "85526390d492713b502b3aa0fbc881b61f1c22ce360630ae160e1e23db92f9ae",
+    "candidateSummarySha256": "bfe02058e1b4e4ab6264c090dc81ceb49c8f8e0f7d8c83503b8be34d26175ab3",
+    "candidateBindingsSha256": "3c1f78aeef329c40cbbcab3810b3cfa338467e78e2615b6c1c679fa2ae00d07d",
+    "candidateUrlLedgerSha256": "3b54913a440c9187f94588667ff7f0f355f734f408f3a5eb8de010f2ce6917b2",
+    "candidateDiffSha256": "c73929e1732541f70d8fee66c641ef131ba60cc77080d7eb525e59fe27c4c125",
+    "candidateResponsesSha256": "4aa0ffff4af0f77c5152e14744b9839a97d05d4ad6271d609045325ddcefee40",
+    "bundleSha256": "47cf0cf97181973e2f33f052fc9ddbb66a7043bd3cbeb24c2c52324711d1099c",
+    "sourceRecordsProofSha256": "24c6dee45fb8712cc1161e331d71d53e3eb3be49732795836e15efab6579aff4"
+  },
+  "reviewFileSha256": "7e3d99689c7ed2d5803e241fcd2cc32bd6e59f81524020e6e98a482c540d664b",
+  "inventoryCount": 21137,
+  "dispositionCounts": {
+    "intentionally_removed": 389,
+    "preserved": 3731,
+    "redirected": 2818,
+    "unresolved": 14199
+  },
+  "unresolvedCount": 14199,
+  "rawIssueCounts": {
+    "asset_bytes_not_captured": 129,
+    "external_dependency_not_requested": 408,
+    "metadata_change_requires_review": 9851,
+    "non_html_mime_changed": 17,
+    "non_html_source_bytes_changed_requires_review": 922,
+    "previous_200_not_preserved": 378,
+    "recording_not_requested": 118,
+    "source_capture_pending_or_missing": 5881,
+    "source_content_image_or_alt_missing": 1224,
+    "source_excluded_no_comparison_evidence": 6,
+    "source_indexability_lost": 451,
+    "source_redirect_target_capture_missing": 1161,
+    "source_semantic_blocks_missing": 3376,
+    "status_mapping_change_requires_review": 1506
+  },
+  "reportIssueCounts": {},
+  "reviewedDifferencePolicyCounts": {
+    "bounded-source-differences": 21137
+  },
+  "sourceCoverageComplete": false,
+  "sourceDeferredCount": 5881,
+  "sourcePendingCount": 0,
+  "source404PathFamilies": {
+    "calendar_path": 377,
+    "event_path": 1,
+    "other_path": 9,
+    "page_alias_path": 2
+  },
+  "retainedSermonReconciliation": {
+    "available": true,
+    "retainedPublishedCount": 454,
+    "freshUniqueSermonIds": 458,
+    "outcomeCounts": {
+      "fresh_same_identity_same_path": 454
+    },
+    "retainedIdsAbsentFromFreshSermons": [],
+    "freshIdsAbsentFromRetainedPublished": [
+      30130,
+      30131,
+      30132,
+      30133
+    ],
+    "retainedIdsAbsentFromFinalBundle": [],
+    "freshIdsAbsentFromFinalBundle": [],
+    "basis": "explicit_retained_source_id_and_sermon_path_not_guid",
+    "retainedSeedSourceStatuses": {
+      "200": 454
+    },
+    "freshPrimaryMediaMissingCount": 0,
+    "freshDatabaseInventoryAvailable": false,
+    "limitation": "retained_export_is_historical_fresh_wordpress_grant_guard_failed"
+  },
+  "retainedExportSha256": "83b736590ad3ed9f942526ffb3437194f7715f9b060a91791176c14e10daef2c",
+  "candidateRuntimeIdentityVerified": true,
+  "candidateComparatorPassed": false,
+  "trafficEvidence": "unavailable",
+  "backlinkEvidence": "unavailable",
+  "freshWordpressDatabaseEvidence": "unavailable_guard_rejected",
+  "verdict": "NOT_READY",
+  "limitations": [
+    "Explicit dispositions do not grant production cutover authority.",
+    "Unavailable source/account evidence remains a launch blocker.",
+    "Hash comparisons contain no source or candidate prose.",
+    "An intended target is not proof of equivalent content."
+  ]
+}

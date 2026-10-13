@@ -1,0 +1,16 @@
+{
+  "finalComparatorInventoryRows": 21134,
+  "finalDistinctUrls": 21134,
+  "originalRows": 15252,
+  "originalHashesRetained": 15252,
+  "sourceStates": {
+    "asset_dependency_unverified": 408,
+    "captured": 14228,
+    "deferred:new_observed_fixed_frontier_no_expansion": 5882,
+    "excluded:asset_reference_only": 124,
+    "discovered_uncaptured": 122,
+    "asset_captured": 364,
+    "excluded:administrative_endpoint": 6
+  },
+  "coverageComplete": false
+}

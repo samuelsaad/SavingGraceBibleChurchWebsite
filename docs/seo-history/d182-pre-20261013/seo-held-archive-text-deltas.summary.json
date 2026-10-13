@@ -1,0 +1,136 @@
+{
+  "format": "sgbc-seo-held-archive-text-deltas-v1",
+  "rows": [
+    {
+      "path": "/sermons/?sermon_speaker=wesam-saad",
+      "retainedTextNodes": 111,
+      "freshTextNodes": 111,
+      "exactTextSequenceEqual": true,
+      "textMultisetEqual": true,
+      "retainedOnlyNodes": 0,
+      "freshOnlyNodes": 0,
+      "retainedOnlyTextHashes": [],
+      "freshOnlyTextHashes": [],
+      "changeResolved": false
+    },
+    {
+      "path": "/sermons/?sermon_speaker=ralph-gambardella",
+      "retainedTextNodes": 111,
+      "freshTextNodes": 111,
+      "exactTextSequenceEqual": true,
+      "textMultisetEqual": true,
+      "retainedOnlyNodes": 0,
+      "freshOnlyNodes": 0,
+      "retainedOnlyTextHashes": [],
+      "freshOnlyTextHashes": [],
+      "changeResolved": false
+    },
+    {
+      "path": "/sermons/page/14/?sermon_speaker=ralph-gambardella",
+      "retainedTextNodes": 64,
+      "freshTextNodes": 64,
+      "exactTextSequenceEqual": true,
+      "textMultisetEqual": true,
+      "retainedOnlyNodes": 0,
+      "freshOnlyNodes": 0,
+      "retainedOnlyTextHashes": [],
+      "freshOnlyTextHashes": [],
+      "changeResolved": false
+    },
+    {
+      "path": "/sermons/page/2/?sermon_speaker=ralph-gambardella",
+      "retainedTextNodes": 113,
+      "freshTextNodes": 113,
+      "exactTextSequenceEqual": true,
+      "textMultisetEqual": true,
+      "retainedOnlyNodes": 0,
+      "freshOnlyNodes": 0,
+      "retainedOnlyTextHashes": [],
+      "freshOnlyTextHashes": [],
+      "changeResolved": false
+    },
+    {
+      "path": "/sermons/page/2/?sermon_speaker=wesam-saad",
+      "retainedTextNodes": 113,
+      "freshTextNodes": 113,
+      "exactTextSequenceEqual": true,
+      "textMultisetEqual": true,
+      "retainedOnlyNodes": 0,
+      "freshOnlyNodes": 0,
+      "retainedOnlyTextHashes": [],
+      "freshOnlyTextHashes": [],
+      "changeResolved": false
+    },
+    {
+      "path": "/sermons/page/3/?sermon_speaker=ralph-gambardella",
+      "retainedTextNodes": 114,
+      "freshTextNodes": 114,
+      "exactTextSequenceEqual": true,
+      "textMultisetEqual": true,
+      "retainedOnlyNodes": 0,
+      "freshOnlyNodes": 0,
+      "retainedOnlyTextHashes": [],
+      "freshOnlyTextHashes": [],
+      "changeResolved": false
+    },
+    {
+      "path": "/sermons/page/3/?sermon_speaker=wesam-saad",
+      "retainedTextNodes": 114,
+      "freshTextNodes": 114,
+      "exactTextSequenceEqual": true,
+      "textMultisetEqual": true,
+      "retainedOnlyNodes": 0,
+      "freshOnlyNodes": 0,
+      "retainedOnlyTextHashes": [],
+      "freshOnlyTextHashes": [],
+      "changeResolved": false
+    },
+    {
+      "path": "/sermons/page/36/?sermon_speaker=wesam-saad",
+      "retainedTextNodes": 43,
+      "freshTextNodes": 43,
+      "exactTextSequenceEqual": true,
+      "textMultisetEqual": true,
+      "retainedOnlyNodes": 0,
+      "freshOnlyNodes": 0,
+      "retainedOnlyTextHashes": [],
+      "freshOnlyTextHashes": [],
+      "changeResolved": false
+    },
+    {
+      "path": "/events/list/?shortcode=9ddfb0dc&eventDisplay=past",
+      "retainedTextNodes": 141,
+      "freshTextNodes": 141,
+      "exactTextSequenceEqual": false,
+      "textMultisetEqual": false,
+      "retainedOnlyNodes": 13,
+      "freshOnlyNodes": 13,
+      "retainedOnlyTextHashes": [
+        "d1eb39b09bf52b68d1c4cb75b98211855dcff0bb908c62c7b969b04ef9ce81f0",
+        "785f3ec7eb32f30b90cd0fcf3657d388b5ff4297f2f9716ff66e9b69c05ddd09",
+        "58e282b035d44444131f3ca9d83ea8837922ed924361a00bf1dae08221aadaa7",
+        "d7be222e3d793164ef5a26e7d6f727c32a05d0d88999da158ed02d1a761c0c76",
+        "374e79ec6f1cb7e9199568c89f9c7a0613461f8927cbd3a20c7d66f2411f5127",
+        "c60d47691c52cd7e9735ce0fd3a53466413c13d0df8ef728f6895e25742b248f",
+        "a7e30da8559c0135b805cd87a8e5f7a6d678d76899f5d674621bcebf4f58a142",
+        "d5e9a048386de8d18e6c87e00b68b5d37b8c7d66b747e84cbaa91921ee9d2d6e",
+        "64a2fbaf1b1afa1805e98e466569f84a9cbdc61b3fd1cae6e3d788eca45405a1",
+        "27b3a562c69fbd2c66b5ae9ac2226f44135d15e741430908d9ae1ce3b99f7fbe"
+      ],
+      "freshOnlyTextHashes": [
+        "db18f17fe532007616d0d0fcc303281c35aafc940b13e6af55e63f8fed304718",
+        "54ef6a9a32e326f3eb6b1085dc53b28c9ddf869ffe7ca7e14846505065b62245",
+        "7c50b51729cb7c5e26a075a0faed7f67c7d0ff09627b771b5b9b3a54ce9462a0",
+        "61210eba3553e6a4f0bef408aa19d50409ccf706f065e9705a352afa1d9b7880",
+        "dbf0067f2004097fd5323073bbf407706a86ba75684f63f1026172ef98af0c03",
+        "2c1acbf3da0adc6a2d636874817d48656d9b7b422f72c491c692503aaedcfaf9",
+        "4fc82b26aecb47d2868c4efbe3581732a3e7cbcc6c2efb32062c08170a05eeb8",
+        "b5b33c8653177eff68a5dd798a2365c1353bde60374ed61d0a7f86a121e6d00e",
+        "f45600a2cc55ea2b7dcd336dc4cbf89e8ac54a97f7a579c6827e39e63d3df3c8"
+      ],
+      "changeResolved": false
+    }
+  ],
+  "sourceVersionsOverwritten": false,
+  "contentEquivalenceClaimed": false
+}

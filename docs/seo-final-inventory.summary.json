@@ -1,16 +1,33 @@
 {
-  "finalComparatorInventoryRows": 21134,
-  "finalDistinctUrls": 21134,
-  "originalRows": 15252,
-  "originalHashesRetained": 15252,
-  "sourceStates": {
-    "asset_dependency_unverified": 408,
-    "captured": 14228,
-    "deferred:new_observed_fixed_frontier_no_expansion": 5882,
-    "excluded:asset_reference_only": 124,
-    "discovered_uncaptured": 122,
-    "asset_captured": 364,
-    "excluded:administrative_endpoint": 6
+  "format": "sgbc-final-finite-source-inventory-v2",
+  "date": "2026-10-13",
+  "distinctObservedUrls": 23017,
+  "originalAcceptanceHashesRetained": 15252,
+  "capturedResponses": 15433,
+  "deferredObservedUrls": 6725,
+  "sourceFileWitnesses": 27863,
+  "sourceStatusCounts": {
+    "200": 10528,
+    "404": 721,
+    "301": 3851,
+    "429": 276,
+    "302": 57
   },
-  "coverageComplete": false
+  "sourceLedgerSha256": "e8bb39b5d44b4e8594321dec480f3a0f1aa929b88e1db753d0c9b6ac1b0516a7",
+  "sourceCacheCertificateSha256": "446767875eeaca51f38e3ed30b9acc9e809d24232900fe6337ce0ee9206f6787",
+  "sourceProjectionRoutes": 6141,
+  "projectionRouteTypes": {
+    "page": 33,
+    "post": 3,
+    "archive": 2098,
+    "event": 1214,
+    "sermon": 458,
+    "asset": 2335
+  },
+  "uniqueSourceFiles": 1943,
+  "retainedWxrDate": "2026-09-24",
+  "retainedWxrIsFreshStoredInspection": false,
+  "completeAuthoritativeSourceCoverageProven": false,
+  "requestScope": "finite observed source links and files; no arbitrary calendar expansion or recording bodies",
+  "scopeClassesOverlap": true
 }

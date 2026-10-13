@@ -21,8 +21,8 @@ A successful technical migration cannot guarantee identical rankings during recr
 Use a fresh ignored output directory for every run. Supply the protected frozen ledger/assets paths and require the runtime label returned by the bound release. Both commands refuse non-loopback destinations; verify actual public DNS/TLS separately after authorized cutover.
 
 ```powershell
-python scripts/seo-verify-candidate.py --baseline private/seo-baseline/d182-final-frontier-frozen/ledger.private.json --assets private/seo-baseline/d182-final-frontier-frozen/assets-frontier-final.private.json --candidate http://127.0.0.1:4447 --environment production --expected-runtime-label <verified-label> --concurrency 4 --timeout 60 --request-limit 50000 --output private/seo-candidate/<fresh-run>
-python scripts/seo-verify-candidate.py --baseline private/seo-baseline/d182-final-frontier-frozen/ledger.private.json --assets private/seo-baseline/d182-final-frontier-frozen/assets-frontier-final.private.json --candidate http://127.0.0.1:4450 --environment staging --expected-runtime-label <verified-label> --concurrency 4 --timeout 60 --request-limit 50000 --output private/seo-candidate/<fresh-staging-run>
+python scripts/seo-verify-candidate.py --baseline private/seo-baseline/sx13/ledger.private.json --assets private/seo-baseline/sx13/assets.private.json --candidate http://127.0.0.1:4447 --environment production --expected-runtime-label <verified-label> --concurrency 4 --timeout 60 --request-limit 50000 --output private/seo-candidate/<fresh-run>
+python scripts/seo-verify-candidate.py --baseline private/seo-baseline/sx13/ledger.private.json --assets private/seo-baseline/sx13/assets.private.json --candidate http://127.0.0.1:4450 --environment staging --expected-runtime-label <verified-label> --concurrency 4 --timeout 60 --request-limit 50000 --output private/seo-candidate/<fresh-staging-run>
 ```
 
 A nonzero comparator exit is an unresolved finding, not a deployment success. Retain its complete machine-readable issue ledger. The responsible operator must classify original defects, planned private-environment differences and new regressions individually; never clear the report just to reach a pass. On launch day run the full mapping, then repeat critical-page/status/asset checks during the first day, daily through week one and with the account/field comparisons in the table above.
@@ -40,4 +40,16 @@ Samuel or the named delegate and the church account owner before launch. These a
 prepared responsibilities and checks, not executed future monitoring.
 
 
-Final prepared release: `a257de54b54c29ce3fc5a8fcdce73e954dcafa31`, image `sha256:93e7c5949adf60d97d7506892a4200986830bf9ec614bd749c0f8ceb58bac4cd`. The immutable source baseline remains 21,134 URL observations retaining all original 15,252. Final local/proxy crawl, exact revision restoration and actual staging backup recovery are immediate technical evidence only. Future Search Console, organic-traffic and field-performance monitoring has not occurred. On launch-day approval record Samuel or a named release delegate and a verified church account owner, then execute the full inventory checks and the dated account/device/query comparisons above. Any leaked draft, canonical-origin error, production noindex, critical 5xx or wrong-content redirect triggers immediate operator review and the retained rollback runbook.
+Final prepared release: `d068c2214e2d53b6c50de4788305acaf7fa052ed`, image `sha256:cfdcd574a493753c73a349da9710fd44f489a07d4dbde3562c7029132201b2ff`. The immutable source baseline remains 23,017 URL observations retaining all original 15,252. Final local/proxy crawl, exact revision restoration and actual staging backup recovery are immediate technical evidence only. Future Search Console, organic-traffic and field-performance monitoring has not occurred. On launch-day approval record Samuel or a named release delegate and a verified church account owner, then execute the full inventory checks and the dated account/device/query comparisons above. Any leaked draft, canonical-origin error, production noindex, critical 5xx or wrong-content redirect triggers immediate operator review and the retained rollback runbook.
+
+
+Run all checklist commands with UTC timestamps, responsible operator and exact release.
+Use `scripts/seo-recheck-original-targets.py` for the original 975-target cohort and
+`scripts/seo-original-cohort-accounting.py` for fixed/reclassified/remaining accounting.
+A protected candidate's noindex and denied sitemap are expected only in staging;
+production-policy acceptance requires the separate loopback rehearsal and real public
+DNS/TLS/headers after later authorized activation. The existing whole-inventory
+verifier is the executable monitoring check; it reports failures with nonzero status.
+For a reported production incident, save the exact public response and compare the
+frozen source row before changing disposition. Never run a broader crawler or new
+external telemetry provider merely to fill missing Search Console history.

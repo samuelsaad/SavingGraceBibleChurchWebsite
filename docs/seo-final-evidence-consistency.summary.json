@@ -1,0 +1,16 @@
+{
+  "format": "sgbc-final-acceptance-consistency-v1",
+  "urlRows": 23017,
+  "metadataRows": 23017,
+  "stagedRows": 23017,
+  "originalHashesRetained": 15252,
+  "sameDistinctSourceHashSet": true,
+  "allRequestedDocumentLinksResolve": true,
+  "reportedDispositionCountsMatchCsv": true,
+  "files": {
+    "seo-url-migration-map.csv": "91ac6cc1b43dc8b6fd0e23d7535f0470493d8c63e03fafec9467e2f5d97ce5d9",
+    "seo-content-metadata-diff.csv": "cdebdefaf7ea29cb2c63869ab8339c4c150ef8dae8334afe24ce440206d2ca63",
+    "seo-staging-url-verification.csv": "6df9d2f80efb8cb42792179a26e227742ef400bca1bef4aaa3bb75efc5f22cf0"
+  },
+  "verdict": "NOT READY FOR CUTOVER"
+}

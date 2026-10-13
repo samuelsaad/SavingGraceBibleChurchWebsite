@@ -1,86 +1,103 @@
 {
-  "applicationCommit": "a257de54b54c29ce3fc5a8fcdce73e954dcafa31",
-  "codeArchiveSha256": "61f3de30ff2319fff128305c26052ce491af9fb2b33e0696ccbba2a0b7cf76e9",
-  "runtimeLabel": "a58b9a513a94aa3119e82174b32f7e65d27e95586bb3ea93c9757b8279c086d7",
+  "applicationCommit": "d068c2214e2d53b6c50de4788305acaf7fa052ed",
+  "codeArchiveSha256": "f1c6b094dd1f343acfef44178c0af2289175cbea530a5ff44b0745dd175c3a8c",
+  "runtimeLabel": "98db8eb58798cc9d4cecfc03609fdd8a71ff737012d50780ba38f933af0dcbc8",
   "independentlyComputedLabelMatchesHttp": true,
   "heapLimitMiB": 384,
   "standardTests": {
-    "passed": 1280,
-    "gatedSkipped": 145,
+    "passed": 1287,
+    "gatedSkipped": 146,
     "gatedCasesCoveredByPostgres": true
   },
   "postgresTests": {
-    "passed": 1425,
+    "passed": 1433,
     "skipped": 0,
-    "files": 154,
     "exactDisposableTargetRemoved": true
   },
   "typeCheck": {
-    "files": 648,
+    "files": 650,
     "errors": 0,
     "warnings": 0,
-    "hints": 7
+    "existingHints": 7
   },
   "staticBuildPages": 45,
   "runtimeBuildPassed": true,
   "outgoingPrivacyScan": {
-    "files": 438,
+    "files": 503,
     "findings": 0,
-    "manifestSha256": "425244e1cecbda3dec05b43e409ac7649b667ba4cdd4e683ac17ab21d8f4b83e"
+    "manifestSha256": "74ab945bef0bb43d7fdcfd113d6f41ac8fd5b3f94d15d668292717a01b4d1f58",
+    "scope": "current reports and recovery verifier before final milestone documentation"
   },
   "originalFailedTargets": {
     "originalFailedTargets": 975,
     "checkedTargets": 975,
     "requests": 975,
-    "runtimeLabel": "a58b9a513a94aa3119e82174b32f7e65d27e95586bb3ea93c9757b8279c086d7",
+    "runtimeLabel": "98db8eb58798cc9d4cecfc03609fdd8a71ff737012d50780ba38f933af0dcbc8",
     "originalCsvSha256": "3aac3a5615030be9c3522be7f2b55688b5057b8c5ae1bb31c834ac7e9165412a",
     "statuses": {
-      "404": 423,
-      "200": 552
+      "404": 68,
+      "200": 907
     },
     "issueCounts": {},
-    "finishedAt": "2026-10-12T07:37:12.608451Z",
+    "finishedAt": "2026-10-13T09:51:16.403981Z",
     "limits": [
       "Successful HTTP alone does not prove equivalent content."
     ]
   },
   "fullComparisonCompleted": true,
-  "stagingFinalDeploymentCompleted": false,
+  "stagingFinalDeploymentCompleted": true,
   "remotePublicationVerified": true,
   "sourceWordpressMutation": false,
   "productionTrafficOrDnsChanged": false,
   "browser": {
-    "cases": 90,
+    "cases": 108,
     "errors": 0,
-    "externalRequestsBlocked": 0,
     "overflowCases": 0,
-    "maxCls": 0.016700240483539092,
-    "maxLcpMs": 824,
+    "externalRequestsBlocked": 0,
     "conditions": {
       "browser": "headless Edge",
       "cpuThrottle": false,
       "networkThrottle": false,
-      "concurrentAcceptanceWork": true,
       "externalResources": "blocked",
       "fieldEvidence": false,
       "inp": "not measured",
       "comparisonToLiveSource": "not performed"
-    },
-    "performanceAcceptance": false
+    }
   },
   "finalRecoverySummary": "seo-final-recovery.summary.json",
   "resourceFreshProcessSummary": "seo-final-resource-restart.summary.json",
   "comparisonPassed": false,
-  "comparisonCheckedRows": 21134,
-  "comparisonCandidateRequests": 22082,
-  "comparisonFinishedAt": "2026-10-12T09:37:01.038830Z",
+  "comparisonCheckedRows": 23017,
+  "comparisonCandidateRequests": 24023,
+  "comparisonFinishedAt": "2026-10-13T11:47:52.807910Z",
   "sourceCacheProof": {
-    "sourceRecordCount": 14228,
-    "sourceFileWitnesses": 25292,
+    "sourceRecordCount": 15433,
+    "sourceFileWitnesses": 27863,
     "beforeAndAfterSourceHashesVerified": true,
     "perReadSourceHashesVerified": true,
     "candidateHttpResponsesReused": false,
     "comparisonExitCode": 1
   },
-  "pythonTests": 173
+  "pythonTests": 173,
+  "deploymentOperatorCommit": "eaf5b9bdb2c29d44cd54345d13e6c7462737d9cf",
+  "pythonTestsPassed": 182,
+  "wholeSourceCoverageProven": false,
+  "recoveryVerifierCommit": "6fef2af367ad851251aaf89276193a972414c523",
+  "recoveryVerifierFocusedTests": 6,
+  "recoveryVerifierTypeErrors": 0,
+  "recoveryVerifierActualSameBackupRestorePassed": true,
+  "currentReportPrivacyManifestSha256": "74ab945bef0bb43d7fdcfd113d6f41ac8fd5b3f94d15d668292717a01b4d1f58",
+  "sourceLedgerSha256": "e8bb39b5d44b4e8594321dec480f3a0f1aa929b88e1db753d0c9b6ac1b0516a7",
+  "sourceBundleFileSha256": "3d278b16957b4ecdd4c4c9d1959f7fe5aa72977e216d3f1ec70f11302dafef4a",
+  "assetPackageSha256": "6c20ec1d0fe927b3479f676df5e0d6927867cedd3535c7e8f666b1c1220d8f66",
+  "applicationPrivacyManifestSha256": "dd269ec29af761eca22af7cd27b90c8d99e60da5b910e88f71b34f149ad6c899",
+  "sourceRouteCount": 6141,
+  "knownOriginalPublicSermons": 458,
+  "resourceRoutes": 2335,
+  "toolingAdditionalTests": {
+    "recoveryVerifierFocusedPassed": 6,
+    "typeErrors": 0,
+    "typeWarnings": 0,
+    "actualBackupRestorePassed": true
+  }
 }

@@ -1,58 +1,60 @@
 {
   "format": "sgbc-seo-safe-acceptance-v1",
   "bindings": {
-    "baselineSha256": "e2d764ce467651cadfe88c0f12cead17066b43171fe1beb5612d42a18200cae1",
-    "assetsSha256": "fea08c9caaad83bd0ba01149fe86492a5610b0e0e1f54b60dcb56f367db37ebe",
-    "candidateSummarySha256": "2f9b4f0681ff30ec8bed63f292636574925034a0a3d41478dc114e5680e86fee",
-    "candidateBindingsSha256": "be0b87f14e9c0831211111211ce53c594d9448bbb754a55f5877a981489e9cc5",
-    "candidateUrlLedgerSha256": "f6c8ad1c5c4ad2c72d935ad32ff69ba6cd8d9a6ce9f6c4e072265557fd426780",
-    "candidateDiffSha256": "55c7bd0325adc5dfbdd330b6dc03720c714028e96adca4687dc157d89929ef95",
-    "candidateResponsesSha256": "7e54e3c0d743a088380e2026937316270a6100ecc301d4afac243e551f5e11fe",
-    "bundleSha256": "cad131cdea84e514135c141a450639114b0ebef5ef7fd29ae965c2bdb48528ce",
-    "sourceRecordsProofSha256": "8e8314eda588febf403f9ce9fad5a3d5d59beee4eff1a9ef7c2297b84b6428b1"
+    "baselineSha256": "e8bb39b5d44b4e8594321dec480f3a0f1aa929b88e1db753d0c9b6ac1b0516a7",
+    "assetsSha256": "4d2c0f97d10d3800bea483cd5705ba019f80f07a3f7993278ada10f09ec08a36",
+    "candidateSummarySha256": "216836d823d831de72a4a754e7d894eb92bb141cb6b71cfed2c1c42365dae246",
+    "candidateBindingsSha256": "f5910dc93a5908735375e497ade427778a733ad5f1d944995339d83f32b10ab9",
+    "candidateUrlLedgerSha256": "1022cce380f150b458166ccbed5c656c8f23e6e894ed0c9d132eed3097683312",
+    "candidateDiffSha256": "d5cf1840b8ae67e35ab386d6ee9ec61d71d2726e8b828003e83324c4b5b895e9",
+    "candidateResponsesSha256": "dce58df0160b9bd3e10d4f3680c374ac586f4333ed2409c5a16b6f35337b408e",
+    "bundleSha256": "3d278b16957b4ecdd4c4c9d1959f7fe5aa72977e216d3f1ec70f11302dafef4a",
+    "sourceRecordsProofSha256": "229bc6db7866fa3df7e9e858699a79508d3b7d2709767488c70dd6dec64b6eb2"
   },
-  "reviewFileSha256": "0c4314ecf9c3b752723e01acf836f873ded06723e997ec4b2fe9ae036c6f9f3a",
-  "inventoryCount": 21134,
+  "reviewFileSha256": "99bf4741cea7c8ea26dc4e92c52f5d968cf9253dc9690bd6cea11492f17437cb",
+  "inventoryCount": 23017,
   "dispositionCounts": {
-    "intentionally_removed": 389,
-    "preserved": 3729,
-    "redirected": 2817,
-    "unresolved": 14199
+    "intentionally_removed": 704,
+    "preserved": 3731,
+    "redirected": 3092,
+    "unresolved": 15490
   },
-  "unresolvedCount": 14199,
+  "unresolvedCount": 15490,
   "rawIssueCounts": {
     "asset_bytes_not_captured": 129,
     "external_dependency_not_requested": 408,
-    "metadata_change_requires_review": 9849,
+    "indexable_canonical_not_self_or_missing": 1,
+    "metadata_change_requires_review": 9863,
     "non_html_mime_changed": 17,
-    "non_html_source_bytes_changed_requires_review": 922,
-    "previous_200_not_preserved": 378,
-    "recording_not_requested": 118,
-    "source_capture_pending_or_missing": 5881,
-    "source_content_image_or_alt_missing": 1224,
+    "non_html_source_bytes_changed_requires_review": 549,
+    "previous_200_not_preserved": 15,
+    "recording_not_requested": 236,
+    "source_capture_pending_or_missing": 6605,
+    "source_content_image_or_alt_missing": 1229,
     "source_excluded_no_comparison_evidence": 6,
     "source_indexability_lost": 451,
     "source_redirect_target_capture_missing": 1161,
-    "source_semantic_blocks_missing": 3376,
-    "status_mapping_change_requires_review": 1506
+    "source_semantic_blocks_missing": 3385,
+    "status_mapping_change_requires_review": 1349
   },
   "reportIssueCounts": {},
   "reviewedDifferencePolicyCounts": {
-    "bounded-source-differences": 21134
+    "bounded-source-differences": 23017
   },
   "sourceCoverageComplete": false,
-  "sourceDeferredCount": 5882,
+  "sourceDeferredCount": 6725,
   "sourcePendingCount": 0,
   "source404PathFamilies": {
     "calendar_path": 377,
-    "event_path": 1,
-    "other_path": 9,
+    "dated_post_path": 302,
+    "event_path": 2,
+    "other_path": 38,
     "page_alias_path": 2
   },
   "retainedSermonReconciliation": {
     "available": true,
     "retainedPublishedCount": 454,
-    "freshUniqueSermonIds": 457,
+    "freshUniqueSermonIds": 458,
     "outcomeCounts": {
       "fresh_same_identity_same_path": 454
     },
@@ -60,7 +62,8 @@
     "freshIdsAbsentFromRetainedPublished": [
       30130,
       30131,
-      30132
+      30132,
+      30133
     ],
     "retainedIdsAbsentFromFinalBundle": [],
     "freshIdsAbsentFromFinalBundle": [],

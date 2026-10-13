@@ -53,7 +53,7 @@ python scripts/seo-verify-candidate.py `
 An exit code of 1 means failed acceptance with recorded findings, not success.
 Configuration/integrity errors and missing response witnesses also fail acceptance.
 The final certified-cache wrapper verifies the parser, source ledger, parsed cache and
-25,292 source file witnesses before/after; it never reuses candidate HTTP responses.
+25,307 source file witnesses before/after; it never reuses candidate HTTP responses.
 Private paths for the completed executions are retained in the acceptance record.
 
 ```powershell
@@ -139,3 +139,65 @@ python scripts/seo-classify-inventory.py --input docs/seo-url-migration-map.csv 
 ```
 
 The certified cache wrapper delegates to the tracked comparator unchanged and checks every frozen source witness before/after and each candidate response. Its Windows retry is restricted to transient sharing errors; it never accepts a missing or changed witness. The tracked `scripts/seo-verify-candidate.py` command above remains the portable uncached rerun.
+
+## Dated 13 October rerun
+
+Use the certified `source-union-20261013` ledger and asset index for the current
+21,137-row inventory; retain every original 15,252 hash. The finite refresh added
+one stable sermon identity and its observed shortlink/feed, rather than extending
+calendar enumeration. The deployment bundle is bound to the exact new capture;
+the acceptance-only union projection is separately certified and preserves identical
+page and expected-version bytes. Do not change the deployed import payload merely
+to satisfy a report binding.
+
+The current application is `25f4b3331683e32926eedcdd4ae5aee726cd3eca`.
+The staged deployment operator is `153ea851e44a9bd00426a207688ba946608257c4`.
+Run the same comparator/parser against new HTTP responses; parsing-cache certificates
+must verify all original file witnesses before/after and on each read. No response
+from a previous application is reused. The operator-only commits change no runtime
+build input, dependency or migration. Retain stopped memory, asset-packaging,
+transfer-binding and CMS-plan attempts alongside successful receipts.
+
+The isolated actual-backup restoration requires both write gates, absence of the
+exact authorized restore target, PostgreSQL 16 identity, and the created OID before
+cleanup. Keep WordPress restoration and roles/ACL restoration separate from table,
+schema, upload and application evidence. Final mobile lab measurements run after
+the complete crawls and restoration, under the same declared local browser/network
+conditions; SSH transport still prevents claiming comparable original-site or field
+performance. Every failed or invalid measurement remains evidence.
+
+
+## Final 13 October WXR and resource release
+
+This checkpoint supersedes older A257/25f examples above. Application: `d068c2214e2d53b6c50de4788305acaf7fa052ed`; deployment
+operator: `eaf5b9bdb2c29d44cd54345d13e6c7462737d9cf`. Frozen source: `sx13`,
+23,017 observed URLs, every original 15,252 hash retained. Candidate source bundle
+`source-final-wxr-20261013.private.json` has 6,141 routes and 2,335 resources. Retain
+failed earlier reports and explicit unresolved evidence; never substitute a smaller denominator.
+
+```powershell
+python scripts/seo-verify-candidate.py --baseline private/seo-baseline/sx13/ledger.private.json --assets private/seo-baseline/sx13/assets.private.json --candidate http://127.0.0.1:4447 --environment production --candidate-id d068c2214e2d53b6c50de4788305acaf7fa052ed --expected-runtime-label VERIFIED_CURRENT_LABEL --request-limit 50000 --concurrency 4 --timeout 30 --output private/seo-verification/NEW-production
+python scripts/seo-verify-candidate.py --baseline private/seo-baseline/sx13/ledger.private.json --assets private/seo-baseline/sx13/assets.private.json --candidate http://127.0.0.1:4450 --environment staging --candidate-id d068c2214e2d53b6c50de4788305acaf7fa052ed --expected-runtime-label VERIFIED_CURRENT_LABEL --request-limit 50000 --concurrency 4 --timeout 30 --output private/seo-verification/NEW-staging
+python scripts/seo-recheck-original-targets.py --original private/seo-candidate/download-links-final-production/internal-targets.csv --candidate http://127.0.0.1:4450 --expected-runtime-label VERIFIED_CURRENT_LABEL --output private/seo-verification/NEW-original-targets
+python scripts/seo-original-cohort-accounting.py --original docs/seo-history/d181-seo-url-migration-map.csv --candidate docs/seo-url-migration-map.csv --expected-original-rows 15252 --original-internal-targets private/seo-candidate/download-links-final-production/internal-targets.csv --candidate-internal-targets private/seo-verification/NEW-original-targets/internal-targets.csv --output private/seo-verification/NEW-original-accounting.json
+```
+
+Private certified wrapper `compare-cached-wxr-union-20261013.private.py` preserves
+tracked parser/comparator bytes and checks every source hash before/after and per read.
+The portable tracked comparator above performs independent parsing. All outputs must
+be new paths. Record actual runtime label independently from code/image/database/policy.
+Actual final comparison paths are `lwx13` and `swx13`; safe exported summaries state
+whether complete parity passed. A matched runtime label is provenance, not parity.
+
+Guarded `source-public-cli import-redirects` requires the exact verified manifest,
+existing active asset/version/hash and protects CMS/native/editorial ownership. 298
+reviewed mappings replay unchanged; historical rows/audits remain immutable. The new
+empty calendar model accepts zero bytes only for exact witnessed calendar flags,
+empty SHA-256, noindex, .ics storage and verified MIME. Never use it for missing content.
+
+Final release checks: 1,287 standard tests passed with 146 gated skips covered separately, 1,433 PostgreSQL
+cases with zero skips, 182 Python tests, type/build/importer/offline audit and privacy scan.
+Prior concurrency/sharing failures remain retained. Restore evidence must describe
+actual staging tables/assets/application separately from unavailable WordPress and
+roles/ACL recovery. Final lab trials run after heavy acceptance work; field INP/CWV
+and original comparable performance remain separate evidence requirements.
