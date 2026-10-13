@@ -22,7 +22,9 @@ browser evidence will be recorded after the new application release is frozen.
 A bounded 13 October public refresh found one new sermon (verified WordPress ID
 30133, service date 11 October), increasing the sitemap count to 458. Its original
 public projection is prepared additively, with no generated enrichment or approvals.
-The source release contains 5,749 routes; the previous source snapshot remains intact.
+The source release now contains 5,750 routes including the exact observed RSS
+resource (1,947 resources total). Its 458 sermon identities retain their original pages; the previous source snapshot
+remains intact.
 Current authoritative stored-CPT coverage still requires read-only WordPress access.
 The dated acceptance below remains the previous release's evidence, not a claim
 that this continuation has passed overall parity.

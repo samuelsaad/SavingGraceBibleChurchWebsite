@@ -354,3 +354,13 @@ from AI approvals. The first bundle command rejected relative paths before outpu
 the required absolute private paths passed. Public REST still exposes 30 pages,
 3 posts and 437 media records; its guessed sermon endpoint is a genuine source404,
 which proves no stored-CPT total. The frozen 21,134-row evidence is unchanged.
+
+The new original page was imported with 1 insert/0 updates/5,748 unchanged;
+its rerun changed zero across 5,749 routes. CMS adoption inserted exactly one
+source-sermon document, replay planned zero, and preserved 2,581 existing source
+documents and all ownership exclusions. Its two observed new aliases were captured
+without recursive expansion: a real WordPress shortlink301 and a 1,074-byte original
+RSS resource200. The feed was preserved by SHA-256/MIME/length and imported with
+one additional asset route. Future feed maintenance remains unproved; byte parity
+must not be described as that acceptance. A local URL-helper error was repaired by
+resuming the already captured alias response without repeating the request.
