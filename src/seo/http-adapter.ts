@@ -30,6 +30,7 @@ export interface SeoHttpAdapterOptions extends ChurchSiteOptions {
   /** Frozen published-source fallback, after every current CMS route/disposition. */
   sourceQueryPage?: (request:Request,context:FrontendRenderContext)=>Promise<Response|null>;
   sourcePage?: (request:Request,context:FrontendRenderContext)=>Promise<Response|null>;
+  sourceResourceRedirects?:Readonly<Record<string,string>>;
   sourceDisposition?: (path:string)=>Promise<{kind:"redirect";location:string}|{kind:"gone"}|null>;
   /** Public managed assets only; the dependency must enforce published references. */
   publicAsset?: (request: Request) => Promise<Response | null>;
@@ -43,7 +44,7 @@ export const legacySitemapPaths=Object.freeze([
 const privatePath = /^\/(?:admin(?:\/|$)|api(?:\/|$)|frontend-preview(?:\/|$)|draft-preview(?:\/|$)|cms-preview(?:\/|$)|cms-editor-frame(?:\/|$)|related-themes-evaluation(?:\/|$)|healthz(?:\/|$)|__local(?:\/|$)|__cms(?:\/|$)|health(?:\/|$))/u;
 export function createSeoHttpAdapter(options: SeoHttpAdapterOptions): (request: Request) => Promise<Response> {
   const policy = createSeoHttpPolicy(options.policy);
-  const context: FrontendRenderContext = {mode: policy.indexable ? "public" : "restricted", basePath:"", seo:{canonicalOrigin:policy.canonicalOrigin,indexable:policy.indexable,indexableArchivePaths:options.indexableArchivePaths??[]}};
+  const context: FrontendRenderContext = {mode: policy.indexable ? "public" : "restricted", basePath:"",...(options.sourceResourceRedirects?{sourceResourceRedirects:options.sourceResourceRedirects}:{}), seo:{canonicalOrigin:policy.canonicalOrigin,indexable:policy.indexable,indexableArchivePaths:options.indexableArchivePaths??[]}};
   const site = createPublicSermonSiteHandler(options.sermons, context, {
     ...(options.today ? {today:options.today} : {}),
     ...(options.content ? {content:options.content} : {}),
@@ -74,7 +75,7 @@ export function createSeoHttpAdapter(options: SeoHttpAdapterOptions): (request: 
       const resource=await options.publicAsset?.(head?new Request(request,{method:"GET"}):request); 
       const observedQuery=url.search&&options.sourceQueryPage?await options.sourceQueryPage(head?new Request(request,{method:'GET'}):request,{...context,...(options.content?{siteContent:await options.content()}:{})}):null;
       const search=options.publicSearch?await options.publicSearch(head?new Request(request,{method:'GET'}):request,{...context,...(options.content?{siteContent:await options.content()}:{})}):null;
-      if(resource){response=resource;}else if(search){response=search;}else if(observedQuery){response=observedQuery;}else if(legacySitemapPaths.includes(url.pathname)) {
+      if(resource){response=resource;}else if(search){response=search;}else if(observedQuery){response=observedQuery;}else if(options.sourceResourceRedirects?.[url.pathname]){response=new Response(null,{status:301,headers:{Location:options.sourceResourceRedirects[url.pathname]+url.search,'Cache-Control':'no-store'}});}else if(legacySitemapPaths.includes(url.pathname)) {
         response=policy.indexable?new Response(null,{status:301,headers:{Location:"/sitemap.xml"+url.search,"Cache-Control":"no-store"}}):boundary(404,"Page not found");
       } else if (url.pathname === "/" && (url.searchParams.has("p") || url.searchParams.has("page_id") || url.searchParams.has("attachment_id"))) {
         const entries=[...url.searchParams].filter(([key])=>["p","page_id","attachment_id"].includes(key));

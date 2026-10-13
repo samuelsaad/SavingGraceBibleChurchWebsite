@@ -22,6 +22,8 @@ export const sermonsV5Path = "/sermons-v5/";
 export type ArchiveBasePath = typeof archivePath | typeof sermonsV1Path | typeof sermonsV4Path | typeof sermonsV5Path;
 
 export interface FrontendRenderContext {
+  /** Current verified original-resource destinations; assigned only by the server. */
+  sourceResourceRedirects?: Readonly<Record<string,string>>;
   /** Supplied only by the validated HTTP environment policy. */
   seo?: {canonicalOrigin:string;indexable:boolean;indexableArchivePaths?:readonly string[]};
   mode: "public" | "preview" | "restricted" | "draft-preview";

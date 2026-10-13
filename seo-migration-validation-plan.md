@@ -405,3 +405,50 @@ exclusions and plan SHA-256 a4bd2b7310915f036e1177094910fd719812e147a1ec3080670b
 The operator now pins that exact one-record plan for the verified original
 WordPress sermon 30133; reruns remain zero-change and all prior rows must be
 preserved. No general plan wildcard or eligibility/approval relaxation is used.
+
+### 13 October retained-export completion and source response corrections
+
+A scoped relevant-file search found the supplied 24 September WXR (SHA-256
+`fd15e0553349f40fa74264b0cb1ab70560cf48ae7ef18101cccb7b0514876e0e`),
+1,357 items including 454 published sermons and 437 attachments. Every historical
+published sermon is in the current known 458-member set. All 420 stable-ID public
+REST attachments match historical IDs; the other 17 historical image identities
+now have fresh verified public file bytes, while their current stored metadata
+remains unproved. Repository/upload archive candidates are not a WordPress full
+recovery backup. Earlier missing-export findings are retained as historical limits.
+
+Finite read-only queues captured 328 public-export/redirect responses and 440
+attachment-page responses, then checked all 437 attachment file URLs. All files
+responded 200; 317 image/document/font bodies passed MIME/signature/hash checks,
+300 existing bytes matched exactly, 17 missing resource routes use 16 unique new
+files. 118 recordings and two uninspected ZIPs received metadata-only requests,
+zero recording bodies. API-index inspection confirms both current home/siteurl
+as the verified www HTTPS origin and exposes no sermon REST endpoint.
+
+The expanded immutable source union has 23,017 observations, 15,433 responses and
+27,863 file witnesses; every prior/original URL hash remains. New discoveries stay
+explicit and finite. WXR is retained historical evidence, not fresh stored facts.
+
+The guarded local source importer inserted 20 source-only routes (one event,
+two observed archive queries, 17 resources), replay 20 unchanged/zero updates.
+It also preserved 371 previously unmapped, genuinely captured empty calendar
+responses as exact zero-byte/noindex endpoints; replay changed zero. A narrow
+model/deployment exception requires original empty hash, calendar flags, MIME,
+zero bytes and noindex. No subscription is retired or replacement content invented;
+future calendar/recurrence service semantics remain unproved.
+
+298 exact attachment-to-owned-binary redirects, including 14 observed numeric
+attachment queries, were imported with immutable system audit and unchanged replay.
+Target hash changes invalidate display. Existing redirects, CMS ownership, withdrawals,
+native publication and review evidence remain protected. Server-rendered links reach
+final destinations and retain campaign/fragment behavior. No unverified recording
+or parent/homepage destination was guessed. Deployment additionally freezes all
+prior redirect/non-CMS audit bytes and permits only the exact scoped new rows.
+
+The rejected first additive package retained UTC-offset schema and duplicate-member
+failures; no DB import succeeded. A new package normalizes the same UTC instants
+and deduplicates archive members. The first expanded union hit Windows path length;
+its failed directory remains, and the verified union uses a short confined path.
+Two later PostgreSQL runs retained existing 5-second filesystem/concurrency timeouts;
+no test timeout or guard was relaxed. Final execution/results follow once the new
+application/content release and staging rehearsal finish.

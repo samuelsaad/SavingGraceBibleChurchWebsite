@@ -1,3 +1,4 @@
+import {importSourceResourceRedirects} from './source-resource-redirects';
 /** Non-HTTP D-181 migration/import into the exact existing sealed staging DB. */
 import {Pool} from 'pg';
 import {lstat,readFile} from 'node:fs/promises';
@@ -12,7 +13,7 @@ import {repairInheritedSourceAliases} from './source-alias-repair';
 
 async function main(){
  if(process.env.ALLOW_STAGING_SOURCE_PUBLIC_SYNC!=='1'||process.env.SOURCE_PUBLIC_TARGET!=='existing-protected'||process.env.D171_COMPLETED_ENABLED!=='1'||process.env.D175_COMPLETED_ENABLED!=='1')throw Error('source_public_maintenance_gate');
- const operation=process.argv[2];if(!['apply','import','inventory','restore','cms-plan','adopt-cms','repair-aliases'].includes(operation??'')||process.argv.length!==3)throw Error('source_public_maintenance_operation');
+ const operation=process.argv[2];if(!['apply','import','import-redirects','inventory','restore','cms-plan','adopt-cms','repair-aliases'].includes(operation??'')||process.argv.length!==3)throw Error('source_public_maintenance_operation');
  const config=stagingConfiguration(process.env,true),pool=new Pool({...config,password:stagingPassword(config.passwordFile),statement_timeout:120000});
  try{
   if(operation==='cms-plan'||operation==='adopt-cms'||operation==='repair-aliases'){
@@ -33,6 +34,10 @@ async function main(){
     const path='/run/source-public/bundle.json',stat=await lstat(path);if(!stat.isFile()||stat.isSymbolicLink()||stat.size>128*1024*1024)throw Error('source_public_bundle_file');
     const bytes=await readFile(path);if(!/^[a-f0-9]{64}$/u.test(process.env.SOURCE_PUBLIC_BUNDLE_SHA256??'')||sha256(bytes)!==process.env.SOURCE_PUBLIC_BUNDLE_SHA256)throw Error('source_public_bundle_hash');
     result=await importSourcePublicBundle(c,JSON.parse(bytes.toString('utf8')),process.env.RELEASE_COMMIT!);
+   }else if(operation==='import-redirects'){
+    const path='/run/source-public/redirects.json',stat=await lstat(path);if(!stat.isFile()||stat.isSymbolicLink()||stat.size>4*1024*1024)throw Error('source_resource_manifest_file');
+    const bytes=await readFile(path);if(!/^[a-f0-9]{64}$/u.test(process.env.SOURCE_RESOURCE_REDIRECTS_SHA256??'')||sha256(bytes)!==process.env.SOURCE_RESOURCE_REDIRECTS_SHA256)throw Error('source_resource_manifest_hash');
+    result=await importSourceResourceRedirects(c,JSON.parse(bytes.toString('utf8')));
    }else if(operation==='restore')result=await restoreSourcePublicImport(c,process.env.SOURCE_PUBLIC_IMPORT_SHA256??'',process.env.RELEASE_COMMIT!);
    else{const pages=await readSourcePublicPages(c);result={pages:pages.length,sermons:pages.filter(page=>page.kind==='sermon').length,indexable:pages.filter(page=>page.indexable).length};}
    await c.query(operation==='inventory'?'ROLLBACK':'COMMIT');process.stdout.write(JSON.stringify({outcome:'source_public_'+operation,result})+'\n');

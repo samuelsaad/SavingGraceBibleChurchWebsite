@@ -23,6 +23,13 @@ export function isExternalHref(href: string): boolean {
   return /^https?:\/\//iu.test(href);
 }
 
+function resourceLink(url:URL,context:FrontendRenderContext):{path:string;suffix:string}|null{
+ const direct=context.sourceResourceRedirects?.[url.pathname];if(direct)return {path:direct,suffix:url.search+url.hash};
+ const ids=url.searchParams.getAll('attachment_id');if(url.pathname!=='/'||ids.length!==1||!/^[1-9][0-9]{0,14}$/u.test(ids[0]!)||['s','search','preview','action','post_type','page','p','page_id'].some(key=>url.searchParams.has(key)))return null;
+ const target=context.sourceResourceRedirects?.['/?attachment_id='+ids[0]];if(!target)return null;
+ const query=url.search.slice(1).split('&').filter(part=>[...new URLSearchParams(part).keys()][0]!=='attachment_id').join('&');return {path:target,suffix:(query?'?'+query:'')+url.hash};
+}
+
 export function resolveHref(href: string, context: FrontendRenderContext): string {
   // Absolute church links keep their external-preview behavior while reaching
   // the verified production host and final CMS path directly.
@@ -30,15 +37,17 @@ export function resolveHref(href: string, context: FrontendRenderContext): strin
     const source = new URL(href);
     if (["http:", "https:"].includes(source.protocol) && !source.username && !source.password && !source.port
         && ["savinggrace.org.au", "www.savinggrace.org.au"].includes(source.hostname)) {
+      const resource=resourceLink(source,context);
       const disposition = legacyDisposition(source.pathname, context)
         ?? (!source.pathname.endsWith("/") ? legacyDisposition(`${source.pathname}/`, context) : null);
-      return `https://www.savinggrace.org.au${disposition?.kind === "redirect" ? disposition.location : source.pathname}${source.search}${source.hash}`;
+      return `https://www.savinggrace.org.au${resource?.path??(disposition?.kind === "redirect" ? disposition.location : source.pathname)}${resource?resource.suffix:source.search+source.hash}`;
     }
   } catch { /* Relative links continue through the existing contextual policy. */ }
   if (href.startsWith("/")&&!href.startsWith('//')) {
     const split=href.search(/[?#]/u),path=split<0?href:href.slice(0,split),suffix=split<0?'':href.slice(split);
+    const resource=resourceLink(new URL(href,"https://www.savinggrace.org.au"),context);
     const disposition=legacyDisposition(path,context)??(!path.endsWith('/')?legacyDisposition(`${path}/`,context):null);
-    return contextualPath(context,(disposition?.kind==='redirect'?disposition.location:path)+suffix);
+    return contextualPath(context,(resource?.path??(disposition?.kind==='redirect'?disposition.location:path))+(resource?resource.suffix:suffix));
   }
   return href;
 }

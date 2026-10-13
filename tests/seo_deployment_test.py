@@ -70,7 +70,7 @@ class SeoDeploymentTest(unittest.TestCase):
 
 
     def test_existing_source_retry_refuses_unknown_history_or_bundle(self):
-        valid={'sourceCounts':{'source_public_versions':7640,'source_public_routes':5748,'source_public_imports':6},'sourceSha256':OP.EXISTING_SOURCE_SHA}
+        valid={'sourceCounts':{'source_public_versions':7642,'source_public_routes':5750,'source_public_imports':7},'sourceSha256':OP.EXISTING_SOURCE_SHA}
         OP.verify_existing_source(valid,OP.INCOMING_BUNDLE_SHA)
         with self.assertRaisesRegex(RuntimeError,'seo_existing_source_drift'):OP.verify_existing_source(valid,OP.EXISTING_BUNDLE_SHA)
         for changed,bundle in (({**valid,'sourceSha256':'0'*64},OP.INCOMING_BUNDLE_SHA),(valid,'0'*64),({**valid,'sourceCounts':{}},OP.INCOMING_BUNDLE_SHA)):
@@ -235,8 +235,8 @@ class SeoDeploymentTest(unittest.TestCase):
                 calls.append(operation)
                 if operation == "cms-plan":
                     self.assertNotIn("SOURCE_CMS_PLAN_SHA256", cfg["services"]["app"]["environment"])
-                    return json.dumps({"planned": 1, "held": 1221, "planSha256": "a4bd2b7310915f036e1177094910fd719812e147a1ec3080670ba96d3bbdc348"})
-                self.assertEqual(cfg["services"]["app"]["environment"]["SOURCE_CMS_PLAN_SHA256"], "a4bd2b7310915f036e1177094910fd719812e147a1ec3080670ba96d3bbdc348")
+                    return json.dumps({"planned": 1, "held": 1223, "planSha256": "462ad12b39e62293e45800a4aa3a51a141072643aaf5be266db20a2b5a20aa8a"})
+                self.assertEqual(cfg["services"]["app"]["environment"]["SOURCE_CMS_PLAN_SHA256"], "462ad12b39e62293e45800a4aa3a51a141072643aaf5be266db20a2b5a20aa8a")
                 return json.dumps({"result": {"inserted": 0}, "assets": {"inserted": 0}})
             fixture.run = run
             upgrade = SimpleNamespace(cms_snapshot=lambda _: {name: [] for name in ("cms_entities", "cms_revisions", "cms_routes", "media_assets", "audit_events", "schema_migrations")})
@@ -282,3 +282,21 @@ class SeoDeploymentTest(unittest.TestCase):
 
 
 if __name__ == "__main__": unittest.main()
+
+class ExactEmptyCalendarAssetTests(unittest.TestCase):
+    def test_only_verified_nonindexable_calendar_zero_byte_members_are_allowed(self):
+        value=asset(b"", "ics");value.update(contentType="text/html; charset=UTF-8", emptySourceCalendar=True)
+        page={"kind":"asset", "path":"/events/?ical=1", "indexable":False, "asset":value}
+        self.assertEqual(len(OP.asset_expectations({"pages":[page]})),1)
+        for changed in ({**page,"indexable":True},{**page,"path":"/ordinary-page/"},{**page,"asset":{**value,"emptySourceCalendar":False}},{**page,"asset":{**value,"contentType":"application/javascript"}}):
+            with self.assertRaisesRegex(RuntimeError,"seo_asset_empty_calendar_refused"):OP.asset_expectations({"pages":[changed]})
+
+class ResourceRedirectHistoryTests(unittest.TestCase):
+    def test_changed_prior_or_unscoped_extra_redirects_are_rejected(self):
+        old={"id":"anonymous-old","old_path":"/old/","new_path":"/known/","reason":"existing-human"};before={"redirects":[old],"audit":[]};fake=SimpleNamespace(load=lambda _:before)
+        with patch.object(OP,"resource_history_snapshot",return_value={"redirects":[{**old,"new_path":"/other/"}],"audit":[]}):
+            with self.assertRaisesRegex(RuntimeError,"seo_original_redirect_or_audit_changed"):OP.verify_resource_history(fake,pathlib.Path("/anonymous"))
+        extra={"id":"anonymous-extra","old_path":"/unscoped/","new_path":"/wrong/","status_code":301,"reason":"verified_original_attachment_resource","verified_at":"anonymous","source_sermon_id":None}
+        fake.load=lambda path:before if path.name=="resource-history-before.private.json" else {"rows":[]}
+        with patch.object(OP,"resource_history_snapshot",return_value={"redirects":[old,extra],"audit":[]}):
+            with self.assertRaisesRegex(RuntimeError,"seo_unscoped_redirect_added"):OP.verify_resource_history(fake,pathlib.Path("/anonymous"))

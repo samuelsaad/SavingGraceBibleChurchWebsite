@@ -1,5 +1,26 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
+## D-182 retained-source completion in progress — 13 October
+
+The supplied 24 September WXR was located and reconciled: 1,357 items, 454 then-public
+sermons (all in the current known 458-member set), and 437 historical attachments.
+Fresh public file verification matched 300 existing binaries and recovered 17 missing
+image paths using 16 files. Recordings/ZIPs received metadata-only requests. Current
+public API configuration confirms www HTTPS home/siteurl and no sermon REST route;
+current authoritative publication/metadata and full WordPress recovery remain unproved.
+
+The frozen expanded union has 23,017 observed URLs, 15,433 responses and 27,863 file
+witnesses, retaining all original 15,252 hashes. Private source bodies/files remain
+outside Git. Guarded local additive imports preserve 20 new source routes, 371 exact
+empty calendar responses and 298 audited resource redirects, all replayed unchanged.
+The original event was adopted into the editable CMS; existing documents remain.
+
+The next release adds verified resource redirects, direct server-rendered links,
+observed numeric attachment identities and tightly scoped zero-byte calendar support.
+No native approval/publication gate or human decision is changed. Final staging,
+expanded whole-inventory comparison, actual backup restore and acceptance exports
+are pending; the historical acceptance below is not a pass for this continuation.
+
 ## 13 October D-182 continuation — original archive Scripture labels
 
 The isolated SEO branch restores explicit Scripture labels from verified original

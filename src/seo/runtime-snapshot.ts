@@ -1,3 +1,4 @@
+import {readSourceResourceRedirects} from './source-resource-redirects';
 import {sourcePresentationPolicy} from './source-route-policy';
 import {createLegacySourceSearch} from './source-search';
 /** Version-keyed runtime snapshots. Every request checks current database state. */
@@ -18,7 +19,7 @@ import {createSeoHttpAdapter} from './http-adapter';
 import type {SeoHttpPolicyInput} from './http-policy';
 import {sha256,stableJson,type SourcePublicPage} from './source-public-model';
 
-export function sourceRoutePolicy(pages:readonly SourcePublicPage[],routes:readonly import('../cms/model').CmsRoute[]=[],context:FrontendRenderContext=publicRenderContext){
+export function sourceRoutePolicy(pages:readonly SourcePublicPage[],routes:readonly import('../cms/model').CmsRoute[]=[],context:FrontendRenderContext=publicRenderContext,resourceRedirects:ReadonlyMap<string,string>=new Map()){
  const currentRoutes=new Map(routes.map(route=>[route.path,route]));
  const canonicalPath=(path:string)=>{
   let target=path;const seen=new Set<string>();
@@ -27,6 +28,7 @@ export function sourceRoutePolicy(pages:readonly SourcePublicPage[],routes:reado
    if(route?.status===200)return target;
    if(route?.status===410)return null;
    if(route?.status===301){if(!route.targetPath)return null;target=route.targetPath;continue;}
+   const resource=resourceRedirects.get(target);if(resource){target=resource;continue;}
    const legacy=legacyDisposition(target,context);
    if(!legacy)return target;
    if(legacy.kind!=="redirect")return null;
@@ -50,10 +52,11 @@ export function sourceRoutePolicy(pages:readonly SourcePublicPage[],routes:reado
   const id=String(page.sourceId);if(!/^[1-9][0-9]*$/u.test(id))continue;
   const values=attachmentIds.get(id)??new Set<string>();values.add(page.path);attachmentIds.set(id,values);
  }
- const sourceAttachmentLinks=Object.fromEntries([...attachmentIds].filter(([,paths])=>paths.size===1).map(([id,paths])=>[id,[...paths][0]! ]));
+ const sourceAttachmentLinks:Record<string,string>=Object.fromEntries([...attachmentIds].filter(([,paths])=>paths.size===1).map(([id,paths])=>[id,[...paths][0]! ]));
+ for(const [path,target] of resourceRedirects){const id=/^\/\?attachment_id=([1-9][0-9]{0,14})$/u.exec(path)?.[1];if(id){if(sourceAttachmentLinks[id]&&sourceAttachmentLinks[id]!==target)throw Error('source_attachment_identity_conflict');sourceAttachmentLinks[id]=target;}}
  const presentation=sourcePresentationPolicy(pages,context);
  const indexableCapturedQueryPaths=pages.filter(page=>page.path.includes('?')&&!page.issues.length&&page.kind!=='asset'&&page.kind!=='feed'&&presentation(page).indexable).map(page=>page.path);
- return {sourceShortlinks,sourceAttachmentLinks,indexableArchivePaths:[...new Set(indexableArchivePaths)].sort(),indexableCapturedQueryPaths:[...new Set(indexableCapturedQueryPaths)].sort()};
+ return {sourceResourceRedirects:Object.fromEntries(resourceRedirects),sourceShortlinks,sourceAttachmentLinks,indexableArchivePaths:[...new Set(indexableArchivePaths)].sort(),indexableCapturedQueryPaths:[...new Set(indexableCapturedQueryPaths)].sort()};
 }
 
 /** Hash all existing dependency pointers in PostgreSQL; return only 64 bytes.
@@ -119,12 +122,13 @@ export async function createVersionedSourceHandler(options:{reader:Pool;assetDir
   const sermons=await createCompositeSourceSermonRepository(pages,options.reader,options.acceptedStageRepository,snapshot.entities,snapshot.routes);
   const sourceAssets=createSourcePublicAssetHandler(pages,options.assetDirectory);
   const content=preserveSourceMetadata(createCmsFrontendSnapshot(snapshot,images.filter(a=>a.type.startsWith('image/')).map(a=>({id:a.id,path:a.url,type:a.type,width:a.width??1,height:a.height??1,alt:a.alt})),false,false,{immutableSourceContent:true}),pages);
-  const routes=sourceRoutePolicy(pages,snapshot.routes,{...publicRenderContext,siteContent:content});
+  const resourceRedirects=await readSourceResourceRedirects(options.reader);
+  const routes=sourceRoutePolicy(pages,snapshot.routes,{...publicRenderContext,siteContent:content},resourceRedirects);
   routes.sourceShortlinks={...routes.sourceShortlinks,...sermons.verifiedSourceShortlinks()};
   const handler=createSeoHttpAdapter({policy:options.policy,sermons,...routes,content:async()=>content,publicSearch:createLegacySourceSearch(pages,content,sermons,sermons.verifiedSourceShortlinks()),
-   sourcePage:createSourcePublicPageHandler(pages),sourceQueryPage:createSourcePublicPageHandler(pages,true),sourceSitemap:async()=>sourcePublicSitemap(pages,{...publicRenderContext,siteContent:content}),sourceDisposition:path=>editorial.findPublicPathDisposition(path),
+   sourcePage:createSourcePublicPageHandler(pages),sourceQueryPage:createSourcePublicPageHandler(pages,true),sourceSitemap:async()=>sourcePublicSitemap(pages,{...publicRenderContext,siteContent:content}),sourceDisposition:async path=>resourceRedirects.has(path)?{kind:'redirect' as const,location:resourceRedirects.get(path)!}:editorial.findPublicPathDisposition(path),
    publicAsset:async request=>{const response=await sourceAssets(request)??siteAssetResponse(request)??await assetHandler(request);
-    if(response&&options.policy.environment==='production'&&response.status===200){if(!['application/rss+xml','application/atom+xml'].includes(response.headers.get('Content-Type')?.split(';')[0]??''))response.headers.delete('X-Robots-Tag');response.headers.set('Cache-Control','public, max-age=3600');}
+    if(response&&options.policy.environment==='production'&&response.status===200){if(!['application/rss+xml','application/atom+xml','text/calendar'].includes(response.headers.get('Content-Type')?.split(';')[0]??'')&&!(response.headers.get('Content-Length')==='0'&&response.headers.get('Content-Type')?.startsWith('text/html')))response.headers.delete('X-Robots-Tag');response.headers.set('Cache-Control','public, max-age=3600');}
     return response;}});
   return {handler,label:sha256(stableJson({release:options.releaseIdentity,state:version,policy:options.policy,acceptedStageSupplement:Boolean(options.acceptedStageRepository)})),pages:pages.length,sermons:pages.filter(p=>p.kind==='sermon').length};
  });

@@ -15,15 +15,16 @@ import shutil
 import subprocess
 import sys
 import tarfile
+from urllib.parse import urlsplit, parse_qs
 import time
 
 UPGRADE_SHA = "e41bbc7b36e883665a4f57c07ed1fbd9b222f018d07af9597f90cebfd4e62fb2"
-PREVIOUS_COMMIT = "a257de54b54c29ce3fc5a8fcdce73e954dcafa31"
-PREVIOUS_IMAGE = "sha256:93e7c5949adf60d97d7506892a4200986830bf9ec614bd749c0f8ceb58bac4cd"
+PREVIOUS_COMMIT = "25f4b3331683e32926eedcdd4ae5aee726cd3eca"
+PREVIOUS_IMAGE = "sha256:6345b625e88db5ccf23dc503a7d0f6fef0862655b76264775268a63fecfe6a9f"
 BASE_SCHEMA_ORDER = 28
-EXISTING_SOURCE_SHA = "cda46cc9c363db65db6981fdaf615447647c924d8714179e4217240cb616531d"
+EXISTING_SOURCE_SHA = "4f001647949abd7d93f5457cfe51c070cb8f5dc1f0edd8a91aef106dad58c2b7"
 EXISTING_BUNDLE_SHA = "3f34acc4b850884c4fbb44bbb66fc0b42c23bb1dfa7f7416f5840cb80ffb1917"
-INCOMING_BUNDLE_SHA = "04aa499a39f929b5f62e8635f39703744d6a2ea63d51527970662f4843505238"
+INCOMING_BUNDLE_SHA = "3d278b16957b4ecdd4c4c9d1959f7fe5aa72977e216d3f1ec70f11302dafef4a"
 SOURCE_TABLES = ("source_public_versions", "source_public_routes", "source_public_imports")
 ASSET_KEY = re.compile(r"[a-f0-9]{64}\.(?:png|jpg|webp|gif|avif|svg|ico|pdf|doc|docx|xls|xlsx|ppt|pptx|rss|atom|ics|zip|otf)")
 MIGRATION = "0028_source_public_migration"
@@ -41,7 +42,7 @@ def helpers():
     upgrade = importlib.util.module_from_spec(spec); spec.loader.exec_module(upgrade)
     base = upgrade.base_operator()
     base.RUNTIME_ENTRIES = (*base.RUNTIME_ENTRIES, "source-public-sync")
-    base.CMS_TABLES = (*base.CMS_TABLES, *SOURCE_TABLES)
+    base.CMS_TABLES = (*base.CMS_TABLES, *SOURCE_TABLES, "redirects", "audit_events")
     base.assets_manifest = lambda: assets_manifest(base)
     upgrade.SCHEMA_ORDER = BASE_SCHEMA_ORDER
     upgrade.PREVIOUS_COMMIT = PREVIOUS_COMMIT; upgrade.PREVIOUS_IMAGE = PREVIOUS_IMAGE
@@ -117,8 +118,14 @@ def asset_expectations(bundle):
     for page in bundle.get("pages", []):
         if page.get("kind") != "asset": continue
         asset = page.get("asset") or {}; key = asset.get("storageKey", "")
-        if not ASSET_KEY.fullmatch(key) or asset.get("sha256") != key.split(".")[0] or type(asset.get("bytes")) is not int or not 0 < asset["bytes"] <= 52428800:
+        if not ASSET_KEY.fullmatch(key) or asset.get("sha256") != key.split(".")[0] or type(asset.get("bytes")) is not int or not 0 <= asset["bytes"] <= 52428800:
             fail("seo_asset_manifest_refused")
+        if asset["bytes"] == 0:
+            flags = parse_qs(urlsplit(page.get("path", "")).query)
+            if asset.get("emptySourceCalendar") is not True or page.get("indexable") is not False or asset["sha256"] != hashlib.sha256(b"").hexdigest() or not key.endswith(".ics") or asset.get("contentType", "").split(";")[0] not in ("text/html", "text/calendar") or not any(flag in flags for flag in ("ical", "outlook-ical")):
+                fail("seo_asset_empty_calendar_refused")
+        if asset.get("emptySourceCalendar") and asset["bytes"] != 0:
+            fail("seo_asset_empty_calendar_refused")
         if key in result and result[key] != asset: fail("seo_asset_manifest_conflict")
         result[key] = asset
     return result
@@ -181,7 +188,7 @@ def owner_secret_identity(base, path):
 
 def verify_existing_source(actual, bundle_hash):
     # Require the frozen incumbent history and the exact reviewed additive delta.
-    expected={"source_public_versions":7640,"source_public_routes":5748,"source_public_imports":6}
+    expected={"source_public_versions":7642,"source_public_routes":5750,"source_public_imports":7}
     if actual.get("sourceCounts") != expected or actual.get("sourceSha256") != EXISTING_SOURCE_SHA or bundle_hash != INCOMING_BUNDLE_SHA:
         fail("seo_existing_source_drift")
 
@@ -227,9 +234,11 @@ def prepare(base, upgrade, helper, root, incoming, commit, source_hash, inventor
     recovery = base.load(root / "recovery.json")
     database_recovery(base, helper, root)
     if upgrade.snapshot_hash(upgrade.cms_snapshot(base)) != actual["cmsSha256"] or base.preservation() != actual["unrelatedSha256"]: fail("seo_content_changed_during_backup")
-    for name in ("source-public.bundle.private.json", "source-public-assets.private.tar"):
+    if base.sha(incoming / "source-resource-redirects.private.json") != "1ac68197c8b587710e36e26176c46addcd40642677537b091efbe04afcb4380a": fail("seo_resource_manifest_scope")
+    for name in ("source-public.bundle.private.json", "source-public-assets.private.tar", "source-resource-redirects.private.json"):
         shutil.copyfile(base.checked(incoming / name), root / name); (root / name).chmod(0o600)
     base.save(root / "source-before.private.json", source_snapshot(base))
+    base.save(root / "resource-history-before.private.json", resource_history_snapshot(base))
     for runtime in ("public", "protected"):
         config = base.load(root / (runtime + "-candidate.json"))
         config["services"]["app"]["environment"]["SOURCE_PUBLIC_ENABLED"] = "1"
@@ -246,6 +255,28 @@ def prepare(base, upgrade, helper, root, incoming, commit, source_hash, inventor
     return {"outcome": "seo_prepared", "commit": commit, "image": recovery["image"], "sourceAssets": len(asset_expectations(bundle)), "schema": BASE_SCHEMA_ORDER}
 
 
+def resource_history_snapshot(base):
+    return {"redirects":json.loads(base.sql("SELECT COALESCE(json_agg(to_jsonb(d) ORDER BY old_path),'[]'::json) FROM redirects d")),
+            "audit":json.loads(base.sql("SELECT COALESCE(json_agg(to_jsonb(a) ORDER BY id),'[]'::json) FROM audit_events a WHERE entity_type NOT IN ('cms_entity','cms_asset')"))}
+
+
+def verify_resource_history(base, root):
+    before=base.load(root / "resource-history-before.private.json"); current=resource_history_snapshot(base)
+    encoded=lambda rows:{json.dumps(row,sort_keys=True) for row in rows}
+    if not encoded(before["redirects"]) <= encoded(current["redirects"]) or not encoded(before["audit"]) <= encoded(current["audit"]):
+        fail("seo_original_redirect_or_audit_changed")
+    extra=[row for row in current["redirects"] if row["id"] not in {old["id"] for old in before["redirects"]}]
+    extra_audit=[row for row in current["audit"] if row["id"] not in {old["id"] for old in before["audit"]}]
+    if not extra and not extra_audit:return
+    manifest=base.load(root / "source-resource-redirects.private.json")
+    expected={row["oldPath"]:row for row in manifest["rows"]};ids={row["id"] for row in extra}
+    if len(extra)>298 or any(row.get("source_sermon_id") is not None or row.get("status_code")!=301 or row.get("reason")!="verified_original_attachment_resource" or not row.get("verified_at") or row["old_path"] not in expected or row["new_path"]!=expected[row["old_path"]]["newPath"] for row in extra):
+        fail("seo_unscoped_redirect_added")
+    by_id={row["id"]:expected[row["old_path"]] for row in extra}
+    if len(extra_audit)!=len(extra) or any(row.get("entity_type")!="redirect" or row.get("entity_id") not in ids or row.get("actor_role")!="system" or row.get("actor_subject")!="source-public-migration" or row.get("action")!="seo.original_resource_redirect" or row.get("request_correlation_id")!="d182-resource-redirects:a22e67b4d8e78403446add446a46ae4be762f86c0188d0efa3fd4a5b389cce70" or row.get("outcome")!="succeeded" or "assetSha256:"+by_id.get(row.get("entity_id"),{}).get("assetSha256","") not in row.get("changed_fields",[]) or "newPath:"+by_id.get(row.get("entity_id"),{}).get("newPath","") not in row.get("changed_fields",[]) for row in extra_audit):
+        fail("seo_unscoped_audit_added")
+
+
 def verify_frozen(base, upgrade, root, recovery):
     base.verify_frozen(root, recovery)
     owner = base.load(root / "source-owner-secret.private.json")
@@ -254,6 +285,7 @@ def verify_frozen(base, upgrade, root, recovery):
         path = pathlib.Path(receipt["path"]); identity = upgrade.secret_file_identity(path, key.split(":", 1)[-1])
         if base.sha(path) != receipt["sha256"] or any(identity[name] != receipt[name] for name in ("mode", "uid", "gid", "parent")): fail("seo_secret_changed")
     if base.preservation() != recovery["previous"]["unrelatedSha256"]: fail("seo_unrelated_changed")
+    verify_resource_history(base, root)
     before = base.load(root / "cms-before.private.json"); current = upgrade.cms_snapshot(base)
     extra = [row for row in current["schema_migrations"] if row["migration_order"] > BASE_SCHEMA_ORDER]
     if len(extra) > 1 or any(row["migration_order"] != 28 or row["migration_id"] != MIGRATION or row["checksum_sha256"] != source_migration_checksum(root) for row in extra): fail("seo_schema_suffix_changed")
@@ -421,7 +453,7 @@ def adopt_cms(base, upgrade, helper, root, recovery):
         frozen = base.load(marker)
         if plan["planned"] and plan != frozen: fail("seo_cms_plan_changed")
     else:
-        if plan.get("planned") != 1 or plan.get("held") != 1221 or plan.get("planSha256") != "a4bd2b7310915f036e1177094910fd719812e147a1ec3080670ba96d3bbdc348":
+        if plan.get("planned") != 1 or plan.get("held") != 1223 or plan.get("planSha256") != "462ad12b39e62293e45800a4aa3a51a141072643aaf5be266db20a2b5a20aa8a":
             fail("seo_cms_plan_scope")
         frozen = plan; base.save(marker, frozen)
     config["services"]["app"]["environment"]["SOURCE_CMS_PLAN_SHA256"] = frozen["planSha256"]
@@ -448,6 +480,34 @@ def adopt_cms(base, upgrade, helper, root, recovery):
     receipt = {"outcome": "seo_cms_adopted", "commit": recovery["commit"], "image": recovery["image"], "plan": frozen, "result": result, "replay": replay, "priorRowsPreserved": True}
     base.save(root / "source-cms-adoption.receipt.json", receipt)
     verify_frozen(base, upgrade, root, recovery)
+    return receipt
+
+
+def import_resource_redirects(base, upgrade, helper, root, recovery):
+    if set(active_phases(base, helper, root, recovery).values()) != {"bridge"}:
+        fail("seo_bridge_required")
+    verify_source_ready(base, root, recovery)
+    before = upgrade.cms_snapshot(base); source_before = source_snapshot(base); assets_before = base.assets_manifest()
+    manifest = base.checked(root / "source-resource-redirects.private.json")
+    if base.sha(manifest) != "1ac68197c8b587710e36e26176c46addcd40642677537b091efbe04afcb4380a":
+        fail("seo_resource_manifest_scope")
+    config = base.load(root / "source-maintenance.json")
+    config["services"]["app"]["environment"]["SOURCE_RESOURCE_REDIRECTS_SHA256"] = base.sha(manifest)
+    config["services"]["app"]["volumes"].append({"type":"bind", "source":str(manifest), "target":"/run/source-public/redirects.json", "read_only":True})
+    path = root / "source-resource-redirect-maintenance.private.json"
+    save_verified_configuration(base, path, config)
+    command = ["docker", "compose", "-f", str(path), "run", "--rm", "--no-deps", "--pull", "never", "app", "import-redirects"]
+    result = json.loads(base.run(command, timeout=600)); replay = json.loads(base.run(command, timeout=600))
+    if result.get("result", {}).get("held") or replay.get("result", {}).get("held") or replay.get("result", {}).get("inserted") != 0 or replay.get("result", {}).get("unchanged") != 298:
+        fail("seo_resource_redirect_result_scope")
+    after = upgrade.cms_snapshot(base)
+    for name in ("cms_entities", "cms_revisions", "cms_routes", "media_assets", "audit_events", "schema_migrations"):
+        if not {json.dumps(row,sort_keys=True) for row in before[name]} <= {json.dumps(row,sort_keys=True) for row in after[name]}:
+            fail("seo_resource_redirect_prior_history_changed")
+    if source_snapshot(base) != source_before or base.assets_manifest() != assets_before:
+        fail("seo_resource_redirect_source_or_assets_changed")
+    receipt = {"outcome":"seo_resource_redirects_imported", "commit":recovery["commit"], "image":recovery["image"], "result":result, "replay":replay, "priorRowsPreserved":True}
+    base.save(root / "source-resource-redirects.receipt.json", receipt)
     return receipt
 
 
@@ -503,6 +563,7 @@ def main():
         canaries(base, upgrade, helper, root, recovery, "bridge" if operation == "bridge-canary" else "candidate")
     elif operation in ("activate-bridge", "rollback", "activate", "reactivate"): switch(base, upgrade, helper, root, recovery, "bridge" if operation in ("activate-bridge", "rollback") else "candidate")
     elif operation == "migrate": print(json.dumps(migrate(base, upgrade, helper, root, recovery)))
+    elif operation == "resource-redirects": print(json.dumps(import_resource_redirects(base, upgrade, helper, root, recovery)))
     elif operation == "adopt-cms": print(json.dumps(adopt_cms(base, upgrade, helper, root, recovery)))
     elif operation == "repair-aliases": print(json.dumps(repair_aliases(base, upgrade, helper, root, recovery)))
     elif operation == "verify":
