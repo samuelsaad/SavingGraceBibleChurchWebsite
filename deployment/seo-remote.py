@@ -102,7 +102,29 @@ def source_migration_checksum(root):
 def source_snapshot(base):
     count = int(base.sql("SELECT count(*) FROM pg_tables WHERE schemaname='public' AND tablename IN('source_public_versions','source_public_routes','source_public_imports')").decode().strip())
     if count not in (0, 3): fail("seo_partial_source_schema")
-    return {name: json.loads(base.sql("SELECT COALESCE(json_agg(to_jsonb(t)),'[]'::json) FROM " + name + " t")) if count else [] for name in SOURCE_TABLES}
+    if not count: return {name: [] for name in SOURCE_TABLES}
+    result = {}
+    keys = {"source_public_versions": "version_sha256", "source_public_routes": "path", "source_public_imports": "bundle_sha256"}
+    # Preserve every complete row; bound transient PostgreSQL/psql wire allocations.
+    # A before/after count and ordered unique key set detect concurrent changes.
+    for name in SOURCE_TABLES:
+        expected = int(base.sql("SELECT count(*) FROM " + name).decode().strip())
+        rows = []
+        for offset in range(0, expected, 128):
+            statement = "SELECT COALESCE(json_agg(to_jsonb(t)),'[]'::json) FROM (SELECT * FROM " + name + " ORDER BY " + keys[name] + " LIMIT 128 OFFSET " + str(offset) + ") t"
+            batch = json.loads(base.sql(statement))
+            if len(batch) != min(128, expected - offset): fail("seo_source_snapshot_changed")
+            rows.extend(batch)
+        identities = [row[keys[name]] for row in rows]
+        if len(set(identities)) != expected or int(base.sql("SELECT count(*) FROM " + name).decode().strip()) != expected:
+            fail("seo_source_snapshot_changed")
+        # Re-read each batch and compare complete decoded rows; count alone
+        # cannot detect a concurrent edit with the same number of identities.
+        for offset in range(0, expected, 128):
+            statement = "SELECT COALESCE(json_agg(to_jsonb(t)),'[]'::json) FROM (SELECT * FROM " + name + " ORDER BY " + keys[name] + " LIMIT 128 OFFSET " + str(offset) + ") t"
+            if json.loads(base.sql(statement)) != rows[offset:offset+128]: fail("seo_source_snapshot_changed")
+        result[name] = rows
+    return result
 
 
 def inventory(base, upgrade, helper):
@@ -355,6 +377,9 @@ def switch(base, upgrade, helper, root, recovery, phase):
         path = phase_file(root, runtime, chosen); config = base.load(path)
         upgrade.compose_up(base, helper, path, PREVIOUS_IMAGE if chosen == "previous" else recovery["image"])
         helper.ready(8080 if runtime == "public" else 8082, config["services"]["app"]["environment"]["RELEASE_COMMIT"])
+    # state_hash returns only digests; reclaim its discarded decoded snapshots
+    # before bringing up both source-enabled visitors on the unchanged host.
+    release_inventory_memory()
     try:
         for runtime in ("public", "protected"): start(runtime, phase)
         if state_hash(base, upgrade) != before or set(active_phases(base, helper, root, recovery).values()) != {phase}: fail("seo_switch_preservation")

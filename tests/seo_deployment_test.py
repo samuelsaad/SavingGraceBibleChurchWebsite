@@ -69,6 +69,42 @@ class SeoDeploymentTest(unittest.TestCase):
         trim.assert_called_once_with(0)
 
 
+    def test_source_snapshot_batches_preserve_all_complete_rows_and_identity(self):
+        rows = [{"version_sha256":str(n),"payload":{"text":"anonymous "*10}} for n in range(260)]
+        calls = []
+        def sql(statement):
+            calls.append(statement)
+            if "pg_tables" in statement: return b"3"
+            if statement.startswith("SELECT count(*) FROM "):
+                return str(260 if statement.endswith("source_public_versions") else 0).encode()
+            offset=int(statement.split(" OFFSET ")[1].split(")")[0])
+            return json.dumps(rows[offset:offset+128]).encode()
+        result=OP.source_snapshot(SimpleNamespace(sql=sql))
+        self.assertEqual(result['source_public_versions'],rows)
+        self.assertEqual(result['source_public_routes'],[])
+        self.assertEqual(result['source_public_imports'],[])
+        self.assertEqual(sum(" LIMIT 128 OFFSET " in x for x in calls),6)
+
+    def test_source_snapshot_refuses_same_count_payload_changes(self):
+        reads=0
+        def sql(statement):
+            nonlocal reads
+            if "pg_tables" in statement:return b"3"
+            if statement.startswith("SELECT count(*) FROM "):return b"1" if statement.endswith("source_public_versions") else b"0"
+            reads+=1
+            return json.dumps([{"version_sha256":"one","payload":{"version":reads}}]).encode()
+        with self.assertRaisesRegex(RuntimeError,"seo_source_snapshot_changed"):
+            OP.source_snapshot(SimpleNamespace(sql=sql))
+
+    def test_source_snapshot_refuses_truncated_or_repeated_batch_identity(self):
+        for rows in ([{"version_sha256":"same"}]*2,[{"version_sha256":"one"}]):
+            def sql(statement):
+                if "pg_tables" in statement:return b"3"
+                if statement.startswith("SELECT count(*) FROM "):return b"2" if statement.endswith("source_public_versions") else b"0"
+                return json.dumps(rows).encode()
+            with self.assertRaisesRegex(RuntimeError,"seo_source_snapshot_changed"):
+                OP.source_snapshot(SimpleNamespace(sql=sql))
+
     def test_existing_source_retry_refuses_unknown_history_or_bundle(self):
         valid={'sourceCounts':{'source_public_versions':7642,'source_public_routes':5750,'source_public_imports':7},'sourceSha256':OP.EXISTING_SOURCE_SHA}
         OP.verify_existing_source(valid,OP.INCOMING_BUNDLE_SHA)
