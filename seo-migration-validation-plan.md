@@ -364,3 +364,7 @@ RSS resource200. The feed was preserved by SHA-256/MIME/length and imported with
 one additional asset route. Future feed maintenance remains unproved; byte parity
 must not be described as that acceptance. A local URL-helper error was repaired by
 resuming the already captured alias response without repeating the request.
+
+The source fallback retains WordPress's exact Passage label in its accessible
+stamp, preserving the original paragraph text instead of renaming the label. It
+still conveys source metadata only and does not approve primary passages.

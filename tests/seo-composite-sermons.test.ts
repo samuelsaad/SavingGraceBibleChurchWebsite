@@ -21,7 +21,7 @@ describe('ordinary approved editorial content with source originals',()=>{
   const source=original(),repository=await CompositeSourceSermonRepository.create([source],[],async()=>null);
   const row=(await repository.listPublished(query())).data[0]!;
   expect(row.sourceScriptureReferences).toEqual(['John 1:1–4']);expect(row.primaryPassages).toEqual([]);expect(row.primaryPassageState).toBe('unresolved');
-  await withHttp(repository,async base=>{const response=await fetch(base+'/sermons/?sermon_book=john'),body=await response.text();expect(response.status).toBe(200);expect(body).toContain('Scripture reference: </span>John 1:1–4');});
+  await withHttp(repository,async base=>{const response=await fetch(base+'/sermons/?sermon_book=john'),body=await response.text();expect(response.status).toBe(200);expect(body).toContain('Passage: </span>John 1:1–4');});
   const edited=approved({editorialChanges:{scriptureReferences:'2026-10-12T00:00:00Z'}});
   edited.detail.primaryPassages=[];edited.detail.scriptureReferences=[{displayText:'John 2:1',parseStatus:'curated'}];
   const changed=await CompositeSourceSermonRepository.create([source],[edited],async()=>null);

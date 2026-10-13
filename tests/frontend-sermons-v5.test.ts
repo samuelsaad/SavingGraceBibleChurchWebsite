@@ -29,7 +29,7 @@ describe("SermonsV5 presentation", () => {
       scriptureReferences: [{displayText: "Acts 7:2–4", parseStatus: "unparsed" as const}],
       sourceScriptureReferences: ["Acts 7:2–4", "John 2:1 <source>"]};
     const page = renderSermonsV5Page({...input, sermons: [original]}, publicRenderContext, {canonical:true});
-    expect(page).toContain('Scripture reference: </span>Acts 7:2–4, John 2:1 &lt;source&gt;');
+    expect(page).toContain('Passage: </span>Acts 7:2–4, John 2:1 &lt;source&gt;');
     expect(page).not.toContain('Preached from </span>Acts');
     expect(original.primaryPassages).toEqual([]);expect(original.primaryPassageState).toBe("unresolved");
     const {sourceScriptureReferences, ...native} = original;
@@ -37,7 +37,7 @@ describe("SermonsV5 presentation", () => {
     const reviewed = renderSermonsV5Page({...input, sermons:[{...original, primaryPassages:sermon.primaryPassages}]});
     expect(reviewed).toContain('Preached from </span>Romans 5:1');expect(reviewed).not.toContain('John 2:1');
     const named = {...original, title:"Acts 7:2–4", sourceScriptureReferences:["Acts 7:2–4"]};
-    expect(renderSermonsV5Page({...input, sermons:[named]})).not.toContain('Scripture reference:');
+    expect(renderSermonsV5Page({...input, sermons:[named]})).not.toContain('Passage:');
   });
 
   it("retains only exact observed single-filter archive canonicals, including observed pagination", () => {
