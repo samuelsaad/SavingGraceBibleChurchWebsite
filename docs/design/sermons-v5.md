@@ -469,3 +469,14 @@ Validation:
   The temporary anonymous fixture was stopped.
 
 This refinement remains local and uncommitted; it does not change staging.
+
+
+### 13 October — original source passage labels
+
+The existing passage stamp preserves explicit labels from the verified original
+public projection when reviewed primary passages are absent. Its accessible label
+says Scripture reference; it makes no review/approval claim. Ordinary native
+unreviewed references remain hidden. The selected layout, typography, motion,
+media controls and pagination are unchanged. The scoped Impeccable detector found
+no antipatterns. Actual desktop/mobile verification is recorded with the SEO
+continuation acceptance after the application release is frozen.

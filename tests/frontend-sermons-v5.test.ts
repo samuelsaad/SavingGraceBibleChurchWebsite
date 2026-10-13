@@ -24,6 +24,22 @@ const input = {
 };
 
 describe("SermonsV5 presentation", () => {
+  it("preserves verified original Scripture labels without displaying unreviewed native references", () => {
+    const original = {...sermon, primaryPassages: [], primaryPassageState: "unresolved" as const,
+      scriptureReferences: [{displayText: "Acts 7:2–4", parseStatus: "unparsed" as const}],
+      sourceScriptureReferences: ["Acts 7:2–4", "John 2:1 <source>"]};
+    const page = renderSermonsV5Page({...input, sermons: [original]}, publicRenderContext, {canonical:true});
+    expect(page).toContain('Scripture reference: </span>Acts 7:2–4, John 2:1 &lt;source&gt;');
+    expect(page).not.toContain('Preached from </span>Acts');
+    expect(original.primaryPassages).toEqual([]);expect(original.primaryPassageState).toBe("unresolved");
+    const {sourceScriptureReferences, ...native} = original;
+    expect(renderSermonsV5Page({...input, sermons:[native]})).not.toContain('Acts 7:2–4');
+    const reviewed = renderSermonsV5Page({...input, sermons:[{...original, primaryPassages:sermon.primaryPassages}]});
+    expect(reviewed).toContain('Preached from </span>Romans 5:1');expect(reviewed).not.toContain('John 2:1');
+    const named = {...original, title:"Acts 7:2–4", sourceScriptureReferences:["Acts 7:2–4"]};
+    expect(renderSermonsV5Page({...input, sermons:[named]})).not.toContain('Scripture reference:');
+  });
+
   it("retains only exact observed single-filter archive canonicals, including observed pagination", () => {
     const context={...publicRenderContext,seo:{canonicalOrigin:'https://www.savinggrace.org.au',indexable:true,indexableArchivePaths:['/sermons/?sermon_book=romans','/sermons/page/2/?sermon_book=romans']}};
     const filtered={...input,query:publicSermonListQuerySchema.parse({book:'romans'}),hasQueryParameters:true,requestQuery:'sermon_book=romans'};

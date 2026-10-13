@@ -1,5 +1,32 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
+## 13 October D-182 continuation — original archive Scripture labels
+
+The isolated SEO branch restores explicit Scripture labels from verified original
+public sermon projections when no reviewed primary passage is available. These
+labels do not approve a primary passage, alter findings or expose native unreviewed
+references. Existing audited original-reference edits take precedence. Source
+version hashes and imported payloads remain unchanged; the provenance marker is
+computed only in visitor summaries and rejected in imports/native projections.
+The selected journal, dates, descriptions, players and pagination are preserved.
+
+Focused checks passed 63 cases, including actual HTTP archive rendering. Full
+PostgreSQL-gated checks passed 1,428/1,428 with zero skips and exact disposable
+cleanup. Type checks passed 648 files with zero errors/warnings and seven existing
+hints. The 45-page build, protected runtime bundle, anonymised importer and offline
+audit passed. The design detector reported no findings; the 442-file privacy scan
+passed with no secret/private-body/proprietary findings and 413 unchanged dataset
+records. Guarded staging inventory independently confirmed the existing A257 image
+and unchanged source history before the next deployment. Final HTTP/staging and
+browser evidence will be recorded after the new application release is frozen.
+A bounded 13 October public refresh found one new sermon (verified WordPress ID
+30133, service date 11 October), increasing the sitemap count to 458. Its original
+public projection is prepared additively, with no generated enrichment or approvals.
+The source release contains 5,749 routes; the previous source snapshot remains intact.
+Current authoritative stored-CPT coverage still requires read-only WordPress access.
+The dated acceptance below remains the previous release's evidence, not a claim
+that this continuation has passed overall parity.
+
 ## D-182 — final local and protected-staging acceptance; NOT READY FOR CUTOVER
 
 The selected website/CMS/media controls and original 4430 dashboard remain preserved. Application `a257de54b54c29ce3fc5a8fcdce73e954dcafa31` was normally pushed and verified; both sealed staging runtimes use image `sha256:93e7c5949adf60d97d7506892a4200986830bf9ec614bd749c0f8ceb58bac4cd`. The source union retains every original 15,252 URL hash and contains 21,134 observations, 14,228 captured responses and 5,882 unrequested discoveries. The 5,748 source-backed routes include 457 known original sermons, 1,213 HTML event identities and 1,946 resources; authoritative source completeness remains unproved.

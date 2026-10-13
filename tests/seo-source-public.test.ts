@@ -25,6 +25,16 @@ function page(number=1,overrides:Partial<SourcePublicPage>={}):SourcePublicPage{
 }
 function query(input:Record<string,unknown>={}){return publicSermonListQuerySchema.parse(input);}
 describe("source-public provenance model",()=>{
+  it('projects explicit original references without changing source versions or admitting projected flags in imports',async()=>{
+    const original=page(),hash=sourceVersionHash(original),repository=new SourcePublicSermonRepository([original]);
+    const row=(await repository.listPublished(query())).data[0]!;
+    expect(row.sourceScriptureReferences).toEqual(['John 21:1–14']);expect(row.primaryPassages).toEqual([]);
+    row.sourceScriptureReferences!.push('Changed consumer value');
+    expect((await repository.listPublished(query())).data[0]!.sourceScriptureReferences).toEqual(['John 21:1–14']);
+    expect(sourceVersionHash(original)).toBe(hash);
+    expect(sourcePageSchema.safeParse({...original,sermon:{...original.sermon!,sourceScriptureReferences:['Unverified label']}}).success).toBe(false);
+  });
+
   it('retains captured facet metadata and headings in the selected archive without admitting search or compound queries',async()=>{
     const path='/sermons/?sermon_book=john';
     const archive=page(1,{path,sourceUrl:origin+path,kind:'archive',sourceId:null,sermon:null,title:'John - Original church title',heading:'Book: John',canonicalSource:origin+'/sermons/?sermon_book=/john',content:[{tag:'a',href:origin+'/sermons/anonymous-source-1/',text:'Anonymous source 1'}]});

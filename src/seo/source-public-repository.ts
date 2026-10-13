@@ -80,7 +80,7 @@ export class SourcePublicSermonRepository implements PublicSermonRepository {
   }
   private summary(page:SourcePublicPage):SermonSummary {
     const {sourcePublic,seoDescription,body,media,transcript,questionAnswers,relatedSermons,reviewWarnings,reviewProvenance,relatedThemes,...summary}=page.sermon!;
-    return structuredClone(summary);
+    return structuredClone({...summary,sourceScriptureReferences:page.sermon!.scriptureReferences.map(item=>item.displayText)});
   }
   async listPublished(query:PublicSermonListQuery) {
     const rows=this.selected(query).sort((a,b)=>{

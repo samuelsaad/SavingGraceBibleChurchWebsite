@@ -43,7 +43,7 @@ export interface PublicEditorialSermon {
 interface RecordProjection {detail:SermonDetail;passageTerms:readonly {name:string;slug:string}[];lastModified:string;indexable:boolean;sourceWordpressId?:number|null;}
 const summary=(detail:SermonDetail):SermonSummary=>{
  const {sourcePublic,seoDescription,body,media,transcript,questionAnswers,relatedSermons,reviewWarnings,reviewProvenance,relatedThemes,...value}=detail;
- return structuredClone(value);
+ return structuredClone({...value,...(sourcePublic?{sourceScriptureReferences:detail.scriptureReferences.map(item=>item.displayText)}:{})});
 };
 const pathFor=(slug:string)=>'/sermons/'+slug+'/';
 const words=(value:string)=>value.normalize('NFKC').toLocaleLowerCase('en-AU');
@@ -89,7 +89,7 @@ export class CompositeSourceSermonRepository implements PublicSermonRepository {
   for(const input of pages){const page=sourcePageSchema.parse(input);if(page.kind==='sermon'&&!page.issues.length)candidates.push(page);}
   const sourceIds=candidates.flatMap(page=>page.sourceId===null?[]:[page.sourceId]);if(new Set(sourceIds).size!==sourceIds.length)throw Error('source_editorial_duplicate_identity');
   const bySource=new Map<string,PublicEditorialSermon>(),ids=new Set<string>();
-  for(const item of approved){sermonDetailSchema.parse(item.detail);if(item.detail.sourcePublic||!acceptedStaging&&(item.detail.reviewState||item.detail.reviewProvenance))throw Error('source_editorial_private_projection');
+  for(const item of approved){sermonDetailSchema.parse(item.detail);if(item.detail.sourcePublic||item.detail.sourceScriptureReferences||!acceptedStaging&&(item.detail.reviewState||item.detail.reviewProvenance))throw Error('source_editorial_private_projection');
    repository.nativeSlugs.set(item.detail.id,item.detail.slug);
    if(ids.has(item.detail.id))throw Error('source_editorial_duplicate_identity');ids.add(item.detail.id);
    if(item.sourceWordpressId!==null){if(!/^[1-9][0-9]*$/u.test(item.sourceWordpressId)||bySource.has(item.sourceWordpressId))throw Error('source_editorial_duplicate_identity');bySource.set(item.sourceWordpressId,item);}

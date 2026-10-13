@@ -89,6 +89,8 @@ export const sermonSummarySchema = z.object({
     isLead: z.boolean()
   })).default([]),
   primaryPassageState: z.enum(["assigned", "none", "unresolved"]).default("unresolved"),
+  /** Explicit labels from a verified original public projection; not passage approval. */
+  sourceScriptureReferences: z.array(z.string().min(1)).optional(),
   /** Only an explicit trusted classification; never inferred from absent books,
    * a no-primary outcome, or a series name. The current DB has no such lifecycle. */
   isTopical: z.boolean().optional(),

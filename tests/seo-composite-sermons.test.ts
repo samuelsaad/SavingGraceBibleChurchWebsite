@@ -17,6 +17,22 @@ async function withHttp(repository:PublicSermonRepository,run:(base:string)=>Pro
  try{await run(base);}finally{server.closeAllConnections();await new Promise<void>((resolve,reject)=>server.close(error=>error?reject(error):resolve()));}
 }
 describe('ordinary approved editorial content with source originals',()=>{
+ it('renders original unparsed Scripture references through actual archive HTTP without approving them',async()=>{
+  const source=original(),repository=await CompositeSourceSermonRepository.create([source],[],async()=>null);
+  const row=(await repository.listPublished(query())).data[0]!;
+  expect(row.sourceScriptureReferences).toEqual(['John 1:1–4']);expect(row.primaryPassages).toEqual([]);expect(row.primaryPassageState).toBe('unresolved');
+  await withHttp(repository,async base=>{const response=await fetch(base+'/sermons/?sermon_book=john'),body=await response.text();expect(response.status).toBe(200);expect(body).toContain('Scripture reference: </span>John 1:1–4');});
+  const edited=approved({editorialChanges:{scriptureReferences:'2026-10-12T00:00:00Z'}});
+  edited.detail.primaryPassages=[];edited.detail.scriptureReferences=[{displayText:'John 2:1',parseStatus:'curated'}];
+  const changed=await CompositeSourceSermonRepository.create([source],[edited],async()=>null);
+  expect((await changed.listPublished(query())).data[0]!.sourceScriptureReferences).toEqual(['John 2:1']);
+  const native=approved({sourceWordpressId:null});native.detail.primaryPassages=[];
+  const nativeRepository=await CompositeSourceSermonRepository.create([],[native],async()=>null);
+  expect((await nativeRepository.listPublished(query())).data[0]).not.toHaveProperty('sourceScriptureReferences');
+  native.detail.sourceScriptureReferences=['John 1:1–4'];
+  await expect(CompositeSourceSermonRepository.create([],[native],async()=>null)).rejects.toThrow('source_editorial_private_projection');
+ });
+
  it('keeps unfiltered and metadata-filtered listings independent of body normalization while text search still reads approved transcripts',async()=>{
   const repository=await CompositeSourceSermonRepository.create([original()],[approved()],async()=>null);
   const nativeNormalize=String.prototype.normalize;

@@ -16,12 +16,12 @@ import tarfile
 import time
 
 UPGRADE_SHA = "e41bbc7b36e883665a4f57c07ed1fbd9b222f018d07af9597f90cebfd4e62fb2"
-PREVIOUS_COMMIT = "f958aa2f3433d9c7c9adc146e9daf66083dfddc3"
-PREVIOUS_IMAGE = "sha256:c2b7b6855082a242601fcd64daddb4fe6f746f1ff6c77139201aaefbf7f0c73c"
+PREVIOUS_COMMIT = "a257de54b54c29ce3fc5a8fcdce73e954dcafa31"
+PREVIOUS_IMAGE = "sha256:93e7c5949adf60d97d7506892a4200986830bf9ec614bd749c0f8ceb58bac4cd"
 BASE_SCHEMA_ORDER = 28
 EXISTING_SOURCE_SHA = "cda46cc9c363db65db6981fdaf615447647c924d8714179e4217240cb616531d"
 EXISTING_BUNDLE_SHA = "3f34acc4b850884c4fbb44bbb66fc0b42c23bb1dfa7f7416f5840cb80ffb1917"
-INCOMING_BUNDLE_SHA = "cad131cdea84e514135c141a450639114b0ebef5ef7fd29ae965c2bdb48528ce"
+INCOMING_BUNDLE_SHA = "c1ff064d760bb3d1d11dbd0bb6dbea7669b404b225790e1df959f2dd6a6f24e4"
 SOURCE_TABLES = ("source_public_versions", "source_public_routes", "source_public_imports")
 ASSET_KEY = re.compile(r"[a-f0-9]{64}\.(?:png|jpg|webp|gif|avif|svg|ico|pdf|doc|docx|xls|xlsx|ppt|pptx|rss|atom|ics|zip|otf)")
 MIGRATION = "0028_source_public_migration"

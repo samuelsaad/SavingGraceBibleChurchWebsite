@@ -324,3 +324,33 @@ outcomes remain unresolved. Parity failed and no cutover is authorized. Final
 421-file documentation privacy scan passed zero findings; explanatory additions
 are rescanned before the safe Git commit. External staging/Git/account/source/
 WordPress restoration/performance gates remain unresolved.
+
+
+### 13 October 2026 — source archive reference preservation
+
+The journal previously omitted explicit original Scripture references when the
+separate primary-passage review was unresolved. A source-only summary projection
+now preserves those labels, with reviewed passages retaining priority. Imported
+source versions and native approval decisions are unchanged. Anonymous tests prove
+actual archive HTTP rendering, source/native separation, escaped multi-reference
+labels, title deduplication, audited editorial precedence and immutable source hashes.
+Focused tests: 63 passed. Standard suite: 1,283 passed with the expected 145 PG-gated
+skips; the separate guarded PostgreSQL suite: 1,428 passed, zero skips, exact target
+cleanup. Type: 648 files, zero errors/warnings, seven existing hints. Build: 45 pages;
+protected runtime bundle passed. Anonymised importer: 3 included/2 excluded/0 rejected.
+The initial incorrect importer invocation was rejected before reading source input;
+the documented JSON invocation passed. Offline audit: zero vulnerabilities.
+Impeccable detector: no findings. Initial full 442-file privacy scan passed; safe
+explanatory documentation is rescanned before commit. No schema/data migration is
+needed. Final candidate checks and staging identifiers follow in the acceptance log.
+
+A finite 21-request public source refresh completed on 13 October; all 16 existing
+sitemap endpoints returned 200. One new original public sermon was identified as
+WordPress ID 30133 with service date 11 October, one explicit source passage, one
+speaker and a verified YouTube relationship. Six exact added/modified sitemap
+landing pages were captured, without recursive expansion or recording bodies.
+The new projection was prepared using the existing importer and remains separate
+from AI approvals. The first bundle command rejected relative paths before output;
+the required absolute private paths passed. Public REST still exposes 30 pages,
+3 posts and 437 media records; its guessed sermon endpoint is a genuine source404,
+which proves no stored-CPT total. The frozen 21,134-row evidence is unchanged.
