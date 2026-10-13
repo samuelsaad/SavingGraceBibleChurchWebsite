@@ -396,3 +396,12 @@ seven-character operator suffix in the existing private namespace. Tests reject
 other application identities, malformed suffixes and outside directories. This
 keeps application 25f4b33 byte-identical while independently pinning the operator
 release; all runtime source/build inputs were compared and found unchanged.
+
+The final staging original-content import passed, preserving history and
+credentials and making no native review/publication changes. CMS adoption then
+correctly rejected its historical zero-addition plan guard. A separate read-only
+plan verified exactly one source-backed document, with 1,221 held ownership/query
+exclusions and plan SHA-256 a4bd2b7310915f036e1177094910fd719812e147a1ec3080670ba96d3bbdc348.
+The operator now pins that exact one-record plan for the verified original
+WordPress sermon 30133; reruns remain zero-change and all prior rows must be
+preserved. No general plan wildcard or eligibility/approval relaxation is used.

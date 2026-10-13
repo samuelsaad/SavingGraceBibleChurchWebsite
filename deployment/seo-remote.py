@@ -421,7 +421,7 @@ def adopt_cms(base, upgrade, helper, root, recovery):
         frozen = base.load(marker)
         if plan["planned"] and plan != frozen: fail("seo_cms_plan_changed")
     else:
-        if plan.get("planned") != 0 or plan.get("held") != 1221 or plan.get("planSha256") != "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945":
+        if plan.get("planned") != 1 or plan.get("held") != 1221 or plan.get("planSha256") != "a4bd2b7310915f036e1177094910fd719812e147a1ec3080670ba96d3bbdc348":
             fail("seo_cms_plan_scope")
         frozen = plan; base.save(marker, frozen)
     config["services"]["app"]["environment"]["SOURCE_CMS_PLAN_SHA256"] = frozen["planSha256"]
