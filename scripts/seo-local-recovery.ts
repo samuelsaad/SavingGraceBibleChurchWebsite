@@ -11,7 +11,8 @@ import {assertReadOnlyLocalDatabase} from '../src/migration/local-database-safet
 import {protectedLocalPostgresPassword,protectedLocalPostgresUser} from '../src/migration/protected-local-postgres';
 import {createVersionedSourceHandler} from '../src/seo/runtime-snapshot';
 import {readSourcePublicPages} from '../src/seo/source-public-store';
-import {sourceOrigin} from '../src/seo/source-public-model';
+import {sourceOrigin,type SourcePublicPage} from '../src/seo/source-public-model';
+import {readSourceResourceRedirects} from '../src/seo/source-resource-redirects';
 import {restoreConstraintCanonical} from './seo-restore-constraint-equivalence';
 
 const sourceDatabase='savinggrace_sermons_test';
@@ -77,12 +78,15 @@ async function restoreAssets(source:string,destination:string):Promise<{files:nu
  }};await mkdir(destination,{mode:0o700});await visit(root);items.sort((a,b)=>a.path.localeCompare(b.path,'en'));
  return {files:items.length,bytes:items.reduce((n,item)=>n+item.bytes,0),sha256:hash(JSON.stringify(items))};
 }
+export async function verifyRestoredResource(handler:(request:Request)=>Promise<Response>,page:SourcePublicPage,redirects:ReadonlyMap<string,string>):Promise<void>{
+ let response=await handler(new Request(sourceOrigin+page.path));
+ if(response.status===301){const destination=redirects.get(page.path);if(!destination||response.headers.get('Location')!==destination)throw Error('seo_restore_resource_redirect');response=await handler(new Request(sourceOrigin+destination));}
+ const bytes=Buffer.from(await response.arrayBuffer()),asset=page.asset;
+ if(!asset||response.status!==200||hash(bytes)!==asset.sha256||bytes.length!==asset.bytes||response.headers.get('Content-Type')?.split(';')[0]?.trim().toLowerCase()!==asset.contentType.split(';')[0]!.trim().toLowerCase())throw Error('seo_restore_resource_response');
+}
 export async function applicationProof(pool:Pool,directory:string):Promise<{resourceRoutes:number;httpChecks:number}>{
- const pages=await readSourcePublicPages(pool),handler=await createVersionedSourceHandler({reader:pool,assetDirectory:directory,releaseIdentity:'0'.repeat(40),policy:{environment:'production',canonicalOrigin:sourceOrigin}});
- let resources=0;for(const page of pages.filter(page=>page.asset)){
-  const response=await handler(new Request(sourceOrigin+page.path));const bytes=Buffer.from(await response.arrayBuffer());
-  if(response.status!==200||hash(bytes)!==page.asset!.sha256||bytes.length!==page.asset!.bytes||response.headers.get('Content-Type')?.split(';')[0]!==page.asset!.contentType)throw Error('seo_restore_resource_response');resources++;
- }
+ const pages=await readSourcePublicPages(pool),handler=await createVersionedSourceHandler({reader:pool,assetDirectory:directory,releaseIdentity:'0'.repeat(40),policy:{environment:'production',canonicalOrigin:sourceOrigin}}),redirects=await readSourceResourceRedirects(pool);
+ let resources=0;for(const page of pages.filter(page=>page.asset)){await verifyRestoredResource(handler,page,redirects);resources++;}
  const server=createServer(async(req,res)=>{try{if(req.method!=='GET'||req.headers.host!=='127.0.0.1:4446')throw Error();const response=await handler(new Request(sourceOrigin+(req.url??'/')));res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));}catch{res.writeHead(503);res.end();}});
  await new Promise<void>((done,reject)=>{server.once('error',reject);server.listen(4446,'127.0.0.1',done);});
  let checks=0;try{const targets=['/','/sermons/','/robots.txt','/sitemap.xml','/admin/','/frontend-preview/',pages.find(page=>page.kind==='sermon')!.path,pages.find(page=>page.kind==='event')!.path];

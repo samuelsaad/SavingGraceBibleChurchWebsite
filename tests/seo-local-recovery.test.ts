@@ -1,5 +1,5 @@
 import {describe,expect,it} from 'vitest';
-import {assertRecoveryAuthority,compareFingerprints,fingerprintSql,recoveryTarget,type DatabaseFingerprint} from '../scripts/seo-local-recovery';
+import {assertRecoveryAuthority,compareFingerprints,fingerprintSql,recoveryTarget,type DatabaseFingerprint,verifyRestoredResource} from '../scripts/seo-local-recovery';
 const token='seo_restore_20261011';
 describe('bounded private local restore proof',()=>{
  it('requires both flags and the established exact disposable target pattern',()=>{
@@ -23,5 +23,20 @@ describe('bounded private local restore proof',()=>{
   expect(()=>compareFingerprints(before,{...before,sermons:{...item,sha256:'b'.repeat(64)}})).toThrow('mismatch');
   const incomplete={...before,source_public_versions:item};expect(()=>compareFingerprints(incomplete,incomplete)).toThrow('partial_source');
   expect(()=>compareFingerprints({},{})).toThrow('required_table');
+ });
+});
+
+import {sourcePageSchema,sha256} from '../src/seo/source-public-model';
+describe('restored original resource identity',()=>{
+ const bytes=new Uint8Array([1,2,3]),digest=sha256(bytes),page=sourcePageSchema.parse({path:'/anonymous-resource/',kind:'asset',sourceUrl:'https://www.savinggrace.org.au/anonymous-resource/',sourceId:null,capturedAt:'2026-10-13T00:00:00Z',responseSha256:digest,title:'Anonymous resource',heading:'Anonymous resource',description:null,language:'en',indexable:false,canonicalSource:null,publishedAt:null,modifiedAt:null,content:[],links:[],mediaReferences:[],passageTerms:[],sermon:null,issues:[],asset:{storageKey:digest+'.pdf',sha256:digest,contentType:'application/pdf',bytes:3}});
+ it('compares media type independently of parameters and still verifies exact bytes',async()=>{
+  await expect(verifyRestoredResource(async()=>new Response(bytes,{headers:{'Content-Type':'application/pdf; charset=UTF-8'}}),page,new Map())).resolves.toBeUndefined();
+  await expect(verifyRestoredResource(async()=>new Response(new Uint8Array([1]),{headers:{'Content-Type':'application/pdf'}}),page,new Map())).rejects.toThrow('resource_response');
+ });
+ it('follows only the exact current verified one-hop resource mapping',async()=>{
+  const handler=async(r:Request)=>new URL(r.url).pathname===page.path?new Response(null,{status:301,headers:{Location:'/final.pdf'}}):new Response(bytes,{headers:{'Content-Type':'application/pdf'}});
+  await expect(verifyRestoredResource(handler,page,new Map([[page.path,'/final.pdf']]))).resolves.toBeUndefined();
+  await expect(verifyRestoredResource(handler,page,new Map())).rejects.toThrow('resource_redirect');
+  await expect(verifyRestoredResource(handler,page,new Map([[page.path,'/wrong.pdf']]))).rejects.toThrow('resource_redirect');
  });
 });
