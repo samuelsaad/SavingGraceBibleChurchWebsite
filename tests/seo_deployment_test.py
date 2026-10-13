@@ -38,6 +38,15 @@ def archive(path, records):
 
 
 class SeoDeploymentTest(unittest.TestCase):
+    def test_separate_hashed_operator_keeps_the_frozen_application_transfer_scope(self):
+        root = pathlib.Path("/home/ec2-user/.seo-upgrade-transfer")
+        for name in (COMMIT, COMMIT + "-operator-123abcd"):
+            self.assertEqual(OP.transfer_directory(COMMIT, root / name / "seo-remote.py"), root / name)
+        for path in (root / ("b" * 40) / "seo-remote.py", root / (COMMIT + "-operator-other") / "seo-remote.py", pathlib.Path("/unapproved") / COMMIT / "seo-remote.py"):
+            with self.assertRaisesRegex(RuntimeError, "seo_transfer_directory_scope"):
+                OP.transfer_directory(COMMIT, path)
+
+
     def test_inventory_memory_settles_without_lowering_the_required_capacity(self):
         threshold = 2 * 1024**3
         with patch.object(OP, "release_inventory_memory") as release, patch.object(OP, "available_source_memory", side_effect=[threshold - 1, threshold]), patch.object(OP.time, "monotonic", side_effect=[0, 1]), patch.object(OP.time, "sleep") as sleep:

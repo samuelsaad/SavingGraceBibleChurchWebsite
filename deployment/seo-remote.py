@@ -473,13 +473,24 @@ def repair_aliases(base, upgrade, helper, root, recovery):
     base.save(root / "source-alias-repair.receipt.json",receipt);verify_frozen(base,upgrade,root,recovery);return receipt
 
 
+def transfer_directory(commit, operator_file):
+    # Operator-only fixes may accompany identical frozen application bytes.
+    # Both locations remain inside the existing private transfer namespace.
+    directory = pathlib.Path(operator_file).parent
+    if directory.parent != pathlib.Path("/home/ec2-user/.seo-upgrade-transfer") or not re.fullmatch(re.escape(commit) + r"(?:-operator-[a-f0-9]{7})?", directory.name):
+        fail("seo_transfer_directory_scope")
+    return directory
+
+
 def main():
     if os.geteuid() != 0 or len(sys.argv) < 2: fail("seo_arguments")
     base, upgrade = helpers(); helper = base.retained(); base.verify_database(helper)
     operation = sys.argv[1]
     if operation == "inventory" and len(sys.argv) == 2: print(json.dumps(inventory(base, upgrade, helper))); return
     if len(sys.argv) < 3 or not re.fullmatch(r"[a-f0-9]{40}", sys.argv[2]): fail("seo_commit")
-    commit = sys.argv[2]; root = pathlib.Path("/opt/savinggrace-seo-upgrade") / commit; incoming = pathlib.Path("/home/ec2-user/.seo-upgrade-transfer") / commit
+    commit = sys.argv[2]; root = pathlib.Path("/opt/savinggrace-seo-upgrade") / commit; incoming = transfer_directory(commit, __file__)
+    if incoming.is_symlink() or not incoming.is_dir() or incoming.resolve() != incoming or incoming.stat().st_uid != 1000:
+        fail("seo_transfer_directory_scope")
     if operation == "prepare" and len(sys.argv) == 8:
         if not all(re.fullmatch(r"[a-f0-9]{64}", value) for value in sys.argv[3:]): fail("seo_hash")
         print(json.dumps(prepare(base, upgrade, helper, root, incoming, commit, *sys.argv[3:]))); return

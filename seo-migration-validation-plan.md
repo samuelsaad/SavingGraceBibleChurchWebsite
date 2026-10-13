@@ -384,3 +384,15 @@ no host-cache flush, unrelated process change, VM resize or memory-limit increas
 is used. Anonymous tests cover recovery at the exact threshold, refusal below it
 and own-process-only allocator release. Final application/source/asset identity
 and complete HTTP comparisons are recorded after this operator release.
+
+The revised memory gate passed in the third preparation attempt, which then
+correctly rejected the new feed's archive member outside the required source-public
+prefix. The archive was retained and regenerated with all 1,926 files independently
+verified by scope/size/hash. An operator-only transfer then exposed the old CLI's
+hardcoded incoming directory; preparation rejected its mismatched asset hash before
+application replacement. The CLI now derives its verified incoming directory from
+the operator file, accepting only the frozen application hash or that hash plus a
+seven-character operator suffix in the existing private namespace. Tests reject
+other application identities, malformed suffixes and outside directories. This
+keeps application 25f4b33 byte-identical while independently pinning the operator
+release; all runtime source/build inputs were compared and found unchanged.
