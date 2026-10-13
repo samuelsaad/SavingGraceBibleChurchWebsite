@@ -38,6 +38,28 @@ def archive(path, records):
 
 
 class SeoDeploymentTest(unittest.TestCase):
+    def test_inventory_memory_settles_without_lowering_the_required_capacity(self):
+        threshold = 2 * 1024**3
+        with patch.object(OP, "release_inventory_memory") as release, patch.object(OP, "available_source_memory", side_effect=[threshold - 1, threshold]), patch.object(OP.time, "monotonic", side_effect=[0, 1]), patch.object(OP.time, "sleep") as sleep:
+            OP.verify_source_memory()
+        release.assert_called_once_with()
+        sleep.assert_called_once_with(2)
+
+    def test_memory_capacity_still_refuses_a_host_that_does_not_recover(self):
+        with patch.object(OP, "release_inventory_memory"), patch.object(OP, "available_source_memory", return_value=2 * 1024**3 - 1), patch.object(OP.time, "monotonic", side_effect=[0, 31]), patch.object(OP.time, "sleep") as sleep:
+            with self.assertRaisesRegex(RuntimeError, "seo_source_memory_insufficient"):
+                OP.verify_source_memory()
+        sleep.assert_not_called()
+
+    def test_allocator_release_touches_only_own_process_allocations(self):
+        trim = Mock()
+        with patch.object(OP.gc, "collect") as collect, patch.object(OP.ctypes, "CDLL", return_value=SimpleNamespace(malloc_trim=trim)) as library, patch.object(OP.sys, "platform", "linux"):
+            OP.release_inventory_memory()
+        collect.assert_called_once_with()
+        library.assert_called_once_with(None)
+        trim.assert_called_once_with(0)
+
+
     def test_existing_source_retry_refuses_unknown_history_or_bundle(self):
         valid={'sourceCounts':{'source_public_versions':7640,'source_public_routes':5748,'source_public_imports':6},'sourceSha256':OP.EXISTING_SOURCE_SHA}
         OP.verify_existing_source(valid,OP.INCOMING_BUNDLE_SHA)

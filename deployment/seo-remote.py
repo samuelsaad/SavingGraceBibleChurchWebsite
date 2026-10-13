@@ -3,6 +3,8 @@ The compatible feature-off bridge precedes schema28; rollback preserves history.
 Use only the retained pinned SSH transport. Source bodies stay in private files.
 """
 import copy
+import ctypes
+import gc
 import hashlib
 import importlib.util
 import json
@@ -184,6 +186,32 @@ def verify_existing_source(actual, bundle_hash):
         fail("seo_existing_source_drift")
 
 
+def release_inventory_memory():
+    # Reclaim only this process's unused allocations, never host caches/services.
+    gc.collect()
+    if sys.platform.startswith("linux"):
+        trim = getattr(ctypes.CDLL(None), "malloc_trim", None)
+        if trim is not None:
+            trim.argtypes = [ctypes.c_size_t]
+            trim.restype = ctypes.c_int
+            trim(0)
+
+
+def available_source_memory():
+    return next((int(line.split()[1]) * 1024 for line in pathlib.Path("/proc/meminfo").read_text().splitlines() if line.startswith("MemAvailable:")), 0)
+
+
+def verify_source_memory():
+    # Inventory JSON and completed Docker/psql pipes need not remain resident.
+    # Keep the original 2 GiB gate; allow at most 30 seconds for buffers to settle.
+    release_inventory_memory()
+    deadline = time.monotonic() + 30
+    while available_source_memory() < 2 * 1024**3:
+        if time.monotonic() >= deadline:
+            fail("seo_source_memory_insufficient")
+        time.sleep(2)
+
+
 def prepare(base, upgrade, helper, root, incoming, commit, source_hash, inventory_hash, runtime_hash, bundle_hash, assets_hash):
     expected = base.load(incoming / "inventory.private.json"); actual = inventory(base, upgrade, helper)
     for key in ("runtimes", "counts", "cmsCounts", "cmsSha256", "uploadsSha256", "unrelatedSha256", "secretFilesSha256"):
@@ -192,8 +220,7 @@ def prepare(base, upgrade, helper, root, incoming, commit, source_hash, inventor
     if base.sha(incoming / "source-public.bundle.private.json") != bundle_hash or base.sha(incoming / "source-public-assets.private.tar") != assets_hash: fail("seo_private_transfer_hash")
     required_bytes = 2 * 1024**3 + 2 * sum((incoming / name).stat().st_size for name in ("source-public.bundle.private.json", "source-public-assets.private.tar"))
     if actual["storage"]["availableBytes"] < required_bytes: fail("seo_source_storage_insufficient")
-    available_memory = next((int(line.split()[1]) * 1024 for line in pathlib.Path("/proc/meminfo").read_text().splitlines() if line.startswith("MemAvailable:")), 0)
-    if available_memory < 2 * 1024**3: fail("seo_source_memory_insufficient")
+    verify_source_memory()
     bundle = base.load(incoming / "source-public.bundle.private.json")
     verify_asset_archive(base, incoming / "source-public-assets.private.tar", bundle)
     upgrade.prepare(base, helper, root, incoming, commit, source_hash, inventory_hash, runtime_hash)

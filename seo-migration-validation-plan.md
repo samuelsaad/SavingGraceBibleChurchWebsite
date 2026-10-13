@@ -368,3 +368,19 @@ resuming the already captured alias response without repeating the request.
 The source fallback retains WordPress's exact Passage label in its accessible
 stamp, preserving the original paragraph text instead of renaming the label. It
 still conveys source metadata only and does not approve primary passages.
+
+
+13 October staging preparation stopped twice before replacing an application at
+its unchanged 2 GiB memory gate. A read-only profile proved that inventory JSON
+left about 150 MiB in the operator allocator and that completed Docker/psql buffers
+settled shortly afterward; source hashes remained unchanged. Both incumbents were
+restarted sequentially with the same verified image/configuration/mount set and
+retained recovery backup, and returned healthy. An interrupted verification import
+and Docker mount-list ordering false difference were retained and verified safely
+without repeating the protected restart. The operator now releases only its own
+unused allocator pages and waits at most 30 seconds for real reported capacity.
+It retains the same 2 GiB threshold and rejects insufficient capacity at timeout;
+no host-cache flush, unrelated process change, VM resize or memory-limit increase
+is used. Anonymous tests cover recovery at the exact threshold, refusal below it
+and own-process-only allocator release. Final application/source/asset identity
+and complete HTTP comparisons are recorded after this operator release.
