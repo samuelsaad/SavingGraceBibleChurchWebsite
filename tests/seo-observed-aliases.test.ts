@@ -1,7 +1,7 @@
 import {describe,it,expect} from 'vitest';
 import {bindObservedSourceAliases,observedAlias,type ObservedSourceAlias} from '../src/seo/source-observed-aliases';
 import {sourceRoutePolicy} from '../src/seo/runtime-snapshot';
-import {observedSourceAliases} from '../src/seo/source-original-aliases.generated';
+import {observedSourceAliases} from '../src/seo/source-original-alias-manifest';
 import type {SourcePublicPage} from '../src/seo/source-public-model';
 const page={sourceId:42,path:'/event/example/2024-01-14/',kind:'event',responseSha256:'a'.repeat(64),issues:[]} as unknown as SourcePublicPage;
 const row:ObservedSourceAlias={alias:'/?p=42',target:page.path,sourceId:42,kind:'event',responseSha256:page.responseSha256,chain:[]};

@@ -118,7 +118,7 @@ The whole-site rebuild from the WordPress export of 24 September 2026 gives ever
 
 ## D-183 observed original HTML aliases
 
-`src/seo/source-original-aliases.generated.ts` freezes only paths, WordPress identities,
+`src/seo/source-original-alias-manifest.ts` freezes only paths, WordPress identities,
 response hashes and actual captured redirect chains from the existing inventory.
 `scripts/seo-generate-observed-aliases.py` regenerates it without a network crawl.
 Each target must be an existing, conflict-free original-public HTML projection with

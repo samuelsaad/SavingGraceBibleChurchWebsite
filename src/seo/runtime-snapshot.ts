@@ -1,5 +1,5 @@
 import {bindObservedSourceAliases,type ObservedSourceAlias} from './source-observed-aliases';
-import {observedSourceAliases} from './source-original-aliases.generated';
+import {observedSourceAliases} from './source-original-alias-manifest';
 import {configuredContactDelivery} from '../server/contact-mail';
 import {readSourceResourceRedirects} from './source-resource-redirects';
 import {sourcePresentationPolicy} from './source-route-policy';
