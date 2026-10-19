@@ -98,3 +98,23 @@ A fresh final source delta and complete reconciliation remain production cutover
 
 Earlier source reports and superseded hashes are retained under `seo-history/`;
 this dated baseline supersedes their current-count claims without deleting evidence.
+
+## 19 October bounded source change
+
+The existing frozen 23,017-URL union was retained and expanded by one verified new
+sermon, WordPress 30134, service date 18 October. The public sermon sitemap was read
+once; its 459 entries retain all prior 458. Captured 19 October 2026 03:10 UTC,
+sitemap SHA-256 `4842018a863532f54b16b53343a020dd807085e7e3c0e992143cd4e882c6471d`.
+The new page response SHA-256 is
+`81c2a68b31e86d596327684dee0cf995fd8afad893d5df40db50f96464639b11`.
+The union is now 23,018 URLs / 15,434 captured responses / 27,865 file witnesses;
+all original observations and source bytes remain. No open calendar/query crawl
+was restarted. The frozen source cache is independently bound to ledger, parser,
+record and response hashes before/after and on every read.
+
+A bounded advertised public events API inspection matched 234 future occurrences
+across six groups against the published CMS for 19 October 2026–19 October 2027.
+The WP REST events view exposes 1,078 virtual occurrence IDs; this is explicitly
+not a count of stored event records or proof of complete publication coverage.
+Original database inspection again stopped before table reads at the unchanged
+SELECT/USAGE privilege guard. A current full WordPress backup remains unavailable.

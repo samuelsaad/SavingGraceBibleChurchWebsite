@@ -1,0 +1,101 @@
+{
+  "format": "sgbc-exact-editorial-metadata-dispositions-v1",
+  "applicationCommit": "29214d1447988d9fcb5e954f768ad1eac8272d53",
+  "capturedAt": "2026-10-19T04:14:03.040Z",
+  "meaning": "Retain existing audited original-content edits; no new human approval or source rewrite.",
+  "sermons": [
+    {
+      "sourceId": 29091,
+      "path": "/sermons/impossible-to-believe/",
+      "sourceResponseSha256": "b0b5a0ef96a5b1e694c959b77628134fadff99a87fe20613c4dc432ad4164d9f",
+      "nativeRows": 1,
+      "auditFields": [
+        "title",
+        "summary",
+        "speakerId",
+        "transcript",
+        "serviceDate",
+        "summaryStatus",
+        "questionAnswers",
+        "summarySourceKind",
+        "bookClassificationIds",
+        "summarySourceReference"
+      ],
+      "sourceTitleSha256": "d30fdc765821e33e6efb970924085ba36d483cc875f4ba3dfd2f5336614de8d5",
+      "nativeTitleSha256": "8258c128b57b6bac2799bd84291fe8bfc8594273689a152295123c9e916eddba",
+      "renderedEscapedTitleSha256": "8258c128b57b6bac2799bd84291fe8bfc8594273689a152295123c9e916eddba",
+      "auditedTitleMatchesRendered": true,
+      "expectedModified": "2026-08-25T02:26:11.034Z",
+      "renderedModified": "2026-08-25T02:26:11.034Z",
+      "modificationMatchesAudit": true,
+      "status": 200
+    },
+    {
+      "sourceId": 28991,
+      "path": "/sermons/managing-the-tongue/",
+      "sourceResponseSha256": "fea7bd2561e067dc2332304e9b68662a46de35c39e416b76a43cf2557c4f1e65",
+      "nativeRows": 1,
+      "auditFields": [
+        "title",
+        "summary",
+        "speakerId",
+        "transcript",
+        "serviceDate",
+        "summaryStatus",
+        "questionAnswers",
+        "summarySourceKind",
+        "bookClassificationIds",
+        "summarySourceReference"
+      ],
+      "sourceTitleSha256": "4affd289d186d482efe02686446788071b32c30aec4bffb9ef35d4f3a7a21926",
+      "nativeTitleSha256": "a558907ec44b02d44322621d385247b26a08d3c66809b9b2fa05bdb7e42186a2",
+      "renderedEscapedTitleSha256": "a558907ec44b02d44322621d385247b26a08d3c66809b9b2fa05bdb7e42186a2",
+      "auditedTitleMatchesRendered": true,
+      "expectedModified": "2026-08-29T02:24:34.811Z",
+      "renderedModified": "2026-08-29T02:24:34.811Z",
+      "modificationMatchesAudit": true,
+      "status": 200
+    },
+    {
+      "sourceId": 29076,
+      "path": "/sermons/what-is-genuine-faith/",
+      "sourceResponseSha256": "85d12f10dfba798bc9ffa2f45fcc6c83c3e98f454d127e3d5da10639894096b2",
+      "nativeRows": 1,
+      "auditFields": [
+        "title",
+        "summary",
+        "speakerId",
+        "transcript",
+        "serviceDate",
+        "summaryStatus",
+        "questionAnswers",
+        "summarySourceKind",
+        "bookClassificationIds",
+        "summarySourceReference"
+      ],
+      "sourceTitleSha256": "36a3761d2ebddff3f6bb56fd262ec969c7b2b06d44ad863d91796bdc4a6118f9",
+      "nativeTitleSha256": "6937bd04f0fc1ae7fd75f8e77cad33a3faa92324ffb9f627338ac1fc161f902a",
+      "renderedEscapedTitleSha256": "6937bd04f0fc1ae7fd75f8e77cad33a3faa92324ffb9f627338ac1fc161f902a",
+      "auditedTitleMatchesRendered": true,
+      "expectedModified": "2026-08-19T10:28:24.650Z",
+      "renderedModified": "2026-08-19T10:28:24.650Z",
+      "modificationMatchesAudit": true,
+      "status": 200
+    }
+  ],
+  "arabic": {
+    "sourceId": 29140,
+    "path": "/sermons/%d8%af%d8%b9%d9%88%d8%a9-%d9%84%d9%84%d8%b9%d8%b7%d8%b4-%d9%84%d9%84%d9%87/",
+    "sourceResponseSha256": "c6a32a6bbcfdc40d431a1fea8ada4e48423f25716a99ad064b609836ff6d63a2",
+    "headingArabicLetters": 12,
+    "headingLetters": 12,
+    "expectedLanguage": "ar",
+    "renderedLanguage": "ar",
+    "languageMatches": true,
+    "translationRelationshipsInvented": false
+  },
+  "limitations": [
+    "Only these exact source identities, response hashes and current rendered/audit values are covered.",
+    "Account and full current WordPress database coverage remain unproved."
+  ]
+}

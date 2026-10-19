@@ -22,13 +22,20 @@ def identities(node):
  return {path for item in walk(node) if item['tag']=='a' and (path:=detail_path(item['attrs'].get('href','')))}
 def source_cards(root):
  result={}
+ # Raw list/article boundaries identify a card even when a filter has one result.
+ for node in walk(root):
+  ids=identities(node)
+  if node['tag']in ('li','article')and len(ids)==1 and any(n['tag']in ('h2','h3','h4')and identities(n)==ids for n in walk(node)):
+   result.setdefault(next(iter(ids)),[]).append(node)
+ if result:return result
  def visit(node):
   ids=identities(node)
-  if len(ids)==1 and node['tag'] in ('li','div','article'):
+  if len(ids)==1 and node['tag']in ('li','div','article'):
    result.setdefault(next(iter(ids)),[]).append(node);return
   for child in node['children']:
    if isinstance(child,dict):visit(child)
  visit(root);return result
+
 def candidate_cards(document):
  result={}
  for node in walk(tree(document)):
@@ -43,6 +50,40 @@ def source_date(value):
  return match[3]+'-'+str(months.index(match[2])+1).zfill(2)+'-'+match[1].zfill(2)
 def whole_text(haystack,needle):
  return bool(needle and re.search(r'(?<!\w)'+re.escape(needle)+r'(?!\w)',haystack))
+def taxonomy_identity(href):
+ p=urlsplit(href)
+ if p.hostname and p.hostname not in ('www.savinggrace.org.au','savinggrace.org.au'):return None
+ native=re.fullmatch(r'/(series|speakers|books)/([a-z0-9-]+)/',p.path)
+ if native and not p.query:return native[1],native[2]
+ pairs=parse_qsl(p.query)
+ mapping={'sermon_series':'series','sermon_speaker':'speakers','sermon_book':'books'}
+ if p.path=='/sermons/'and len(pairs)==1 and pairs[0][0]in mapping:
+  slug=unquote(pairs[0][1]).strip('/')
+  if re.fullmatch('[a-z0-9-]+',slug):return mapping[pairs[0][0]],slug
+ return None
+
+def metadata_field_witness(node,candidate):
+ value=norm(CAP.text(node));match=re.match(r'^(Series|Preacher|Book):\s*(.*)$',value)
+ if not match:return False
+ kind={'Series':'series','Preacher':'speakers','Book':'books'}[match[1]]
+ anchors=[n for n in walk(node)if n['tag']=='a'];wanted=[(taxonomy_identity(n['attrs'].get('href','')),norm(CAP.text(n)))for n in anchors]
+ if not anchors:return not match[2] # Exact empty legacy metadata label, no fact lost.
+ if any(not identity or identity[0]!=kind for identity,name in wanted):return False
+ if norm(match[2].replace(',',' '))!=norm(' '.join(name for identity,name in wanted)):return False
+ classes={'series':'journal__series','speakers':'journal__speaker','books':'journal__tab'}
+ areas=[n for n in walk(candidate)if classes[kind]in n['attrs'].get('class','').split()]
+ actual=[(taxonomy_identity(n['attrs'].get('href','')),norm(CAP.text(n)))for area in areas for n in walk(area)if n['tag']=='a']
+ whole=norm(CAP.text(candidate))
+ return all(any(a==identity and (text==name or whole_text(whole,name))for a,text in actual)for identity,name in wanted)
+
+def original_main(source,document):
+ root=tree(document);selector=source.get('mainSelector')
+ if selector=='main':return CAP.first(root,lambda n:n['tag']=='main')
+ if selector=='main-content':return CAP.first(root,lambda n:n['attrs'].get('id')=='main-content')
+ if selector in ('sermon-main-content','tribe-events-single-event-description','entry-content','post-content','page-content'):
+  return CAP.first(root,lambda n:selector in CAP.classes(n))
+ return None
+
 def card_witness(original,candidate,path):
  actual=norm(CAP.text(candidate));dates={item['attrs'].get('datetime','').split('T')[0]for item in walk(candidate)if item['tag']=='time'}
  series=[norm(CAP.text(item)) for item in walk(candidate)if 'journal__series'in item['attrs'].get('class','').split()]
@@ -51,6 +92,7 @@ def card_witness(original,candidate,path):
   if not value:return True
   if node['tag']=='img':return True # image identity/alt is checked separately.
   if node['tag']=='p':
+   if metadata_field_witness(node,candidate):return True
    date=source_date(value)
    if date:return date in dates
    if value.startswith('Series: '):return 'Series '+value[8:] in series
@@ -63,10 +105,10 @@ def card_witness(original,candidate,path):
    elif not exact_node(child):return False
   return True
  return exact_node(original)
-def block_witnesses(source,candidate,document,missing):
+def block_witnesses(source,candidate,document,missing,source_document=None):
  """Require the same card URL and every original leaf, never a bag of words."""
  remaining=collections.Counter(missing);witnesses=[]
- actual=norm(candidate.get('mainText',''));root=tree(source.get('mainHtml',''));cards=source_cards(root);current=candidate_cards(document)
+ actual=norm(candidate.get('mainText',''));root=original_main(source,source_document)if source_document is not None else tree(source.get('mainHtml',''));cards=source_cards(root)if root else {};current=candidate_cards(document)
  card_nodes={}
  for path,groups in cards.items():
   if path not in current:continue

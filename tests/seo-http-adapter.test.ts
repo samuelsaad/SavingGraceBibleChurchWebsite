@@ -20,6 +20,15 @@ function repository():PublicSermonRepository{return {
 };}
 const production=()=>createSeoHttpAdapter({policy:{environment:"production",canonicalOrigin:origin,redirectOrigins:["http://example.test","https://example.test","http://www.example.test"]},sermons:repository()});
 describe("explicit production SEO adapter",()=>{
+  it('serves witnessed aliases in one host/path redirect and propagates withdrawal',async()=>{
+    const route=createSeoHttpAdapter({policy:{environment:'production',canonicalOrigin:origin,redirectOrigins:['http://example.test']},sermons:repository(),sourceObservedAliases:{'/?p=42':'/event/anonymous/2024-01-14/','/?p=43':null,'/old-contact':'/contact/'}});
+    const response=await route(new Request('http://example.test/?p=42&utm_source=a%20b'));
+    expect(response.status).toBe(301);expect(response.headers.get('Location')).toBe(origin+'/event/anonymous/2024-01-14/?utm_source=a%20b');
+    expect((await route(new Request(origin+'/?p=43&utm_source=x'))).status).toBe(410);
+    expect((await route(new Request(origin+'/?p=42&p=42'))).status).toBe(404);
+    const renamed=await route(new Request(origin+'/old-contact?filter=kept'));expect(renamed.headers.get('Location')).toBe('/contact/?filter=kept');
+  });
+
   it("refuses unsafe canonical origins and accidental production rehearsal origins",()=>{
     for(const canonicalOrigin of ["http://example.test","https://user:secret@example.test","https://example.test/path","https://example.test/?x=1","https://127.0.0.1","https://localhost"]) expect(()=>createSeoHttpPolicy({environment:"production",canonicalOrigin})).toThrow();
     expect(()=>createSeoHttpPolicy({environment:"production",canonicalOrigin:origin,rehearsalOrigins:["http://127.0.0.1:4450"]})).toThrow();

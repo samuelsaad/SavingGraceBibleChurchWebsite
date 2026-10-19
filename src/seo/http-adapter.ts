@@ -1,3 +1,4 @@
+import {observedAlias} from './source-observed-aliases';
 import {retiredWordPressAssets} from './retired-wordpress-assets';
 import {sha256} from './source-public-model';
 import {createContactHandler,type ContactDelivery} from '../server/http/contact';
@@ -36,6 +37,8 @@ export interface SeoHttpAdapterOptions extends ChurchSiteOptions {
   sourceQueryPage?: (request:Request,context:FrontendRenderContext)=>Promise<Response|null>;
   sourcePage?: (request:Request,context:FrontendRenderContext)=>Promise<Response|null>;
   sourceResourceRedirects?:Readonly<Record<string,string>>;
+  /** Exact original aliases bound to current source identity and editorial disposition. */
+  sourceObservedAliases?:Readonly<Record<string,string|null>>;
   sourceDisposition?: (path:string)=>Promise<{kind:"redirect";location:string}|{kind:"gone"}|null>;
   /** Public managed assets only; the dependency must enforce published references. */
   publicAsset?: (request: Request) => Promise<Response | null>;
@@ -80,6 +83,11 @@ export function createSeoHttpAdapter(options: SeoHttpAdapterOptions): (request: 
       if (request.method !== "GET" && !head) return finish(new Response("Method not allowed",{status:405,headers:{Allow:"GET, HEAD","Cache-Control":"no-store"}}),false);
       if (/%(?:2f|5c|00|0[ad])/iu.test(url.pathname) || url.pathname.includes("\\")) return finish(boundary(400,"Invalid page address"),head);
       const resourceTarget=(path:string)=>{const target=new URL(path,policy.canonicalOrigin);if(!path.startsWith('/')||path.startsWith('//')||path.includes('\\')||/%(?:2f|5c|00|0[ad])/iu.test(path)||target.origin!==policy.canonicalOrigin||target.pathname+target.search!==path||privatePath.test(decodeURIComponent(target.pathname)))throw Error('seo_resource_target_refused');return path;};
+      const alias=options.sourceObservedAliases?observedAlias(url,options.sourceObservedAliases):null;
+      if(alias){
+       if(alias.target===null)return finish(boundary(410,'Page no longer available'),head);
+       return finish(new Response(null,{status:301,headers:{Location:(policy.indexable&&url.origin!==policy.canonicalOrigin?policy.canonicalOrigin:'')+resourceTarget(alias.target),'Cache-Control':'no-store'}}),head);
+      }
       const exactResource=options.sourceResourceRedirects?.[url.pathname+url.search];
       if(exactResource&&url.search)return finish(new Response(null,{status:301,headers:{Location:policy.indexable&&url.origin!==policy.canonicalOrigin?policy.canonicalOrigin+resourceTarget(exactResource):resourceTarget(exactResource),'Cache-Control':'no-store'}}),head);
       if(url.pathname==='/feed/'&&url.searchParams.has('attachment_id')){

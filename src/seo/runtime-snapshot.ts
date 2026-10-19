@@ -1,3 +1,5 @@
+import {bindObservedSourceAliases,type ObservedSourceAlias} from './source-observed-aliases';
+import {observedSourceAliases} from './source-original-aliases.generated';
 import {configuredContactDelivery} from '../server/contact-mail';
 import {readSourceResourceRedirects} from './source-resource-redirects';
 import {sourcePresentationPolicy} from './source-route-policy';
@@ -20,7 +22,7 @@ import {createSeoHttpAdapter} from './http-adapter';
 import type {SeoHttpPolicyInput} from './http-policy';
 import {sha256,stableJson,type SourcePublicPage} from './source-public-model';
 
-export function sourceRoutePolicy(pages:readonly SourcePublicPage[],routes:readonly import('../cms/model').CmsRoute[]=[],context:FrontendRenderContext=publicRenderContext,resourceRedirects:ReadonlyMap<string,string>=new Map()){
+export function sourceRoutePolicy(pages:readonly SourcePublicPage[],routes:readonly import('../cms/model').CmsRoute[]=[],context:FrontendRenderContext=publicRenderContext,resourceRedirects:ReadonlyMap<string,string>=new Map(),aliases:readonly ObservedSourceAlias[]=observedSourceAliases,sermonPaths:Readonly<Record<string,string>>={}){
  const currentRoutes=new Map(routes.map(route=>[route.path,route]));
  const canonicalPath=(path:string)=>{
   let target=path;const seen=new Set<string>();
@@ -55,9 +57,10 @@ export function sourceRoutePolicy(pages:readonly SourcePublicPage[],routes:reado
  }
  const sourceAttachmentLinks:Record<string,string>=Object.fromEntries([...attachmentIds].filter(([,paths])=>paths.size===1).map(([id,paths])=>[id,[...paths][0]! ]));
  for(const [path,target] of resourceRedirects){const id=/^\/\?attachment_id=([1-9][0-9]{0,14})$/u.exec(path)?.[1];if(id){if(sourceAttachmentLinks[id]&&sourceAttachmentLinks[id]!==target)throw Error('source_attachment_identity_conflict');sourceAttachmentLinks[id]=target;}}
+ const sourceObservedAliases=bindObservedSourceAliases(pages,aliases,new Set(currentRoutes.keys()),canonicalPath,sermonPaths);
  const presentation=sourcePresentationPolicy(pages,context);
  const indexableCapturedQueryPaths=pages.filter(page=>page.path.includes('?')&&!page.issues.length&&page.kind!=='asset'&&page.kind!=='feed'&&presentation(page).indexable).map(page=>page.path);
- return {sourceResourceRedirects:Object.fromEntries(resourceRedirects),sourceShortlinks,sourceAttachmentLinks,indexableArchivePaths:[...new Set(indexableArchivePaths)].sort(),indexableCapturedQueryPaths:[...new Set(indexableCapturedQueryPaths)].sort()};
+ return {sourceObservedAliases,sourceResourceRedirects:{...Object.fromEntries(Object.entries(sourceObservedAliases).filter((entry):entry is [string,string]=>entry[1]!==null)),...Object.fromEntries(resourceRedirects)},sourceShortlinks,sourceAttachmentLinks,indexableArchivePaths:[...new Set(indexableArchivePaths)].sort(),indexableCapturedQueryPaths:[...new Set(indexableCapturedQueryPaths)].sort()};
 }
 
 /** Hash all existing dependency pointers in PostgreSQL; return only 64 bytes.
@@ -130,7 +133,7 @@ export async function createVersionedSourceHandler(options:{reader:Pool;assetDir
   const sourceAssets=createSourcePublicAssetHandler(pages,options.assetDirectory);
   const content=preserveSourceMetadata(createCmsFrontendSnapshot(snapshot,images.filter(a=>a.type.startsWith('image/')).map(a=>({id:a.id,path:a.url,type:a.type,width:a.width??1,height:a.height??1,alt:a.alt})),false,false,{immutableSourceContent:true}),pages);
   const resourceRedirects=await readSourceResourceRedirects(options.reader);
-  const routes=sourceRoutePolicy(pages,snapshot.routes,{...publicRenderContext,siteContent:content},resourceRedirects);
+  const routes=sourceRoutePolicy(pages,snapshot.routes,{...publicRenderContext,siteContent:content},resourceRedirects,observedSourceAliases,sermons.verifiedSourceShortlinks());
   routes.sourceShortlinks={...routes.sourceShortlinks,...sermons.verifiedSourceShortlinks()};
   const handler=createSeoHttpAdapter({...(contactDelivery?{contactDelivery}:{}),policy:options.policy,sermons,...routes,content:async()=>content,publicSearch:createLegacySourceSearch(pages,content,sermons,sermons.verifiedSourceShortlinks()),
    sourcePage:createSourcePublicPageHandler(pages),sourceQueryPage:createSourcePublicPageHandler(pages,true),sourceSitemap:async()=>sourcePublicSitemap(pages,{...publicRenderContext,siteContent:content}),sourceDisposition:async path=>resourceRedirects.has(path)?{kind:'redirect' as const,location:resourceRedirects.get(path)!}:editorial.findPublicPathDisposition(path),

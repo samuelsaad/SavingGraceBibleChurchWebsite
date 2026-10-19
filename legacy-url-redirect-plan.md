@@ -115,3 +115,19 @@ The whole-site rebuild from the WordPress export of 24 September 2026 gives ever
 9. Run chain, loop, soft-404, broken-link, orphan-page, status, canonical, duplicate-parameter, sitemap, robots, structured-data, and no-JavaScript crawl tests.
 10. Confirm no staging/preview/admin/non-public URL or staging-origin social asset appears in production redirects, canonicals, metadata, or sitemaps.
 11. Exercise published slug changes, archive/restore, redirect deletion, and gone deletion; verify direct final dispositions, no chains, no silent 404, and no deleted URL in the sitemap.
+
+## D-183 observed original HTML aliases
+
+`src/seo/source-original-aliases.generated.ts` freezes only paths, WordPress identities,
+response hashes and actual captured redirect chains from the existing inventory.
+`scripts/seo-generate-observed-aliases.py` regenerates it without a network crawl.
+Each target must be an existing, conflict-free original-public HTML projection with
+the same source response hash; numeric and event-series identities must agree.
+A reused ID on an archive does not override a witnessed detail-page redirect.
+
+Runtime binding preserves current CMS ownership and withdrawals, follows current
+slug dispositions directly and uses audited native sermon slug mappings. Stale or
+missing source dependencies do not become approved redirects or justified removals.
+Exact semantic query parameters remain meaningful; only campaign parameters may
+be separated for matching and their original encoding is retained. No catch-all
+homepage redirect or hidden content publication is introduced.
