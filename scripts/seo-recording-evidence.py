@@ -2,7 +2,7 @@
 import json,hashlib
 from collections import Counter
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit,urljoin
 
 def sha(data):return hashlib.sha256(data).hexdigest()
 
@@ -24,7 +24,7 @@ def load_recording_evidence(path,bundle,bindings):
    asset=files.get(u.path)
    if not asset or row.get('bodySha256')!=asset['sha256']or row.get('byteCount')!=asset['bytes']or headers.get('content-type','').split(';')[0]!=asset['contentType']or headers.get('content-length')!=str(asset['bytes'])or headers.get('etag')!='"'+asset['sha256']+'"'or row.get('rangeContentRange')!='bytes 0-1023/'+str(asset['bytes'])or row.get('rangePrefixSha256')!=row.get('verifiedSourcePrefixSha256')or len(row.get('rangePrefixSha256',''))!=64:raise ValueError('recording_supplement_response_file')
   elif status==301:
-   target=urlsplit(headers.get('location',''))
+   target=urlsplit(urljoin(url,headers.get('location','')))
    if target.scheme!='https'or target.hostname!='www.savinggrace.org.au'or target.path not in files or target.username or target.password or target.port:raise ValueError('recording_supplement_redirect_target')
   else:raise ValueError('recording_supplement_response_status')
   responses[url]=row

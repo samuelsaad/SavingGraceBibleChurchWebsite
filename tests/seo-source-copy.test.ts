@@ -1,9 +1,10 @@
+import{sourcePageSchema,sourcePathSchema}from'../src/seo/source-public-model';
 import{createLegacySourceSearch}from'../src/seo/source-search';
 import {describe,it,expect} from 'vitest';
 import {html} from '../src/frontend/html';
 import {retainedSourceCopy} from '../src/frontend/source-copy';
 import {preserveSourceMetadata} from '../src/seo/source-metadata';
-import {defaultSiteSettings} from '../src/frontend/content/site-snapshot';
+import {defaultSiteSettings,defaultHomeContent} from '../src/frontend/content/site-snapshot';
 import {pageShell} from '../src/frontend/shell';
 import {extractSourceStructuredData} from '../src/seo/source-structured-data';
 import {createSourcePublicPageHandler} from '../src/seo/source-public-handler';
@@ -86,4 +87,25 @@ it('uses a native page recorded source identity for SEO defaults while retaining
  const edited=pageShell({title:'Edited title',seo:{title:'Explicit editor title'},canonicalPath:'/replacement/',robots:'index, follow',body:html`<h1>Edited heading</h1>`},{...context,siteContent:{...content,cmsExplicitSeoByPath:{'/replacement/':{title:'Explicit editor title'}}}});expect(edited).toContain('<title>Explicit editor title</title>');expect(edited).toContain('<h1>Edited heading</h1>');
 });
 
-it('preserves an exact observed search title while retaining native live search behavior',async()=>{const path='/?s=example',observed={...source,path,sourceUrl:'https://www.savinggrace.org.au'+path,sourceId:null,kind:'archive' as const,title:'Exact original search title',indexable:false};const handler=createLegacySourceSearch([observed],snapshot,{listPublished:async()=>({data:[]})}as never,{});const response=await handler(new Request(observed.sourceUrl),{mode:'public',basePath:''});expect(response?.status).toBe(200);const doc=await response!.text();expect(doc).toContain('<title>Exact original search title</title>');expect(doc).toContain('noindex, follow');expect(doc).toContain('Search Results for: example');});
+it('preserves an exact observed search title while retaining native live search behavior',async()=>{const path='/?s=example',observed=sourcePageSchema.parse({...source,path,sourceUrl:'https://www.savinggrace.org.au'+path,sourceId:null,kind:'archive',title:'Exact original search title',indexable:false});const handler=createLegacySourceSearch([observed],snapshot,{listPublished:async()=>({data:[]})}as never,{});const response=await handler(new Request(observed.sourceUrl),{mode:'public',basePath:''});expect(response?.status).toBe(200);const doc=await response!.text();expect(doc).toContain('<title>Exact original search title</title>');expect(doc).toContain('noindex, follow');expect(doc).toContain('Search Results for: example');});
+
+
+it('searches document copy and headings without matching SEO template or plugin-only words',async()=>{
+ const page={...source,heading:'A specific document',title:'A specific document | TemplateOnlyWord',description:'PluginOnlyWord',content:[{tag:'p' as const,text:'Actual visible content.'}]};
+ const handler=createLegacySourceSearch([page],{...snapshot,pages:[],posts:[],events:[]},{listPublished:async()=>({data:[]})}as never,{});
+ for(const [query,expected]of [['TemplateOnlyWord',0],['PluginOnlyWord',0],['visible',1],['specific',1]]as const){const result=await handler(new Request('https://www.savinggrace.org.au/?s='+query),{mode:'public',basePath:''});expect(result?.status).toBe(200);expect(await result!.text()).toContain('<p>'+expected+' results</p>');}
+});
+
+it('admits only bounded root search metadata and prevents its accidental publication in sitemaps',()=>{
+ const input={...source,path:'/?s=church',sourceUrl:'https://www.savinggrace.org.au/?s=church',kind:'archive',indexable:false};expect(sourcePageSchema.safeParse(input).success).toBe(true);expect(sourcePageSchema.safeParse({...input,indexable:true}).success).toBe(false);expect(sourcePageSchema.safeParse({...input,kind:'page'}).success).toBe(false);expect(sourcePageSchema.safeParse({...input,path:'http://['}).success).toBe(false);
+ for(const path of ['/sermons/?s=church','/?s=church&s=other','/?s=church&preview=1','/?s=','/?s=%3Cscript%3E'])expect(sourcePathSchema.safeParse(path).success).toBe(false);
+});
+
+it('searches current published homepage text and respects hidden modules and explicit source replacement',async()=>{
+ const home=structuredClone(defaultHomeContent),about=home.modules.find(m=>m.block.kind==='home-about')!;if(about.block.kind!=='home-about')throw Error('fixture_kind');about.block.paragraph='CurrentVisibleHomeWord';about.block.giving={...about.block.giving,enabled:false,quote:'HiddenGivingWord'};home.description='MetadataOnlyHomeWord';home.modules.push({id:'hidden-proof',enabled:false,block:{kind:'paragraph',text:'HiddenModuleWord'}});
+ const original=sourcePageSchema.parse({...source,path:'/',sourceUrl:'https://www.savinggrace.org.au/',canonicalSource:'https://www.savinggrace.org.au/',content:[{tag:'p',text:'LegacyVisibleHomeWord'}]}),published={...snapshot,pages:[],posts:[],events:[],routes:[],home};
+ const search=(data=published,originals=[original])=>createLegacySourceSearch(originals,data,{listPublished:async()=>({data:[]})}as never,{}),handler=search();
+ for(const [query,count]of [['CurrentVisibleHomeWord',1],['LegacyVisibleHomeWord',1],['HiddenGivingWord',0],['HiddenModuleWord',0],['MetadataOnlyHomeWord',0]]as const){const response=await handler(new Request('https://www.savinggrace.org.au/?s='+query),{mode:'public',basePath:''});expect(await response!.text()).toContain('<p>'+count+' results</p>');}
+ const replaced=search({...published,home:{...home,seo:{replaceSourceContent:true}}});expect(await(await replaced(new Request('https://www.savinggrace.org.au/?s=LegacyVisibleHomeWord'),{mode:'public',basePath:''}))!.text()).toContain('<p>0 results</p>');
+ const newHome=search(published,[]);expect(await(await newHome(new Request('https://www.savinggrace.org.au/?s=CurrentVisibleHomeWord'),{mode:'public',basePath:''}))!.text()).toContain('<p>1 results</p>');
+});

@@ -152,4 +152,10 @@ def corrected_all_occurrences_social_url(source,candidate,origin):
                     controls.add(target.query)
             collections(node.get('children',[]))
     collections(source.get('contentTree',[]))
-    return ''in controls and 'eventDisplay=past'in controls and bool({'ical=1','outlook-ical=1'}&controls)
+    future = 'eventDisplay=past'in controls and bool({'ical=1','outlook-ical=1'}&controls)
+    scoped_past_export = False
+    for query in controls:
+        pairs=parse_qsl(query,keep_blank_values=True);values=dict(pairs)
+        if len(values)==len(pairs)==2 and values.get('eventDisplay')=='past'and (values.get('ical')=='1'or values.get('outlook-ical')=='1'):
+            scoped_past_export=True
+    return ''in controls and (future or address.query=='eventDisplay=past'and scoped_past_export)

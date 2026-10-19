@@ -1,0 +1,93 @@
+{
+  "format": "sgbc-specific-page-metadata-dispositions-v1",
+  "applicationCommit": "72ac4984319a518373ced3251021d4e2fb5699a5",
+  "purpose": "Specific source identity/content equivalence; no administrator or sermon approval; other findings remain independent.",
+  "rows": [
+    {
+      "policy": "homepage_exact_identity_heading",
+      "sourceId": 28672,
+      "sourceUrl": "https://savinggrace.org.au/",
+      "sourceResponseSha256": "69f9f323684cf47cf446c94b95ce87812a567cda66e8a8eb10a5f4408971b828",
+      "candidateResponseSha256": "f4ef5710729e7bf54e5ff3bd4186a79486131d90904c4138d12c9c76672c3762",
+      "oldHeadingSha256": "f9ab9b6b900c01fab836e1e5904a34b16c98472cb7f8a6a4303e4e640ac2d075",
+      "newHeadingSha256": "2f57e0c0c69f9b752f8cbfcae4bb933ef4fddbc35418a4fcd2c30c76613ed2d3"
+    },
+    {
+      "policy": "visitor_service_exact_consolidation",
+      "sourceId": 37,
+      "destinationPrimarySourceId": 26330,
+      "sourceUrl": "https://www.savinggrace.org.au/pages/im-new-here/",
+      "targetUrl": "https://www.savinggrace.org.au/lords-day-service/",
+      "sourceResponseSha256": "26271c8b12f11319917ca1db1d3898ac6c3c5ab20a84441919d4be0da7eb6b82",
+      "primarySourceResponseSha256": "263f5f7d48b6049c19dc30c6b82a7089640feba4f0583e9057025e0d00d94ea4",
+      "candidateResponseSha256": "bc713e204ff8bbc43a15bc84e9c98901fd2206e35a2bf1b8a4376c5ea29d62e5",
+      "contentWitnessSha256": "f01f0813e7f2afbdf6de51941c07ed18bdb8aab5575f06cfaa512ab30d92b2d5",
+      "unmatchedOnlyOriginalFormLabelHashes": [
+        "2167a3e04aec7884c4568690d65f5bef4aa87d190c854a113f1c75799ba20223",
+        "22ae3f97a92d0e66c036bd07a2044dd6947a20d87dff0c808f9d8b996684e4ed",
+        "9cd26bee4d76694cb03cfee8c2355a83339157f2e9234fd1352c12597da72474"
+      ],
+      "contactLinkAndEmailPresent": true,
+      "liveDeliveryNotProven": true
+    },
+    {
+      "policy": "blank_taxonomy_exact_blog_consolidation",
+      "sourceUrl": "https://www.savinggrace.org.au/?taxonomy=&term=",
+      "sourceResponseSha256": "96d4ab032281066f35446f97058bffe92f8a4db465b78a41959f2972d8713f3d",
+      "targetUrl": "https://www.savinggrace.org.au/blogs/",
+      "candidateResponseSha256": "e952a042ee3a47e54cba99308309bc4f0027f36f4ae42603062db2520e2f75aa",
+      "destinationPrimarySourceId": 274,
+      "primarySourceResponseSha256": "79620e16977b5c1810ca873790fda946d89238df33feb3841e3830a05bae49c8",
+      "sameOriginalPublicPostIds": [
+        29160,
+        29285,
+        29343
+      ]
+    },
+    {
+      "policy": "visitor_service_exact_consolidation",
+      "sourceId": 37,
+      "destinationPrimarySourceId": 26330,
+      "sourceUrl": "https://www.savinggrace.org.au/pages/im-new-here/",
+      "targetUrl": "https://www.savinggrace.org.au/lords-day-service/",
+      "sourceResponseSha256": "26271c8b12f11319917ca1db1d3898ac6c3c5ab20a84441919d4be0da7eb6b82",
+      "primarySourceResponseSha256": "263f5f7d48b6049c19dc30c6b82a7089640feba4f0583e9057025e0d00d94ea4",
+      "candidateResponseSha256": "bc713e204ff8bbc43a15bc84e9c98901fd2206e35a2bf1b8a4376c5ea29d62e5",
+      "contentWitnessSha256": "f01f0813e7f2afbdf6de51941c07ed18bdb8aab5575f06cfaa512ab30d92b2d5",
+      "unmatchedOnlyOriginalFormLabelHashes": [
+        "2167a3e04aec7884c4568690d65f5bef4aa87d190c854a113f1c75799ba20223",
+        "22ae3f97a92d0e66c036bd07a2044dd6947a20d87dff0c808f9d8b996684e4ed",
+        "9cd26bee4d76694cb03cfee8c2355a83339157f2e9234fd1352c12597da72474"
+      ],
+      "contactLinkAndEmailPresent": true,
+      "liveDeliveryNotProven": true
+    },
+    {
+      "policy": "visitor_service_exact_consolidation",
+      "sourceId": 37,
+      "destinationPrimarySourceId": 26330,
+      "sourceUrl": "https://savinggrace.org.au/pages/im-new-here/",
+      "targetUrl": "https://www.savinggrace.org.au/lords-day-service/",
+      "sourceResponseSha256": "b013080a39664b270dbc900b18bf6e36f6936e421ad562c2b8ccdbad3cfda6c9",
+      "primarySourceResponseSha256": "263f5f7d48b6049c19dc30c6b82a7089640feba4f0583e9057025e0d00d94ea4",
+      "candidateResponseSha256": "bc713e204ff8bbc43a15bc84e9c98901fd2206e35a2bf1b8a4376c5ea29d62e5",
+      "contentWitnessSha256": "f01f0813e7f2afbdf6de51941c07ed18bdb8aab5575f06cfaa512ab30d92b2d5",
+      "unmatchedOnlyOriginalFormLabelHashes": [
+        "2167a3e04aec7884c4568690d65f5bef4aa87d190c854a113f1c75799ba20223",
+        "22ae3f97a92d0e66c036bd07a2044dd6947a20d87dff0c808f9d8b996684e4ed",
+        "9cd26bee4d76694cb03cfee8c2355a83339157f2e9234fd1352c12597da72474"
+      ],
+      "contactLinkAndEmailPresent": true,
+      "liveDeliveryNotProven": true
+    },
+    {
+      "policy": "homepage_exact_identity_heading",
+      "sourceId": 28672,
+      "sourceUrl": "https://www.savinggrace.org.au/",
+      "sourceResponseSha256": "f9c47c81b8d2e44ca0f474b560b72ab8e06bd5fa4ca3f76eb80e7be27f92c43a",
+      "candidateResponseSha256": "f4ef5710729e7bf54e5ff3bd4186a79486131d90904c4138d12c9c76672c3762",
+      "oldHeadingSha256": "f9ab9b6b900c01fab836e1e5904a34b16c98472cb7f8a6a4303e4e640ac2d075",
+      "newHeadingSha256": "2f57e0c0c69f9b752f8cbfcae4bb933ef4fddbc35418a4fcd2c30c76613ed2d3"
+    }
+  ]
+}

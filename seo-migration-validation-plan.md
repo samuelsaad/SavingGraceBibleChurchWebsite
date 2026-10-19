@@ -736,3 +736,24 @@ unchanged dispositions, and replayed with zero inserts. All earlier redirects,
 source pointers and unrelated tables were preserved. Two extra apex ZIP witnesses
 share already mapped paths; the attempted duplicate manifest was refused before
 any write. The reviewed tracked CSV contains each original path exactly once.
+
+
+### D-183 exact search, discussion-feed and comparison corrections (20 October)
+
+The internal search now indexes visible published homepage modules and current
+page copy, excludes hidden/draft modules and SEO-only plugin descriptions, and
+admits observed root search metadata only as a non-indexable archive. A separate
+source-bound one-row import preserves the original search title while results stay
+live; delivery/recovery evidence is pending and must not be inferred from unit tests.
+Retained empty event discussion RSS resources follow the parent event withdrawal
+and cancellation boundary; these resources are distinct from the four maintained
+live event/calendar feeds. Exact discussion-feed comparison requires unchanged
+XML semantics, same parent and original/candidate body hashes.
+
+Comparison fixes require the same original duplicate heading/current H1, matching
+scoped past iCalendar link for an all-occurrences social correction, and direct
+relative recording redirects to an independently verified recording file. External
+or wrong-file redirect targets still fail. These rules retain raw findings.
+All 371 originally empty calendar URLs returned actual nonempty text/calendar in
+the 72ac498 full HTTP rehearsal. The metadata follow-up accounted for 28 of 29
+remaining rows; the final search title still awaits the guarded compatible import.

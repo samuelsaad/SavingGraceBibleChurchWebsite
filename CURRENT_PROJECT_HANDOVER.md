@@ -2004,3 +2004,22 @@ unchanged dispositions, and replayed with zero inserts. All earlier redirects,
 source pointers and unrelated tables were preserved. Two extra apex ZIP witnesses
 share already mapped paths; the attempted duplicate manifest was refused before
 any write. The reviewed tracked CSV contains each original path exactly once.
+
+
+### D-183 search and retained discussion resources — 20 October
+
+The candidate fixes live search for published homepage modules and avoids matching
+SEO-only plugin metadata as page copy. Observed search metadata is separately
+source-bound and must remain noindex; its exact local import/recovery is pending.
+Retained event discussion feeds follow their parent publication/cancellation
+boundary; the independently maintained calendar subscriptions remain live.
+The 72ac498 full HTTP comparison completed all 23,334 known URL rows. All 371
+originally empty calendar endpoints returned actual nonempty calendar documents.
+Full finding reconciliation and the fixed 501 missing-target source frontier are
+still running; these interim facts do not establish final parity or staging release.
+
+The compatible candidate passed 1,566 PostgreSQL tests with zero skips, 1,418
+standard tests (148 gated cases covered by PostgreSQL), 704-file type checking
+with zero errors/warnings and seven existing hints, and the 45-page build. Python,
+importer, runtime build and offline audit passed. Private release scanning and
+actual publication/search/import recovery remain separate acceptance steps.

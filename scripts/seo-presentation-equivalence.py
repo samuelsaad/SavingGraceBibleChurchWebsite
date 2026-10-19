@@ -218,6 +218,16 @@ def block_witnesses(source,candidate,document,missing,source_document=None,relat
  witnesses+=pagination_control_witnesses(root,source,candidate,document,related_archive,remaining)
  if remaining.get(sha('Filtered by:'))and active_filter_witness(source,document):
   remaining[sha('Filtered by:')]-=1;witnesses.append({'blockSha256':sha('Filtered by:'),'reason':'same_typed_selected_filters_and_visible_removable_tokens'})
+ # WordPress sometimes duplicated the exact primary heading as H1 and H2.
+ # One unchanged H1 preserves that heading; this does not collapse paragraphs,
+ # card titles or a different secondary heading.
+ primary=norm(source.get('primaryHeading',''));key=sha(primary)
+ if remaining.get(key)and source.get('template')in('page','post')and isinstance(source.get('sourcePostId'),int)and source['sourcePostId']>0 and primary==norm(candidate.get('primaryHeading','')):
+  original_headings=[b for b in source.get('semanticBlocks',[])if b.get('tag')in('h1','h2')and norm(b.get('text',''))==primary]
+  current_headings=[n for n in walk(tree(document))if n['tag']=='h1'and norm(CAP.text(n))==primary]
+  if len(original_headings)>1 and len(current_headings)==1:
+   while remaining.get(key):
+    remaining[key]-=1;witnesses.append({'blockSha256':key,'reason':'duplicate_original_primary_heading_preserved_once_as_the_same_h1'})
  for block in source.get('semanticBlocks',[]):
   value=norm(block['text']);key=sha(value)
   if remaining.get(key) and whole_text(actual,value):

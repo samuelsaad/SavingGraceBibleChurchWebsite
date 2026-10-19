@@ -11,7 +11,7 @@ import type {PublicSermonRepository} from '../server/repositories/sermon-reposit
 type Entry={path:string;title:string;text:string;kind:string;language:string;date:string};
 const words=(value:string)=>plainText(value).normalize('NFKC').replace(/\s+/gu,' ').trim();
 function visibleText(value:unknown,key=''):string{
- if(typeof value==='string')return ['text','paragraphs','title','heading','caption','label','description','body','intro','items'].includes(key)?words(value):'';
+ if(typeof value==='string')return ['text','paragraph','paragraphs','title','heading','caption','label','description','body','intro','items','quote','attribution','place','address','serviceTime','nameLine1','nameLine2','newHere','join','moreLabel','viewAll','learnMore','readMore','viewCalendar','link'].includes(key)?words(value):'';
  if(Array.isArray(value))return value.map(child=>visibleText(child,key)).join(' ');
  if(!value||typeof value!=='object')return '';
  const node=value as Record<string,unknown>;if(node.enabled===false||node.hidden===true||(node.presentation as {hidden?:boolean}|undefined)?.hidden)return '';
@@ -28,10 +28,14 @@ export function createLegacySourceSearch(pages:readonly SourcePublicPage[],snaps
   if(!['page','post','event','attachment','sermon'].includes(page.kind)||page.path.includes('?')||page.issues.length)continue;
   const disposition=legacyDisposition(page.path,{mode:'public',basePath:'',siteContent:snapshot});if(disposition?.kind==='gone')continue;
   const path=page.kind==='sermon'?sourceLinks[String(page.sourceId)]:resolveHref(page.path,{mode:'public',basePath:'',siteContent:snapshot});if(!path)continue;
-  const managed=managedPages.find(item=>item.path===path);
-  const text=managed?.seo?.replaceSourceContent?visibleText(managedBody(managed)):[sourceText(page),managed?visibleText(managedBody(managed)):'',page.description??'',page.title].join(' ');
-  const prior=records.get(path);records.set(path,{path,title:managed?.title??page.heading,text:words([prior?.text??'',text].join(' ')),kind:page.kind,language:page.language,date:page.modifiedAt??page.publishedAt??''});
+  const managed=managedPages.find(item=>item.path===path),home=path==='/'?snapshot.home:null;
+  const currentBody=home?visibleText(home.modules):managed?visibleText(managedBody(managed)):'';
+  // Search the public copy and document heading, not SEO title templates or
+  // plugin descriptions that can add the church name to every stored record.
+  const text=(home?.seo??managed?.seo)?.replaceSourceContent?currentBody:[sourceText(page),currentBody].join(' ');
+  const prior=records.get(path);records.set(path,{path,title:home?.title??managed?.title??page.heading,text:words([prior?.text??'',text].join(' ')),kind:page.kind,language:page.language,date:page.modifiedAt??page.publishedAt??''});
  }
+ if(snapshot.home&&!records.has('/')&&!snapshot.routes.some(route=>route.path==='/'&&route.status===410))records.set('/',{path:'/',title:snapshot.home.title,text:words(visibleText(snapshot.home.modules)),kind:'page',language:'en-AU',date:snapshot.modifiedAtByPath?.['/']??''});
  for(const page of managedPages)if(!records.has(page.path))records.set(page.path,{path:page.path,title:page.title,text:words(visibleText(managedBody(page))),kind:'page',language:'en-AU',date:snapshot.modifiedAtByPath?.[page.path]??''});
  return records;
  };

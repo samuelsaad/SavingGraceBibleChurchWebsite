@@ -1,3 +1,5 @@
+import{createLegacySourceSearch}from'../src/seo/source-search';
+import{defaultSiteSettings}from'../src/frontend/content/site-snapshot';
 import{createSourcePageValidationCache}from'../src/seo/source-page-validation';
 import {protectedLocalPostgresPassword,protectedLocalPostgresUser} from '../src/migration/protected-local-postgres';
 import {createSnapshotVerifiedFingerprint,fingerprintSnapshotProofSql} from '../src/seo/snapshot-fingerprint-proof';
@@ -19,6 +21,16 @@ function guard(){assertDisposableIntegrationTestDatabase(process.env.TEST_DATABA
 const commit='a'.repeat(40),hash='b'.repeat(64);
 function fixture():SourcePublicPage{return{path:'/anonymous-original/',kind:'page',sourceUrl:'https://www.savinggrace.org.au/anonymous-original/',sourceId:919191,capturedAt:'2026-10-09T00:00:00Z',responseSha256:hash,title:'Anonymous original page',heading:'Anonymous original page',description:null,language:'en',indexable:true,canonicalSource:'https://www.savinggrace.org.au/anonymous-original/',publishedAt:'2004-01-01T00:00:00Z',modifiedAt:null,content:[{tag:'p',text:'Anonymous original public wording.'}],links:[],mediaReferences:[],sermon:null,issues:[],passageTerms:[]};}
 export function registerSeoSourcePostgresTests(getPool:()=>Pool){
+ it('persists exact original search metadata while rendering only current public search results',async()=>{guard();const client=await getPool().connect();try{
+  await client.query('BEGIN');for(const item of [...(await completedSchemaMigrations()).slice(22),await loadAcceptedSemanticMigration(),await loadCmsMigration()]){await client.query(item.upBody);await client.query('INSERT INTO schema_migrations(migration_order,migration_id,checksum_sha256) VALUES($1,$2,$3)',[item.order,item.id,item.checksumSha256]);}await applySourcePublicMigration(client);
+  const archive=sourceBundleSchema.parse({format:'sgbc-source-public-v1',capturedAt:'2026-10-09T00:00:00Z',inventorySha256:hash,pages:[{...fixture(),path:'/?s=church',sourceUrl:'https://www.savinggrace.org.au/?s=church',kind:'archive',sourceId:null,indexable:false,title:'Exact original search title',content:[{tag:'p',text:'Frozen results must not become current results.'}]}],expectedVersions:{'/?s=church':null}});
+  expect((await importSourcePublicBundle(client,archive,commit)).inserted).toBe(1);expect((await importSourcePublicBundle(client,archive,commit)).unchanged).toBe(1);
+  const visible={...fixture(),path:'/current-document/',sourceUrl:'https://www.savinggrace.org.au/current-document/',sourceId:919192,title:'Current document | TemplateOnlyToken',heading:'Current document',content:[{tag:'p' as const,text:'Current church information.'}]};await importSourcePublicBundle(client,{...archive,pages:[visible],expectedVersions:{[visible.path]:null}},commit);const pages=await readSourcePublicPages(client);expect(pages.some(p=>p.path==='/?s=church'&&!p.indexable)).toBe(true);
+  const snapshot={pages:[],posts:[],events:[],venues:{},home:null,settings:defaultSiteSettings,assets:{},routes:[]},handler=createLegacySourceSearch(pages,snapshot,{listPublished:async()=>({data:[]})}as never,{});
+  const response=await handler(new Request('https://www.savinggrace.org.au/?s=church'),{mode:'public',basePath:''});expect(response?.status).toBe(200);const body=await response!.text();expect(body).toContain('<title>Exact original search title</title>');expect(body).toContain('Current church information.');expect(body).not.toContain('Frozen results must not become current results.');expect(body).toContain('noindex, follow');
+  const metadataOnly=await handler(new Request('https://www.savinggrace.org.au/?s=TemplateOnlyToken'),{mode:'public',basePath:''});expect(await metadataOnly!.text()).toContain('<p>0 results</p>');
+ }finally{await client.query('ROLLBACK');client.release();}});
+
  it('snapshot certificates track actual committed visibility and refuse own-write/RLS shortcuts',async()=>{guard();const writer=getPool(),{Pool:ReaderPool}=await import('pg'),target=new URL(process.env.TEST_DATABASE_URL!),reader=new ReaderPool({host:target.hostname,port:Number(target.port),database:decodeURIComponent(target.pathname.slice(1)),user:protectedLocalPostgresUser,password:protectedLocalPostgresPassword,max:1,options:'-c default_transaction_read_only=on'});let transaction:import('pg').PoolClient|undefined;
   try{
    await writer.query('CREATE TABLE seo_snapshot_acceptance_fixture(id int PRIMARY KEY,value text NOT NULL)');await writer.query("INSERT INTO seo_snapshot_acceptance_fixture VALUES(1,'one')");let fullReads=0;

@@ -32,4 +32,12 @@ class RecordingEvidenceTest(unittest.TestCase):
    for location in ['https://example.org/file.mp3','https://www.savinggrace.org.au/unrelated.mp3']:
     p.write_text(json.dumps({**v,'responses':[{'url':'http://savinggrace.org.au/wp-content/uploads/anonymous-0.mp3','status':301,'headers':{'x-seo-candidate':'a'*64,'location':location}}]}))
     with self.assertRaises(ValueError):M.load_recording_evidence(p,bundle,bindings)
+ def test_relative_redirect_resolves_to_the_exact_verified_recording(self):
+  with tempfile.TemporaryDirectory()as d:
+   root=pathlib.Path(d);bundle,v,bindings=self.fixture(root);p=root/'recording-evidence.private.json'
+   row={'url':'https://www.savinggrace.org.au/?attachment_id=1','status':301,'headers':{'x-seo-candidate':'a'*64,'location':'/wp-content/uploads/anonymous-0.mp3'}}
+   p.write_text(json.dumps({**v,'responses':[row]}));sources,responses=M.load_recording_evidence(p,bundle,bindings);self.assertEqual(len(responses),1)
+   for location in ['//example.org/wp-content/uploads/anonymous-0.mp3','/unrelated.mp3','http://www.savinggrace.org.au/wp-content/uploads/anonymous-0.mp3']:
+    p.write_text(json.dumps({**v,'responses':[{**row,'headers':{**row['headers'],'location':location}}]}))
+    with self.assertRaises(ValueError):M.load_recording_evidence(p,bundle,bindings)
 if __name__=='__main__':unittest.main()

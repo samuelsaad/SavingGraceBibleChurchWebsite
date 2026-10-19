@@ -89,3 +89,10 @@ class OriginalPassagePresentationTests(unittest.TestCase):
   self.assertTrue(M.metadata_field_witness(source,candidate))
   self.assertFalse(M.metadata_field_witness(source,M.tree('<article><p class="journal__passage">Preached from Luke 5:27–31</p></article>')))
   self.assertFalse(M.metadata_field_witness(source,M.tree('<article><p>Preached from Luke 5:27–32</p></article>')))
+
+
+class DuplicatePrimaryHeadingTests(unittest.TestCase):
+ def test_only_identical_primary_heading_duplicates_may_share_one_unchanged_h1(self):
+  text='Anonymous church heading';key=M.sha(text);source={'url':'https://www.savinggrace.org.au/about/','sourcePostId':77,'template':'page','primaryHeading':text,'semanticBlocks':[{'tag':'h1','text':text},{'tag':'h2','text':text}]};candidate={'url':source['url'],'primaryHeading':text,'mainText':''};document='<html><h1>'+text+'</h1><main><p>Original other copy.</p></main></html>'
+  self.assertTrue(M.block_witnesses(source,candidate,document,{key:1})['fullyEquivalent'])
+  for changed in [{'template':'archive'},{'primaryHeading':'Different heading'},{'semanticBlocks':[{'tag':'p','text':text},{'tag':'p','text':text}]}]:self.assertFalse(M.block_witnesses({**source,**changed},candidate,document,{key:1})['fullyEquivalent'])

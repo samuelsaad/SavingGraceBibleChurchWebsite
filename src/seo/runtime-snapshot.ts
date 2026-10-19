@@ -1,3 +1,4 @@
+import{createSourceDiscussionFeedGuard}from'./source-discussion-feeds';
 import {reviewedCalendarFeedAliases} from './source-reviewed-calendar-aliases';
 import {configuredMeasurement} from './measurement-configuration';
 import{createSourcePageValidationCache}from'./source-page-validation';
@@ -146,6 +147,7 @@ export async function createVersionedSourceHandler(options:{reader:Pool;assetDir
   const sourceAssets=createSourcePublicAssetHandler(pages,options.assetDirectory);
   const content=preserveSourceMetadata(createCmsFrontendSnapshot(snapshot,images.filter(a=>a.type.startsWith('image/')).map(a=>({id:a.id,path:a.url,type:a.type,width:a.width??1,height:a.height??1,alt:a.alt})),false,false,{immutableSourceContent:true}),pages);
   content.legacyCalendarOccurrences=await loadLegacyCalendarOccurrences(pages,sourceAssets,[...content.events,...(content.cancelledCalendarEvents??[])]);
+  const discussionFeedGuard=createSourceDiscussionFeedGuard(pages,{...publicRenderContext,siteContent:content});
   const resourceRedirects=await readSourceResourceRedirects(options.reader);
   const routes=sourceRoutePolicy(pages,snapshot.routes,{...publicRenderContext,siteContent:content},resourceRedirects,[...observedSourceAliases,...reviewedArchiveAliases,...reviewedCalendarFeedAliases],sermons.verifiedSourceShortlinks());
   routes.sourceShortlinks={...routes.sourceShortlinks,...sermons.verifiedSourceShortlinks()};
@@ -155,7 +157,7 @@ export async function createVersionedSourceHandler(options:{reader:Pool;assetDir
   const rss=createSourceRssHandler({pages,cms:snapshot,content,sermons,facts:rssFacts,sourceBindings:sermons.verifiedSourceShortlinks(),firstCmsPublishedAt:Object.fromEntries(cmsPublicationRows.map(row=>[row.entity_id,new Date(row.published_at).toISOString()])),nativeSermonPublishedAt:Object.fromEntries(sermonPublicationRows.map(row=>[row.id,new Date(row.published_at).toISOString()]))});
   const handler=createSeoHttpAdapter({...(measurement?{measurement:measurement.configuration}:{}),...(contactDelivery?{contactDelivery}:{}),policy:options.policy,sermons,...routes,content:async()=>content,publicSearch:createLegacySourceSearch(pages,content,sermons,sermons.verifiedSourceShortlinks()),
    sourcePage:createSourcePublicPageHandler(pages),sourceQueryPage:createSourcePublicPageHandler(pages,true),sourceSitemap:async()=>sourcePublicSitemap(pages,{...publicRenderContext,siteContent:content}),sourceDisposition:async path=>resourceRedirects.has(path)?{kind:'redirect' as const,location:resourceRedirects.get(path)!}:path.startsWith('/sermons/')?sermons.findPublicPathDisposition(path):editorial.findPublicPathDisposition(path),
-   publicAsset:async request=>{const response=await rss(request)??await sourceAssets(request)??siteAssetResponse(request)??await assetHandler(request);
+   publicAsset:async request=>{const disposition=discussionFeedGuard(request);if(disposition)return disposition;const response=await rss(request)??await sourceAssets(request)??siteAssetResponse(request)??await assetHandler(request);
     if(response&&options.policy.environment==='production'&&response.status===200){if(!['application/rss+xml','application/atom+xml','text/calendar'].includes(response.headers.get('Content-Type')?.split(';')[0]??'')&&!(response.headers.get('Content-Length')==='0'&&response.headers.get('Content-Type')?.startsWith('text/html')))response.headers.delete('X-Robots-Tag');if(!['application/rss+xml','application/atom+xml','text/calendar'].includes(response.headers.get('Content-Type')?.split(';')[0]??''))response.headers.set('Cache-Control','public, max-age=3600');}
     return response;}});
   return {handler,label:sha256(stableJson({release:options.releaseIdentity,state:version,policy:options.policy,acceptedStageSupplement:Boolean(options.acceptedStageRepository),acceptedLocalSupplement:Boolean(options.acceptedLocalRepository),...(measurement?{measurementConfiguration:measurement.fileSha256}:{})})),pages:pages.length,sermons:pages.filter(p=>p.kind==='sermon').length};

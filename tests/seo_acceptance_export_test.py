@@ -13,9 +13,9 @@ SECRET = 'Synthetic confidential body must never enter a tracked report.'
 
 class SafeObservedQueryTests(unittest.TestCase):
     def test_exact_empty_taxonomy_and_calendar_dates_remain_visible_without_accepting_private_values(self):
-        for suffix in ['/?taxonomy=&term=','/events/?eventDate=2026-10-19']:
+        for suffix in ['/?taxonomy=&term=','/events/?eventDate=2026-10-19','/?attachment_id=777','/?attachment_id=777/feed/','/feed/?attachment_id=777']:
             self.assertEqual(report.safe_url(report.ORIGIN+suffix),report.ORIGIN+suffix)
-        for suffix in ['/?taxonomy=private&term=private','/events/?eventDate=private-value','/?unrecognized=private-value']:
+        for suffix in ['/?attachment_id=private-value','/?taxonomy=private&term=private','/events/?eventDate=private-value','/?unrecognized=private-value']:
             self.assertTrue(report.safe_url(report.ORIGIN+suffix).startswith('withheld-reference:'))
 
 

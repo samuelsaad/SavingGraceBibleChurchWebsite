@@ -94,3 +94,8 @@ class ObservedCalendarControlIdentityTest(unittest.TestCase):
   url=ORIGIN+'/venue/example/page/3/';source={'template':'archive','url':url,'title':'Venue','meta':{'og:url':[ORIGIN+'/venue/example/']}};candidate={'url':url,'title':'Venue','meta':{'og:url':[url]},'canonicalUrls':[url]};self.assertTrue(P.corrected_calendar_social_url(source,candidate,ORIGIN));source['meta']['og:url']=[ORIGIN+'/venue/other/'];self.assertFalse(P.corrected_calendar_social_url(source,candidate,ORIGIN))
  def test_empty_all_collection_requires_both_scoped_navigation_and_subscription(self):
   url=ORIGIN+'/event/example/all/';source={'url':url,'title':'Example','meta':{'og:url':[ORIGIN+'/event/example/2026-10-20/']},'contentTree':[{'tag':'a','href':url},{'tag':'a','href':url+'?eventDisplay=past'},{'tag':'a','href':url+'?ical=1'}]};candidate={'url':url,'title':'Example','meta':{'og:url':[url]},'canonicalUrls':[url]};self.assertTrue(P.corrected_all_occurrences_social_url(source,candidate,ORIGIN));source['contentTree'].pop();self.assertFalse(P.corrected_all_occurrences_social_url(source,candidate,ORIGIN))
+
+
+class PastCollectionSocialUrlTests(unittest.TestCase):
+ def test_past_export_must_retain_the_exact_observed_past_scope(self):
+  base=ORIGIN+'/event/example/all/';url=base+'?eventDisplay=past';source={'url':url,'title':'Example','meta':{'og:url':[ORIGIN+'/event/example/2026-10-20/']},'contentTree':[{'tag':'a','href':base},{'tag':'a','href':base+'?eventDisplay=past&ical=1'}]};candidate={'url':url,'title':'Example','meta':{'og:url':[url]},'canonicalUrls':[url]};self.assertTrue(P.corrected_all_occurrences_social_url(source,candidate,ORIGIN));source['contentTree'][1]['href']=base+'?ical=1';self.assertFalse(P.corrected_all_occurrences_social_url(source,candidate,ORIGIN))
