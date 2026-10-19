@@ -1,5 +1,42 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
+## D-183 subscription and historical-discovery candidate — 20 October 2026
+
+The finite source union now contains 23,334 observed URLs, 15,986 captured
+responses and 29,012 file witnesses, retaining the original 23,017 denominator.
+Ledger SHA-256 `e19f9ec5f90a616fedf995ddd70904333da12cab30ff62ddaef64315fa52c7ae`.
+The latest extension is exactly 171 missing detail pages in two historical event
+families and seven already-observed broken archive destinations. Six retained
+bounded public API responses identified 261 exact old-family occurrences; unrelated
+records were excluded and the seventh API page was not requested. This is specific
+dependency evidence, not a complete current WordPress database inventory.
+
+The new adapter can paginate verified visible historical Event dates independently
+of present recurrence rules. It preserves source detail identity, CMS ownership,
+withdrawals and replacements; it never invents past occurrences or feed UIDs.
+Typed Day links discard redundant inherited collection pages while retaining
+filters, dates and campaign bytes. Retained calendar cards reach current final
+paths without changing immutable original feed identifiers.
+
+Eight exact original past-calendar aliases now reach the global past subscription
+whose actual UID/property comparison contains all original entries. Future rolling
+exports include already-verified source occurrences beyond the default year, bounded
+by the existing ten-year calendar limit. Original full venue addresses survive while
+the current venue still matches; a later venue edit prevails. Noncanonical byte-range
+requests now normalize the preferred origin and close the unused asset stream.
+
+New strict comparison tools distinguish source-backed metadata/linked-content/image
+presentation evidence, actual recording body/Range evidence and semantic calendar
+properties. They retain missing identities and unexplained differences as failures.
+The current final integrated and full-inventory checks are still in progress;
+this checkpoint is not a completed acceptance or staging-deployment claim.
+
+Protected staging still fails its pinned read-only SSH connection. Current original
+WordPress backup/stored completeness, account measurement, live SMTP recipient/config,
+production managed administrator authentication/recovery and production hosting
+choices remain unavailable. The original site, production traffic and DNS are unchanged.
+
+
 ## D-183 calendar, runtime and measurement checkpoint — 20 October 2026
 
 The bounded original-66 refresh reaches 66 successful final source responses with

@@ -1,3 +1,4 @@
+import {resolveHref} from '../frontend/content/markup';
 /** Historical occurrence facts come from verified retained iCalendar bytes only. */
 import type {LegacyCalendarOccurrence} from './legacy-calendar-identities';
 import type {FrontendRenderContext} from '../frontend/routes';
@@ -13,7 +14,7 @@ export function retainedCalendarFact(record:LegacyCalendarOccurrence):RetainedCa
  const title=get('SUMMARY'),start=time('DTSTART'),end=time('DTEND');if(!title||!start||!end||start.date!==record.date||end.date!==start.date||end.clock<start.clock)return null;
  return{record,title:unescape(title),date:start.date,start:start.clock,end:end.clock,location:unescape(get('LOCATION')??''),description:unescape(get('DESCRIPTION')??'').split(/\n\s*\n/u).filter(Boolean)};
 }
-export function retainedCalendarRow(fact:RetainedCalendarFact):Html{return html`<li class="event"><span class="event__date"><span class="event__month">${monthAbbreviation(fact.date)}</span><span class="event__day">${dayOfMonth(fact.date)}</span></span><div class="event__body"><time datetime="${fact.date}T${fact.start}">${formatLongDate(fact.date)}, ${formatTimeRange(fact.start,fact.end)}</time><h2 class="event__title"><a href="${new URL(fact.record.url).pathname}">${fact.title}</a></h2>${fact.location?html`<p>${fact.location}</p>`:null}${fact.description.map(text=>html`<p>${text}</p>`)}</div></li>`;}
+export function retainedCalendarRow(fact:RetainedCalendarFact,context?:FrontendRenderContext):Html{return html`<li class="event"><span class="event__date"><span class="event__month">${monthAbbreviation(fact.date)}</span><span class="event__day">${dayOfMonth(fact.date)}</span></span><div class="event__body"><time datetime="${fact.date}T${fact.start}">${formatLongDate(fact.date)}, ${formatTimeRange(fact.start,fact.end)}</time><h2 class="event__title"><a href="${context?resolveHref(new URL(fact.record.url).pathname,context):new URL(fact.record.url).pathname}">${fact.title}</a></h2>${fact.location?html`<p>${fact.location}</p>`:null}${fact.description.map(text=>html`<p>${text}</p>`)}</div></li>`;}
 /** Only an exact captured UID/date/URL can supply an otherwise missing old page. */
 export function retainedCalendarOccurrence(request:Request,context:FrontendRenderContext):Response|null{
  const url=new URL(request.url);if(url.search||!/^\/event\/[^/]+\/20\d{2}-\d{2}-\d{2}\/$/u.test(url.pathname))return null;

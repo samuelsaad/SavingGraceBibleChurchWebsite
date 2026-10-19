@@ -51,3 +51,14 @@ class MetadataDifferencePolicyTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+class OriginVariantDispositionTest(unittest.TestCase):
+ def test_only_same_original_identity_text_dates_metadata_and_media_can_share_disposition(self):
+  source={'url':'https://savinggrace.org.au/sermons/anonymous/','status':200,'sourcePostId':77,'mainText':'Complete anonymous source text.','title':'Original title','primaryHeading':'Original title','bodySha256':'a'*64,'meta':{'og:url':['https://savinggrace.org.au/sermons/anonymous/']},'canonicalUrls':['https://savinggrace.org.au/sermons/anonymous/'],'primaryMediaReferences':[{'url':'https://www.youtube.com/watch?v=anonymous01'}]};canonical={**source,'url':source['url'].replace('https://savinggrace','https://www.savinggrace'),'bodySha256':'b'*64,'meta':{'og:url':['https://www.savinggrace.org.au/sermons/anonymous/']},'canonicalUrls':['https://www.savinggrace.org.au/sermons/anonymous/']}
+  self.assertTrue(P.same_original_origin_variant(source,canonical,'b'*64))
+  for changed in [{'sourcePostId':78},{'mainText':'Different source text.'},{'modifiedAt':'2026-10-20'},{'title':'Different original title'},{'url':'https://savinggrace.org.au/sermons/unrelated/'},{'url':source['url']+'?page=2'},{'meta':{'description':['Different source metadata.']}},{'primaryMediaReferences':[]}]:self.assertFalse(P.same_original_origin_variant({**source,**changed},canonical,'b'*64))
+  self.assertFalse(P.same_original_origin_variant(source,canonical,'c'*64))
+  tile='https://i0.wp.com/savinggrace.org.au/wp-content/uploads/anonymous.jpg?fit=270%2C270&ssl=1';a={**source,'meta':{**source['meta'],'msapplication-tileimage':[tile]}};b={**canonical,'meta':{**canonical['meta'],'msapplication-tileimage':[tile.replace('wp.com/savinggrace','wp.com/www.savinggrace')]}};self.assertTrue(P.same_original_origin_variant(a,b,'b'*64));b['meta']['msapplication-tileimage']=[b['meta']['msapplication-tileimage'][0].replace('270%2C270','271%2C270')];self.assertFalse(P.same_original_origin_variant(a,b,'b'*64))
+
+ def test_original_media_only_page_requires_matching_source_tree_and_actual_media(self):
+  a={'url':'https://savinggrace.org.au/sermons/anonymous/','status':200,'sourcePostId':77,'title':'Original title','primaryHeading':'Original title','mainFound':True,'mainText':'','contentTree':[{'tag':'div','children':[]}],'primaryMediaReferences':[{'url':'https://www.youtube.com/watch?v=anonymous01'}],'bodySha256':'a'*64};b={**a,'url':'https://www.savinggrace.org.au/sermons/anonymous/','bodySha256':'b'*64};self.assertTrue(P.same_original_origin_variant(a,b,'b'*64));self.assertFalse(P.same_original_origin_variant({**a,'primaryMediaReferences':[]},b,'b'*64));self.assertFalse(P.same_original_origin_variant({**a,'contentTree':[{'tag':'p','text':'Different source copy.'}]},b,'b'*64))

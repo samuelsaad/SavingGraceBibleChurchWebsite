@@ -171,7 +171,8 @@ export function createSeoHttpAdapter(options: SeoHttpAdapterOptions): (request: 
         if (target.origin !== policy.canonicalOrigin || !location.startsWith("/") || location.startsWith("//")) throw new Error("seo_redirect_target_refused");
         // A host/scheme move and a path move form one permanent redirect.
         if (policy.indexable && url.origin !== policy.canonicalOrigin) response.headers.set("Location",target.href);
-      } else if (policy.indexable && url.origin !== policy.canonicalOrigin && response.status === 200) {
+      } else if (policy.indexable && url.origin !== policy.canonicalOrigin && (response.status === 200 || response.status === 206)) {
+        await response.body?.cancel();
         response = new Response(null,{status:301,headers:{Location:policy.canonicalOrigin + url.pathname + url.search,"Cache-Control":"no-store"}});
       }
       if(options.measurement&&policy.environment==='production'&&url.origin===policy.canonicalOrigin&&response.status===200&&!head&&response.headers.get('Content-Type')?.includes('text/html')&&!url.searchParams.has('s')&&!url.searchParams.has('search')){

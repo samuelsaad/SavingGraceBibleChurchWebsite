@@ -1,3 +1,4 @@
+import {sourceCalendarHistory} from './source-calendar-history';
 import {calendarSubscriptionTargets,adjacentCalendarDay} from './calendar-links';
 import {retainedCalendarFact,retainedCalendarOccurrence,retainedCalendarRow} from './retained-calendar';
 import {calendarEditorAllowsProjection} from './calendar-presentation';
@@ -81,7 +82,8 @@ export function calendarSubscription(request:Request,context:FrontendRenderConte
  if(!legacy)events=displayedEvents(events,url);
  let window;try{window=calendarWindow(url);}catch{return null;}
  if(url.searchParams.get('eventDisplay')==='past'&&url.searchParams.has('tribe-bar-date')){const anchor=url.searchParams.get('tribe-bar-date')!,until=new Date(Date.parse(anchor+'T00:00:00Z')-86400000).toISOString().slice(0,10),dates=legacy?legacy.filter(r=>scopedEvents.some(e=>e.id===r.eventId)&&r.date<=until).map(r=>r.date):events.map(e=>e.schedule.kind==='single'?e.schedule.date:e.schedule.from);window={from:dates.sort()[0]??until,until};}
- if(legacy){const today=melbourneToday(),past=url.searchParams.get('eventDisplay')==='past',shift=(days:number)=>new Date(Date.parse(today+'T00:00:00Z')+days*86400000).toISOString().slice(0,10);const singles=events.every(e=>e.schedule.kind==='single'),dates=singles?events.map(e=>(e.schedule as {kind:'single';date:string}).date).sort():[];const range=window??{from:singles&&dates.length?dates[0]!:past?[...legacy.filter(r=>scopedEvents.some(e=>e.id===r.eventId)).map(r=>r.date),shift(-365)].sort()[0]!:today,until:singles&&dates.length?dates.at(-1)!:past?today:shift(365)};events=calendarOccurrenceEvents(events,legacy,range);events=displayedEvents(events,url);}
+ if(legacy){const today=melbourneToday(),past=url.searchParams.get('eventDisplay')==='past',shift=(days:number)=>new Date(Date.parse(today+'T00:00:00Z')+days*86400000).toISOString().slice(0,10);const singles=events.every(e=>e.schedule.kind==='single'),dates=singles?events.map(e=>(e.schedule as {kind:'single';date:string}).date).sort():[];const range=window??{from:singles&&dates.length?dates[0]!:past?[...legacy.filter(r=>scopedEvents.some(e=>e.id===r.eventId)).map(r=>r.date),shift(-365)].sort()[0]!:today,until:singles&&dates.length?dates.at(-1)!:past?today:shift(365)};if(!window&&!singles&&!past){const limit=shift(calendarFutureDays);for(const fact of legacy)if(scopedEvents.some(event=>event.id===fact.eventId)&&fact.date>=today&&fact.date<=limit&&fact.date>range.until)range.until=fact.date;}
+ events=calendarOccurrenceEvents(events,legacy,range);events=displayedEvents(events,url);}
  else if(window){const selected=window;events=events.flatMap(event=>occurrencesBetween(event,selected.from,selected.until,100).map(o=>({...event,id:event.id+'-'+o.date,schedule:{kind:'single' as const,date:o.date}})));}
  events=events.filter(event=>matchesEventSearch(url,event,context));
  const feed=renderCalendarFeed({...context,siteContent:{...context.siteContent,events:events.filter(e=>!e.calendarRevision?.cancelled),cancelledCalendarEvents:events.filter(e=>e.calendarRevision?.cancelled)}});
@@ -125,17 +127,20 @@ export function futureCalendarPage(request:Request,context:FrontendRenderContext
  const past=url.searchParams.get('eventDisplay')==='past';
  const filtered=filteredEvents(url,context,selected);if(!filtered)return null;
  let window;try{window=calendarWindow(url,true);}catch{return null;}if(!window)return null;let {from,until}=window;const today=melbourneToday(),legacy=context.siteContent.legacyCalendarOccurrences??[];
+ const history=past||from<today?sourceCalendarHistory(context,filtered,today):[];
  const lastFutureDate=new Date(Date.parse(today+'T00:00:00Z')+calendarFutureDays*86400000).toISOString().slice(0,10);if(until>lastFutureDate)until=lastFutureDate;
- if(past){const dates=legacy.filter(row=>filtered.some(event=>event.id===row.eventId)&&row.date<=(url.searchParams.get('tribe-bar-date')??today)).map(row=>row.date).sort();if(!dates.length)return null;from=dates[0]!;until=url.searchParams.has('tribe-bar-date')?new Date(Date.parse(url.searchParams.get('tribe-bar-date')!+'T00:00:00Z')-86400000).toISOString().slice(0,10):today;}
+ if(past){const dates=[...legacy.filter(row=>filtered.some(event=>event.id===row.eventId)).map(row=>row.date),...history.map(row=>row.date)].filter(date=>date<=(url.searchParams.get('tribe-bar-date')??today)).sort();if(!dates.length)return null;from=dates[0]!;until=url.searchParams.has('tribe-bar-date')?new Date(Date.parse(url.searchParams.get('tribe-bar-date')!+'T00:00:00Z')-86400000).toISOString().slice(0,10):today;}
  const rawPage=/\/page\/([1-9][0-9]{0,2})\/$/u.exec(url.pathname)?.[1]??url.searchParams.get('paged')??url.searchParams.get('page')??'1';
  if(!/^[1-9][0-9]{0,2}$/u.test(rawPage))return null;const page=Number(rawPage);
  const published=filtered.filter(e=>e.calendarVisible!==false&&!e.calendarRevision?.cancelled),visible=displayedEvents(published,url),ids=new Set(published.map(event=>event.id));
- const retained=legacy.filter(record=>ids.has(record.eventId)&&record.date>=from&&record.date<=until&&record.date<today).flatMap(record=>{const fact=retainedCalendarFact(record);return fact&&matchesSearch(url,fact.title,fact.description,fact.location)?[{date:fact.date,start:fact.start,body:retainedCalendarRow(fact)}]:[];});
- const upcoming=visible.flatMap(e=>occurrencesBetween(e,from,until,1000)).filter(o=>(o.date>=today||!legacy.some(record=>record.eventId===o.event.id))&&matchesEventSearch(url,o.event,context)).map(o=>({date:o.date,start:o.start,occurrence:o}));
- const historical=from<today&&legacy.length>0;
- const earliest=legacy.map(record=>record.date).sort()[0];
+ const retained=legacy.filter(record=>ids.has(record.eventId)&&record.date>=from&&record.date<=until&&record.date<today).flatMap(record=>{const fact=retainedCalendarFact(record);return fact&&matchesSearch(url,fact.title,fact.description,fact.location)?[{date:fact.date,start:fact.start,body:retainedCalendarRow(fact,context)}]:[];});
+ const upcoming=visible.flatMap(e=>occurrencesBetween(e,from,until,1000)).filter(o=>(o.date>=today||!legacy.some(record=>record.eventId===o.event.id)&&!history.some(record=>record.eventId===o.event.id))&&matchesEventSearch(url,o.event,context)).map(o=>({date:o.date,start:o.start,occurrence:o}));
+ const retainedPaths=new Set(legacy.filter(record=>ids.has(record.eventId)).map(record=>new URL(record.url).pathname));
+ const sourceHistory=history.filter(row=>row.date>=from&&row.date<=until&&!retainedPaths.has(row.path)&&matchesSearch(url,row.title,row.description,row.location)).map(row=>({date:row.date,start:row.start,body:row.body}));
+ const historical=from<today&&(legacy.length>0||history.length>0);
+ const earliest=[...legacy.map(record=>record.date),...history.map(row=>row.date)].sort()[0];
  if(earliest&&until<earliest||from>new Date(Date.parse(today+'T00:00:00Z')+calendarFutureDays*86400000).toISOString().slice(0,10))return null;
- const occurrences=[...retained,...upcoming].sort((a,b)=>(past?-1:1)*(a.date.localeCompare(b.date)||a.start.localeCompare(b.start)));
+ const occurrences=[...retained,...sourceHistory,...upcoming].sort((a,b)=>(past?-1:1)*(a.date.localeCompare(b.date)||a.start.localeCompare(b.start)));
  if(page>Math.max(1,Math.ceil(occurrences.length/calendarPageSize)))return null;
  const current=occurrences.slice((page-1)*calendarPageSize,page*calendarPageSize),metadataPath=url.pathname+url.search;
  const scopePath=root?'/events/':url.pathname.replace(/(?:\/(?:list|month|week|day|today|summary)(?:\/(?:20[0-9]{2}-[0-9]{2}(?:-[0-9]{2})?|page\/[1-9][0-9]*))?|\/20[0-9]{2}-[0-9]{2}(?:-[0-9]{2})?|\/page\/[1-9][0-9]*)\/$/u,'/');
@@ -167,7 +172,8 @@ export function maintainedCalendarView(request:Request,context:FrontendRenderCon
  const literal=/(20\d{2}-\d{2}(?:-\d{2})?)/u.exec(url.pathname)?.[1]??url.searchParams.get('tribe-bar-date');
  if(!url.pathname.startsWith('/events/'))return null;
  if(literal)return literal<'2026-10'?null:futureCalendarPage(request,context);
- if(url.searchParams.get('eventDisplay')==='past'||url.searchParams.has('post_type')&&url.searchParams.get('post_type')!=='tribe_events')return null;
+ if(url.searchParams.get('eventDisplay')==='past')return futureCalendarPage(request,context);
+ if(url.searchParams.has('post_type')&&url.searchParams.get('post_type')!=='tribe_events')return null;
  const rolling=/^\/events\/(?:(?:list|month|week|day|today|summary)(?:\/page\/[1-9]\d{0,2})?\/|(?:category|tag)\/[^/]+\/(?:.*)?$)/u.test(url.pathname)||url.pathname==='/events/'&&['eventDisplay','related_series','paged','page','tribe_events_cat','tag','tribe_venue','tribe_organizer','tribe-bar-search','tribe-bar-location','tribe-events-views[tribe-bar-search]','tribe-events-views[tribe-bar-location]'].some(key=>url.searchParams.has(key));
  return rolling?futureCalendarPage(request,context):null;
 }

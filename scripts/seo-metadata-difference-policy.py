@@ -61,3 +61,28 @@ def corrected_calendar_social_url(source,candidate,origin):
     # Correct that conflicting signal only for this same witnessed event scope.
     equivalent_taxonomy=scope.removeprefix('/events')if scope!='/events/'else None
     return bool(not previous.query and previous.path in (scope,equivalent_taxonomy) or old==[source.get('url')])
+
+def same_original_origin_variant(source, canonical_source, expected_response_sha256):
+    """Extend an existing exact-source disposition only to its same-content host variant."""
+    origins={'savinggrace.org.au','www.savinggrace.org.au'}
+    a=urlsplit(source.get('url',''));b=urlsplit(canonical_source.get('url',''))
+    if a.scheme not in ('http','https')or b.scheme!='https'or a.hostname not in origins or b.hostname!='www.savinggrace.org.au'or a.username or a.password or a.port or b.username or b.password or b.port or (a.path,a.query,a.fragment)!=(b.path,b.query,b.fragment):return False
+    if not isinstance(expected_response_sha256,str)or not re.fullmatch('[a-f0-9]{64}',expected_response_sha256)or canonical_source.get('bodySha256')!=expected_response_sha256 or source.get('status')!=200 or canonical_source.get('status')!=200 or not isinstance(source.get('sourcePostId'),int)or isinstance(source.get('sourcePostId'),bool)or source['sourcePostId']<=0 or not(source.get('mainText')or source.get('mainFound')is True and source.get('contentTree')and source.get('primaryMediaReferences')):return False
+    fields=('sourcePostId','template','title','primaryHeading','mainFound','semanticBlocks','mainText','headings','language','serviceDate','publishedAt','modifiedAt')
+    if any(source.get(k)!=canonical_source.get(k)for k in fields):return False
+    def normalized(value):
+        if isinstance(value,str):
+            try:parsed=urlsplit(value)
+            except ValueError:return value
+            if parsed.scheme in ('http','https')and parsed.hostname in origins and not(parsed.username or parsed.password or parsed.port):return 'https://www.savinggrace.org.au'+parsed.path+('?' +parsed.query if parsed.query else '')+('#'+parsed.fragment if parsed.fragment else '')
+            # Jetpack embeds the requested church hostname in its path. Keep
+            # the same CDN, image path and transform bytes; normalize only that
+            # already verified www/apex origin variant.
+            image=re.fullmatch(r'/(?:www\.)?savinggrace\.org\.au(/wp-content/uploads/[^?#]+)',parsed.path)
+            if parsed.scheme=='https'and parsed.hostname in ('i0.wp.com','i1.wp.com','i2.wp.com')and image and not(parsed.username or parsed.password or parsed.port or parsed.fragment)and all(k in ('resize','fit','crop','ssl','w','h','quality','strip')for k,_ in parse_qsl(parsed.query)):
+                return 'https://'+parsed.hostname+'/www.savinggrace.org.au'+image[1]+('?' +parsed.query if parsed.query else '')
+            return value
+        if isinstance(value,list):return [normalized(v)for v in value]
+        if isinstance(value,dict):return {k:normalized(v)for k,v in value.items()}
+        return value
+    return all(normalized(source.get(k))==normalized(canonical_source.get(k))for k in ('meta','canonicalUrls','primaryMediaReferences','contentTree','eventMetadataTree'))

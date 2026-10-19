@@ -1,3 +1,4 @@
+import {reviewedCalendarFeedAliases} from './source-reviewed-calendar-aliases';
 import {configuredMeasurement} from './measurement-configuration';
 import{createSourcePageValidationCache}from'./source-page-validation';
 import {readSourceRssFacts} from './rss-fact-store';
@@ -29,7 +30,7 @@ import {createSeoHttpAdapter} from './http-adapter';
 import type {SeoHttpPolicyInput} from './http-policy';
 import {sha256,stableJson,type SourcePublicPage} from './source-public-model';
 
-export function sourceRoutePolicy(pages:readonly SourcePublicPage[],routes:readonly import('../cms/model').CmsRoute[]=[],context:FrontendRenderContext=publicRenderContext,resourceRedirects:ReadonlyMap<string,string>=new Map(),aliases:readonly ObservedSourceAlias[]=[...observedSourceAliases,...reviewedArchiveAliases],sermonPaths:Readonly<Record<string,string>>={}){
+export function sourceRoutePolicy(pages:readonly SourcePublicPage[],routes:readonly import('../cms/model').CmsRoute[]=[],context:FrontendRenderContext=publicRenderContext,resourceRedirects:ReadonlyMap<string,string>=new Map(),aliases:readonly ObservedSourceAlias[]=[...observedSourceAliases,...reviewedArchiveAliases,...reviewedCalendarFeedAliases],sermonPaths:Readonly<Record<string,string>>={}){
  const currentRoutes=new Map(routes.map(route=>[route.path,route]));
  const activeSourcePaths=new Set(pages.filter(page=>!page.issues.length).map(page=>page.path)),nativeSermonPaths=new Set(Object.values(sermonPaths));
  const canonicalPath=(path:string)=>{
@@ -146,7 +147,7 @@ export async function createVersionedSourceHandler(options:{reader:Pool;assetDir
   const content=preserveSourceMetadata(createCmsFrontendSnapshot(snapshot,images.filter(a=>a.type.startsWith('image/')).map(a=>({id:a.id,path:a.url,type:a.type,width:a.width??1,height:a.height??1,alt:a.alt})),false,false,{immutableSourceContent:true}),pages);
   content.legacyCalendarOccurrences=await loadLegacyCalendarOccurrences(pages,sourceAssets,[...content.events,...(content.cancelledCalendarEvents??[])]);
   const resourceRedirects=await readSourceResourceRedirects(options.reader);
-  const routes=sourceRoutePolicy(pages,snapshot.routes,{...publicRenderContext,siteContent:content},resourceRedirects,[...observedSourceAliases,...reviewedArchiveAliases],sermons.verifiedSourceShortlinks());
+  const routes=sourceRoutePolicy(pages,snapshot.routes,{...publicRenderContext,siteContent:content},resourceRedirects,[...observedSourceAliases,...reviewedArchiveAliases,...reviewedCalendarFeedAliases],sermons.verifiedSourceShortlinks());
   routes.sourceShortlinks={...routes.sourceShortlinks,...sermons.verifiedSourceShortlinks()};
   const rssFacts=await readSourceRssFacts(pages,options.assetDirectory);
   const cmsPublicationRows=rssFacts.size?(await options.reader.query<{entity_id:string;published_at:Date|string}>("SELECT entity_id,min(created_at) AS published_at FROM audit_events WHERE entity_type='cms_entity' AND action='cms.publish' GROUP BY entity_id")).rows:[];

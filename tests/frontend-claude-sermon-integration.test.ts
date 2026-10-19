@@ -18,8 +18,8 @@ const preservedSources = [
   ],
   [
     "src/frontend/pages/church.ts",
-    // D-183 preserves future ICS source properties; the selected visible church layout is unchanged.
-    "dd64a4603d8e3e7410c558906bc964f94876ab5109e9f7a099c24e62da6961e1"
+    // D-183 preserves the original ICS location; the independent markup guard below keeps every church template byte unchanged.
+    "80a0a5b0c9cf5c0fc18fc23ad8a3500dbc30b6b5b780875dc24bfdc2972be9bd"
   ],
   [
     "src/frontend/styles/core.ts",
@@ -166,4 +166,9 @@ describe("Claude sermon integration inside the preserved Astra shell", () => {
     expect(preview).toContain('double-click to browse SermonsV4');
     for(const label of ["SermonsV1","SermonsV2","SermonsV4"])expect(preview).toContain(">"+label+"</a>");
   });
+});
+
+
+it("keeps every church template byte outside the task-authorized calendar serializer unchanged",()=>{
+ const source=readFileSync("src/frontend/pages/church.ts","utf8").replace(/\r\n/g,"\n"),startMarker="/** The site's iCalendar feed of every event, with recurrence rules as exported. */",endMarker="/* ---------------------------------------------------------------- blog */",start=source.indexOf(startMarker),end=source.indexOf(endMarker,start);expect(start).toBeGreaterThan(0);expect(source.lastIndexOf(startMarker)).toBe(start);expect(end).toBeGreaterThan(start);expect(source.lastIndexOf(endMarker)).toBe(end);const presentation=source.slice(0,start)+source.slice(end);expect(createHash("sha256").update(presentation).digest("hex")).toBe("21e94c7295bb3615ca2fa957f69ec909ae82ae31efd9775fbfc6916110ab92ab");
 });

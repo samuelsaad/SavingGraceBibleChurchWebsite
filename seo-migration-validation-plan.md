@@ -672,3 +672,35 @@ selection. No provider/account/MFA/recovery state is invented or connected here.
 D-183 integrated context/recurrence checkpoint: PostgreSQL 1,519/0 skips; standard 1,372/147 gated skips; Python 167; type/build and privacy scan passed. Current original homepage/robots confirmation and four no-clobber profile-link settings preservation receipts remain private. Final immutable HTTP comparison and staging activation are not yet accepted.
 
 D-183 immutable source validation reuse: PostgreSQL 1,523/zero skips; standard 1,376/147 gated skips; Python 167; types/build/importer/offline audit/privacy passed. Real-corpus component benchmark 7,873 ms initial / 2,158 ms reuse, exact object and DB-state equality. Final release HTTP/timing and complete cohort reconciliation remain pending. eca90d9 whole-inventory run was interrupted before HTTP after the measured cold-rebuild finding; retain its earlier 120 browser and reversible CMS/feed results separately.
+
+
+### D-183 subscription, historical archive and resource-origin candidate — 20 October
+
+Integrated application gates passed: `npm run test:postgres` 1,547 passed with
+zero skips and exact disposable database cleanup; `npm test -- --maxWorkers=2`
+1,400 passed / 147 gated skips covered by PostgreSQL. `npm run check` reports
+zero errors/warnings and seven existing hints. `npm run build` builds 45 pages;
+`npm run staging:bundle` succeeds. Complete Python discovery
+`python -m unittest discover -s tests -p '*test.py'` passes 244 cases.
+`npm run migration:dry-run -- --input tests/fixtures/dry-run.json` includes three,
+excludes two, rejects zero. Offline audit reports zero cached advisories. The
+full release privacy scan covers 578 files, with zero private-body/prohibited
+secret/source matches and zero excluded paths; manifest
+`36c75a6d209121d2963c43a1ff9bcfebdf8bef6c4104b3cb0ccf457dee3a241b`.
+
+Focused regressions cover exact past-feed aliases and source/hash ownership;
+source-backed historical pagination, withdrawals and ambiguity; typed Day links;
+original venue country retention and edited-venue precedence; verified future
+occurrences beyond the default year; noncanonical Range redirects and stream
+cancellation. The church template's existing whole-file guard was updated solely
+for the calendar serializer correction; a new independent hash proves every byte
+outside that serializer section remains unchanged. Earlier failed hash/fixture
+and incomplete discovery runs remain private and are not reported as passes.
+
+The finite extension contains 178 successful exact source responses: 171 old
+occurrence pages plus seven already-observed archive targets. Every new event's
+start/end facts were checked against visible source content; all 84 image references
+resolve to already-verified owned files. No arbitrary HTML link expansion occurred.
+Full final-release HTTP, cohort reconciliation and staging acceptance remain separate
+requirements. Pinned protected-staging SSH again times out; no completed successor
+deployment or current running staging commit/image is claimed.

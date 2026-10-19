@@ -4,6 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 import argparse
 from functools import lru_cache
 from collections import Counter
+from collections.abc import Mapping
 import csv
 import hashlib
 import importlib.util
@@ -15,12 +16,14 @@ from urllib.parse import parse_qsl, urljoin, urlsplit
 SPEC = importlib.util.spec_from_file_location('seo_comparator', Path(__file__).with_name('seo-verify-candidate.py'))
 VERIFY = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(VERIFY)
+RECORDING_SPEC=importlib.util.spec_from_file_location('seo_recording_evidence',Path(__file__).with_name('seo-recording-evidence.py'))
+RECORDINGS=importlib.util.module_from_spec(RECORDING_SPEC);RECORDING_SPEC.loader.exec_module(RECORDINGS)
 ORIGIN = VERIFY.CANONICAL
 DISPOSITIONS = frozenset(('preserved', 'redirected', 'intentionally_removed', 'unresolved'))
 HASH = re.compile(r'^[a-f0-9]{64}$')
 CODE = re.compile(r'^[a-z][a-z0-9_:.\-]{0,159}$')
 SAFE_QUERY = frozenset(('p', 'page_id', 'paged', 'page', 'pagename', 'tribe_organizer', 'tribe_venue', 'post_type', 'feed', 's', 'order', 'sermon_dates', 'sermon_series', 'sermon_speaker', 'sermon_book', 'sermon_topics', 'tribe-bar-date', 'eventDisplay', 'tribe_events_cat', 'tag', 'ical', 'outlook-ical', 'related_series', 'shortcode', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'ver', 'resize', 'ssl', 'eventDate', 'taxonomy', 'term'))
-MAP_FIELDS = ('source_url', 'source_url_sha256', 'source_wordpress_id', 'source_type', 'source_route_family', 'source_state', 'source_captured_at', 'source_status', 'source_redirect', 'source_canonical_urls', 'source_indexability', 'source_origin', 'source_provenance', 'traffic_evidence', 'backlink_evidence', 'retained_published_source_id', 'retained_reconciliation', 'target_identity', 'intended_url', 'candidate_first_status', 'candidate_final_status', 'candidate_final_url', 'redirect_hops', 'candidate_response_sha256', 'candidate_indexable', 'candidate_canonical_valid', 'candidate_robots_allowed', 'candidate_in_sitemap', 'raw_verification_issues', 'report_validation_issues', 'reviewed_issue_codes', 'unreviewed_issue_codes', 'explained_difference_policies', 'review_evidence_references', 'disposition', 'disposition_reason')
+MAP_FIELDS = ('source_url', 'source_url_sha256', 'source_wordpress_id', 'source_type', 'source_route_family', 'source_state', 'source_captured_at', 'source_observation_kind', 'source_status', 'source_redirect', 'source_canonical_urls', 'source_indexability', 'source_origin', 'source_provenance', 'traffic_evidence', 'backlink_evidence', 'retained_published_source_id', 'retained_reconciliation', 'target_identity', 'intended_url', 'candidate_first_status', 'candidate_final_status', 'candidate_final_url', 'redirect_hops', 'candidate_response_sha256', 'candidate_evidence_source', 'candidate_indexable', 'candidate_canonical_valid', 'candidate_robots_allowed', 'candidate_in_sitemap', 'raw_verification_issues', 'report_validation_issues', 'reviewed_issue_codes', 'unreviewed_issue_codes', 'explained_difference_policies', 'review_evidence_references', 'disposition', 'disposition_reason')
 DIFF_GROUPS = ('blocks', 'metadata', 'language', 'dates', 'images', 'media', 'content_tree')
 DIFF_FIELDS = ('source_url', 'source_url_sha256', 'source_response_sha256', 'candidate_response_sha256', 'comparison_available', 'source_block_count', 'matched_block_count', 'missing_block_count', 'missing_image_count', 'missing_media_count', 'metadata_change_count', *tuple(field for group in DIFF_GROUPS for field in ('source_' + group + '_sha256', 'candidate_' + group + '_sha256', group + '_changed')), 'missing_block_hashes', 'missing_image_hashes', 'missing_media_hashes', 'metadata_change_hashes', 'bundle_projection_sha256', 'explained_difference_policies', 'raw_verification_issues', 'disposition')
 
@@ -112,15 +115,16 @@ def body_record(root, relative, expected_url=None):
     return record
 
 
-def candidate_chain(root, url):
+def candidate_chain(root, url, supplemental=None):
     chain, seen, issues = [], set(), []
     while VERIFY.church_url(url):
         if url in seen: return chain, issues + ['candidate_redirect_loop']
         if len(chain) >= 6: return chain, issues + ['candidate_redirect_limit']
         seen.add(url)
         path = root / 'responses' / (digest(url) + '.json')
-        if not path.is_file(): return chain, issues + ['candidate_response_evidence_missing']
-        record = body_record(root, str(path.relative_to(root)), url)
+        if path.is_file(): record=body_record(root,str(path.relative_to(root)),url)
+        elif url in (supplemental or {}): record=supplemental[url]
+        else: return chain, issues + ['candidate_response_evidence_missing']
         chain.append(record)
         if record.get('status') not in VERIFY.REDIRECTS: return chain, issues
         if record.get('status') != 301: issues.append('candidate_redirect_not_301')
@@ -170,13 +174,35 @@ def public_rest_identity(provenance):
     return next(iter(ids)) if len(ids)==1 else None
 
 
-def source_records(root, ledger):
+def source_identity_supplements(path, baseline, ledger):
+    if not path: return {}
+    value=load(path)
+    if set(value)!={'format','sourceLedgerSha256','parserSha256','rows'} or value['format']!='sgbc-missing-inventory-identities-v1' or value['sourceLedgerSha256']!=digest(Path(baseline).read_bytes()) or value['parserSha256']!=digest(Path(VERIFY.parser.__file__).read_bytes()): raise ValueError('source_identity_supplement_binding')
+    byhash={digest(url):(url,summary) for url,summary in ledger['pages'].items()};result={}
+    for row in value['rows']:
+        if set(row)!={'sourceUrlSha256','sourceId','sourceRecordSha256','sourceResponseSha256'} or row['sourceUrlSha256'] in result or not isinstance(row['sourceId'],int) or isinstance(row['sourceId'],bool) or row['sourceId']<=0: raise ValueError('source_identity_supplement_scope')
+        if row['sourceUrlSha256'] not in byhash: raise ValueError('source_identity_supplement_unknown_url')
+        url,summary=byhash[row['sourceUrlSha256']]
+        if summary.get('sourcePostId') is not None: raise ValueError('source_identity_supplement_existing_identity')
+        raw=VERIFY.confined_file(Path(baseline).parent,summary['recordPath']).read_bytes();captured=json.loads(raw);parsed=VERIFY.source_record(Path(baseline).parent,summary)
+        if digest(raw)!=row['sourceRecordSha256'] or captured.get('url')!=url or parsed.get('url')!=url or captured.get('sourcePostId')!=row['sourceId'] or parsed.get('sourcePostId')!=row['sourceId'] or row['sourceResponseSha256']!=summary.get('bodySha256') or parsed.get('bodySha256')!=row['sourceResponseSha256']: raise ValueError('source_identity_supplement_evidence')
+        result[row['sourceUrlSha256']]=row
+    return result
+
+
+def verify_source_identity(url, summary, record, supplements=None):
+    if record.get('sourcePostId')==summary.get('sourcePostId'): return
+    row=(supplements or {}).get(digest(url))
+    if summary.get('sourcePostId') is not None or not row or row['sourceId']!=record.get('sourcePostId') or row['sourceResponseSha256']!=record.get('bodySha256'): raise ValueError('report_source_identity_mismatch')
+
+
+def source_records(root, ledger, identity_supplements=None):
     def validated(item):
         url, summary = item
         record = VERIFY.source_record(root, summary)
         if record.get('url') != url: raise ValueError('report_source_url_mismatch')
         if record.get('bodySha256') != summary.get('bodySha256'): raise ValueError('report_source_ledger_hash_mismatch')
-        if record.get('sourcePostId') != summary.get('sourcePostId'): raise ValueError('report_source_identity_mismatch')
+        verify_source_identity(url,summary,record,identity_supplements)
         return url, record
     result = {}
     with ThreadPoolExecutor(max_workers=4) as pool:
@@ -320,7 +346,7 @@ def write_csv(path, fields, rows):
     temporary.replace(path)
 
 
-def export_reports(baseline, assets_path, candidate, bundle_path, output, *, reviews=None, retained_path=None, repo=None):
+def export_reports(baseline, assets_path, candidate, bundle_path, output, *, reviews=None, retained_path=None, repo=None, identity_supplements=None, recording_evidence=None):
     baseline, assets_path, candidate, bundle_path = map(lambda p: Path(p).resolve(), (baseline, assets_path, candidate, bundle_path))
     repo = Path(repo).resolve() if repo else Path(__file__).resolve().parents[1]
     ledger, assets, bundle = load(baseline), load(assets_path), load(bundle_path)
@@ -341,8 +367,21 @@ def export_reports(baseline, assets_path, candidate, bundle_path, output, *, rev
         key = item.get('urlSha256')
         if not isinstance(key, str) or not HASH.fullmatch(key) or key in differences: raise ValueError('candidate_diff_identity_invalid')
         differences[key] = item
-    records = source_records(baseline.parent, ledger)
+    identities=source_identity_supplements(identity_supplements,baseline,ledger)
+    if identity_supplements: bindings['sourceIdentitySupplementSha256']=digest(Path(identity_supplements).read_bytes())
+    records = source_records(baseline.parent, ledger,identities)
     bindings['sourceRecordsProofSha256'] = fingerprint([(digest(url),fingerprint(record)) for url,record in sorted(records.items())])
+    source_recordings,supplemental_responses=RECORDINGS.load_recording_evidence(recording_evidence,bundle,{**bindings,'expectedRuntimeLabel':candidate_bindings.get('expectedRuntimeLabel')})
+    if recording_evidence:
+        bindings['recordingEvidenceSha256']=digest(Path(recording_evidence).read_bytes())
+        bindings['recordingFullBodyProofSha256']=digest((Path(recording_evidence).parent/'full-body-http.private.json').read_bytes())
+        original_records=records
+        class RecordingObservations(Mapping):
+            def __iter__(self):return iter(original_records)
+            def __len__(self):return len(original_records)
+            def __getitem__(self,url):return RECORDINGS.source_with_recording_observation(original_records[url],url,source_recordings)
+        records=RecordingObservations()
+
     retained = load(retained_path) if retained_path else None
     retained_rows, reconciliation = retained_reconciliation(retained, records, bundle)
     inventory = VERIFY.inventory(ledger, assets)
@@ -366,10 +405,11 @@ def export_reports(baseline, assets_path, candidate, bundle_path, output, *, rev
         key = url.removeprefix('withheld-reference:') if url.startswith('withheld-reference:') and HASH.fullmatch(url.removeprefix('withheld-reference:')) else digest(url)
         row, diff, source, asset = observed.get(key, {}), differences.get(key), records.get(url), assets.get('assets', {}).get(url)
         issues = code_list(row.get('issues', 'candidate_not_checked'))
-        chain, validation = candidate_chain(candidate, url) if VERIFY.church_url(url) and not VERIFY.parser.MEDIA_EXT.search(url) else ([], [])
+        chain, validation = candidate_chain(candidate, url,supplemental_responses) if VERIFY.church_url(url) and (not VERIFY.parser.MEDIA_EXT.search(url) or url in supplemental_responses) else ([], [])
         first, final = (chain[0], chain[-1]) if chain else ({}, {})
         if summary.get('runtimeIdentityVerified') is not True: validation.append('candidate_runtime_identity_not_verified')
-        if row and chain and (number(row.get('candidateStatus')) != final.get('status') or number(row.get('redirectHops')) != len(chain) - 1): validation.append('candidate_csv_response_mismatch')
+        recording_completed=bool(row and chain and number(row.get('candidateStatus')) is None and 'recording_not_requested' in issues and final.get('url') in supplemental_responses and final.get('status')==200)
+        if row and chain and not recording_completed and (number(row.get('candidateStatus')) != final.get('status') or number(row.get('redirectHops')) != len(chain) - 1): validation.append('candidate_csv_response_mismatch')
         source_redirect_chain, source_redirect_issues = source_chain(records, url) if source and source.get('status') in VERIFY.REDIRECTS else ([], [])
         comparison_source = source_redirect_chain[-1] if source_redirect_chain and not source_redirect_issues and source_redirect_chain[-1].get('status') == 200 else source
         if source_redirect_chain and not source_redirect_issues and comparison_source.get('status') == 200 and 'mainFound' in comparison_source and final.get('extracted'):
@@ -396,7 +436,7 @@ def export_reports(baseline, assets_path, candidate, bundle_path, output, *, rev
         if source_id is None: source_id=public_rest_identity(provenance)
         target_identity = ('source:' + str(projection['sourceId']) if isinstance(projection.get('sourceId'), int) else 'source-route:' + digest(projection['path'])) if projection else ('candidate-route:' + digest(route(intended)) if intended and route(intended) else '')
         safe_source = 'withheld-reference:' + key if url.startswith('withheld-reference:') else safe_url(url)
-        report = {'source_url': safe_source, 'source_url_sha256': key, 'source_wordpress_id': source_id if isinstance(source_id, int) else None, 'source_type': safe_code((source or {}).get('template') or ('non_html' if source else 'asset' if asset else 'unverified')), 'source_route_family': path_family(url) if VERIFY.church_url(url) else 'external_or_withheld_reference', 'source_state': safe_code(state), 'source_captured_at': metadata.get('capturedAt') if re.fullmatch(r'\d{4}-\d\d-\d\dT[0-9:.+Z\-]+', str(metadata.get('capturedAt', ''))) else '', 'source_status': metadata.get('status'), 'source_redirect': safe_url(source.get('redirectTarget')) if source else '', 'source_canonical_urls': [safe_url(value) for value in source.get('canonicalUrls', []) if value] if source else [], 'source_indexability': source_indexability(source), 'source_origin': public_origin(url), 'source_provenance': {'count': len(provenance), 'sha256': fingerprint(provenance), 'sample': safe_provenance[:10], 'sampleLimit': 10, 'fullEvidence': 'frozen_private_ledger_or_asset_manifest'}, 'traffic_evidence': 'unavailable', 'backlink_evidence': 'unavailable', 'retained_published_source_id': historical.get('sourceId'), 'retained_reconciliation': historical.get('outcome', ''), 'target_identity': target_identity, 'intended_url': safe_url(intended), 'candidate_first_status': first.get('status'), 'candidate_final_status': final.get('status'), 'candidate_final_url': safe_url(final.get('url')), 'redirect_hops': len(chain) - 1 if chain else None, 'candidate_response_sha256': safe_hash(final.get('bodySha256')), 'candidate_indexable': boolean_cell(row.get('indexable')), 'candidate_canonical_valid': boolean_cell(row.get('canonicalValid')), 'candidate_robots_allowed': boolean_cell(row.get('robotsAllowed')), 'candidate_in_sitemap': boolean_cell(row.get('inSitemap')), 'raw_verification_issues': issues, 'report_validation_issues': validation, 'reviewed_issue_codes': accepted, 'unreviewed_issue_codes': remaining, 'explained_difference_policies': own_policies, 'review_evidence_references': [policies[code] for code in own_policies], 'disposition': disposition, 'disposition_reason': reason}
+        report = {'source_url': safe_source, 'source_url_sha256': key, 'source_wordpress_id': source_id if isinstance(source_id, int) else None, 'source_type': safe_code((source or {}).get('template') or ('non_html' if source else 'asset' if asset else 'unverified')), 'source_route_family': path_family(url) if VERIFY.church_url(url) else 'external_or_withheld_reference', 'source_state': safe_code(state), 'source_captured_at': metadata.get('capturedAt') if re.fullmatch(r'\d{4}-\d\d-\d\dT[0-9:.+Z\-]+', str(metadata.get('capturedAt', ''))) else '', 'source_observation_kind': 'later_verified_recording_body' if source and source.get('recordingSourceObservationUrl') else 'frozen_source_capture' if source else 'frozen_asset_capture' if asset else 'unavailable', 'source_status': metadata.get('status'), 'source_redirect': safe_url(source.get('redirectTarget')) if source else '', 'source_canonical_urls': [safe_url(value) for value in source.get('canonicalUrls', []) if value] if source else [], 'source_indexability': source_indexability(source), 'source_origin': public_origin(url), 'source_provenance': {'count': len(provenance), 'sha256': fingerprint(provenance), 'sample': safe_provenance[:10], 'sampleLimit': 10, 'fullEvidence': 'frozen_private_ledger_or_asset_manifest'}, 'traffic_evidence': 'unavailable', 'backlink_evidence': 'unavailable', 'retained_published_source_id': historical.get('sourceId'), 'retained_reconciliation': historical.get('outcome', ''), 'target_identity': target_identity, 'intended_url': safe_url(intended), 'candidate_first_status': first.get('status'), 'candidate_final_status': final.get('status'), 'candidate_final_url': safe_url(final.get('url')), 'redirect_hops': len(chain) - 1 if chain else None, 'candidate_response_sha256': safe_hash(final.get('bodySha256')), 'candidate_evidence_source': 'supplemental_recording_full_file_head_and_range' if recording_completed else 'frozen_comparator_http', 'candidate_indexable': boolean_cell(VERIFY.indexable(final) if recording_completed else row.get('indexable')), 'candidate_canonical_valid': boolean_cell(None if recording_completed else row.get('canonicalValid')), 'candidate_robots_allowed': boolean_cell(None if recording_completed else row.get('robotsAllowed')), 'candidate_in_sitemap': boolean_cell(row.get('inSitemap')), 'raw_verification_issues': issues, 'report_validation_issues': validation, 'reviewed_issue_codes': accepted, 'unreviewed_issue_codes': remaining, 'explained_difference_policies': own_policies, 'review_evidence_references': [policies[code] for code in own_policies], 'disposition': disposition, 'disposition_reason': reason}
         rows.append(report)
         source_groups, candidate_groups = signal_groups(comparison_source), signal_groups(final.get('extracted'))
         difference = {'source_url': safe_source, 'source_url_sha256': key, 'source_response_sha256': safe_hash(source.get('bodySha256') if source else asset.get('sha256') if asset else ''), 'candidate_response_sha256': safe_hash(final.get('bodySha256')), 'comparison_available': diff is not None, 'source_block_count': diff.get('sourceBlockCount') if diff else None, 'matched_block_count': diff.get('matchedBlockCount') if diff else None, 'missing_block_count': diff.get('missingBlockCount') if diff else None, 'missing_image_count': diff.get('missingImageCount') if diff else None, 'missing_media_count': diff.get('missingMediaCount') if diff else None, 'metadata_change_count': len(diff.get('metadataChanges', {})) if diff else None, 'missing_block_hashes': safe_diff_hashes(diff.get('missingBlockHashes', {})) if diff else {}, 'missing_image_hashes': safe_diff_hashes(diff.get('missingImageHashes', [])) if diff else [], 'missing_media_hashes': safe_diff_hashes(diff.get('missingMediaHashes', [])) if diff else [], 'metadata_change_hashes': safe_diff_hashes(diff.get('metadataChanges', {})) if diff else {}, 'bundle_projection_sha256': fingerprint(projection) if projection else '', 'explained_difference_policies': own_policies, 'raw_verification_issues': issues, 'disposition': disposition}
@@ -418,9 +458,9 @@ def export_reports(baseline, assets_path, candidate, bundle_path, output, *, rev
 def main():
     arguments = argparse.ArgumentParser(description=__doc__)
     for name in ('baseline', 'assets', 'candidate', 'bundle', 'output'): arguments.add_argument('--' + name, required=True)
-    arguments.add_argument('--reviews'); arguments.add_argument('--retained-wordpress'); arguments.add_argument('--repo')
+    arguments.add_argument('--recording-evidence'); arguments.add_argument('--identity-supplements'); arguments.add_argument('--reviews'); arguments.add_argument('--retained-wordpress'); arguments.add_argument('--repo')
     args = arguments.parse_args()
-    result = export_reports(args.baseline, args.assets, args.candidate, args.bundle, args.output, reviews=args.reviews, retained_path=args.retained_wordpress, repo=args.repo)
+    result = export_reports(args.baseline, args.assets, args.candidate, args.bundle, args.output, reviews=args.reviews, retained_path=args.retained_wordpress, repo=args.repo, identity_supplements=args.identity_supplements, recording_evidence=args.recording_evidence)
     print(json.dumps({'inventoryCount': result['inventoryCount'], 'dispositionCounts': result['dispositionCounts'], 'verdict': result['verdict']}))
 
 

@@ -1,0 +1,113 @@
+{
+  "format": "sgbc-original-calendar-scope-dispositions-v1",
+  "rows": [
+    {
+      "sourceUrl": "https://www.savinggrace.org.au/events/sgbc-picnic-rye/?eventDisplay=past&ical=1",
+      "sourceStatuses": [
+        301,
+        200
+      ],
+      "sourceResponseSha256": "5f6bab0df1ccc53f48f1446c407d9cff7ab2f4f5964b00bd8b54ba5ba5aebdb5",
+      "sourceEventSetSha256": "d26e6b749c4891796f4351a25d35b9cc0de4b87ef88d3fad9e674177a4dab879",
+      "targetUrl": "https://www.savinggrace.org.au/events/list/?eventDisplay=past&ical=1",
+      "verifiedContainedOriginalEvents": 30,
+      "missingOriginalEvents": 0,
+      "meaningfulPropertyDifferences": 0,
+      "verificationMethod": "actual_loopback_global_past_feed_complete_UID_and_property_comparison_excluding_only_DTSTAMP"
+    },
+    {
+      "sourceUrl": "https://www.savinggrace.org.au/event/sgbc-picnic-rye/?eventDisplay=past&ical=1",
+      "sourceStatuses": [
+        200
+      ],
+      "sourceResponseSha256": "5f6bab0df1ccc53f48f1446c407d9cff7ab2f4f5964b00bd8b54ba5ba5aebdb5",
+      "sourceEventSetSha256": "d26e6b749c4891796f4351a25d35b9cc0de4b87ef88d3fad9e674177a4dab879",
+      "targetUrl": "https://www.savinggrace.org.au/events/list/?eventDisplay=past&ical=1",
+      "verifiedContainedOriginalEvents": 30,
+      "missingOriginalEvents": 0,
+      "meaningfulPropertyDifferences": 0,
+      "verificationMethod": "actual_loopback_global_past_feed_complete_UID_and_property_comparison_excluding_only_DTSTAMP"
+    },
+    {
+      "sourceUrl": "https://www.savinggrace.org.au/events/sgbc-picnic-rye/?eventDisplay=past&outlook-ical=1",
+      "sourceStatuses": [
+        301,
+        200
+      ],
+      "sourceResponseSha256": "40e81b1f5f7412059b30faf64a8508cd12dde92343195a593d09fa1de699d6f8",
+      "sourceEventSetSha256": "682a0b31a7acb338d95aebbf4ad192dd9f4f866533ea99f8aa2b1331baba96f3",
+      "targetUrl": "https://www.savinggrace.org.au/events/list/?eventDisplay=past&outlook-ical=1",
+      "verifiedContainedOriginalEvents": 30,
+      "missingOriginalEvents": 0,
+      "meaningfulPropertyDifferences": 0,
+      "verificationMethod": "actual_loopback_global_past_feed_complete_UID_and_property_comparison_excluding_only_DTSTAMP"
+    },
+    {
+      "sourceUrl": "https://www.savinggrace.org.au/event/sgbc-picnic-rye/?eventDisplay=past&outlook-ical=1",
+      "sourceStatuses": [
+        200
+      ],
+      "sourceResponseSha256": "40e81b1f5f7412059b30faf64a8508cd12dde92343195a593d09fa1de699d6f8",
+      "sourceEventSetSha256": "682a0b31a7acb338d95aebbf4ad192dd9f4f866533ea99f8aa2b1331baba96f3",
+      "targetUrl": "https://www.savinggrace.org.au/events/list/?eventDisplay=past&outlook-ical=1",
+      "verifiedContainedOriginalEvents": 30,
+      "missingOriginalEvents": 0,
+      "meaningfulPropertyDifferences": 0,
+      "verificationMethod": "actual_loopback_global_past_feed_complete_UID_and_property_comparison_excluding_only_DTSTAMP"
+    },
+    {
+      "sourceUrl": "https://www.savinggrace.org.au/events/street-evangelism-outreach/?eventDisplay=past&ical=1",
+      "sourceStatuses": [
+        301,
+        200
+      ],
+      "sourceResponseSha256": "269c8737d272a3dba0cbfcfe2e64f9668618e8a35b6ae4c412762f80c6de6253",
+      "sourceEventSetSha256": "f646dfb0b8b4d6dcb58f13ef78931f6c1c1b9c1e0af676b8ea4670aa9bef974d",
+      "targetUrl": "https://www.savinggrace.org.au/events/list/?eventDisplay=past&ical=1",
+      "verifiedContainedOriginalEvents": 30,
+      "missingOriginalEvents": 0,
+      "meaningfulPropertyDifferences": 0,
+      "verificationMethod": "actual_loopback_global_past_feed_complete_UID_and_property_comparison_excluding_only_DTSTAMP"
+    },
+    {
+      "sourceUrl": "https://www.savinggrace.org.au/event/street-evangelism-outreach/?eventDisplay=past&ical=1",
+      "sourceStatuses": [
+        200
+      ],
+      "sourceResponseSha256": "269c8737d272a3dba0cbfcfe2e64f9668618e8a35b6ae4c412762f80c6de6253",
+      "sourceEventSetSha256": "f646dfb0b8b4d6dcb58f13ef78931f6c1c1b9c1e0af676b8ea4670aa9bef974d",
+      "targetUrl": "https://www.savinggrace.org.au/events/list/?eventDisplay=past&ical=1",
+      "verifiedContainedOriginalEvents": 30,
+      "missingOriginalEvents": 0,
+      "meaningfulPropertyDifferences": 0,
+      "verificationMethod": "actual_loopback_global_past_feed_complete_UID_and_property_comparison_excluding_only_DTSTAMP"
+    },
+    {
+      "sourceUrl": "https://www.savinggrace.org.au/events/street-evangelism-outreach/?eventDisplay=past&outlook-ical=1",
+      "sourceStatuses": [
+        301,
+        200
+      ],
+      "sourceResponseSha256": "cf0eb67bdbab587cd08650132b7f0e6e770c0648c5ce2b42c046051824bf91f6",
+      "sourceEventSetSha256": "7bdd9cba832f506d748120e4e84ea15965b98b3fc7331a06d09022c82592b2f8",
+      "targetUrl": "https://www.savinggrace.org.au/events/list/?eventDisplay=past&outlook-ical=1",
+      "verifiedContainedOriginalEvents": 30,
+      "missingOriginalEvents": 0,
+      "meaningfulPropertyDifferences": 0,
+      "verificationMethod": "actual_loopback_global_past_feed_complete_UID_and_property_comparison_excluding_only_DTSTAMP"
+    },
+    {
+      "sourceUrl": "https://www.savinggrace.org.au/event/street-evangelism-outreach/?eventDisplay=past&outlook-ical=1",
+      "sourceStatuses": [
+        200
+      ],
+      "sourceResponseSha256": "cf0eb67bdbab587cd08650132b7f0e6e770c0648c5ce2b42c046051824bf91f6",
+      "sourceEventSetSha256": "7bdd9cba832f506d748120e4e84ea15965b98b3fc7331a06d09022c82592b2f8",
+      "targetUrl": "https://www.savinggrace.org.au/events/list/?eventDisplay=past&outlook-ical=1",
+      "verifiedContainedOriginalEvents": 30,
+      "missingOriginalEvents": 0,
+      "meaningfulPropertyDifferences": 0,
+      "verificationMethod": "actual_loopback_global_past_feed_complete_UID_and_property_comparison_excluding_only_DTSTAMP"
+    }
+  ]
+}

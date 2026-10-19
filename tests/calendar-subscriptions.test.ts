@@ -131,3 +131,14 @@ it('restores real adjacent-day links and scoped live client subscriptions withou
  vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-19T02:00:00Z'));
  try{const c=context();c.mode='public';c.siteContent!.events=[{...event,schedule:{kind:'weekly',weekday:0,from:'2026-10-01'}}];const request=new Request('https://www.example.test/events/day/2026-10-21/?utm_source=example&paged=1');const html=await maintainedCalendarView(request,c)!.text();expect(html).toContain('/events/day/2026-10-20/?utm_source=example');expect(html).toContain('/events/day/2026-10-22/?utm_source=example');for(const label of ['Google Calendar','iCalendar','Outlook 365','Outlook Live','Export .ics file','Export Outlook .ics file'])expect(html).toContain(label);expect(html).not.toContain('cid=webcal%3A%2F%2Fwww.example.test');c.mode='restricted';const privateHtml=await maintainedCalendarView(request,c)!.text();expect(privateHtml).not.toContain('https://www.google.com/calendar/render');expect(privateHtml).toContain('Export .ics file');}finally{vi.useRealTimers();}
 });
+
+it('retains a verified future subscription UID beyond the default year while respecting explicit windows and scope',async()=>{
+ vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-20T02:00:00Z'));
+ try{const c=context();c.siteContent!.events=[{...event,schedule:{kind:'weekly',weekday:2,from:'2026-10-20'}}];c.siteContent!.eventScopeIds={'/events/category/bible-study/':[event.id]};c.siteContent!.legacyCalendarOccurrences=[{eventId:event.id,uid:'verified-future-uid',date:'2027-10-26',url:'https://www.savinggrace.org.au/event/old-anonymous/2027-10-26/',sequence:0,lines:[]}];
+ const request=(path:string)=>calendarSubscription(new Request('https://www.example.test'+path),c)!.text();
+ const feed=await request('/events/category/bible-study/page/3/?ical=1');expect(feed).toContain('UID:verified-future-uid');expect(feed).toContain('DTSTART;TZID=Australia/Melbourne:20271026T173000');
+ expect(await request('/events/category/bible-study/day/2027-10-19/?ical=1')).not.toContain('verified-future-uid');expect(await request('/events/category/bible-study/?eventDisplay=past&ical=1')).not.toContain('verified-future-uid');
+ c.siteContent!.legacyCalendarOccurrences=[{...c.siteContent!.legacyCalendarOccurrences[0]!,eventId:'unrelated'}];expect(await request('/events/category/bible-study/?ical=1')).not.toContain('20271026T');
+ c.siteContent!.legacyCalendarOccurrences=[{...c.siteContent!.legacyCalendarOccurrences[0]!,eventId:event.id,date:'2037-10-27'}];expect(await request('/events/category/bible-study/?ical=1')).not.toContain('20371027T');
+ }finally{vi.useRealTimers();}
+});

@@ -16,6 +16,7 @@
 import { escapeHtml, html, raw, type Html } from "../html";
 import { contextualPath, type FrontendRenderContext } from "../routes";
 import {legacyDisposition} from './registry';
+import {legacyDayViewTarget} from '../source-content';
 
 const linkPattern = /\[([^\]]+)\]\(([^)\s]+)\)/gu;
 
@@ -32,6 +33,12 @@ function resourceLink(url:URL,context:FrontendRenderContext):{path:string;suffix
 }
 
 export function resolveHref(href: string, context: FrontendRenderContext): string {
+  // Day is one scoped date; inherited collection page numbers are redundant.
+  // The typed legacy parser retains search/filter/campaign meaning and rejects unknown parameters.
+  try { const original=new URL(href,"https://www.savinggrace.org.au"), normalized=legacyDayViewTarget(original.pathname+original.search);
+    if (["https:","http:"].includes(original.protocol)&&!original.port&&!original.username&&!original.password&&["savinggrace.org.au","www.savinggrace.org.au"].includes(original.hostname)&&normalized!==original.pathname+original.search)
+      href=(/^https?:\/\//iu.test(href)?"https://www.savinggrace.org.au":"")+normalized+original.hash;
+  } catch { /* The existing safe-link policy handles invalid addresses. */ }
   // Absolute church links keep their external-preview behavior while reaching
   // the verified production host and final CMS path directly.
   try {

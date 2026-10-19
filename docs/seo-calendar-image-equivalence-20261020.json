@@ -1,0 +1,137 @@
+{
+  "format": "sgbc-image-visual-identity-v1",
+  "rows": [
+    {
+      "sourceUrl": "https://i0.wp.com/www.savinggrace.org.au/wp-content/uploads/2024/12/PP-Martin-Loyd-Jones.png?fit=328%2C500&ssl=1",
+      "sourceSha256": "be55d5e954d84955ec89b5c1fafffc14d6bc3d127e8d6e4e11d4ba3200e44bec",
+      "candidateUrl": "https://www.savinggrace.org.au/media/preaching-and-preachers.jpg",
+      "candidateSha256": "0983a26b62ff39630b01337a8980d991402e72568d7cc371c06d3a580a692a95",
+      "sourceDimensions": [
+        328,
+        500
+      ],
+      "candidateDimensions": [
+        328,
+        500
+      ],
+      "mae": 0.0030671562244689544,
+      "rmse": 0.004797087152314269,
+      "aspectDifference": 0.0,
+      "sourceAltSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "candidateAltSha256": "a7a631c4a906de34992600ac666c24fe02a80f308c3e31ba89e57998965025ec",
+      "visualIdentityVerified": true,
+      "reviewMethod": "interactive_agent_visual_comparison_of_both_exact_files",
+      "notHumanApproval": true
+    },
+    {
+      "sourceUrl": "https://www.savinggrace.org.au/wp-content/uploads/2024/12/PP-Martin-Loyd-Jones.png",
+      "sourceSha256": "be55d5e954d84955ec89b5c1fafffc14d6bc3d127e8d6e4e11d4ba3200e44bec",
+      "candidateUrl": "https://www.savinggrace.org.au/media/preaching-and-preachers.jpg",
+      "candidateSha256": "0983a26b62ff39630b01337a8980d991402e72568d7cc371c06d3a580a692a95",
+      "sourceDimensions": [
+        328,
+        500
+      ],
+      "candidateDimensions": [
+        328,
+        500
+      ],
+      "mae": 0.0030671562244689544,
+      "rmse": 0.004797087152314269,
+      "aspectDifference": 0.0,
+      "sourceAltSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "candidateAltSha256": "a7a631c4a906de34992600ac666c24fe02a80f308c3e31ba89e57998965025ec",
+      "visualIdentityVerified": true,
+      "reviewMethod": "interactive_agent_visual_comparison_of_both_exact_files",
+      "notHumanApproval": true
+    },
+    {
+      "sourceUrl": "https://i0.wp.com/www.savinggrace.org.au/wp-content/uploads/2023/12/Mens-Theological-Study-small-1.jpg?fit=300%2C200&ssl=1",
+      "sourceSha256": "26c74b018500649c25270a7fd4ea59e7056cd4915f641391d99395e8e6975454",
+      "candidateUrl": "https://www.savinggrace.org.au/media/mens-bible-study.jpg",
+      "candidateSha256": "628343d4c439218cfb6e259d6b55295ff30f586ed86229f2c89b97159e529c94",
+      "sourceDimensions": [
+        300,
+        200
+      ],
+      "candidateDimensions": [
+        800,
+        533
+      ],
+      "mae": 0.006481774024714052,
+      "rmse": 0.009604327416108888,
+      "aspectDifference": 0.0009380863039398779,
+      "sourceAltSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "candidateAltSha256": "715492be37754be08a24b909cc1f836fc71a9860abb0889a7b316b08e225a3cf",
+      "visualIdentityVerified": true,
+      "reviewMethod": "interactive_agent_visual_comparison_of_both_exact_files",
+      "notHumanApproval": true
+    },
+    {
+      "sourceUrl": "https://www.savinggrace.org.au/wp-content/uploads/2023/12/Mens-Theological-Study-small-1.jpg",
+      "sourceSha256": "26c74b018500649c25270a7fd4ea59e7056cd4915f641391d99395e8e6975454",
+      "candidateUrl": "https://www.savinggrace.org.au/media/mens-bible-study.jpg",
+      "candidateSha256": "628343d4c439218cfb6e259d6b55295ff30f586ed86229f2c89b97159e529c94",
+      "sourceDimensions": [
+        300,
+        200
+      ],
+      "candidateDimensions": [
+        800,
+        533
+      ],
+      "mae": 0.006481774024714052,
+      "rmse": 0.009604327416108888,
+      "aspectDifference": 0.0009380863039398779,
+      "sourceAltSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "candidateAltSha256": "715492be37754be08a24b909cc1f836fc71a9860abb0889a7b316b08e225a3cf",
+      "visualIdentityVerified": true,
+      "reviewMethod": "interactive_agent_visual_comparison_of_both_exact_files",
+      "notHumanApproval": true
+    },
+    {
+      "sourceUrl": "https://i0.wp.com/www.savinggrace.org.au/wp-content/uploads/2025/08/SGBC-End-Times-Bible-Study-1.png?fit=1024%2C1024&ssl=1",
+      "sourceSha256": "aa1099abea012d766bd0dca21dfdec98426a510f79f574ce84c5446989e4754a",
+      "candidateUrl": "https://www.savinggrace.org.au/media/end-times.jpg",
+      "candidateSha256": "b613c1aedc3ce6ca9532e53cbe68eec36f9757997f47d407798423ab0bed5a5c",
+      "sourceDimensions": [
+        1024,
+        1024
+      ],
+      "candidateDimensions": [
+        720,
+        720
+      ],
+      "mae": 0.0028100107230392157,
+      "rmse": 0.004489028745392212,
+      "aspectDifference": 0.0,
+      "sourceAltSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "candidateAltSha256": "ad5b6934ae87324ef5df4139c565b08f5ee6b8a0012c70739f3b41d252ce96d3",
+      "visualIdentityVerified": true,
+      "reviewMethod": "interactive_agent_visual_comparison_of_both_exact_files",
+      "notHumanApproval": true
+    },
+    {
+      "sourceUrl": "https://www.savinggrace.org.au/wp-content/uploads/2025/08/SGBC-End-Times-Bible-Study-1.png",
+      "sourceSha256": "aa1099abea012d766bd0dca21dfdec98426a510f79f574ce84c5446989e4754a",
+      "candidateUrl": "https://www.savinggrace.org.au/media/end-times.jpg",
+      "candidateSha256": "b613c1aedc3ce6ca9532e53cbe68eec36f9757997f47d407798423ab0bed5a5c",
+      "sourceDimensions": [
+        1024,
+        1024
+      ],
+      "candidateDimensions": [
+        720,
+        720
+      ],
+      "mae": 0.0028100107230392157,
+      "rmse": 0.004489028745392212,
+      "aspectDifference": 0.0,
+      "sourceAltSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "candidateAltSha256": "ad5b6934ae87324ef5df4139c565b08f5ee6b8a0012c70739f3b41d252ce96d3",
+      "visualIdentityVerified": true,
+      "reviewMethod": "interactive_agent_visual_comparison_of_both_exact_files",
+      "notHumanApproval": true
+    }
+  ]
+}
