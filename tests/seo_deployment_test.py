@@ -386,3 +386,13 @@ class CompositeRecordingBackupTests(unittest.TestCase):
             rejected=pathlib.Path(folder)/'rejected';rejected.mkdir()
             with self.assertRaisesRegex(RuntimeError,'seo_recording_backup_integrity'):OP.composite_recording_backup(fixture,rejected,manifest,{'pages':pages},receipt)
             self.assertFalse((rejected/'uploads-before.tar').exists())
+
+
+class InventoryDriftDiagnosticsTests(unittest.TestCase):
+    def test_all_preservation_fields_remain_gated_without_exposing_values(self):
+        expected={key:"anonymous frozen value"for key in ("runtimes","counts","cmsCounts","cmsSha256","uploadsSha256","unrelatedSha256","secretFilesSha256")}
+        OP.verify_inventory_match(expected,dict(expected))
+        for key in expected:
+            actual={**expected,key:"private changed value must never enter error"}
+            with self.assertRaisesRegex(RuntimeError,"^seo_inventory_drift_"+key.lower()+"$"):
+                OP.verify_inventory_match(expected,actual)

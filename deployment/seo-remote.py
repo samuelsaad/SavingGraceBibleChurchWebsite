@@ -286,10 +286,18 @@ def composite_recording_backup(base, root, assets, bundle, receipt):
     base.save(root/"asset-backup-coverage.private.json",{"format":"sgbc-composite-asset-backup-v1","ordinaryArchiveSha256":base.sha(archive_path),"ordinaryFiles":len(ordinary),"recordingBackupManifestSha256":receipt["manifestSha256"],"externalRecordings":external,"files":len(assets),"completeCoverage":True,"externalLocation":"verified_owner_local_recording_backup","restoreRequiresBothParts":True})
 
 
+
+def verify_inventory_match(expected, actual):
+    keys=("runtimes", "counts", "cmsCounts", "cmsSha256", "uploadsSha256", "unrelatedSha256", "secretFilesSha256")
+    changed=[key.lower() for key in keys if actual.get(key)!=expected.get(key)]
+    if changed:
+        # Report only fixed field names, never secret values, paths or content.
+        fail("seo_inventory_drift_"+"_".join(changed))
+
+
 def prepare(base, upgrade, helper, root, incoming, commit, source_hash, inventory_hash, runtime_hash, bundle_hash, assets_hash):
     expected = base.load(incoming / "inventory.private.json"); actual = inventory(base, upgrade, helper)
-    for key in ("runtimes", "counts", "cmsCounts", "cmsSha256", "uploadsSha256", "unrelatedSha256", "secretFilesSha256"):
-        if actual[key] != expected[key]: fail("seo_inventory_drift")
+    verify_inventory_match(expected, actual)
     verify_existing_source(actual, bundle_hash)
     if base.sha(incoming / "source-public.bundle.private.json") != bundle_hash or base.sha(incoming / "source-public-assets.private.tar") != assets_hash: fail("seo_private_transfer_hash")
     required_bytes = 2 * 1024**3 + 2 * sum((incoming / name).stat().st_size for name in ("source-public.bundle.private.json", "source-public-assets.private.tar"))
