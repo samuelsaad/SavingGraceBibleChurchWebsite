@@ -363,8 +363,8 @@ class SeoDeploymentTest(unittest.TestCase):
                 calls.append(operation)
                 if operation == "cms-plan":
                     self.assertNotIn("SOURCE_CMS_PLAN_SHA256", cfg["services"]["app"]["environment"])
-                    return json.dumps({"planned": 16, "held": 1445, "planSha256": "478c01d5de68b898d67db6a7a533e692d81e40770fb404f865f78db4e3902fde"})
-                self.assertEqual(cfg["services"]["app"]["environment"]["SOURCE_CMS_PLAN_SHA256"], "478c01d5de68b898d67db6a7a533e692d81e40770fb404f865f78db4e3902fde")
+                    return json.dumps({"planned": 26, "held": 1445, "planSha256": "c15bc03e224f7f370b3782d78420a7cafe8b205c19cd890b09d9459b94368794"})
+                self.assertEqual(cfg["services"]["app"]["environment"]["SOURCE_CMS_PLAN_SHA256"], "c15bc03e224f7f370b3782d78420a7cafe8b205c19cd890b09d9459b94368794")
                 return json.dumps({"result": {"inserted": 0}, "assets": {"inserted": 0}})
             fixture.run = run
             upgrade = SimpleNamespace(cms_snapshot=lambda _: {name: [] for name in ("cms_entities", "cms_revisions", "cms_routes", "media_assets", "audit_events", "schema_migrations")})
@@ -474,6 +474,12 @@ class CompositeRecordingBackupTests(unittest.TestCase):
             for name,value in coverage['externalRecordings'].items():
                 path=restored/name;path.parent.mkdir(exist_ok=True);path.write_bytes((assets_root/name).read_bytes())
             self.assertEqual({p.relative_to(restored).as_posix():p.stat().st_size for p in restored.rglob('*')if p.is_file()},manifest)
+            delta_backup=pathlib.Path(folder)/'delta-backup';delta_backup.mkdir()
+            OP.composite_recording_backup(fixture,delta_backup,manifest,{'pages':[]},receipt)
+            delta_coverage=json.loads((delta_backup/'asset-backup-coverage.private.json').read_text())
+            self.assertEqual(delta_coverage,coverage)
+            unexpected=copy.deepcopy(pages[0]);unexpected['asset']=asset(b'not authorized','mp3');unexpected['asset']['contentType']='audio/mpeg'
+            with self.assertRaisesRegex(RuntimeError,'seo_recording_backup_scope'):OP.composite_recording_backup(fixture,pathlib.Path(folder)/'invalid-delta',manifest,{'pages':[unexpected]},receipt)
             receipt['rows'][0]['sourceRangeVerified']=False
             rejected=pathlib.Path(folder)/'rejected';rejected.mkdir()
             with self.assertRaisesRegex(RuntimeError,'seo_recording_backup_integrity'):OP.composite_recording_backup(fixture,rejected,manifest,{'pages':pages},receipt)

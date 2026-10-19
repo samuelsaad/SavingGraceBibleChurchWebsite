@@ -40,7 +40,7 @@ it('updates rolling view dates and published content while retaining historical 
  vi.useFakeTimers();vi.setSystemTime(new Date('2026-11-02T02:00:00Z'));
  try{
   const c=context();c.mode='public';c.siteContent!.events=[{...event,schedule:{kind:'weekly',weekday:0,from:'2026-09-27'},title:'Current published gathering'}];c.siteContent!.sourceSeoByPath={'/events/month/':{title:'Events for October 2026 | Anonymous church',socialTitle:'October 2026 events',description:'Preserved original description.'}};c.siteContent!.sourceContentByPath={'/events/month/':[{path:'/events/month/',heading:'October 2026',hasOriginalHeading:true}]as never};
-  const request=new Request('https://www.example.test/events/month/'),first=await maintainedCalendarView(request,c)!.text();expect(first).toContain('<title>Events for November 2026 | Anonymous church</title>');expect(first).toContain('<h1>November 2026</h1>');expect(first).toContain('Current published gathering');expect(first).toContain('Preserved original description.');
+  const request=new Request('https://www.example.test/events/month/'),first=await maintainedCalendarView(request,c)!.text();expect(first).toContain('<title>Events for November 2026 | Anonymous church</title>');expect(first).toContain('<h1>November 2026</h1>');expect(first).toContain('Current published gathering');expect(first).toContain('Preserved original description.');expect(first).toContain('aria-label="Calendar views"');expect(first).toContain('name="tribe-bar-date"');
   c.siteContent!.events=[{...c.siteContent!.events[0]!,title:'New published title'}];expect(await maintainedCalendarView(request,c)!.text()).toContain('New published title');
   c.siteContent!.cmsExplicitSeoByPath={'/events/month/':{replaceSourceContent:true}};expect(maintainedCalendarView(request,c)).toBeNull();expect(maintainedCalendarView(new Request('https://www.example.test/events/month/2024-01/'),c)).toBeNull();expect(maintainedCalendarView(new Request('https://www.example.test/events/list/?eventDisplay=past'),c)).toBeNull();expect(maintainedCalendarView(new Request('https://www.example.test/events/'),c)).toBeNull();
  }finally{vi.useRealTimers();}
@@ -65,5 +65,13 @@ it('preserves editor modules, explicit metadata and replaced or hidden source ca
   c.siteContent!.pages=[{...c.siteContent!.pages[0]!,title:'Editor heading'}];expect(await maintainedCalendarView(request,c)!.text()).toContain('<h1>Editor heading</h1>');
   c.siteContent!.pages=[{...c.siteContent!.pages[0]!,blocks:[]}];expect(maintainedCalendarView(request,c)).toBeNull();
   c.siteContent!.pages=[{...c.siteContent!.pages[0]!,blocks:[{...original,nodes:[{tag:'p',text:'Editor replacement.'}]}]}];expect(maintainedCalendarView(request,c)).toBeNull();
+ }finally{vi.useRealTimers();}
+});
+
+it('searches published event wording and venue details in HTML and subscriptions without external geocoding',async()=>{
+ vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-19T02:00:00Z'));
+ try{const c=context();c.siteContent!.events=[{...event,title:'Anonymous fellowship',description:['Shared meal and conversation.'],schedule:{kind:'single',date:'2026-10-25'}},{...event,id:'other',title:'Unrelated workshop',description:[],venue:'rye-civic-hall',schedule:{kind:'single',date:'2026-10-25'}}];
+ const path='/events/list/?tribe-bar-search=shared+meal&tribe-bar-location=Westmeadows',page=await futureCalendarPage(new Request('https://www.example.test'+path),c)!.text();expect(page).toContain('Anonymous fellowship');expect(page).not.toContain('Unrelated workshop');expect(page).toContain('aria-label="Search church events"');const feed=await calendarSubscription(new Request('https://www.example.test'+path+'&ical=1'),c)!.text();expect(feed).toContain('Anonymous fellowship');expect(feed).not.toContain('Unrelated workshop');
+ const nested=await futureCalendarPage(new Request('https://www.example.test/events/list/?tribe-events-views[tribe-bar-search]=shared'),c)!.text();expect(nested).toContain('Anonymous fellowship');expect(nested).not.toContain('Unrelated workshop');expect(futureCalendarPage(new Request('https://www.example.test'+path+'&tribe-events-views[tribe-bar-search]=other'),c)).toBeNull();
  }finally{vi.useRealTimers();}
 });

@@ -1,6 +1,7 @@
+import{retainedCalendarFact,retainedCalendarOccurrence}from'../src/seo/retained-calendar';
 import {describe,it,expect,vi}from 'vitest';
 import {parseLegacyCalendar,calendarOccurrenceEvents,loadLegacyCalendarOccurrences}from '../src/seo/legacy-calendar-identities';
-import {calendarSubscription,futureCalendarOccurrence,maintainedCalendarView}from '../src/seo/calendar-subscriptions';
+import {calendarSubscription,futureCalendarOccurrence,maintainedCalendarView,futureCalendarPage}from '../src/seo/calendar-subscriptions';
 import {events,venues}from '../src/frontend/content/events';
 import {defaultSiteSettings}from '../src/frontend/content/site-snapshot';
 import type{FrontendRenderContext}from '../src/frontend/routes';
@@ -17,4 +18,34 @@ describe('original calendar subscription continuity',()=>{
  it('keeps summary and root-paginated event exports live without accepting a different post type',()=>{const c=context();for(const path of ['/events/summary/?related_series='+event.sourceIds[0]+'&ical=1','/page/2/?post_type=tribe_events&ical=1'])expect(calendarSubscription(new Request('https://www.example.test'+path),c)?.status).toBe(200);expect(calendarSubscription(new Request('https://www.example.test/page/2/?post_type=post&ical=1'),c)).toBeNull();});
  it('serves real future occurrence URLs, reflects a published edit and refuses invented dates',async()=>{vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-19T02:00:00Z'));try{const c=context(),request=new Request('https://www.example.test/event/original-anonymous/2026-10-25/');const response=futureCalendarOccurrence(request,c)!;expect(response.status).toBe(200);expect(await response.text()).toContain('2026-10-25T17:30');expect(futureCalendarOccurrence(new Request('https://www.example.test/event/original-anonymous/2026-10-26/'),c)).toBeNull();c.siteContent!.events=[{...event,title:'Published occurrence edit',calendarRevision:{...event.calendarRevision,sequence:2}}];expect(await maintainedCalendarView(request,c)!.text()).toContain('Published occurrence edit');}finally{vi.useRealTimers();}});
  it('fails closed on unavailable identity resources or conflicting source UIDs',async()=>{const page={kind:'asset',path:'/events/?ical=1',asset:{contentType:'text/calendar',bytes:100,sha256:'a'.repeat(64)}};await expect(loadLegacyCalendarOccurrences([page]as never,async()=>new Response('',{status:503}),[event])).rejects.toThrow('source_calendar_identity_asset_unavailable');await expect(loadLegacyCalendarOccurrences([page,{...page,path:'/other/?ical=1',asset:{...page.asset,sha256:'b'.repeat(64)}}]as never,async request=>new Response(body(new URL(request.url).pathname==='/events/'?'one@example.test':'two@example.test')),[event])).rejects.toThrow('source_calendar_occurrence_uid_conflict');});
+});
+
+it('renders only exact retained historical facts and preserves source wording after present-day edits',async()=>{
+ vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-19T02:00:00Z'));
+ try{const c=context();c.siteContent!.legacyCalendarOccurrences=parseLegacyCalendar(body('past@example.test','20261011'),[event]);const record=c.siteContent!.legacyCalendarOccurrences[0]!;expect(retainedCalendarFact(record)).toMatchObject({title:'Original anonymous gathering',start:'17:30',end:'19:00',description:['Original folded description']});
+ const request=new Request(record.url),response=retainedCalendarOccurrence(request,c)!;expect(response.status).toBe(200);const html=await response.text();expect(html).toContain('<h1>Original anonymous gathering</h1>');expect(html).toContain('2026-10-11T17:30');expect(html).toContain('Original folded description');expect(html).not.toContain('Current anonymous gathering');
+ expect(retainedCalendarOccurrence(new Request(record.url.replace('2026-10-11','2026-10-12')),c)).toBeNull();c.siteContent!.events=[];expect(retainedCalendarOccurrence(request,c)).toBeNull();
+ for(const replacement of ['DTSTART;TZID=Unknown/Zone:20261011T173000','DTSTART;TZID=Australia/Melbourne:20260231T173000','DTSTART:20261011T173000Z'])expect(retainedCalendarFact({...record,lines:record.lines.map(line=>line.startsWith('DTSTART')?replacement:line)})).toBeNull();
+ }finally{vi.useRealTimers();}
+});
+it('serves scoped retained past archives without inventing missing historical dates or discarding pagination',async()=>{
+ vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-19T02:00:00Z'));
+ try{const c=context();c.siteContent!.legacyCalendarOccurrences=parseLegacyCalendar(body('past@example.test','20261011'),[event]);
+ const old=await futureCalendarPage(new Request('https://www.example.test/events/list/?eventDisplay=past'),c)!.text();expect(old).toContain('Original anonymous gathering');expect(old).not.toContain('Current anonymous gathering');const search='/events/list/?eventDisplay=past&tribe-bar-search=original';expect(await futureCalendarPage(new Request('https://www.example.test'+search),c)!.text()).toContain('Original anonymous gathering');expect(await calendarSubscription(new Request('https://www.example.test'+search+'&ical=1'),c)!.text()).toContain('SUMMARY:Original anonymous gathering');
+ const day=await futureCalendarPage(new Request('https://www.example.test/?post_type=tribe_events&eventDisplay=day&eventDate=2026-10-11'),c)!.text();expect(day).toContain('2026-10-11T17:30');
+ for(const path of ['/?post_type=post&eventDisplay=day&eventDate=2026-10-11','/events/list/?eventDisplay=past&paged=2','/events/day/2026-10-12/','/events/list/?eventDate=2026-10-11&tribe-bar-date=2026-10-12','/events/list/?eventDate=2026-10-11&eventDate=2026-10-12','/events/list/?unknown=1'])expect(futureCalendarPage(new Request('https://www.example.test'+path),c)).toBeNull();
+ }finally{vi.useRealTimers();}
+});
+
+it('keeps an originally indexable future occurrence indexable while excluding new date URLs',async()=>{
+ vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-19T02:00:00Z'));
+ try{const c=context(),path='/event/original-anonymous/2026-10-25/';c.siteContent!.sourceSeoByPath={[path]:{title:'Original public event'}};let response=await futureCalendarOccurrence(new Request('https://www.example.test'+path),c)!.text();expect(response).toContain('<meta name="robots" content="index, follow"');expect(response).toContain('<title>Original public event</title>');
+ c.siteContent!.sourceSeoByPath={[path]:{title:'Original excluded event',noindex:true}};response=await futureCalendarOccurrence(new Request('https://www.example.test'+path),c)!.text();expect(response).toContain('<meta name="robots" content="noindex, follow"');c.siteContent!.sourceSeoByPath={};expect(await futureCalendarOccurrence(new Request('https://www.example.test'+path),c)!.text()).toContain('<meta name="robots" content="noindex, follow"');
+ }finally{vi.useRealTimers();}
+});
+
+it('honors a past-view anchor beyond today in HTML and subscription membership',async()=>{
+ vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-19T02:00:00Z'));
+ try{const c=context(),url='https://www.example.test/events/list/?tribe-bar-date=2026-11-01&eventDisplay=past',page=await futureCalendarPage(new Request(url),c)!.text();expect(page).toContain('2026-10-25T17:30');expect(page).not.toContain('2026-11-01T17:30');const feed=await calendarSubscription(new Request(url+'&ical=1'),c)!.text();expect(feed).toContain('20261025T173000');expect(feed).not.toContain('20261101T173000');expect(calendarSubscription(new Request('https://www.example.test/events/month/2026-10/?tribe-bar-date=invalid&ical=1'),c)).toBeNull();
+ }finally{vi.useRealTimers();}
 });

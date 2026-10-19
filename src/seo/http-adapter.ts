@@ -1,3 +1,4 @@
+import {legacyDayViewTarget} from '../frontend/source-content';
 import {observedAlias} from './source-observed-aliases';
 import {retiredWordPressAssets} from './retired-wordpress-assets';
 import {sha256} from './source-public-model';
@@ -122,10 +123,14 @@ export function createSeoHttpAdapter(options: SeoHttpAdapterOptions): (request: 
         response = new Response(policy.indexable
           ? `User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/\nDisallow: /frontend-preview/\nDisallow: /draft-preview/\nDisallow: /cms-preview/\nSitemap: ${policy.canonicalOrigin}/sitemap.xml\n`
           : "User-agent: *\nDisallow: /\n", {headers:{"Content-Type":"text/plain; charset=utf-8","Cache-Control":"no-store"}});
-      } else if ((url.pathname==='/'||/^\/(?:events?|venues?|organisers?)(?:\/|$)/u.test(decodedPath))&&[...url.searchParams.keys()].some(key=>['post_type','pagename','eventDisplay','paged','page','related_series','tribe_events_cat','tribe_organizer','tribe_venue','tribe-bar-date','ical','outlook-ical',...(url.pathname==='/'?['s','attachment_id','feed','rest_route','elementor_library','taxonomy','term']:[])].includes(key))) {
+      } else if ((url.pathname==='/'||/^\/page\/[1-9][0-9]*\/$/u.test(url.pathname)&&url.searchParams.get('post_type')==='tribe_events'||/^\/(?:events?|venues?|organisers?)(?:\/|$)/u.test(decodedPath))&&[...url.searchParams.keys()].some(key=>['post_type','pagename','eventDisplay','paged','page','related_series','tribe_events_cat','tribe_organizer','tribe_venue','tribe-bar-date','tribe-bar-search','tribe-bar-location','tribe-events-views[tribe-bar-search]','tribe-events-views[tribe-bar-location]','ical','outlook-ical',...(url.pathname==='/'?['s','attachment_id','feed','rest_route','elementor_library','taxonomy','term']:[])].includes(key))) {
         // Exact captured query pages/resources already won above. A missing
         // meaningful legacy query must never return an unrelated collection/homepage.
-        response=futureCalendarPage(request,{...context,...(options.content?{siteContent:await options.content()}:{})})??boundary(404,"Page not found");
+        const calendarContext={...context,...(options.content?{siteContent:await options.content()}:{})},target=legacyDayViewTarget(url.pathname+url.search);
+        // A legacy Day view inherits its collection's paged value. Redirect
+        // only after the scoped date can actually be rendered from real facts.
+        const dayView=target!==url.pathname+url.search?futureCalendarPage(new Request(new URL(target,url.origin),request),calendarContext):null;
+        response=dayView?new Response(null,{status:301,headers:{Location:target,'Cache-Control':'no-store'}}):futureCalendarPage(request,calendarContext)??boundary(404,"Page not found");
       } else {
         const get = head ? new Request(request,{method:"GET"}) : request;
         let selectedSourceContext:Promise<FrontendRenderContext>|undefined;

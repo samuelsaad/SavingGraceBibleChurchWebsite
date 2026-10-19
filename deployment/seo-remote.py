@@ -27,7 +27,7 @@ PREVIOUS_IMAGE = "sha256:761155063d484cbc72a1e740f63f8cfa3e4222ba693833960b6be1c
 BASE_SCHEMA_ORDER = 28
 EXISTING_SOURCE_SHA = "cc9aa745c9c650de622779a700385cdb7b5c7c4159357a095eee1ca493e70b55"
 EXISTING_BUNDLE_SHA = "3f34acc4b850884c4fbb44bbb66fc0b42c23bb1dfa7f7416f5840cb80ffb1917"
-INCOMING_BUNDLE_SHA = "0d550805a97a2ced9d603d0f1cdecb0df77f5d72b5e1ed9b54d640836ec5695f"
+INCOMING_BUNDLE_SHA = "a615a30a655d20fc3ff131416aa456fdb2001289dfb396d869436e46861fceda"
 SOURCE_TABLES = ("source_public_versions", "source_public_routes", "source_public_imports")
 ASSET_KEY = re.compile(r"[a-f0-9]{64}\.(?:png|jpg|webp|gif|avif|svg|ico|pdf|doc|docx|xls|xlsx|ppt|pptx|rss|atom|ics|zip|otf|mp3|mp4)")
 MIGRATION = "0028_source_public_migration"
@@ -339,11 +339,22 @@ def composite_recording_backup(base, root, assets, bundle, receipt):
     """Cover every asset with a tar member or the frozen private recording backup."""
     if receipt.get("format")!="sgbc-original-recording-backup-result-v1" or receipt.get("manifestSha256")!="10833a17ef8adb0acde739b765340a1b677463ec6b3ec5fcf4c82e945e1b46db":
         fail("seo_recording_backup_scope")
-    expected=asset_expectations(bundle);rows=receipt.get("rows",[])
-    if len(expected)!=118 or len(rows)!=118 or len({r.get("file") for r in rows})!=118:
+    # The receipt is pinned byte-for-byte by prepare(), independently of an
+    # additive delta. Every existing recording still needs recovery coverage.
+    rows=receipt.get("rows",[])
+    if len(rows)!=118 or len({r.get("file") for r in rows})!=118:
         fail("seo_recording_backup_scope")
+    expected={r["file"]:{k:r.get(k) for k in ("sha256","bytes","contentType")} for r in rows}
+    if sum(key.endswith(".mp3") for key in expected)!=117 or sum(key.endswith(".mp4") for key in expected)!=1:
+        fail("seo_recording_backup_scope")
+    for key,value in expected.items():
+        if not ASSET_KEY.fullmatch(key) or value["sha256"]!=key.split(".")[0] or type(value["bytes"])is not int or not 0<value["bytes"]<=52428800 or value["contentType"]!=("audio/mpeg" if key.endswith(".mp3") else "video/mp4"):
+            fail("seo_recording_backup_scope")
+    # If this delta contains recordings, they must agree with the frozen cohort.
+    for key,value in asset_expectations(bundle).items():
+        if key.endswith((".mp3",".mp4")) and (key not in expected or any(value.get(k)!=expected[key][k] for k in expected[key])):
+            fail("seo_recording_backup_scope")
     by_key={r["file"]:r for r in rows}
-    if set(by_key)!=set(expected):fail("seo_recording_backup_scope")
     external={}
     for key,value in expected.items():
         row=by_key[key];name="source-public/"+key;path=base.ASSETS/name
@@ -626,7 +637,7 @@ def adopt_cms(base, upgrade, helper, root, recovery):
         frozen = base.load(marker)
         if plan["planned"] and plan != frozen: fail("seo_cms_plan_changed")
     else:
-        if plan.get("planned") != 16 or plan.get("held") != 1445 or plan.get("planSha256") != "478c01d5de68b898d67db6a7a533e692d81e40770fb404f865f78db4e3902fde":
+        if plan.get("planned") != 26 or plan.get("held") != 1445 or plan.get("planSha256") != "c15bc03e224f7f370b3782d78420a7cafe8b205c19cd890b09d9459b94368794":
             fail("seo_cms_plan_scope")
         frozen = plan; base.save(marker, frozen)
     config["services"]["app"]["environment"]["SOURCE_CMS_PLAN_SHA256"] = frozen["planSha256"]

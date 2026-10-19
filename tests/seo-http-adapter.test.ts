@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import{events,venues}from'../src/frontend/content/events';
+import { describe, expect, it, vi } from "vitest";
 import {defaultSiteSettings} from "../src/frontend/content/site-snapshot";
 import { createSeoHttpAdapter,legacySitemapPaths } from "../src/seo/http-adapter";
 import { createSeoHttpPolicy } from "../src/seo/http-policy";
@@ -222,4 +223,12 @@ describe("explicit production SEO adapter",()=>{
     for(const entry of [{slug:"bad/slash",lastModified:"2026-01-01"},{slug:"ok",lastModified:"2026-02-30"}])expect(()=>renderSeoSitemap([entry],publicRenderContext)).toThrow();
     expect(()=>renderSeoSitemap([],publicRenderContext,false,[{path:"//untrusted.test/"}])).toThrow();
   });
+});
+
+it('routes an inherited Day-view page directly to the same real scoped date',async()=>{
+ vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-19T02:00:00Z'));
+ try{const event={...events[0]!,id:'anonymous-day',title:'Anonymous day gathering',description:[],schedule:{kind:'single' as const,date:'2026-10-25'},path:'/event/anonymous-day/',legacyPaths:[],sourceIds:[42]};const content={pages:[],posts:[],events:[event],venues,home:null,settings:defaultSiteSettings,assets:{},routes:[],eventScopeIds:{'/events/tag/tb/':[event.id]}};
+ const route=createSeoHttpAdapter({policy:{environment:'production',canonicalOrigin:origin},sermons:repository(),content:async()=>content});const first=await route(new Request(origin+'/?post_type=tribe_events&eventDisplay=day&paged=2&eventDate=2026-10-25&tag=tb&utm_source=a%20b'));expect(first.status).toBe(301);expect(first.headers.get('Location')).toBe('/events/day/2026-10-25/?tag=tb&utm_source=a%20b');const final=await route(new Request(origin+first.headers.get('Location')));expect(final.status).toBe(200);const html=await final.text();expect(html).toContain('Anonymous day gathering');expect(html).toContain('2026-10-25');
+ expect((await route(new Request(origin+'/?post_type=tribe_events&eventDisplay=day&paged=2&eventDate=2026-10-25&tag=unknown'))).status).toBe(404);
+ }finally{vi.useRealTimers();}
 });
