@@ -14,6 +14,20 @@ export function sourceSeo(page:SourcePublicPage,pages:readonly SourcePublicPage[
  if(!image&&page.socialImageSource){try{const url=new URL(page.socialImageSource);if(['www.savinggrace.org.au','savinggrace.org.au'].includes(url.hostname)){const verified=pages.find(p=>p.path===url.pathname+url.search&&p.asset?.contentType.startsWith('image/')&&!p.issues.length);if(verified)image=sourcePhotoId(verified);}}catch{}}
  return{title:page.title,...(page.socialType?{socialType:page.socialType}:{}),description:page.description??'',...(page.socialTitle?{socialTitle:page.socialTitle}:{}),...(page.socialDescription?{socialDescription:page.socialDescription}:{}),...(image?{image}:{}),...(!page.indexable?{noindex:true}:{})};
 }
+/** A speaker archive's one leading source image precedes every sermon card.
+ * Its exact owned asset must already be verified; ambiguous headers are held.
+ */
+export function archiveSourcePortrait(page:SourcePublicPage,pages:readonly SourcePublicPage[]){
+ if(page.kind!=='archive'||page.issues.length)return null;const address=new URL(page.path,'https://www.savinggrace.org.au');if(!/^\/sermons\/(?:page\/[1-9][0-9]*\/)?$/u.test(address.pathname)||address.searchParams.size!==1||!address.searchParams.has('sermon_speaker'))return null;
+ const images:import('../domain/source-content').SourceNode[]=[];let cards=false;
+ const detailLink=(node:import('../domain/source-content').SourceNode)=>{if(node.tag!=='a'||!node.href)return false;try{const url=new URL(node.href,'https://www.savinggrace.org.au');return ['www.savinggrace.org.au','savinggrace.org.au'].includes(url.hostname)&&/^\/sermons\/(?!page\/)[^/]+\/$/u.test(url.pathname)&&!url.search;}catch{return false;}};
+ const containsDetail=(node:import('../domain/source-content').SourceNode,depth=0):boolean=>depth>50||detailLink(node)||(node.children??[]).some(child=>containsDetail(child,depth+1));
+ const visit=(nodes:readonly import('../domain/source-content').SourceNode[],depth=0)=>{if(depth>50){cards=true;return;}for(const node of nodes){if(cards)return;if(detailLink(node)||node.tag==='li'&&containsDetail(node)){cards=true;return;}if(node.tag==='img')images.push(node);visit(node.children??[],depth+1);}};visit(page.content);if(images.length!==1)return null;
+ const image=images[0]!;if(!image.src||!image.width||!image.height)return null;let url:URL;try{url=new URL(image.src,'https://www.savinggrace.org.au');}catch{return null;}if(!['https:','http:'].includes(url.protocol)||url.username||url.password)return null;
+ let path=url.pathname;if(['i0.wp.com','i1.wp.com','i2.wp.com'].includes(url.hostname)){const match=/^\/(?:www\.)?savinggrace\.org\.au(\/wp-content\/uploads\/.+)$/u.exec(path);if(!match||[...url.searchParams.keys()].some(key=>!['resize','fit','crop','ssl','w','h','quality','strip'].includes(key)))return null;path=match[1]!;}else if(!['www.savinggrace.org.au','savinggrace.org.au'].includes(url.hostname))return null;
+ if(!pages.some(asset=>asset.path===path&&asset.kind==='asset'&&!asset.issues.length&&asset.asset?.contentType.startsWith('image/')&&asset.asset.bytes>0))return null;
+ return {src:path,alt:image.alt??'',width:image.width,height:image.height};
+}
 export function preserveSourceMetadata(snapshot:FrontendSiteSnapshot,pages:readonly SourcePublicPage[]):FrontendSiteSnapshot{
  // Metadata overlay replaces containers; immutable content trees stay shared.
  const result={...snapshot,home:snapshot.home?{...snapshot.home}:null},source=new Map(pages.filter(p=>p.kind!=='asset'&&p.issues.length===0).map(p=>[p.path,p]));
@@ -21,6 +35,7 @@ export function preserveSourceMetadata(snapshot:FrontendSiteSnapshot,pages:reado
  result.cmsExplicitSeoByPath={...Object.fromEntries([...snapshot.pages,...snapshot.posts,...snapshot.events].filter(page=>page.seo).map(page=>[page.path,page.seo!])),...(snapshot.home?.seo?{'/':snapshot.home.seo}:{})};
  const merge=<T extends {path:string;seo?:ContentSeo}>(page:T):T=>{const original=source.get(page.path);return original?{...page,seo:{...sourceSeo(original,pages),...page.seo}}:page;};
  result.sourceSeoByPath=Object.fromEntries(pages.filter(p=>p.kind!=='asset'&&p.issues.length===0).map(p=>[p.path,sourceSeo(p,pages)]));
+ result.sourceArchivePortraitByPath=Object.fromEntries(pages.flatMap(page=>{const portrait=archiveSourcePortrait(page,pages);return portrait&&!result.cmsExplicitSeoByPath?.[page.path]?.replaceSourceContent?[[page.path,portrait]]:[];}));
  result.sourceArchiveHeadingsByPath=Object.fromEntries(pages.filter(p=>p.kind==='archive'&&!p.issues.length&&valuableOriginalTaxonomyQuery(p.path,p.content)).map(p=>[p.path,p.heading]));
  result.pages=result.pages.map(merge);result.posts=result.posts.map(merge);result.events=result.events.map(merge);
  const home=source.get('/');if(result.home&&home)result.home.seo={...sourceSeo(home,pages),...result.home.seo};

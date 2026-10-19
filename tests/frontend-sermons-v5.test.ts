@@ -1,3 +1,4 @@
+import{defaultSiteSettings}from'../src/frontend/content/site-snapshot';
 import { describe, expect, it } from "vitest";
 import { publicSermonListQuerySchema } from "../src/api/contracts/public-sermons";
 import type { SermonSummary } from "../src/domain/sermon";
@@ -236,4 +237,9 @@ describe("SermonsV5 presentation", () => {
     expect(empty).toContain("No sermons matched these filters");
     expect(empty).toContain('href="/sermons-v5/">Clear filters');
   });
+});
+
+it('restores a verified source portrait within its exact archive heading',()=>{
+ const context={...publicRenderContext,siteContent:{pages:[],posts:[],events:[],venues:{},home:null,assets:{},routes:[],settings:defaultSiteSettings,sourceArchivePortraitByPath:{'/sermons/?sermon_speaker=example-speaker':{src:'/wp-content/uploads/original-portrait.jpg',alt:'Original portrait label',width:600,height:700}}}};
+ const output=renderSermonsV5Page({...input,query:publicSermonListQuerySchema.parse({speaker:'example-speaker'}),requestQuery:'sermon_speaker=example-speaker',hasQueryParameters:true},context,{canonical:true});expect(output).toMatch(/<h1><img[^>]+src="\/wp-content\/uploads\/original-portrait.jpg"[^>]+alt="Original portrait label"/);expect(output).toMatch(/class="journal__entry(?:[ "])/);
 });

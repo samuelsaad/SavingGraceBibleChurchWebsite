@@ -35,6 +35,7 @@ export interface FrontendSiteSnapshot {
   sourceCalendarIdentityPaths?:Readonly<Record<string,string>>;
   eventScopeIds?:Readonly<Record<string,readonly string[]>>;
   cancelledCalendarEvents?:readonly ChurchEvent[];
+  sourceArchivePortraitByPath?:Readonly<Record<string,{src:string;alt:string;width:number;height:number}>>;
   sourceArchiveHeadingsByPath?:Readonly<Record<string,string>>;
   sourceContentAdoptedByPath?:Readonly<Record<string,boolean>>;
   cmsExplicitSeoByPath?:Readonly<Record<string,import("../seo").ContentSeo>>;
