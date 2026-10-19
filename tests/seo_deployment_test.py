@@ -38,6 +38,17 @@ def archive(path, records):
 
 
 class SeoDeploymentTest(unittest.TestCase):
+    def test_preservation_hashes_all_assets_once_and_checks_every_original(self):
+        manifest=Mock(return_value={'one.pdf':3,'two.mp3':9,'new.png':4})
+        target=SimpleNamespace(assets_manifest=manifest)
+        self.assertTrue(OP.prior_assets_preserved(target,{'one.pdf':3,'two.mp3':9}))
+        manifest.assert_called_once_with()
+        for original in ({'one.pdf':4},{'missing.pdf':3}):
+            self.assertFalse(OP.prior_assets_preserved(target,original))
+        manifest.side_effect=RuntimeError('seo_source_asset_integrity')
+        with self.assertRaisesRegex(RuntimeError,'seo_source_asset_integrity'):
+            OP.prior_assets_preserved(target,{'one.pdf':3})
+
     def test_separate_hashed_operator_keeps_the_frozen_application_transfer_scope(self):
         root = pathlib.Path("/home/ec2-user/.seo-upgrade-transfer")
         for name in (COMMIT, COMMIT + "-operator-123abcd"):

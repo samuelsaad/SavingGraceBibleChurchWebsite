@@ -357,6 +357,12 @@ def verify_resource_history(base, root):
         fail("seo_unscoped_audit_added")
 
 
+def prior_assets_preserved(base, expected):
+    """One complete hash-verified read; compare every prior asset without quadratic I/O."""
+    current = base.assets_manifest()
+    return all(current.get(name) == size for name, size in expected.items())
+
+
 def verify_frozen(base, upgrade, root, recovery):
     base.verify_frozen(root, recovery)
     owner = base.load(root / "source-owner-secret.private.json")
@@ -371,9 +377,11 @@ def verify_frozen(base, upgrade, root, recovery):
     if len(extra) > 1 or any(row["migration_order"] != 28 or row["migration_id"] != MIGRATION or row["checksum_sha256"] != source_migration_checksum(root) for row in extra): fail("seo_schema_suffix_changed")
     current["schema_migrations"] = [row for row in current["schema_migrations"] if row["migration_order"] <= BASE_SCHEMA_ORDER]
     upgrade.immutable_preserved(before, current)
+    source_before = base.load(root / "source-before.private.json")
+    source_current = source_snapshot(base)
     for name in ("source_public_versions", "source_public_imports"):
-        old = {json.dumps(row, sort_keys=True) for row in base.load(root / "source-before.private.json")[name]}
-        if not old <= {json.dumps(row, sort_keys=True) for row in source_snapshot(base)[name]}: fail("seo_source_history_changed")
+        old = {json.dumps(row, sort_keys=True) for row in source_before[name]}
+        if not old <= {json.dumps(row, sort_keys=True) for row in source_current[name]}: fail("seo_source_history_changed")
 
 
 def phase_file(root, runtime, phase):
@@ -486,7 +494,7 @@ def migrate(base, upgrade, helper, root, recovery):
     result = json.loads(base.run(command + ["import"], timeout=600)); replay = json.loads(base.run(command + ["import"], timeout=600))
     after = upgrade.cms_snapshot(base); after["schema_migrations"] = [row for row in after["schema_migrations"] if row["migration_order"] <= BASE_SCHEMA_ORDER]
     cms_before["schema_migrations"] = [row for row in cms_before["schema_migrations"] if row["migration_order"] <= BASE_SCHEMA_ORDER]
-    if upgrade.snapshot_hash(cms_before) != upgrade.snapshot_hash(after) or any(base.assets_manifest().get(name) != size for name, size in assets_before.items()): fail("seo_import_cms_changed")
+    if upgrade.snapshot_hash(cms_before) != upgrade.snapshot_hash(after) or not prior_assets_preserved(base, assets_before): fail("seo_import_cms_changed")
     if replay.get("result", {}).get("inserted") != 0 or replay.get("result", {}).get("updated") != 0: fail("seo_import_not_idempotent")
     verify_frozen(base, upgrade, root, recovery)
     completion = {"commit": recovery["commit"], "image": recovery["image"], "bundleSha256": base.sha(root / "source-public.bundle.private.json"), "assetArchiveSha256": base.sha(root / "source-public-assets.private.tar"), "sourceImportSha256": result.get("result", {}).get("bundleSha256")}
@@ -558,7 +566,7 @@ def adopt_cms(base, upgrade, helper, root, recovery):
     for name in ("cms_entities", "cms_revisions", "cms_routes", "media_assets", "audit_events", "schema_migrations"):
         if not {json.dumps(row, sort_keys=True) for row in before[name]} <= {json.dumps(row, sort_keys=True) for row in after[name]}:
             fail("seo_cms_prior_rows_changed")
-    if source_snapshot(base) != source_before or any(base.assets_manifest().get(name) != size for name, size in assets_before.items()):
+    if source_snapshot(base) != source_before or not prior_assets_preserved(base, assets_before):
         fail("seo_cms_source_or_assets_changed")
     receipt = {"outcome": "seo_cms_adopted", "commit": recovery["commit"], "image": recovery["image"], "plan": frozen, "result": result, "replay": replay, "priorRowsPreserved": True}
     base.save(root / "source-cms-adoption.receipt.json", receipt)
