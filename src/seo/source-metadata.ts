@@ -28,6 +28,25 @@ export function archiveSourcePortrait(page:SourcePublicPage,pages:readonly Sourc
  if(!pages.some(asset=>asset.path===path&&asset.kind==='asset'&&!asset.issues.length&&asset.asset?.contentType.startsWith('image/')&&asset.asset.bytes>0))return null;
  return {src:path,alt:image.alt??'',width:image.width,height:image.height};
 }
+/** Preserve a verified speaker header's visible role and archive label.
+ * This reads only the source prefix before sermon cards, never card metadata.
+ */
+export function archiveSourceIntro(page:SourcePublicPage,pages:readonly SourcePublicPage[]):string|null{
+ if(!archiveSourcePortrait(page,pages))return null;
+ type Node=import('../domain/source-content').SourceNode;
+ let tooDeep=false;
+ const text=(node:Node,depth=0):string=>{if(depth>50){tooDeep=true;return '';}return [node.text??'',...(node.children??[]).map(child=>text(child,depth+1))].join(' ').replace(/\s+/gu,' ').trim();};
+ const detail=(node:Node):boolean=>{if(node.tag!=='a'||!node.href)return false;try{const u=new URL(node.href,'https://www.savinggrace.org.au');return ['www.savinggrace.org.au','savinggrace.org.au'].includes(u.hostname)&&/^\/sermons\/(?!page\/)[^/]+\/$/u.test(u.pathname)&&!u.search;}catch{return false;}};
+ const contains=(node:Node,depth=0):boolean=>depth>50||detail(node)||(node.children??[]).some(child=>contains(child,depth+1)),prefix:Node[]=[];let stopped=false;
+ const visit=(nodes:readonly Node[],depth=0)=>{if(depth>50){stopped=true;tooDeep=true;return;}for(const node of nodes){if(stopped)return;if(detail(node)||node.tag==='li'&&contains(node)){stopped=true;return;}if(!contains(node))prefix.push(node);visit(node.children??[],depth+1);}};visit(page.content);
+ const flatten=(node:Node,depth=0):Node[]=>{if(depth>50){tooDeep=true;return [];}return [node,...(node.children??[]).flatMap(child=>flatten(child,depth+1))];};
+ const profiles=prefix.flatMap(node=>{const nodes=flatten(node),images=nodes.filter(n=>n.tag==='img'),names=nodes.filter(n=>n.tag==='h2'&&text(n));return images.length===1&&names.length===1&&page.heading.includes(text(names[0]!))?[{node,name:text(names[0]!),size:nodes.length}]:[];}).sort((a,b)=>a.size-b.size);
+ const profile=profiles[0];if(!profile||tooDeep)return null;
+ const caption=(node:Node,depth=0):string=>{if(depth>50){tooDeep=true;return '';}return ['img','h2'].includes(node.tag)?'':[node.text??'',...(node.children??[]).map(child=>caption(child,depth+1))].join(' ');};
+ const role=caption(profile.node).replace(/\s+/gu,' ').trim();if(!role||role.length>160)return null;
+ const labels=[...new Set(prefix.filter(node=>['h3','h4','h5'].includes(node.tag)&&text(node)==='Sermons by '+profile.name).map(text))];
+ return tooDeep?null:[role,...labels].join(' · ');
+}
 export function preserveSourceMetadata(snapshot:FrontendSiteSnapshot,pages:readonly SourcePublicPage[]):FrontendSiteSnapshot{
  // Metadata overlay replaces containers; immutable content trees stay shared.
  const result={...snapshot,home:snapshot.home?{...snapshot.home}:null},source=new Map(pages.filter(p=>p.kind!=='asset'&&p.issues.length===0).map(p=>[p.path,p]));
@@ -36,6 +55,7 @@ export function preserveSourceMetadata(snapshot:FrontendSiteSnapshot,pages:reado
  const merge=<T extends {path:string;seo?:ContentSeo}>(page:T):T=>{const original=source.get(page.path);return original?{...page,seo:{...sourceSeo(original,pages),...page.seo}}:page;};
  result.sourceSeoByPath=Object.fromEntries(pages.filter(p=>p.kind!=='asset'&&p.issues.length===0).map(p=>[p.path,sourceSeo(p,pages)]));
  result.sourceArchivePortraitByPath=Object.fromEntries(pages.flatMap(page=>{const portrait=archiveSourcePortrait(page,pages);return portrait&&!result.cmsExplicitSeoByPath?.[page.path]?.replaceSourceContent?[[page.path,portrait]]:[];}));
+ result.sourceArchiveIntroByPath=Object.fromEntries(pages.flatMap(page=>{const intro=archiveSourceIntro(page,pages);return intro&&!result.cmsExplicitSeoByPath?.[page.path]?.replaceSourceContent?[[page.path,intro]]:[];}));
  result.sourceArchiveHeadingsByPath=Object.fromEntries(pages.filter(p=>p.kind==='archive'&&!p.issues.length&&valuableOriginalTaxonomyQuery(p.path,p.content)).map(p=>[p.path,p.heading]));
  result.pages=result.pages.map(merge);result.posts=result.posts.map(merge);result.events=result.events.map(merge);
  const home=source.get('/');if(result.home&&home)result.home.seo={...sourceSeo(home,pages),...result.home.seo};

@@ -163,6 +163,31 @@ def individual_card_block_witness(node,candidate,path):
   return bool(expected)and any(n['tag']in ('h1','h2','h3','h4','h5','h6')and identities(n)=={path}and norm(CAP.text(n))==expected for n in walk(candidate))
  return card_witness(node,candidate,path)
 
+def pagination_control_witnesses(root,source,candidate,document,related_archive,remaining):
+ group=archive_group(source['url'])
+ if group is None or archive_group(candidate['url'])!=group:return []
+ current=archive_page(candidate['url']);candidate_root=tree(document);direct=set();current_visible=False
+ for area in walk(candidate_root):
+  if area['tag']!='nav'or 'pagination'not in area['attrs'].get('class','').split():continue
+  for node in walk(area):
+   if node['tag']=='a':
+    key=archive_page(urljoin(candidate['url'],node['attrs'].get('href','')))
+    if key and key[0]==group:direct.add(key)
+   if node['attrs'].get('aria-current')=='page'and norm(CAP.text(node))==str(current[1]):current_visible=True
+ pooled={archive_page(p['url']):p for p in related_archive['pages']}if related_archive and related_archive.get('completePagination')and related_archive.get('group')==group else {}
+ result=[]
+ for node in walk(root)if root else []:
+  value=norm(CAP.text(node));key=sha(value)
+  if node['tag']not in BLOCKS or not value.isdecimal()or not remaining.get(key):continue
+  target=(group,int(value));anchors=[n for n in walk(node)if n['tag']=='a'];source_link=any(archive_page(urljoin(source['url'],n['attrs'].get('href','')))==target and norm(CAP.text(n))==value for n in anchors)
+  source_current=archive_page(source['url'])==target and any(n['attrs'].get('aria-current')=='page'or 'current'in n['attrs'].get('class','').split()for n in walk(node))
+  if not(source_link or source_current):continue
+  witness=None
+  if target==current and current_visible:witness={'candidatePage':candidate['url'],'candidateResponseSha256':sha(document),'reason':'same_archive_pagination_control_in_rendered_navigation'}
+  elif target in pooled:witness={'candidatePage':pooled[target]['url'],'candidateResponseSha256':pooled[target]['responseSha256'],'reason':'same_archive_pagination_control_with_verified_target'if target in direct else'same_archive_page_in_complete_connected_navigation','navigationPoolSha256':sha(json.dumps(related_archive['pages'],sort_keys=True))}
+  if witness:remaining[key]-=1;result.append({'blockSha256':key,'page':int(value),**witness})
+ return result
+
 def block_witnesses(source,candidate,document,missing,source_document=None,related_archive=None):
  """Require the same card URL and every original leaf, never a bag of words."""
  remaining=collections.Counter(missing);witnesses=[]
@@ -180,6 +205,7 @@ def block_witnesses(source,candidate,document,missing,source_document=None,relat
     matched=complete or next((item for item in options if individual_card_block_witness(child,item['node'],path)),None)
     if matched:
      remaining[key]-=1;witnesses.append({'blockSha256':key,'reason':'same_sermon_card_all_original_leaves_verified'if complete else'same_sermon_identity_exact_individual_block_verified','identity':path,'sourceCardSha256':sha(CAP.sanitize(node,source['url'])),'candidateCardSha256':sha(CAP.sanitize(matched['node'],matched['page'])),'candidatePage':matched['page'],'candidateResponseSha256':matched['responseSha256']})
+ witnesses+=pagination_control_witnesses(root,source,candidate,document,related_archive,remaining)
  if remaining.get(sha('Filtered by:'))and active_filter_witness(source,document):
   remaining[sha('Filtered by:')]-=1;witnesses.append({'blockSha256':sha('Filtered by:'),'reason':'same_typed_selected_filters_and_visible_removable_tokens'})
  for block in source.get('semanticBlocks',[]):

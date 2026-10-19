@@ -1,4 +1,4 @@
-import{it,expect}from'vitest';import{archiveSourcePortrait}from'../src/seo/source-metadata';import type{SourcePublicPage}from'../src/seo/source-public-model';
+import{it,expect}from'vitest';import{archiveSourcePortrait,archiveSourceIntro}from'../src/seo/source-metadata';import type{SourcePublicPage}from'../src/seo/source-public-model';
 const base={sourceUrl:'https://www.savinggrace.org.au/anonymous/',sourceId:null,capturedAt:'2026-10-19T00:00:00Z',responseSha256:'a'.repeat(64),title:'Anonymous archive',heading:'Anonymous archive',description:null,indexable:true,canonicalSource:null,publishedAt:null,modifiedAt:null,language:'en',content:[],sermon:null,issues:[],passageTerms:[],links:[],mediaReferences:[]};
 const photo:SourcePublicPage={...base,path:'/wp-content/uploads/anonymous-portrait.jpg',kind:'asset',issues:[],asset:{storageKey:'a'.repeat(64)+'.jpg',sha256:'a'.repeat(64),contentType:'image/jpeg',bytes:100}};
 const archive:SourcePublicPage={...base,path:'/sermons/?sermon_speaker=anonymous',kind:'archive',issues:[],content:[{tag:'div',children:[{tag:'img',src:'https://i0.wp.com/www.savinggrace.org.au/wp-content/uploads/anonymous-portrait.jpg?fit=600%2C700&ssl=1',alt:'Original portrait label',width:600,height:700}]},{tag:'ul',children:[{tag:'li',children:[{tag:'a',href:'/sermons/anonymous-teaching/',text:'Anonymous teaching'}]}]}]};
@@ -8,3 +8,9 @@ it('refuses unverified assets, ambiguous headers, non-speaker filters and images
 });
 
 it('does not mistake an unlinked sermon-card picture for a speaker-header portrait',()=>{expect(archiveSourcePortrait({...archive,content:[{tag:'li',children:[archive.content[0]!,{tag:'a',href:'/sermons/anonymous-teaching/',text:'Anonymous teaching'}]}]},[photo])).toBeNull();});
+
+it('keeps the verified profile role and original archive label without importing filters or card prose',()=>{
+ const header:SourcePublicPage={...archive,heading:'Preacher: Anonymous speaker',content:[{tag:'p',text:'Filtered by:'},{tag:'div',children:[archive.content[0]!,{tag:'h6',text:'Anonymous role'},{tag:'h2',text:'Anonymous speaker'}]},{tag:'h4',text:'Sermons by Anonymous speaker'},archive.content[1]!]};
+ expect(archiveSourceIntro(header,[photo])).toBe('Anonymous role · Sermons by Anonymous speaker');
+ expect(archiveSourceIntro({...header,heading:'Different speaker'},[photo])).toBeNull();expect(archiveSourceIntro(header,[])).toBeNull();expect(archiveSourceIntro({...header,content:[archive.content[1]!,...header.content]},[photo])).toBeNull();
+});

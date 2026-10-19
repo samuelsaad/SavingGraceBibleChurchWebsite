@@ -639,3 +639,29 @@ anonymized importer, offline audit (zero cached advisories) and the release scan
 zero private-body/prohibited-source matches). Actual seven-row reapplication/replay
 and ordinary import replay passed, with6,527 incumbent pointers and all CMS/sermon
 rows unchanged. Final runtime-bound acceptance and staging delivery remain required.
+
+### Exact header/navigation context and recurrence ownership — continuation
+
+Additional focused checks identify speaker role text omitted from the selected
+archive, existing images retained on their canonical article/homepage instead of
+long WordPress result excerpts, and numeric pagination controls omitted from the
+comparator's primary-text extraction. Exact per-object/context witnesses are now
+available; none changes the original cohort denominator or grants blanket passes.
+Their fresh final HTTP replay remains required. The diagnostic image replay matched
+all three affected source-view rows; it is explicitly not final release acceptance.
+
+A separate recurrence-edit regression let a frozen original future detail page
+return200 after its feed occurrence became cancelled. The adapter now returns410
+for verified removed dates, preserves the UID, and defers to explicit per-date CMS
+edits, hidden source modules and moved routes. Focused checks pass. No historical
+recurrence is inferred from a present schedule and no editorial review is fabricated.
+
+The first context/recurrence integrated run retained three failures in unchanged
+restricted-acceptance tests:an initial5-second transcript-case timeout followed by
+two fixture-cleanup failures. It is not a passing run. Completed temporary local
+verifiers were stopped and the same strict suite is being repeated with two workers;
+no timeout, assertion or publication gate was weakened. Production identity remains
+provider-independent:the architecture's later decision supersedes historical Cognito
+selection. No provider/account/MFA/recovery state is invented or connected here.
+
+D-183 integrated context/recurrence checkpoint: PostgreSQL 1,519/0 skips; standard 1,372/147 gated skips; Python 167; type/build and privacy scan passed. Current original homepage/robots confirmation and four no-clobber profile-link settings preservation receipts remain private. Final immutable HTTP comparison and staging activation are not yet accepted.

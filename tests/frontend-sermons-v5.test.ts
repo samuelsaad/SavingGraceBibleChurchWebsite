@@ -55,6 +55,10 @@ describe("SermonsV5 presentation", () => {
     const unlisted=renderSermonsV5Page({...filtered,query:{...filtered.query,page:2}},{...context,seo:{...context.seo,indexableArchivePaths:[]}},{canonical:true});expect(unlisted).toContain('name="robots" content="noindex, follow"');expect(unlisted).toContain('rel="canonical" href="https://www.savinggrace.org.au/sermons/page/2/?sermon_book=romans"');
     expect(renderSermonsV5Page(filtered,{...context,seo:{...context.seo,indexable:false}},{canonical:true})).not.toContain('rel="canonical"');
   });
+  it('shows retained public speaker role and archive wording in the selected design',()=>{
+    const context={...publicRenderContext,siteContent:{pages:[],posts:[],events:[],venues:{},home:null,settings:defaultSiteSettings,assets:{},routes:[],sourceArchiveIntroByPath:{'/sermons/?sermon_book=romans':'Original role · Original archive label'}}as never};
+    const page=renderSermonsV5Page({...input,query:publicSermonListQuerySchema.parse({book:'romans'}),hasQueryParameters:true,requestQuery:'sermon_book=romans'},context,{canonical:true});expect(page).toContain('<p>Original role · Original archive label</p>');
+  });
   it("places progressive More sermons and numbered links before the directories on discovery", () => {
     const page = renderSermonsV5Page(input, previewRenderContext);
     expect(page).toContain('data-v5-more href="/frontend-preview/sermons-v5/page/2/#v5-results"');

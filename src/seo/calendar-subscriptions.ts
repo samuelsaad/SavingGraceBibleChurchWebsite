@@ -90,9 +90,11 @@ export function calendarSubscription(request:Request,context:FrontendRenderConte
 export function futureCalendarOccurrence(request:Request,context:FrontendRenderContext):Response|null{
  const url=new URL(request.url),match=/^(\/event\/[^/]+\/)(20\d{2}-\d{2}-\d{2})\/$/u.exec(url.pathname);if(!match||!context.siteContent)return null;
  const date=match[2]!,today=melbourneToday(),until=new Date(Date.parse(today+'T00:00:00Z')+calendarFutureDays*86400000).toISOString().slice(0,10);if(date<today||date>until)return null;
+ if(!calendarEditorAllowsProjection(url.pathname,context))return null;
  const all=[...context.siteContent.events,...(context.siteContent.cancelledCalendarEvents??[])],matching=all.filter(event=>event.calendarVisible!==false&&(event.path===match[1]||event.legacyPaths.includes(match[1]!)));if(matching.length!==1)return null;
  const event=matching[0]!;if(event.calendarRevision?.cancelled)return new Response('This gathering has been cancelled.',{status:410,headers:{'Content-Type':'text/plain; charset=utf-8','X-Robots-Tag':'noindex','Cache-Control':'no-store'}});
- if(!occurrencesBetween(event,date,date,1).length){if(event.schedule.kind!=='single'&&event.schedule.exclusions?.includes(date))return new Response('This gathering has been cancelled.',{status:410,headers:{'Content-Type':'text/plain; charset=utf-8','X-Robots-Tag':'noindex','Cache-Control':'no-store'}});return null;}
+ const knownOriginal=context.siteContent.legacyCalendarOccurrences?.some(record=>record.eventId===event.id&&record.date===date&&new URL(record.url).pathname===url.pathname)||context.siteContent.sourceContentByPath?.[url.pathname]?.some(page=>page.path===url.pathname&&page.kind==='event');
+ if(!occurrencesBetween(event,date,date,1).length){if(event.schedule.kind!=='single'&&event.schedule.exclusions?.includes(date)||(event.calendarRevision?.sequence??0)>1&&knownOriginal)return new Response('This gathering has been cancelled.',{status:410,headers:{'Content-Type':'text/plain; charset=utf-8','X-Robots-Tag':'noindex','Cache-Control':'no-store'}});return null;}
  const source=context.siteContent.sourceSeoByPath?.[url.pathname],content={...event,path:url.pathname,schedule:{kind:'single' as const,date},seo:{...source,noindex:source?Boolean(source.noindex):true}};
  return frontendResponse(renderEventPage(content,{today,sermons:[],options:emptyFilterOptions},context));
 }

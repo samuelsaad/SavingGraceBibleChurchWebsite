@@ -1,5 +1,42 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
+
+## D-183 source context and recurrence checkpoint — 20 October 2026
+
+The next candidate preserves verified speaker role/archive introduction text in
+its existing subtitle, proves numeric pagination controls only against a complete
+connected candidate pagination pool, and traces search/empty-taxonomy excerpts to
+the exact original identity and canonical page. Image equivalence requires the
+actual original bytes, MIME, alternative text and visible target image. These are
+specific witnesses; historical findings are not automatically cleared.
+
+Recurrence edits now return 410 for known original occurrences removed from a
+published rule. Per-occurrence CMS ownership, visibility and redirects prevail
+over generated calendar detail. Draft and unrecognized dates retain their gates.
+
+Integrated verification: 1,519 PostgreSQL tests passed with zero skips; standard
+suite 1,372 passed and 147 gated skips covered by PostgreSQL; 167 Python checks;
+types zero errors/warnings (seven existing hints); build 45 pages. Privacy manifest
+`dd0cb00bbfb306caa9bae4f9a23641d3c15802383e6e59a7a44aa214d9c0a652`
+passed with no prohibited/private content. A prior resource-contended run failed
+three tests; the unchanged strict suite passed with two workers after temporary
+verification listeners stopped. Both records remain retained.
+
+Two bounded public checks at 2026-10-19 15:40 UTC confirmed the current homepage's
+main text, title, canonical, language, robots and extracted dates match the retained
+9 October snapshot. HTML bytes differ; this is semantic confirmation, not a fresh
+whole-site or database inventory. Robots bytes match exactly. Four verified church
+profile links were absent from local footer settings. Their entire CMS history
+was unchanged and empty, with no pending draft. A scoped system-attributed revision
+restored those four links, preserved unrelated settings and passed idempotent replay.
+Protected-staging propagation and final rendered-response verification remain pending.
+
+Pinned staging SSH still times out. No new running staging commit/image is claimed.
+Source union remains 23,089 URLs and 459 known original public sermons. The four
+original finding denominators remain 855/2,114/76/120 pending final reconciliation.
+Production, DNS and original WordPress remain unchanged.
+
+
 ## D-183 calendar/canonical recovery checkpoint — 20 October 2026
 
 Frozen source union:23,089 URLs,15,737 captured responses,28,465 witnesses;

@@ -76,3 +76,28 @@ unfiltered or unrelated destination cannot. Calendar corrections are confined to
 the same original category/tag/calendar base; the original plugin's corresponding
 blog taxonomy URL is a documented conflicting signal. Every resolution still
 requires its exact response hashes and independent content/identity verification.
+
+A rendered pagination number can be a navigation control rather than missing prose.
+Its witness must identify the same source filter/page and a complete connected
+candidate pagination pool containing that exact successful page, or the actual
+current-page marker. A number in ordinary prose, an unverified target, a different
+filter or an incomplete pool cannot receive this explanation.
+
+The original speaker profile's short role and archive label remain visible in the
+selected archive header. They come only from its verified leading source portrait
+and matching speaker name, before any sermon cards. Card text is excluded; explicit
+source replacement still wins. No new role, biography or approval is generated.
+
+Search/empty-taxonomy result excerpts may use a shorter layout while their full
+canonical content remains available. A linked-content witness is confined to those
+observed view types. It must bind the original WordPress result object and heading
+link, a real heading link in the new result list, the same indexable self-canonical
+content URL and exact body hashes. Text requires its original paragraph and links
+on that page. Images require the same verified owned file, successful image MIME
+and preserved meaningful alt text. This never approves unrelated redirects, absent
+content, unverified files or a whole URL merely because one witness succeeds.
+
+An original future occurrence removed by a published recurrence edit returns410
+and retains its cancellation UID in calendar exports. Unknown dates remain404.
+Explicit per-occurrence edits, module hiding and slug dispositions retain their CMS
+ownership; a computed series page cannot overwrite them or revive withdrawn content.

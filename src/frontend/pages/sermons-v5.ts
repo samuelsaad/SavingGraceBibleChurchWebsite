@@ -46,6 +46,7 @@ export function renderSermonsV5Page(input: SermonsV5PageInput, context: Frontend
     &&facetValues.get([...requestParameters.keys()][0]!)===requestParameters.values().next().value&&requestParameters.values().next().value);
   const observedQuery=singleFacet&&Boolean(context.seo?.indexableArchivePaths?.includes(requestPath));
   const originalPortrait=options.canonical?context.siteContent?.sourceArchivePortraitByPath?.[requestPath]:undefined;
+  const originalIntro=options.canonical?context.siteContent?.sourceArchiveIntroByPath?.[requestPath]:undefined;
   const originalHeading=options.canonical?context.siteContent?.sourceArchiveHeadingsByPath?.[requestPath]:undefined;
   const expanded = isExpandedRecentView(input.query);
   const discovery = !filtered && !expanded && input.query.page === 1;
@@ -60,7 +61,7 @@ export function renderSermonsV5Page(input: SermonsV5PageInput, context: Frontend
     chapter: input.query.passageChapter, verse: input.query.passageVerse, headingLevel: 2,
     broad: !input.query.passageBook, target }) : null;
   const body = html`<div class="v5">
-    <header class="v5__heading"><h1>${originalPortrait?html`<img class="v5-directory__portrait" src="${originalPortrait.src}" width="${originalPortrait.width}" height="${originalPortrait.height}" alt="${originalPortrait.alt}" loading="lazy" decoding="async" /> `:null}${originalHeading??(filtered ? resultsTitle(input.query, input.options) : "Sermons")}</h1><p>${filtered ? "Search the archive, or explore a different passage." : "Explore the preaching of God's Word at Saving Grace."}</p></header>
+    <header class="v5__heading"><h1>${originalPortrait?html`<img class="v5-directory__portrait" src="${originalPortrait.src}" width="${originalPortrait.width}" height="${originalPortrait.height}" alt="${originalPortrait.alt}" loading="lazy" decoding="async" /> `:null}${originalHeading??(filtered ? resultsTitle(input.query, input.options) : "Sermons")}</h1><p>${originalIntro??(filtered ? "Search the archive, or explore a different passage." : "Explore the preaching of God's Word at Saving Grace.")}</p></header>
     ${finder({ query: input.query, options: input.options, context, target })}
     ${panel ?? shelfFold(input, context, "after-v5-shelf", target, "v5")}
     ${when(latest, () => html`<section class="v5__featured" aria-labelledby="v5-latest-heading">${sectionHead("v5-latest-heading", "Last Week’s Sermon", html`<span>Latest available recording</span>`)}${sermonJournal([latest!], links, true)}</section>`)}

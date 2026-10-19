@@ -70,4 +70,13 @@ class PresentationProofTests(unittest.TestCase):
   url='https://www.savinggrace.org.au/wp-content/uploads/a.jpg';target='https://www.savinggrace.org.au/wp-content/uploads/a-200x300.jpg';row={'visualIdentityVerified':True,'sourceUrl':url,'sourceSha256':'a'*64,'candidateUrl':target,'candidateSha256':'b'*64,'sourceAltSha256':M.sha('Original alt'),'candidateAltSha256':M.sha('Original alt')};images=[{'url':target,'alt':'Original alt'}]
   self.assertTrue(M.image_witnesses([(url,'Original alt')],images,{'/wp-content/uploads/a.jpg':'a'*64},{target:'b'*64},[row])['fullyEquivalent'])
   for changed in [{'visualIdentityVerified':False},{'sourceSha256':'c'*64},{'candidateSha256':'c'*64},{'sourceAltSha256':M.sha('Other alt')}]:self.assertFalse(M.image_witnesses([(url,'Original alt')],images,{'/wp-content/uploads/a.jpg':'a'*64},{target:'b'*64},[{**row,**changed}])['fullyEquivalent'])
+ def test_page_number_is_resolved_only_as_a_real_same_scope_navigation_control(self):
+  origin='https://www.savinggrace.org.au';url=origin+'/sermons/?sermon_book=acts';original='<main><ul><li><a href="/sermons/page/2/?sermon_book=acts">2</a></li></ul></main>';document='<nav class="pagination"><a href="/sermons/page/2/?sermon_book=acts">2</a></nav>';source={'url':url,'mainSelector':'main','semanticBlocks':[]};candidate={'url':url,'mainText':''}
+  proof=M.archive_card_pool(url,{url:document,origin+'/sermons/page/2/?sermon_book=acts':'<article>Second page</article>'})
+  self.assertTrue(M.block_witnesses(source,candidate,document,[M.sha('2')],original,proof)['fullyEquivalent'])
+  self.assertFalse(M.block_witnesses(source,candidate,document.replace('acts','romans'),[M.sha('2')],original)['fullyEquivalent'])
+  self.assertFalse(M.block_witnesses(source,candidate,document,[M.sha('2')],'<main><p>2</p></main>')['fullyEquivalent'])
+  second=origin+'/sermons/page/2/?sermon_book=acts';firstdoc='<nav class="pagination"><a href="/sermons/page/2/?sermon_book=acts">Next</a></nav>';pool=M.archive_card_pool(url,{url:firstdoc,second:'<nav class="pagination"><span aria-current="page">2</span></nav>'})
+  self.assertTrue(M.block_witnesses(source,candidate,firstdoc,[M.sha('2')],original,pool)['fullyEquivalent'])
+  self.assertFalse(M.block_witnesses(source,candidate,firstdoc,[M.sha('2')],original,M.archive_card_pool(url,{url:firstdoc}))['fullyEquivalent'])
 if __name__=='__main__':unittest.main()

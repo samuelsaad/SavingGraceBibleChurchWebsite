@@ -105,3 +105,19 @@ it('keeps verified historical membership when the current recurrence begins afte
  const html=await futureCalendarPage(new Request('https://www.example.test/events/list/page/3/?tribe-bar-date=2026-09-01&eventDisplay=past'),c)!.text();expect(html).toContain('Verified historical gathering');expect(html).toContain('2026-01-');expect(html).not.toContain('Anonymous gathering');
  }finally{vi.useRealTimers();}
 });
+
+it('cancels a verified future occurrence removed by a published recurrence edit and preserves its feed UID',async()=>{
+ vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-19T02:00:00Z'));
+ try{const c=context(),path='/event/old-anonymous/2026-10-25/';c.siteContent!.events=[{...event,schedule:{kind:'weekly',weekday:1,from:'2026-10-01'}}];c.siteContent!.legacyCalendarOccurrences=[{eventId:event.id,uid:'verified-original-uid',date:'2026-10-25',url:'https://www.savinggrace.org.au'+path,sequence:0,lines:[]}];
+ expect(futureCalendarOccurrence(new Request('https://www.example.test'+path),c)?.status).toBe(410);const feed=await calendarSubscription(new Request('https://www.example.test/events/?ical=1'),c)!.text();expect(feed).toContain('UID:verified-original-uid');expect(feed).toContain('STATUS:CANCELLED');
+ expect(futureCalendarOccurrence(new Request('https://www.example.test/event/old-anonymous/2026-10-27/'),c)).toBeNull();
+ }finally{vi.useRealTimers();}
+});
+it('retains explicit occurrence edits, module hiding and slug dispositions instead of replacing them with a computed series page',()=>{
+ vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-19T02:00:00Z'));
+ try{const c=context(),path='/event/old-anonymous/2026-10-25/',nodes=[{tag:'p',text:'Original occurrence wording.'}],source={path,kind:'event',content:nodes};c.siteContent!.events=[{...event,schedule:{kind:'weekly',weekday:0,from:'2026-10-01'}},{...event,id:'specific-occurrence',path,legacyPaths:[],calendarVisible:false,schedule:{kind:'single',date:'2026-10-25'},modules:[{kind:'source-content',nodes,cmsInstanceId:'original-content'}],calendarRevision:{modifiedAt:'2026-10-19T02:00:00Z',sequence:1}}as never];c.siteContent!.sourceContentByPath={[path]:[source]as never};c.siteContent!.sourceContentAdoptedByPath={[path]:true};
+ expect(futureCalendarOccurrence(new Request('https://www.example.test'+path),c)?.status).toBe(200);
+ c.siteContent!.events[1]!.calendarRevision!.sequence=2;expect(futureCalendarOccurrence(new Request('https://www.example.test'+path),c)).toBeNull();c.siteContent!.events[1]!.calendarRevision!.sequence=1;c.siteContent!.events[1]!.modules=[];expect(futureCalendarOccurrence(new Request('https://www.example.test'+path),c)).toBeNull();
+ c.siteContent!.routes=[{path,entityId:'specific-occurrence',status:301,targetPath:'/moved-occurrence/'},{path:'/moved-occurrence/',entityId:'specific-occurrence',status:200,targetPath:null}];expect(futureCalendarOccurrence(new Request('https://www.example.test'+path),c)).toBeNull();
+ }finally{vi.useRealTimers();}
+});
