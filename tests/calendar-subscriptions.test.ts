@@ -34,3 +34,36 @@ it('honors past and upcoming membership without discarding the temporal query',a
   const upcoming=await calendarSubscription(new Request('https://www.example.test/events/?eventDisplay=upcoming&ical=1'),c)!.text();expect(upcoming).toContain('Future gathering');expect(upcoming).toContain('Ongoing gathering');expect(upcoming).not.toContain('SUMMARY:Anonymous gathering');
  }finally{vi.useRealTimers();}
 });
+
+
+it('updates rolling view dates and published content while retaining historical captures and explicit replacements',async()=>{
+ vi.useFakeTimers();vi.setSystemTime(new Date('2026-11-02T02:00:00Z'));
+ try{
+  const c=context();c.mode='public';c.siteContent!.events=[{...event,schedule:{kind:'weekly',weekday:0,from:'2026-09-27'},title:'Current published gathering'}];c.siteContent!.sourceSeoByPath={'/events/month/':{title:'Events for October 2026 | Anonymous church',socialTitle:'October 2026 events',description:'Preserved original description.'}};c.siteContent!.sourceContentByPath={'/events/month/':[{path:'/events/month/',heading:'October 2026',hasOriginalHeading:true}]as never};
+  const request=new Request('https://www.example.test/events/month/'),first=await maintainedCalendarView(request,c)!.text();expect(first).toContain('<title>Events for November 2026 | Anonymous church</title>');expect(first).toContain('<h1>November 2026</h1>');expect(first).toContain('Current published gathering');expect(first).toContain('Preserved original description.');
+  c.siteContent!.events=[{...c.siteContent!.events[0]!,title:'New published title'}];expect(await maintainedCalendarView(request,c)!.text()).toContain('New published title');
+  c.siteContent!.cmsExplicitSeoByPath={'/events/month/':{replaceSourceContent:true}};expect(maintainedCalendarView(request,c)).toBeNull();expect(maintainedCalendarView(new Request('https://www.example.test/events/month/2024-01/'),c)).toBeNull();expect(maintainedCalendarView(new Request('https://www.example.test/events/list/?eventDisplay=past'),c)).toBeNull();expect(maintainedCalendarView(new Request('https://www.example.test/events/'),c)).toBeNull();
+ }finally{vi.useRealTimers();}
+});
+it('keeps the verified Monday week boundary in HTML and calendar exports',async()=>{
+ vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-21T02:00:00Z'));
+ try{const c=context();c.siteContent!.events=[{...event,schedule:{kind:'weekly',weekday:1,from:'2026-10-01'}}];const request=new Request('https://www.example.test/events/week/2026-10-21/'),html=await maintainedCalendarView(request,c)!.text();expect(html).toContain('From 2026-10-19 to 2026-10-25');const feed=await calendarSubscription(new Request(request.url+'?ical=1'),c)!.text();expect(feed).toContain('20261019T173000');expect(feed).not.toContain('20261026T173000');}finally{vi.useRealTimers();}
+});
+
+it('preserves editor modules, explicit metadata and replaced or hidden source calendars',async()=>{
+ vi.useFakeTimers();vi.setSystemTime(new Date('2026-11-02T02:00:00Z'));
+ try{
+  const c=context(),path='/events/month/',nodes=[{tag:'p',text:'Captured event rows.'}];
+  c.mode='public';c.siteContent!.sourceContentByPath={[path]:[{path,heading:'October 2026',content:nodes}]as never};
+  c.siteContent!.sourceContentAdoptedByPath={[path]:true};c.siteContent!.sourceSeoByPath={[path]:{title:'October 2026 events'}};
+  c.siteContent!.initialMetadataByPath={[path]:{title:'October 2026',heading:'October 2026',seeded:true}};
+  const original={kind:'source-content' as const,nodes,cmsInstanceId:'original-content'};
+  const page={id:'anonymous-calendar',path,title:'October 2026',section:'events',status:'published',description:'',legacyPaths:[],blocks:[{kind:'paragraph',text:'Editor introduction.'},original,{kind:'paragraph',text:'Editor conclusion.'}]}as never;
+  c.siteContent!.pages=[page];c.siteContent!.cmsExplicitSeoByPath={[path]:{title:'Editor SEO title'}};
+  const request=new Request('https://www.example.test'+path),rendered=await maintainedCalendarView(request,c)!.text();
+  expect(rendered).toContain('<title>Editor SEO title</title>');expect(rendered).toContain('<h1>November 2026</h1>');expect(rendered.indexOf('Editor introduction.')).toBeLessThan(rendered.indexOf('From 2026-11-01'));expect(rendered.indexOf('Editor conclusion.')).toBeGreaterThan(rendered.indexOf('From 2026-11-01'));expect(rendered).not.toContain('Captured event rows.');
+  c.siteContent!.pages=[{...c.siteContent!.pages[0]!,title:'Editor heading'}];expect(await maintainedCalendarView(request,c)!.text()).toContain('<h1>Editor heading</h1>');
+  c.siteContent!.pages=[{...c.siteContent!.pages[0]!,blocks:[]}];expect(maintainedCalendarView(request,c)).toBeNull();
+  c.siteContent!.pages=[{...c.siteContent!.pages[0]!,blocks:[{...original,nodes:[{tag:'p',text:'Editor replacement.'}]}]}];expect(maintainedCalendarView(request,c)).toBeNull();
+ }finally{vi.useRealTimers();}
+});

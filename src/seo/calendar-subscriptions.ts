@@ -1,3 +1,6 @@
+import {simplifySourceNodes} from './source-cms-adoption';
+import {sha256,stableJson} from './source-public-model';
+import {renderBlocks} from '../frontend/components/blocks';
 import {emptyFilterOptions} from '../frontend/pages/sermons-v1';
 import {calendarOccurrenceEvents} from './legacy-calendar-identities';
 import {originalCalendarGroups} from '../frontend/content/calendar-groups';
@@ -30,6 +33,8 @@ function calendarWindow(url:URL,defaultList=false):{from:string;until:string}|nu
  let from=requested?.length===7?requested+'-01':requested??melbourneToday();
  if(!/^20\d{2}-\d{2}-\d{2}$/u.test(from)||!Number.isFinite(Date.parse(from+'T00:00:00Z'))||new Date(from).toISOString().slice(0,10)!==from)throw Error('calendar_invalid_date');
  if(month)from=from.slice(0,7)+'-01';
+ // The retained original October grid starts Monday (28 September).
+ if(week){const weekday=new Date(from+'T00:00:00Z').getUTCDay();from=new Date(Date.parse(from+'T00:00:00Z')-((weekday+6)%7)*86400000).toISOString().slice(0,10);}
  const until=month?new Date(Date.UTC(Number(from.slice(0,4)),Number(from.slice(5,7)),0)).toISOString().slice(0,10):new Date(Date.parse(from+'T00:00:00Z')+(day?0:week?6:365)*86400000).toISOString().slice(0,10);
  return {from,until};
 }
@@ -80,11 +85,21 @@ export function futureCalendarOccurrence(request:Request,context:FrontendRenderC
  return frontendResponse(renderEventPage(content,{today,sermons:[],options:emptyFilterOptions},context));
 }
 
-/** Called only after an exact retained source page is unavailable. */
+const englishMonths='January|February|March|April|May|June|July|August|September|October|November|December';
+function rollingCalendarText(value:string,from:string,until:string):string{
+ const label=(iso:string,style:'us'|'au'|'month')=>{const date=new Date(iso+'T12:00:00Z'),month=new Intl.DateTimeFormat('en-AU',{month:'long',timeZone:'UTC'}).format(date),day=String(Number(iso.slice(8))),year=iso.slice(0,4);return style==='us'?month+' '+day+', '+year:style==='au'?day+' '+month+' '+year:month+' '+year;};
+ for(const [pattern,style]of [[new RegExp('\\b(?:'+englishMonths+') [0-9]{1,2}, [0-9]{4}\\b','gu'),'us'],[new RegExp('\\b[0-9]{1,2} (?:'+englishMonths+') [0-9]{4}\\b','gu'),'au'],[new RegExp('\\b(?:'+englishMonths+') [0-9]{4}\\b','gu'),'month']]as const){
+  const found=[...value.matchAll(pattern)];if(found.length===1)return value.slice(0,found[0]!.index)+label(from,style)+value.slice(found[0]!.index!+found[0]![0].length);
+  if(found.length===2&&/^\s*(?:[-–—]|to|through)\s*$/u.test(value.slice(found[0]!.index!+found[0]![0].length,found[1]!.index))){const last=found[1]!,first=found[0]!;return value.slice(0,first.index)+label(from,style)+value.slice(first.index!+first[0].length,last.index)+label(until,style)+value.slice(last.index!+last[0].length);}
+  if(found.length)return value;
+ }return value;
+}
+
+/** Maintained calendar projection; explicit editor replacements retain precedence. */
 export function futureCalendarPage(request:Request,context:FrontendRenderContext):Response|null{
  const occurrence=futureCalendarOccurrence(request,context);if(occurrence)return occurrence;
  if(!context.siteContent)return null;const url=new URL(request.url),selected=selectedScope(url.pathname,context);if(!selected||!url.pathname.startsWith('/events/'))return null;
- if(url.pathname==='/events/'&&!url.search||/^\/events\/[^/]+\/$/u.test(url.pathname)&&!/^\/events\/(?:20\d{2}-\d{2}(?:-\d{2})?|list|month|week|day|today)\/$/u.test(url.pathname))return null;
+ if(url.pathname==='/events/'&&!url.search||/^\/events\/[^/]+\/$/u.test(url.pathname)&&!/^\/events\/(?:20\d{2}-\d{2}(?:-\d{2})?|list|month|week|day|today|summary)\/$/u.test(url.pathname))return null;
  if(url.searchParams.get('eventDisplay')==='past')return null;
  const filtered=filteredEvents(url,context,selected);if(!filtered)return null;
  let window;try{window=calendarWindow(url,true);}catch{return null;}if(!window)return null;const {from,until}=window;
@@ -93,15 +108,31 @@ export function futureCalendarPage(request:Request,context:FrontendRenderContext
  const occurrences=filtered.filter(e=>e.calendarVisible!==false&&!e.calendarRevision?.cancelled).flatMap(e=>occurrencesBetween(e,from,until,100)).sort((a,b)=>a.date.localeCompare(b.date)||a.start.localeCompare(b.start));
  if(page>Math.max(1,Math.ceil(occurrences.length/20)))return null;
  const current=occurrences.slice((page-1)*20,page*20),metadataPath=url.pathname+url.search;
- const original=context.siteContent.sourceContentByPath?.[metadataPath]?.find(p=>p.path===metadataPath),known=context.siteContent.sourceSeoByPath?.[metadataPath];
- const content={...context.siteContent,venues:{...venues,...context.siteContent.venues}},renderContext={...context,siteContent:content};
- return frontendResponse(pageShell({sourceContentRendered:true,sourcePath:metadataPath,title:original?.heading??'Church events',canonicalPath:known&&!known.noindex?metadataPath:url.pathname,robots:known&&!known.noindex?'index, follow':'noindex, follow',styles:['church'],body:html`<section class="section"><h1>${original?.heading??"Church events"}</h1><p>From ${from} to ${until}</p>${occurrences.length?html`<ol class="events">${current.map(o=>occurrenceRow(o,renderContext,true))}</ol>`:html`<p>No gathering is scheduled for these dates.</p>`}<nav aria-label="Calendar pages">${page>1?html`<a href="${(()=>{const next=new URL(url);if(/\/page\/[1-9]\d*\/$/u.test(next.pathname))next.pathname=next.pathname.replace(/\/page\/[1-9]\d*\/$/u,'/page/'+(page-1)+'/');else next.searchParams.set('paged',String(page-1));return next.pathname+next.search;})()}">Previous dates</a>`:null} ${page*20<occurrences.length?html`<a href="${(()=>{const next=new URL(url);if(/\/page\/[1-9]\d*\/$/u.test(next.pathname))next.pathname=next.pathname.replace(/\/page\/[1-9]\d*\/$/u,'/page/'+(page+1)+'/');else next.searchParams.set('paged',String(page+1));return next.pathname+next.search;})()}">More dates</a>`:null}</nav><p><a href="/events/">All gatherings</a> · <a href="${(()=>{const feed=new URL(url);feed.searchParams.delete("paged");feed.searchParams.delete("page");feed.searchParams.set("ical","1");return feed.pathname+feed.search;})()}">Subscribe to this calendar</a></p></section>`},renderContext));
+ const original=context.siteContent.sourceContentByPath?.[metadataPath]?.find(p=>p.path===metadataPath),known=context.siteContent.sourceSeoByPath?.[metadataPath],pageContent=context.siteContent.pages.find(p=>p.path===url.pathname),originalBlock=pageContent?.blocks.find(block=>block.kind==='source-content'&&'cmsInstanceId'in block&&block.cmsInstanceId==='original-content');
+ const explicit=context.siteContent.cmsExplicitSeoByPath?.[metadataPath];if(explicit?.replaceSourceContent)return null;
+ if(context.siteContent.sourceContentAdoptedByPath?.[metadataPath]&&pageContent){
+  // An explicitly hidden or manually replaced calendar remains the editor's content.
+  if(!originalBlock||originalBlock.kind!=='source-content'||original&&sha256(stableJson(originalBlock.nodes))!==sha256(stableJson(simplifySourceNodes(original.content))))return null;
+ }
+ const rolling=!/(20\d{2}-\d{2}(?:-\d{2})?)/u.test(url.pathname)&&!url.searchParams.has('tribe-bar-date'),initial=context.siteContent.initialMetadataByPath?.[metadataPath],titleEdited=Boolean(pageContent&&initial&&pageContent.title!==initial.heading);
+ const heading=titleEdited?pageContent!.title:rolling?rollingCalendarText(original?.heading??'Church events',from,until):original?.heading??'Church events';
+ const seo=known?{...known,...Object.fromEntries(['title','socialTitle'].flatMap(key=>{const value=known[key as keyof typeof known];return rolling&&typeof value==='string'?[[key,rollingCalendarText(value,from,until)]]:[];}))}:undefined;
+ const sourceContentByPath={...context.siteContent.sourceContentByPath},initialMetadataByPath={...context.siteContent.initialMetadataByPath},sourceSeoByPath={...context.siteContent.sourceSeoByPath};
+ // This response represents a computed calendar, not a frozen source article.
+ delete sourceContentByPath[metadataPath];if(!titleEdited)delete initialMetadataByPath[metadataPath];if(seo)sourceSeoByPath[metadataPath]=seo;
+ const content={...context.siteContent,sourceContentByPath,initialMetadataByPath,sourceSeoByPath,venues:{...venues,...context.siteContent.venues}},renderContext={...context,siteContent:content};
+ const blockIndex=originalBlock&&pageContent?pageContent.blocks.indexOf(originalBlock):-1,blockContext={context:renderContext,today:melbourneToday(),sermons:[]};
+ const beforeContent=renderBlocks(blockIndex>=0?pageContent!.blocks.slice(0,blockIndex):[],blockContext),afterContent=renderBlocks(blockIndex>=0?pageContent!.blocks.slice(blockIndex+1):[],blockContext);
+ return frontendResponse(pageShell({sourceContentRendered:true,sourcePath:metadataPath,title:heading,...(seo?{seo}:{}),canonicalPath:known&&!known.noindex?metadataPath:url.pathname,robots:known&&!known.noindex?'index, follow':'noindex, follow',styles:['church'],body:html`<section class="section"><h1>${heading}</h1>${beforeContent}<p>From ${from} to ${until}</p>${occurrences.length?html`<ol class="events">${current.map(o=>occurrenceRow(o,renderContext,true))}</ol>`:html`<p>No gathering is scheduled for these dates.</p>`}<nav aria-label="Calendar pages">${page>1?html`<a href="${(()=>{const next=new URL(url);if(/\/page\/[1-9]\d*\/$/u.test(next.pathname))next.pathname=next.pathname.replace(/\/page\/[1-9]\d*\/$/u,'/page/'+(page-1)+'/');else next.searchParams.set('paged',String(page-1));return next.pathname+next.search;})()}">Previous dates</a>`:null} ${page*20<occurrences.length?html`<a href="${(()=>{const next=new URL(url);if(/\/page\/[1-9]\d*\/$/u.test(next.pathname))next.pathname=next.pathname.replace(/\/page\/[1-9]\d*\/$/u,'/page/'+(page+1)+'/');else next.searchParams.set('paged',String(page+1));return next.pathname+next.search;})()}">More dates</a>`:null}</nav><p><a href="/events/">All gatherings</a> · <a href="${(()=>{const feed=new URL(url);feed.searchParams.delete("paged");feed.searchParams.delete("page");feed.searchParams.set("ical","1");return feed.pathname+feed.search;})()}">Subscribe to this calendar</a></p>${afterContent}</section>`},renderContext));
 }
 
 /** Captured future date views must react to CMS edits instead of freezing a calendar. */
 export function maintainedCalendarView(request:Request,context:FrontendRenderContext):Response|null{
  const url=new URL(request.url);if(url.pathname.startsWith('/event/')){const parent=url.pathname.replace(/20\d{2}-\d{2}-\d{2}\/$/u,'');const event=[...(context.siteContent?.events??[]),...(context.siteContent?.cancelledCalendarEvents??[])].find(e=>e.path===parent||e.legacyPaths.includes(parent));if(event&&(event.calendarRevision?.sequence??0)>1)return futureCalendarOccurrence(request,context);}
  const literal=/(20\d{2}-\d{2}(?:-\d{2})?)/u.exec(url.pathname)?.[1]??url.searchParams.get('tribe-bar-date');
- if(!literal||literal<'2026-10'||!url.pathname.startsWith('/events/'))return null;
- return futureCalendarPage(request,context);
+ if(!url.pathname.startsWith('/events/'))return null;
+ if(literal)return literal<'2026-10'?null:futureCalendarPage(request,context);
+ if(url.searchParams.get('eventDisplay')==='past'||url.searchParams.has('post_type')&&url.searchParams.get('post_type')!=='tribe_events')return null;
+ const rolling=/^\/events\/(?:(?:list|month|week|day|today|summary)(?:\/page\/[1-9]\d{0,2})?\/|(?:category|tag)\/[^/]+\/(?:.*)?$)/u.test(url.pathname)||url.pathname==='/events/'&&['eventDisplay','related_series','paged','page','tribe_events_cat','tag','tribe_venue','tribe_organizer'].some(key=>url.searchParams.has(key));
+ return rolling?futureCalendarPage(request,context):null;
 }

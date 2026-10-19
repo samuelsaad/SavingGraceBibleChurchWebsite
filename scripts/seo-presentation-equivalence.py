@@ -151,10 +151,17 @@ def active_filter_witness(source,document):
   if node['tag']=='select':
    values=[x for x in walk(node)if x['tag']=='option'and 'selected'in x['attrs']]
    if len(values)==1:
-    key=node['attrs'].get('name');selected[key]=values[0]['attrs'].get('value');labels[key]=norm(option_text(values[0]))
+    key=node['attrs'].get('name');selected[key]=values[0]['attrs'].get('value');labels[key]=norm(option_text(values[0]));labels[key]=re.sub(r' \([0-9]+\)$','',labels[key])
  tokens=' '.join(norm(CAP.text(n))for n in walk(root)if n['attrs'].get('aria-label')=='Active filters')
  prefixes={'sermon_book':'Book','sermon_series':'Series','sermon_speaker':'Speaker','sermon_topics':'Reference'}
  return bool(tokens)and all(selected.get(key)==value and labels.get(key)and whole_text(tokens,prefixes[key]+': '+labels[key])for key,value in group)
+
+def individual_card_block_witness(node,candidate,path):
+ # Resolve only this exact block. A missing excerpt keeps its own finding open.
+ if node['tag']in ('h1','h2','h3','h4','h5','h6'):
+  expected=norm(CAP.text(node))
+  return bool(expected)and any(n['tag']in ('h1','h2','h3','h4','h5','h6')and identities(n)=={path}and norm(CAP.text(n))==expected for n in walk(candidate))
+ return card_witness(node,candidate,path)
 
 def block_witnesses(source,candidate,document,missing,source_document=None,related_archive=None):
  """Require the same card URL and every original leaf, never a bag of words."""
@@ -165,13 +172,14 @@ def block_witnesses(source,candidate,document,missing,source_document=None,relat
   options=[{'node':current[path],'page':candidate['url'],'responseSha256':sha(document)}]if path in current else []
   if related_archive and related_archive.get('completePagination')and related_archive.get('group')==archive_group(source['url'])==archive_group(candidate['url']):options+=related_archive['cards'].get(path,[])
   for node in groups:
-   matched=next((item for item in options if card_witness(node,item['node'],path)),None)
-   if matched:
-    for child in walk(node):
-     if child['tag']in BLOCKS:
-      value=norm(CAP.text(child));key=sha(value)
-      if remaining.get(key):
-       remaining[key]-=1;witnesses.append({'blockSha256':key,'reason':'same_sermon_card_all_original_leaves_verified','identity':path,'sourceCardSha256':sha(CAP.sanitize(node,source['url'])),'candidateCardSha256':sha(CAP.sanitize(matched['node'],matched['page'])),'candidatePage':matched['page'],'candidateResponseSha256':matched['responseSha256']})
+   complete=next((item for item in options if card_witness(node,item['node'],path)),None)
+   for child in walk(node):
+    if child['tag']not in BLOCKS:continue
+    value=norm(CAP.text(child));key=sha(value)
+    if not remaining.get(key):continue
+    matched=complete or next((item for item in options if individual_card_block_witness(child,item['node'],path)),None)
+    if matched:
+     remaining[key]-=1;witnesses.append({'blockSha256':key,'reason':'same_sermon_card_all_original_leaves_verified'if complete else'same_sermon_identity_exact_individual_block_verified','identity':path,'sourceCardSha256':sha(CAP.sanitize(node,source['url'])),'candidateCardSha256':sha(CAP.sanitize(matched['node'],matched['page'])),'candidatePage':matched['page'],'candidateResponseSha256':matched['responseSha256']})
  if remaining.get(sha('Filtered by:'))and active_filter_witness(source,document):
   remaining[sha('Filtered by:')]-=1;witnesses.append({'blockSha256':sha('Filtered by:'),'reason':'same_typed_selected_filters_and_visible_removable_tokens'})
  for block in source.get('semanticBlocks',[]):

@@ -2,6 +2,21 @@ import importlib.util,pathlib,unittest
 P=pathlib.Path(__file__).resolve().parents[1]
 S=importlib.util.spec_from_file_location('policy',P/'scripts/seo-presentation-equivalence.py');M=importlib.util.module_from_spec(S);S.loader.exec_module(M)
 class PresentationProofTests(unittest.TestCase):
+ def test_selected_option_count_decoration_preserves_exact_typed_visible_filter(self):
+  doc='<select name="sermon_book"><option value="acts" selected>Acts (1)</option></select><div aria-label="Active filters">Book: Acts</div>'
+  source={'url':'https://www.savinggrace.org.au/sermons/?sermon_book=%2Facts%2F'}
+  self.assertTrue(M.active_filter_witness(source,doc))
+  for wrong in [doc.replace('Book: Acts','Book: Romans'),doc.replace('Acts (1)','Romans (1)'),doc.replace('value="acts"','value="romans"'),doc.replace('Acts (1)','Acts (one)')]:self.assertFalse(M.active_filter_witness(source,wrong))
+
+ def test_individual_card_metadata_does_not_clear_a_missing_excerpt(self):
+  original='<main><ul><li><h2><a href="/sermons/anonymous/">Anonymous title</a></h2><p>4 October, 2026</p><p>Original anonymous excerpt is absent.</p></li></ul></main>'
+  current='<article class="journal__entry"><h3><a href="/sermons/anonymous/">Anonymous title</a></h3><time datetime="2026-10-04">4 Oct</time><p>Different anonymous excerpt.</p></article>'
+  missing={M.sha('4 October, 2026'):1,M.sha('Original anonymous excerpt is absent.'):1}
+  proof=M.block_witnesses({'url':'https://www.savinggrace.org.au/sermons/','mainSelector':'main','semanticBlocks':[]},{'url':'https://www.savinggrace.org.au/sermons/','mainText':''},current,missing,original)
+  self.assertFalse(proof['fullyEquivalent']);self.assertEqual(proof['remainingBlocks'],1);self.assertIn(M.sha('Original anonymous excerpt is absent.'),proof['remainingBlockHashes'])
+  self.assertEqual(proof['witnesses'][0]['reason'],'same_sermon_identity_exact_individual_block_verified')
+
+
  def test_same_card_identity_and_all_original_fields_are_required(self):
   source=M.tree('<div><h3><a href="/sermons/anonymous/">Anonymous title</a></h3><p>4 October, 2026</p><p>Series: Anonymous series</p></div>')['children'][0]
   document='<article class="journal__entry"><h3><a href="/sermons/anonymous/">Anonymous title</a></h3><time datetime="2026-10-04">4 Oct</time><p class="journal__series"><span>Series</span> Anonymous series</p></article>'
