@@ -1,3 +1,4 @@
+import{sourcePublicSitemap}from'../src/seo/source-public-handler';
 import {describe,it,expect,vi} from 'vitest';
 import {renderCalendarFeed} from '../src/frontend/pages/church';
 import {calendarSubscription,futureCalendarPage,futureCalendarOccurrence,maintainedCalendarView} from '../src/seo/calendar-subscriptions';
@@ -142,3 +143,15 @@ it('retains a verified future subscription UID beyond the default year while res
  c.siteContent!.legacyCalendarOccurrences=[{...c.siteContent!.legacyCalendarOccurrences[0]!,eventId:event.id,date:'2037-10-27'}];expect(await request('/events/category/bible-study/?ical=1')).not.toContain('20371027T');
  }finally{vi.useRealTimers();}
 });
+
+it('keeps captured legacy query calendars live and rejects only proved exhausted current pagination',async()=>{
+ vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-01T00:00:00Z'));
+ try{const c=context(),path='/?post_type=tribe_events&eventDisplay=list';const request=new Request('https://www.savinggrace.org.au'+path);expect(await maintainedCalendarView(request,c)!.text()).toContain('Anonymous gathering');c.siteContent!.events=[{...event,title:'Updated published gathering'}];expect(await maintainedCalendarView(request,c)!.text()).toContain('Updated published gathering');expect(maintainedCalendarView(new Request(request.url+'&paged=2'),c)?.status).toBe(404);expect(maintainedCalendarView(new Request(request.url+'&tag=unknown'),c)).toBeNull();expect(maintainedCalendarView(new Request(request.url+'&tribe-bar-date=2024-01-01'),c)).toBeNull();}finally{vi.useRealTimers();}
+});
+
+it('retains captured Day-selector semantics and uses native URLs for real daily pagination',async()=>{
+ vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-01T00:00:00Z'));
+ try{const c=context(),path='/?post_type=tribe_events&eventDisplay=day&eventDate=2026-10-11&paged=5';c.siteContent!.sourceSeoByPath={[path]:{title:'Original day title'}};c.siteContent!.events=Array.from({length:17},(_,i)=>({...event,id:'daily-'+i,path:'/events/daily-'+i+'/',legacyPaths:[],title:'Daily gathering '+i,schedule:{kind:'single',date:'2026-10-11'}}));const response=maintainedCalendarView(new Request('https://www.savinggrace.org.au'+path),c)!;expect(response.status).toBe(200);const doc=await response.text();expect(doc).toContain('Daily gathering 0');expect(doc).not.toContain('Daily gathering 16');expect(doc).toContain('href="/events/day/2026-10-11/?paged=2"');const next=await futureCalendarPage(new Request('https://www.savinggrace.org.au/events/day/2026-10-11/?paged=2'),c)!.text();expect(next).toContain('Daily gathering 16');expect(next).not.toContain('Daily gathering 0');const alias=maintainedCalendarView(new Request('https://www.savinggrace.org.au/page/2/?post_type=tribe_events&eventDisplay=day&eventDate=2026-10-11'),c)!;expect(alias.status).toBe(301);expect(alias.headers.get('location')).toBe('/events/day/2026-10-11/');}finally{vi.useRealTimers();}
+});
+
+it('excludes a witnessed but exhausted live legacy page from the sitemap without excluding its working collection',()=>{vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-01T00:00:00Z'));try{const c=context(),path='/?post_type=tribe_events&eventDisplay=list',second=path+'&paged=2';c.siteContent!.sourceSeoByPath={[path]:{title:'Collection'},[second]:{title:'Collection page two'}};const pages=[path,second].map(path=>({path,kind:'archive',indexable:true,issues:[],canonicalSource:null,content:[],sourceUrl:'https://www.savinggrace.org.au'+path}));expect(sourcePublicSitemap(pages as never,c).map(row=>row.path)).toEqual([path]);}finally{vi.useRealTimers();}});

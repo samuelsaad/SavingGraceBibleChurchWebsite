@@ -1,0 +1,4 @@
+import{it,expect}from'vitest';import{primarySourcePage}from'../src/frontend/source-identity';import type{SourcePublicPage}from'../src/seo/source-public-model';
+const page=(path:string,id:number|null,kind='page')=>({path,sourceId:id,kind})as SourcePublicPage;
+it('uses the native recorded identity before an unrelated archive sharing its canonical path',()=>{const original=page('/old-example/',12),archive=page('/example/',null,'archive');expect(primarySourcePage([archive,original],'/example/',12)).toBe(original);expect(primarySourcePage([original,archive],'/example/',12)).toBe(original);});
+it('does not silently select among conflicting original identities or duplicate identity aliases',()=>{const a=page('/old-a/',12),b=page('/old-b/',13);expect(primarySourcePage([a,b],'/example/')).toBeUndefined();expect(primarySourcePage([a,{...a,path:'/alias/'}],'/example/',12)).toBeUndefined();expect(primarySourcePage([a,b],'/example/',13)).toBe(b);});

@@ -3,13 +3,14 @@ import {randomUUID} from 'node:crypto';
 import type {SqlExecutor} from '../server/repositories/postgres-sermon-repository';
 import {sourcePageSchema,sourcePathSchema,sourceVersionHash,sha256,stableJson} from './source-public-model';
 const digest=z.string().regex(/^[a-f0-9]{64}$/u);
+const resourceQuery=/^(?:\/(?:feed\/)?\?attachment_id=[1-9][0-9]{0,14}(?:\/feed\/)?|\/\?p=[1-9][0-9]{0,14})$/u;
 const originalUrl=z.url().refine(value=>{const u=new URL(value);return ['https:','http:'].includes(u.protocol)&&['savinggrace.org.au','www.savinggrace.org.au'].includes(u.hostname)&&!u.username&&!u.password&&!u.hash&&!u.port;});
-export const resourceRedirectManifestSchema=z.object({format:z.literal('sgbc-original-resource-redirects-v1'),sourceInventorySha256:digest,rows:z.array(z.object({oldPath:z.string().refine(value=>sourcePathSchema.safeParse(value).success||/^\/(?:feed\/)?\?attachment_id=[1-9][0-9]{0,14}$/u.test(value)),newPath:sourcePathSchema,sourceUrl:originalUrl,sourceDestination:originalUrl,sourceStatus:z.literal(301),sourceRecordSha256:digest,assetSha256:digest}).strict()).max(2000)}).strict().superRefine((value,context)=>{
+export const resourceRedirectManifestSchema=z.object({format:z.literal('sgbc-original-resource-redirects-v1'),sourceInventorySha256:digest,rows:z.array(z.object({oldPath:z.string().refine(value=>sourcePathSchema.safeParse(value).success||resourceQuery.test(value)),newPath:sourcePathSchema,sourceUrl:originalUrl,sourceDestination:originalUrl,sourceStatus:z.literal(301),sourceRecordSha256:digest,assetSha256:digest}).strict()).max(2000)}).strict().superRefine((value,context)=>{
  const old=new Set(value.rows.map(row=>row.oldPath));
  if(old.size!==value.rows.length)context.addIssue({code:'custom',message:'Repeated original resource URL'});
- for(const row of value.rows){const from=new URL(row.sourceUrl),to=new URL(row.sourceDestination);if(!(row.oldPath.endsWith('/')||/^\/(?:feed\/)?\?attachment_id=[1-9][0-9]{0,14}$/u.test(row.oldPath))||['/','/sermons/','/events/'].includes(row.oldPath)||row.oldPath===row.newPath||old.has(row.newPath)||from.pathname+from.search!==row.oldPath||to.pathname+to.search!==row.newPath||row.newPath.includes('?'))context.addIssue({code:'custom',message:'Expected exact direct source resource paths'});}
+ for(const row of value.rows){const from=new URL(row.sourceUrl),to=new URL(row.sourceDestination);if(!(row.oldPath.endsWith('/')||resourceQuery.test(row.oldPath))||['/','/sermons/','/events/'].includes(row.oldPath)||row.oldPath===row.newPath||old.has(row.newPath)||from.pathname+from.search!==row.oldPath||to.pathname+to.search!==row.newPath||row.newPath.includes('?'))context.addIssue({code:'custom',message:'Expected exact direct source resource paths'});}
 });
-const resourceOriginalPathSchema=z.string().refine(value=>sourcePathSchema.safeParse(value).success||/^\/(?:feed\/)?\?attachment_id=[1-9][0-9]{0,14}$/u.test(value),'Expected an observed original attachment path');
+const resourceOriginalPathSchema=z.string().refine(value=>sourcePathSchema.safeParse(value).success||resourceQuery.test(value),'Expected an observed original attachment path');
 const reason='verified_original_attachment_resource';
 const auditAction='seo.original_resource_redirect';
 export async function importSourceResourceRedirects(db:SqlExecutor,input:unknown){

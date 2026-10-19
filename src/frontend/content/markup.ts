@@ -16,7 +16,7 @@
 import { escapeHtml, html, raw, type Html } from "../html";
 import { contextualPath, type FrontendRenderContext } from "../routes";
 import {legacyDisposition} from './registry';
-import {legacyDayViewTarget} from '../source-content';
+import {reviewedDayLinks} from './reviewed-day-links';
 
 const linkPattern = /\[([^\]]+)\]\(([^)\s]+)\)/gu;
 
@@ -25,20 +25,15 @@ export function isExternalHref(href: string): boolean {
 }
 
 function resourceLink(url:URL,context:FrontendRenderContext):{path:string;suffix:string}|null{
- const exact=context.sourceResourceRedirects?.[url.pathname+url.search];if(exact)return {path:exact,suffix:url.hash};
+ const exact=context.sourceResourceRedirects?.[url.pathname+url.search]??reviewedDayLinks[url.pathname+url.search];if(exact)return {path:exact,suffix:url.hash};
  const direct=context.sourceResourceRedirects?.[url.pathname];if(direct)return {path:direct,suffix:url.search+url.hash};
- const ids=url.searchParams.getAll('attachment_id');if(!['/','/feed/'].includes(url.pathname)||ids.length!==1||!/^[1-9][0-9]{0,14}$/u.test(ids[0]!)||['s','search','preview','action','post_type','page','p','page_id'].some(key=>url.searchParams.has(key)))return null;
- const target=context.sourceResourceRedirects?.[url.pathname+'?attachment_id='+ids[0]];if(!target)return null;
- const query=url.search.slice(1).split('&').filter(part=>[...new URLSearchParams(part).keys()][0]!=='attachment_id').join('&');return {path:target,suffix:(query?'?'+query:'')+url.hash};
+ const key=url.pathname==='/'&&url.searchParams.has('p')?'p':'attachment_id',ids=url.searchParams.getAll(key);
+ if(!['/','/feed/'].includes(url.pathname)||ids.length!==1||!(key==='attachment_id'?/^[1-9][0-9]{0,14}(?:\/feed\/)?$/u:/^[1-9][0-9]{0,14}$/u).test(ids[0]!)||['s','search','preview','action','post_type','page','page_id',key==='p'?'attachment_id':'p'].some(other=>url.searchParams.has(other)))return null;
+ const target=context.sourceResourceRedirects?.[url.pathname+'?'+key+'='+ids[0]];if(!target)return null;
+ const query=url.search.slice(1).split('&').filter(part=>[...new URLSearchParams(part).keys()][0]!==key).join('&');return {path:target,suffix:(query?'?'+query:'')+url.hash};
 }
 
 export function resolveHref(href: string, context: FrontendRenderContext): string {
-  // Day is one scoped date; inherited collection page numbers are redundant.
-  // The typed legacy parser retains search/filter/campaign meaning and rejects unknown parameters.
-  try { const original=new URL(href,"https://www.savinggrace.org.au"), normalized=legacyDayViewTarget(original.pathname+original.search);
-    if (["https:","http:"].includes(original.protocol)&&!original.port&&!original.username&&!original.password&&["savinggrace.org.au","www.savinggrace.org.au"].includes(original.hostname)&&normalized!==original.pathname+original.search)
-      href=(/^https?:\/\//iu.test(href)?"https://www.savinggrace.org.au":"")+normalized+original.hash;
-  } catch { /* The existing safe-link policy handles invalid addresses. */ }
   // Absolute church links keep their external-preview behavior while reaching
   // the verified production host and final CMS path directly.
   try {

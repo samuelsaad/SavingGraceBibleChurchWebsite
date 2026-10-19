@@ -1,3 +1,4 @@
+import{primarySourcePage}from'../frontend/source-identity';
 import {originalCalendarGroups} from '../frontend/content/calendar-groups';
 import type {FrontendSiteSnapshot} from '../frontend/content/site-snapshot';
 import type {ContentSeo} from '../frontend/seo';
@@ -78,7 +79,7 @@ export function preserveSourceMetadata(snapshot:FrontendSiteSnapshot,pages:reado
  }
  result.eventScopeIds=scopes;
  result.sourceCalendarIdentityPaths=Object.fromEntries(pages.filter(p=>p.sourceId!==null&&!p.issues.length&&/^\/(?:venue|organiser)\/[^/]+\/$/u.test(p.path)).map(p=>[String(p.sourceId),p.path]));
- for(const [path,originals]of Object.entries(sourceContentByPath)){const primary=originals.filter(page=>page.kind!=='archive'),original=originals.length===1?originals[0]:primary.length===1?primary[0]:undefined;if(original&&!result.sourceSeoByPath?.[path])result.sourceSeoByPath={...result.sourceSeoByPath,[path]:sourceSeo(original,pages)};}
+ for(const [path,originals]of Object.entries(sourceContentByPath)){const owner=[...result.pages,...result.posts].find(page=>page.path===path),original=primarySourcePage(originals,path,owner?.source?.id);if(original&&(!result.sourceSeoByPath?.[path]||owner?.source?.id===original.sourceId))result.sourceSeoByPath={...result.sourceSeoByPath,[path]:sourceSeo(original,pages)};}
  const dates={...result.modifiedAtByPath};for(const [path,originals]of Object.entries(sourceContentByPath))if(originals.length===1&&originals[0]!.modifiedAt&&!dates[path])dates[path]=originals[0]!.modifiedAt;for(const page of pages)if(page.modifiedAt&&!dates[page.path]&&result.routes.some(r=>r.path===page.path&&r.status===200))dates[page.path]=page.modifiedAt;result.modifiedAtByPath=dates;
  return result;
 }

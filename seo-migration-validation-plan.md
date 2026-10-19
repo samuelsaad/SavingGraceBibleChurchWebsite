@@ -704,3 +704,35 @@ resolve to already-verified owned files. No arbitrary HTML link expansion occurr
 Full final-release HTTP, cohort reconciliation and staging acceptance remain separate
 requirements. Pinned protected-staging SSH again times out; no completed successor
 deployment or current running staging commit/image is claimed.
+
+
+### 20 October resource/metadata integration checkpoint
+
+The finite historical extension is bound to source ledger SHA-256
+`e19f9ec5f90a616fedf995ddd70904333da12cab30ff62ddaef64315fa52c7ae`.
+The local 178-row additive rehearsal includes rollback, no-op replay, scoped
+withdrawal, refusal of ordinary resurrection and guarded exact reapplication.
+An independent 65-table proof preserves all earlier rows, including payloads and
+timestamps. No sermon/enrichment approval was introduced.
+
+The exact resource/date rehearsal inserted 489 redirects, left 298 existing exact
+manifest matches unchanged, preserved all 534 prior redirect rows, and changed
+only two date projections for WordPress 30091. Trial rollback was independently
+verified; replay inserted/updated zero. Expected versions and source response
+hashes remain in the private receipts and safe date dispositions.
+
+Current integration commands: `npm run test:postgres -- --maxWorkers=2` (1,560
+passed, zero skips), `npm test -- --maxWorkers=2` (1,413 passed, 147 gated cases
+covered separately), `npm run check` (0 errors/0 warnings/7 existing hints),
+`npm run build`, Python unittest discovery (255 passed), anonymous importer dry
+run, `npm run staging:bundle`, and offline audit. Final outgoing privacy scan and
+release-bound HTTP acceptance remain separate gates. A source-backed, directly
+redirected file must still prove its exact MIME, bytes and final file identity;
+a successful status does not discharge content verification.
+
+The final distinct resource manifest has 1,141 aliases to 418 verified files.
+The second guarded application inserted 118 further aliases, matched 1,023
+unchanged dispositions, and replayed with zero inserts. All earlier redirects,
+source pointers and unrelated tables were preserved. Two extra apex ZIP witnesses
+share already mapped paths; the attempted duplicate manifest was refused before
+any write. The reviewed tracked CSV contains each original path exactly once.

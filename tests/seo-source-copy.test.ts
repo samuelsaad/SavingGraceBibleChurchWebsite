@@ -1,3 +1,4 @@
+import{createLegacySourceSearch}from'../src/seo/source-search';
 import {describe,it,expect} from 'vitest';
 import {html} from '../src/frontend/html';
 import {retainedSourceCopy} from '../src/frontend/source-copy';
@@ -76,3 +77,13 @@ describe('verified original copy preservation',()=>{
   expect(extractSourceStructuredData({...capture,schema:[{...capture.schema[0],startDate:'2026-01-05T10:30:00+11:00'}]}).value?.primary).toBeUndefined();
  });
 });
+
+it('uses a native page recorded source identity for SEO defaults while retaining all legacy copy and editor overrides',()=>{
+ const primary={...source,path:'/old-primary/',sourceUrl:'https://www.savinggrace.org.au/old-primary/',sourceId:12,hasOriginalHeading:true},secondary={...source,path:'/old-secondary/',sourceUrl:'https://www.savinggrace.org.au/old-secondary/',sourceId:13,title:'Other original title',content:[{tag:'p' as const,text:'Other original visitor paragraph.'}]},archive={...source,path:'/replacement/',kind:'archive' as const,title:'Plugin collection title'};
+ const page={id:'example',path:'/replacement/',source:{id:12},status:'published',title:'Seed title',legacyPaths:[primary.path,secondary.path],blocks:[]}as never;
+ const content=preserveSourceMetadata({...snapshot,pages:[page],routes:[{path:'/replacement/',entityId:'page',status:200 as const,targetPath:null}],initialMetadataByPath:{'/replacement/':{title:'Seed title',heading:'Seed heading',seeded:true}}},[secondary,archive,primary]);
+ const context={mode:'public' as const,basePath:'' as const,siteContent:content};const doc=pageShell({title:'Seed title',canonicalPath:'/replacement/',robots:'index, follow',body:html`<h1>Seed heading</h1>`},context);expect(doc).toContain('<title>Original title</title>');expect(doc).toContain('<h1>Original heading</h1>');expect(doc).toContain('2020-01-01T00:00:00Z');expect(doc).toContain('Other original visitor paragraph.');
+ const edited=pageShell({title:'Edited title',seo:{title:'Explicit editor title'},canonicalPath:'/replacement/',robots:'index, follow',body:html`<h1>Edited heading</h1>`},{...context,siteContent:{...content,cmsExplicitSeoByPath:{'/replacement/':{title:'Explicit editor title'}}}});expect(edited).toContain('<title>Explicit editor title</title>');expect(edited).toContain('<h1>Edited heading</h1>');
+});
+
+it('preserves an exact observed search title while retaining native live search behavior',async()=>{const path='/?s=example',observed={...source,path,sourceUrl:'https://www.savinggrace.org.au'+path,sourceId:null,kind:'archive' as const,title:'Exact original search title',indexable:false};const handler=createLegacySourceSearch([observed],snapshot,{listPublished:async()=>({data:[]})}as never,{});const response=await handler(new Request(observed.sourceUrl),{mode:'public',basePath:''});expect(response?.status).toBe(200);const doc=await response!.text();expect(doc).toContain('<title>Exact original search title</title>');expect(doc).toContain('noindex, follow');expect(doc).toContain('Search Results for: example');});

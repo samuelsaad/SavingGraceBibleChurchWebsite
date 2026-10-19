@@ -25,6 +25,9 @@ def additive_archive_signal(source, candidate, field):
     if field in ('og:description','twitter:description'):
         description=source.get('meta',{}).get('description',[])
         return len(description)==1 and bool(description[0]) and candidate.get('meta',{}).get('description',[])==description and new==description
+    if field == 'og:url':
+        address=urlsplit(source.get('url',''));expected='https://www.savinggrace.org.au'+address.path+('?' +address.query if address.query else '')
+        return address.scheme in ('http','https')and address.hostname in ('savinggrace.org.au','www.savinggrace.org.au')and not(address.username or address.password or address.port or address.fragment)and new==[expected]and candidate.get('canonicalUrls')==new
     if field == 'og:type':
         return new == ['website']
     if field == 'twitter:card':
@@ -55,12 +58,33 @@ def corrected_calendar_social_url(source,candidate,origin):
     if source.get('template')!='archive' or len(old)!=1 or len(new)!=1 or source.get('title')!=candidate.get('title') or source.get('primaryHeading') and source.get('primaryHeading')!=candidate.get('primaryHeading'):
         return False
     original=urlsplit(source.get('url',''));previous=urlsplit(old[0]);current=urlsplit(new[0]);scope=calendar_scope(original.path)
+    if not scope:
+        venue=re.fullmatch(r'(/(?:venue|organiser)/[a-z0-9-]+/)(?:page/[1-9][0-9]*/)?',original.path)
+        if venue:scope=venue[1]
+        elif original.path=='/'and dict(parse_qsl(original.query)).get('post_type')=='tribe_events':
+            pairs=parse_qsl(original.query,keep_blank_values=True);query=dict(pairs);allowed={'post_type','eventDisplay','eventDate','tribe-bar-date','paged','page','related_series','tag','tribe_events_cat','tribe_venue','tribe_organizer','tribe-bar-search','tribe-bar-location'}
+            if len(query)!=len(pairs)or any(k not in allowed for k in query):return False
+            filters=[('category',query['tribe_events_cat'])]if query.get('tribe_events_cat')else[('tag',query['tag'])]if query.get('tag')else[]
+            if any(not re.fullmatch('[a-z0-9-]+',v)for _,v in filters):return False
+            scope='/events/'+('/'.join(filters[0])+'/'if filters else'')
     if not scope or previous.hostname not in ('www.savinggrace.org.au','savinggrace.org.au') or current.scheme+'://'+current.netloc!=origin or current.path!=original.path or current.query!=original.query or current.fragment or candidate.get('canonicalUrls')!=new:
         return False
     # The plugin used the corresponding blog taxonomy URL or calendar base.
     # Correct that conflicting signal only for this same witnessed event scope.
     equivalent_taxonomy=scope.removeprefix('/events')if scope!='/events/'else None
-    return bool(not previous.query and previous.path in (scope,equivalent_taxonomy) or old==[source.get('url')])
+    same_scope = not previous.query and previous.path in (scope,equivalent_taxonomy,original.path if original.path.startswith('/events/')else scope)
+    # Captured event-tag month views used AIOSEO's empty blog-taxonomy URL.
+    # Admit only that exact broken value and actual same-scope navigation links.
+    links = []
+    def visit(nodes):
+        for node in nodes:
+            if node.get('tag') == 'a' and isinstance(node.get('href'), str):
+                links.append(urlsplit(node['href']))
+            visit(node.get('children', []))
+    visit(source.get('contentTree', []))
+    empty_blog_taxonomy = bool(scope.startswith('/events/tag/') and previous.path == '/' and previous.query == 'taxonomy=&term='
+        and any(link.hostname in ('www.savinggrace.org.au','savinggrace.org.au') and calendar_scope(link.path) == scope for link in links))
+    return bool(same_scope or empty_blog_taxonomy or old==[source.get('url')])
 
 def same_original_origin_variant(source, canonical_source, expected_response_sha256):
     """Extend an existing exact-source disposition only to its same-content host variant."""
@@ -86,3 +110,46 @@ def same_original_origin_variant(source, canonical_source, expected_response_sha
         if isinstance(value,dict):return {k:normalized(v)for k,v in value.items()}
         return value
     return all(normalized(source.get(k))==normalized(canonical_source.get(k))for k in ('meta','canonicalUrls','primaryMediaReferences','contentTree','eventMetadataTree'))
+
+
+def corrected_reviewed_redirect_social_url(source,candidate,chain,origin):
+    """Only the social URL consequence of an actual one-hop permanent page move.
+
+    The acceptance caller must independently prove equivalent page identity/content.
+    This helper never accepts another metadata field or invents the redirect.
+    """
+    def owned(value):
+        u=urlsplit(value)
+        return 'https://www.savinggrace.org.au'+u.path+('?' +u.query if u.query else '')if u.scheme in('http','https')and u.hostname in('savinggrace.org.au','www.savinggrace.org.au')and not(u.username or u.password or u.port or u.fragment)else None
+    old=source.get('meta',{}).get('og:url',[]);new=candidate.get('meta',{}).get('og:url',[]);a=owned(source.get('url',''));b=owned(candidate.get('url',''))
+    return bool(a and b and a!=b and len(chain)==2 and owned(chain[0].get('url',''))==a and chain[0].get('status')==301 and owned(chain[1].get('url',''))==b and chain[1].get('status')==200 and len(old)==1 and owned(old[0])==a and source.get('canonicalUrls')==old and new==[origin+urlsplit(b).path+('?' +urlsplit(b).query if urlsplit(b).query else '')]and candidate.get('canonicalUrls')==new)
+
+
+def corrected_all_occurrences_social_url(source,candidate,origin):
+    """An actual multi-occurrence collection must identify itself, not its first date."""
+    old=source.get('meta',{}).get('og:url',[]);new=candidate.get('meta',{}).get('og:url',[]);address=urlsplit(source.get('url',''));current=urlsplit(candidate.get('url',''));match=re.fullmatch(r'(/event/[a-z0-9-]+/)all/',address.path)
+    if not match or len(old)!=1 or len(new)!=1 or source.get('title')!=candidate.get('title')or source.get('primaryHeading')and source.get('primaryHeading')!=candidate.get('primaryHeading')or current.scheme+'://'+current.netloc!=origin or(address.path,address.query)!=(current.path,current.query)or new!=[candidate.get('url')]or candidate.get('canonicalUrls')!=new:return False
+    previous=urlsplit(old[0]);parent=match[1]
+    if previous.hostname not in('www.savinggrace.org.au','savinggrace.org.au')or previous.query or previous.fragment or not re.fullmatch(re.escape(parent)+r'20[0-9]{2}-[0-9]{2}-[0-9]{2}/',previous.path):return False
+    dates=set()
+    def visit(nodes):
+        for node in nodes:
+            if node.get('tag')=='a'and isinstance(node.get('href'),str):
+                target=urlsplit(node['href'])
+                if target.hostname in('www.savinggrace.org.au','savinggrace.org.au')and not target.query and re.fullmatch(re.escape(parent)+r'20[0-9]{2}-[0-9]{2}-[0-9]{2}/',target.path):dates.add(target.path)
+            visit(node.get('children',[]))
+    visit(source.get('contentTree',[]))
+    if len(dates)>=2:return True
+    # An empty collection still has its own previous/current collection controls
+    # and scoped subscription. Those observed URLs prove collection identity;
+    # a single unrelated dated link or a guessed family does not.
+    controls=set()
+    def collections(nodes):
+        for node in nodes:
+            if node.get('tag')=='a'and isinstance(node.get('href'),str):
+                target=urlsplit(node['href'])
+                if target.hostname in('www.savinggrace.org.au','savinggrace.org.au')and target.path==address.path and not target.fragment:
+                    controls.add(target.query)
+            collections(node.get('children',[]))
+    collections(source.get('contentTree',[]))
+    return ''in controls and 'eventDisplay=past'in controls and bool({'ical=1','outlook-ical=1'}&controls)

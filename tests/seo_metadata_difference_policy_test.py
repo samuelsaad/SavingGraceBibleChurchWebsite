@@ -62,3 +62,35 @@ class OriginVariantDispositionTest(unittest.TestCase):
 
  def test_original_media_only_page_requires_matching_source_tree_and_actual_media(self):
   a={'url':'https://savinggrace.org.au/sermons/anonymous/','status':200,'sourcePostId':77,'title':'Original title','primaryHeading':'Original title','mainFound':True,'mainText':'','contentTree':[{'tag':'div','children':[]}],'primaryMediaReferences':[{'url':'https://www.youtube.com/watch?v=anonymous01'}],'bodySha256':'a'*64};b={**a,'url':'https://www.savinggrace.org.au/sermons/anonymous/','bodySha256':'b'*64};self.assertTrue(P.same_original_origin_variant(a,b,'b'*64));self.assertFalse(P.same_original_origin_variant({**a,'primaryMediaReferences':[]},b,'b'*64));self.assertFalse(P.same_original_origin_variant({**a,'contentTree':[{'tag':'p','text':'Different source copy.'}]},b,'b'*64))
+
+
+class AdditionalSocialUrlConsequences(unittest.TestCase):
+    def test_absent_archive_social_url_only_adds_its_exact_canonical(self):
+        source={'template':'archive','url':'https://savinggrace.org.au/tag/example/','title':'Example','meta':{}};candidate={'title':'Example','meta':{'og:url':['https://www.savinggrace.org.au/tag/example/']},'canonicalUrls':['https://www.savinggrace.org.au/tag/example/']}
+        self.assertTrue(P.additive_archive_signal(source,candidate,'og:url'));candidate['meta']['og:url']=['https://www.savinggrace.org.au/'];self.assertFalse(P.additive_archive_signal(source,candidate,'og:url'))
+    def test_social_move_requires_actual_direct_permanent_page_move(self):
+        a='https://www.savinggrace.org.au/old-example/';b='https://www.savinggrace.org.au/new-example/';source={'url':a,'canonicalUrls':[a],'meta':{'og:url':[a]}};candidate={'url':b,'canonicalUrls':[b],'meta':{'og:url':[b]}};chain=[{'url':a,'status':301},{'url':b,'status':200}]
+        self.assertTrue(P.corrected_reviewed_redirect_social_url(source,candidate,chain,'https://www.savinggrace.org.au'));chain[0]['status']=302;self.assertFalse(P.corrected_reviewed_redirect_social_url(source,candidate,chain,'https://www.savinggrace.org.au'));chain[0]['status']=301;chain.append(chain[-1]);self.assertFalse(P.corrected_reviewed_redirect_social_url(source,candidate,chain,'https://www.savinggrace.org.au'))
+
+    def test_calendar_query_keeps_the_exact_scope_and_all_meaningful_parameters(self):
+        url=ORIGIN+'/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=example&paged=2';source={'template':'archive','title':'Example date','url':url,'meta':{'og:url':[ORIGIN+'/events/category/example/']}};candidate={'title':'Example date','url':url,'canonicalUrls':[url],'meta':{'og:url':[url]}}
+        self.assertTrue(P.corrected_calendar_social_url(source,candidate,ORIGIN));source['meta']['og:url']=[ORIGIN+'/events/category/unrelated/'];self.assertFalse(P.corrected_calendar_social_url(source,candidate,ORIGIN));source['url']=url+'&unknown=value';self.assertFalse(P.corrected_calendar_social_url(source,candidate,ORIGIN))
+    def test_venue_and_date_collection_social_defaults_do_not_accept_another_collection(self):
+        for path in('/venue/example/?eventDisplay=past','/events/list/?tribe-bar-date=2026-10-25'):
+            url=ORIGIN+path;base=url.split('?')[0];source={'template':'archive','title':'Example','url':url,'meta':{'og:url':[base]}};candidate={'title':'Example','url':url,'canonicalUrls':[url],'meta':{'og:url':[url]}};self.assertTrue(P.corrected_calendar_social_url(source,candidate,ORIGIN));source['meta']['og:url']=[ORIGIN+'/events/tag/unrelated/'];self.assertFalse(P.corrected_calendar_social_url(source,candidate,ORIGIN))
+
+
+class AllOccurrenceSocialUrlTest(unittest.TestCase):
+    def test_collection_social_url_needs_multiple_observed_dates_and_the_same_series(self):
+        parent=ORIGIN+'/event/example/';url=parent+'all/';old=parent+'2026-10-20/';source={'title':'Example','primaryHeading':'Example','url':url,'meta':{'og:url':[old]},'contentTree':[{'tag':'a','href':old},{'tag':'a','href':parent+'2026-10-27/'}]};candidate={'title':'Example','primaryHeading':'Example','url':url,'meta':{'og:url':[url]},'canonicalUrls':[url]}
+        self.assertTrue(P.corrected_all_occurrences_social_url(source,candidate,ORIGIN));source['contentTree']=source['contentTree'][:1];self.assertFalse(P.corrected_all_occurrences_social_url(source,candidate,ORIGIN));source['contentTree'].append({'tag':'a','href':ORIGIN+'/event/unrelated/2026-10-27/'});self.assertFalse(P.corrected_all_occurrences_social_url(source,candidate,ORIGIN))
+
+
+class ObservedCalendarControlIdentityTest(unittest.TestCase):
+ def test_empty_tag_taxonomy_error_requires_the_same_real_calendar_navigation(self):
+  url=ORIGIN+'/events/tag/example/month/';source={'template':'archive','url':url,'title':'Example','meta':{'og:url':[ORIGIN+'/?taxonomy=&term=']},'contentTree':[{'tag':'a','href':ORIGIN+'/events/tag/example/2026-11/'}]};candidate={'url':url,'title':'Example','meta':{'og:url':[url]},'canonicalUrls':[url]}
+  self.assertTrue(P.corrected_calendar_social_url(source,candidate,ORIGIN));source['contentTree'][0]['href']=ORIGIN+'/events/tag/other/2026-11/';self.assertFalse(P.corrected_calendar_social_url(source,candidate,ORIGIN))
+ def test_venue_pagination_preserves_its_own_scope(self):
+  url=ORIGIN+'/venue/example/page/3/';source={'template':'archive','url':url,'title':'Venue','meta':{'og:url':[ORIGIN+'/venue/example/']}};candidate={'url':url,'title':'Venue','meta':{'og:url':[url]},'canonicalUrls':[url]};self.assertTrue(P.corrected_calendar_social_url(source,candidate,ORIGIN));source['meta']['og:url']=[ORIGIN+'/venue/other/'];self.assertFalse(P.corrected_calendar_social_url(source,candidate,ORIGIN))
+ def test_empty_all_collection_requires_both_scoped_navigation_and_subscription(self):
+  url=ORIGIN+'/event/example/all/';source={'url':url,'title':'Example','meta':{'og:url':[ORIGIN+'/event/example/2026-10-20/']},'contentTree':[{'tag':'a','href':url},{'tag':'a','href':url+'?eventDisplay=past'},{'tag':'a','href':url+'?ical=1'}]};candidate={'url':url,'title':'Example','meta':{'og:url':[url]},'canonicalUrls':[url]};self.assertTrue(P.corrected_all_occurrences_social_url(source,candidate,ORIGIN));source['contentTree'].pop();self.assertFalse(P.corrected_all_occurrences_social_url(source,candidate,ORIGIN))

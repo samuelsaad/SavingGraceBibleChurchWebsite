@@ -242,3 +242,33 @@ class PublicRestIdentityTests(unittest.TestCase):
         self.assertEqual(report.public_rest_identity([good]),17)
         for changed in ({**good,'wordpressId':True},{**good,'kind':'guid'},{**good,'from':'https://unapproved.invalid/'},{**good,'wordpressId':-1}):self.assertIsNone(report.public_rest_identity([changed]))
         self.assertIsNone(report.public_rest_identity([good,{**good,'wordpressId':18}]))
+
+
+class SourceAssetTerminalTests(unittest.TestCase):
+    def test_redirect_terminal_uses_verified_asset_bytes_and_its_own_capture_time(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory); raw = b'%PDF-1.7 anonymous fixture'
+            (root / 'file.pdf').write_bytes(raw)
+            target = report.ORIGIN + '/wp-content/uploads/anonymous.pdf'
+            assets = {'assets': {target: {'status': 200, 'validation': {'valid': True},
+                'sha256': report.digest(raw), 'byteCount': len(raw), 'mime': 'application/pdf',
+                'relativePath': 'file.pdf', 'capturedAt': '2026-01-02T00:00:00Z'}}}
+            records = {URL: {'url': URL, 'status': 301, 'redirectTarget': target}}
+            chain, issues = report.source_chain(records, URL, assets, root)
+            self.assertEqual(issues, [])
+            self.assertEqual(chain[-1]['bodySha256'], report.digest(raw))
+            self.assertEqual(chain[-1]['capturedAt'], '2026-01-02T00:00:00Z')
+            self.assertEqual(chain[-1]['headers']['content-type'], 'application/pdf')
+            self.assertNotIn('mainFound', chain[-1])
+            (root / 'file.pdf').write_bytes(b'<html>Error</html>')
+            with self.assertRaisesRegex(ValueError, 'source_asset_terminal_hash_mismatch'):
+                report.source_chain(records, URL, assets, root)
+
+    def test_missing_invalid_and_html_assets_do_not_become_verified_binary_sources(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory); (root / 'a').write_bytes(b'body')
+            item = {'status': 200, 'validation': {'valid': True}, 'sha256': report.digest(b'body'),
+                'byteCount': 4, 'mime': 'text/html', 'relativePath': 'a', 'capturedAt': '2026-01-01Z'}
+            for change in [item, {**item, 'status': 404}, {**item, 'validation': {'valid': False}}]:
+                self.assertIsNone(report.source_asset_observation(root, {'assets': {URL: change}}, URL))
+            self.assertIsNone(report.source_asset_observation(root, {}, URL))

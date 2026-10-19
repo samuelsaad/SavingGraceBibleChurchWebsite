@@ -80,3 +80,12 @@ class PresentationProofTests(unittest.TestCase):
   self.assertTrue(M.block_witnesses(source,candidate,firstdoc,[M.sha('2')],original,pool)['fullyEquivalent'])
   self.assertFalse(M.block_witnesses(source,candidate,firstdoc,[M.sha('2')],original,M.archive_card_pool(url,{url:firstdoc}))['fullyEquivalent'])
 if __name__=='__main__':unittest.main()
+
+
+class OriginalPassagePresentationTests(unittest.TestCase):
+ def test_same_card_reference_preserves_verse_range_under_reviewed_label(self):
+  source=M.tree('<p>Passage: Luke 5:27-32</p>')['children'][0]
+  candidate=M.tree('<article><p class="journal__passage"><span>Preached from </span>Luke 5:27–32</p></article>')
+  self.assertTrue(M.metadata_field_witness(source,candidate))
+  self.assertFalse(M.metadata_field_witness(source,M.tree('<article><p class="journal__passage">Preached from Luke 5:27–31</p></article>')))
+  self.assertFalse(M.metadata_field_witness(source,M.tree('<article><p>Preached from Luke 5:27–32</p></article>')))

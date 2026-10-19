@@ -134,12 +134,37 @@ def candidate_chain(root, url, supplemental=None):
     return chain, issues + ['candidate_redirect_target_not_verified_church']
 
 
-def source_chain(records, url):
+def source_asset_observation(root, assets, url):
+    """A terminal binary observation, proved from the retained asset body.
+
+    This is not an HTML capture or a new source request. Keep its own capture
+    time, MIME and exact digest; invalid or absent evidence stays unresolved.
+    """
+    item = assets.get('assets', {}).get(url)
+    if not item or item.get('status') != 200 or item.get('validation', {}).get('valid') is not True:
+        return None
+    if not item.get('capturedAt') or not HASH.fullmatch(item.get('sha256', '')):
+        return None
+    raw = VERIFY.confined_file(root, item.get('relativePath')).read_bytes()
+    if digest(raw) != item['sha256'] or len(raw) != item.get('byteCount'):
+        raise ValueError('source_asset_terminal_hash_mismatch')
+    mime = item.get('mime', '').split(';')[0].strip().lower()
+    if not mime or mime in ('text/html', 'application/xhtml+xml'):
+        return None
+    return {'url': url, 'status': 200, 'bodySha256': item['sha256'],
+            'bodyBytes': len(raw), 'capturedAt': item['capturedAt'],
+            'headers': {'content-type': item['mime']},
+            'sourceObservationKind': 'verified_retained_asset_body'}
+
+
+def source_chain(records, url, assets=None, asset_root=None):
     chain, seen = [], set()
     while VERIFY.church_url(url):
         if url in seen or len(chain) >= 6: return chain, ['source_redirect_chain_unresolved']
         seen.add(url)
         record = records.get(url)
+        if not record and assets is not None and asset_root is not None:
+            record = source_asset_observation(asset_root, assets, url)
         if not record: return chain, ['source_redirect_target_capture_missing']
         chain.append(record)
         if record.get('status') not in VERIFY.REDIRECTS: return chain, []
@@ -410,7 +435,7 @@ def export_reports(baseline, assets_path, candidate, bundle_path, output, *, rev
         if summary.get('runtimeIdentityVerified') is not True: validation.append('candidate_runtime_identity_not_verified')
         recording_completed=bool(row and chain and number(row.get('candidateStatus')) is None and 'recording_not_requested' in issues and final.get('url') in supplemental_responses and final.get('status')==200)
         if row and chain and not recording_completed and (number(row.get('candidateStatus')) != final.get('status') or number(row.get('redirectHops')) != len(chain) - 1): validation.append('candidate_csv_response_mismatch')
-        source_redirect_chain, source_redirect_issues = source_chain(records, url) if source and source.get('status') in VERIFY.REDIRECTS else ([], [])
+        source_redirect_chain, source_redirect_issues = source_chain(records, url, assets, assets_path.parent) if source and source.get('status') in VERIFY.REDIRECTS else ([], [])
         comparison_source = source_redirect_chain[-1] if source_redirect_chain and not source_redirect_issues and source_redirect_chain[-1].get('status') == 200 else source
         if source_redirect_chain and not source_redirect_issues and comparison_source.get('status') == 200 and 'mainFound' in comparison_source and final.get('extracted'):
             raw = VERIFY.confined_file(candidate, final['responsePath']).read_bytes().decode('utf8', errors='replace') if final.get('responsePath') else ''

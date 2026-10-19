@@ -91,13 +91,13 @@ export function createSeoHttpAdapter(options: SeoHttpAdapterOptions): (request: 
       }
       const exactResource=options.sourceResourceRedirects?.[url.pathname+url.search];
       if(exactResource&&url.search)return finish(new Response(null,{status:301,headers:{Location:policy.indexable&&url.origin!==policy.canonicalOrigin?policy.canonicalOrigin+resourceTarget(exactResource):resourceTarget(exactResource),'Cache-Control':'no-store'}}),head);
-      if(url.pathname==='/feed/'&&url.searchParams.has('attachment_id')){
-       const identities=[...url.searchParams].filter(([key])=>key==='attachment_id');
-       const retained=url.search.slice(1).split('&').filter(part=>[...new URLSearchParams(part).keys()][0]!=='attachment_id');
+      if(['/','/feed/'].includes(url.pathname)&&(url.searchParams.has('attachment_id')||url.pathname==='/'&&url.searchParams.has('p'))){
+       const identities=[...url.searchParams].filter(([key])=>['attachment_id','p'].includes(key));
+       const retained=url.search.slice(1).split('&').filter(part=>[...new URLSearchParams(part).keys()][0]!=='attachment_id'&&[...new URLSearchParams(part).keys()][0]!=='p');
        const onlyCampaign=retained.every(part=>/^(?:utm_[a-z_]+|gclid|wbraid|gbraid)=/u.test(part));
-       const proof=identities.length===1&&onlyCampaign?options.sourceResourceRedirects?.['/feed/?attachment_id='+identities[0]![1]]:undefined;
-       if(!proof)return finish(boundary(404,'Page not found'),head);
-       return finish(new Response(null,{status:301,headers:{Location:(policy.indexable&&url.origin!==policy.canonicalOrigin?policy.canonicalOrigin:'')+resourceTarget(proof)+(retained.length?'?'+retained.join('&'):''),'Cache-Control':'no-store'}}),head);
+       const proof=identities.length===1&&(identities[0]![0]==='attachment_id'?/^[1-9][0-9]{0,14}(?:\/feed\/)?$/u:/^[1-9][0-9]{0,14}$/u).test(identities[0]![1])&&onlyCampaign?options.sourceResourceRedirects?.[url.pathname+'?'+identities[0]![0]+'='+identities[0]![1]]:undefined;
+       if(!proof&&url.pathname==='/feed/')return finish(boundary(404,'Page not found'),head);
+       if(proof)return finish(new Response(null,{status:301,headers:{Location:(policy.indexable&&url.origin!==policy.canonicalOrigin?policy.canonicalOrigin:'')+resourceTarget(proof)+(retained.length?'?'+retained.join('&'):''),'Cache-Control':'no-store'}}),head);
       }
       let response: Response;
       const liveCalendar=calendarSubscription(request,{...context,...(options.content?{siteContent:await options.content()}:{})});

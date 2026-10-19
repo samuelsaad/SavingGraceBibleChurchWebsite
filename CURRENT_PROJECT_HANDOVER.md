@@ -1967,3 +1967,40 @@ Integrated verification and final finding reconciliation are in progress. The
 previous b82b06b release is independently pushed and its local image was built
 and checked; it was not deployed to protected staging. The last pinned staging
 SSH attempt timed out. WordPress remains live; DNS and production are unchanged.
+
+
+### D-183 historical calendar, metadata and resource continuation — 20 October 2026
+
+The finite historical dependency capture added 178 verified routes (171 past
+occurrences and seven archives), without updating any prior source route. The
+local projection now has 6,746 routes and 459 known originally public sermons.
+The frozen source union has 23,334 URLs; all original 23,017 remain. Current
+WordPress stored-publication completeness is still unproved.
+
+Historical cards now follow published same-identity CMS edits and audited slug
+changes. Captured current calendar queries use published CMS occurrences, with
+real daily pagination and deliberate past/upcoming navigation. Fifty-five exact
+reviewed Day links reach their final URL directly; unreviewed queries retain
+their meaning. Native pages resolve original metadata through their recorded
+WordPress identity, including the services and church-events pages.
+
+A guarded local transaction added 489 missing resource aliases, preserved all
+534 prior redirect rows byte for byte, corrected two invalid original dates from
+unique same-page WebPage evidence, and replayed with zero changes. Independent
+trial rollback and unaffected-table/source-pointer checks passed. Source bodies,
+backups, credentials and recording binaries remain private and outside Git.
+
+The 20 October PostgreSQL suite passed 1,560 tests with zero skips; standard tests
+passed 1,413, with 147 database cases covered by that PostgreSQL run. Type checks
+reported zero errors/warnings and seven existing hints. Builds, 255 Python checks,
+anonymised importer and offline audit passed. Final release HTTP reconciliation,
+packaging and delivery are continuing; these checks do not establish final parity.
+Pinned protected-staging SSH still times out (19 October 22:06 UTC); no current
+staging deployment is claimed. Production WordPress and traffic remain unchanged.
+
+The final distinct resource manifest has 1,141 aliases to 418 verified files.
+The second guarded application inserted 118 further aliases, matched 1,023
+unchanged dispositions, and replayed with zero inserts. All earlier redirects,
+source pointers and unrelated tables were preserved. Two extra apex ZIP witnesses
+share already mapped paths; the attempted duplicate manifest was refused before
+any write. The reviewed tracked CSV contains each original path exactly once.

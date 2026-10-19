@@ -23,6 +23,18 @@ describe('verified original resource redirects',()=>{
   const refused=createSeoHttpAdapter({policy:{environment:'production',canonicalOrigin:origin},sermons:new SourcePublicSermonRepository([]),sourceResourceRedirects:{[path]:'//untrusted.test/recording'}});
   expect((await refused(new Request(origin+path))).status).toBe(503);
  });
+ it('accepts only exact observed malformed numeric attachment feeds and preserves campaign queries',async()=>{
+  const path='/?attachment_id=777/feed/';
+  expect(resourceRedirectManifestSchema.safeParse({...manifest,rows:[{...row,oldPath:'/?p=777',sourceUrl:origin+'/?p=777'}]}).success).toBe(true);
+  expect(resourceRedirectManifestSchema.safeParse({...manifest,rows:[{...row,oldPath:path,sourceUrl:origin+path}]}).success).toBe(true);
+  for(const invalid of ['/?attachment_id=777/other/','/?attachment_id=777/feed/?x=1','/?attachment_id=777/feed/&attachment_id=778'])expect(resourceRedirectManifestSchema.safeParse({...manifest,rows:[{...row,oldPath:invalid,sourceUrl:origin+invalid}]}).success).toBe(false);
+  const context={...publicRenderContext,sourceResourceRedirects:{[path]:newPath}};
+  const site=createSeoHttpAdapter({policy:{environment:'production',canonicalOrigin:origin},sermons:new SourcePublicSermonRepository([]),sourceResourceRedirects:context.sourceResourceRedirects});
+  const response=await site(new Request(origin+path+'&utm_source=church'));
+  expect(response.status).toBe(301);expect(response.headers.get('Location')).toBe(newPath+'?utm_source=church');
+  expect(resolveHref(path+'&utm_source=church',context)).toBe(newPath+'?utm_source=church');
+  expect((await site(new Request(origin+'/?attachment_id=778/feed/'))).status).toBe(404);
+ });
  it('requires exact owned identities, permanent original status and a final destination without loops or chains',()=>{
   expect(resourceRedirectManifestSchema.safeParse(manifest).success).toBe(true);
   for(const rows of [[row,row],[{...row,newPath:oldPath,sourceDestination:origin+oldPath}],[{...row,sourceDestination:'https://example.test'+newPath}],[{...row,sourceStatus:302}],[{...row,sourceUrl:origin+'/other/'}],[row,{...row,oldPath:newPath,sourceUrl:origin+newPath,newPath:'/end.png',sourceDestination:origin+'/end.png'}]])expect(resourceRedirectManifestSchema.safeParse({...manifest,rows}).success).toBe(false);

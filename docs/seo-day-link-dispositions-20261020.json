@@ -1,0 +1,995 @@
+{
+  "format": "sgbc-observed-day-link-dispositions-v1",
+  "rows": [
+    {
+      "from": "/page/2/?post_type=tribe_events&eventDisplay=day&eventDate=2026-10-11",
+      "to": "/events/day/2026-10-11/",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/2/?post_type=tribe_events&eventDisplay=day&eventDate=2026-10-11",
+          "status": 301,
+          "responseRecordSha256": "d93dfb56228fb426b2c7781efc3423ae519f4a8ab3d57c916566b75155dc9133",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-11/",
+          "status": 200,
+          "responseRecordSha256": "4b59436ee535d36c755a2802699de66038526b56c2f79431d74fba5aa71e9cbb",
+          "responseBodySha256": "956a847bb962a84dbf9d19a3ed6edd14208220a4963eaa8da8440a977a0f195e"
+        }
+      ]
+    },
+    {
+      "from": "/page/2/?post_type=tribe_events&eventDisplay=day&tag=es&eventDate=2026-10-11",
+      "to": "/events/day/2026-10-11/?tag=es",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/2/?post_type=tribe_events&eventDisplay=day&tag=es&eventDate=2026-10-11",
+          "status": 301,
+          "responseRecordSha256": "03c7663592cc5bfe69ef369f5321ba818a3c2bc72c01ad5a360dd3c04527caa6",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-11/?tag=es",
+          "status": 200,
+          "responseRecordSha256": "f46d55802d8d0d892c5b0ff017130889113977b8e597fa0ee6722b99a3590f4c",
+          "responseBodySha256": "47548d3083747c222eaae15c7c627c4c3c94580cb2bcc95a7f8bd162a9e318d5"
+        }
+      ]
+    },
+    {
+      "from": "/page/2/?post_type=tribe_events&eventDisplay=day&tag=ms&eventDate=2026-09-01",
+      "to": "/events/day/2026-09-01/?tag=ms",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/2/?post_type=tribe_events&eventDisplay=day&tag=ms&eventDate=2026-09-01",
+          "status": 301,
+          "responseRecordSha256": "19b57a90131ebf211b1b9689ffe709e514467e04182885a068221724f789b376",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-09-01/?tag=ms",
+          "status": 200,
+          "responseRecordSha256": "675b0983e55b89ca01ca5f35f48107bfd9e6b637fd7aef21ea32c1bf611d1ff0",
+          "responseBodySha256": "fe7e08bee9f4fecc2ae419464be8c2a759d0e2ab1a4ff53b49b228b3fd9cb304"
+        }
+      ]
+    },
+    {
+      "from": "/page/2/?post_type=tribe_events&eventDisplay=day&tag=ms&eventDate=2026-10-03",
+      "to": "/events/day/2026-10-03/?tag=ms",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/2/?post_type=tribe_events&eventDisplay=day&tag=ms&eventDate=2026-10-03",
+          "status": 301,
+          "responseRecordSha256": "94b31c7d54c6cbad8dae61c65236cfcda4df59a01566ab91b4ff88a80811f040",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-03/?tag=ms",
+          "status": 200,
+          "responseRecordSha256": "0539f404d503691b886d7ee9e5e3ffe2195e84c9d61a3598651f5ba094da7f36",
+          "responseBodySha256": "30f0fd1632b0978e205fe863068d1c9ae178f4123d1bb4371217ab8440cdc1c4"
+        }
+      ]
+    },
+    {
+      "from": "/page/2/?post_type=tribe_events&eventDisplay=day&tag=ms&eventDate=2026-10-11",
+      "to": "/events/day/2026-10-11/?tag=ms",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/2/?post_type=tribe_events&eventDisplay=day&tag=ms&eventDate=2026-10-11",
+          "status": 301,
+          "responseRecordSha256": "984381218981950267eecb9a1c652fb8490b34aacc5cb61de1a9946752291f48",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-11/?tag=ms",
+          "status": 200,
+          "responseRecordSha256": "1960faeb27e49130a0c8c1d7572ae14482ba2b3df635460575f890bf7761d51a",
+          "responseBodySha256": "07332a7d1628d3754fcb2e6b2c74d43081fe91a5a16045925e3e0676a87edfcd"
+        }
+      ]
+    },
+    {
+      "from": "/page/2/?post_type=tribe_events&eventDisplay=day&tag=ms&eventDate=2026-11-01",
+      "to": "/events/day/2026-11-01/?tag=ms",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/2/?post_type=tribe_events&eventDisplay=day&tag=ms&eventDate=2026-11-01",
+          "status": 301,
+          "responseRecordSha256": "4cef2281d4ea79d720b0d21a9893f02ec75e36d5767b4616af01c35888e3475f",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-11-01/?tag=ms",
+          "status": 200,
+          "responseRecordSha256": "d3a856d5c34dfbf38dab87b0a0c56747de5f7433a40f5d08e67b7f63633719e8",
+          "responseBodySha256": "26cbfd45ec875a45a3d3fd0233c391d7e77b9c68c7fd4cd82e9bd9d957d46a0a"
+        }
+      ]
+    },
+    {
+      "from": "/page/2/?post_type=tribe_events&eventDisplay=day&tag=tap&eventDate=2026-09-01",
+      "to": "/events/day/2026-09-01/?tag=tap",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/2/?post_type=tribe_events&eventDisplay=day&tag=tap&eventDate=2026-09-01",
+          "status": 301,
+          "responseRecordSha256": "e002e7c520fb1f3086ee94beb5f81550ba38768b44b4e0c6c2f22f1772eb82b2",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-09-01/?tag=tap",
+          "status": 200,
+          "responseRecordSha256": "efc5589663e2e81912d43f20aa842c7ee455e17f5ee748efb293fbbcec1c1221",
+          "responseBodySha256": "1d3b16ba1c41738ad474514a62c59ba8f840a81d93c5ade7bfe41cad6cbeb99b"
+        }
+      ]
+    },
+    {
+      "from": "/page/2/?post_type=tribe_events&eventDisplay=day&tag=tap&eventDate=2026-09-29",
+      "to": "/events/day/2026-09-29/?tag=tap",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/2/?post_type=tribe_events&eventDisplay=day&tag=tap&eventDate=2026-09-29",
+          "status": 301,
+          "responseRecordSha256": "674d512fc580fb66ca64c3c410098af7077e0108a78bc74c7d54a96888982f33",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-09-29/?tag=tap",
+          "status": 200,
+          "responseRecordSha256": "37cbff41d519c6c8b9a436c0abaf6eae209baf1c222ed3f403304d29e018b6d3",
+          "responseBodySha256": "8285a1343c437025e80d357e421218be78632f5f074a4e63e6c57e1f2b62417a"
+        }
+      ]
+    },
+    {
+      "from": "/page/2/?post_type=tribe_events&eventDisplay=day&tag=tap&eventDate=2026-10-11",
+      "to": "/events/day/2026-10-11/?tag=tap",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/2/?post_type=tribe_events&eventDisplay=day&tag=tap&eventDate=2026-10-11",
+          "status": 301,
+          "responseRecordSha256": "25af590b0d93a0f242bf3abd7e3ab5439644bb921ac77f53b33049cee39a0076",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-11/?tag=tap",
+          "status": 200,
+          "responseRecordSha256": "751ee1e28f082d9eba0581ccf17f02b2c8a5f1340670c8182cff404b742d31bf",
+          "responseBodySha256": "cdd117b6bff75a3f27d05fa9ef4c526eafa74569e50f29a08b81cccc387ca65d"
+        }
+      ]
+    },
+    {
+      "from": "/page/2/?post_type=tribe_events&eventDisplay=day&tag=tb&eventDate=2026-09-01",
+      "to": "/events/day/2026-09-01/?tag=tb",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/2/?post_type=tribe_events&eventDisplay=day&tag=tb&eventDate=2026-09-01",
+          "status": 301,
+          "responseRecordSha256": "09206c223287e3dd37b4428474f33708f46c8ed7cbd8fc3b61e2c3b20c254e7a",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-09-01/?tag=tb",
+          "status": 200,
+          "responseRecordSha256": "5a2cf8b3810a9701684f4ffcd36700fd15afc35e6e9f985ca500f73c473358b1",
+          "responseBodySha256": "78a1865f26fe2a132e9aa026af71ce846d5aca154cb52f5137f1b3ddb52929e4"
+        }
+      ]
+    },
+    {
+      "from": "/page/2/?post_type=tribe_events&eventDisplay=day&tag=tb&eventDate=2026-09-29",
+      "to": "/events/day/2026-09-29/?tag=tb",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/2/?post_type=tribe_events&eventDisplay=day&tag=tb&eventDate=2026-09-29",
+          "status": 301,
+          "responseRecordSha256": "dfdeee0e52b957e85fe7f18ff781e4c9ca6783255e03058e8e65434404fc9c76",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-09-29/?tag=tb",
+          "status": 200,
+          "responseRecordSha256": "92360ed640d776ba00ece16633cc36350dc43941e5b7ad88d5b9ca5f2d743bcc",
+          "responseBodySha256": "28d25e77c0fe2526b9d2669fa42b3c42b0aa0d3323cacaef3add3ab3475267ca"
+        }
+      ]
+    },
+    {
+      "from": "/page/2/?post_type=tribe_events&eventDisplay=day&tag=tb&eventDate=2026-10-11",
+      "to": "/events/day/2026-10-11/?tag=tb",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/2/?post_type=tribe_events&eventDisplay=day&tag=tb&eventDate=2026-10-11",
+          "status": 301,
+          "responseRecordSha256": "eb2501a90f8a90133dcb38c4af69a476f936ee83b7abb4a4b35cc3576d09dcb7",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-11/?tag=tb",
+          "status": 200,
+          "responseRecordSha256": "26622107f8219fc9f13f44ad34516a8d20cfef4e499b0894825903020e493d67",
+          "responseBodySha256": "cf14b23b3865b990e96a2091c42508859d101f53ff82325e621763ef24b04a2e"
+        }
+      ]
+    },
+    {
+      "from": "/page/2/?post_type=tribe_events&eventDisplay=day&tag=ts&eventDate=2026-09-01",
+      "to": "/events/day/2026-09-01/?tag=ts",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/2/?post_type=tribe_events&eventDisplay=day&tag=ts&eventDate=2026-09-01",
+          "status": 301,
+          "responseRecordSha256": "15c0a4026ff935fb956e546b22c2624ad67a460c3bd59fde3c68ae807ed149dd",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-09-01/?tag=ts",
+          "status": 200,
+          "responseRecordSha256": "2c83921c90ca4e2a2550607f674f9d7ed2edc8dca94de93d8ab80f09f4ed85ab",
+          "responseBodySha256": "5c41a4eb81217d06adeac7c5c9280b5fa902058112d5ba902c00a1982145f272"
+        }
+      ]
+    },
+    {
+      "from": "/page/2/?post_type=tribe_events&eventDisplay=day&tag=ts&eventDate=2026-10-11",
+      "to": "/events/day/2026-10-11/?tag=ts",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/2/?post_type=tribe_events&eventDisplay=day&tag=ts&eventDate=2026-10-11",
+          "status": 301,
+          "responseRecordSha256": "5a97994a4250f6cada5267a8f768dcec257c42f43f8bd126c3315f610630fda2",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-11/?tag=ts",
+          "status": 200,
+          "responseRecordSha256": "5bb64f8300da27c276cc69f4588fdc5d56d80c8ee61b7925ed95f169c7108640",
+          "responseBodySha256": "8299023eea9cba66a8acf2ca46e04b26ea7fede4d250c4e96beb7468d440d6ba"
+        }
+      ]
+    },
+    {
+      "from": "/page/2/?post_type=tribe_events&eventDisplay=day&tag=ws&eventDate=2026-10-11",
+      "to": "/events/day/2026-10-11/?tag=ws",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/2/?post_type=tribe_events&eventDisplay=day&tag=ws&eventDate=2026-10-11",
+          "status": 301,
+          "responseRecordSha256": "f1a184cbdc7f7bf56fbc1800be165d31481beab208c74a65d083a021c3efc1fe",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-11/?tag=ws",
+          "status": 200,
+          "responseRecordSha256": "8a59e369c344dcbb8e29d873bdad0d88dc16d4dd314b87795116d6aa52c936d7",
+          "responseBodySha256": "ed50038df8a1adace7006217a5ce551e3e78232c19a087a2cdd63b660a92f541"
+        }
+      ]
+    },
+    {
+      "from": "/page/2/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=bible-study&eventDate=2026-09-01",
+      "to": "/events/day/2026-09-01/?tribe_events_cat=bible-study",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/2/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=bible-study&eventDate=2026-09-01",
+          "status": 301,
+          "responseRecordSha256": "650914d2f91185f255e6089e7a6dcffe9dfecead2c3fd472bc9ebf0e30e45487",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-09-01/?tribe_events_cat=bible-study",
+          "status": 200,
+          "responseRecordSha256": "d29589bbe2c06286695ac0ef4e0a1e2b123c589c0a7d32a8bcb93bee54dd9a12",
+          "responseBodySha256": "9204ca51088ac83f6e98383ecc36dd27333417aff6105ac29583ed98e17967bd"
+        }
+      ]
+    },
+    {
+      "from": "/page/2/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=bible-study&eventDate=2026-09-29",
+      "to": "/events/day/2026-09-29/?tribe_events_cat=bible-study",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/2/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=bible-study&eventDate=2026-09-29",
+          "status": 301,
+          "responseRecordSha256": "c58911711ee952f4db25593f3f3f95151661a254de816caaa2e6f366b180068d",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-09-29/?tribe_events_cat=bible-study",
+          "status": 200,
+          "responseRecordSha256": "4dfc3e1d4e89e7459f423eb82a9f4b7cea80d708ba7ae4882c5c9c9d0d103e06",
+          "responseBodySha256": "74cda18e94a036ab4ec79fb1e4440792ee649d6a768d8c60e32a5ef122c101a3"
+        }
+      ]
+    },
+    {
+      "from": "/page/2/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=evening-service&eventDate=2026-09-06",
+      "to": "/events/day/2026-09-06/?tribe_events_cat=evening-service",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/2/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=evening-service&eventDate=2026-09-06",
+          "status": 301,
+          "responseRecordSha256": "00443e7a78f5e384639ca0391eb22e92dd047942c37e6183e9c0c529b89771ad",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-09-06/?tribe_events_cat=evening-service",
+          "status": 200,
+          "responseRecordSha256": "1b8d842ae7e41a978391446f6f40e479817d511bec7a977977f4f12dda267a9b",
+          "responseBodySha256": "16e7d092e15a2f355c320f198b4018eb792096386ac81b3da4215c44bc87aac1"
+        }
+      ]
+    },
+    {
+      "from": "/page/2/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=mens-leadership-study&eventDate=2026-09-05",
+      "to": "/events/day/2026-09-05/?tribe_events_cat=mens-leadership-study",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/2/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=mens-leadership-study&eventDate=2026-09-05",
+          "status": 301,
+          "responseRecordSha256": "8fed78b446b3c20212687327e3129dcc213e18734d1a3dda29028cf7d6f09b97",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-09-05/?tribe_events_cat=mens-leadership-study",
+          "status": 200,
+          "responseRecordSha256": "5a41c3d328540687190349988aac2644b2bf00ac6e595ce9b550ae1a8dec3480",
+          "responseBodySha256": "d145082adf489618e51dd0e2fd9cd73efbee1183a03f05a1d73e183df962e2cf"
+        }
+      ]
+    },
+    {
+      "from": "/page/2/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=mens-leadership-study&eventDate=2026-10-03",
+      "to": "/events/day/2026-10-03/?tribe_events_cat=mens-leadership-study",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/2/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=mens-leadership-study&eventDate=2026-10-03",
+          "status": 301,
+          "responseRecordSha256": "33963963eb21b36007ff60c96f1c996497aea0e2c0f7b6af9afd615f542cd097",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-03/?tribe_events_cat=mens-leadership-study",
+          "status": 200,
+          "responseRecordSha256": "7e09df580658581639738a229f6ddcffc09cb1c318a66c420abcc250e518fb7b",
+          "responseBodySha256": "5f31ca2c2ce7ad932c86ff7faf13091dad275c1f9e3cffb8af365673fe977f2d"
+        }
+      ]
+    },
+    {
+      "from": "/page/2/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=mens-teaching-and-preaching-study&eventDate=2026-09-01",
+      "to": "/events/day/2026-09-01/?tribe_events_cat=mens-teaching-and-preaching-study",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/2/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=mens-teaching-and-preaching-study&eventDate=2026-09-01",
+          "status": 301,
+          "responseRecordSha256": "25d0313a0727e202ba3709ef192c33b8d5cee34cb2acf42ab685efe7cdc39ec2",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-09-01/?tribe_events_cat=mens-teaching-and-preaching-study",
+          "status": 200,
+          "responseRecordSha256": "3fc60c8e0173d9491eeaacf25eaaad41a0a124a573dd77699283d18378313d1c",
+          "responseBodySha256": "f65477a4c45e35e4e3ff6ad50cb6713353c146a4dcbb5f284009b51f6b4de2f0"
+        }
+      ]
+    },
+    {
+      "from": "/page/2/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=mens-teaching-and-preaching-study&eventDate=2026-09-29",
+      "to": "/events/day/2026-09-29/?tribe_events_cat=mens-teaching-and-preaching-study",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/2/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=mens-teaching-and-preaching-study&eventDate=2026-09-29",
+          "status": 301,
+          "responseRecordSha256": "57878b68b2ef3b07d994be485c0482948cb50f6758bfb71024dc6dd42f56b371",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-09-29/?tribe_events_cat=mens-teaching-and-preaching-study",
+          "status": 200,
+          "responseRecordSha256": "0de75a3784c8b7b4126be97f85025c36ab85aa100ae6489817daceaeab5e3c36",
+          "responseBodySha256": "855a6ba49f5c5da6f167b95e953b6f38ca4ede5f643e6e1c573fde530fb20969"
+        }
+      ]
+    },
+    {
+      "from": "/page/2/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=mens-theological-study&eventDate=2026-09-06",
+      "to": "/events/day/2026-09-06/?tribe_events_cat=mens-theological-study",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/2/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=mens-theological-study&eventDate=2026-09-06",
+          "status": 301,
+          "responseRecordSha256": "64e538f9eada7bf227258c9d9f95af9df7d3f0a067f1c1a28c7e85f75d5cc4f4",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-09-06/?tribe_events_cat=mens-theological-study",
+          "status": 200,
+          "responseRecordSha256": "5a480b2402390711791b336019f0ded9b596f61050ddb2dd8842b6ac6a9cd1d2",
+          "responseBodySha256": "c65a5e186f94354d2c473b92e0dd37756e0a17b9218e4fc2e4247c57526c4804"
+        }
+      ]
+    },
+    {
+      "from": "/page/2/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=womans-study&eventDate=2026-09-05",
+      "to": "/events/day/2026-09-05/?tribe_events_cat=womans-study",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/2/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=womans-study&eventDate=2026-09-05",
+          "status": 301,
+          "responseRecordSha256": "0ea8e67235b27dd24a87270c43c6e01169ce34c6e347c2c2ff796a904ac29f95",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-09-05/?tribe_events_cat=womans-study",
+          "status": 200,
+          "responseRecordSha256": "e18177103a0f9e9500f6e12eaa6229055f363179af1b92abd5bb3aa81343a95a",
+          "responseBodySha256": "2c555cfe50601fe62bb831f6adfaf69ce8cd92c8d8ae41aadf1c3f77489aa01f"
+        }
+      ]
+    },
+    {
+      "from": "/page/2/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=womans-study&eventDate=2026-10-03",
+      "to": "/events/day/2026-10-03/?tribe_events_cat=womans-study",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/2/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=womans-study&eventDate=2026-10-03",
+          "status": 301,
+          "responseRecordSha256": "373c0fe63d02fff783b185341eaedc633e64b4d1e0ce97c67fff42ee6f94bf27",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-03/?tribe_events_cat=womans-study",
+          "status": 200,
+          "responseRecordSha256": "0738c4f36a7354279e0ba457b8d7bbe1b01c9d052616de78f9c9418865164b98",
+          "responseBodySha256": "4427bc6cfa7075c26ffc67a9cb80c6816d770f75b48a7e456cb19d29050dca79"
+        }
+      ]
+    },
+    {
+      "from": "/page/3/?post_type=tribe_events&eventDisplay=day&eventDate=2026-10-11",
+      "to": "/events/day/2026-10-11/",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/3/?post_type=tribe_events&eventDisplay=day&eventDate=2026-10-11",
+          "status": 301,
+          "responseRecordSha256": "31bfe339846b95214af91cea0364d45b7092c276e722f4df625e9bca4f0c3efd",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-11/",
+          "status": 200,
+          "responseRecordSha256": "4b59436ee535d36c755a2802699de66038526b56c2f79431d74fba5aa71e9cbb",
+          "responseBodySha256": "956a847bb962a84dbf9d19a3ed6edd14208220a4963eaa8da8440a977a0f195e"
+        }
+      ]
+    },
+    {
+      "from": "/page/3/?post_type=tribe_events&eventDisplay=day&tag=es&eventDate=2026-10-20",
+      "to": "/events/day/2026-10-20/?tag=es",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/3/?post_type=tribe_events&eventDisplay=day&tag=es&eventDate=2026-10-20",
+          "status": 301,
+          "responseRecordSha256": "3862c1ba8540d3a31d0f9c2fb039e5ab16d6695fe240a488acd3805c41838f13",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-20/?tag=es",
+          "status": 200,
+          "responseRecordSha256": "2e6799c222c5455c9f6a418a047afcb00faddf5771757bf78414a05ed4b6c6c1",
+          "responseBodySha256": "703b8cef7621389a46b985745b8edec17e0b27b954d71223848c0aaf07e5e69e"
+        }
+      ]
+    },
+    {
+      "from": "/page/3/?post_type=tribe_events&eventDisplay=day&tag=ms&eventDate=2026-10-11",
+      "to": "/events/day/2026-10-11/?tag=ms",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/3/?post_type=tribe_events&eventDisplay=day&tag=ms&eventDate=2026-10-11",
+          "status": 301,
+          "responseRecordSha256": "5abfd60b08864716829baa1d4a2db2f1b74032ce7db93e595185279df179ea86",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-11/?tag=ms",
+          "status": 200,
+          "responseRecordSha256": "1960faeb27e49130a0c8c1d7572ae14482ba2b3df635460575f890bf7761d51a",
+          "responseBodySha256": "07332a7d1628d3754fcb2e6b2c74d43081fe91a5a16045925e3e0676a87edfcd"
+        }
+      ]
+    },
+    {
+      "from": "/page/3/?post_type=tribe_events&eventDisplay=day&tag=tap&eventDate=2026-10-11",
+      "to": "/events/day/2026-10-11/?tag=tap",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/3/?post_type=tribe_events&eventDisplay=day&tag=tap&eventDate=2026-10-11",
+          "status": 301,
+          "responseRecordSha256": "5721e645a12a419cf792de0039f5c0a16784613621ee6109b0522cba64afb19c",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-11/?tag=tap",
+          "status": 200,
+          "responseRecordSha256": "751ee1e28f082d9eba0581ccf17f02b2c8a5f1340670c8182cff404b742d31bf",
+          "responseBodySha256": "cdd117b6bff75a3f27d05fa9ef4c526eafa74569e50f29a08b81cccc387ca65d"
+        }
+      ]
+    },
+    {
+      "from": "/page/3/?post_type=tribe_events&eventDisplay=day&tag=tb&eventDate=2026-10-11",
+      "to": "/events/day/2026-10-11/?tag=tb",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/3/?post_type=tribe_events&eventDisplay=day&tag=tb&eventDate=2026-10-11",
+          "status": 301,
+          "responseRecordSha256": "a9efb16981c05fdaa9d0823ffe2edaa46d3353b27d8b17db4f53c8e5427310e4",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-11/?tag=tb",
+          "status": 200,
+          "responseRecordSha256": "26622107f8219fc9f13f44ad34516a8d20cfef4e499b0894825903020e493d67",
+          "responseBodySha256": "cf14b23b3865b990e96a2091c42508859d101f53ff82325e621763ef24b04a2e"
+        }
+      ]
+    },
+    {
+      "from": "/page/3/?post_type=tribe_events&eventDisplay=day&tag=ts&eventDate=2026-10-11",
+      "to": "/events/day/2026-10-11/?tag=ts",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/3/?post_type=tribe_events&eventDisplay=day&tag=ts&eventDate=2026-10-11",
+          "status": 301,
+          "responseRecordSha256": "eca870486e12b4309ee9d929c37a4d1b31233c4a30e9a457cc24070d51d0c873",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-11/?tag=ts",
+          "status": 200,
+          "responseRecordSha256": "5bb64f8300da27c276cc69f4588fdc5d56d80c8ee61b7925ed95f169c7108640",
+          "responseBodySha256": "8299023eea9cba66a8acf2ca46e04b26ea7fede4d250c4e96beb7468d440d6ba"
+        }
+      ]
+    },
+    {
+      "from": "/page/3/?post_type=tribe_events&eventDisplay=day&tag=ws&eventDate=2026-10-20",
+      "to": "/events/day/2026-10-20/?tag=ws",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/3/?post_type=tribe_events&eventDisplay=day&tag=ws&eventDate=2026-10-20",
+          "status": 301,
+          "responseRecordSha256": "a836b581eaa5e29f19228a652cda01d5529e4ff0d96a3cee1ea551a1a2665cb1",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-20/?tag=ws",
+          "status": 200,
+          "responseRecordSha256": "60daf1a63e2d5f6b62f244e84d4fe55f058e6b8792f393c5b34deb49a9975b5e",
+          "responseBodySha256": "3d4ce2ce638135f5894dd2dd316d92b6600d488cf7024ca244c9b395ee05020b"
+        }
+      ]
+    },
+    {
+      "from": "/page/4/?post_type=tribe_events&eventDisplay=day&eventDate=2026-10-20",
+      "to": "/events/day/2026-10-20/",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/4/?post_type=tribe_events&eventDisplay=day&eventDate=2026-10-20",
+          "status": 301,
+          "responseRecordSha256": "98080d699e5b123555b67fd2062a6d06810e67fe21c693f11fe2437e22ec2ca2",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-20/",
+          "status": 200,
+          "responseRecordSha256": "243e06767e9e501ecea71ff6b6912a1aff858c7e841b11da6059bda2f92ce763",
+          "responseBodySha256": "ee6eb57fb34ed504abae37d3e461b096718252982a731ebd24a0de51fc03a4a9"
+        }
+      ]
+    },
+    {
+      "from": "/page/4/?post_type=tribe_events&eventDisplay=day&tag=es&eventDate=2026-10-20",
+      "to": "/events/day/2026-10-20/?tag=es",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/4/?post_type=tribe_events&eventDisplay=day&tag=es&eventDate=2026-10-20",
+          "status": 301,
+          "responseRecordSha256": "ca7390c5b13c4699e9aa3bb1fcf8079f39161a5a1f8ca896a0fb3baa90254f9e",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-20/?tag=es",
+          "status": 200,
+          "responseRecordSha256": "2e6799c222c5455c9f6a418a047afcb00faddf5771757bf78414a05ed4b6c6c1",
+          "responseBodySha256": "703b8cef7621389a46b985745b8edec17e0b27b954d71223848c0aaf07e5e69e"
+        }
+      ]
+    },
+    {
+      "from": "/page/4/?post_type=tribe_events&eventDisplay=day&tag=ms&eventDate=2026-10-20",
+      "to": "/events/day/2026-10-20/?tag=ms",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/4/?post_type=tribe_events&eventDisplay=day&tag=ms&eventDate=2026-10-20",
+          "status": 301,
+          "responseRecordSha256": "08247485f21f1a3a6bbf7971366868dec884c900a82c05894d422d4b006f898e",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-20/?tag=ms",
+          "status": 200,
+          "responseRecordSha256": "f139a96c3a6bfd359ef5f3bd8e39c6d9b2f65ef93ef68679eaed11482e70c406",
+          "responseBodySha256": "03fa4a097e28dd11a91039c6094b0590ecde9b84b8264cb2d29949d2bef537d9"
+        }
+      ]
+    },
+    {
+      "from": "/page/4/?post_type=tribe_events&eventDisplay=day&tag=tap&eventDate=2026-10-20",
+      "to": "/events/day/2026-10-20/?tag=tap",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/4/?post_type=tribe_events&eventDisplay=day&tag=tap&eventDate=2026-10-20",
+          "status": 301,
+          "responseRecordSha256": "e9aa75af8373b86d0b8f988975d56272153f435f4af3a532e20a4c8762297e5c",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-20/?tag=tap",
+          "status": 200,
+          "responseRecordSha256": "9728c3481bdba4bed8dd98ef7d1d09f079fa7704abbe40f88f3f036a38a9a9f7",
+          "responseBodySha256": "747188f30fa40f63115ace28b4cbcb528416942f4107648e22f7b518d62a7e2f"
+        }
+      ]
+    },
+    {
+      "from": "/page/4/?post_type=tribe_events&eventDisplay=day&tag=tb&eventDate=2026-10-20",
+      "to": "/events/day/2026-10-20/?tag=tb",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/4/?post_type=tribe_events&eventDisplay=day&tag=tb&eventDate=2026-10-20",
+          "status": 301,
+          "responseRecordSha256": "bb15c5c8b7ef038f721312992c3b042de28bf712cd7e00c72de72899a5518493",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-20/?tag=tb",
+          "status": 200,
+          "responseRecordSha256": "e6b792e94176a8463fb0f7a2dc945c35c3fc9c6e48934eaa7627703674a3c1f3",
+          "responseBodySha256": "bfe58d39936bb8fa19921061b286233332c9609491dc4ebb5479cc09107f193b"
+        }
+      ]
+    },
+    {
+      "from": "/page/4/?post_type=tribe_events&eventDisplay=day&tag=ts&eventDate=2026-10-20",
+      "to": "/events/day/2026-10-20/?tag=ts",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/4/?post_type=tribe_events&eventDisplay=day&tag=ts&eventDate=2026-10-20",
+          "status": 301,
+          "responseRecordSha256": "b5ea820c726d4dd1e591b47e0cb0ad503cabee3c1c60474cf32bd077a6d421d0",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-20/?tag=ts",
+          "status": 200,
+          "responseRecordSha256": "36258b373571587fb8c06d88dc95c66b81df9c5bcc5c849964daa3c94254d223",
+          "responseBodySha256": "e14cf92f37a6f09b1f4ad0862c3ca55378ec2070086f4af5827a35ad50f4870d"
+        }
+      ]
+    },
+    {
+      "from": "/page/4/?post_type=tribe_events&eventDisplay=day&tag=ws&eventDate=2026-10-20",
+      "to": "/events/day/2026-10-20/?tag=ws",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/4/?post_type=tribe_events&eventDisplay=day&tag=ws&eventDate=2026-10-20",
+          "status": 301,
+          "responseRecordSha256": "c0574951164f4cec4b8c8877315b67db0289d503dc5bef7e59bb828a622efe98",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-20/?tag=ws",
+          "status": 200,
+          "responseRecordSha256": "60daf1a63e2d5f6b62f244e84d4fe55f058e6b8792f393c5b34deb49a9975b5e",
+          "responseBodySha256": "3d4ce2ce638135f5894dd2dd316d92b6600d488cf7024ca244c9b395ee05020b"
+        }
+      ]
+    },
+    {
+      "from": "/page/4/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=bible-study&eventDate=2026-10-13",
+      "to": "/events/day/2026-10-13/?tribe_events_cat=bible-study",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/4/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=bible-study&eventDate=2026-10-13",
+          "status": 301,
+          "responseRecordSha256": "5ee3ed74d18b445971bd80ce584bd67c0e1c6f9859687989956b9c7a939c5adb",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-13/?tribe_events_cat=bible-study",
+          "status": 200,
+          "responseRecordSha256": "1ad209bea410a90119beb277ffbc0f4439abd292908ecccacd39d5ccea800023",
+          "responseBodySha256": "19dc2707c267e7b8decc61a7f34133b20ac881598600bb725a46fe3f64c08f91"
+        }
+      ]
+    },
+    {
+      "from": "/page/4/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=evening-service&eventDate=2026-10-11",
+      "to": "/events/day/2026-10-11/?tribe_events_cat=evening-service",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/4/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=evening-service&eventDate=2026-10-11",
+          "status": 301,
+          "responseRecordSha256": "b4e976eba6cf73d935f4f42c1caf0c9536d2c345aab37098eae667808b5f6b9e",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-11/?tribe_events_cat=evening-service",
+          "status": 200,
+          "responseRecordSha256": "fb737bd2088b495cb23f6f0b57c65e0db32378cd35a9aab5053ee9be1483fe24",
+          "responseBodySha256": "525c24f451cb996d9bf1e96e0e78024283b5a868c3fdf360efd36c2d4171ac88"
+        }
+      ]
+    },
+    {
+      "from": "/page/4/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=mens-leadership-study&eventDate=2026-11-07",
+      "to": "/events/day/2026-11-07/?tribe_events_cat=mens-leadership-study",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/4/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=mens-leadership-study&eventDate=2026-11-07",
+          "status": 301,
+          "responseRecordSha256": "2ed407065a34ea88ef8f044e994f74a74de29e621358922c7d61b42d23aace9a",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-11-07/?tribe_events_cat=mens-leadership-study",
+          "status": 200,
+          "responseRecordSha256": "01d5423e7427e9fb3a7b1fde3cceb3ebf9e6d48879c98505b9eca5a304b00733",
+          "responseBodySha256": "9abc65e68ce3bb730176232f28eb7fa5fcdced721ed3a6aee66cde7070482944"
+        }
+      ]
+    },
+    {
+      "from": "/page/4/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=mens-teaching-and-preaching-study&eventDate=2026-10-13",
+      "to": "/events/day/2026-10-13/?tribe_events_cat=mens-teaching-and-preaching-study",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/4/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=mens-teaching-and-preaching-study&eventDate=2026-10-13",
+          "status": 301,
+          "responseRecordSha256": "7ea8ca30c3d6e82a97ee8c34fd540fcf385afd14eace6ba30c434fc32a5f0d49",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-13/?tribe_events_cat=mens-teaching-and-preaching-study",
+          "status": 200,
+          "responseRecordSha256": "ec9f07f7e84b19ff96a3640a711f8c4fc761912eea76094267ce61094225c82c",
+          "responseBodySha256": "410544d5e7d9f4c77d24e44e14aa69955f1594723b03079b607417b4bbb2651e"
+        }
+      ]
+    },
+    {
+      "from": "/page/4/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=mens-theological-study&eventDate=2026-10-11",
+      "to": "/events/day/2026-10-11/?tribe_events_cat=mens-theological-study",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/4/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=mens-theological-study&eventDate=2026-10-11",
+          "status": 301,
+          "responseRecordSha256": "9c2f290b6ada93388e4105d470422df2ec43fbfe917550fc98072b92fce44a00",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-11/?tribe_events_cat=mens-theological-study",
+          "status": 200,
+          "responseRecordSha256": "311fbb01dc64044c1b6f92e3937b69ed57067063a29e8b1d2bcd402a65c13473",
+          "responseBodySha256": "c3d31a98f9a52c3ea23df65d92bbbefd3dd186d313d63e8548201ff774e57de7"
+        }
+      ]
+    },
+    {
+      "from": "/page/4/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=womans-study&eventDate=2026-11-07",
+      "to": "/events/day/2026-11-07/?tribe_events_cat=womans-study",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/4/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=womans-study&eventDate=2026-11-07",
+          "status": 301,
+          "responseRecordSha256": "3b40049b391084ecdc154199e979c85e987af0326f15f53bb8809410c36f4d8f",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-11-07/?tribe_events_cat=womans-study",
+          "status": 200,
+          "responseRecordSha256": "0a5cfcbf2a55b3a77fbc0e81825c5bf84a7da20903a649b956221af7bb7614e0",
+          "responseBodySha256": "dcdb201c89a6fd46ac1e6b29021a0225b26e4a73c68e6e24e265c72586ed6b23"
+        }
+      ]
+    },
+    {
+      "from": "/page/5/?post_type=tribe_events&eventDisplay=day&eventDate=2026-10-20",
+      "to": "/events/day/2026-10-20/",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/5/?post_type=tribe_events&eventDisplay=day&eventDate=2026-10-20",
+          "status": 301,
+          "responseRecordSha256": "75d024defb2df6a2da87c2281c3bbe40426ce9372da172ef4e39c3741213c5fe",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-20/",
+          "status": 200,
+          "responseRecordSha256": "243e06767e9e501ecea71ff6b6912a1aff858c7e841b11da6059bda2f92ce763",
+          "responseBodySha256": "ee6eb57fb34ed504abae37d3e461b096718252982a731ebd24a0de51fc03a4a9"
+        }
+      ]
+    },
+    {
+      "from": "/page/5/?post_type=tribe_events&eventDisplay=day&tag=ms&eventDate=2026-10-20",
+      "to": "/events/day/2026-10-20/?tag=ms",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/5/?post_type=tribe_events&eventDisplay=day&tag=ms&eventDate=2026-10-20",
+          "status": 301,
+          "responseRecordSha256": "04148ef601e02a58d8dcbb18c2f4e005425dc4a3d952017f59f27ae5a34e033b",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-20/?tag=ms",
+          "status": 200,
+          "responseRecordSha256": "f139a96c3a6bfd359ef5f3bd8e39c6d9b2f65ef93ef68679eaed11482e70c406",
+          "responseBodySha256": "03fa4a097e28dd11a91039c6094b0590ecde9b84b8264cb2d29949d2bef537d9"
+        }
+      ]
+    },
+    {
+      "from": "/page/5/?post_type=tribe_events&eventDisplay=day&tag=tb&eventDate=2026-10-20",
+      "to": "/events/day/2026-10-20/?tag=tb",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/5/?post_type=tribe_events&eventDisplay=day&tag=tb&eventDate=2026-10-20",
+          "status": 301,
+          "responseRecordSha256": "6acf16a7abf9cbdcab2e9bdee75a586825ad6a755eb451e1a0816e44bfc6213d",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-20/?tag=tb",
+          "status": 200,
+          "responseRecordSha256": "e6b792e94176a8463fb0f7a2dc945c35c3fc9c6e48934eaa7627703674a3c1f3",
+          "responseBodySha256": "bfe58d39936bb8fa19921061b286233332c9609491dc4ebb5479cc09107f193b"
+        }
+      ]
+    },
+    {
+      "from": "/page/5/?post_type=tribe_events&eventDisplay=day&tag=ts&eventDate=2026-10-20",
+      "to": "/events/day/2026-10-20/?tag=ts",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/5/?post_type=tribe_events&eventDisplay=day&tag=ts&eventDate=2026-10-20",
+          "status": 301,
+          "responseRecordSha256": "4bfc7e7580be6a5c3b07dce1925fab8fcc67268f725cc0bc7dfff954fcdca33f",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-20/?tag=ts",
+          "status": 200,
+          "responseRecordSha256": "36258b373571587fb8c06d88dc95c66b81df9c5bcc5c849964daa3c94254d223",
+          "responseBodySha256": "e14cf92f37a6f09b1f4ad0862c3ca55378ec2070086f4af5827a35ad50f4870d"
+        }
+      ]
+    },
+    {
+      "from": "/page/5/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=bible-study&eventDate=2026-10-20",
+      "to": "/events/day/2026-10-20/?tribe_events_cat=bible-study",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/5/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=bible-study&eventDate=2026-10-20",
+          "status": 301,
+          "responseRecordSha256": "6277f33485056e41cb21d3ec5723b5bb9f6438927fbb1f085555ebbc8da864c3",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-20/?tribe_events_cat=bible-study",
+          "status": 200,
+          "responseRecordSha256": "d8b5e6cdad92540a50bc6cf6ad0554bc09fb71e02407cfed421b5c9f9a9adc1a",
+          "responseBodySha256": "a65154016b462d1552fe03fd2ed1795fe4682006eccc5cf12378f742522b8602"
+        }
+      ]
+    },
+    {
+      "from": "/page/5/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=evening-service&eventDate=2026-10-25",
+      "to": "/events/day/2026-10-25/?tribe_events_cat=evening-service",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/5/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=evening-service&eventDate=2026-10-25",
+          "status": 301,
+          "responseRecordSha256": "9e3cf1039342e3a738dc49f936f70080f46b1859f0d3e8be2acce15f02b2e92f",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-25/?tribe_events_cat=evening-service",
+          "status": 200,
+          "responseRecordSha256": "239c71e4021ffabfca3eb2117c699bd2a9cabd20b6734f8f8555f8631a6d3558",
+          "responseBodySha256": "b63b7f00581bedaf23a2bdd7a3100a53444376e421e09ae4fe04a1b74eb3efee"
+        }
+      ]
+    },
+    {
+      "from": "/page/5/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=mens-leadership-study&eventDate=2026-11-07",
+      "to": "/events/day/2026-11-07/?tribe_events_cat=mens-leadership-study",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/5/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=mens-leadership-study&eventDate=2026-11-07",
+          "status": 301,
+          "responseRecordSha256": "88a9da51637965191575bb6b1b54358f69ba805463b6a63970c191c7e9dc3db6",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-11-07/?tribe_events_cat=mens-leadership-study",
+          "status": 200,
+          "responseRecordSha256": "01d5423e7427e9fb3a7b1fde3cceb3ebf9e6d48879c98505b9eca5a304b00733",
+          "responseBodySha256": "9abc65e68ce3bb730176232f28eb7fa5fcdced721ed3a6aee66cde7070482944"
+        }
+      ]
+    },
+    {
+      "from": "/page/5/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=mens-teaching-and-preaching-study&eventDate=2026-10-20",
+      "to": "/events/day/2026-10-20/?tribe_events_cat=mens-teaching-and-preaching-study",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/5/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=mens-teaching-and-preaching-study&eventDate=2026-10-20",
+          "status": 301,
+          "responseRecordSha256": "826a0b9c7ebb06917af65a60bbae209e16da014a8d4e213e0c1998ca4900e6ba",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-20/?tribe_events_cat=mens-teaching-and-preaching-study",
+          "status": 200,
+          "responseRecordSha256": "6d7c14e4fe5bfa1077befa24d487b8e6ce3ac65fc28a00d85c04ab8ecac00924",
+          "responseBodySha256": "b43c782c5f1be92cdf45192dd46c6a07c5165853e96d4b9c85197b2e9804f225"
+        }
+      ]
+    },
+    {
+      "from": "/page/5/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=mens-theological-study&eventDate=2026-10-25",
+      "to": "/events/day/2026-10-25/?tribe_events_cat=mens-theological-study",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/5/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=mens-theological-study&eventDate=2026-10-25",
+          "status": 301,
+          "responseRecordSha256": "4ae0109e5c4617ef7532558d900616f2a080373d29588391061c172529880061",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-10-25/?tribe_events_cat=mens-theological-study",
+          "status": 200,
+          "responseRecordSha256": "95d0ffd7d25ebf7a6b035110ebef353fd00aff67556547359e6726cea768f155",
+          "responseBodySha256": "4e291dac8be41bd95b49d5287885574de4767f5a76d50e8c558642c2789e64da"
+        }
+      ]
+    },
+    {
+      "from": "/page/5/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=womans-study&eventDate=2026-11-07",
+      "to": "/events/day/2026-11-07/?tribe_events_cat=womans-study",
+      "chain": [
+        {
+          "url": "https://www.savinggrace.org.au/page/5/?post_type=tribe_events&eventDisplay=day&tribe_events_cat=womans-study&eventDate=2026-11-07",
+          "status": 301,
+          "responseRecordSha256": "376a9fb893667197183d4da6b7a41e9087ccfa5f67d866b066281c283524d38e",
+          "responseBodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://www.savinggrace.org.au/events/day/2026-11-07/?tribe_events_cat=womans-study",
+          "status": 200,
+          "responseRecordSha256": "0a5cfcbf2a55b3a77fbc0e81825c5bf84a7da20903a649b956221af7bb7614e0",
+          "responseBodySha256": "dcdb201c89a6fd46ac1e6b29021a0225b26e4a73c68e6e24e265c72586ed6b23"
+        }
+      ]
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+import{primarySourcePage}from'./source-identity';
 import {contactForm} from './contact-form';
 import {retainedSourceCopy,sourceHeading} from './source-copy';
 import {pageStructuredData,type PageStructuredData} from './structured-data';
@@ -219,8 +220,8 @@ function footerColumns(input: PageShellInput, context: FrontendRenderContext): H
 export function pageShell(input: PageShellInput, context: FrontendRenderContext = publicRenderContext): string {
   const metadataPath=input.sourcePath??input.canonicalPath;
   const originals=input.sourceContentRendered?undefined:context.siteContent?.sourceContentByPath?.[metadataPath];
-  const primary=originals?.filter(page=>page.kind!=='archive');
-  const original=originals?.find(page=>page.path===input.canonicalPath)??(originals?.length===1?originals[0]:primary?.length===1?primary[0]:undefined);
+  const owner=context.siteContent?.pages.find(page=>page.path===metadataPath)??context.siteContent?.posts.find(post=>post.path===metadataPath);
+  const original=primarySourcePage(originals,input.canonicalPath,owner?.source?.id);
   const initial=input.sourceContentRendered?undefined:context.siteContent?.initialMetadataByPath?.[metadataPath];
   if(input.canonicalPath==="/contact/"&&!input.sourceContentRendered&&!input.body.toString().includes('class="contact-form"'))input={...input,body:html`${input.body}${contactForm()}`};
   const originalBody=input.body;

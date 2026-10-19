@@ -63,7 +63,17 @@ def taxonomy_identity(href):
  return None
 
 def metadata_field_witness(node,candidate):
- value=norm(CAP.text(node));match=re.match(r'^(Series|Preacher|Book):\s*(.*)$',value)
+ value=norm(CAP.text(node))
+ if node['tag']=='p'and value.startswith('Passage: '):
+  reference=re.sub('[‐‑‒–—−]','-',value.removeprefix('Passage: ')).strip()
+  if not reference:return False
+  for area in walk(candidate):
+   classes=area['attrs'].get('class','').split()
+   if area['tag']=='p'and any(c in classes for c in('journal__passage','entry__stamp')):
+    actual=re.sub('[‐‑‒–—−]','-',norm(CAP.text(area)))
+    if actual in ('Passage: '+reference,'Preached from '+reference):return True
+  return False
+ match=re.match(r'^(Series|Preacher|Book):\s*(.*)$',value)
  if not match:return False
  kind={'Series':'series','Preacher':'speakers','Book':'books'}[match[1]]
  anchors=[n for n in walk(node)if n['tag']=='a'];wanted=[(taxonomy_identity(n['attrs'].get('href','')),norm(CAP.text(n)))for n in anchors]

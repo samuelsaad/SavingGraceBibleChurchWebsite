@@ -1,0 +1,36 @@
+{
+  "format": "sgbc-primary-date-corrections-v1",
+  "targetSha256": "bdd1c00076be0447cc3601219a9a06ae70e29ab3125516422081e5b6480a2cb5",
+  "rows": [
+    {
+      "path": "/venue/state-library/",
+      "sourceId": 30091,
+      "sourceResponseSha256": "9d0419d6ae95541a4460e92a5d7fc26b9715af929a78181331b3856824bf955b",
+      "originalInvalidMeta": {
+        "publishedAt": "-001-11-30T00:00:00+00:00",
+        "modifiedAt": "-001-11-30T00:00:00+00:00"
+      },
+      "corrected": {
+        "publishedAt": "2026-05-24T08:54:07.000Z",
+        "modifiedAt": "2026-05-24T08:54:07.000Z"
+      },
+      "expectedVersion": "6e34123104b9a542d7bb6dfe7d55220f5b1e13880c89e1cd81f4d592a11c5f61",
+      "reason": "invalid_rendered_date_repaired_from_unique_same_page_WebPage_schema"
+    },
+    {
+      "path": "/venue/state-library/?eventDisplay=past",
+      "sourceId": 30091,
+      "sourceResponseSha256": "6c475e1f67eb5e76c2c633d16cc0cd2b13e7c5b20737f82c7b649ed8728274e6",
+      "originalInvalidMeta": {
+        "publishedAt": "-001-11-30T00:00:00+00:00",
+        "modifiedAt": "-001-11-30T00:00:00+00:00"
+      },
+      "corrected": {
+        "publishedAt": "2026-05-24T08:54:07.000Z",
+        "modifiedAt": "2026-05-24T08:54:07.000Z"
+      },
+      "expectedVersion": "987d607c75f79726d21c4480f964c4ba2c05003831c9b8ed219255b7b069c883",
+      "reason": "invalid_rendered_date_repaired_from_unique_same_page_WebPage_schema"
+    }
+  ]
+}
