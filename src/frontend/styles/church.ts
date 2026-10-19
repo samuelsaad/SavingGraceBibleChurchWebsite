@@ -3,6 +3,7 @@
  * and open reading space. Content and eligibility stay in their renderers.
  */
 export const churchStyles = `
+.event__description { grid-column:2 / -1; }
 /* ---- opening invitation ---- */
 .page { max-width: var(--measure-page); }
 .page__head { display: grid; gap: var(--space-6); margin-bottom: clamp(2.5rem, 5vw, 4.5rem); padding: clamp(1.5rem, 3.5vw, 3rem); background: var(--colour-recessed); }

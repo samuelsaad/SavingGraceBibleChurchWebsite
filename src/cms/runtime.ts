@@ -1,3 +1,4 @@
+import {createContactHandler,type ContactDelivery} from '../server/http/contact';
 import {originalSermonPreview} from './source-sermon-preview';
 import {cmsPreviewSnapshot} from './preview-snapshot';
 import type {CmsSnapshot} from './model';
@@ -21,6 +22,7 @@ import type {FrontendRenderContext} from "../frontend/routes";
 import {siteAssetResponse} from "../server/http/site-assets";
 const headers={"Cache-Control":"private, no-store","X-Robots-Tag":"noindex, nofollow, noarchive","X-Content-Type-Options":"nosniff","Referrer-Policy":"same-origin","X-Frame-Options":"DENY"};
 export interface CmsRuntimeOptions{
+ contactDelivery?:ContactDelivery;
  repository:CmsRepository;sermons:PublicSermonRepository;assets:CmsDiskAssets;assetStore:CmsAssetStore;
  session:CmsSessionProvider;dashboardDirectory:string;environment:"local"|"staging";release:string;
  sourcePages?:()=>Promise<readonly SourcePublicPage[]>;
@@ -29,6 +31,7 @@ export interface CmsRuntimeOptions{
 }
 export function createCmsRuntimeHandler(options:CmsRuntimeOptions){
  const {repository,session}=options;
+ const contact=createContactHandler({origin:session.origin,...(options.contactDelivery?{deliver:options.contactDelivery}:{})});
  const api=createCmsApiHandler(repository,session,{authorizeMutation:request=>session.authorizeMutation(request)});
  const assets=createCmsAssetHandler(options.assets,session,session,(key,draft)=>repository.canReadAsset(key,draft));
  const dashboard=createCmsDashboardHandler(options.dashboardDirectory,session,options.environment,Boolean(options.existingAdminHandler));
@@ -47,6 +50,7 @@ export function createCmsRuntimeHandler(options:CmsRuntimeOptions){
   const pathname=new URL(request.url).pathname;
   const finish=(response:Response,canvas=false)=>{const result=new Headers(response.headers);for(const [key,value] of Object.entries(headers))result.set(key,canvas&&key==="X-Frame-Options"&&response.status===200?"SAMEORIGIN":value);return new Response(request.method==="HEAD"?null:response.body,{status:response.status,headers:result});};
   try{
+   const submitted=await contact(request);if(submitted)return finish(submitted);
    const sessionResponse=await session.handle(request);if(sessionResponse)return finish(sessionResponse);
    if(pathname==="/health/ready"){await options.ready();return finish(Response.json({status:"ready",release:options.release,authentication:"protected_cms_session"}));}
    if(pathname==="/robots.txt")return finish(new Response("User-agent: *\nDisallow: /\n"));

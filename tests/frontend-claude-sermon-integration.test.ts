@@ -19,12 +19,12 @@ const preservedSources = [
   [
     "src/frontend/pages/church.ts",
     // Authorized SEO/source metadata controls preserve the existing church layout.
-    "b550a2e869457240840b7217f8d82b90db3721258c0bb93555684c88117d8a66"
+    "a00930c6f74b1430081c387ad072ecd801f4c60d0b10ab9078c5c2b6ebeb0400"
   ],
   [
     "src/frontend/styles/core.ts",
     // Authorized mobile adaptation plus stable narrow masthead rows to prevent measured layout shift.
-    "8cca5442b28e5138c1c566510efd3708078bb256a1346c1365a2df0c2efd3bf2"
+    "582c4855771f3259cc180d51222f8fcf8f5f45f2c2866b3c262dbcfa8b1057c5"
   ],
   [
     "src/frontend/styles/home.ts",
@@ -33,7 +33,7 @@ const preservedSources = [
   [
     "src/frontend/styles/church.ts",
     // Authorized mobile adaptation: contact heading stacks instead of squeezing.
-    "6b1e4d9ea734e5ffe872104f7cd1d2a591a63aef4546e6b3da57bdb1f14aefdb"
+    "570b47132fefa7b9adc2526dd7df152ecd3364866d50399a46e2d25257295454"
   ],
   [
     "src/frontend/styles/cards.ts",

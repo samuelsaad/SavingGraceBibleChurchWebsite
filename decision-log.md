@@ -1139,3 +1139,32 @@ preserves existing ownership, revisions and withdrawals; imports use truthful
 system provenance. A single empty calendar export is insufficient retirement
 evidence: the 101 previous removal decisions are withdrawn pending subscription
 and future-content reconciliation. WordPress stays live and retained.
+
+## D-183 — bounded pre-cutover completion (19 October 2026)
+
+Samuel explicitly authorizes continuing the existing 23,017-URL candidate on
+`codex/whole-site-seo-migration`: scoped implementation and guarded local/existing
+protected-staging updates, recovery, local delivery, deployment and normal push.
+Preserve source identities, editorial revisions, prior finding denominators and
+all unrelated work. Production traffic, DNS and WordPress mutation stay forbidden.
+
+A read-only WordPress database/uploads/configuration backup may use existing
+properly authorized export or backup access. Never weaken the SELECT/USAGE SQL
+reader guard, change production privileges or evade an execution-control rejection.
+Private recovery may create/remove only its own isolated container project with
+prefix `sgbc-seo-wp-restore-20261019-`, loopback web and outbound integrations,
+email, cron and analytics disabled. Proprietary plugins remain inert and unexecuted.
+Existing PostgreSQL/assets recovery proof is reused unless its behavior changes.
+
+The recording-download restriction has one exact exception: copy unchanged the
+117 MP3 and one MP4 identities in the retained original-file inventory for private
+migration backup and existing church-controlled storage. Freeze URL/identity/hash
+receipts; verify MIME, integrity and byte ranges. Do not transcribe, decode, edit,
+re-encode, create paid infrastructure or retire the original hosting. Binaries,
+backups, source/account data and credentials remain outside Git and release images.
+
+Retain a loopback local delivery listener and the existing authorized protected
+SSH tunnel for Samuel's use; stop temporary verification processes. No production
+tracking on staging. Actual property/stream, approved test recipient and managed
+production administrator/MFA/recovery evidence are required before those features
+can be accepted. Missing inputs never authorize invented configuration or approval.

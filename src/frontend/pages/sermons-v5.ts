@@ -81,7 +81,7 @@ export function renderSermonsV5Page(input: SermonsV5PageInput, context: Frontend
   </div>`;
   return pageShell({ title: filtered ? resultsTitle(input.query, input.options) : options.canonical ? `Sermons${input.query.page>1?` — Page ${input.query.page}`:""}` : "SermonsV5",
     description: "Browse sermons from Saving Grace Bible Church by speaker, series, Scripture, Bible book, or service date.",
-    canonicalPath: observedQuery?requestPath:canonicalPath, navigationPath: target.path,
+    sourcePath:requestPath, canonicalPath: observedQuery?requestPath:canonicalPath, navigationPath: target.path,
     robots: options.canonical&&(observedQuery||!input.hasQueryParameters&&!filtered&&input.query.view!=="recent")?"index, follow":"noindex, follow", styles: ["shelf", "v4", "v5"], scripts: ["canon", "journal", "journalPagination"],
     books: input.options.books, mastheadSearch: false, body }, context);
 }

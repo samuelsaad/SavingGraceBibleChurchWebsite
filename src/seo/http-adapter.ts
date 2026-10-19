@@ -1,3 +1,7 @@
+import {retiredWordPressAssets} from './retired-wordpress-assets';
+import {sha256} from './source-public-model';
+import {createContactHandler,type ContactDelivery} from '../server/http/contact';
+import {calendarSubscription,futureCalendarPage,maintainedCalendarView} from './calendar-subscriptions';
 /**
  * Public-only Web HTTP adapter for production or an isolated SEO rehearsal.
  * Dependencies supply eligible content; this module neither opens databases nor
@@ -16,6 +20,7 @@ import { createSeoHttpPolicy, type SeoHttpPolicyInput } from "./http-policy";
 export interface SeoHttpAdapterOptions extends ChurchSiteOptions {
   /** Only populated after property/stream/consent verification and cutover approval. */
   measurement?:VerifiedGa4Configuration;
+  contactDelivery?:ContactDelivery;
   policy: SeoHttpPolicyInput;
   /** Exact observed canonical archive query paths; supplied from verified source records. */
   indexableArchivePaths?: readonly string[];
@@ -45,6 +50,7 @@ const privatePath = /^\/(?:admin(?:\/|$)|api(?:\/|$)|frontend-preview(?:\/|$)|dr
 export function createSeoHttpAdapter(options: SeoHttpAdapterOptions): (request: Request) => Promise<Response> {
   const policy = createSeoHttpPolicy(options.policy);
   const context: FrontendRenderContext = {mode: policy.indexable ? "public" : "restricted", basePath:"",...(options.sourceResourceRedirects?{sourceResourceRedirects:options.sourceResourceRedirects}:{}), seo:{canonicalOrigin:policy.canonicalOrigin,indexable:policy.indexable,indexableArchivePaths:options.indexableArchivePaths??[]}};
+  const contacts=new Map(policy.acceptedOrigins.map(origin=>[origin,createContactHandler({origin,...(options.contactDelivery?{deliver:options.contactDelivery}:{})})]));
   const site = createPublicSermonSiteHandler(options.sermons, context, {
     ...(options.today ? {today:options.today} : {}),
     ...(options.content ? {content:options.content} : {}),
@@ -68,12 +74,27 @@ export function createSeoHttpAdapter(options: SeoHttpAdapterOptions): (request: 
       // different site, canonical origin or indexability policy.
       let decodedPath: string;
       try { decodedPath=decodeURIComponent(url.pathname); } catch { return finish(boundary(400,"Invalid page address"),head); }
+      if(decodedPath==="/contact/send/")return finish((await contacts.get(url.origin)!(request))!,head);
+      if(Object.hasOwn(retiredWordPressAssets,sha256(url.pathname+url.search)))return finish(boundary(410,'Page no longer available'),head);
       if (privatePath.test(decodedPath)) return finish(boundary(404,"Page not found"),head);
       if (request.method !== "GET" && !head) return finish(new Response("Method not allowed",{status:405,headers:{Allow:"GET, HEAD","Cache-Control":"no-store"}}),false);
       if (/%(?:2f|5c|00|0[ad])/iu.test(url.pathname) || url.pathname.includes("\\")) return finish(boundary(400,"Invalid page address"),head);
+      const resourceTarget=(path:string)=>{const target=new URL(path,policy.canonicalOrigin);if(!path.startsWith('/')||path.startsWith('//')||path.includes('\\')||/%(?:2f|5c|00|0[ad])/iu.test(path)||target.origin!==policy.canonicalOrigin||target.pathname+target.search!==path||privatePath.test(decodeURIComponent(target.pathname)))throw Error('seo_resource_target_refused');return path;};
+      const exactResource=options.sourceResourceRedirects?.[url.pathname+url.search];
+      if(exactResource&&url.search)return finish(new Response(null,{status:301,headers:{Location:policy.indexable&&url.origin!==policy.canonicalOrigin?policy.canonicalOrigin+resourceTarget(exactResource):resourceTarget(exactResource),'Cache-Control':'no-store'}}),head);
+      if(url.pathname==='/feed/'&&url.searchParams.has('attachment_id')){
+       const identities=[...url.searchParams].filter(([key])=>key==='attachment_id');
+       const retained=url.search.slice(1).split('&').filter(part=>[...new URLSearchParams(part).keys()][0]!=='attachment_id');
+       const onlyCampaign=retained.every(part=>/^(?:utm_[a-z_]+|gclid|wbraid|gbraid)=/u.test(part));
+       const proof=identities.length===1&&onlyCampaign?options.sourceResourceRedirects?.['/feed/?attachment_id='+identities[0]![1]]:undefined;
+       if(!proof)return finish(boundary(404,'Page not found'),head);
+       return finish(new Response(null,{status:301,headers:{Location:(policy.indexable&&url.origin!==policy.canonicalOrigin?policy.canonicalOrigin:'')+resourceTarget(proof)+(retained.length?'?'+retained.join('&'):''),'Cache-Control':'no-store'}}),head);
+      }
       let response: Response;
-      const resource=await options.publicAsset?.(head?new Request(request,{method:"GET"}):request); 
-      const observedQuery=url.search&&options.sourceQueryPage?await options.sourceQueryPage(head?new Request(request,{method:'GET'}):request,{...context,...(options.content?{siteContent:await options.content()}:{})}):null;
+      const liveCalendar=calendarSubscription(request,{...context,...(options.content?{siteContent:await options.content()}:{})});
+      const resource=liveCalendar??await options.publicAsset?.(request);
+      const currentCalendar=maintainedCalendarView(request,{...context,...(options.content?{siteContent:await options.content()}:{})});
+      const observedQuery=currentCalendar??(url.search&&options.sourceQueryPage?await options.sourceQueryPage(head?new Request(request,{method:'GET'}):request,{...context,...(options.content?{siteContent:await options.content()}:{})}):null);
       const search=options.publicSearch?await options.publicSearch(head?new Request(request,{method:'GET'}):request,{...context,...(options.content?{siteContent:await options.content()}:{})}):null;
       if(resource){response=resource;}else if(search){response=search;}else if(observedQuery){response=observedQuery;}else if(options.sourceResourceRedirects?.[url.pathname]){response=new Response(null,{status:301,headers:{Location:options.sourceResourceRedirects[url.pathname]+url.search,'Cache-Control':'no-store'}});}else if(legacySitemapPaths.includes(url.pathname)) {
         response=policy.indexable?new Response(null,{status:301,headers:{Location:"/sitemap.xml"+url.search,"Cache-Control":"no-store"}}):boundary(404,"Page not found");
@@ -93,15 +114,15 @@ export function createSeoHttpAdapter(options: SeoHttpAdapterOptions): (request: 
         response = new Response(policy.indexable
           ? `User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/\nDisallow: /frontend-preview/\nDisallow: /draft-preview/\nDisallow: /cms-preview/\nSitemap: ${policy.canonicalOrigin}/sitemap.xml\n`
           : "User-agent: *\nDisallow: /\n", {headers:{"Content-Type":"text/plain; charset=utf-8","Cache-Control":"no-store"}});
-      } else if ((url.pathname==='/'||/^\/(?:events?|venues?|organisers?)(?:\/|$)/u.test(decodedPath))&&[...url.searchParams.keys()].some(key=>['post_type','pagename','eventDisplay','paged','page','related_series','tribe_events_cat','tribe_organizer','tribe_venue','tribe-bar-date','ical','outlook-ical',...(url.pathname==='/'?['s','attachment_id','feed','rest_route']:[])].includes(key))) {
+      } else if ((url.pathname==='/'||/^\/(?:events?|venues?|organisers?)(?:\/|$)/u.test(decodedPath))&&[...url.searchParams.keys()].some(key=>['post_type','pagename','eventDisplay','paged','page','related_series','tribe_events_cat','tribe_organizer','tribe_venue','tribe-bar-date','ical','outlook-ical',...(url.pathname==='/'?['s','attachment_id','feed','rest_route','elementor_library']:[])].includes(key))) {
         // Exact captured query pages/resources already won above. A missing
         // meaningful legacy query must never return an unrelated collection/homepage.
-        response=boundary(404,"Page not found");
+        response=futureCalendarPage(request,{...context,...(options.content?{siteContent:await options.content()}:{})})??boundary(404,"Page not found");
       } else {
         const get = head ? new Request(request,{method:"GET"}) : request;
         let selectedSourceContext:Promise<FrontendRenderContext>|undefined;
         const sourceContext=()=>selectedSourceContext??=(async()=>{const snapshot=await options.content?.();return snapshot?{...context,siteContent:snapshot}:context;})();
-        const current = await options.publicAsset?.(get) ?? await site(get);
+        const current = await options.publicAsset?.(request) ?? await site(get);
         if (current) {
           response=current;
           // Native collection handlers may return404 for a verified historical
@@ -112,7 +133,7 @@ export function createSeoHttpAdapter(options: SeoHttpAdapterOptions): (request: 
             const known=pageByPath(url.pathname,currentContext);
             if(!editorial && !legacyDisposition(url.pathname,currentContext) && (!known || pageAvailable(known,currentContext))) {
               const source=await options.sourcePage(get,currentContext);
-              if(source)response=source;
+              if(source)response=source;else response=futureCalendarPage(get,currentContext)??response;
             }
           }
         }
@@ -120,7 +141,7 @@ export function createSeoHttpAdapter(options: SeoHttpAdapterOptions): (request: 
           const disposition=await options.sourceDisposition?.(url.pathname);
           response=disposition?.kind==="gone" ? boundary(410,"Page no longer available")
             : disposition?.kind==="redirect" ? new Response(null,{status:301,headers:{Location:disposition.location+url.search,"Cache-Control":"no-store"}})
-            : await options.sourcePage?.(get,await sourceContext()) ?? boundary(404,"Page not found");
+            : await options.sourcePage?.(get,await sourceContext()) ?? futureCalendarPage(get,await sourceContext()) ?? boundary(404,"Page not found");
         }
       }
       // Calendar export/filter HTML duplicates and empty legacy taxonomy forms

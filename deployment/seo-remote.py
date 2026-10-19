@@ -18,15 +18,15 @@ import tarfile
 from urllib.parse import urlsplit, parse_qs
 import time
 
-UPGRADE_SHA = "e41bbc7b36e883665a4f57c07ed1fbd9b222f018d07af9597f90cebfd4e62fb2"
-PREVIOUS_COMMIT = "25f4b3331683e32926eedcdd4ae5aee726cd3eca"
-PREVIOUS_IMAGE = "sha256:6345b625e88db5ccf23dc503a7d0f6fef0862655b76264775268a63fecfe6a9f"
+UPGRADE_SHA = "8d399d913a7ad30fa7e94d76c4dbbf0e6ac749a99d0937f6e92187bf4c989cdd"
+PREVIOUS_COMMIT = "d068c2214e2d53b6c50de4788305acaf7fa052ed"
+PREVIOUS_IMAGE = "sha256:cfdcd574a493753c73a349da9710fd44f489a07d4dbde3562c7029132201b2ff"
 BASE_SCHEMA_ORDER = 28
-EXISTING_SOURCE_SHA = "4f001647949abd7d93f5457cfe51c070cb8f5dc1f0edd8a91aef106dad58c2b7"
+EXISTING_SOURCE_SHA = "5f44735379b990f0f4950eef509ce28434cd1036632fea4abf897e237a98c83a"
 EXISTING_BUNDLE_SHA = "3f34acc4b850884c4fbb44bbb66fc0b42c23bb1dfa7f7416f5840cb80ffb1917"
-INCOMING_BUNDLE_SHA = "3d278b16957b4ecdd4c4c9d1959f7fe5aa72977e216d3f1ec70f11302dafef4a"
+INCOMING_BUNDLE_SHA = "e4621e98c6d45a64f8d9b9550d5390877d6305fe6db99a67d3a32c228bb6b072"
 SOURCE_TABLES = ("source_public_versions", "source_public_routes", "source_public_imports")
-ASSET_KEY = re.compile(r"[a-f0-9]{64}\.(?:png|jpg|webp|gif|avif|svg|ico|pdf|doc|docx|xls|xlsx|ppt|pptx|rss|atom|ics|zip|otf)")
+ASSET_KEY = re.compile(r"[a-f0-9]{64}\.(?:png|jpg|webp|gif|avif|svg|ico|pdf|doc|docx|xls|xlsx|ppt|pptx|rss|atom|ics|zip|otf|mp3|mp4)")
 MIGRATION = "0028_source_public_migration"
 
 
@@ -156,7 +156,20 @@ def asset_expectations(bundle):
 def verify_asset_archive(base, archive_path, bundle):
     expected = asset_expectations(bundle)
     with tarfile.open(archive_path) as archive:
-        members = archive.getmembers(); names = [member.name for member in members]
+        # D-183 copied the exact frozen recording bodies first, one file at a
+        # time, retaining >=2 GiB free throughout. Do not duplicate a 1.1-GiB
+        # archive on the host. An empty archive is admitted only for that exact
+        # recording cohort when every installed immutable file is verified.
+        members = archive.getmembers()
+        if not members and len(expected)==118 and sum(key.endswith('.mp3') for key in expected)==117 and sum(key.endswith('.mp4') for key in expected)==1:
+            directory=base.ASSETS/'source-public'
+            if directory.is_symlink() or not directory.is_dir():fail('seo_recording_root')
+            for key,value in expected.items():
+                target=directory/key
+                if target.is_symlink() or not target.is_file() or target.stat().st_size!=value['bytes'] or base.sha(target)!=value['sha256']:
+                    fail('seo_preinstalled_recording_integrity')
+            return expected
+        names = [member.name for member in members]
         if len(names) != len(set(names)) or any(not member.isfile() for member in members) or set(names) != {"source-public/" + key for key in expected}: fail("seo_asset_archive_scope")
         for member in members:
             asset = expected[member.name.removeprefix("source-public/")]
@@ -210,7 +223,7 @@ def owner_secret_identity(base, path):
 
 def verify_existing_source(actual, bundle_hash):
     # Require the frozen incumbent history and the exact reviewed additive delta.
-    expected={"source_public_versions":7642,"source_public_routes":5750,"source_public_imports":7}
+    expected={"source_public_versions":8033,"source_public_routes":6141,"source_public_imports":8}
     if actual.get("sourceCounts") != expected or actual.get("sourceSha256") != EXISTING_SOURCE_SHA or bundle_hash != INCOMING_BUNDLE_SHA:
         fail("seo_existing_source_drift")
 
@@ -241,6 +254,38 @@ def verify_source_memory():
         time.sleep(2)
 
 
+def composite_recording_backup(base, root, assets, bundle, receipt):
+    """Cover every asset with a tar member or the frozen private recording backup."""
+    if receipt.get("format")!="sgbc-original-recording-backup-result-v1" or receipt.get("manifestSha256")!="10833a17ef8adb0acde739b765340a1b677463ec6b3ec5fcf4c82e945e1b46db":
+        fail("seo_recording_backup_scope")
+    expected=asset_expectations(bundle);rows=receipt.get("rows",[])
+    if len(expected)!=118 or len(rows)!=118 or len({r.get("file") for r in rows})!=118:
+        fail("seo_recording_backup_scope")
+    by_key={r["file"]:r for r in rows}
+    if set(by_key)!=set(expected):fail("seo_recording_backup_scope")
+    external={}
+    for key,value in expected.items():
+        row=by_key[key];name="source-public/"+key;path=base.ASSETS/name
+        if row.get("outcome")!="verified" or row.get("sourceRangeVerified") is not True or row.get("sha256")!=value["sha256"] or row.get("bytes")!=value["bytes"] or row.get("contentType")!=value["contentType"] or assets.get(name)!=value["bytes"] or base.sha(path)!=value["sha256"]:
+            fail("seo_recording_backup_integrity")
+        external[name]={"sha256":value["sha256"],"bytes":value["bytes"]}
+    ordinary=set(assets)-set(external)
+    archive_path=root/"uploads-before.tar"
+    with tarfile.open(archive_path,"x") as archive:
+        for name in sorted(ordinary):archive.add(base.checked(base.ASSETS/name),arcname=name,recursive=False)
+    archive_path.chmod(0o600)
+    with tarfile.open(archive_path) as archive:
+        members=archive.getmembers()
+        if len(members)!=len(ordinary) or {m.name for m in members}!=ordinary or any(not m.isfile() for m in members):
+            fail("seo_composite_backup_scope")
+        for member in members:
+            if member.size!=assets[member.name] or hashlib.sha256(archive.extractfile(member).read()).hexdigest()!=pathlib.Path(member.name).stem:
+                fail("seo_composite_backup_integrity")
+    if ordinary|set(external)!=set(assets):fail("seo_composite_backup_coverage")
+    base.save(root/"recordings-backup.private.json",receipt)
+    base.save(root/"asset-backup-coverage.private.json",{"format":"sgbc-composite-asset-backup-v1","ordinaryArchiveSha256":base.sha(archive_path),"ordinaryFiles":len(ordinary),"recordingBackupManifestSha256":receipt["manifestSha256"],"externalRecordings":external,"files":len(assets),"completeCoverage":True,"externalLocation":"verified_owner_local_recording_backup","restoreRequiresBothParts":True})
+
+
 def prepare(base, upgrade, helper, root, incoming, commit, source_hash, inventory_hash, runtime_hash, bundle_hash, assets_hash):
     expected = base.load(incoming / "inventory.private.json"); actual = inventory(base, upgrade, helper)
     for key in ("runtimes", "counts", "cmsCounts", "cmsSha256", "uploadsSha256", "unrelatedSha256", "secretFilesSha256"):
@@ -252,11 +297,16 @@ def prepare(base, upgrade, helper, root, incoming, commit, source_hash, inventor
     verify_source_memory()
     bundle = base.load(incoming / "source-public.bundle.private.json")
     verify_asset_archive(base, incoming / "source-public-assets.private.tar", bundle)
-    upgrade.prepare(base, helper, root, incoming, commit, source_hash, inventory_hash, runtime_hash)
+    recording_receipt=base.checked(incoming/"recordings-backup.private.json")
+    if base.sha(recording_receipt)!="15361a83876dfe1150e586521d7e1f4c5632678d5cb253dc1e896f4f2e2bb045":
+        fail("seo_recording_backup_receipt_binding")
+    receipt=base.load(recording_receipt)
+    upgrade.prepare(base, helper, root, incoming, commit, source_hash, inventory_hash, runtime_hash,
+                    asset_backup=lambda target,folder,assets:composite_recording_backup(target,folder,assets,bundle,receipt))
     recovery = base.load(root / "recovery.json")
     database_recovery(base, helper, root)
     if upgrade.snapshot_hash(upgrade.cms_snapshot(base)) != actual["cmsSha256"] or base.preservation() != actual["unrelatedSha256"]: fail("seo_content_changed_during_backup")
-    if base.sha(incoming / "source-resource-redirects.private.json") != "1ac68197c8b587710e36e26176c46addcd40642677537b091efbe04afcb4380a": fail("seo_resource_manifest_scope")
+    if base.sha(incoming / "source-resource-redirects.private.json") != "5ba8b27278a147cef447cb932752b61698677d44ea3f3bb623fadbd657d2f463": fail("seo_resource_manifest_scope")
     for name in ("source-public.bundle.private.json", "source-public-assets.private.tar", "source-resource-redirects.private.json"):
         shutil.copyfile(base.checked(incoming / name), root / name); (root / name).chmod(0o600)
     base.save(root / "source-before.private.json", source_snapshot(base))
@@ -292,7 +342,7 @@ def verify_resource_history(base, root):
     if not extra and not extra_audit:return
     manifest=base.load(root / "source-resource-redirects.private.json")
     expected={row["oldPath"]:row for row in manifest["rows"]};ids={row["id"] for row in extra}
-    if len(extra)>298 or any(row.get("source_sermon_id") is not None or row.get("status_code")!=301 or row.get("reason")!="verified_original_attachment_resource" or not row.get("verified_at") or row["old_path"] not in expected or row["new_path"]!=expected[row["old_path"]]["newPath"] for row in extra):
+    if len(extra)>534 or any(row.get("source_sermon_id") is not None or row.get("status_code")!=301 or row.get("reason")!="verified_original_attachment_resource" or not row.get("verified_at") or row["old_path"] not in expected or row["new_path"]!=expected[row["old_path"]]["newPath"] for row in extra):
         fail("seo_unscoped_redirect_added")
     by_id={row["id"]:expected[row["old_path"]] for row in extra}
     if len(extra_audit)!=len(extra) or any(row.get("entity_type")!="redirect" or row.get("entity_id") not in ids or row.get("actor_role")!="system" or row.get("actor_subject")!="source-public-migration" or row.get("action")!="seo.original_resource_redirect" or row.get("request_correlation_id")!="d182-resource-redirects:a22e67b4d8e78403446add446a46ae4be762f86c0188d0efa3fd4a5b389cce70" or row.get("outcome")!="succeeded" or "assetSha256:"+by_id.get(row.get("entity_id"),{}).get("assetSha256","") not in row.get("changed_fields",[]) or "newPath:"+by_id.get(row.get("entity_id"),{}).get("newPath","") not in row.get("changed_fields",[]) for row in extra_audit):
@@ -355,7 +405,7 @@ def canaries(base, upgrade, helper, root, recovery, phase):
             upgrade.compose_up(base, helper, path, recovery["image"])
             if phase == "candidate":
                 # Readiness alone cannot prove the first visitor render survives.
-                probe = """(async()=>{const a=require('node:assert/strict');for(let n=0;n<12;n++){const r=await fetch('http://127.0.0.1:8080/',{signal:AbortSignal.timeout(60000)});a.equal(r.status,200);a.match(r.headers.get('x-robots-tag')||'',/noindex/);a.match(r.headers.get('x-seo-candidate')||'',/^[a-f0-9]{64}$/);a.match(await r.text(),/<main(?:\s|>)/);}console.log('source_visitor_render_passed')})().catch(()=>{process.exitCode=1})"""
+                probe = r"""(async()=>{const a=require('node:assert/strict');for(let n=0;n<12;n++){const r=await fetch('http://127.0.0.1:8080/',{signal:AbortSignal.timeout(60000)});a.equal(r.status,200);a.match(r.headers.get('x-robots-tag')||'',/noindex/);a.match(r.headers.get('x-seo-candidate')||'',/^[a-f0-9]{64}$/);a.match(await r.text(),/<main(?:\s|>)/);}console.log('source_visitor_render_passed')})().catch(()=>{process.exitCode=1})"""
                 ids = base.run(["docker", "compose", "-f", str(path), "ps", "-q", "app"]).decode().split()
                 if len(ids) != 1: fail("seo_source_canary_container")
                 base.run(["docker", "exec", ids[0], "node", "-e", probe], timeout=135)
@@ -478,7 +528,7 @@ def adopt_cms(base, upgrade, helper, root, recovery):
         frozen = base.load(marker)
         if plan["planned"] and plan != frozen: fail("seo_cms_plan_changed")
     else:
-        if plan.get("planned") != 1 or plan.get("held") != 1223 or plan.get("planSha256") != "462ad12b39e62293e45800a4aa3a51a141072643aaf5be266db20a2b5a20aa8a":
+        if plan.get("planned") != 1 or plan.get("held") != 1223 or plan.get("planSha256") != "7dce063d0c26a45f0a1653152a964f749581b8741c69357403eb7075b9731969":
             fail("seo_cms_plan_scope")
         frozen = plan; base.save(marker, frozen)
     config["services"]["app"]["environment"]["SOURCE_CMS_PLAN_SHA256"] = frozen["planSha256"]
@@ -514,7 +564,7 @@ def import_resource_redirects(base, upgrade, helper, root, recovery):
     verify_source_ready(base, root, recovery)
     before = upgrade.cms_snapshot(base); source_before = source_snapshot(base); assets_before = base.assets_manifest()
     manifest = base.checked(root / "source-resource-redirects.private.json")
-    if base.sha(manifest) != "1ac68197c8b587710e36e26176c46addcd40642677537b091efbe04afcb4380a":
+    if base.sha(manifest) != "5ba8b27278a147cef447cb932752b61698677d44ea3f3bb623fadbd657d2f463":
         fail("seo_resource_manifest_scope")
     config = base.load(root / "source-maintenance.json")
     config["services"]["app"]["environment"]["SOURCE_RESOURCE_REDIRECTS_SHA256"] = base.sha(manifest)
@@ -523,7 +573,7 @@ def import_resource_redirects(base, upgrade, helper, root, recovery):
     save_verified_configuration(base, path, config)
     command = ["docker", "compose", "-f", str(path), "run", "--rm", "--no-deps", "--pull", "never", "app", "import-redirects"]
     result = json.loads(base.run(command, timeout=600)); replay = json.loads(base.run(command, timeout=600))
-    if result.get("result", {}).get("held") or replay.get("result", {}).get("held") or replay.get("result", {}).get("inserted") != 0 or replay.get("result", {}).get("unchanged") != 298:
+    if result.get("result", {}).get("held") or replay.get("result", {}).get("held") or replay.get("result", {}).get("inserted") != 0 or replay.get("result", {}).get("unchanged") != 534:
         fail("seo_resource_redirect_result_scope")
     after = upgrade.cms_snapshot(base)
     for name in ("cms_entities", "cms_revisions", "cms_routes", "media_assets", "audit_events", "schema_migrations"):

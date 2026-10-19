@@ -61,6 +61,7 @@ export type Schedule =
 type ChurchEventInput = Omit<ChurchEvent, "id"> & { id: string };
 
 export interface ChurchEvent {
+  calendarRevision?:{modifiedAt:string;sequence:number;cancelled?:boolean};
   /** Imported historical occurrence pages need not duplicate a maintained recurring series. */
   calendarVisible?: boolean;
   modules?: import('./types').Block[];

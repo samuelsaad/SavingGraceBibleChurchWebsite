@@ -11,7 +11,8 @@ export function retainedSourceCopy(body:Html,path:string,replace:boolean,context
  const originals=context.siteContent?.sourceContentByPath?.[path];if(replace||!originals?.length)return body;
  const current=body.toString(),visible=text(current),extras:SourceNode[]=[],seenExtras=new Set<string>();
  const present=(node:SourceNode):boolean=>{
-  const words=nodeText(node);if(words&&!visible.includes(words))return false;
+  const words=nodeText(node);
+  if(path==="/contact/"&&current.includes('action="/contact/send/"')&&words==="To use CAPTCHA, you need Really Simple CAPTCHA plugin installed.")return true;if(words&&!visible.includes(words))return false;
   for(const key of ['id','lang','dir','title'] as const)if(node[key]!==undefined&&!current.includes(`${key}="${escapeHtml(node[key]!)}"`))return false;
   if(node.src&&!current.includes(node.src.replaceAll('&','&amp;')))return false;
   if(node.href){let input=node.href;try{const url=new URL(input);if(['www.savinggrace.org.au','savinggrace.org.au'].includes(url.hostname))input=url.pathname+url.search+url.hash;}catch{}const href=resolveHref(input,context);if(!current.includes(href.replaceAll('&','&amp;')))return false;}

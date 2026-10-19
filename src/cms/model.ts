@@ -33,9 +33,9 @@ export type CmsDocument = Record<string,unknown>;
 export interface CmsSeed {key:string;kind:CmsKind;title:string;path?:string;payload:object;publish:boolean}
 export interface CmsRevision {id:string;revisionNumber:number;content:CmsDocument;createdAt:string;actor:string;sourceRevisionId:string|null}
 export interface CmsEntity {id:string;key:string;kind:CmsKind;rowVersion:number;draftRevisionId:string;publishedRevisionId:string|null;draft:CmsRevision;published:CmsRevision|null}
-export interface CmsPublishedDocument {initialMetadata?:{title:string;heading:string;seeded:boolean};modifiedAt?:string;id:string;key:string;kind:CmsKind;revisionId:string;content:CmsDocument;payload:CmsDocument}
+export interface CmsPublishedDocument {revisionNumber?:number;calendarSequence?:number;calendarModifiedAt?:string;initialMetadata?:{title:string;heading:string;seeded:boolean};modifiedAt?:string;id:string;key:string;kind:CmsKind;revisionId:string;content:CmsDocument;payload:CmsDocument}
 export interface CmsRoute {path:string;entityId:string;status:200|301|410;targetPath:string|null}
-export interface CmsSnapshot {documents:Record<string,CmsDocument>;entities:CmsPublishedDocument[];routes:CmsRoute[]}
+export interface CmsSnapshot {cancelledCalendarEvents?:Array<{content:CmsDocument;modifiedAt:string;sequence:number}>;documents:Record<string,CmsDocument>;entities:CmsPublishedDocument[];routes:CmsRoute[]}
 export interface CmsMutation {expectedRowVersion:number}
 export interface CmsRevisionMutation extends CmsMutation {revisionId:string}
 export interface CmsUnpublishInput extends CmsMutation {disposition:'gone'|'redirect';targetPath?:string}

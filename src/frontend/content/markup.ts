@@ -25,8 +25,8 @@ export function isExternalHref(href: string): boolean {
 
 function resourceLink(url:URL,context:FrontendRenderContext):{path:string;suffix:string}|null{
  const direct=context.sourceResourceRedirects?.[url.pathname];if(direct)return {path:direct,suffix:url.search+url.hash};
- const ids=url.searchParams.getAll('attachment_id');if(url.pathname!=='/'||ids.length!==1||!/^[1-9][0-9]{0,14}$/u.test(ids[0]!)||['s','search','preview','action','post_type','page','p','page_id'].some(key=>url.searchParams.has(key)))return null;
- const target=context.sourceResourceRedirects?.['/?attachment_id='+ids[0]];if(!target)return null;
+ const ids=url.searchParams.getAll('attachment_id');if(!['/','/feed/'].includes(url.pathname)||ids.length!==1||!/^[1-9][0-9]{0,14}$/u.test(ids[0]!)||['s','search','preview','action','post_type','page','p','page_id'].some(key=>url.searchParams.has(key)))return null;
+ const target=context.sourceResourceRedirects?.[url.pathname+'?attachment_id='+ids[0]];if(!target)return null;
  const query=url.search.slice(1).split('&').filter(part=>[...new URLSearchParams(part).keys()][0]!=='attachment_id').join('&');return {path:target,suffix:(query?'?'+query:'')+url.hash};
 }
 

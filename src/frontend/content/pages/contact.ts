@@ -1,5 +1,5 @@
 /**
- * Contact Us (WordPress page 3002, /contact-us-2/ → /contact/). Text transcribed verbatim from the WordPress export of 24 September 2026; the Contact Form 7 form has no mail service in this application, so the page offers the real e-mail, telephone and map destinations instead.
+ * Contact Us (WordPress page 3002, /contact-us-2/ → /contact/). Text transcribed verbatim from the WordPress export of 24 September 2026; the current validated contact form retains the real e-mail, telephone and map alternatives. Live delivery is separately configuration-gated.
  */
 import type { SitePage } from "../types";
 

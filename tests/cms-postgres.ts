@@ -1,3 +1,4 @@
+import {verifyCalendarCmsLifecycle} from './helpers/calendar-cms-lifecycle';
 import type {Pool} from 'pg';
 import {expect,it} from 'vitest';
 import {assertDisposableIntegrationTestDatabase} from '../src/migration/local-database-safety';
@@ -60,6 +61,7 @@ export function registerCmsPostgresTests(getPool:()=>Pool){
    linking=await repository.save(linking.id,{expectedRowVersion:linking.rowVersion,content:{...linking.draft.content,modules:[{id:'document',enabled:true,block:{kind:'downloads',items:[{title:'Anonymous document',text:'An anonymous document fixture.',label:'Download',href:'/cms-assets/'+pdfKey}]}}]}},actor);
    await repository.publish(linking.id,{expectedRowVersion:linking.rowVersion,revisionId:linking.draftRevisionId},actor);expect(await repository.canReadAsset(pdfKey,false)).toBe(true);
    await verifyCmsSeoHttpLifecycle(repository);
+   await verifyCalendarCmsLifecycle(repository,actor);
    expect((await pool.query('SELECT count(*)::int n,sum(row_version)::text versions FROM sermons')).rows).toEqual(before);
   }finally{
    // Only this guarded disposable test family creates these tables and anonymous rows.

@@ -1,3 +1,4 @@
+import {Readable} from 'node:stream';
 import { createServer } from "node:http";
 import {createStagingCmsIntegration} from "../cms/staging-integration";
 import { Pool } from "pg";
@@ -43,7 +44,7 @@ async function main() {
     try {
       const response = await handler(await toWebRequest(incoming, cms?.origin??"http://127.0.0.1:8080", cms?.maximumBodyBytes??16_384));
       outgoing.writeHead(response.status, Object.fromEntries(response.headers));
-      outgoing.end(Buffer.from(await response.arrayBuffer()));
+      if(response.body)Readable.fromWeb(response.body as import('node:stream/web').ReadableStream).pipe(outgoing);else outgoing.end();
     } catch { outgoing.writeHead(400, { "Cache-Control": "no-store", "X-Robots-Tag": "noindex" }); outgoing.end("request_refused"); }
   });
   server.requestTimeout = 15000;

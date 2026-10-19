@@ -175,7 +175,7 @@ def inventory(base, helper):
     return result
 
 
-def prepare(base, helper, root, incoming, commit, source_hash, inventory_hash, runtime_hash):
+def prepare(base, helper, root, incoming, commit, source_hash, inventory_hash, runtime_hash, asset_backup=None):
     if root.exists():
         fail("cms_upgrade_release_exists")
     if base.sha(incoming / "release.tar") != source_hash or base.sha(incoming / "inventory.private.json") != inventory_hash or base.sha(incoming / "runtime.tar") != runtime_hash:
@@ -201,10 +201,15 @@ def prepare(base, helper, root, incoming, commit, source_hash, inventory_hash, r
     base.save(root / "cms-before.private.json", before)
     assets = base.assets_manifest()
     base.save(root / "uploads-before.private.json", assets)
-    with tarfile.open(root / "uploads-before.tar", "x") as archive:
-        for name in assets:
-            archive.add(base.ASSETS / name, arcname=name, recursive=False)
-    (root / "uploads-before.tar").chmod(0o600)
+    if asset_backup is None:
+        with tarfile.open(root / "uploads-before.tar", "x") as archive:
+            for name in assets:
+                archive.add(base.ASSETS / name, arcname=name, recursive=False)
+        (root / "uploads-before.tar").chmod(0o600)
+    else:
+        # A committed caller may provide a verified composite backup. Its exact
+        # coverage/dependencies must be written before the frozen file binding.
+        asset_backup(base, root, assets)
     for name in ("release.tar", "runtime.tar"):
         shutil.copyfile(base.checked(incoming / name), root / name)
         (root / name).chmod(0o600)

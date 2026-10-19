@@ -106,7 +106,7 @@ class SeoDeploymentTest(unittest.TestCase):
                 OP.source_snapshot(SimpleNamespace(sql=sql))
 
     def test_existing_source_retry_refuses_unknown_history_or_bundle(self):
-        valid={'sourceCounts':{'source_public_versions':7642,'source_public_routes':5750,'source_public_imports':7},'sourceSha256':OP.EXISTING_SOURCE_SHA}
+        valid={'sourceCounts':{'source_public_versions':8033,'source_public_routes':6141,'source_public_imports':8},'sourceSha256':OP.EXISTING_SOURCE_SHA}
         OP.verify_existing_source(valid,OP.INCOMING_BUNDLE_SHA)
         with self.assertRaisesRegex(RuntimeError,'seo_existing_source_drift'):OP.verify_existing_source(valid,OP.EXISTING_BUNDLE_SHA)
         for changed,bundle in (({**valid,'sourceSha256':'0'*64},OP.INCOMING_BUNDLE_SHA),(valid,'0'*64),({**valid,'sourceCounts':{}},OP.INCOMING_BUNDLE_SHA)):
@@ -271,8 +271,8 @@ class SeoDeploymentTest(unittest.TestCase):
                 calls.append(operation)
                 if operation == "cms-plan":
                     self.assertNotIn("SOURCE_CMS_PLAN_SHA256", cfg["services"]["app"]["environment"])
-                    return json.dumps({"planned": 1, "held": 1223, "planSha256": "462ad12b39e62293e45800a4aa3a51a141072643aaf5be266db20a2b5a20aa8a"})
-                self.assertEqual(cfg["services"]["app"]["environment"]["SOURCE_CMS_PLAN_SHA256"], "462ad12b39e62293e45800a4aa3a51a141072643aaf5be266db20a2b5a20aa8a")
+                    return json.dumps({"planned": 1, "held": 1223, "planSha256": "7dce063d0c26a45f0a1653152a964f749581b8741c69357403eb7075b9731969"})
+                self.assertEqual(cfg["services"]["app"]["environment"]["SOURCE_CMS_PLAN_SHA256"], "7dce063d0c26a45f0a1653152a964f749581b8741c69357403eb7075b9731969")
                 return json.dumps({"result": {"inserted": 0}, "assets": {"inserted": 0}})
             fixture.run = run
             upgrade = SimpleNamespace(cms_snapshot=lambda _: {name: [] for name in ("cms_entities", "cms_revisions", "cms_routes", "media_assets", "audit_events", "schema_migrations")})
@@ -336,3 +336,53 @@ class ResourceRedirectHistoryTests(unittest.TestCase):
         fake.load=lambda path:before if path.name=="resource-history-before.private.json" else {"rows":[]}
         with patch.object(OP,"resource_history_snapshot",return_value={"redirects":[old,extra],"audit":[]}):
             with self.assertRaisesRegex(RuntimeError,"seo_unscoped_redirect_added"):OP.verify_resource_history(fake,pathlib.Path("/anonymous"))
+
+
+class PreinstalledRecordingTests(unittest.TestCase):
+    def test_empty_transfer_archive_requires_every_exact_preinstalled_recording(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root=pathlib.Path(folder);(root/'source-public').mkdir()
+            pages=[]
+            for n in range(118):
+                data=('ID3anonymous recording '+str(n)).encode();value=asset(data,'mp4' if n==117 else 'mp3');value['contentType']='video/mp4' if n==117 else 'audio/mpeg'
+                (root/'source-public'/value['storageKey']).write_bytes(data)
+                pages.append({'kind':'asset','path':'/wp-content/uploads/'+str(n)+'.mp3','asset':value})
+            transfer=root/'empty.tar'
+            with tarfile.open(transfer,'w'):pass
+            self.assertEqual(len(OP.verify_asset_archive(base(root),transfer,{'pages':pages})),118)
+            (root/'source-public'/pages[0]['asset']['storageKey']).write_bytes(b'wrong')
+            with self.assertRaisesRegex(RuntimeError,'seo_preinstalled_recording_integrity'):
+                OP.verify_asset_archive(base(root),transfer,{'pages':pages})
+            with self.assertRaisesRegex(RuntimeError,'seo_asset_archive_scope'):
+                OP.verify_asset_archive(base(root),transfer,{'pages':pages[:117]})
+
+class CompositeRecordingBackupTests(unittest.TestCase):
+    def test_complete_two_part_backup_and_refusal_of_unverified_recording(self):
+        with tempfile.TemporaryDirectory() as folder:
+            assets_root=pathlib.Path(folder)/'assets';assets_root.mkdir();(assets_root/'source-public').mkdir()
+            pages=[];rows=[];manifest={}
+            for n in range(118):
+                data=('ID3anonymous recording '+str(n)).encode();value=asset(data,'mp4' if n==117 else 'mp3');value['contentType']='video/mp4' if n==117 else 'audio/mpeg'
+                (assets_root/'source-public'/value['storageKey']).write_bytes(data)
+                pages.append({'kind':'asset','path':'/wp-content/uploads/'+str(n)+'.mp3','asset':value})
+                rows.append({'file':value['storageKey'],'outcome':'verified','sourceRangeVerified':True,**{k:value[k] for k in ('sha256','bytes','contentType')}})
+                manifest['source-public/'+value['storageKey']]=len(data)
+            data=b'anonymous ordinary image';key=hashlib.sha256(data).hexdigest()+'.png';(assets_root/key).write_bytes(data);manifest[key]=len(data)
+            fixture=base(assets_root);fixture.checked=lambda path:path
+            fixture.save=lambda path,value:path.write_text(json.dumps(value))
+            receipt={'format':'sgbc-original-recording-backup-result-v1','manifestSha256':'10833a17ef8adb0acde739b765340a1b677463ec6b3ec5fcf4c82e945e1b46db','rows':rows}
+            backup=pathlib.Path(folder)/'backup';backup.mkdir()
+            OP.composite_recording_backup(fixture,backup,manifest,{'pages':pages},receipt)
+            coverage=json.loads((backup/'asset-backup-coverage.private.json').read_text())
+            self.assertTrue(coverage['completeCoverage']);self.assertTrue(coverage['restoreRequiresBothParts'])
+            self.assertEqual((coverage['files'],coverage['ordinaryFiles'],len(coverage['externalRecordings'])),(119,1,118))
+            restored=pathlib.Path(folder)/'restored';restored.mkdir()
+            with tarfile.open(backup/'uploads-before.tar')as archive:
+                self.assertEqual(archive.getnames(),[key]);archive.extractall(restored,filter='data')
+            for name,value in coverage['externalRecordings'].items():
+                path=restored/name;path.parent.mkdir(exist_ok=True);path.write_bytes((assets_root/name).read_bytes())
+            self.assertEqual({p.relative_to(restored).as_posix():p.stat().st_size for p in restored.rglob('*')if p.is_file()},manifest)
+            receipt['rows'][0]['sourceRangeVerified']=False
+            rejected=pathlib.Path(folder)/'rejected';rejected.mkdir()
+            with self.assertRaisesRegex(RuntimeError,'seo_recording_backup_integrity'):OP.composite_recording_backup(fixture,rejected,manifest,{'pages':pages},receipt)
+            self.assertFalse((rejected/'uploads-before.tar').exists())

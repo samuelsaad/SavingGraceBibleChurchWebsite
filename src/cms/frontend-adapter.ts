@@ -33,10 +33,10 @@ export function createCmsFrontendSnapshot(snapshot:CmsSnapshot,assets:readonly F
       posts.push({...metadata,blocks:blocks(modules,"modules",visualEditor,immutableSourceContent)} as BlogPost);
     } else if(entity.kind==="home") result.home=structuredClone(content) as unknown as CmsHomePayload;
     else if(entity.kind==="settings") result.settings=structuredClone(content) as unknown as CmsSettingsPayload;
-    else if(entity.kind==="event"){const {modules,...metadata}=content as unknown as CmsEventPayload;events.push({...structuredClone(metadata),...(modules?{modules:blocks(modules,'modules',visualEditor,immutableSourceContent)}:{})});}
+    else if(entity.kind==="event"){const {modules,...metadata}=content as unknown as CmsEventPayload;events.push({...structuredClone(metadata),calendarRevision:{modifiedAt:entity.calendarModifiedAt??"2026-09-24T00:00:00Z",sequence:entity.calendarSequence??0},...(modules?{modules:blocks(modules,'modules',visualEditor,immutableSourceContent)}:{})});}
     else if(entity.kind==="venue"){const venue=structuredClone(content) as unknown as CmsVenuePayload;venues[venue.id]=venue;}
   }
   const embedded:FrontendAsset[]=siteImages.map(image=>({id:image.id,path:image.id==="favicon-32"?"/brand/favicon-32.png":image.id==="icon-192"?"/brand/icon-192.png":image.path,type:image.type,width:image.width,height:image.height,alt:image.alt}));
   embedded.push({id:"church-logo",path:logoPath,type:"image/png",width:logoWidth,height:logoHeight,alt:logoAlt});
-  return {...result,pages,posts,events,venues,sourceContentAdoptedByPath,modifiedAtByPath,initialMetadataByPath,assets:Object.fromEntries([...embedded,...assets].map(asset=>[asset.id,{...asset}]))};
+  return {...result,cancelledCalendarEvents:(snapshot.cancelledCalendarEvents??[]).map(item=>({...item.content,calendarRevision:{modifiedAt:item.modifiedAt,sequence:item.sequence,cancelled:true}} as unknown as import("../frontend/content/events").ChurchEvent)),pages,posts,events,venues,sourceContentAdoptedByPath,modifiedAtByPath,initialMetadataByPath,assets:Object.fromEntries([...embedded,...assets].map(asset=>[asset.id,{...asset}]))};
 }

@@ -105,7 +105,7 @@ export function renderChurchPage(page: SitePage, data: ChurchPageData, context: 
 
 /* ---------------------------------------------------------------- events */
 
-function occurrenceRow(occurrence: EventOccurrence, context: FrontendRenderContext): Html {
+export function occurrenceRow(occurrence: EventOccurrence, context: FrontendRenderContext,includeDescription=false): Html {
   const links = siteLinks(context);
   const venue = eventVenue(occurrence.event, context);
   return html`<li class="event">
@@ -115,6 +115,7 @@ function occurrenceRow(occurrence: EventOccurrence, context: FrontendRenderConte
       <span class="event__title"><a href="${links.path(occurrence.event.path)}">${occurrence.event.title}</a></span>
       <span class="event__venue">${venue.name}, ${venue.address}, ${venue.locality}</span>
     </span>
+    ${includeDescription?html`<div class="event__description prose">${occurrence.event.description.map(value=>paragraph(value,context))}</div>`:null}
   </li>`;
 }
 
@@ -225,14 +226,18 @@ function icsEscape(value: string): string {
   return value.replace(/\\/gu, "\\\\").replace(/;/gu, "\\;").replace(/,/gu, "\\,").replace(/\n/gu, "\\n");
 }
 
-function icsFold(line: string): string {
-  const out: string[] = [];
-  let rest = line;
-  while (rest.length > 72) { out.push(rest.slice(0, 72)); rest = ` ${rest.slice(72)}`; }
-  out.push(rest);
-  return out.join("\r\n");
+function icsFold(line:string):string {
+ const lines:string[]=[];let current='',bytes=0;
+ for(const character of line){const size=new TextEncoder().encode(character).length;if(bytes+size>74){lines.push(current);current=' ';bytes=1;}current+=character;bytes+=size;}
+ lines.push(current);return lines.join('\r\n');
 }
-
+/** RFC 5545 UNTIL must be UTC when DTSTART carries a TZID. */
+function melbourneUtc(date:string,time:string):string{
+ const wall=new Date(date+'T'+time+':00Z').getTime();let instant=wall;
+ const formatter=new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
+ for(let n=0;n<3;n++){const p=Object.fromEntries(formatter.formatToParts(new Date(instant)).map(part=>[part.type,part.value]));const displayed=Date.parse(p.year+'-'+p.month+'-'+p.day+'T'+p.hour+':'+p.minute+':'+p.second+'Z');instant+=wall-displayed;}
+ return new Date(instant).toISOString().replace(/[-:]/gu,'').replace('.000','');
+}
 const weekdayCodes = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
 
 /** The site's iCalendar feed of every event, with recurrence rules as exported. */
@@ -245,16 +250,18 @@ export function renderCalendarFeed(context:FrontendRenderContext=publicRenderCon
     "BEGIN:DAYLIGHT", "DTSTART:19701004T020000", "RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=1SU", "TZOFFSETFROM:+1000", "TZOFFSETTO:+1100", "TZNAME:AEDT", "END:DAYLIGHT",
     "END:VTIMEZONE"
   ];
-  for (const event of (context.siteContent?.events ?? events) as readonly ChurchEvent[]) {
+  for (const event of [...(context.siteContent?.events ?? events),...(context.siteContent?.cancelledCalendarEvents??[])] as readonly ChurchEvent[]) {
     if(event.calendarVisible===false)continue;
     const venue = eventVenue(event, context);
     const start = event.schedule.kind === "single" ? event.schedule.date : event.schedule.from;
-    lines.push("BEGIN:VEVENT", `UID:${event.id}@www.savinggrace.org.au`, `DTSTAMP:20260924T000000Z`, `DTSTART;TZID=Australia/Melbourne:${stamp(start, event.start)}`, `DTEND;TZID=Australia/Melbourne:${stamp(start, event.end)}`, `SUMMARY:${icsEscape(event.title)}`, `LOCATION:${icsEscape(`${venue.name}, ${venue.address}, ${venue.locality}`)}`, `URL:https://www.savinggrace.org.au${event.path}`);
+    const revision=event.calendarRevision,modified=revision?.modifiedAt??'2026-09-24T00:00:00Z';
+    const modifiedStamp=new Date(modified).toISOString().replace(/[-:]/gu,'').replace(/\.\d{3}Z$/u,'Z');
+    lines.push("BEGIN:VEVENT", `SEQUENCE:${revision?.sequence??0}`, `LAST-MODIFIED:${modifiedStamp}`, `STATUS:${revision?.cancelled?'CANCELLED':'CONFIRMED'}`, `UID:${event.id}@www.savinggrace.org.au`, `DTSTAMP:${modifiedStamp}`, `DTSTART;TZID=Australia/Melbourne:${stamp(start, event.start)}`, `DTEND;TZID=Australia/Melbourne:${stamp(start, event.end)}`, `SUMMARY:${icsEscape(event.title)}`, `LOCATION:${icsEscape(`${venue.name}, ${venue.address}, ${venue.locality}`)}`, `URL:https://www.savinggrace.org.au${event.path}`);
     if (event.description.length) lines.push(`DESCRIPTION:${icsEscape(event.description.join("\n\n"))}`);
     if (event.schedule.kind === "weekly") {
-      lines.push(`RRULE:FREQ=WEEKLY;BYDAY=${weekdayCodes[event.schedule.weekday]}${event.schedule.until ? `;UNTIL=${stamp(event.schedule.until, event.end)}` : ""}`);
+      lines.push(`RRULE:FREQ=WEEKLY;BYDAY=${weekdayCodes[event.schedule.weekday]}${event.schedule.until ? `;UNTIL=${melbourneUtc(event.schedule.until, event.end)}` : ""}`);
     } else if (event.schedule.kind === "monthly-first") {
-      lines.push(`RRULE:FREQ=MONTHLY;BYDAY=1${weekdayCodes[event.schedule.weekday]}${event.schedule.until ? `;UNTIL=${stamp(event.schedule.until, event.end)}` : ""}`);
+      lines.push(`RRULE:FREQ=MONTHLY;BYDAY=1${weekdayCodes[event.schedule.weekday]}${event.schedule.until ? `;UNTIL=${melbourneUtc(event.schedule.until, event.end)}` : ""}`);
     }
     if (event.schedule.kind !== "single" && event.schedule.exclusions?.length) {
       lines.push(`EXDATE;TZID=Australia/Melbourne:${event.schedule.exclusions.map((date) => stamp(date, event.start)).join(",")}`);

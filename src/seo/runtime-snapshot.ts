@@ -1,3 +1,4 @@
+import {configuredContactDelivery} from '../server/contact-mail';
 import {readSourceResourceRedirects} from './source-resource-redirects';
 import {sourcePresentationPolicy} from './source-route-policy';
 import {createLegacySourceSearch} from './source-search';
@@ -109,9 +110,15 @@ export function versionedHandlerCache<T>(fingerprint:()=>Promise<string>,build:(
  };
 }
 
-export async function createVersionedSourceHandler(options:{reader:Pool;assetDirectory:string;policy:SeoHttpPolicyInput;releaseIdentity:string;acceptedStageRepository?:import('../server/repositories/sermon-repository').PublicSermonRepository}){
+export async function createVersionedSourceHandler(options:{reader:Pool;assetDirectory:string;policy:SeoHttpPolicyInput;releaseIdentity:string;acceptedStageRepository?:import('../server/repositories/sermon-repository').PublicSermonRepository;acceptedLocalRepository?:import('../server/repositories/sermon-repository').PublicSermonRepository}){
  if(options.acceptedStageRepository&&(options.policy.environment!=='staging'||process.env.STAGING_SEALED!=='1'))throw Error('source_runtime_staging_supplement_refused');
+ if(options.acceptedLocalRepository){
+  if(options.acceptedStageRepository||options.policy.environment!=='staging'||!options.policy.rehearsalOrigins?.length||options.policy.rehearsalOrigins.some(origin=>!/^http:\/\/127\.0\.0\.1:[0-9]{4,5}$/u.test(origin)))throw Error('source_runtime_local_supplement_refused');
+  const row=(await options.reader.query("SELECT current_database() db,current_setting('server_version_num')::int version,host(inet_server_addr()) address,inet_server_port() port")).rows[0];
+  if(row.db!=='savinggrace_sermons_test'||row.version<160000||row.version>=170000||row.address!=='127.0.0.1'||row.port!==5432)throw Error('source_runtime_local_supplement_refused');
+ }
  if(!/^[a-f0-9]{40}(?:[a-f0-9]{24})?$/u.test(options.releaseIdentity))throw Error('source_runtime_release_identity');
+ const contactDelivery=await configuredContactDelivery(process.env.CONTACT_SMTP_CONFIG_FILE,process.env.SEO_REHEARSAL_HOST?"local":options.policy.environment==="production"?"production":"staging");
  const cms=new PostgresCmsRepository(options.reader),store=new PostgresCmsAssetStore(options.reader),editorial=new PostgresSermonRepository(options.reader);
  const assets=await CmsDiskAssets.create(options.assetDirectory,store);
  const assetHandler=createCmsAssetHandler(assets,{authenticate:async()=>null},{authorizeMutation:()=>false},async(key,draft)=>!draft&&await cms.canReadAsset(key,false));
@@ -119,18 +126,18 @@ export async function createVersionedSourceHandler(options:{reader:Pool;assetDir
   // Release the consumed source wire rows before allocating the full CMS corpus.
   const pages=await readSourcePublicPages(options.reader);
   const [snapshot,images]=await Promise.all([cms.getPublishedSnapshot(),store.list()]);
-  const sermons=await createCompositeSourceSermonRepository(pages,options.reader,options.acceptedStageRepository,snapshot.entities,snapshot.routes);
+  const sermons=await createCompositeSourceSermonRepository(pages,options.reader,options.acceptedStageRepository??options.acceptedLocalRepository,snapshot.entities,snapshot.routes);
   const sourceAssets=createSourcePublicAssetHandler(pages,options.assetDirectory);
   const content=preserveSourceMetadata(createCmsFrontendSnapshot(snapshot,images.filter(a=>a.type.startsWith('image/')).map(a=>({id:a.id,path:a.url,type:a.type,width:a.width??1,height:a.height??1,alt:a.alt})),false,false,{immutableSourceContent:true}),pages);
   const resourceRedirects=await readSourceResourceRedirects(options.reader);
   const routes=sourceRoutePolicy(pages,snapshot.routes,{...publicRenderContext,siteContent:content},resourceRedirects);
   routes.sourceShortlinks={...routes.sourceShortlinks,...sermons.verifiedSourceShortlinks()};
-  const handler=createSeoHttpAdapter({policy:options.policy,sermons,...routes,content:async()=>content,publicSearch:createLegacySourceSearch(pages,content,sermons,sermons.verifiedSourceShortlinks()),
+  const handler=createSeoHttpAdapter({...(contactDelivery?{contactDelivery}:{}),policy:options.policy,sermons,...routes,content:async()=>content,publicSearch:createLegacySourceSearch(pages,content,sermons,sermons.verifiedSourceShortlinks()),
    sourcePage:createSourcePublicPageHandler(pages),sourceQueryPage:createSourcePublicPageHandler(pages,true),sourceSitemap:async()=>sourcePublicSitemap(pages,{...publicRenderContext,siteContent:content}),sourceDisposition:async path=>resourceRedirects.has(path)?{kind:'redirect' as const,location:resourceRedirects.get(path)!}:editorial.findPublicPathDisposition(path),
    publicAsset:async request=>{const response=await sourceAssets(request)??siteAssetResponse(request)??await assetHandler(request);
     if(response&&options.policy.environment==='production'&&response.status===200){if(!['application/rss+xml','application/atom+xml','text/calendar'].includes(response.headers.get('Content-Type')?.split(';')[0]??'')&&!(response.headers.get('Content-Length')==='0'&&response.headers.get('Content-Type')?.startsWith('text/html')))response.headers.delete('X-Robots-Tag');response.headers.set('Cache-Control','public, max-age=3600');}
     return response;}});
-  return {handler,label:sha256(stableJson({release:options.releaseIdentity,state:version,policy:options.policy,acceptedStageSupplement:Boolean(options.acceptedStageRepository)})),pages:pages.length,sermons:pages.filter(p=>p.kind==='sermon').length};
+  return {handler,label:sha256(stableJson({release:options.releaseIdentity,state:version,policy:options.policy,acceptedStageSupplement:Boolean(options.acceptedStageRepository),acceptedLocalSupplement:Boolean(options.acceptedLocalRepository)})),pages:pages.length,sermons:pages.filter(p=>p.kind==='sermon').length};
  });
  if(!(await select()).value.pages)throw Error('source_public_empty_release');
  return async(request:Request)=>{

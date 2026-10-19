@@ -9,6 +9,13 @@ import {validateCmsContent} from '../src/cms/validation';
 const original=sourcePageSchema.parse({path:'/sermons/anonymous-source/',kind:'sermon',sourceUrl:'https://www.savinggrace.org.au/sermons/anonymous-source/',sourceId:998001,capturedAt:'2026-10-11T00:00:00Z',responseSha256:'a'.repeat(64),title:'Original source metadata title',heading:'Original anonymous heading',description:'Original source metadata',indexable:true,canonicalSource:null,publishedAt:'2000-01-01T00:00:00Z',modifiedAt:null,content:[{tag:'p',text:'Original anonymous source body'}],sermon:{id:'11111111-1111-4111-8111-111111111111',slug:'anonymous-source',title:'Original anonymous heading',serviceDate:'2000-01-01',summary:null,speaker:null,series:[],books:[],scriptureReferences:[],primaryPassages:[],primaryPassageState:'unresolved',primaryMedia:null,media:[],seoDescription:null,body:null,transcript:null,questionAnswers:[],relatedSermons:[]}});
 function document():CmsPublishedDocument{const seed=sourceCmsAdoption([original],[],[]).seeds[0]!;return {id:'22222222-2222-4222-8222-222222222222',key:seed.key,kind:seed.kind,revisionId:'33333333-3333-4333-8333-333333333333',content:seed.payload as Record<string,unknown>,payload:seed.payload as Record<string,unknown>};}
 describe('independent original sermon CMS',()=>{
+ it('does not let an untouched migration seed undo an audited native title; an explicit later CMS revision still wins',async()=>{
+  const doc=document();doc.revisionNumber=1;doc.initialMetadata={title:String(doc.content.title),heading:String(doc.content.heading),seeded:true};
+  const current={...original.sermon!,title:'Audited native title'};
+  const approved={detail:current,sourceWordpressId:String(original.sourceId),editorialChanges:{title:'2026-10-12T00:00:00Z'},passageTerms:[],lastModified:'2026-10-12'};
+  let repo=await CompositeSourceSermonRepository.create([original],[approved],async()=>null,false,undefined,[doc]);expect((await repo.findPublishedBySlug('anonymous-source'))?.title).toBe('Audited native title');
+  doc.revisionNumber=2;doc.content.heading='Explicit later CMS title';repo=await CompositeSourceSermonRepository.create([original],[approved],async()=>null,false,undefined,[doc]);expect((await repo.findPublishedBySlug('anonymous-source'))?.title).toBe('Explicit later CMS title');
+ });
  it('removes CMS-withdrawn originals from discovery without losing source facts or treating a rename as removal',async()=>{
   const doc=document(),before=JSON.stringify(original);
   for(const status of [410,301] as const){const repo=await CompositeSourceSermonRepository.create([original],[],async()=>null,false,undefined,[],[{path:original.path,entityId:doc.id,status,targetPath:status===301?'/replacement/':null}]);

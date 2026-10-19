@@ -1,3 +1,4 @@
+import {contactForm} from './contact-form';
 import {retainedSourceCopy,sourceHeading} from './source-copy';
 import {pageStructuredData,type PageStructuredData} from './structured-data';
 /**
@@ -36,6 +37,8 @@ export type RobotsDirective = "index, follow" | "noindex, follow" | "noindex, no
 export interface PageShellInput {
   /** Original fallback body and metadata are already rendered for this exact source URL. */
   sourceContentRendered?: boolean;
+  /** Exact observed request whose metadata belongs to this result set. */
+  sourcePath?: string;
   sourceMetadata?: PageStructuredData;
   seo?: ContentSeo;
   /** Errors and gone URLs are not alternative content canonicals. */
@@ -214,20 +217,22 @@ function footerColumns(input: PageShellInput, context: FrontendRenderContext): H
 
 /** Renders a complete HTML document. */
 export function pageShell(input: PageShellInput, context: FrontendRenderContext = publicRenderContext): string {
-  const originals=input.sourceContentRendered?undefined:context.siteContent?.sourceContentByPath?.[input.canonicalPath];
+  const metadataPath=input.sourcePath??input.canonicalPath;
+  const originals=input.sourceContentRendered?undefined:context.siteContent?.sourceContentByPath?.[metadataPath];
   const primary=originals?.filter(page=>page.kind!=='archive');
   const original=originals?.find(page=>page.path===input.canonicalPath)??(originals?.length===1?originals[0]:primary?.length===1?primary[0]:undefined);
-  const initial=input.sourceContentRendered?undefined:context.siteContent?.initialMetadataByPath?.[input.canonicalPath];
+  const initial=input.sourceContentRendered?undefined:context.siteContent?.initialMetadataByPath?.[metadataPath];
+  if(input.canonicalPath==="/contact/"&&!input.sourceContentRendered&&!input.body.toString().includes('class="contact-form"'))input={...input,body:html`${input.body}${contactForm()}`};
   const originalBody=input.body;
   const headingMatch=/<h1\b[^>]*>([\s\S]*?)<\/h1>/u.exec(originalBody.toString());
   const headingUnchanged=initial?.seeded&&headingMatch?.[1]===String(initial.heading).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
   if(original?.hasOriginalHeading&&headingUnchanged&&!input.seo?.replaceSourceContent)input={...input,body:sourceHeading(input.body,original.heading)};
-  if(initial&&(!initial.seeded||input.title!==initial.title)&&!context.siteContent?.cmsExplicitSeoByPath?.[input.canonicalPath]?.title)input={...input,seo:{...input.seo,title:input.suffixTitle===false?input.title:`${input.title} — ${siteSettings(context).siteName}`}};
-  input={...input,seo:{...context.siteContent?.sourceSeoByPath?.[input.canonicalPath],...input.seo},body:input.sourceContentRendered?input.body:retainedSourceCopy(input.body,input.canonicalPath,input.seo?.replaceSourceContent===true||context.siteContent?.sourceContentAdoptedByPath?.[input.canonicalPath]===true,context),...(original?{sourceMetadata:{language:original.language,publishedAt:original.publishedAt,modifiedAt:context.siteContent?.modifiedAtByPath?.[input.canonicalPath]??original.modifiedAt,...(original.structuredData&&!input.seo?.replaceSourceContent?{primary:original.structuredData.primary,breadcrumbs:original.structuredData.breadcrumbs}:{}),...input.sourceMetadata}}:{})};
-  const sourceSeo=context.siteContent?.sourceSeoByPath?.[input.canonicalPath];
+  if(initial&&(!initial.seeded||input.title!==initial.title)&&!context.siteContent?.cmsExplicitSeoByPath?.[metadataPath]?.title)input={...input,seo:{...input.seo,title:input.suffixTitle===false?input.title:`${input.title} — ${siteSettings(context).siteName}`}};
+  input={...input,seo:{...context.siteContent?.sourceSeoByPath?.[metadataPath],...input.seo},body:input.sourceContentRendered?input.body:retainedSourceCopy(input.body,metadataPath,input.seo?.replaceSourceContent===true||context.siteContent?.sourceContentAdoptedByPath?.[metadataPath]===true,context),...(original?{sourceMetadata:{language:original.language,publishedAt:original.publishedAt,modifiedAt:context.siteContent?.modifiedAtByPath?.[metadataPath]??original.modifiedAt,...(original.structuredData&&!input.seo?.replaceSourceContent?{primary:original.structuredData.primary,breadcrumbs:original.structuredData.breadcrumbs}:{}),...input.sourceMetadata}}:{})};
+  const sourceSeo=context.siteContent?.sourceSeoByPath?.[metadataPath];
   if(sourceSeo&&/^\/sermons\/(?!page\/)[^/]+\/$/u.test(input.canonicalPath))input={...input,seo:{...sourceSeo,...input.seo}};
   else if(sourceSeo){
-    const explicit=context.siteContent?.cmsExplicitSeoByPath?.[input.canonicalPath]??{};
+    const explicit=context.siteContent?.cmsExplicitSeoByPath?.[metadataPath]??{};
     const defaults:ContentSeo={...sourceSeo};delete defaults.noindex;
     const editedTitle=initial&&(!initial.seeded||input.title!==initial.title)&&!explicit.title;
     input={...input,seo:{...input.seo,...defaults,...explicit,...(editedTitle?{title:input.seo!.title!}:{})}};

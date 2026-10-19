@@ -1,4 +1,5 @@
 /** Loopback-only rehearsal, with a caller-supplied hash of the frozen code package. */
+import {Readable} from 'node:stream';
 import {createServer} from 'node:http';
 import {createCmsLocalPool,verifyCmsLocalIdentity} from '../cms/local-database';
 import {createVersionedSourceHandler} from './runtime-snapshot';
@@ -13,7 +14,7 @@ async function main(){
  const server=createServer(async(incoming,outgoing)=>{try{
   if(incoming.headers.host!==`127.0.0.1:${port}`)throw Error('seo_rehearsal_host');
   const requested=incoming.headers['x-seo-rehearsal-origin'],origin=mode==='production'?(typeof requested==='string'?requested:sourceOrigin):`http://127.0.0.1:${port}`;
-  const response=await handler(await toWebRequest(incoming,origin,0));outgoing.writeHead(response.status,Object.fromEntries(response.headers));outgoing.end(Buffer.from(await response.arrayBuffer()));
+  const response=await handler(await toWebRequest(incoming,origin,0));outgoing.writeHead(response.status,Object.fromEntries(response.headers));if(response.body)Readable.fromWeb(response.body as import('node:stream/web').ReadableStream).pipe(outgoing);else outgoing.end();
  }catch{outgoing.writeHead(400,{'X-Robots-Tag':'noindex','Cache-Control':'no-store'});outgoing.end('request_refused');}});
  server.requestTimeout=15000;server.headersTimeout=10000;
  server.listen(port,'127.0.0.1',()=>console.log(JSON.stringify({outcome:'seo_rehearsal_ready',mode,port,codeSha256:code})));

@@ -11,6 +11,16 @@ ${tokensCss()}
 @font-face { font-family: "Bitstream Vera Sans"; src: url("/brand/fonts/bitstream-vera-sans-regular.ttf") format("truetype"); font-style: normal; font-weight: 400; font-display: swap; }
 @font-face { font-family: "Bitstream Vera Sans"; src: url("/brand/fonts/bitstream-vera-sans-bold.ttf") format("truetype"); font-style: normal; font-weight: 600 900; font-display: swap; }
 
+/* Contact form follows the existing page and control palette. */
+.contact-form { display:grid; gap:var(--space-5); max-width:42rem; }
+.contact-form__field { display:grid; gap:var(--space-2); }
+.contact-form label { font-weight:600; }
+.contact-form input,.contact-form textarea { font:inherit; font-size:1rem; color:var(--colour-ink); background:var(--colour-ground); width:100%; border:1px solid var(--colour-rule-strong); border-radius:var(--radius-control,.25rem); padding:.75rem; }
+.contact-form textarea { resize:vertical; min-height:10rem; }
+.contact-form [aria-invalid="true"] { border-color:var(--colour-gilt); }
+.contact-form__error { color:var(--colour-gilt); }
+.contact-form .button { justify-self:start; }
+.contact-form__trap { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
 /* ---- base ---- */
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }

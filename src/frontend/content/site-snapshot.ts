@@ -31,6 +31,9 @@ export interface FrontendAsset {
   focalX?:number; focalY?:number;
 }
 export interface FrontendSiteSnapshot {
+  sourceCalendarIdentityPaths?:Readonly<Record<string,string>>;
+  eventScopeIds?:Readonly<Record<string,readonly string[]>>;
+  cancelledCalendarEvents?:readonly ChurchEvent[];
   sourceArchiveHeadingsByPath?:Readonly<Record<string,string>>;
   sourceContentAdoptedByPath?:Readonly<Record<string,boolean>>;
   cmsExplicitSeoByPath?:Readonly<Record<string,import("../seo").ContentSeo>>;
