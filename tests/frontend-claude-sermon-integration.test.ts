@@ -18,8 +18,8 @@ const preservedSources = [
   ],
   [
     "src/frontend/pages/church.ts",
-    // D-183 reuses the existing DST conversion for RSS by exporting it; rendering bytes are unchanged.
-    "402917c856ca2fc69ba84ee3aeabf165c95438e49c505cef8e3c007ada114a30"
+    // D-183 preserves future ICS source properties; the selected visible church layout is unchanged.
+    "dd64a4603d8e3e7410c558906bc964f94876ab5109e9f7a099c24e62da6961e1"
   ],
   [
     "src/frontend/styles/core.ts",

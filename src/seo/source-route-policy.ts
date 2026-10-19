@@ -1,8 +1,9 @@
+import{sourcePageContentJson}from'./source-page-validation';
 /** Bounded corrections to captured archive canonical signals, never source content. */
 import {maintainedIndexableCalendar} from './calendar-presentation';
 import {legacyDisposition} from '../frontend/content/registry';
 import {publicRenderContext,type FrontendRenderContext} from '../frontend/routes';
-import {sourceHosts,stableJson,type SourcePublicPage} from './source-public-model';
+import {sourceHosts,type SourcePublicPage} from './source-public-model';
 export interface SourceRoutePresentation {canonicalPath:string;indexable:boolean;reason:'source_self'|'distinct_pagination'|'distinct_source_archive'|'calendar_navigation'|'verified_equivalent_source'}
 function capturedCanonicalPath(page:SourcePublicPage):string|null{
  if(!page.canonicalSource)return null;
@@ -25,7 +26,7 @@ export function sourcePresentationPolicy(pages:readonly SourcePublicPage[],conte
   if(collection){
    const sourceBase=current.get(collection);
    const identical=Boolean(sourceBase&&sourceBase.kind===page.kind&&sourceBase.content.length>0
-    &&sourceBase.heading===page.heading&&stableJson(sourceBase.content)===stableJson(page.content));
+    &&sourceBase.heading===page.heading&&sourcePageContentJson(sourceBase)===sourcePageContentJson(page));
    // A calendar-shaped URL alone does not prove duplicate or low-value content.
    // Keep captured meaningful distinct archives eligible and self-canonical.
    if(page.indexable&&page.content.length>0&&!identical)return {...base,reason:'distinct_source_archive'};
@@ -42,7 +43,7 @@ export function sourcePresentationPolicy(pages:readonly SourcePublicPage[],conte
   if(original&&original!==page.path){
    const target=current.get(original);
    if(target&&target.kind===page.kind&&target.indexable&&target.content.length>0&&page.heading===target.heading
-    &&stableJson(page.content)===stableJson(target.content)&&capturedCanonicalPath(target)===target.path
+    &&sourcePageContentJson(page)===sourcePageContentJson(target)&&capturedCanonicalPath(target)===target.path
     &&!legacyDisposition(target.path,context))return {canonicalPath:target.path,indexable:page.indexable,reason:'verified_equivalent_source'};
   }
   return base;

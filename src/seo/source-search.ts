@@ -19,6 +19,8 @@ function visibleText(value:unknown,key=''):string{
 }
 function sourceText(page:SourcePublicPage):string{const walk=(nodes:SourcePublicPage['content']):string=>nodes.map(node=>[node.text??'',node.alt??'',walk(node.children??[])].join(' ')).join(' ');return words(walk(page.content));}
 export function createLegacySourceSearch(pages:readonly SourcePublicPage[],snapshot:FrontendSiteSnapshot,sermons:PublicSermonRepository,sourceLinks:Readonly<Record<string,string>>){
+ let selectedRecords:Map<string,Entry>|null=null;
+ const buildRecords=()=>{
  const records=new Map<string,Entry>();
  const managedPages=[...snapshot.pages.filter(page=>page.status==='published'),...snapshot.posts,...snapshot.events];
  const managedBody=(page:typeof managedPages[number])=>'blocks' in page?page.blocks:page;
@@ -31,12 +33,15 @@ export function createLegacySourceSearch(pages:readonly SourcePublicPage[],snaps
   const prior=records.get(path);records.set(path,{path,title:managed?.title??page.heading,text:words([prior?.text??'',text].join(' ')),kind:page.kind,language:page.language,date:page.modifiedAt??page.publishedAt??''});
  }
  for(const page of managedPages)if(!records.has(page.path))records.set(page.path,{path:page.path,title:page.title,text:words(visibleText(managedBody(page))),kind:'page',language:'en-AU',date:snapshot.modifiedAtByPath?.[page.path]??''});
+ return records;
+ };
  return async(request:Request,context:FrontendRenderContext):Promise<Response|null>=>{
   const url=new URL(request.url);if(url.pathname!=='/'||!url.searchParams.has('s'))return null;
   const query=(url.searchParams.get('s')??'').trim(),rawPage=url.searchParams.get('paged')??'1',type=url.searchParams.get('post_type');
   const supported:Record<string,string[]>={page:['page','attachment'],post:['post'],tribe_events:['event'],sermons:['sermon'],any:['page','post','event','attachment','sermon']};
   if(query.length>120||url.searchParams.getAll('s').length!==1||!/^\d{1,5}$/u.test(rawPage)||Number(rawPage)<1||type&&!supported[type])return frontendResponse(pageShell({title:'Invalid search',canonicalPath:'/',suppressCanonical:true,robots:'noindex, follow',seo:{noindex:true},body:html`<h1>Invalid search</h1>`},context),{status:404});
   const terms=words(query).toLowerCase().split(/\s+/u).filter(Boolean),pageNumber=Number(rawPage),pageSize=20;
+  const records=selectedRecords??=buildRecords();
   const entries=[...records.values()];
   if(query&&(!type||type==='sermons'||type==='any')){
    const result=await sermons.listPublished({page:1,pageSize:50,query,order:'DESC'});

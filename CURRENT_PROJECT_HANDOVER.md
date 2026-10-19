@@ -1,5 +1,42 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
+## D-183 calendar, runtime and measurement checkpoint — 20 October 2026
+
+The bounded original-66 refresh reaches 66 successful final source responses with
+70 requests including redirects. The frozen union is now 23,129 URLs, 15,777
+responses and 28,594 file witnesses; original denominators remain unchanged.
+Fifty-six nonempty source calendars reconcile to 140 already-retained occurrence
+facts with no new identity or meaningful property differences. Current public
+church name/contact/service text matches the fresh homepage; the candidate's
+telephone link adds navigation to the same visible number.
+
+Future ICS updates preserve verified original creation/category/attachment fields
+and retain geography only when the published venue still matches. Published seed
+initialization now counts toward the sequence, so its first edit increments it.
+Create/edit/cancel/restore checks read the actual loopback HTTP subscription.
+Bounded parallel calendar reads, lazy search-corpus creation, exact immutable JSON
+reuse and PostgreSQL current-wire hashes reduce measured snapshot rebuilding while
+retaining current pointers, identity, schema and version checks. No TTL is added.
+
+The production measurement loader requires a protected bounded regular file and
+its exact pinned hash plus verified stream/property/privacy settings. Local,
+staging and production-policy rehearsals never activate it. It is unconfigured;
+account ownership, consent and attribution continuity remain unproved.
+
+Integrated checks: PostgreSQL 1,531 passed/zero skips; standard 1,384 passed/147
+gated skips covered by PostgreSQL; Python 222 passed; types zero errors/warnings
+and seven existing hints; 45-page build, runtime build, anonymized importer and
+offline dependency audit passed. The earlier exact-file checksum failure and type
+annotation failures were corrected; failed logs remain retained. Final inventory,
+browser, resource, image and staging evidence belongs in the acceptance report.
+
+The existing WSL container engine responds; the official existing Node 24 build
+base was fetched and its resolved digest is retained privately. No current
+WordPress backup is available for the isolated task-owned restore. Pinned staging
+SSH still times out after the interrupted f13b6d2 adoption; current deployed state
+is unconfirmed. No production, DNS or WordPress mutation occurred.
+
+
 
 ## D-183 validated-source performance checkpoint — 20 October 2026
 

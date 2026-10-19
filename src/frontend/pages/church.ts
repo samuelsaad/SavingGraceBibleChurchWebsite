@@ -241,6 +241,14 @@ export function melbourneUtc(date:string,time:string):string{
 const weekdayCodes = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
 
 /** The site's iCalendar feed of every event, with recurrence rules as exported. */
+/** Keep verified original resource/classification facts through live event edits.
+ * Geographic properties remain only for the same published venue address. */
+function sourceCalendarProperties(properties:readonly string[],location:string):string[]{
+ const original=properties.find(line=>line.startsWith('LOCATION:'))?.slice(9).replace(/\\([nN,;\\])/gu,(_,c:string)=>c==='n'||c==='N'?'\n':c);
+ const normalize=(value:string)=>value.normalize('NFKC').toLowerCase().replace(/\baustralia\b/gu,'').replace(/\bvictoria\b/gu,'vic').replace(/[^a-z0-9]/gu,'');
+ const samePlace=Boolean(original)&&normalize(original!)===normalize(location);
+ return properties.filter(line=>/^(?:CREATED|CATEGORIES|ATTACH|GEO|X-APPLE-STRUCTURED-LOCATION)(?:;[^:\r\n]*)?:[^\r\n\x00-\x08\x0b\x0c\x0e-\x1f]*$/u.test(line)&&(!/^(?:GEO|X-APPLE-STRUCTURED-LOCATION)(?::|;)/u.test(line)||samePlace));
+}
 export function renderCalendarFeed(context:FrontendRenderContext=publicRenderContext): string {
   const stamp = (date: string, time: string) => `${date.replaceAll("-", "")}T${time.replace(":", "")}00`;
   const lines = [
@@ -260,6 +268,7 @@ export function renderCalendarFeed(context:FrontendRenderContext=publicRenderCon
     if(identity?.originalLines&&!revision?.cancelled){lines.push('BEGIN:VEVENT',...identity.originalLines,...(identity.originalLines.some(line=>line.startsWith('DTSTAMP:'))?[]:[`DTSTAMP:${generatedStamp}`]),'END:VEVENT');continue;}
     lines.push("BEGIN:VEVENT", `SEQUENCE:${identity?.sequence??revision?.sequence??0}`, ...(modified?[`LAST-MODIFIED:${utcStamp(modified)}`]:[]), `STATUS:${revision?.cancelled?'CANCELLED':'CONFIRMED'}`, `UID:${identity?.uid??event.id+'@www.savinggrace.org.au'}`, `DTSTAMP:${generatedStamp}`, `DTSTART;TZID=Australia/Melbourne:${stamp(start, event.start)}`, `DTEND;TZID=Australia/Melbourne:${stamp(start, event.end)}`, `SUMMARY:${icsEscape(event.title)}`, `LOCATION:${icsEscape(`${venue.name}, ${venue.address}, ${venue.locality}`)}`, `URL:${identity?.url??'https://www.savinggrace.org.au'+event.path}`);
     if (event.description.length) lines.push(`DESCRIPTION:${icsEscape(event.description.join("\n\n"))}`);
+    lines.push(...sourceCalendarProperties(identity?.sourceProperties??[],`${venue.name}, ${venue.address}, ${venue.locality}`));
     if (event.schedule.kind === "weekly") {
       lines.push(`RRULE:FREQ=WEEKLY;BYDAY=${weekdayCodes[event.schedule.weekday]}${event.schedule.until ? `;UNTIL=${melbourneUtc(event.schedule.until, event.end)}` : ""}`);
     } else if (event.schedule.kind === "monthly-first") {

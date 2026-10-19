@@ -1,3 +1,4 @@
+import{createSourcePageValidationCache}from'../src/seo/source-page-validation';
 import {protectedLocalPostgresPassword,protectedLocalPostgresUser} from '../src/migration/protected-local-postgres';
 import {createSnapshotVerifiedFingerprint,fingerprintSnapshotProofSql} from '../src/seo/snapshot-fingerprint-proof';
 import {importSourceResourceRedirects,readSourceResourceRedirects} from '../src/seo/source-resource-redirects';
@@ -91,7 +92,10 @@ export function registerSeoSourcePostgresTests(getPool:()=>Pool){
  const before=(await client.query("SELECT md5(coalesce(json_agg(to_jsonb(s) ORDER BY id)::text,'[]')) hash FROM sermons s")).rows;
  expect(await applySourcePublicMigration(client)).toBe('applied');expect(await applySourcePublicMigration(client)).toBe('unchanged');expect(await verifyCmsSchema(client)).toBe(28);
  const page=fixture(),bundle=sourceBundleSchema.parse({format:'sgbc-source-public-v1',capturedAt:'2026-10-09T00:00:00Z',inventorySha256:hash,pages:[page],expectedVersions:{[page.path]:null}});
- const initial=await importSourcePublicBundle(client,bundle,commit);expect(initial.inserted).toBe(1);expect((await importSourcePublicBundle(client,bundle,commit)).unchanged).toBe(1);expect((await readSourcePublicPages(client))[0]?.publishedAt).toBe('2004-01-01T00:00:00Z');
+ const initial=await importSourcePublicBundle(client,bundle,commit);expect(initial.inserted).toBe(1);
+ const wireReads:Array<{omitted:boolean;hashes:boolean}>=[],validation=createSourcePageValidationCache(),reader={query:async(...args:any[])=>{const result=await(client.query as any)(...args);wireReads.push({omitted:result.rows.length>0&&result.rows.every((row:any)=>row.payload===null),hashes:result.rows.every((row:any)=>/^[a-f0-9]{64}$/.test(row.wire_sha256))});return result;}};
+ const firstRead=await readSourcePublicPages(reader,undefined,undefined,validation),secondRead=await readSourcePublicPages(reader,undefined,undefined,validation);expect(firstRead).toHaveLength(1);expect(secondRead[0]).toBe(firstRead[0]);expect(wireReads).toEqual([{omitted:false,hashes:true},{omitted:true,hashes:true}]);
+expect((await importSourcePublicBundle(client,bundle,commit)).unchanged).toBe(1);expect((await readSourcePublicPages(client))[0]?.publishedAt).toBe('2004-01-01T00:00:00Z');
  await client.query('SAVEPOINT conflict');await expect(importSourcePublicBundle(client,{...bundle,pages:[{...page,title:'An observed source delta'}]},commit)).rejects.toThrow('concurrent_change');await client.query('ROLLBACK TO SAVEPOINT conflict');
  const delta={...bundle,pages:[{...page,title:'An observed source delta'}],expectedVersions:{[page.path]:sourceVersionHash(page)}};const changed=await importSourcePublicBundle(client,delta,commit);expect(changed.updated).toBe(1);
  await client.query('SAVEPOINT recovery');await expect(restoreSourcePublicImport(client,initial.bundleSha256,commit)).rejects.toThrow('later_change');await client.query('ROLLBACK TO SAVEPOINT recovery');expect((await restoreSourcePublicImport(client,changed.bundleSha256,commit)).restored).toBe(1);expect((await readSourcePublicPages(client))[0]?.title).toBe(page.title);

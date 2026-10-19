@@ -1,3 +1,8 @@
+> D-183 20 October: PostgreSQL 1,531/zero skips, standard 1,384/147 gated skips,
+> Python 222, types/build/importer/offline audit pass for the integrated candidate.
+> The frozen union is 23,129 URLs; full-release HTTP/cohort and protected staging
+> acceptance must remain separately evidenced. See CURRENT_PROJECT_HANDOVER.md.
+
 > D-181 (9 October 2026) supersedes historical fixed-count and universal new-enrichment
 > prerequisites for preserving already-public originals. Use the fresh union inventory
 > and `seo-migration-plan.md`; source-backed original pages and independently approved

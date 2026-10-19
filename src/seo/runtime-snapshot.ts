@@ -1,3 +1,4 @@
+import {configuredMeasurement} from './measurement-configuration';
 import{createSourcePageValidationCache}from'./source-page-validation';
 import {readSourceRssFacts} from './rss-fact-store';
 import {createSourceRssHandler} from './rss-feeds';
@@ -128,6 +129,7 @@ export async function createVersionedSourceHandler(options:{reader:Pool;assetDir
   if(row.db!=='savinggrace_sermons_test'||row.version<160000||row.version>=170000||row.address!=='127.0.0.1'||row.port!==5432)throw Error('source_runtime_local_supplement_refused');
  }
  if(!/^[a-f0-9]{40}(?:[a-f0-9]{24})?$/u.test(options.releaseIdentity))throw Error('source_runtime_release_identity');
+ const measurement=await configuredMeasurement({environment:options.policy.environment,rehearsal:Boolean(process.env.SEO_REHEARSAL_HOST),filename:process.env.SEO_GA4_CONFIGURATION_FILE,expectedSha256:process.env.SEO_GA4_CONFIGURATION_SHA256});
  const contactDelivery=await configuredContactDelivery(process.env.CONTACT_SMTP_CONFIG_FILE,process.env.SEO_REHEARSAL_HOST?"local":options.policy.environment==="production"?"production":"staging");
  const cms=new PostgresCmsRepository(options.reader),store=new PostgresCmsAssetStore(options.reader),editorial=new PostgresSermonRepository(options.reader);
  const assets=await CmsDiskAssets.create(options.assetDirectory,store);
@@ -150,12 +152,12 @@ export async function createVersionedSourceHandler(options:{reader:Pool;assetDir
   const cmsPublicationRows=rssFacts.size?(await options.reader.query<{entity_id:string;published_at:Date|string}>("SELECT entity_id,min(created_at) AS published_at FROM audit_events WHERE entity_type='cms_entity' AND action='cms.publish' GROUP BY entity_id")).rows:[];
   const sermonPublicationRows=rssFacts.size?(await options.reader.query<{id:string;published_at:Date|string}>("SELECT id,published_at FROM sermons WHERE published_at IS NOT NULL")).rows:[];
   const rss=createSourceRssHandler({pages,cms:snapshot,content,sermons,facts:rssFacts,sourceBindings:sermons.verifiedSourceShortlinks(),firstCmsPublishedAt:Object.fromEntries(cmsPublicationRows.map(row=>[row.entity_id,new Date(row.published_at).toISOString()])),nativeSermonPublishedAt:Object.fromEntries(sermonPublicationRows.map(row=>[row.id,new Date(row.published_at).toISOString()]))});
-  const handler=createSeoHttpAdapter({...(contactDelivery?{contactDelivery}:{}),policy:options.policy,sermons,...routes,content:async()=>content,publicSearch:createLegacySourceSearch(pages,content,sermons,sermons.verifiedSourceShortlinks()),
+  const handler=createSeoHttpAdapter({...(measurement?{measurement:measurement.configuration}:{}),...(contactDelivery?{contactDelivery}:{}),policy:options.policy,sermons,...routes,content:async()=>content,publicSearch:createLegacySourceSearch(pages,content,sermons,sermons.verifiedSourceShortlinks()),
    sourcePage:createSourcePublicPageHandler(pages),sourceQueryPage:createSourcePublicPageHandler(pages,true),sourceSitemap:async()=>sourcePublicSitemap(pages,{...publicRenderContext,siteContent:content}),sourceDisposition:async path=>resourceRedirects.has(path)?{kind:'redirect' as const,location:resourceRedirects.get(path)!}:path.startsWith('/sermons/')?sermons.findPublicPathDisposition(path):editorial.findPublicPathDisposition(path),
    publicAsset:async request=>{const response=await rss(request)??await sourceAssets(request)??siteAssetResponse(request)??await assetHandler(request);
     if(response&&options.policy.environment==='production'&&response.status===200){if(!['application/rss+xml','application/atom+xml','text/calendar'].includes(response.headers.get('Content-Type')?.split(';')[0]??'')&&!(response.headers.get('Content-Length')==='0'&&response.headers.get('Content-Type')?.startsWith('text/html')))response.headers.delete('X-Robots-Tag');if(!['application/rss+xml','application/atom+xml','text/calendar'].includes(response.headers.get('Content-Type')?.split(';')[0]??''))response.headers.set('Cache-Control','public, max-age=3600');}
     return response;}});
-  return {handler,label:sha256(stableJson({release:options.releaseIdentity,state:version,policy:options.policy,acceptedStageSupplement:Boolean(options.acceptedStageRepository),acceptedLocalSupplement:Boolean(options.acceptedLocalRepository)})),pages:pages.length,sermons:pages.filter(p=>p.kind==='sermon').length};
+  return {handler,label:sha256(stableJson({release:options.releaseIdentity,state:version,policy:options.policy,acceptedStageSupplement:Boolean(options.acceptedStageRepository),acceptedLocalSupplement:Boolean(options.acceptedLocalRepository),...(measurement?{measurementConfiguration:measurement.fileSha256}:{})})),pages:pages.length,sermons:pages.filter(p=>p.kind==='sermon').length};
  });
  if(!(await select()).value.pages)throw Error('source_public_empty_release');
  return async(request:Request)=>{

@@ -18,7 +18,7 @@ Before production authorization, obtain the missing fresh WordPress SELECT/USAGE
 ## Freeze and final delta
 
 1. Agree and record the exact content freeze time with the church editor. Freeze is an operational agreement; this task does not change WordPress. If editing must continue, record additions, edits, withdrawals, metadata/media changes and uploaded files through the final source capture.
-2. Obtain the current guarded WordPress publication/permalink/metadata/attachment/recurrence inventory. Reuse the frozen 23,089-URL union, and inspect only exact final additions, edits, withdrawals or missing dependencies. Do not restart open-ended calendar/query crawling. Keep the previous snapshot immutable. Compare source identity, status, body/metadata hashes, canonical path and assets. Do not treat absence in an incomplete crawl as removal.
+2. Obtain the current guarded WordPress publication/permalink/metadata/attachment/recurrence inventory. Reuse the frozen 23,129-URL union, and inspect only exact final additions, edits, withdrawals or missing dependencies. Do not restart open-ended calendar/query crawling. Keep the previous snapshot immutable. Compare source identity, status, body/metadata hashes, canonical path and assets. Do not treat absence in an incomplete crawl as removal.
 3. Build a new private source bundle. Each changed route must bind the exact currently expected version. New routes expect null. Conflicts stop the transaction. A previously withdrawn route cannot be resurrected automatically. Existing enrichment approvals, uncertainty and CMS edits are independent.
 4. Review source publication changes and deletions explicitly. Apply approved withdrawals/redirects using the existing audited workflow. Do not overwrite current CMS revisions or infer a removal from an unavailable optional transcript/video.
 5. Import atomically, rerun byte-identical to prove idempotency, and rerun the entire URL ledger, content/metadata comparison, sitemap/link/asset checks and browser matrix. Reconcile source changes occurring during the freeze window before opening traffic.
@@ -79,8 +79,8 @@ new snapshots and current expected versions; the frozen deployment operator is n
 a general authorization to apply another delta.
 
 Before WordPress retirement, decide and verify durable hosting for the 117 original
-MP3 and one MP4 URLs without changing recording identity. No recording bodies were
-downloaded. Keep the existing WordPress runtime/files available until the operator
+MP3 and one MP4 URLs without changing recording identity. The bounded unchanged 118-file backup is complete. Keep the existing WordPress
+runtime/files available until the operator
 has an exact church-owned storage/origin mapping, verified HEAD/Range behavior,
 backup and restart proof for every recording URL. Do not point a fallback proxy at
 the cutover hostname itself: that can loop after DNS/routing changes. A separately

@@ -6,19 +6,24 @@ establish production identity. Localhost, staging addresses and WordPress GUIDs 
 not establish current production permalinks. No production content, DNS or traffic
 has been changed.
 
-The frozen finite union now has **23,089 observed URLs**, retaining the original
-23,017 denominator and all original 15,252 hashes. Its 72 additions are specific
+The frozen finite union now has **23,129 observed URLs**, retaining the original
+23,017 denominator and all original 15,252 hashes. Its 112 additions are specific
 missing identities/resources or final source changes; HTML links were not expanded
-into another calendar/query crawl. There are **15,737 captured responses** and
-**28,465 file witnesses**. Captured statuses are 10,812 successful, 3,871 permanent
-redirects, 59 temporary redirects, 723 not found and 272 rate-limited responses.
+into another calendar/query crawl. There are **15,777 captured responses** and
+**28,594 file witnesses**. The original 66 broken-target refresh requested exactly 70 URLs including observed
+redirect destinations: 66 returned 200 and four returned 301. All initial targets
+reached a successful final source response. Fifty-six nonempty calendars matched
+140 already-retained occurrence facts, with no new identity or meaningful property
+difference. Seven originally empty HTML subscription responses now serve valid live
+calendar output; the three HTML calendar views retain their scoped content. This
+public comparison does not establish stored WordPress database completeness.
 Uncaptured URLs, older source snapshots and unavailable account evidence remain
 explicit limitations rather than presumed removals or proof of complete coverage.
 
 Ledger SHA-256:
-`bf724f9c9640700e5de9c24cb9937909073ee312975e787665e54480f9079083`.
+`f51f306816f997128c8bf91c038e223b8203ae10543069a2999a760bde435867`.
 Parsed cache SHA-256:
-`30a6e6394176e721c4eb98fe5230c820e5fea5e05dd9e714535bade5ff034bd5`.
+`f2c07a019db611465230bf02e2980080889f00990fd8f858a9f87d2b18d9a577`.
 The full comparison checks every source witness before/after and per read. New
 candidate runs make fresh HTTP requests and require an independently derived
 application/configuration/database runtime label.

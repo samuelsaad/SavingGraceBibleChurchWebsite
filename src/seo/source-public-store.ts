@@ -1,4 +1,4 @@
-import{validateSourcePagePayload,type SourcePageValidator}from'./source-page-validation';
+import{validateSourcePagePayload,sourcePageValidationManifest,readCertifiedSourcePage,type SourcePageValidator}from'./source-page-validation';
 import{originalNativeSourceIdSql,originalNativeIdentities,type OriginalNativeIdentity}from'./source-original-native-identities';
 import type {PoolClient} from 'pg';
 import {verifyCmsSchema} from '../cms/migration';
@@ -38,14 +38,21 @@ export async function importSourcePublicBundle(db:Db,input:unknown,releaseCommit
  if(!previous)await db.query('INSERT INTO source_public_imports(bundle_sha256,inventory_sha256,release_commit,changes) VALUES($1,$2,$3,$4::jsonb)',[bundleHash,bundle.inventorySha256,releaseCommit,JSON.stringify(changes)]);
  return {bundleSha256:bundleHash,inserted:changes.filter(x=>x.before===null).length,updated:changes.filter(x=>x.before!==null).length,unchanged:bundle.pages.length-changes.length};
 }
-export async function readSourcePublicPages(db:Db,paths?:readonly string[],identityBindings:readonly OriginalNativeIdentity[]=originalNativeIdentities,validate:SourcePageValidator=validateSourcePagePayload):Promise<SourcePublicPage[]>{
+export async function readSourcePublicPages(db:Db,paths?:readonly string[],identityBindings:readonly OriginalNativeIdentity[]=originalNativeIdentities,cache?:SourcePageValidator):Promise<SourcePublicPage[]>{
  if(paths){if(paths.length>2)throw Error('source_public_read_scope');paths.forEach(path=>sourcePathSchema.parse(path));if(!paths.length)return [];}
- const rows=(await db.query<{payload:unknown;version_sha256:string}>(`SELECT v.payload::text AS payload,v.version_sha256 FROM source_public_routes r JOIN source_public_versions v USING(version_sha256) WHERE NOT r.withdrawn AND NOT EXISTS(SELECT 1 FROM sermons s WHERE ${originalNativeSourceIdSql('s',identityBindings)}=r.source_wordpress_id AND (s.status IN ('unpublished','archived') OR s.deleted_at IS NOT NULL)) AND NOT EXISTS(SELECT 1 FROM redirects d WHERE d.old_path=r.path)${paths?' AND r.path=ANY($1::text[])':''} ORDER BY r.path`,paths?[paths]:[])).rows;
+ const parameters:unknown[]=paths?[paths]:[];
+ const manifest=cache?sourcePageValidationManifest(cache):null;
+ if(manifest)parameters.push(JSON.stringify(manifest));
+ const columns=cache?`r.path,r.source_wordpress_id,v.version_sha256,proof.wire_sha256,CASE WHEN ($${parameters.length}::jsonb ->> v.version_sha256)=proof.wire_sha256 THEN NULL ELSE wire.payload END AS payload`:'r.path,r.source_wordpress_id,v.payload::text AS payload,v.version_sha256';
+ const proof=cache?` CROSS JOIN LATERAL(SELECT v.payload::text AS payload OFFSET 0) wire CROSS JOIN LATERAL(SELECT pg_catalog.encode(pg_catalog.sha256(pg_catalog.convert_to(wire.payload,'UTF8')),'hex') AS wire_sha256 OFFSET 0) proof`:'';
+ const rows=(await db.query<{path:string;source_wordpress_id:string|number|null;payload:unknown;version_sha256:string;wire_sha256?:string}>(`SELECT ${columns} FROM source_public_routes r JOIN source_public_versions v USING(version_sha256)${proof} WHERE NOT r.withdrawn AND NOT EXISTS(SELECT 1 FROM sermons s WHERE ${originalNativeSourceIdSql('s',identityBindings)}=r.source_wordpress_id AND (s.status IN ('unpublished','archived') OR s.deleted_at IS NOT NULL)) AND NOT EXISTS(SELECT 1 FROM redirects d WHERE d.old_path=r.path)${paths?' AND r.path=ANY($1::text[])':''} ORDER BY r.path`,parameters)).rows;
  const pages:SourcePublicPage[]=[];
  // The decoded corpus remains alive; release each consumed wire payload rather
  // than retaining a second complete copy throughout validation.
  for(const row of rows){const payload=row.payload;row.payload=undefined;
-  pages.push(validate(payload,row.version_sha256));
+  const page=cache?readCertifiedSourcePage(cache,payload,row.version_sha256,row.wire_sha256):validateSourcePagePayload(payload,row.version_sha256);
+  if(page.path!==row.path||String(page.sourceId??'')!==String(row.source_wordpress_id??''))throw Error('source_public_route_integrity');
+  pages.push(page);
  }
  return pages;
 }

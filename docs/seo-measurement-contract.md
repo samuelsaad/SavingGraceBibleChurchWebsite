@@ -1,3 +1,18 @@
+## D-183 production wiring checkpoint — 20 October 2026
+
+Fresh public HTML contains two GA4 identifiers; this supersedes the historical
+one-call observation below. Their actual property/stream ownership remains unproved.
+The optional runtime loader now requires both `SEO_GA4_CONFIGURATION_FILE` and
+`SEO_GA4_CONFIGURATION_SHA256`. It reads only a bounded protected regular file,
+checks its exact SHA-256 and strict verified configuration fields, and binds the
+active file hash into the runtime identity. Missing configuration keeps tracking
+off; incomplete or changed production configuration fails closed. Local/staging
+and `SEO_REHEARSAL_HOST` never read or activate this configuration. No configuration
+has been supplied or activated. Referrer suppression and its attribution limitation
+remain unchanged; account/consent evidence is still required before continuity can
+be accepted. The Google authentication entry was rejected by automatic approval
+review; no authentication workaround or account change was attempted.
+
 # D-182 measurement implementation and activation gate
 
 The captured live homepage has one GA4 configuration call. Its identifier is retained

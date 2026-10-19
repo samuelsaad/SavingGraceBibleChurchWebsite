@@ -21,10 +21,18 @@ export function parseLegacyCalendar(body:string,events:readonly ChurchEvent[]):L
  }return result;
 }
 export async function loadLegacyCalendarOccurrences(pages:readonly SourcePublicPage[],asset:(request:Request)=>Promise<Response|null>,events:readonly ChurchEvent[]){
- const records=new Map<string,LegacyCalendarOccurrence>(),seen=new Set<string>();
- for(const page of pages){if(page.kind!=='asset'||!page.asset||page.asset.contentType.split(';')[0]!=='text/calendar'||!page.asset.bytes||seen.has(page.asset.sha256))continue;seen.add(page.asset.sha256);
-  const response=await asset(new Request('https://www.savinggrace.org.au'+page.path));if(response?.status!==200)throw Error('source_calendar_identity_asset_unavailable');
-  for(const record of parseLegacyCalendar(await response.text(),events)){const key=record.eventId+':'+record.date,previous=records.get(key);if(previous&&previous.uid!==record.uid)throw Error('source_calendar_occurrence_uid_conflict');if(!previous||(record.modifiedAt??'')>(previous.modifiedAt??''))records.set(key,record);}
+ const records=new Map<string,LegacyCalendarOccurrence>(),seen=new Set<string>(),files:SourcePublicPage[]=[];
+ for(const page of pages){if(page.kind!=='asset'||!page.asset||page.asset.contentType.split(';')[0]!=='text/calendar'||!page.asset.bytes||seen.has(page.asset.sha256))continue;if(page.asset.bytes>4*1024*1024)throw Error('source_calendar_identity_asset_too_large');seen.add(page.asset.sha256);files.push(page);}
+ // File checks remain mandatory. Bounded reads avoid serial filesystem latency;
+ // merging retains exact input order and the original UID/conflict rules.
+ for(let offset=0;offset<files.length;offset+=8){
+  const results=await Promise.allSettled(files.slice(offset,offset+8).map(async page=>{
+   const response=await asset(new Request('https://www.savinggrace.org.au'+page.path));if(response?.status!==200)throw Error('source_calendar_identity_asset_unavailable');
+   return parseLegacyCalendar(await response.text(),events);
+  }));
+  for(const result of results){if(result.status==='rejected')throw result.reason;
+   for(const record of result.value){const key=record.eventId+':'+record.date,previous=records.get(key);if(previous&&previous.uid!==record.uid)throw Error('source_calendar_occurrence_uid_conflict');if(!previous||(record.modifiedAt??'')>(previous.modifiedAt??''))records.set(key,record);}
+  }
  }return [...records.values()];
 }
 /** WordPress exported separate occurrences. Continue that format with live CMS rules. */
@@ -32,7 +40,7 @@ export function calendarOccurrenceEvents(events:readonly ChurchEvent[],records:r
  const today=melbourneToday(now),output:ChurchEvent[]=[];
  for(const event of events){if(event.calendarVisible===false)continue;const known=records.filter(r=>r.eventId===event.id&&r.date>=window.from&&r.date<=window.until),byDate=new Map(known.map(r=>[r.date,r]));
   const actual=occurrencesBetween(event,window.from,window.until,500),dates=new Set(actual.map(o=>o.date));
-  const append=(date:string,original:LegacyCalendarOccurrence|undefined,cancelled=false)=>{const edited=(event.calendarRevision?.sequence??0)>1,sequence=Math.max(original?.sequence??0,event.calendarRevision?.sequence??0);output.push({...event,id:event.id+'-'+date,schedule:{kind:'single',date},calendarRevision:{...event.calendarRevision,modifiedAt:event.calendarRevision?.modifiedAt??now.toISOString(),sequence,...(cancelled||event.calendarRevision?.cancelled?{cancelled:true}:{})},calendarIdentity:{uid:original?.uid??event.id+'-'+date+'@www.savinggrace.org.au',url:original?.url??'https://www.savinggrace.org.au'+event.path,sequence:edited?sequence:original?.sequence??sequence,...(edited&&event.calendarRevision?{modifiedAt:event.calendarRevision.modifiedAt}:original?.modifiedAt?{modifiedAt:original.modifiedAt}:{}),...(original&&date<today&&!event.calendarRevision?.cancelled?{originalLines:original.lines}:{})}});};
+  const append=(date:string,original:LegacyCalendarOccurrence|undefined,cancelled=false)=>{const edited=(event.calendarRevision?.sequence??0)>1,sequence=Math.max(original?.sequence??0,event.calendarRevision?.sequence??0);output.push({...event,id:event.id+'-'+date,schedule:{kind:'single',date},calendarRevision:{...event.calendarRevision,modifiedAt:event.calendarRevision?.modifiedAt??now.toISOString(),sequence,...(cancelled||event.calendarRevision?.cancelled?{cancelled:true}:{})},calendarIdentity:{uid:original?.uid??event.id+'-'+date+'@www.savinggrace.org.au',url:original?.url??'https://www.savinggrace.org.au'+event.path,sequence:edited?sequence:original?.sequence??sequence,...(edited&&event.calendarRevision?{modifiedAt:event.calendarRevision.modifiedAt}:original?.modifiedAt?{modifiedAt:original.modifiedAt}:{}),...(original?{sourceProperties:original.lines.filter(line=>/^(?:CREATED|CATEGORIES|ATTACH|LOCATION|GEO|X-APPLE-STRUCTURED-LOCATION)(?::|;)/u.test(line))}:{}),...(original&&date<today&&!event.calendarRevision?.cancelled?{originalLines:original.lines}:{})}});};
   // Historical facts come only from captured occurrences, never extrapolated rules.
   for(const original of known)if(original.date<today||!dates.has(original.date))append(original.date,original,original.date>=today&&!dates.has(original.date));
   for(const occurrence of actual)if(occurrence.date>=today||!records.some(r=>r.eventId===event.id))append(occurrence.date,byDate.get(occurrence.date));
