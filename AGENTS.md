@@ -2,6 +2,25 @@
 
 ## D-183 — bounded pre-cutover completion (19 October 2026)
 
+
+
+An operator may reapply only newly inserted source rows withdrawn by that exact
+operator's scoped restoration. Require the original immutable import and restoration
+receipts, exact complete bundle and source hashes, original row-version sequence,
+unchanged restoration timestamp and no current native/CMS/redirect withdrawal.
+Append a separate reapplication receipt and reject later changes, mixed/update
+imports or guessed history. The normal importer still refuses withdrawn rows;
+this non-HTTP recovery operation grants no editorial approval or publication state.
+
+The three frozen historical native/source correspondences also govern withdrawal
+and URL dispositions. A native unpublish/archive/delete excludes its verified
+original from detail/search/archive/feed/sitemap discovery; the original path and
+native aliases return the existing audited gone/redirect decision. Identity-query
+aliases point directly to a verified replacement. Stored IDs and review decisions
+remain unchanged. The original-source media hash still validates the frozen source
+correspondence; a later normally approved native media edit does not erase that
+identity or require the old native player to remain. Eligibility gates are unchanged.
+
 The four live RSS feeds use a rebuildable extraction cache on the existing private
 asset volume. Exactly four content-addressed `.rssfacts` files are allowlisted by
 source XML hash, file hash and length in the release; they are not a primary data

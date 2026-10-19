@@ -1,4 +1,5 @@
 /** Bounded corrections to captured archive canonical signals, never source content. */
+import {maintainedIndexableCalendar} from './calendar-presentation';
 import {legacyDisposition} from '../frontend/content/registry';
 import {publicRenderContext,type FrontendRenderContext} from '../frontend/routes';
 import {sourceHosts,stableJson,type SourcePublicPage} from './source-public-model';
@@ -17,6 +18,7 @@ export function sourcePresentationPolicy(pages:readonly SourcePublicPage[],conte
  return(page:SourcePublicPage):SourceRoutePresentation=>{
   const original=capturedCanonicalPath(page),base:SourceRoutePresentation={canonicalPath:page.path,indexable:page.indexable,reason:original&&original!==page.path?'distinct_source_archive':'source_self'};
   if(page.kind!=='archive')return base;
+  if(page.indexable&&maintainedIndexableCalendar(page.path,context))return {...base,reason:'distinct_source_archive'};
   // Pagination identifies a different captured result set. Preserve source noindex where present.
   if(/\/page\/(?:[2-9]|[1-9][0-9]+)\/$/u.test(page.path))return {...base,reason:'distinct_pagination'};
   const collection=calendarBase(page.path);

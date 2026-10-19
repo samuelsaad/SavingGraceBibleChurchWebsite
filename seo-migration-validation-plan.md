@@ -573,3 +573,69 @@ unchanged. This emits no tracking request and activates no production measuremen
 Focused tests assert exact escaped post and event URLs after publication/slug edits.
 This defect was found by actual feed comparison after the first candidate rehearsal;
 its failed intermediate candidate remains identifiable rather than marked accepted.
+
+The 26-entry RSS semantic comparison matched every source member, URL (including
+campaign attribution), publication instant, description and body. It identified
+one source post represented in two feeds whose RSS title used an en dash while
+its existing frontend heading used a hyphen. Preserve the original RSS title as
+its own default; body/slug edits retain it, while a deliberate published title edit
+uses the new title. This does not change the website layout or original page copy.
+An anonymous regression covers both outcomes rather than waiving title differences.
+
+### Frozen native identity withdrawal — 20 October 2026 Sydney
+
+The three accepted historical pilots retained legacy development source IDs. Their
+public URL reconciliation must survive approved media edits and apply native
+withdrawals to the corresponding original WordPress identity. The read-only source
+selector now resolves only those exact native-ID/source-ID pairs, and the public
+repository retains the native audited gone/redirect disposition at both paths.
+Original source content, stored IDs, native reviews and normal public eligibility
+remain unchanged. Source ID aliases flatten to the final eligible replacement.
+Anonymous HTTP and PostgreSQL fixtures test original/native 410, archive/search/
+sitemap exclusion, direct replacement, and unchanged review-row hashes.
+
+The frozen identity proof is scoped to its exact original WordPress ID and path.
+An unrelated original page using the same recording does not change that established
+correspondence or collapse either public page. Source-byte/media drift of the bound
+record still refuses reconciliation. This preserves distinct source identities.
+
+### Calendar, canonical and new-row recovery continuation — 20 October 2026
+
+The finite eight-destination dependency capture adds seven verified public past
+calendar result pages and confirms one original shortcode404. No HTML links were
+followed. Frozen union:23,089 URLs,15,737 responses,28,465 witnesses; ledger hash
+`bf724f9c9640700e5de9c24cb9937909073ee312975e787665e54480f9079083`.
+Original finding denominators remain855/2,114/76/120, four editorial dispositions
+and66 broken targets. Raw HTTP findings and distinct identity/function evidence
+remain separate; a successful response alone does not close a content finding.
+
+Focused tests cover twelve-item pagination, witnessed monthly pages beyond one
+year, accurate page date titles, truthful empty historical views, no past-rule
+extrapolation, source facts predating current recurrence rules, Day controls,
+explicit CMS ownership/withdrawal and final sitemap serialization. Single-facet
+canonicals preserve the actual filter/page while indexability remains allowlisted.
+The first integrated run retained one obsolete empty-history404 assertion and
+failed1/1,515; that case now asserts the truthful empty view and absence of invented
+content. The failure is retained privately, not recorded as a passing run.
+
+The seven-row restore rehearsal exposed the intended tombstone behavior: rolling
+back a new source insert retains a withdrawn route, so a normal import cannot
+resurrect it. A separate non-HTTP new-row reapplication operation now requires both
+immutable receipts, exact bundle identity, original row versions/timestamp and no
+editorial withdrawal. It appends history, refuses later changes and leaves ordinary
+withdrawal checks intact. Guarded PostgreSQL tests and actual scoped recovery must
+pass before the restored seven rows return to the local projection.
+
+The f13b6d2 staging attempt completed prepare, bridge activation, source migration
+and resource reconciliation. SSH timed out during CMS adoption; subsequent pinned
+read-only SSH checks also timed out. Actual completion and running state are not
+assumed. No production, DNS, cloud permissions or network controls were changed.
+Final application activation/rollback and remote acceptance remain required.
+
+The corrected integrated run passed1,515 PostgreSQL tests with zero skips,
+1,368 standard tests (147 gated skips covered), types/build,164 Python SEO tests,
+anonymized importer, offline audit (zero cached advisories) and the release scan
+(manifest`ed663e5160af9ed37c5df643fbc77387e61400ad2d0081dbfbedae2d5b54e2f1`,
+zero private-body/prohibited-source matches). Actual seven-row reapplication/replay
+and ordinary import replay passed, with6,527 incumbent pointers and all CMS/sermon
+rows unchanged. Final runtime-bound acceptance and staging delivery remain required.

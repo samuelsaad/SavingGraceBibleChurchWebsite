@@ -52,6 +52,7 @@ describe("SermonsV5 presentation", () => {
       const result=renderSermonsV5Page({...filtered,requestQuery},context,{canonical:true});
       expect(result).toContain('name="robots" content="noindex, follow"');expect(result).toContain('rel="canonical" href="https://www.savinggrace.org.au/sermons/"');
     }
+    const unlisted=renderSermonsV5Page({...filtered,query:{...filtered.query,page:2}},{...context,seo:{...context.seo,indexableArchivePaths:[]}},{canonical:true});expect(unlisted).toContain('name="robots" content="noindex, follow"');expect(unlisted).toContain('rel="canonical" href="https://www.savinggrace.org.au/sermons/page/2/?sermon_book=romans"');
     expect(renderSermonsV5Page(filtered,{...context,seo:{...context.seo,indexable:false}},{canonical:true})).not.toContain('rel="canonical"');
   });
   it("places progressive More sermons and numbered links before the directories on discovery", () => {

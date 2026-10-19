@@ -80,3 +80,28 @@ it('returns gone only for an explicitly excluded occurrence, leaving unknown dat
  vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-19T02:00:00Z'));
  try{const c=context();c.siteContent!.events=[{...event,schedule:{kind:'weekly',weekday:0,from:'2026-10-01',exclusions:['2026-10-25']}}];expect(futureCalendarOccurrence(new Request('https://www.example.test/event/old-anonymous/2026-10-25/'),c)?.status).toBe(410);expect(futureCalendarOccurrence(new Request('https://www.example.test/event/old-anonymous/2026-10-26/'),c)).toBeNull();expect(futureCalendarOccurrence(new Request('https://www.example.test/event/old-anonymous/2026-11-01/'),c)?.status).toBe(200);}finally{vi.useRealTimers();}
 });
+
+it('paginates twelve real monthly occurrences across years without an artificial one-year truncation',async()=>{
+ vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-01T02:00:00Z'));
+ try{const c=context();c.siteContent!.events=[{...event,schedule:{kind:'monthly-first',weekday:6,from:'2026-10-01'}}];
+ c.siteContent!.sourceSeoByPath={'/events/list/page/3/':{title:'Events from October 7, 2028 to September 1, 2029'}};
+ const first=await futureCalendarPage(new Request('https://www.example.test/events/list/'),c)!.text(),third=await futureCalendarPage(new Request('https://www.example.test/events/list/page/3/'),c)!.text();
+ expect((first.match(/class="event"/g)??[]).length).toBe(12);expect(third).toContain('<title>Events from October 7, 2028 to September 1, 2029</title>');expect(third).toContain('2028-10-07');expect(third).not.toContain('2026-10-03');expect(first).toContain('More dates');
+ expect(futureCalendarOccurrence(new Request('https://www.example.test/event/old-anonymous/2028-10-07/'),c)?.status).toBe(200);expect(futureCalendarOccurrence(new Request('https://www.example.test/event/old-anonymous/2040-10-06/'),c)).toBeNull();
+ }finally{vi.useRealTimers();}
+});
+it('keeps linked empty historical date views truthful without extrapolating past recurrence',async()=>{
+ vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-19T02:00:00Z'));
+ try{const c=context();c.mode='public';c.siteContent!.legacyCalendarOccurrences=[{eventId:event.id,uid:'anonymous-original',date:'2026-09-27',url:'https://www.savinggrace.org.au/event/old-anonymous/2026-09-27/',sequence:0,lines:[]}];
+ const response=futureCalendarPage(new Request('https://www.example.test/events/day/2026-10-10/'),c)!,html=await response.text();expect(response.status).toBe(200);expect(html).toContain('No verified historical entry');expect(html).toContain('not a complete historical record');expect(html).not.toContain('class="event"');expect(html).toContain('noindex, follow');
+ expect(futureCalendarPage(new Request('https://www.example.test/events/day/2020-01-01/'),c)).toBeNull();
+ }finally{vi.useRealTimers();}
+});
+
+it('keeps verified historical membership when the current recurrence begins after the requested past window',async()=>{
+ vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-19T02:00:00Z'));
+ try{const c=context();c.siteContent!.events=[{...event,schedule:{kind:'weekly',weekday:0,from:'2026-10-01'}}];
+ c.siteContent!.legacyCalendarOccurrences=Array.from({length:30},(_,i)=>{const date=new Date(Date.UTC(2026,0,4+i*7)).toISOString().slice(0,10);return{eventId:event.id,uid:'original-'+i,date,url:'https://www.savinggrace.org.au/event/old-anonymous/'+date+'/',sequence:0,lines:['UID:original-'+i,'SUMMARY:Verified historical gathering','DTSTART;TZID=Australia/Melbourne:'+date.replaceAll('-','')+'T173000','DTEND;TZID=Australia/Melbourne:'+date.replaceAll('-','')+'T190000','URL:https://www.savinggrace.org.au/event/old-anonymous/'+date+'/']};});
+ const html=await futureCalendarPage(new Request('https://www.example.test/events/list/page/3/?tribe-bar-date=2026-09-01&eventDisplay=past'),c)!.text();expect(html).toContain('Verified historical gathering');expect(html).toContain('2026-01-');expect(html).not.toContain('Anonymous gathering');
+ }finally{vi.useRealTimers();}
+});

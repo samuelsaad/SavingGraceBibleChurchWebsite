@@ -1,3 +1,4 @@
+import{originalNativeSourceIdSql,originalNativeIdentities,type OriginalNativeIdentity}from'./source-original-native-identities';
 import type {PoolClient} from 'pg';
 import {verifyCmsSchema} from '../cms/migration';
 import {loadSourcePublicMigration} from './source-public-migration';
@@ -36,9 +37,9 @@ export async function importSourcePublicBundle(db:Db,input:unknown,releaseCommit
  if(!previous)await db.query('INSERT INTO source_public_imports(bundle_sha256,inventory_sha256,release_commit,changes) VALUES($1,$2,$3,$4::jsonb)',[bundleHash,bundle.inventorySha256,releaseCommit,JSON.stringify(changes)]);
  return {bundleSha256:bundleHash,inserted:changes.filter(x=>x.before===null).length,updated:changes.filter(x=>x.before!==null).length,unchanged:bundle.pages.length-changes.length};
 }
-export async function readSourcePublicPages(db:Db,paths?:readonly string[]):Promise<SourcePublicPage[]>{
+export async function readSourcePublicPages(db:Db,paths?:readonly string[],identityBindings:readonly OriginalNativeIdentity[]=originalNativeIdentities):Promise<SourcePublicPage[]>{
  if(paths){if(paths.length>2)throw Error('source_public_read_scope');paths.forEach(path=>sourcePathSchema.parse(path));if(!paths.length)return [];}
- const rows=(await db.query<{payload:unknown;version_sha256:string}>(`SELECT v.payload::text AS payload,v.version_sha256 FROM source_public_routes r JOIN source_public_versions v USING(version_sha256) WHERE NOT r.withdrawn AND NOT EXISTS(SELECT 1 FROM sermons s WHERE s.source_wordpress_id=r.source_wordpress_id AND s.status IN ('unpublished','archived')) AND NOT EXISTS(SELECT 1 FROM redirects d WHERE d.old_path=r.path)${paths?' AND r.path=ANY($1::text[])':''} ORDER BY r.path`,paths?[paths]:[])).rows;
+ const rows=(await db.query<{payload:unknown;version_sha256:string}>(`SELECT v.payload::text AS payload,v.version_sha256 FROM source_public_routes r JOIN source_public_versions v USING(version_sha256) WHERE NOT r.withdrawn AND NOT EXISTS(SELECT 1 FROM sermons s WHERE ${originalNativeSourceIdSql('s',identityBindings)}=r.source_wordpress_id AND (s.status IN ('unpublished','archived') OR s.deleted_at IS NOT NULL)) AND NOT EXISTS(SELECT 1 FROM redirects d WHERE d.old_path=r.path)${paths?' AND r.path=ANY($1::text[])':''} ORDER BY r.path`,paths?[paths]:[])).rows;
  const pages:SourcePublicPage[]=[];
  // The decoded corpus remains alive; release each consumed wire payload rather
  // than retaining a second complete copy throughout validation.
@@ -74,4 +75,31 @@ export async function restoreSourcePublicImport(db:Db,bundleHash:string,releaseC
  for(const change of row.changes)await db.query('UPDATE source_public_routes SET version_sha256=$2,withdrawn=$3,row_version=row_version+1,updated_at=now() WHERE path=$1',[change.path,change.before??change.after,change.before===null]);
  await db.query('INSERT INTO source_public_imports(bundle_sha256,inventory_sha256,release_commit,changes) VALUES($1,$2,$3,$4::jsonb)',[restoreHash,row.inventory_sha256,releaseCommit,JSON.stringify(row.changes.map(change=>({path:change.path,before:change.after,after:change.before,operation:'restore',sourceImport:bundleHash})))]);
  return{restored:row.changes.length,unchanged:0};
+}
+
+/** Reapply only newly inserted rows withdrawn by this exact operator restoration.
+ * Human withdrawals never gain a general resurrection path. Two immutable receipts,
+ * complete bundle identity, the original row-version sequence and current disposition
+ * checks are mandatory. Caller owns the guarded destination transaction.
+ */
+export async function reapplyRestoredNewSourceImport(db:Db,input:unknown,restoreRelease:string,releaseCommit=restoreRelease){
+ if(!/^[a-f0-9]{40}$/u.test(restoreRelease)||!/^[a-f0-9]{40}$/u.test(releaseCommit))throw Error('source_public_reapply_identity');
+ const bundle=sourceBundleSchema.parse(input),bundleHash=sha256(stableJson(bundle)),restoreHash=sha256(stableJson({operation:'restore',bundleHash,releaseCommit:restoreRelease})),reapplyHash=sha256(stableJson({operation:'reapply_restored_new_rows',bundleHash,restoreHash,releaseCommit}));
+ await db.query('SELECT pg_advisory_xact_lock(181,28)');
+ const original=(await db.query<{changes:Array<{path:string;before:string|null;after:string}>}>('SELECT changes FROM source_public_imports WHERE bundle_sha256=$1',[bundleHash])).rows[0];
+ const restoration=(await db.query<{changes:Array<{path:string;before:string;after:null;operation:string;sourceImport:string}>}>('SELECT changes FROM source_public_imports WHERE bundle_sha256=$1',[restoreHash])).rows[0];
+ const same=(a:unknown,b:unknown)=>stableJson(a)===stableJson(b),ordered=<T extends {path:string}>(rows:T[])=>[...rows].sort((a,b)=>a.path.localeCompare(b.path,'en'));
+ const expected=bundle.pages.map(page=>({path:page.path,before:null,after:sourceVersionHash(page)}));
+ if(!expected.length||!original||!restoration||!same(ordered(original.changes),ordered(expected))||!same(ordered(restoration.changes),ordered(expected.map(row=>({path:row.path,before:row.after,after:null,operation:'restore',sourceImport:bundleHash})))))throw Error('source_public_reapply_scope');
+ const replay=Boolean((await db.query('SELECT 1 FROM source_public_imports WHERE bundle_sha256=$1',[reapplyHash])).rowCount);
+ for(const page of bundle.pages){
+  const row=(await db.query<{version_sha256:string;withdrawn:boolean;row_version:number;unchanged_since_receipt:boolean}>('SELECT r.version_sha256,r.withdrawn,r.row_version,r.updated_at=i.imported_at AS unchanged_since_receipt FROM source_public_routes r CROSS JOIN source_public_imports i WHERE r.path=$1 AND i.bundle_sha256=$2 FOR UPDATE OF r',[page.path,replay?reapplyHash:restoreHash])).rows[0];
+  if(!row||row.version_sha256!==sourceVersionHash(page)||row.withdrawn!==!replay||row.row_version!==(replay?3:2)||!row.unchanged_since_receipt)throw Error('source_public_reapply_later_change');
+  const withdrawn=(await db.query(`SELECT 1 FROM sermons s WHERE ${originalNativeSourceIdSql('s')}=$1 AND (s.status IN ('unpublished','archived') OR s.deleted_at IS NOT NULL) UNION ALL SELECT 1 FROM redirects WHERE old_path=$2 UNION ALL SELECT 1 FROM cms_routes WHERE path=$2 AND status<>200 LIMIT 1`,[page.sourceId,page.path])).rowCount;
+  if(withdrawn)throw Error('source_public_reapply_editorial_disposition');
+ }
+ if(replay)return {reapplied:0,unchanged:bundle.pages.length};
+ for(const page of bundle.pages)await db.query('UPDATE source_public_routes SET withdrawn=false,row_version=row_version+1,updated_at=now() WHERE path=$1',[page.path]);
+ await db.query('INSERT INTO source_public_imports(bundle_sha256,inventory_sha256,release_commit,changes) VALUES($1,$2,$3,$4::jsonb)',[reapplyHash,bundle.inventorySha256,releaseCommit,JSON.stringify(expected.map(row=>({...row,operation:'reapply_restored_new_rows',sourceImport:bundleHash,restoreImport:restoreHash,rowVersionBefore:2,rowVersionAfter:3})))]);
+ return {reapplied:bundle.pages.length,unchanged:0};
 }

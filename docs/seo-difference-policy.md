@@ -40,3 +40,39 @@ original title/heading. Search, campaigns, compound filters and unrelated archiv
 targets do not qualify. `scripts/seo-metadata-difference-policy.py` implements
 these narrow predicates; raw findings remain in the reports and identity/content
 verification is still required separately.
+
+## D-183 calendar and social identity corrections
+
+Original event lists use twelve cards. Live lists preserve that size, bound future
+schedule navigation to ten years (including witnessed monthly pages), retain exact
+historical facts separately from current recurrence start dates, and never infer
+past gatherings from a present rule. Empty historical views explicitly identify
+missing verified history and remain excluded unless an original indexed page owns
+the route. Current list titles/date ranges describe the actual displayed page.
+Exact Day/Previous Day/Next Day controls reset inherited list pagination while
+preserving their date, scope and campaign bytes. The two witnessed dead shortcode
+navigation links point to the corresponding live list; their original source404
+URL dispositions remain404. Seven specifically missing original past result pages
+were captured independently; this does not establish complete historical recurrence.
+
+The three original maintained `/events/list/`, `/events/month/` and
+`/events/today/` views identify themselves in both rendered metadata and sitemaps.
+The original seed consolidation aliases cannot exclude a view which HTTP serves
+independently. Explicit source replacement, hidden adopted content and current
+withdrawals still take precedence.
+
+A single valid sermon facet keeps its facet and page in its canonical URL,
+including intentionally excluded result pages. This does not give a new facet
+indexability or sitemap membership. Only the frozen valuable original allowlist
+can do that. Search, campaigns and compound filters retain their separate policy.
+
+An absent optional social description may copy the unchanged original primary
+meta description. Existing social values are never replaced by this rule.
+Conflicting original social URLs may identify the same source facet/calendar
+scope's self-canonical URL: the original and candidate titles must match, existing
+headings must match, and the actual canonical must match the corrected social URL.
+An old first-page facet URL can describe that same facet's later page, but a new
+unfiltered or unrelated destination cannot. Calendar corrections are confined to
+the same original category/tag/calendar base; the original plugin's corresponding
+blog taxonomy URL is a documented conflicting signal. Every resolution still
+requires its exact response hashes and independent content/identity verification.

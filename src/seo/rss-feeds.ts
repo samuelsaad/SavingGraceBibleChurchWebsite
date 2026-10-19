@@ -44,9 +44,10 @@ export function createSourceRssHandler(options:SourceRssOptions){
    const doc=documentFor(options.cms,'post',post.id),sourceId=doc?Number((doc.content.source as {id?:number}|undefined)?.id??/^source-public:post:([1-9][0-9]*):/u.exec(doc.key)?.[1]):null;
    const source=options.pages.find(row=>row.kind==='post'&&(sourceId&&row.sourceId===sourceId||row.path===post.path));
    const original=facts.items.find(item=>source&&item.sourceId===source.sourceId||item.path===post.path),legacy=source?.sourceId?facts.legacyGuids[String(source.sourceId)]:undefined,baseline=unchanged(facts,doc);
+   const title=original&&(!doc||baseline||doc.initialMetadata?.title===post.title)?original.title:post.title;
    const sourceDate=original?.publishedAt??source?.publishedAt??legacy?.publishedAt??null;
    const publishedAt=sourceDate??options.firstCmsPublishedAt?.[doc?.id??'']??null;
-   entries.push({path:post.path,title:post.title,guid:original?.guid??legacy?.guid??'urn:sgbc:post:'+(doc?.id??post.id),isPermaLink:original?.isPermaLink??legacy?.isPermaLink??false,publishedAt,modifiedAt:options.content.modifiedAtByPath?.[post.path],description:baseline&&original?nodes(original.description):render(post.description?[{kind:'paragraph',text:post.description}]:[]),content:baseline&&original?nodes(original.content):render(post.blocks),creator:original?.creator,categories:original?.categories??[],...(source?.sourceId?{sourceId:source.sourceId}:{}),unchanged:baseline&&Boolean(original&&original.path===post.path&&original.title===post.title&&sameDate(original.publishedAt,publishedAt))});
+   entries.push({path:post.path,title,guid:original?.guid??legacy?.guid??'urn:sgbc:post:'+(doc?.id??post.id),isPermaLink:original?.isPermaLink??legacy?.isPermaLink??false,publishedAt,modifiedAt:options.content.modifiedAtByPath?.[post.path],description:baseline&&original?nodes(original.description):render(post.description?[{kind:'paragraph',text:post.description}]:[]),content:baseline&&original?nodes(original.content):render(post.blocks),creator:original?.creator,categories:original?.categories??[],...(source?.sourceId?{sourceId:source.sourceId}:{}),unchanged:baseline&&Boolean(original&&original.path===post.path&&original.title===post.title&&sameDate(original.publishedAt,publishedAt))});
   }
   if(facts.kind==='sermons'){
    for(let number=1;number<=200;number++){

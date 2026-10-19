@@ -26,5 +26,28 @@ class MetadataDifferencePolicyTest(unittest.TestCase):
             self.assertFalse(P.corrected_facet_social_url(source,{**candidate,'meta':{'og:url':[other]}},ORIGIN))
         self.assertFalse(P.corrected_facet_social_url(source,{**candidate,'canonicalUrls':[]},ORIGIN))
 
+    def test_optional_social_description_keeps_the_original_primary_description(self):
+        source={'template':'archive','title':'Original','meta':{'description':['Original description.']}}
+        candidate={'title':'Original','meta':{'description':['Original description.'],'og:description':['Original description.']}}
+        self.assertTrue(P.additive_archive_signal(source,candidate,'og:description'))
+        self.assertFalse(P.additive_archive_signal(source,{**candidate,'meta':{'description':['Changed.'],'og:description':['Changed.']}},'og:description'))
+
+    def test_pagination_keeps_the_same_facet_instead_of_the_unfiltered_page(self):
+        url=ORIGIN+'/sermons/page/3/?sermon_book=anonymous'
+        source={'template':'archive','url':url,'title':'Original page three','meta':{'og:url':[ORIGIN+'/sermons/?sermon_book=/anonymous']}}
+        candidate={'title':source['title'],'meta':{'og:url':[url]},'canonicalUrls':[url]}
+        self.assertTrue(P.corrected_facet_social_url(source,candidate,ORIGIN))
+        self.assertFalse(P.corrected_facet_social_url(source,{**candidate,'meta':{'og:url':[ORIGIN+'/sermons/page/3/']}},ORIGIN))
+
+    def test_calendar_correction_never_crosses_event_scope_or_changes_existing_copy(self):
+        url=ORIGIN+'/events/tag/anonymous/list/page/2/'
+        source={'template':'archive','url':url,'title':'Original page two','meta':{'og:url':[ORIGIN+'/tag/anonymous/']}}
+        candidate={'title':source['title'],'meta':{'og:url':[url]},'canonicalUrls':[url]}
+        self.assertTrue(P.corrected_calendar_social_url(source,candidate,ORIGIN))
+        for path in ['/tag/other/','/events/','/events/tag/other/']:
+            self.assertFalse(P.corrected_calendar_social_url({**source,'meta':{'og:url':[ORIGIN+path]}},candidate,ORIGIN))
+        self.assertFalse(P.corrected_calendar_social_url(source,{**candidate,'title':'Changed'},ORIGIN))
+        self.assertFalse(P.corrected_calendar_social_url(source,{**candidate,'canonicalUrls':[ORIGIN+'/events/']},ORIGIN))
+
 if __name__ == '__main__':
     unittest.main()

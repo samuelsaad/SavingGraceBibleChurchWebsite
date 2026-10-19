@@ -1,5 +1,50 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
+## D-183 calendar/canonical recovery checkpoint — 20 October 2026
+
+Frozen source union:23,089 URLs,15,737 captured responses,28,465 witnesses;
+ledger SHA-256`bf724f9c9640700e5de9c24cb9937909073ee312975e787665e54480f9079083`.
+Eight exact missing calendar destinations were inspected, without following HTML
+links:seven public past result pages and one original shortcode404. The local
+projection has6,534 routes and459 known original public sermons; original findings
+remain855 metadata/2,114 blocks/76 image-alt/120 indexability, plus the separate
+four editorial and66 broken-target cohorts. Final per-URL reconciliation is pending.
+
+Calendar lists now retain the original twelve-item pagination, witnessed monthly
+pages beyond one year, actual displayed-page date titles and historical facts
+predating present recurrence rules. Empty historical views identify missing verified
+history rather than inventing occurrences. Day navigation retains date/scope while
+resetting inherited list pages. Three maintained original calendar views use the
+same ownership gate in HTTP and final sitemap generation. Single sermon facets
+retain their filter/page in canonical URLs; indexability still requires the original
+allowlist. Native/source identity bindings also preserve explicit withdrawals.
+All26 original RSS entries match titles, links, GUID policy, dates and text.
+
+Guarded PostgreSQL:1,515 passed/zero skips. Standard:1,368 passed/147 gated skips
+covered by that run. Types:zero errors/warnings, seven existing hints. Build:45 pages.
+Python SEO:164 tests. Anonymized importer and offline dependency audit passed;
+release scan found zero private-body matches or prohibited secret/source classes.
+The earlier run's obsolete empty-history404 assertion failed and was replaced with
+explicit truthful-empty/no-invented-content assertions; its failed evidence remains.
+
+The seven-page rehearsal independently rolled back its initial transaction, then
+imported/replayed and restored. New-row restoration intentionally retains withdrawn
+tombstones. A separate non-HTTP operation now reopens only that exact operator
+restoration, with both immutable receipts, source hashes, row versions/timestamp
+and current editorial-disposition checks. Actual reapplication7/replay0 and normal
+import replay0 passed; all6,527 prior source pointers and CMS/sermon rows were unchanged.
+Normal imports still reject explicit withdrawals. No new content approval occurred.
+
+Staging f13b6d2 reached bridge activation, source migration and resource reconciliation
+before SSH timed out during CMS adoption. Repeated pinned read-only SSH probes also
+timed out. Actual completion/running state is unconfirmed. The last fully exercised
+activation/rollback remains6fd5417; this checkpoint does not claim a new deployment.
+Final immutable runtime HTTP/browser/CMS/resource comparisons and safe acceptance
+exports remain. Production traffic, DNS and WordPress remain unchanged. Existing
+source backup, account, live-mail and production authentication/configuration gaps
+remain, alongside the current staging reachability problem.
+
+
 ## D-183 live feeds and original sermon identities — 19 October 2026
 
 The latest finite source union has 23,081 URLs, 15,729 captured responses and

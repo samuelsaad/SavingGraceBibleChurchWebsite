@@ -1,3 +1,4 @@
+import {renderSeoSitemap} from '../src/seo/http-sitemap';
 import {describe,expect,it} from 'vitest';
 import {sourcePresentationPolicy} from '../src/seo/source-route-policy';
 import {createSourcePublicPageHandler,sourcePublicSitemap} from '../src/seo/source-public-handler';
@@ -47,4 +48,18 @@ describe('bounded captured archive canonical corrections',()=>{
   expect(html).toContain('<title>Original calendar title</title>');expect(html).toContain('Original calendar description.');expect(html).toContain('Anonymous original content.');
   expect(html).toContain('name="robots" content="noindex, follow"');expect(html).toContain('rel="canonical" href="'+origin+base.path+'"');expect(sourcePublicSitemap([base,calendar]).map(p=>p.path)).toEqual([base.path]);
  });
+});
+
+it('includes maintained original rolling calendars in the sitemap using the same editor ownership gate',()=>{
+ const pages=['/events/','/events/list/','/events/month/','/events/today/'].map(path=>page(path));
+ const content={pages:[],posts:[],events:[{id:'anonymous',legacyPaths:[]}]as never,venues:{},home:null,settings:structuredClone(defaultSiteSettings),assets:{},routes:[],sourceSeoByPath:Object.fromEntries(pages.map(p=>[p.path,{title:p.title}]))};
+ const context={...publicRenderContext,siteContent:content};expect(sourcePublicSitemap(pages,context).map(p=>p.path)).toEqual(pages.map(p=>p.path));
+ content.sourceSeoByPath['/events/month/']={...content.sourceSeoByPath['/events/month/'],noindex:true}as never;
+ expect(sourcePublicSitemap(pages,context).map(p=>p.path)).not.toContain('/events/month/');
+});
+
+it('emits maintained calendar views through the final sitemap despite original seed consolidation aliases, but respects withdrawal',()=>{
+ const paths=['/events/list/','/events/month/','/events/today/'];const content={pages:[],posts:[],events:[{id:'anonymous',legacyPaths:[]}]as never,venues:{},home:null,settings:structuredClone(defaultSiteSettings),assets:{},routes:[{path:'/events/',entityId:'calendar',status:200 as const,targetPath:null},...paths.map(path=>({path,entityId:'calendar',status:301 as const,targetPath:'/events/'}))],sourceSeoByPath:Object.fromEntries(paths.map(path=>[path,{title:'Original calendar'}]))};const context={...publicRenderContext,siteContent:content};
+ const xml=renderSeoSitemap([],context,false,paths.map(path=>({path})));for(const path of paths)expect(xml).toContain('<loc>'+origin+path+'</loc>');
+ content.routes[0]={...content.routes[0]!,status:410}as never;const withdrawn=renderSeoSitemap([],context,false,paths.map(path=>({path})));for(const path of paths)expect(withdrawn).not.toContain('<loc>'+origin+path+'</loc>');
 });

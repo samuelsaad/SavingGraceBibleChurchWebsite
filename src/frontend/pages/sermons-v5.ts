@@ -39,11 +39,12 @@ export function renderSermonsV5Page(input: SermonsV5PageInput, context: Frontend
   const canonicalPath=archivePagePath(input.query.page,publicRenderContext);
   const requestParameters=new URLSearchParams(input.requestQuery??'');
   const requestPath=canonicalPath+(input.requestQuery?'?'+input.requestQuery:'');
-  // Only individually observed source archive URLs may retain indexable query
-  // canonicals. Unknown, search, compound and tracking queries stay excluded.
-  const observedQuery=Boolean(options.canonical&&input.hasQueryParameters&&filtered&&requestParameters.size===1
-    &&['sermon_speaker','sermon_series','sermon_book','sermon_topics'].includes([...requestParameters.keys()][0]!)
-    &&context.seo?.indexableArchivePaths?.includes(requestPath));
+  // A single facet keeps its own identity even when intentionally noindex.
+  // Only frozen valuable originals gain indexability and sitemap membership.
+  const facetValues=new Map([['sermon_speaker',input.query.speaker],['sermon_series',input.query.series],['sermon_book',input.query.book],['sermon_topics',input.query.passage]]);
+  const singleFacet=Boolean(options.canonical&&input.hasQueryParameters&&filtered&&requestParameters.size===1
+    &&facetValues.get([...requestParameters.keys()][0]!)===requestParameters.values().next().value&&requestParameters.values().next().value);
+  const observedQuery=singleFacet&&Boolean(context.seo?.indexableArchivePaths?.includes(requestPath));
   const originalPortrait=options.canonical?context.siteContent?.sourceArchivePortraitByPath?.[requestPath]:undefined;
   const originalHeading=options.canonical?context.siteContent?.sourceArchiveHeadingsByPath?.[requestPath]:undefined;
   const expanded = isExpandedRecentView(input.query);
@@ -82,7 +83,7 @@ export function renderSermonsV5Page(input: SermonsV5PageInput, context: Frontend
   </div>`;
   return pageShell({ title: filtered ? resultsTitle(input.query, input.options) : options.canonical ? `Sermons${input.query.page>1?` — Page ${input.query.page}`:""}` : "SermonsV5",
     description: "Browse sermons from Saving Grace Bible Church by speaker, series, Scripture, Bible book, or service date.",
-    sourcePath:requestPath, canonicalPath: observedQuery?requestPath:canonicalPath, navigationPath: target.path,
+    sourcePath:requestPath, canonicalPath: singleFacet?requestPath:canonicalPath, navigationPath: target.path,
     robots: options.canonical&&(observedQuery||!input.hasQueryParameters&&!filtered&&input.query.view!=="recent")?"index, follow":"noindex, follow", styles: ["shelf", "v4", "v5"], scripts: ["canon", "journal", "journalPagination"],
     books: input.options.books, mastheadSearch: false, body }, context);
 }

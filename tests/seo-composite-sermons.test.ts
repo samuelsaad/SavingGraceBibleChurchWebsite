@@ -1,3 +1,4 @@
+import{originalNativeStatesSql}from'../src/seo/source-original-native-identities';
 import {sha256} from '../src/seo/source-public-model';
 import {describe,it,expect} from 'vitest';
 import {createServer} from 'node:http';
@@ -25,6 +26,9 @@ describe('ordinary approved editorial content with source originals',()=>{
   const repository=await CompositeSourceSermonRepository.create([source],[native],async()=>null,false,undefined,[],[],[binding]);
   const list=await repository.listPublished(query());expect(list.totalItems).toBe(1);expect(list.data[0]).toMatchObject({id:native.detail.id,slug:'source-original',title:native.detail.title,summary:native.detail.summary});
   expect(await repository.findPublicPathDisposition('/sermons/'+native.detail.slug+'/')).toEqual({kind:'redirect',location:source.path});expect(JSON.stringify(native)).toBe(before);
+  const updated=structuredClone(native);updated.detail.media=[{provider:'sermonaudio',mediaType:'audio',externalId:'123456789',canonicalUrl:'https://www.sermonaudio.com/sermons/123456789',title:'Anonymous approved replacement',durationSeconds:null}];updated.detail.primaryMedia=updated.detail.media[0]!;updated.editorialChanges={media:'2026-10-20T00:00:00Z'};expect((await CompositeSourceSermonRepository.create([source],[updated],async()=>null,false,undefined,[],[],[binding])).verifiedSourceShortlinks()).toEqual({[String(source.sourceId)]:source.path});
+  const withdrawn=await CompositeSourceSermonRepository.create([source],[],async()=>null,false,undefined,[],[],[binding],[{nativeId:native.detail.id,originalSourceId:String(source.sourceId),originalPath:source.path,nativePath:'/sermons/'+native.detail.slug+'/',disposition:{kind:'gone'}}]);expect((await withdrawn.listPublished(query())).totalItems).toBe(0);expect(await withdrawn.listPublishedSitemapEntries()).toEqual([]);expect(withdrawn.verifiedSourceShortlinks()).toEqual({[String(source.sourceId)]:source.path});await withHttp(withdrawn,async base=>{expect((await fetch(base+source.path)).status).toBe(410);expect((await fetch(base+'/sermons/'+native.detail.slug+'/')).status).toBe(410);});
+  const another=structuredClone(source);another.sourceId=987002;another.path='/sermons/another-source/';another.sourceUrl=origin+another.path;another.sermon!.id='55555555-5555-4555-8555-555555555555';another.sermon!.slug='another-source';expect((await(await CompositeSourceSermonRepository.create([source,another],[native],async()=>null,false,undefined,[],[],[binding])).listPublished(query())).totalItems).toBe(2);
   const hidden=await CompositeSourceSermonRepository.create([source],[native],async()=>null,false,undefined,[],[{path:source.path,entityId:'source-document',status:410,targetPath:null}],[binding]);expect((await hidden.listPublished(query())).totalItems).toBe(0);expect(await hidden.listPublishedSitemapEntries()).toEqual([]);
   await expect(CompositeSourceSermonRepository.create([{...source,path:'/sermons/other-original/',sourceUrl:origin+'/sermons/other-original/',sermon:{...source.sermon!,slug:'other-original'}}],[native],async()=>null,false,undefined,[],[],[binding])).rejects.toThrow('original_pilot_identity_binding_changed');
  });
@@ -106,6 +110,6 @@ describe('ordinary approved editorial content with source originals',()=>{
  });
  it('uses the unchanged public eligibility SQL and no private scope in the production factory',async()=>{
   const statements:string[]=[];const repository=await createCompositeSourceSermonRepository([original()],{query:async text=>{statements.push(text);return{rows:[],rowCount:0,command:'SELECT',oid:0,fields:[]};}});
-  expect(statements).toEqual([publicEditorialBindingsSql]);expect(publicEditorialBindingsSql).toContain(frontendSermonEligibilitySql('s','public'));expect(publicEditorialBindingsSql).toContain("a.actor_role='admin'");expect(publicEditorialBindingsSql).toContain("a.action='sermon.update'");expect(publicEditorialBindingsSql).not.toContain('d175');expect((await repository.listPublished(query())).totalItems).toBe(1);
+  expect(statements).toEqual([publicEditorialBindingsSql,originalNativeStatesSql]);expect(originalNativeStatesSql).not.toMatch(/summary|transcript|answer|approval/iu);expect(publicEditorialBindingsSql).toContain(frontendSermonEligibilitySql('s','public'));expect(publicEditorialBindingsSql).toContain("a.actor_role='admin'");expect(publicEditorialBindingsSql).toContain("a.action='sermon.update'");expect(publicEditorialBindingsSql).not.toContain('d175');expect((await repository.listPublished(query())).totalItems).toBe(1);
  });
 });

@@ -1,4 +1,5 @@
 /** Canonical, indexable, server-rendered routes only; no draft or comparison pages. */
+import {maintainedIndexableCalendar} from './calendar-presentation';
 import { archivePageSize, archivePagePath, canonicalOriginFor, sermonPath, type FrontendRenderContext } from "../frontend/routes";
 import { pagesFor, postsFor, legacyDisposition } from "../frontend/content/registry";
 import { events, type ChurchEvent } from "../frontend/content/events";
@@ -51,7 +52,7 @@ export function renderSeoSitemap(entries: readonly PublicSermonSitemapEntry[], c
       || (parsed.search && !queryAllowed) || /%(?:2f|5c|00|0[ad])/iu.test(item.path)
       || /^\/(?:admin|api|frontend-preview|draft-preview|cms-preview|__local|__cms|sermons-v[0-9]+)(?:\/|$)/u.test(item.path)) throw new Error("seo_sitemap_path_invalid");
     if(item.lastModified && (!/^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z)?$/u.test(item.lastModified) || !Number.isFinite(Date.parse(item.lastModified)))) throw new Error("seo_sitemap_date_invalid");
-    return !legacyDisposition(item.path,context) && (!knownChurch.has(item.path) || allowedChurch.has(item.path));
+    return maintainedIndexableCalendar(item.path,context) || !legacyDisposition(item.path,context) && (!knownChurch.has(item.path) || allowedChurch.has(item.path));
   });
   const urls = [...source,...church,...sermonUrls(entries, context,totalItems)];
   const unique = new Map(urls.map(item => [item.path, item]));

@@ -32,8 +32,9 @@ it('serves scoped retained past archives without inventing missing historical da
  vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-19T02:00:00Z'));
  try{const c=context();c.siteContent!.legacyCalendarOccurrences=parseLegacyCalendar(body('past@example.test','20261011'),[event]);
  const old=await futureCalendarPage(new Request('https://www.example.test/events/list/?eventDisplay=past'),c)!.text();expect(old).toContain('Original anonymous gathering');expect(old).not.toContain('Current anonymous gathering');const search='/events/list/?eventDisplay=past&tribe-bar-search=original';expect(await futureCalendarPage(new Request('https://www.example.test'+search),c)!.text()).toContain('Original anonymous gathering');expect(await calendarSubscription(new Request('https://www.example.test'+search+'&ical=1'),c)!.text()).toContain('SUMMARY:Original anonymous gathering');
+ const empty=await futureCalendarPage(new Request('https://www.example.test/events/day/2026-10-12/'),c)!.text();expect(empty).toContain('No verified historical entry');expect(empty).not.toContain('Original anonymous gathering');expect(empty).not.toContain('Current anonymous gathering');
  const day=await futureCalendarPage(new Request('https://www.example.test/?post_type=tribe_events&eventDisplay=day&eventDate=2026-10-11'),c)!.text();expect(day).toContain('2026-10-11T17:30');
- for(const path of ['/?post_type=post&eventDisplay=day&eventDate=2026-10-11','/events/list/?eventDisplay=past&paged=2','/events/day/2026-10-12/','/events/list/?eventDate=2026-10-11&tribe-bar-date=2026-10-12','/events/list/?eventDate=2026-10-11&eventDate=2026-10-12','/events/list/?unknown=1'])expect(futureCalendarPage(new Request('https://www.example.test'+path),c)).toBeNull();
+ for(const path of ['/?post_type=post&eventDisplay=day&eventDate=2026-10-11','/events/list/?eventDisplay=past&paged=2','/events/list/?eventDate=2026-10-11&tribe-bar-date=2026-10-12','/events/list/?eventDate=2026-10-11&eventDate=2026-10-12','/events/list/?unknown=1'])expect(futureCalendarPage(new Request('https://www.example.test'+path),c)).toBeNull();
  }finally{vi.useRealTimers();}
 });
 

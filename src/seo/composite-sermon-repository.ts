@@ -1,4 +1,4 @@
-import {originalEditorialIdentity,type OriginalNativeIdentity} from './source-original-native-identities';
+import {originalEditorialIdentity,originalStoredSourceId,originalNativeSourceIdSql,originalNativeIdentities,readOriginalNativeWithdrawals,type OriginalNativeIdentity,type OriginalNativeWithdrawal} from './source-original-native-identities';
 import {applyOriginalCmsSerMons} from './source-sermon-cms';
 import type {CmsPublishedDocument,CmsRoute} from '../cms/model';
 /** Source originals plus the unchanged, normally approved public editorial projection. */
@@ -16,7 +16,7 @@ import {SourcePublicSermonRepository} from './source-public-repository';
 const term=z.object({name:z.string(),slug:z.string()});
 const bindingSchema=z.object({id:z.uuid(),slug:z.string(),source_wordpress_id:z.string().regex(/^[1-9][0-9]*$/u).nullable(),last_modified:z.string().regex(/^\d{4}-\d{2}-\d{2}$/u),editorial_changes:z.record(z.string(),z.string()),passage_terms:z.array(term)});
 /** No bodies or guessed UUID identity: joins use the unique stored WordPress ID. */
-export const publicEditorialBindingsSql=`SELECT s.id,s.slug,s.source_wordpress_id::text,
+const editorialBindingsSql=(identityBindings:readonly OriginalNativeIdentity[])=>`SELECT s.id,s.slug,s.source_wordpress_id::text,
  to_char(s.updated_at AT TIME ZONE 'UTC','YYYY-MM-DD') AS last_modified,
  COALESCE((SELECT jsonb_object_agg(changed.field,changed.at) FROM (
   SELECT field.value AS field,max(a.created_at) AS at FROM audit_events a
@@ -28,9 +28,10 @@ export const publicEditorialBindingsSql=`SELECT s.id,s.slug,s.source_wordpress_i
   FROM sermon_source_terms m JOIN source_taxonomy_terms t ON t.id=m.source_taxonomy_term_id
   WHERE m.sermon_id=s.id AND t.taxonomy='sermon_topics'),'[]'::jsonb) AS passage_terms
  FROM sermons s WHERE ${frontendSermonEligibilitySql('s','public')}
- AND NOT EXISTS(SELECT 1 FROM source_public_routes original WHERE original.source_wordpress_id=s.source_wordpress_id
+ AND NOT EXISTS(SELECT 1 FROM source_public_routes original WHERE original.source_wordpress_id=${originalNativeSourceIdSql('s',identityBindings)}
   AND (original.withdrawn OR EXISTS(SELECT 1 FROM redirects disposition WHERE disposition.old_path=original.path AND disposition.status_code=410)))
  ORDER BY s.id`;
+export const publicEditorialBindingsSql=editorialBindingsSql(originalNativeIdentities);
 
 export interface PublicEditorialSermon {
  detail:SermonDetail;
@@ -74,19 +75,21 @@ export class CompositeSourceSermonRepository implements PublicSermonRepository {
  private readonly bySlug=new Map<string,RecordProjection>();
  private readonly sourceShortlinks=new Map<string,string>();
  private readonly nativeSlugs=new Map<string,string>();
+ private readonly nativeWithdrawals=new Map<string,NonNullable<PublicSermonPathDisposition>>();
  private readonly relatedCache=new Map<string,Promise<SermonDetail['relatedSermons']>>();
  private constructor(private readonly disposition:(path:string)=>Promise<PublicSermonPathDisposition|null>,private readonly relatedLoader?:(id:string,slug:string)=>Promise<SermonDetail['relatedSermons']>){}
- static async create(pages:readonly SourcePublicPage[],approved:readonly PublicEditorialSermon[],disposition:(path:string)=>Promise<PublicSermonPathDisposition|null>,acceptedStaging=false,relatedLoader?:(id:string,slug:string)=>Promise<SermonDetail['relatedSermons']>,cms:readonly CmsPublishedDocument[]=[],cmsRoutes:readonly CmsRoute[]=[],identityBindings?:readonly OriginalNativeIdentity[]){
-  const routes=new Map(cmsRoutes.map(route=>[route.path,route]));
+ static async create(pages:readonly SourcePublicPage[],approved:readonly PublicEditorialSermon[],disposition:(path:string)=>Promise<PublicSermonPathDisposition|null>,acceptedStaging=false,relatedLoader?:(id:string,slug:string)=>Promise<SermonDetail['relatedSermons']>,cms:readonly CmsPublishedDocument[]=[],cmsRoutes:readonly CmsRoute[]=[],identityBindings?:readonly OriginalNativeIdentity[],nativeWithdrawals:readonly OriginalNativeWithdrawal[]=[]){
+  const routes=new Map(cmsRoutes.map(route=>[route.path,route]));approved=approved.filter(item=>!nativeWithdrawals.some(w=>w.nativeId===item.detail.id));
   const publishedOriginalIds=new Set(cms.filter(doc=>doc.content.template==='source-sermon').map(doc=>(doc.content.source as {id:number}).id));
   const withdrawn=pages.filter(page=>{if(page.kind!=='sermon')return false;const route=routes.get(page.path);return route?.status===410||route?.status===301&&!publishedOriginalIds.has(page.sourceId!);});
-  const withdrawnPaths=new Set(withdrawn.map(page=>page.path)),withdrawnIds=new Set(withdrawn.flatMap(page=>page.sourceId===null?[]:[String(page.sourceId)]));
+  const withdrawnPaths=new Set([...withdrawn.map(page=>page.path),...nativeWithdrawals.map(w=>w.originalPath)]),withdrawnIds=new Set([...withdrawn.flatMap(page=>page.sourceId===null?[]:[String(page.sourceId)]),...nativeWithdrawals.map(w=>w.originalSourceId)]);
   // Retain immutable source/review evidence while removing a CMS-withdrawn
   // identity from every visitor discovery surface, including native aliases.
   const resolvedOriginalIds=new Map(approved.map(item=>[item.detail.id,originalEditorialIdentity(pages,item,identityBindings)]));
   pages=pages.filter(page=>!withdrawnPaths.has(page.path));
   approved=approved.filter(item=>resolvedOriginalIds.get(item.detail.id)===null||!withdrawnIds.has(resolvedOriginalIds.get(item.detail.id)!));
   const repository=new CompositeSourceSermonRepository(disposition,relatedLoader),source=new SourcePublicSermonRepository(pages);
+  for(const w of nativeWithdrawals){repository.nativeWithdrawals.set(w.originalPath,w.disposition);repository.nativeWithdrawals.set(w.nativePath,w.disposition);repository.sourceShortlinks.set(w.originalSourceId,w.originalPath);}
   const candidates:SourcePublicPage[]=[];
   for(const input of pages){const page=sourcePageSchema.parse(input);if(page.kind==='sermon'&&!page.issues.length)candidates.push(page);}
   const sourceIds=candidates.flatMap(page=>page.sourceId===null?[]:[page.sourceId]);if(new Set(sourceIds).size!==sourceIds.length)throw Error('source_editorial_duplicate_identity');
@@ -132,6 +135,7 @@ export class CompositeSourceSermonRepository implements PublicSermonRepository {
   const recordIds=new Set<string>();
   for(const record of repository.records){const slug=canonicalStoredSermonSlug(record.detail.slug);if(slug!==record.detail.slug||repository.bySlug.has(slug)||recordIds.has(record.detail.id))throw Error('source_editorial_route_collision');repository.bySlug.set(slug,record);recordIds.add(record.detail.id);}
   for(const [alias,target]of repository.aliases)if(alias===target||repository.bySlug.has(alias.slice(9,-1)))throw Error('source_editorial_route_collision');
+  for(const w of nativeWithdrawals){const disposition=await repository.findPublicPathDisposition(w.originalPath);if(disposition?.kind==='redirect')repository.sourceShortlinks.set(w.originalSourceId,disposition.location);}
   return repository;
  }
  private selected(query?:Partial<PublicSermonListQuery>){return this.records.filter(record=>matches(record,query));}
@@ -159,32 +163,32 @@ export class CompositeSourceSermonRepository implements PublicSermonRepository {
  async listPublishedSitemapEntries(){return this.records.filter(r=>r.indexable).map(r=>({slug:r.detail.slug,lastModified:r.lastModified}));}
  async findPublicPathDisposition(path:string){
   if(this.aliases.has(path))return{kind:'redirect' as const,location:this.aliases.get(path)!};
-  const selected=await this.disposition(path);if(selected?.kind!=='redirect')return selected;
+  const selected=this.nativeWithdrawals.get(path)??await this.disposition(path);if(selected?.kind!=='redirect')return selected;
   const seen=new Set<string>([path]);let target=selected.location;
-  while(!seen.has(target)&&seen.size<16){seen.add(target);target=this.aliases.get(target)??target;if(this.bySlug.has(target.slice(9,-1)))return{kind:'redirect' as const,location:target};const next=await this.disposition(target);if(next?.kind==='gone')return next;if(next?.kind!=='redirect')return null;target=next.location;}
+  while(!seen.has(target)&&seen.size<16){seen.add(target);target=this.aliases.get(target)??target;if(this.bySlug.has(target.slice(9,-1)))return{kind:'redirect' as const,location:target};const next=this.nativeWithdrawals.get(target)??await this.disposition(target);if(next?.kind==='gone')return next;if(next?.kind!=='redirect')return null;target=next.location;}
   return null;
  }
 }
 
 /** This is the only production constructor: every enrichment detail crosses the normal public gate. */
-export async function createCompositeSourceSermonRepository(pages:readonly SourcePublicPage[],database:SqlExecutor,acceptedStageRepository?:PublicSermonRepository,cms:readonly CmsPublishedDocument[]=[],cmsRoutes:readonly CmsRoute[]=[]):Promise<CompositeSourceSermonRepository>{
- const editorial=acceptedStageRepository??new PostgresSermonRepository(database,'public'),sql=acceptedStageRepository?publicEditorialBindingsSql.replace(frontendSermonEligibilitySql('s','public'),"s.deleted_at IS NULL AND s.status NOT IN ('unpublished','archived')"):publicEditorialBindingsSql,rows=(await database.query(sql)).rows.map(row=>bindingSchema.parse(row));
+export async function createCompositeSourceSermonRepository(pages:readonly SourcePublicPage[],database:SqlExecutor,acceptedStageRepository?:PublicSermonRepository,cms:readonly CmsPublishedDocument[]=[],cmsRoutes:readonly CmsRoute[]=[],identityBindings:readonly OriginalNativeIdentity[]=originalNativeIdentities):Promise<CompositeSourceSermonRepository>{
+ const editorial=acceptedStageRepository??new PostgresSermonRepository(database,'public'),bindingsSql=identityBindings===originalNativeIdentities?publicEditorialBindingsSql:editorialBindingsSql(identityBindings),sql=acceptedStageRepository?bindingsSql.replace(frontendSermonEligibilitySql('s','public'),"s.deleted_at IS NULL AND s.status NOT IN ('unpublished','archived')"):bindingsSql,rows=(await database.query(sql)).rows.map(row=>bindingSchema.parse(row));
  if(rows.length>10000)throw Error('source_editorial_corpus_limit');
- const originals=[...pages],moved=new Set<string>();
+ const withdrawals=await readOriginalNativeWithdrawals(database,identityBindings),originals=[...pages],moved=new Set<string>();
  // readSourcePublicPages excludes redirected paths. Retain original wording only
  // when an active 301 proves this exact source identity moved to its eligible row.
- const unmatched=rows.filter(row=>row.source_wordpress_id!==null&&!pages.some(page=>page.kind==='sermon'&&String(page.sourceId)===row.source_wordpress_id));
+ const unmatched=rows.filter(row=>{const id=originalStoredSourceId(row.id,row.source_wordpress_id,identityBindings);return id!==null&&!pages.some(page=>page.kind==='sermon'&&String(page.sourceId)===id);});
  if(unmatched.length){const retired=(await database.query(`SELECT s.id,v.payload,v.version_sha256,d.new_path
-  FROM sermons s JOIN source_public_routes r ON r.source_wordpress_id=s.source_wordpress_id
+  FROM sermons s JOIN source_public_routes r ON r.source_wordpress_id=${originalNativeSourceIdSql('s',identityBindings)}
   JOIN source_public_versions v USING(version_sha256) JOIN redirects d ON d.old_path=r.path
   WHERE s.id=ANY($1::uuid[]) AND NOT r.withdrawn AND d.status_code=301 AND d.source_sermon_id=s.id
    AND d.new_path='/sermons/'||s.slug||'/'`,[unmatched.map(row=>row.id)])).rows;
   for(const row of retired){const page=sourcePageSchema.parse(row.payload),binding=unmatched.find(item=>item.id===row.id);
-   if(!binding||sourceVersionHash(page)!==row.version_sha256||page.kind!=='sermon'||String(page.sourceId)!==binding.source_wordpress_id||row.new_path!==pathFor(binding.slug))throw Error('source_editorial_redirect_identity');
+   if(!binding||sourceVersionHash(page)!==row.version_sha256||page.kind!=='sermon'||String(page.sourceId)!==originalStoredSourceId(binding.id,binding.source_wordpress_id,identityBindings)||row.new_path!==pathFor(binding.slug))throw Error('source_editorial_redirect_identity');
    originals.push(page);moved.add(binding.id);
   }
  }
  const approved:PublicEditorialSermon[]=[];
  for(let start=0;start<rows.length;start+=4){const batch=await Promise.all(rows.slice(start,start+4).map(async row=>{const detail=await (editorial.findPublishedSnapshotBySlug?.(row.slug)??editorial.findPublishedBySlug(row.slug));if(!detail){if(acceptedStageRepository)return null;throw Error('source_editorial_changed_during_snapshot');}if(detail.id!==row.id)throw Error('source_editorial_changed_during_snapshot');return{detail,sourceWordpressId:row.source_wordpress_id,editorialChanges:row.editorial_changes,passageTerms:row.passage_terms,lastModified:row.last_modified,...(moved.has(row.id)?{canonicalSlug:row.slug}:{})};}));approved.push(...batch.filter((item):item is NonNullable<typeof item>=>item!==null));}
- return CompositeSourceSermonRepository.create(originals,approved,path=>editorial.findPublicPathDisposition(path),Boolean(acceptedStageRepository),async(id,slug)=>{const current=await editorial.findPublishedBySlug(slug);if(current&&current.id!==id)throw Error('source_editorial_related_changed');return current?.relatedSermons??[];},cms,cmsRoutes);
+ return CompositeSourceSermonRepository.create(originals,approved,path=>editorial.findPublicPathDisposition(path),Boolean(acceptedStageRepository),async(id,slug)=>{const current=await editorial.findPublishedBySlug(slug);if(current&&current.id!==id)throw Error('source_editorial_related_changed');return current?.relatedSermons??[];},cms,cmsRoutes,identityBindings,withdrawals);
 }
