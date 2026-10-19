@@ -14,6 +14,9 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
+import threading
+from contextlib import closing
 import tarfile
 from urllib.parse import urlsplit, parse_qs
 import time
@@ -56,6 +59,8 @@ def helpers():
     upgrade = importlib.util.module_from_spec(spec); spec.loader.exec_module(upgrade)
     base = upgrade.base_operator()
     base.sha = streaming_sha
+    base._seo_streaming_source_reader = True
+    base.stream_source_batches = lambda name, key, expected: stream_source_batches(base, name, key, expected)
     base.RUNTIME_ENTRIES = (*base.RUNTIME_ENTRIES, "source-public-sync")
     base.CMS_TABLES = (*base.CMS_TABLES, *SOURCE_TABLES, "redirects", "audit_events")
     base.assets_manifest = lambda: assets_manifest(base)
@@ -114,6 +119,59 @@ def source_migration_checksum(root):
     return hashlib.sha256("\n".join(("saving-grace-schema-migration-v1", "-- up", values[0], "-- down", values[1])).encode()).hexdigest()
 
 
+def stream_source_batches(base, name, key, expected):
+    """Bound each NDJSON packet, never log source rows, retain two independent passes."""
+    keys = {"source_public_versions": "version_sha256", "source_public_routes": "path", "source_public_imports": "bundle_sha256"}
+    if name not in keys or keys[name] != key or type(expected) is not int or not 0 <= expected <= 1000000:
+        fail("seo_source_batch_scope")
+    statements = ["BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY", "SET LOCAL timezone='UTC'", "SET LOCAL statement_timeout='30s'", "SELECT count(*) FROM " + name]
+    for offset in range(0, expected, 128):
+        statements.append("SELECT COALESCE(json_agg(to_jsonb(t)),'[]'::json) FROM (SELECT * FROM " + name + " ORDER BY " + key + " LIMIT 128 OFFSET " + str(offset) + ") t")
+    statements.extend(["SELECT count(*) FROM " + name, "COMMIT"])
+    with tempfile.TemporaryFile() as script, tempfile.TemporaryFile() as errors:
+        script.write((";\n".join(statements) + ";\n").encode()); script.seek(0)
+        command = ["docker", "exec", "-i", base.DB, "psql", "-X", "-qAt", "-U", "postgres", "-d", "savinggrace_staging", "-v", "ON_ERROR_STOP=1"]
+        process = subprocess.Popen(command, stdin=script, stdout=subprocess.PIPE, stderr=errors)
+        expired = threading.Event()
+        def timeout():
+            expired.set()
+            try: process.kill()
+            except ProcessLookupError: pass
+        timer = threading.Timer(600, timeout); timer.daemon = True; timer.start()
+        def packet():
+            raw = process.stdout.readline(32 * 1024 * 1024 + 1)
+            if not raw or len(raw) > 32 * 1024 * 1024 or not raw.endswith(b"\n"):
+                fail("seo_source_batch_transport")
+            try: return json.loads(raw)
+            except (ValueError, UnicodeError): fail("seo_source_batch_transport")
+        try:
+            count = packet()
+            if type(count) is not int or count != expected: fail("seo_source_snapshot_changed")
+            for offset in range(0, expected, 128):
+                rows = packet()
+                if not isinstance(rows, list) or len(rows) != min(128, expected - offset):
+                    fail("seo_source_snapshot_changed")
+                yield rows
+            count = packet()
+            if type(count) is not int or count != expected: fail("seo_source_snapshot_changed")
+            if process.stdout.read(1) or process.wait(timeout=10) != 0 or expired.is_set():
+                fail("seo_source_batch_transport")
+        finally:
+            timer.cancel()
+            if process.poll() is None:
+                process.kill(); process.wait(timeout=10)
+            process.stdout.close()
+
+
+def source_batches(base, name, key, expected):
+    if getattr(base, "_seo_streaming_source_reader", False) is True:
+        yield from base.stream_source_batches(name, key, expected)
+    else:
+        for offset in range(0, expected, 128):
+            statement = "SELECT COALESCE(json_agg(to_jsonb(t)),'[]'::json) FROM (SELECT * FROM " + name + " ORDER BY " + key + " LIMIT 128 OFFSET " + str(offset) + ") t"
+            yield json.loads(base.sql(statement))
+
+
 def source_snapshot(base):
     count = int(base.sql("SELECT count(*) FROM pg_tables WHERE schemaname='public' AND tablename IN('source_public_versions','source_public_routes','source_public_imports')").decode().strip())
     if count not in (0, 3): fail("seo_partial_source_schema")
@@ -125,19 +183,22 @@ def source_snapshot(base):
     for name in SOURCE_TABLES:
         expected = int(base.sql("SELECT count(*) FROM " + name).decode().strip())
         rows = []
-        for offset in range(0, expected, 128):
-            statement = "SELECT COALESCE(json_agg(to_jsonb(t)),'[]'::json) FROM (SELECT * FROM " + name + " ORDER BY " + keys[name] + " LIMIT 128 OFFSET " + str(offset) + ") t"
-            batch = json.loads(base.sql(statement))
-            if len(batch) != min(128, expected - offset): fail("seo_source_snapshot_changed")
-            rows.extend(batch)
+        with closing(source_batches(base, name, keys[name], expected)) as batches:
+            for offset, batch in enumerate(batches):
+                if len(batch) != min(128, expected - offset * 128): fail("seo_source_snapshot_changed")
+                rows.extend(batch)
+        if len(rows) != expected: fail("seo_source_snapshot_changed")
         identities = [row[keys[name]] for row in rows]
         if len(set(identities)) != expected or int(base.sql("SELECT count(*) FROM " + name).decode().strip()) != expected:
             fail("seo_source_snapshot_changed")
         # Re-read each batch and compare complete decoded rows; count alone
         # cannot detect a concurrent edit with the same number of identities.
-        for offset in range(0, expected, 128):
-            statement = "SELECT COALESCE(json_agg(to_jsonb(t)),'[]'::json) FROM (SELECT * FROM " + name + " ORDER BY " + keys[name] + " LIMIT 128 OFFSET " + str(offset) + ") t"
-            if json.loads(base.sql(statement)) != rows[offset:offset+128]: fail("seo_source_snapshot_changed")
+        compared = 0
+        with closing(source_batches(base, name, keys[name], expected)) as batches:
+            for batch in batches:
+                if batch != rows[compared:compared+128]: fail("seo_source_snapshot_changed")
+                compared += len(batch)
+        if compared != expected: fail("seo_source_snapshot_changed")
         result[name] = rows
     return result
 

@@ -38,6 +38,40 @@ def archive(path, records):
 
 
 class SeoDeploymentTest(unittest.TestCase):
+    def test_streamed_source_packets_keep_scope_guards_and_full_identity_checks(self):
+        def process(output):
+            value=Mock(stdout=io.BytesIO(output));value.poll.return_value=0;value.wait.return_value=0;return value
+        rows=[{'version_sha256':'one','payload':{'text':'Anonymous complete row'}}]
+        transport=process(b'1\n'+json.dumps(rows).encode()+b'\n1\n')
+        def launch(command,**kwargs):
+            self.assertEqual(command[:4],['docker','exec','-i','anonymous-db'])
+            statement=kwargs['stdin'].read().decode();self.assertIn('REPEATABLE READ READ ONLY',statement);self.assertIn('statement_timeout',statement);self.assertIn('LIMIT 128 OFFSET 0',statement);self.assertNotRegex(statement,r'(?i)\b(?:insert|update|delete|grant|alter|drop)\b');return transport
+        with patch.object(OP.subprocess,'Popen',side_effect=launch):self.assertEqual(list(OP.stream_source_batches(SimpleNamespace(DB='anonymous-db'),'source_public_versions','version_sha256',1)),[rows])
+        transport.kill.assert_not_called()
+        for name,key,count in [('other','id',1),('source_public_versions','wrong',1),('source_public_versions','version_sha256',-1)]:
+            with patch.object(OP.subprocess,'Popen') as launch,self.assertRaisesRegex(RuntimeError,'seo_source_batch_scope'):list(OP.stream_source_batches(SimpleNamespace(DB='anonymous-db'),name,key,count))
+            launch.assert_not_called()
+
+    def test_streamed_source_packets_refuse_counts_truncation_extra_output_and_database_errors(self):
+        rows=json.dumps([{'version_sha256':'one'}]).encode()
+        for output,returncode in [(b'true\n'+rows+b'\n1\n',0),(b'2\n',0),(b'1\n'+rows+b'\n2\n',0),(b'1\n[]\n1\n',0),(b'1\n'+rows+b'\n1\nextra',0),(b'1\n'+rows+b'\n1\n',1),(b'1\n[',0)]:
+            process=Mock(stdout=io.BytesIO(output));process.poll.return_value=0;process.wait.return_value=returncode
+            with patch.object(OP.subprocess,'Popen',return_value=process),self.assertRaisesRegex(RuntimeError,'seo_source_(?:snapshot_changed|batch_transport)'):list(OP.stream_source_batches(SimpleNamespace(DB='anonymous-db'),'source_public_versions','version_sha256',1))
+
+    def test_streamed_snapshot_still_reads_two_separate_complete_passes_and_refuses_same_count_changes(self):
+        rows=[{'version_sha256':'one','payload':{'version':1}}];calls=[]
+        def sql(statement):return b'3' if 'pg_tables' in statement else b'1' if statement.endswith('source_public_versions') else b'0'
+        def stream(name,key,count):
+            calls.append(name)
+            if count:yield rows
+        fake=SimpleNamespace(sql=sql,_seo_streaming_source_reader=True,stream_source_batches=stream)
+        self.assertEqual(OP.source_snapshot(fake)['source_public_versions'],rows);self.assertEqual(calls.count('source_public_versions'),2)
+        def changed(name,key,count):
+            if count:yield [{'version_sha256':'one','payload':{'version':len(calls)}}];calls.append(name)
+        fake.stream_source_batches=changed
+        with self.assertRaisesRegex(RuntimeError,'seo_source_snapshot_changed'):OP.source_snapshot(fake)
+
+
     def test_resource_receipt_rerun_retains_original_counts_and_refuses_different_identity(self):
         result=lambda inserted:{'result':{'manifestSha256':'d'*64,'inserted':inserted,'unchanged':534-inserted,'held':[]}}
         previous={'outcome':'seo_resource_redirects_imported','commit':COMMIT,'image':IMAGE,'priorRowsPreserved':True,'result':result(236),'replay':result(0)}
