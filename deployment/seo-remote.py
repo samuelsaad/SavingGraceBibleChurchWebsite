@@ -172,7 +172,11 @@ def source_batches(base, name, key, expected):
             yield json.loads(base.sql(statement))
 
 
-def source_snapshot(base):
+def source_row_digest(row):
+    return hashlib.sha256(json.dumps(row, sort_keys=True).encode()).hexdigest()
+
+
+def source_snapshot(base, digest_only=False):
     count = int(base.sql("SELECT count(*) FROM pg_tables WHERE schemaname='public' AND tablename IN('source_public_versions','source_public_routes','source_public_imports')").decode().strip())
     if count not in (0, 3): fail("seo_partial_source_schema")
     if not count: return {name: [] for name in SOURCE_TABLES}
@@ -182,13 +186,13 @@ def source_snapshot(base):
     # A before/after count and ordered unique key set detect concurrent changes.
     for name in SOURCE_TABLES:
         expected = int(base.sql("SELECT count(*) FROM " + name).decode().strip())
-        rows = []
+        rows = []; identities = []
         with closing(source_batches(base, name, keys[name], expected)) as batches:
             for offset, batch in enumerate(batches):
                 if len(batch) != min(128, expected - offset * 128): fail("seo_source_snapshot_changed")
-                rows.extend(batch)
+                identities.extend(row[keys[name]] for row in batch)
+                rows.extend(source_row_digest(row) for row in batch) if digest_only else rows.extend(batch)
         if len(rows) != expected: fail("seo_source_snapshot_changed")
-        identities = [row[keys[name]] for row in rows]
         if len(set(identities)) != expected or int(base.sql("SELECT count(*) FROM " + name).decode().strip()) != expected:
             fail("seo_source_snapshot_changed")
         # Re-read each batch and compare complete decoded rows; count alone
@@ -196,7 +200,8 @@ def source_snapshot(base):
         compared = 0
         with closing(source_batches(base, name, keys[name], expected)) as batches:
             for batch in batches:
-                if batch != rows[compared:compared+128]: fail("seo_source_snapshot_changed")
+                actual = [source_row_digest(row) for row in batch] if digest_only else batch
+                if actual != rows[compared:compared+128]: fail("seo_source_snapshot_changed")
                 compared += len(batch)
         if compared != expected: fail("seo_source_snapshot_changed")
         result[name] = rows
@@ -455,10 +460,10 @@ def verify_frozen(base, upgrade, root, recovery):
     current["schema_migrations"] = [row for row in current["schema_migrations"] if row["migration_order"] <= BASE_SCHEMA_ORDER]
     upgrade.immutable_preserved(before, current)
     source_before = base.load(root / "source-before.private.json")
-    source_current = source_snapshot(base)
+    source_current = source_snapshot(base, digest_only=True)
     for name in ("source_public_versions", "source_public_imports"):
-        old = {json.dumps(row, sort_keys=True) for row in source_before[name]}
-        if not old <= {json.dumps(row, sort_keys=True) for row in source_current[name]}: fail("seo_source_history_changed")
+        old = {source_row_digest(row) for row in source_before[name]}
+        if not old <= set(source_current[name]): fail("seo_source_history_changed")
 
 
 def phase_file(root, runtime, phase):
@@ -764,4 +769,4 @@ if __name__ == "__main__":
     try: main()
     except Exception as error:
         code = str(error) if re.fullmatch(r"(?:cms|seo)_[a-z_]+", str(error)) else "seo_operation_refused"
-        print(json.dumps({"outcome": "stopped_safely", "code": code})); sys.exit(1)
+        print(json.dumps({"outcome": "stopped_safely", "code": code, "errorType": type(error).__name__})); sys.exit(1)
