@@ -1,8 +1,16 @@
 import {describe,it,expect} from 'vitest';
+import {siteAssetPaths} from '../src/server/http/site-assets';
 import {retainPrivateRoutes} from '../src/seo/site-integration';
 import {createCmsDashboardHandler} from '../src/cms/dashboard';
 import {CmsSessionProvider} from '../src/cms/session';
 describe('source visitor preserves the protected CMS asset boundary',()=>{
+ it('serves only known code-owned assets through the existing protected runtime without waiting for a public snapshot',async()=>{
+  const existing=async()=>new Response('asset'),visitor=async()=>{throw Error('public_snapshot_not_needed_for_code_asset');};
+  const handler=retainPrivateRoutes(existing,visitor);
+  for(const path of siteAssetPaths)expect(await(await handler(new Request('http://127.0.0.1:4430'+path))).text()).toBe('asset');
+  const ordinary=retainPrivateRoutes(existing,async()=>new Response('visitor'));
+  for(const path of ['/wp-content/uploads/original.jpg','/sermons/example/','/_astro/unrecognized.js'])expect(await(await ordinary(new Request('http://127.0.0.1:4430'+path))).text()).toBe('visitor');
+ });
  it('routes only the exact admin bundle and stylesheet to the existing handler',async()=>{
   const handler=retainPrivateRoutes(async()=>new Response('protected'),async()=>new Response('visitor'));
   for(const path of ['/_astro/cms-admin.js','/_astro/cms-admin.css','/_astro/cms-admin.js?cache=1','/admin/cms'])expect(await(await handler(new Request('http://127.0.0.1:4396'+path))).text()).toBe('protected');

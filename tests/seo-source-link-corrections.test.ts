@@ -8,6 +8,11 @@ describe('exact original link corrections',()=>{
   for(const href of ['ralph@savinggrace.org.au','/music-ministry/ralph@savinggrace.org.au','https://www.savinggrace.org.au/music-ministry/ralph@savinggrace.org.au'])expect(String(renderSourceContent([{tag:'a',href,text:'Contact'}]))).toContain('href="mailto:ralph@savinggrace.org.au"');
   expect(String(renderSourceContent([{tag:'a',href:'/other/ralph@savinggrace.org.au',text:'Contact'}]))).toContain('href="/other/ralph@savinggrace.org.au"');
  });
+ it('repairs only the witnessed broken past-calendar control',()=>{
+  const href='/events/?pagename=church-events&shortcode=9ddfb0dc&eventDisplay=past';
+  expect(String(renderSourceContent([{tag:'a',href,text:'Past events'}]))).toContain('href="/events/list/?eventDisplay=past"');
+  for(const variant of [href+'&tag=other',href.replace('9ddfb0dc','unknown'),href.replace('past','list')])expect(String(renderSourceContent([{tag:'a',href:variant,text:'Past events'}]))).not.toContain('href="/events/list/?eventDisplay=past"');
+ });
  it('binds empty taxonomy aliases only to the exact original blog archive with all original members',()=>{
   const row=reviewedArchiveAliases[0]!;const page={path:row.target,sourceId:row.sourceId,kind:row.kind,responseSha256:row.responseSha256,issues:[],links:row.dispositionEvidence!.memberPaths} as unknown as SourcePublicPage;
   const policy=sourceRoutePolicy([page],[],undefined,undefined,reviewedArchiveAliases);expect(policy.sourceObservedAliases['/?taxonomy=&term=']).toBe('/blogs/');

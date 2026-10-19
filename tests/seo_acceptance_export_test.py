@@ -11,6 +11,14 @@ URL = report.ORIGIN + '/anonymous-example/'
 SECRET = 'Synthetic confidential body must never enter a tracked report.'
 
 
+class SafeObservedQueryTests(unittest.TestCase):
+    def test_exact_empty_taxonomy_and_calendar_dates_remain_visible_without_accepting_private_values(self):
+        for suffix in ['/?taxonomy=&term=','/events/?eventDate=2026-10-19']:
+            self.assertEqual(report.safe_url(report.ORIGIN+suffix),report.ORIGIN+suffix)
+        for suffix in ['/?taxonomy=private&term=private','/events/?eventDate=private-value','/?unrecognized=private-value']:
+            self.assertTrue(report.safe_url(report.ORIGIN+suffix).startswith('withheld-reference:'))
+
+
 def save(path, value):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(value, ensure_ascii=False), encoding='utf8')
