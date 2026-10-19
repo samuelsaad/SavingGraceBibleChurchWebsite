@@ -38,6 +38,20 @@ def archive(path, records):
 
 
 class SeoDeploymentTest(unittest.TestCase):
+    def test_digest_snapshot_hashes_every_complete_row_without_retaining_duplicate_decoded_payloads(self):
+        row={'version_sha256':'one','payload':{'text':'Anonymous complete payload','other':[1,2,3]}}
+        def sql(statement):return b'3' if 'pg_tables' in statement else b'1' if statement.endswith('source_public_versions') else b'0'
+        fake=SimpleNamespace(sql=sql,_seo_streaming_source_reader=True,stream_source_batches=lambda name,key,count:iter([[row]]if count else[]))
+        full=OP.source_snapshot(fake);digests=OP.source_snapshot(fake,digest_only=True)
+        self.assertEqual(digests,{name:[hashlib.sha256(json.dumps(value,sort_keys=True).encode()).hexdigest()for value in rows]for name,rows in full.items()})
+        calls=[]
+        def changed(name,key,count):
+            if count:
+                calls.append(name);yield [{**row,'payload':{'text':'Changed complete payload'if len(calls)>1 else'Anonymous complete payload'}}]
+        fake.stream_source_batches=changed
+        with self.assertRaisesRegex(RuntimeError,'seo_source_snapshot_changed'):OP.source_snapshot(fake,digest_only=True)
+
+
     def test_streamed_source_packets_keep_scope_guards_and_full_identity_checks(self):
         def process(output):
             value=Mock(stdout=io.BytesIO(output));value.poll.return_value=0;value.wait.return_value=0;return value
