@@ -23,3 +23,7 @@ describe('source-backed CMS adoption',()=>{
   expect(rendered).toContain('&lt;script&gt;');expect(rendered).toContain('**literal**');expect(rendered).not.toContain('javascript:');expect(rendered).not.toContain('<script>');
  });
 });
+
+it('produces the same exact plan for source rows returned in different database orders',()=>{
+ const second={...original,path:'/another-original/',sourceUrl:'https://www.savinggrace.org.au/another-original/',sourceId:43};const input=[original,second],before=JSON.stringify(input);expect(sourceCmsAdoption(input,[],[])).toEqual(sourceCmsAdoption([...input].reverse(),[],[]));expect(JSON.stringify(input)).toBe(before);
+});

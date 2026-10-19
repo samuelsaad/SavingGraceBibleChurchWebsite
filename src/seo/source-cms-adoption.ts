@@ -29,5 +29,7 @@ export function sourceCmsAdoption(pages:readonly SourcePublicPage[],entities:rea
   else payload={...(page.kind==='sermon'?{template:'source-sermon'}:{}),id,path:page.path,title:page.heading,heading:page.heading,description:page.description??'',section:page.kind==='sermon'?'sermons':page.kind==='archive'?'events':'resources',status:'published',modules,seo,legacyPaths:[],...(page.sourceId?{source:{id:page.sourceId,link:page.sourceUrl,status:'publish',modified:page.modifiedAt??''}}:{})};
   try{validateCmsContent(kind,payload);seeds.push({key,kind,title:page.heading,path:page.path,payload,publish:true});}catch{held.push({path:page.path,reason:'current_cms_contract_not_representable'});}
  }
+ // Bind plan hashes to identities, independent of database collation or caller order.
+ seeds.sort((a,b)=>a.key<b.key?-1:a.key>b.key?1:0);held.sort((a,b)=>a.path<b.path?-1:a.path>b.path?1:0);
  return {seeds,held,unchanged};
 }

@@ -526,3 +526,38 @@ four with a distinct assembly envelope and unchanged source-capture dates/conten
 Native sermon rows matched before/after. CMS plan remains zero additions / 1,445
 held. No migration schema or PostgreSQL restoration behavior changed; retain the
 successful 65-table recovery proof rather than repeating it.
+
+### Final finite dependency closure — 19 October 2026
+
+Eleven retained-ICS occurrence URLs already in the inventory were missing HTML
+witnesses. Eleven bounded public requests returned 200; all eleven exact original
+event pages assembled without held records. The union remains 23,081 URLs, now
+15,729 captured responses / 28,449 witnesses, ledger SHA-256
+`99e078a8a657657f645c493c7677f3b88abe7b3f96c1722dd00d97f349b884a6`.
+Local source/CMS additions each inserted eleven and changed zero on replay;
+independent transaction rollback was verified before committing the additive import.
+All 2,662 prior CMS entities retained exact row hashes. Total source routes: 6,527.
+
+CMS adoption plan order is now stable by key, independent of database ordering;
+an anonymous shuffled-input regression verifies identical payload/plan and no input
+mutation. A focused RSS regression verifies a captured occurrence plus a published
+exclusion produces one cancellation under the same GUID. This fixes duplicate
+cancellation emission without suppressing cancellations or clearing evidence.
+
+Exact committed 7691ef9 local browser checks passed three source templates and
+published-response revision restoration; extended module hiding, two slug changes,
+direct aliases, calendar edit/cancel/restore and original UID continuity passed.
+The subsequent narrow fixes receive final integrated and deployed verification.
+A fresh complete local asset backup/restoration verified 2,387 files, 118 recordings,
+1,221,900,924 bytes and all four private extraction caches by full hash/length.
+The extra local asset count is not assumed to equal staging; staging inventory is
+verified separately. Existing successful 65-table PostgreSQL restore is retained.
+
+Final integrated dependency release gates: 1,507 PostgreSQL passes / zero skips,
+1,360 standard passes / 147 gated skips covered above, 683 type-checked files /
+zero errors or warnings / seven existing hints, 45-page build, 161 Python SEO
+passes, and 551-file credential/private-body scan passed. Offline audit has zero
+known vulnerabilities and the established anonymized importer fixture passes.
+The eleven added original pages each return 200 with zero missing meaningful
+blocks or images in direct comparison; remaining raw social-image differences
+are retained for the exact original-logo metadata policy, not silently cleared.

@@ -2,13 +2,18 @@
 
 ## D-183 live feeds and original sermon identities — 19 October 2026
 
-The latest finite source union has 23,081 URLs, 15,718 captured responses and
-28,427 retained witnesses; ledger SHA-256
-`824e978b31acc118883bb021c0b64d1cc186a4c647b7e7a0333ba9ca1d745335`.
-There are 6,516 source routes and 459 known original public sermons. Three accepted
+The latest finite source union has 23,081 URLs, 15,729 captured responses and
+28,449 retained witnesses; ledger SHA-256
+`99e078a8a657657f645c493c7677f3b88abe7b3f96c1722dd00d97f349b884a6`.
+There are 6,527 source routes and 459 known original public sermons. Three accepted
 historical pilots now project onto their verified original URLs without changing
 stored IDs, reviews or editorial content. This removes duplicate archive entries.
 The selected archive also retains all original Bible-book classifications.
+Eleven remaining exact historical occurrence pages were verified publicly, imported
+and adopted additively; independent transaction rollback and replay passed, with
+all 2,662 prior CMS entities unchanged. Plan hashes now sort by stable identity,
+independent of database collation. A retained occurrence cancelled by an explicit
+exclusion is emitted once, preserving its identifier.
 
 Four RSS feeds now follow published CMS/sermon/calendar snapshots. Opaque original
 GUIDs and historical dates are retained; recurring event GUIDs distinguish actual

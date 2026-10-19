@@ -27,7 +27,7 @@ PREVIOUS_IMAGE = "sha256:91b68b57b5ee27a29848816aae750c5ea358212024fe55f22c8e6e5
 BASE_SCHEMA_ORDER = 28
 EXISTING_SOURCE_SHA = "a6b578032152542a01d7f593efbe027d5f5f89ccfa4cff3fabed8de1b44cb7d6"
 EXISTING_BUNDLE_SHA = "3f34acc4b850884c4fbb44bbb66fc0b42c23bb1dfa7f7416f5840cb80ffb1917"
-INCOMING_BUNDLE_SHA = "4c695cc090bde27a5f64c0998973cd823bccb53396de4a18e7695dd61fbf54bf"
+INCOMING_BUNDLE_SHA = "f3b34abcecb2ad3b740e018160108e24841148aec3042f300510ebceb42975a1"
 SOURCE_TABLES = ("source_public_versions", "source_public_routes", "source_public_imports")
 ASSET_KEY = re.compile(r"[a-f0-9]{64}\.(?:png|jpg|webp|gif|avif|svg|ico|pdf|doc|docx|xls|xlsx|ppt|pptx|rss|atom|ics|zip|otf|mp3|mp4)")
 RSS_FACT_ASSETS = {'f9eacfba6d1043a9fd731e46be5fd8210426d71606a58a4671bc0a9e1172e5d2.rssfacts': {'path': '/category/posts/feed/', 'sourceResponseSha256': '3c7e3fcff64fe807cc6d61e2aa04419f0f4b72895545c19556e1c7851e02a424', 'key': 'f9eacfba6d1043a9fd731e46be5fd8210426d71606a58a4671bc0a9e1172e5d2.rssfacts', 'sha256': 'f9eacfba6d1043a9fd731e46be5fd8210426d71606a58a4671bc0a9e1172e5d2', 'bytes': 47649}, 'b550b065f989b65fd872ab677bca0847248a984b17fbbb5b7a4a58e18a14767f.rssfacts': {'path': '/events/feed/', 'sourceResponseSha256': 'd5e94fa11eee912980f34bb8245a5584909e71316da1b5efbb35ca405a0bab99', 'key': 'b550b065f989b65fd872ab677bca0847248a984b17fbbb5b7a4a58e18a14767f.rssfacts', 'sha256': 'b550b065f989b65fd872ab677bca0847248a984b17fbbb5b7a4a58e18a14767f', 'bytes': 25997}, '8038933ca2724be5db143e4552646a4b02199d084702e5a7c4708daf78e78ab5.rssfacts': {'path': '/feed/', 'sourceResponseSha256': '7eb2a774c50bd90361a93ef74b561c8faaf5edb152bc0d95bb9ab28d5bbe13af', 'key': '8038933ca2724be5db143e4552646a4b02199d084702e5a7c4708daf78e78ab5.rssfacts', 'sha256': '8038933ca2724be5db143e4552646a4b02199d084702e5a7c4708daf78e78ab5', 'bytes': 47637}, '857b2ae8c90de7647a10b30095e151bb2d98a0a572af26efbfae8a32a5a79516.rssfacts': {'path': '/sermons/feed/', 'sourceResponseSha256': '433fd7df00b6bd6283a6857eefeaa4966b5cea45be3f35c13eb2b3059d501037', 'key': '857b2ae8c90de7647a10b30095e151bb2d98a0a572af26efbfae8a32a5a79516.rssfacts', 'sha256': '857b2ae8c90de7647a10b30095e151bb2d98a0a572af26efbfae8a32a5a79516', 'bytes': 73407}}
@@ -645,7 +645,7 @@ def adopt_cms(base, upgrade, helper, root, recovery):
         frozen = base.load(marker)
         if plan["planned"] and plan != frozen: fail("seo_cms_plan_changed")
     else:
-        if plan.get("planned") != 0 or plan.get("held") != 1445 or plan.get("planSha256") != "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945":
+        if plan.get("planned") != 11 or plan.get("held") != 1445 or plan.get("planSha256") != "a7bebbe0a4145583a5fb0b1b92d182c0cbfecbac7475fabbf2dbe044f7fe0143":
             fail("seo_cms_plan_scope")
         frozen = plan; base.save(marker, frozen)
     config["services"]["app"]["environment"]["SOURCE_CMS_PLAN_SHA256"] = frozen["planSha256"]
