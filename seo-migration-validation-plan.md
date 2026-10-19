@@ -561,3 +561,15 @@ known vulnerabilities and the established anonymized importer fixture passes.
 The eleven added original pages each return 200 with zero missing meaningful
 blocks or images in direct comparison; remaining raw social-image differences
 are retained for the exact original-logo metadata policy, not silently cleared.
+
+### RSS measurement continuity follow-up — 20 October 2026 Sydney
+
+The actual four-feed original/candidate comparison found that canonical item links
+had lost WordPress's existing RSS attribution. Every verified original member used
+`utm_source=rss`, `utm_medium=rss`, and its public item/series slug as `utm_campaign`.
+Preserve that exact publisher pattern for current and newly published entries,
+including dated recurring-event links. Canonical page metadata and GUIDs remain
+unchanged. This emits no tracking request and activates no production measurement.
+Focused tests assert exact escaped post and event URLs after publication/slug edits.
+This defect was found by actual feed comparison after the first candidate rehearsal;
+its failed intermediate candidate remains identifiable rather than marked accepted.

@@ -17,7 +17,8 @@ exclusion is emitted once, preserving its identifier.
 
 Four RSS feeds now follow published CMS/sermon/calendar snapshots. Opaque original
 GUIDs and historical dates are retained; recurring event GUIDs distinguish actual
-dates. Drafts remain private. Exactly four private, source-bound extraction caches
+dates. Original RSS publisher campaign tags are preserved without enabling telemetry.
+Drafts remain private. Exactly four private, source-bound extraction caches
 are rebuilt from frozen original evidence on the existing asset volume, never Git
 or public URLs. Four source-feed versions passed guarded local import, idempotent
 replay, independent scoped restore, restored replay and clean reapply; sermon rows
