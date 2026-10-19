@@ -39,12 +39,25 @@ function filteredEvents(url:URL,context:FrontendRenderContext,initial:ChurchEven
   const matches=path?selectedScope(path,context):null;if(!matches)return null;const ids=new Set(matches.map(e=>e.id));events=events.filter(e=>ids.has(e.id));
  }return events;
 }
+/** Explicit past/upcoming exports retain the requested temporal membership. */
+function displayedEvents(events:ChurchEvent[],url:URL):ChurchEvent[]{
+ const display=url.searchParams.get('eventDisplay');if(display!=='past'&&display!=='upcoming')return events;
+ const now=new Date(),today=melbourneToday(now),clock=new Intl.DateTimeFormat('en-AU',{timeZone:'Australia/Melbourne',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(now);
+ const shift=(days:number)=>new Date(Date.parse(today+'T00:00:00Z')+days*86400000).toISOString().slice(0,10);
+ return events.flatMap(event=>{
+  const boundary=display==='past'?(event.end<=clock?today:shift(-1)):(event.end>clock?today:shift(1)),schedule=event.schedule;
+  if(schedule.kind==='single')return (display==='past'?schedule.date<=boundary:schedule.date>=boundary)?[event]:[];
+  const from=display==='upcoming'&&schedule.from<boundary?boundary:schedule.from,until=display==='past'&&(!schedule.until||schedule.until>boundary)?boundary:schedule.until;
+  return until&&from>until?[]:[{...event,schedule:{...schedule,from,...(until?{until}:{})}}];
+ });
+}
 export function calendarSubscription(request:Request,context:FrontendRenderContext):Response|null{
  if(!context.siteContent)return null;
  const url=new URL(request.url),flags=['ical','outlook-ical'].filter(k=>url.searchParams.has(k));
  if(url.pathname!=='/events/calendar.ics'&&(flags.length!==1||url.searchParams.get(flags[0]!)!=='1'))return null;
  let events=selectedScope(url.pathname==='/'&&url.searchParams.get('post_type')==='tribe_events'?'/events/':url.pathname,context);if(!events)return null;
  events=filteredEvents(url,context,events);if(!events)return null;
+ events=displayedEvents(events,url);
  let window;try{window=calendarWindow(url);}catch{return null;}
  if(window){const selected=window;events=events.flatMap(event=>occurrencesBetween(event,selected.from,selected.until,100).map(o=>({...event,id:event.id+'-'+o.date,schedule:{kind:'single' as const,date:o.date}})));}
  const feed=renderCalendarFeed({...context,siteContent:{...context.siteContent,events:events.filter(e=>!e.calendarRevision?.cancelled),cancelledCalendarEvents:events.filter(e=>e.calendarRevision?.cancelled)}});

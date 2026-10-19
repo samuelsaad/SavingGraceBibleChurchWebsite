@@ -1,4 +1,4 @@
-import {describe,it,expect} from 'vitest';
+import {describe,it,expect,vi} from 'vitest';
 import {renderCalendarFeed} from '../src/frontend/pages/church';
 import {calendarSubscription,futureCalendarPage,maintainedCalendarView} from '../src/seo/calendar-subscriptions';
 import {events,venues} from '../src/frontend/content/events';
@@ -23,4 +23,14 @@ describe('live calendar subscriptions',()=>{
  it('preserves recurring identity, DST-aware UTC limits and exclusions',()=>{const feed=renderCalendarFeed(context());expect(feed).toContain('UID:anonymous-event@www.savinggrace.org.au');expect(feed).toContain('SEQUENCE:2');expect(feed).toContain('LAST-MODIFIED:20261019T020000Z');expect(feed).toContain('UNTIL=20261011T080000Z');expect(feed).toContain('EXDATE;TZID=Australia/Melbourne:20261004T173000');expect(feed).toContain('STATUS:CONFIRMED');});
  it('updates edits and cancellations through the same legacy subscription URL',async()=>{const request=new Request('https://www.example.test/event/old-anonymous/?ical=1');const current=calendarSubscription(request,context())!;expect(current.headers.get('Content-Type')).toContain('text/calendar');expect(await current.text()).toContain('STATUS:CONFIRMED');const updated=context();updated.siteContent!.events=[{...event,title:'Edited gathering'}];expect(await calendarSubscription(request,updated)!.text()).toContain('Edited gathering');const removed=await calendarSubscription(request,context(true))!.text();expect(removed).toContain('STATUS:CANCELLED');expect(removed).toContain('SEQUENCE:3');expect(removed).not.toContain('STATUS:CONFIRMED');});
  it('folds at UTF-8 octet boundaries and refuses unknown event subscriptions',()=>{const c=context();c.siteContent!.events=[{...event,title:'مرحبا '.repeat(40)}];for(const line of renderCalendarFeed(c).split('\r\n'))expect(Buffer.byteLength(line)).toBeLessThanOrEqual(75);expect(calendarSubscription(new Request('https://www.example.test/event/unknown/?ical=1'),c)).toBeNull();});
+});
+
+
+it('honors past and upcoming membership without discarding the temporal query',async()=>{
+ vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-19T04:00:00Z'));
+ try{
+  const c=context();c.siteContent!.events=[event,{...event,id:'ongoing',title:'Ongoing gathering',schedule:{kind:'weekly',weekday:0,from:'2026-09-27'}},{...event,id:'future',title:'Future gathering',schedule:{kind:'single',date:'2026-11-01'}}];
+  const past=await calendarSubscription(new Request('https://www.example.test/events/?eventDisplay=past&ical=1'),c)!.text();expect(past).not.toContain('Future gathering');expect(past).toContain('Ongoing gathering');expect(past).toContain('UNTIL=20261018T080000Z');
+  const upcoming=await calendarSubscription(new Request('https://www.example.test/events/?eventDisplay=upcoming&ical=1'),c)!.text();expect(upcoming).toContain('Future gathering');expect(upcoming).toContain('Ongoing gathering');expect(upcoming).not.toContain('SUMMARY:Anonymous gathering');
+ }finally{vi.useRealTimers();}
 });
