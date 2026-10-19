@@ -38,6 +38,18 @@ def archive(path, records):
 
 
 class SeoDeploymentTest(unittest.TestCase):
+    def test_resource_receipt_rerun_retains_original_counts_and_refuses_different_identity(self):
+        result=lambda inserted:{'result':{'manifestSha256':'d'*64,'inserted':inserted,'unchanged':534-inserted,'held':[]}}
+        previous={'outcome':'seo_resource_redirects_imported','commit':COMMIT,'image':IMAGE,'priorRowsPreserved':True,'result':result(236),'replay':result(0)}
+        current={**previous,'result':result(0)}
+        with tempfile.TemporaryDirectory() as folder:
+            path=pathlib.Path(folder)/'receipt.json';path.write_text(json.dumps(previous));initial=path.read_bytes();fake=SimpleNamespace(load=lambda _:previous,save=Mock())
+            OP.retain_resource_receipt(fake,path,current);fake.save.assert_not_called();self.assertEqual(path.read_bytes(),initial)
+            for altered in ({**previous,'commit':'c'*40},{**previous,'replay':result(1)},{**previous,'result':{'result':{'manifestSha256':'e'*64,'inserted':236,'unchanged':298,'held':[]}}}):
+                fake.load=lambda _,value=altered:value
+                with self.assertRaisesRegex(RuntimeError,'seo_resource_receipt_binding'):OP.retain_resource_receipt(fake,path,current)
+
+
     def test_new_resource_audit_is_bound_to_the_frozen_manifest_not_an_older_release(self):
         manifest={'format':'sgbc-original-resource-redirects-v1','sourceInventorySha256':'a'*64,'rows':[{'oldPath':'/anonymous-old/','newPath':'/wp-content/uploads/anonymous.pdf','assetSha256':'b'*64}]}
         correlation='d182-resource-redirects:'+hashlib.sha256(json.dumps(manifest,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()).hexdigest()

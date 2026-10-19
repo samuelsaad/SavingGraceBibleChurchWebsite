@@ -590,6 +590,23 @@ def adopt_cms(base, upgrade, helper, root, recovery):
     return receipt
 
 
+def retain_resource_receipt(base, marker, receipt):
+    if not marker.exists():
+        base.save(marker, receipt)
+        return
+    previous = base.load(marker)
+    if any(previous.get(key) != receipt.get(key) for key in ("outcome", "commit", "image", "priorRowsPreserved")) or previous.get("priorRowsPreserved") is not True:
+        fail("seo_resource_receipt_binding")
+    expected = receipt["replay"]["result"]["manifestSha256"]
+    for operation in ("result", "replay"):
+        result = previous.get(operation, {}).get("result", {})
+        if result.get("manifestSha256") != expected or result.get("held") or type(result.get("inserted")) is not int or type(result.get("unchanged")) is not int or result["inserted"] + result["unchanged"] != 534 or min(result["inserted"], result["unchanged"]) < 0:
+            fail("seo_resource_receipt_binding")
+    if previous["replay"]["result"]["inserted"] != 0 or previous["replay"]["result"]["unchanged"] != 534:
+        fail("seo_resource_receipt_binding")
+    # Keep the original completed import/replay evidence byte-for-byte.
+
+
 def import_resource_redirects(base, upgrade, helper, root, recovery):
     if set(active_phases(base, helper, root, recovery).values()) != {"bridge"}:
         fail("seo_bridge_required")
@@ -614,7 +631,7 @@ def import_resource_redirects(base, upgrade, helper, root, recovery):
     if source_snapshot(base) != source_before or base.assets_manifest() != assets_before:
         fail("seo_resource_redirect_source_or_assets_changed")
     receipt = {"outcome":"seo_resource_redirects_imported", "commit":recovery["commit"], "image":recovery["image"], "result":result, "replay":replay, "priorRowsPreserved":True}
-    base.save(root / "source-resource-redirects.receipt.json", receipt)
+    retain_resource_receipt(base, root / "source-resource-redirects.receipt.json", receipt)
     return receipt
 
 
