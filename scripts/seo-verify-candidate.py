@@ -1,9 +1,11 @@
 """Compare frozen source evidence to loopback; no source/provider requests or media playback."""
 from __future__ import annotations
 import argparse
+import copy
 from collections import Counter, OrderedDict
+from functools import lru_cache
 from concurrent.futures import ThreadPoolExecutor
-from threading import Lock
+from threading import Lock, RLock
 from datetime import datetime, timezone
 import csv
 import hashlib
@@ -50,11 +52,18 @@ def private_directory(path):
     result.mkdir(parents=True, exist_ok=True)
     return result
 
+@lru_cache(maxsize=64)
+def confined_root(absolute):
+    # Freeze the authorized root, never a file's resolved location. Every file is
+    # resolved and checked again, so a later junction escape is still refused.
+    return Path(absolute).resolve()
+
+
 def confined_file(root, relative):
     if not isinstance(relative, str) or not relative or re.match(r'^(?:[a-zA-Z]:|[/\\])',relative) or Path(relative).is_absolute():
         raise ValueError('source_evidence_path_invalid')
     result = (root / relative.replace('\\','/')).resolve()
-    if not result.is_relative_to(root.resolve()) or not result.is_file():
+    if not result.is_relative_to(confined_root(str(Path(root).absolute()))) or not result.is_file():
         raise ValueError('source_evidence_path_invalid')
     return result
 
@@ -116,8 +125,15 @@ class LoopbackClient:
         self.requests, self.cache = 0, {}
         self.record_hashes, self.parsed_records = {}, OrderedDict()
         self.lock = Lock()
+        self.url_locks = {}
 
     def fetch(self, logical, force=False):
+        # One owner per logical URL, including cold alias targets. Different URLs
+        # retain the caller's bounded concurrency and unchanged request budget.
+        with self.lock: gate = self.url_locks.setdefault(logical, RLock())
+        with gate: return self._fetch(logical, force)
+
+    def _fetch(self, logical, force=False):
         if logical in self.cache and not force:
             raw=self.cache[logical].read_bytes()
             if digest(raw)!=self.record_hashes[logical]:raise ValueError('candidate_cached_record_changed')
@@ -319,8 +335,10 @@ def indexable(response):
     return response.get('status') == 200 and 'noindex' not in robots.lower() and 'none' not in re.split(r'[,\s]+', robots.lower())
 
 class Verification:
-    def __init__(self, baseline, candidate, output, *, assets=None, environment='production', candidate_id=None, expected_label=None, request_limit=20000, concurrency=1, timeout=15):
+    def __init__(self, baseline, candidate, output, *, assets=None, environment='production', candidate_id=None, expected_label=None, request_limit=20000, concurrency=1, timeout=15, comparison_workers=1):
         if type(concurrency) is not int or not 1 <= concurrency <= 4: raise ValueError('candidate_concurrency_invalid')
+        if type(comparison_workers) is not int or not 1 <= comparison_workers <= 4: raise ValueError("candidate_comparison_workers_invalid")
+        self.comparison_workers = comparison_workers
         self.concurrency = concurrency
         self.baseline = Path(baseline).resolve()
         self.root = self.baseline.parent
@@ -333,7 +351,7 @@ class Verification:
         self.bindings = {'baselineSha256': digest(baseline_bytes), 'assetsSha256': digest(assets_bytes) if assets_bytes else None,
                          'parserSha256': digest(PARSER_PATH.read_bytes()), 'comparatorSha256': digest(Path(__file__).read_bytes()),
                          'candidateOrigin': candidate, 'candidateId': candidate_id, 'expectedRuntimeLabel': expected_label,
-                         'environment': environment, 'requestLimit': request_limit, 'concurrency': concurrency, 'httpTimeoutSeconds': timeout}
+                         'environment': environment, 'requestLimit': request_limit, 'concurrency': concurrency, 'comparisonWorkers': comparison_workers, 'httpTimeoutSeconds': timeout}
         state_path = self.output / 'bindings.private.json'
         if state_path.exists(): raise ValueError('verification_output_already_used_choose_fresh_directory')
         save(state_path, self.bindings)
@@ -482,7 +500,7 @@ class Verification:
         row['outcome'] = 'review_required' if issues else 'checked'
         self.rows.append(row)
 
-    def audit_targets(self):
+    def _audit_targets(self):
         # A finite union, not a recursive candidate/provider crawl.
         for target in sorted(self.internal_targets | self.sitemap_urls):
             followed = self.client.follow(target)
@@ -498,6 +516,42 @@ class Verification:
             self.link_rows.append({'url': safe_url(target), 'urlSha256': digest(target), 'status': result.get('status'),
                                    'inSitemap': target in self.sitemap_urls, 'inlinkCount': self.internal_inlinks[target],
                                    'issues': ';'.join(sorted(set(issues)))})
+
+    def isolated(self):
+        # Shared dependencies are immutable evidence and the guarded HTTP client.
+        # Every row/target gets independent accumulators, merged in inventory order.
+        worker = copy.copy(self)
+        worker.rows, worker.differences, worker.link_rows = [], [], []
+        worker.internal_targets, worker.internal_inlinks = set(), Counter()
+        return worker
+
+    def verify_inventory(self):
+        items = list(inventory(self.ledger, self.assets).items())
+        def inspect(item):
+            worker = self.isolated(); worker.verify_url(*item); return worker
+        def merge(index, worker):
+            self.rows.extend(worker.rows); self.differences.extend(worker.differences)
+            self.internal_targets.update(worker.internal_targets); self.internal_inlinks.update(worker.internal_inlinks)
+            if index % 25 == 0:
+                save(self.output / 'progress.private.json', {'rows': index, 'requests': self.client.requests, 'updatedAt': stamp()})
+                print(json.dumps({'checkedRows': index, 'candidateRequests': self.client.requests}), flush=True)
+        if self.comparison_workers == 1:
+            for index, item in enumerate(items, 1): merge(index, inspect(item))
+        else:
+            with ThreadPoolExecutor(max_workers=self.comparison_workers) as pool:
+                for index, worker in enumerate(pool.map(inspect, items), 1): merge(index, worker)
+
+    def audit_targets(self):
+        targets = sorted(self.internal_targets | self.sitemap_urls)
+        def inspect(target):
+            worker = self.isolated(); worker.internal_targets = {target}
+            worker.sitemap_urls = {target} if target in self.sitemap_urls else set()
+            worker.internal_inlinks = Counter({target:self.internal_inlinks[target]})
+            worker._audit_targets(); return worker.link_rows
+        with ThreadPoolExecutor(max_workers=self.comparison_workers) as pool:
+            for index, rows in enumerate(pool.map(inspect, targets), 1):
+                self.link_rows.extend(rows)
+                if index % 250 == 0: print(json.dumps({'checkedTargets': index, 'targetCount':len(targets), 'candidateRequests':self.client.requests}),flush=True)
 
     def reports(self, fatal=None):
         attempted_rows = len(self.rows)
@@ -542,11 +596,7 @@ class Verification:
                 with ThreadPoolExecutor(max_workers=self.concurrency) as pool:
                     for _ in pool.map(self.client.fetch,urls): pass
                 print(json.dumps({'prefetchedRequests':self.client.requests,'concurrency':self.concurrency}),flush=True)
-            for index, (url, state) in enumerate(inventory(self.ledger, self.assets).items(), 1):
-                self.verify_url(url, state)
-                if index % 25 == 0:
-                    save(self.output / 'progress.private.json', {'rows': index, 'requests': self.client.requests, 'updatedAt': stamp()})
-                    print(json.dumps({'checkedRows': index, 'candidateRequests': self.client.requests}), flush=True)
+            self.verify_inventory()
             self.audit_targets()
             if self.client.label is not None:self.client.fetch(CANONICAL+'/robots.txt',force=True)
         except (ValueError, OSError) as error:
@@ -567,11 +617,12 @@ def main():
     cli.add_argument('--expected-runtime-label', help='Require every HTTP response X-SEO-Candidate header to match.')
     cli.add_argument('--request-limit', type=int, default=20000)
     cli.add_argument('--concurrency', type=int, default=1, choices=range(1,5), help='Bounded loopback-only HTTP prefetch; source/provider traffic is never enabled.')
+    cli.add_argument('--comparison-workers',type=int,default=1,choices=range(1,5),help='Isolated comparison/target workers, identical assertions and deterministic output.')
     cli.add_argument('--timeout', type=int, default=15, choices=range(1,61), help='Bounded per-request timeout in seconds; failures remain recorded.')
     args = cli.parse_args()
     try:
         summary = Verification(args.baseline, args.candidate, args.output, assets=args.assets, environment=args.environment,
-                               candidate_id=args.candidate_id, expected_label=args.expected_runtime_label, request_limit=args.request_limit, concurrency=args.concurrency, timeout=args.timeout).run()
+                               candidate_id=args.candidate_id, expected_label=args.expected_runtime_label, request_limit=args.request_limit, concurrency=args.concurrency, timeout=args.timeout, comparison_workers=args.comparison_workers).run()
         print(json.dumps({key: summary[key] for key in ('checkedInventoryRows', 'inventoryCount', 'candidateRequests', 'baselineComplete', 'passed', 'issueCounts')}))
         return 0 if summary['passed'] else 1
     except (ValueError, OSError, json.JSONDecodeError):

@@ -1,7 +1,7 @@
 """Exact presentation witnesses. Raw comparator findings are never rewritten."""
 import re, collections, hashlib, json, importlib.util
 from pathlib import Path
-from urllib.parse import urlsplit, parse_qsl, unquote
+from urllib.parse import urlsplit, parse_qsl, unquote, urljoin
 SPEC=importlib.util.spec_from_file_location('presentation_capture',Path(__file__).with_name('seo-source-capture.py'))
 CAP=importlib.util.module_from_spec(SPEC);SPEC.loader.exec_module(CAP)
 BLOCKS={'p','h1','h2','h3','h4','h5','h6','li','blockquote','figcaption'}
@@ -105,20 +105,75 @@ def card_witness(original,candidate,path):
    elif not exact_node(child):return False
   return True
  return exact_node(original)
-def block_witnesses(source,candidate,document,missing,source_document=None):
+def archive_group(url):
+ p=urlsplit(url)
+ if p.hostname and p.hostname not in ('www.savinggrace.org.au','savinggrace.org.au'):return None
+ match=re.fullmatch(r'/sermons/(?:page/([1-9][0-9]*)/)?',p.path)
+ if not match:return None
+ pairs=parse_qsl(p.query)
+ if len(pairs)>1 or any(k not in ('sermon_series','sermon_speaker','sermon_book','sermon_topics')or not re.fullmatch(r'[a-z0-9-]+',unquote(v).strip('/'))for k,v in pairs):return None
+ return tuple((k,unquote(v).strip('/'))for k,v in pairs)
+
+def archive_page(url):
+ p=urlsplit(url);group=archive_group(url)
+ if group is None:return None
+ match=re.search(r'/page/([1-9][0-9]*)/',p.path)
+ return group,int(match[1])if match else 1
+
+def archive_card_pool(start,documents):
+ group=archive_group(start);pages={};cards={};missing=set()
+ if group is None:return None
+ for url,document in documents.items():
+  key=archive_page(url)
+  if key and key[0]==group:pages[key]=(url,document)
+ first=archive_page(start)
+ if first not in pages:return None
+ queue=[first];seen=set();proof=[]
+ while queue:
+  key=queue.pop()
+  if key in seen:continue
+  seen.add(key)
+  if key not in pages:missing.add(key);continue
+  url,document=pages[key];root=tree(document);proof.append({'url':url,'responseSha256':sha(document)})
+  for path,node in candidate_cards(document).items():cards.setdefault(path,[]).append({'node':node,'page':url,'responseSha256':sha(document)})
+  for area in walk(root):
+   if area['tag']=='nav'and 'pagination'in area['attrs'].get('class','').split():
+    for node in walk(area):
+     if node['tag']=='a'and(nodekey:=archive_page(urljoin(url,node['attrs'].get('href',''))))and nodekey[0]==group:queue.append(nodekey)
+ return {'group':group,'cards':cards,'pages':proof,'completePagination':not missing,'missingPages':[key[1]for key in sorted(missing)]}
+
+def active_filter_witness(source,document):
+ group=archive_group(source['url'])
+ if not group:return False
+ root=tree(document);selected={};labels={}
+ def option_text(node):return node if isinstance(node,str)else' '.join(option_text(child)for child in node['children'])
+ for node in walk(root):
+  if node['tag']=='select':
+   values=[x for x in walk(node)if x['tag']=='option'and 'selected'in x['attrs']]
+   if len(values)==1:
+    key=node['attrs'].get('name');selected[key]=values[0]['attrs'].get('value');labels[key]=norm(option_text(values[0]))
+ tokens=' '.join(norm(CAP.text(n))for n in walk(root)if n['attrs'].get('aria-label')=='Active filters')
+ prefixes={'sermon_book':'Book','sermon_series':'Series','sermon_speaker':'Speaker','sermon_topics':'Reference'}
+ return bool(tokens)and all(selected.get(key)==value and labels.get(key)and whole_text(tokens,prefixes[key]+': '+labels[key])for key,value in group)
+
+def block_witnesses(source,candidate,document,missing,source_document=None,related_archive=None):
  """Require the same card URL and every original leaf, never a bag of words."""
  remaining=collections.Counter(missing);witnesses=[]
  actual=norm(candidate.get('mainText',''));root=original_main(source,source_document)if source_document is not None else tree(source.get('mainHtml',''));cards=source_cards(root)if root else {};current=candidate_cards(document)
  card_nodes={}
  for path,groups in cards.items():
-  if path not in current:continue
+  options=[{'node':current[path],'page':candidate['url'],'responseSha256':sha(document)}]if path in current else []
+  if related_archive and related_archive.get('completePagination')and related_archive.get('group')==archive_group(source['url'])==archive_group(candidate['url']):options+=related_archive['cards'].get(path,[])
   for node in groups:
-   if card_witness(node,current[path],path):
+   matched=next((item for item in options if card_witness(node,item['node'],path)),None)
+   if matched:
     for child in walk(node):
      if child['tag']in BLOCKS:
       value=norm(CAP.text(child));key=sha(value)
       if remaining.get(key):
-       remaining[key]-=1;witnesses.append({'blockSha256':key,'reason':'same_sermon_card_all_original_leaves_verified','identity':path,'sourceCardSha256':sha(CAP.sanitize(node,source['url'])),'candidateCardSha256':sha(CAP.sanitize(current[path],candidate['url']))})
+       remaining[key]-=1;witnesses.append({'blockSha256':key,'reason':'same_sermon_card_all_original_leaves_verified','identity':path,'sourceCardSha256':sha(CAP.sanitize(node,source['url'])),'candidateCardSha256':sha(CAP.sanitize(matched['node'],matched['page'])),'candidatePage':matched['page'],'candidateResponseSha256':matched['responseSha256']})
+ if remaining.get(sha('Filtered by:'))and active_filter_witness(source,document):
+  remaining[sha('Filtered by:')]-=1;witnesses.append({'blockSha256':sha('Filtered by:'),'reason':'same_typed_selected_filters_and_visible_removable_tokens'})
  for block in source.get('semanticBlocks',[]):
   value=norm(block['text']);key=sha(value)
   if remaining.get(key) and whole_text(actual,value):
@@ -133,11 +188,18 @@ def owned_original(url):
   match=re.fullmatch(r'/(www\.savinggrace\.org\.au|savinggrace\.org\.au)(/wp-content/uploads/[^?#]+)',p.path)
   if match and all(k in ('resize','fit','crop','ssl','w','h','quality','strip')for k,v in parse_qsl(p.query)):return match[2]
  return None
-def image_witnesses(expected,candidate_images,original_hashes,actual_hashes):
+def image_witnesses(expected,candidate_images,original_hashes,actual_hashes,reviewed_variants=()):
  witnesses=[];remaining=[]
  for url,alt in expected:
   path=owned_original(url);original=original_hashes.get(path) if path else None
   match=next((image for image in candidate_images if original and actual_hashes.get(image['url'])==original and (norm(image.get('alt',''))==norm(alt) or not norm(alt) and bool(norm(image.get('alt',''))))),None)
-  if match:witnesses.append({'sourceUrlSha256':sha(url),'candidateUrlSha256':sha(match['url']),'fileSha256':original,'sourceAltSha256':sha(norm(alt)),'candidateAltSha256':sha(norm(match.get('alt',''))),'reason':'verified_same_original_image'+('_descriptive_alt_added' if norm(alt)!=norm(match.get('alt','')) else '')})
+  variant=None
+  if not match:
+   for image in candidate_images:
+    variant=next((row for row in reviewed_variants if row.get('visualIdentityVerified')is True and row.get('sourceUrl')==url and row.get('sourceSha256')==original and row.get('candidateUrl')==image['url'] and row.get('candidateSha256')==actual_hashes.get(image['url']) and row.get('sourceAltSha256')==sha(norm(alt)) and row.get('candidateAltSha256')==sha(norm(image.get('alt','')))and(norm(image.get('alt',''))==norm(alt)or not norm(alt)and norm(image.get('alt','')))),None)
+    if variant:match=image;break
+  if match:
+   witness={'sourceUrlSha256':sha(url),'candidateUrlSha256':sha(match['url']),'fileSha256':actual_hashes[match['url']],'ownedOriginalSha256':original,'sourceAltSha256':sha(norm(alt)),'candidateAltSha256':sha(norm(match.get('alt',''))),'reason':'visually_verified_responsive_variant_with_exact_byte_bindings'if variant else'verified_same_original_image'+('_descriptive_alt_added'if norm(alt)!=norm(match.get('alt',''))else'')}
+   witnesses.append(witness)
   else:remaining.append(sha(json.dumps([url,alt])))
  return {'fullyEquivalent':not remaining,'witnesses':witnesses,'remainingImageHashes':remaining}

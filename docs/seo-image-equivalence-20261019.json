@@ -1,0 +1,364 @@
+{
+  "format": "sgbc-image-visual-identity-v1",
+  "runtimeLabel": "c93b386f865eb36ed37a511496ffa0a9c79114bff58e12ee9750e1465f702429",
+  "rows": [
+    {
+      "page": "https://savinggrace.org.au/2024/01/",
+      "sourceUrl": "https://i0.wp.com/www.savinggrace.org.au/wp-content/uploads/2023/12/Saving-Grace-Bible-Church-fellowship-1-1024x576.jpg?resize=1024%2C576&ssl=1",
+      "sourceSha256": "37ef7c7fa55412280513f293349d1fdce45c01b1b9b05ae8d76c86fb8153d0f7",
+      "passedPixelCheck": true,
+      "candidateUrl": "https://www.savinggrace.org.au/wp-content/uploads/2023/12/Saving-Grace-Bible-Church-fellowship-1.jpg",
+      "candidateSha256": "cc061318465ddea1dd011822f6da166c17d2094cabf59e5407e4e1522a233971",
+      "mae": 0.004192977827705157,
+      "rmse": 0.005739173136893726,
+      "aspectDifference": 0.0,
+      "sourceDimensions": [
+        1024,
+        576
+      ],
+      "candidateDimensions": [
+        1920,
+        1080
+      ],
+      "sourceAltSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "candidateAltSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "visualIdentityVerified": true
+    },
+    {
+      "page": "https://savinggrace.org.au/2024/01/making-a-difference-how-churches-in-australia-influence-melbournes-community/",
+      "sourceUrl": "https://i0.wp.com/www.savinggrace.org.au/wp-content/uploads/2023/12/Saving-Grace-Bible-Church-fellowship-1-1024x576.jpg?resize=1024%2C576&ssl=1",
+      "sourceSha256": "37ef7c7fa55412280513f293349d1fdce45c01b1b9b05ae8d76c86fb8153d0f7",
+      "passedPixelCheck": true,
+      "candidateUrl": "https://www.savinggrace.org.au/wp-content/uploads/2023/12/Saving-Grace-Bible-Church-fellowship-1.jpg",
+      "candidateSha256": "cc061318465ddea1dd011822f6da166c17d2094cabf59e5407e4e1522a233971",
+      "mae": 0.004192977827705157,
+      "rmse": 0.005739173136893726,
+      "aspectDifference": 0.0,
+      "sourceDimensions": [
+        1024,
+        576
+      ],
+      "candidateDimensions": [
+        1920,
+        1080
+      ],
+      "sourceAltSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "candidateAltSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "visualIdentityVerified": true
+    },
+    {
+      "page": "https://savinggrace.org.au/?p=26191",
+      "sourceUrl": "https://i0.wp.com/savinggrace.org.au/wp-content/uploads/2023/11/1xwvmneiyky.jpg?resize=200%2C300&ssl=1",
+      "sourceSha256": "058684c0516fa9f62b9850aaaffb38b7e15249c28f31786e8263d94d71fb902b",
+      "passedPixelCheck": true,
+      "candidateUrl": "https://www.savinggrace.org.au/wp-content/uploads/2023/11/1xwvmneiyky-200x300.jpg",
+      "candidateSha256": "be05af89b48c6fb489fae50f1c4770faa56043f944b29f4d8e97c0466399b6b3",
+      "mae": 0.0070167824074074065,
+      "rmse": 0.014697350617594284,
+      "aspectDifference": 0.0,
+      "sourceDimensions": [
+        800,
+        1200
+      ],
+      "candidateDimensions": [
+        200,
+        300
+      ],
+      "sourceAltSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "candidateAltSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "visualIdentityVerified": true
+    },
+    {
+      "page": "https://savinggrace.org.au/?p=26193",
+      "sourceUrl": "https://i0.wp.com/savinggrace.org.au/wp-content/uploads/2023/12/y3tl-cbu-cu.jpg?resize=300%2C198&ssl=1",
+      "sourceSha256": "d0502d68f9e2c7f18fbfaf4edc3c8f0d6fc8568d36d7ee3411b9d6921019d908",
+      "passedPixelCheck": true,
+      "candidateUrl": "https://www.savinggrace.org.au/wp-content/uploads/2023/12/y3tl-cbu-cu-300x198.jpg",
+      "candidateSha256": "8aa537fb593881333e0a34a95f0167309b88b37cc1c5a5d30d20bea571372042",
+      "mae": 0.008829096598129993,
+      "rmse": 0.015083991895107299,
+      "aspectDifference": 0.0018939393939394267,
+      "sourceDimensions": [
+        1600,
+        1054
+      ],
+      "candidateDimensions": [
+        300,
+        198
+      ],
+      "sourceAltSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "candidateAltSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "visualIdentityVerified": true
+    },
+    {
+      "page": "https://savinggrace.org.au/?p=26344",
+      "sourceUrl": "https://i0.wp.com/savinggrace.org.au/wp-content/uploads/2023/12/1ngigjt7klq.jpg?resize=300%2C200&ssl=1",
+      "sourceSha256": "5938bfb5ccf705db0801d3174023be2a7b76fef685ea87588f2cdcd85eae9ab1",
+      "passedPixelCheck": true,
+      "candidateUrl": "https://www.savinggrace.org.au/wp-content/uploads/2023/12/1ngigjt7klq-300x200.jpg",
+      "candidateSha256": "0af7bb508469941aa823ec3adea6e07f40eac9a4357f294c396dd4500cb053d4",
+      "mae": 0.012012711624001452,
+      "rmse": 0.02063270449706211,
+      "aspectDifference": 0.0003124999999999585,
+      "sourceDimensions": [
+        1600,
+        1067
+      ],
+      "candidateDimensions": [
+        300,
+        200
+      ],
+      "sourceAltSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "candidateAltSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "visualIdentityVerified": true
+    },
+    {
+      "page": "https://savinggrace.org.au/?p=26344",
+      "sourceUrl": "https://i0.wp.com/savinggrace.org.au/wp-content/uploads/2023/12/Saving-Grace-Bible-Church-fellowship-1.jpg?fit=1024%2C576&ssl=1",
+      "sourceSha256": "cc061318465ddea1dd011822f6da166c17d2094cabf59e5407e4e1522a233971",
+      "passedPixelCheck": true,
+      "candidateUrl": "https://www.savinggrace.org.au/wp-content/uploads/2023/12/Saving-Grace-Bible-Church-fellowship-1.jpg",
+      "candidateSha256": "cc061318465ddea1dd011822f6da166c17d2094cabf59e5407e4e1522a233971",
+      "mae": 0.0,
+      "rmse": 0.0,
+      "aspectDifference": 0.0,
+      "sourceDimensions": [
+        1920,
+        1080
+      ],
+      "candidateDimensions": [
+        1920,
+        1080
+      ],
+      "sourceAltSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "candidateAltSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "visualIdentityVerified": true
+    },
+    {
+      "page": "https://savinggrace.org.au/?p=26358",
+      "sourceUrl": "https://i0.wp.com/savinggrace.org.au/wp-content/uploads/2025/08/Bible-Study-Invitation-by-Candlelight.png?resize=300%2C200&ssl=1",
+      "sourceSha256": "5e2f540e5f3346152321cd205c14a23937810cb4f62c9bf38d44c248e89187c6",
+      "passedPixelCheck": true,
+      "candidateUrl": "https://www.savinggrace.org.au/wp-content/uploads/2025/08/Bible-Study-Invitation-by-Candlelight-300x200.png",
+      "candidateSha256": "1dfe58a89fa3eb6fbc292eabf65acd4eaa68cd06e7ff711c23eec10a0e5eaa87",
+      "mae": 0.0059411452659767616,
+      "rmse": 0.013934838846116968,
+      "aspectDifference": 0.0,
+      "sourceDimensions": [
+        1536,
+        1024
+      ],
+      "candidateDimensions": [
+        300,
+        200
+      ],
+      "sourceAltSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "candidateAltSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "visualIdentityVerified": true
+    },
+    {
+      "page": "https://savinggrace.org.au/?p=26384",
+      "sourceUrl": "https://i0.wp.com/savinggrace.org.au/wp-content/uploads/2023/09/9ibatvwnuno.jpg?resize=300%2C207&ssl=1",
+      "sourceSha256": "fb790088fdf2c0f5d80990079cafff430d225e65810eee44bd583c48521ff6d1",
+      "passedPixelCheck": true,
+      "candidateUrl": "https://www.savinggrace.org.au/wp-content/uploads/2023/09/9ibatvwnuno-300x207.jpg",
+      "candidateSha256": "c97529a663d3952c98fda4d7c086f8f37016b9487beb8d04e2580f1ef03bd0c0",
+      "mae": 0.019747483773602033,
+      "rmse": 0.02969095019402443,
+      "aspectDifference": 0.0018115942028985711,
+      "sourceDimensions": [
+        1600,
+        1102
+      ],
+      "candidateDimensions": [
+        300,
+        207
+      ],
+      "sourceAltSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "candidateAltSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "visualIdentityVerified": true
+    },
+    {
+      "page": "https://savinggrace.org.au/?p=26391",
+      "sourceUrl": "https://i0.wp.com/savinggrace.org.au/wp-content/uploads/2023/12/yiftar2fjve.jpg?resize=225%2C300&ssl=1",
+      "sourceSha256": "b04d1941832243439d48f17a7b9ea55c61a1659119bf03a596248bf3e07f9688",
+      "passedPixelCheck": true,
+      "candidateUrl": "https://www.savinggrace.org.au/wp-content/uploads/2023/12/yiftar2fjve-225x300.jpg",
+      "candidateSha256": "62f9de3a96e1465643c4867093b6eabcfffe2ac512c0ef03978f475375747af5",
+      "mae": 0.010520634758533043,
+      "rmse": 0.016347645889097054,
+      "aspectDifference": 0.0,
+      "sourceDimensions": [
+        900,
+        1200
+      ],
+      "candidateDimensions": [
+        225,
+        300
+      ],
+      "sourceAltSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "candidateAltSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "visualIdentityVerified": true
+    },
+    {
+      "page": "https://savinggrace.org.au/?p=26490",
+      "sourceUrl": "https://i0.wp.com/savinggrace.org.au/wp-content/uploads/2023/09/pexels-photo-10874313-removebg-preview.png?resize=200%2C300&ssl=1",
+      "sourceSha256": "5379239af51cf41d2f36e92b6554dd0a2600bc1a756a7e27e957cb5a5bee2feb",
+      "passedPixelCheck": true,
+      "candidateUrl": "https://www.savinggrace.org.au/wp-content/uploads/2023/09/pexels-photo-10874313-removebg-preview-200x300.png",
+      "candidateSha256": "f45f02e879bb05d4bc95fdd66f4264a85a63734347b007d1486d889fb061cedc",
+      "mae": 0.01103377331835512,
+      "rmse": 0.03751608092546404,
+      "aspectDifference": 0.0,
+      "sourceDimensions": [
+        408,
+        612
+      ],
+      "candidateDimensions": [
+        200,
+        300
+      ],
+      "sourceAltSha256": "22c9ac0860d3fdb356adb7c0f5528d51304ab03ff3b5b1a5b02cffced82d67c5",
+      "candidateAltSha256": "22c9ac0860d3fdb356adb7c0f5528d51304ab03ff3b5b1a5b02cffced82d67c5",
+      "visualIdentityVerified": true
+    },
+    {
+      "page": "https://savinggrace.org.au/?p=27475",
+      "sourceUrl": "https://i0.wp.com/savinggrace.org.au/wp-content/uploads/2023/09/g1-kch8gzna.jpg?resize=200%2C300&ssl=1",
+      "sourceSha256": "736ec56c33467da3ede96390b61c6ac19bb05ab0f308aea2fa8ede21e3a321d3",
+      "passedPixelCheck": true,
+      "candidateUrl": "https://www.savinggrace.org.au/wp-content/uploads/2023/09/g1-kch8gzna-200x300.jpg",
+      "candidateSha256": "5a31ff3881ae88f0d995e806a81eb3c1b4012d1b394ad866ec1874b2d13d0074",
+      "mae": 0.007921538841230936,
+      "rmse": 0.011919877010332838,
+      "aspectDifference": 0.0,
+      "sourceDimensions": [
+        800,
+        1200
+      ],
+      "candidateDimensions": [
+        200,
+        300
+      ],
+      "sourceAltSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "candidateAltSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "visualIdentityVerified": true
+    },
+    {
+      "page": "https://savinggrace.org.au/?p=29840",
+      "sourceUrl": "https://i0.wp.com/savinggrace.org.au/wp-content/uploads/2023/12/y3tl-cbu-cu.jpg?resize=300%2C198&ssl=1",
+      "sourceSha256": "d0502d68f9e2c7f18fbfaf4edc3c8f0d6fc8568d36d7ee3411b9d6921019d908",
+      "passedPixelCheck": true,
+      "candidateUrl": "https://www.savinggrace.org.au/wp-content/uploads/2023/12/y3tl-cbu-cu-300x198.jpg",
+      "candidateSha256": "8aa537fb593881333e0a34a95f0167309b88b37cc1c5a5d30d20bea571372042",
+      "mae": 0.008829096598129993,
+      "rmse": 0.015083991895107299,
+      "aspectDifference": 0.0018939393939394267,
+      "sourceDimensions": [
+        1600,
+        1054
+      ],
+      "candidateDimensions": [
+        300,
+        198
+      ],
+      "sourceAltSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "candidateAltSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "visualIdentityVerified": true
+    },
+    {
+      "page": "https://savinggrace.org.au/mens-ministry/",
+      "sourceUrl": "https://i0.wp.com/savinggrace.org.au/wp-content/uploads/2023/12/mo9vkbg5csg.jpg?resize=300%2C200&ssl=1",
+      "sourceSha256": "8b5f07153e575c7fe3eb394cf95552f6eeeb9995c802218eb0f55520207dc765",
+      "passedPixelCheck": true,
+      "candidateUrl": "https://www.savinggrace.org.au/wp-content/uploads/2023/12/mo9vkbg5csg-300x200.jpg",
+      "candidateSha256": "08f2fa651cd431da5e271f5f9fdc105de3dcf8f1c142529c9e7bf83021220705",
+      "mae": 0.009420104847494554,
+      "rmse": 0.015233587483588563,
+      "aspectDifference": 0.001249999999999929,
+      "sourceDimensions": [
+        1600,
+        1068
+      ],
+      "candidateDimensions": [
+        300,
+        200
+      ],
+      "sourceAltSha256": "115639d1ab4cd30dfd678ed728c53fbd02f13f7c35be65d69dc6f3a9d5669d63",
+      "candidateAltSha256": "115639d1ab4cd30dfd678ed728c53fbd02f13f7c35be65d69dc6f3a9d5669d63",
+      "visualIdentityVerified": true
+    },
+    {
+      "page": "https://savinggrace.org.au/mens-ministry/",
+      "sourceUrl": "https://i0.wp.com/savinggrace.org.au/wp-content/uploads/2025/01/Fight-Like-A-Man.jpg?resize=150%2C232&ssl=1",
+      "sourceSha256": "e400ab25772316c97be01e4680359e22a4105bfd5bda5e3e9ad70692f269bc26",
+      "passedPixelCheck": true,
+      "candidateUrl": "https://www.savinggrace.org.au/wp-content/uploads/2025/01/Fight-Like-A-Man-194x300.jpg",
+      "candidateSha256": "fa1ac8402eb190921f0d27d82771c2aac0b082a470b32d636714d1746804fa91",
+      "mae": 0.01774943122503631,
+      "rmse": 0.03060441004492468,
+      "aspectDifference": 0.002163355408388597,
+      "sourceDimensions": [
+        302,
+        466
+      ],
+      "candidateDimensions": [
+        194,
+        300
+      ],
+      "sourceAltSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "candidateAltSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "visualIdentityVerified": true
+    },
+    {
+      "page": "https://savinggrace.org.au/womens-ministry/",
+      "sourceUrl": "https://i0.wp.com/savinggrace.org.au/wp-content/uploads/2023/12/u5e1kqw6e3m.jpg?resize=300%2C200&ssl=1",
+      "sourceSha256": "2e4515927cb6e972394a097112951e9eb09ab59a205e56d40361edbc08ef2cb5",
+      "passedPixelCheck": true,
+      "candidateUrl": "https://www.savinggrace.org.au/wp-content/uploads/2023/12/u5e1kqw6e3m-300x200.jpg",
+      "candidateSha256": "e4458841ed312975b4c5a163e66e32b195ea330aedbe918deded15ebb1e10251",
+      "mae": 0.014543086476488745,
+      "rmse": 0.020865997477358914,
+      "aspectDifference": 0.0003124999999999585,
+      "sourceDimensions": [
+        1600,
+        1067
+      ],
+      "candidateDimensions": [
+        300,
+        200
+      ],
+      "sourceAltSha256": "2563d2c04998ea34c619742b464514225b4536b48513a90edf36391948e3b8dd",
+      "candidateAltSha256": "2563d2c04998ea34c619742b464514225b4536b48513a90edf36391948e3b8dd",
+      "visualIdentityVerified": true
+    },
+    {
+      "page": "https://savinggrace.org.au/womens-ministry/",
+      "sourceUrl": "https://i0.wp.com/savinggrace.org.au/wp-content/uploads/2025/01/Blessing-of-Humility-The-Bridges-Jerry.jpg?resize=200%2C300&ssl=1",
+      "sourceSha256": "a0d20e7dbca4c13aa438b9fa344c01ce7c35e905178c242aad697e6d83fadf16",
+      "passedPixelCheck": true,
+      "candidateUrl": "https://www.savinggrace.org.au/wp-content/uploads/2025/01/Blessing-of-Humility-The-Bridges-Jerry-200x300.jpg",
+      "candidateSha256": "cb5c69bdca92acadb94c4f5542d470ed5258db89df1266a90c85e7c22c890f81",
+      "mae": 0.012764884599673202,
+      "rmse": 0.02039613315366413,
+      "aspectDifference": 0.0,
+      "sourceDimensions": [
+        420,
+        630
+      ],
+      "candidateDimensions": [
+        200,
+        300
+      ],
+      "sourceAltSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "candidateAltSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "visualIdentityVerified": true
+    }
+  ],
+  "allPixelChecksPassed": true,
+  "visualReviewCompleted": true,
+  "visualReviewer": "current_interactive_codex",
+  "visualReviewBasis": "All 16 side-by-side source and candidate pairs inspected: same photograph or cover, composition and content; only responsive size/compression differences.",
+  "humanEditorialApprovalAsserted": false,
+  "reviewedAt": "2026-10-19T05:58:19.937722+00:00"
+}

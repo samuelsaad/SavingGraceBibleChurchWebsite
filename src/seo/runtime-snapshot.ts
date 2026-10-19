@@ -1,3 +1,6 @@
+import {loadLegacyCalendarOccurrences} from './legacy-calendar-identities';
+import {createSnapshotVerifiedFingerprint} from './snapshot-fingerprint-proof';
+import {reviewedArchiveAliases} from './source-reviewed-archive-aliases';
 import {bindObservedSourceAliases,type ObservedSourceAlias} from './source-observed-aliases';
 import {observedSourceAliases} from './source-original-alias-manifest';
 import {configuredContactDelivery} from '../server/contact-mail';
@@ -22,22 +25,23 @@ import {createSeoHttpAdapter} from './http-adapter';
 import type {SeoHttpPolicyInput} from './http-policy';
 import {sha256,stableJson,type SourcePublicPage} from './source-public-model';
 
-export function sourceRoutePolicy(pages:readonly SourcePublicPage[],routes:readonly import('../cms/model').CmsRoute[]=[],context:FrontendRenderContext=publicRenderContext,resourceRedirects:ReadonlyMap<string,string>=new Map(),aliases:readonly ObservedSourceAlias[]=observedSourceAliases,sermonPaths:Readonly<Record<string,string>>={}){
+export function sourceRoutePolicy(pages:readonly SourcePublicPage[],routes:readonly import('../cms/model').CmsRoute[]=[],context:FrontendRenderContext=publicRenderContext,resourceRedirects:ReadonlyMap<string,string>=new Map(),aliases:readonly ObservedSourceAlias[]=[...observedSourceAliases,...reviewedArchiveAliases],sermonPaths:Readonly<Record<string,string>>={}){
  const currentRoutes=new Map(routes.map(route=>[route.path,route]));
+ const activeSourcePaths=new Set(pages.filter(page=>!page.issues.length).map(page=>page.path)),nativeSermonPaths=new Set(Object.values(sermonPaths));
  const canonicalPath=(path:string)=>{
   let target=path;const seen=new Set<string>();
   while(!seen.has(target)&&seen.size<10){
    seen.add(target);const route=currentRoutes.get(target);
    if(route?.status===200)return target;
    if(route?.status===410)return null;
-   if(route?.status===301){if(!route.targetPath)return null;target=route.targetPath;continue;}
+   if(route?.status===301){if(!route.targetPath)return undefined;target=route.targetPath;continue;}
    const resource=resourceRedirects.get(target);if(resource){target=resource;continue;}
    const legacy=legacyDisposition(target,context);
-   if(!legacy)return target;
-   if(legacy.kind!=="redirect")return null;
+   if(!legacy)return activeSourcePaths.has(target)||nativeSermonPaths.has(target)?target:undefined;
+   if(legacy.kind!=="redirect")return legacy.kind==='gone'?null:undefined;
    target=legacy.location;
   }
-  return null;
+  return undefined;
  };
  const ids=new Map<string,Set<string>>();
  for(const page of pages){
@@ -125,15 +129,18 @@ export async function createVersionedSourceHandler(options:{reader:Pool;assetDir
  const cms=new PostgresCmsRepository(options.reader),store=new PostgresCmsAssetStore(options.reader),editorial=new PostgresSermonRepository(options.reader);
  const assets=await CmsDiskAssets.create(options.assetDirectory,store);
  const assetHandler=createCmsAssetHandler(assets,{authenticate:async()=>null},{authorizeMutation:()=>false},async(key,draft)=>!draft&&await cms.canReadAsset(key,false));
- const select=versionedHandlerCache(()=>sourceRuntimeFingerprint(options.reader),async(version)=>{
+ const relations=[...new Set([...sourceRuntimeFingerprintSql.matchAll(/\bFROM ([a-z][a-z0-9_]*)/gu)].map(match=>match[1]!))].sort();
+ const fingerprint=createSnapshotVerifiedFingerprint(options.reader,sourceRuntimeFingerprint,relations);
+ const select=versionedHandlerCache(fingerprint,async(version)=>{
   // Release the consumed source wire rows before allocating the full CMS corpus.
   const pages=await readSourcePublicPages(options.reader);
   const [snapshot,images]=await Promise.all([cms.getPublishedSnapshot(),store.list()]);
   const sermons=await createCompositeSourceSermonRepository(pages,options.reader,options.acceptedStageRepository??options.acceptedLocalRepository,snapshot.entities,snapshot.routes);
   const sourceAssets=createSourcePublicAssetHandler(pages,options.assetDirectory);
   const content=preserveSourceMetadata(createCmsFrontendSnapshot(snapshot,images.filter(a=>a.type.startsWith('image/')).map(a=>({id:a.id,path:a.url,type:a.type,width:a.width??1,height:a.height??1,alt:a.alt})),false,false,{immutableSourceContent:true}),pages);
+  content.legacyCalendarOccurrences=await loadLegacyCalendarOccurrences(pages,sourceAssets,[...content.events,...(content.cancelledCalendarEvents??[])]);
   const resourceRedirects=await readSourceResourceRedirects(options.reader);
-  const routes=sourceRoutePolicy(pages,snapshot.routes,{...publicRenderContext,siteContent:content},resourceRedirects,observedSourceAliases,sermons.verifiedSourceShortlinks());
+  const routes=sourceRoutePolicy(pages,snapshot.routes,{...publicRenderContext,siteContent:content},resourceRedirects,[...observedSourceAliases,...reviewedArchiveAliases],sermons.verifiedSourceShortlinks());
   routes.sourceShortlinks={...routes.sourceShortlinks,...sermons.verifiedSourceShortlinks()};
   const handler=createSeoHttpAdapter({...(contactDelivery?{contactDelivery}:{}),policy:options.policy,sermons,...routes,content:async()=>content,publicSearch:createLegacySourceSearch(pages,content,sermons,sermons.verifiedSourceShortlinks()),
    sourcePage:createSourcePublicPageHandler(pages),sourceQueryPage:createSourcePublicPageHandler(pages,true),sourceSitemap:async()=>sourcePublicSitemap(pages,{...publicRenderContext,siteContent:content}),sourceDisposition:async path=>resourceRedirects.has(path)?{kind:'redirect' as const,location:resourceRedirects.get(path)!}:editorial.findPublicPathDisposition(path),

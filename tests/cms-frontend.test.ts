@@ -1,4 +1,4 @@
-import { describe,it,expect } from "vitest";
+import { describe,it,expect,vi } from "vitest";
 import { buildCmsSeeds,buildCmsEmbeddedAssetSeeds } from "../src/cms/seed";
 import { createCmsFrontendSnapshot } from "../src/cms/frontend-adapter";
 import { validateCmsContent } from "../src/cms/validation";
@@ -48,7 +48,7 @@ describe("CMS migration and renderer projection",()=>{
    expect(projected.blocks.map(block=>JSON.parse(JSON.stringify(block,(key,value)=>key==="cmsInstanceId"?undefined:value)))).toEqual(page.blocks);
    expect(pageBody(renderChurchPage(projected,data,context))).toBe(pageBody(renderChurchPage(page,data)));
   }
-  expect(renderCalendarFeed(context)).toBe(renderCalendarFeed());
+  vi.useFakeTimers();vi.setSystemTime(new Date("2026-10-19T02:00:00Z"));try{expect(renderCalendarFeed(context)).toBe(renderCalendarFeed());}finally{vi.useRealTimers();}
  });
  it("leaves immutable seed defaults and concurrent snapshots independent",()=>{
   const first=snapshot(),second=snapshot();

@@ -13,8 +13,9 @@ def path(url):
  if len(value)>2000 or PRIVATE.match(urllib.parse.unquote(u.path)) or re.search(r'[\\\x00-\x20]|%(?:2f|5c|00|0[ad])',u.path,re.I):return None
  return value
 
-def generate(root,bundle):
- ledger=json.loads((root/'ledger.private.json').read_text(encoding='utf8'));pages={p['path']:p for p in bundle['pages']};out={};cache={}
+def generate(root,bundle,ledger_name="ledger.private.json"):
+ if Path(ledger_name).name!=ledger_name or not ledger_name.endswith(".private.json"):raise ValueError("source_alias_ledger_name_refused")
+ ledger=json.loads((root/ledger_name).read_text(encoding='utf8'));pages={p['path']:p for p in bundle['pages']};out={};cache={}
  def record(url):
   if url not in cache:
    item=ledger['pages'].get(url)
@@ -37,10 +38,10 @@ def generate(root,bundle):
    current=r.get('redirectTarget')or urllib.parse.urljoin(current,r['headers'].get('location',''))
    if not path(current):break
   target=path(current);page=pages.get(target)
-  if not pair or r['status']!=200 or not page or page['issues'] or page['kind'] in ('asset','feed') or page['sourceId'] is None or target=='/' or alias==target or page['responseSha256']!=r['bodySha256']:continue
+  if not pair or r['status']!=200 or not page or page['issues'] or page['kind'] in ('asset','feed') or target=='/' or alias==target or page['responseSha256']!=r['bodySha256']:continue
   q=urllib.parse.parse_qs(urllib.parse.urlsplit(original).query,keep_blank_values=True)
   identities=[q[k] for k in ('p','page_id','related_series') if k in q]
-  if identities and (len(identities)!=1 or identities[0]!=[str(page['sourceId'])]):continue
+  if identities and (page['sourceId'] is None or len(identities)!=1 or identities[0]!=[str(page['sourceId'])]):continue
   value={'alias':alias,'target':target,'sourceId':page['sourceId'],'kind':page['kind'],'responseSha256':page['responseSha256'],'chain':chain}
   prior=out.get(alias)
   if prior and any(prior[k]!=value[k] for k in ('target','sourceId','kind','responseSha256')):raise ValueError('source_alias_conflict')
@@ -55,8 +56,8 @@ def render(rows):
  return '/** Frozen observed aliases, D-183. Regenerate with scripts/seo-generate-observed-aliases.py. */\nimport type {ObservedSourceAlias} from "./source-observed-aliases";\n'+'\n'.join(parts)+'\nexport const observedSourceAliases: readonly ObservedSourceAlias[] = Object.freeze(['+','.join('...'+name for name in names)+']);\n'
 
 def main():
- a=argparse.ArgumentParser();a.add_argument('--baseline',type=Path,required=True);a.add_argument('--bundle',type=Path,required=True);a.add_argument('--output',type=Path,required=True);v=a.parse_args()
- rows=generate(v.baseline,json.loads(v.bundle.read_text(encoding='utf8')))
+ a=argparse.ArgumentParser();a.add_argument('--baseline',type=Path,required=True);a.add_argument('--bundle',type=Path,required=True);a.add_argument('--output',type=Path,required=True);a.add_argument('--ledger-name',default='ledger.private.json');v=a.parse_args()
+ rows=generate(v.baseline,json.loads(v.bundle.read_text(encoding='utf8')),v.ledger_name)
  v.output.write_text(render(rows),encoding='utf8')
  print(json.dumps({'observedAliases':len(rows),'sha256':hashlib.sha256(v.output.read_bytes()).hexdigest()}))
 if __name__=='__main__':main()

@@ -18,8 +18,8 @@ const preservedSources = [
   ],
   [
     "src/frontend/pages/church.ts",
-    // Authorized SEO/source metadata controls preserve the existing church layout.
-    "a00930c6f74b1430081c387ad072ecd801f4c60d0b10ab9078c5c2b6ebeb0400"
+    // D-183 calendar UID continuity and truthful dates; church HTML layout remains unchanged.
+    "16055e3a3ba477cf954bd6520c85d03ac883bba1b4b74da6c03dc6f0fb49f1e8"
   ],
   [
     "src/frontend/styles/core.ts",

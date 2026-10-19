@@ -485,3 +485,18 @@ The original primary checkout retains all 18 unrelated user changes. No DNS,
 production traffic, WordPress mutation, recording bodies or new approval occurred.
 See docs/seo-migration-acceptance.md and machine-readable evidence for exact hashes,
 counts and remaining actions. Final documentation commit is separate from runtime.
+
+
+### D-183 integrated checkpoint — 19 October 2026
+
+The finite missing-dependency union retains the prior source witnesses and original
+finding denominators: 23,053 observed URLs, 15,698 retained responses, 28,380 witnesses.
+The 246-row local import (234 archive, four event, eight calendar resources) inserted
+246 and updated zero; replay changed zero. Source routes 6,506, known sermons 459.
+Sixteen source CMS additions preserved 2,636 earlier documents; replay changed zero.
+Integrated PostgreSQL: 1,477 passes / zero skips with exact disposable cleanup.
+Standard tests 1,328 passes / 147 gated skips; types 672 files / zero errors/warnings;
+45-page build; 149 Python SEO and 83 deployment checks; importer dry run, offline
+audit and 540-file source/runtime privacy scan passed. Earlier failed runs are
+retained separately. Final deployed/full-inventory acceptance remains required;
+see `docs/seo-d183-completion.md`. No production/DNS/WordPress mutation occurred.

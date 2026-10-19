@@ -33,4 +33,20 @@ class PresentationProofTests(unittest.TestCase):
   missing={M.sha('Series: Anonymous series'):1}
   proof=M.block_witnesses({'url':'https://www.savinggrace.org.au/sermons/','mainSelector':'main','semanticBlocks':[]},{'url':'https://www.savinggrace.org.au/sermons/','mainText':''},candidate,missing,original)
   self.assertTrue(proof['fullyEquivalent']);self.assertEqual(proof['resolvedBlocks'],1)
+ def test_filter_label_equivalence_requires_actual_selected_state_and_visible_tokens(self):
+  doc='<select name="sermon_book"><option value="acts" selected>Acts</option></select><div aria-label="Active filters">Book: Acts</div>'
+  source={'url':'https://www.savinggrace.org.au/sermons/?sermon_book=/acts/','mainHtml':'<p>Filtered by:</p>','semanticBlocks':[]};candidate={'url':'https://www.savinggrace.org.au/sermons/?sermon_book=acts','mainText':''};missing={M.sha('Filtered by:'):1}
+  self.assertTrue(M.block_witnesses(source,candidate,doc,missing)['fullyEquivalent'])
+  for bad in [doc.replace('value="acts"','value="romans"'),doc.replace(' selected',''),doc.replace('Active filters','Unrelated'),doc.replace('Book: Acts','Book: Romans')]:self.assertFalse(M.block_witnesses(source,candidate,bad,missing)['fullyEquivalent'])
+ def test_repagination_proof_requires_real_links_and_the_same_filter_group(self):
+  origin='https://www.savinggrace.org.au';first=origin+'/sermons/?sermon_book=acts';second=origin+'/sermons/page/2/?sermon_book=acts'
+  card='<article class="journal__entry"><a href="/sermons/anonymous/">Anonymous title</a><time datetime="2026-10-04">4 Oct</time></article>'
+  firstdoc='<nav class="pagination"><a href="/sermons/page/2/?sermon_book=acts">Next</a></nav>';docs={first:firstdoc,second:card}
+  source={'url':first,'mainHtml':'<div><a href="/sermons/anonymous/">Anonymous title</a><p>4 October, 2026</p></div>','semanticBlocks':[]};candidate={'url':first,'mainText':''};missing={M.sha('4 October, 2026'):1}
+  pool=M.archive_card_pool(first,docs);self.assertTrue(M.block_witnesses(source,candidate,firstdoc,missing,related_archive=pool)['fullyEquivalent'])
+  for bad in [{first:firstdoc},{first:'',second:card},{first:firstdoc,second.replace('acts','romans'):card}]:self.assertFalse(M.block_witnesses(source,candidate,firstdoc,missing,related_archive=M.archive_card_pool(first,bad))['fullyEquivalent'])
+ def test_visual_variant_resolution_requires_the_exact_reviewed_pair_alt_and_actual_bytes(self):
+  url='https://www.savinggrace.org.au/wp-content/uploads/a.jpg';target='https://www.savinggrace.org.au/wp-content/uploads/a-200x300.jpg';row={'visualIdentityVerified':True,'sourceUrl':url,'sourceSha256':'a'*64,'candidateUrl':target,'candidateSha256':'b'*64,'sourceAltSha256':M.sha('Original alt'),'candidateAltSha256':M.sha('Original alt')};images=[{'url':target,'alt':'Original alt'}]
+  self.assertTrue(M.image_witnesses([(url,'Original alt')],images,{'/wp-content/uploads/a.jpg':'a'*64},{target:'b'*64},[row])['fullyEquivalent'])
+  for changed in [{'visualIdentityVerified':False},{'sourceSha256':'c'*64},{'candidateSha256':'c'*64},{'sourceAltSha256':M.sha('Other alt')}]:self.assertFalse(M.image_witnesses([(url,'Original alt')],images,{'/wp-content/uploads/a.jpg':'a'*64},{target:'b'*64},[{**row,**changed}])['fullyEquivalent'])
 if __name__=='__main__':unittest.main()

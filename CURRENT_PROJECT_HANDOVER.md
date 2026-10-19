@@ -9,6 +9,13 @@ precedence fixes. The one newly observed sermon is additive: 459 known public so
 sermons; frozen inventory 23,018 (original 23,017 retained). All 118 authorized recordings
 were copied unchanged to private local and existing protected staging storage.
 
+The bounded missing-dependency union now has 23,053 URLs and 6,506 source routes.
+The 246-row local delta replayed unchanged; sixteen CMS additions preserved all
+2,636 prior documents. Original calendar UIDs, truthful dates, future occurrence
+URLs, witnessed archive aliases and compressed public text are implemented.
+Integrated PostgreSQL checks passed 1,477/1,477 with zero skips; type/build/privacy
+checks passed. See the dated D-183 completion document for exact scope and limits.
+
 This is an implementation checkpoint, not acceptance or cutover approval. Fresh full
 comparison, exact staging application activation and final acceptance accounting follow.
 No production/DNS/WordPress mutation or invented human approval occurred. Required church

@@ -33,8 +33,10 @@ Implemented candidate changes:
 - Exact presentation witnesses retain the raw findings and require full same-identity card
   facts, visible text or actual image-byte/alternative-text evidence before equivalence.
 
-The sole source inventory expansion is the verified 18 October sermon (WordPress 30134),
-raising the known public set to 459 and observed URL inventory to 23,018. No sermon body,
+The bounded source additions are the verified 18 October sermon (WordPress 30134)
+and exact missing broken-link dependencies. The known public set remains 459.
+The frozen union is 23,053 URLs / 15,698 responses / 28,380 file witnesses, retaining
+every prior witness. No open-ended calendar or query expansion occurred. No sermon body,
 backup, account data or recording binary is added to Git. Original-public projection and
 CMS adoption do not create enrichment approval or alter native human review states.
 
@@ -54,3 +56,63 @@ recovery and final production deployment/routing configuration. Production/DNS r
 unchanged. Docker is available through WSL; original WordPress restoration requires the
 actual backup, with inert plugins and integrations disabled under the task-owned project
 prefix `sgbc-seo-wp-restore-20261019-`.
+
+
+## Integrated candidate checks and exact dependency completion
+
+The finite 271-destination check found 269 successful original destinations and two
+source 404s. The 268 bounded new requests (including only redirect dependencies)
+prepared 234 archive pages, four historical event pages and eight real iCalendar
+resources. The guarded local import inserted 246 / updated zero; replay inserted
+zero / updated zero / unchanged 246. All 459 sermons remain. Source routes now total
+6,506: 33 pages, 2,332 archives, three posts, 2,461 assets, 1,218 event pages and 459
+sermons. There are 6,496 retained deferred source URLs, not assertions of removal.
+Sixteen original public CMS documents were added (four events, twelve pages), with
+all 2,636 prior documents unchanged; a second run added nothing. Explicit source
+and CMS withdrawals retain precedence over witnessed aliases.
+
+Calendar identity reconciliation preserves 483 distinct original occurrence UIDs
+across eight mapped event groups from hash-verified retained calendars. URL aliases
+must not be counted as additional occurrences. Original occurrence UIDs survive
+published time edits, exclusion and cancellation; new dates use separate stable
+application UIDs. Known past facts are retained without extrapolating the current
+rule into unknown history. Calendar dates no longer invent a 24 September
+modification time when no historical timestamp exists. Future dated event URLs are
+served only for an actual current occurrence, with deliberate indexing policy.
+See [iCalendar UID requirements](https://www.rfc-editor.org/rfc/rfc5545.html#section-3.8.4.7).
+
+The empty original taxonomy form is an evidenced three-post Blog alias. Unknown
+forms remain unavailable. The exact broken music email link becomes its verified
+mailto address. Sixteen responsive image variants have exact original/candidate
+byte and alternative-text bindings plus recorded visual comparison in
+`seo-image-equivalence-20261019.json`; no general image waiver is introduced.
+
+Public HTML/XML can use streaming gzip while media, ranges, private/admin output
+and unencoded byte identity remain intact. Runtime fingerprint reuse requires an
+identical read-only PostgreSQL visibility/session/schema proof on every request.
+Own writes, RLS, temporary tables, replicas or changing visibility use the original
+full dependency hash. There is no time-based approval cache. Independent acceptance
+continues computing the complete hash. See [PostgreSQL snapshot functions](https://www.postgresql.org/docs/16/functions-info.html)
+and [transaction visibility](https://www.postgresql.org/docs/16/transaction-iso.html).
+
+Integrated checks: 1,477 PostgreSQL passes with zero skips and exact disposable
+cleanup; standard suite 1,328 passes / 147 gated skips covered by that run; type check
+672 files, zero errors/warnings and seven existing hints; 45-page build; 149 Python
+SEO checks and 83 deployment checks; anonymized importer and offline dependency
+audit. The 540-file release scan found zero secrets, proprietary source or private
+content violations and verified the 413 unchanged authorized dataset records.
+The earlier full-run test timeout and pre-fix calendar assertions remain retained;
+they are superseded by the successful integrated run, not represented as passes.
+
+Staging integrity now computes one complete asset manifest per preservation
+comparison and streams complete hashes with bounded memory. It does not lower
+capacity or integrity gates. A positively identified stale task hash process left
+by the transport timeout was stopped using exact PID/start-time, task asset and
+sudo-parent evidence. No application service/container was stopped by that cleanup.
+Final HTTP, browser, resource and staging release acceptance still follow this
+implementation checkpoint; the prior dated acceptance is not this release's proof.
+
+The final retained subscription-scope check found zero unresolved scopes, after
+adding legacy all-series, summary and root-pagination forms. The first redirect
+import receipt (236 added / 298 retained, replay 534 unchanged) remains immutable;
+operator retries validate its exact release/image/manifest and successful replay.

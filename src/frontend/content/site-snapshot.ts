@@ -31,6 +31,7 @@ export interface FrontendAsset {
   focalX?:number; focalY?:number;
 }
 export interface FrontendSiteSnapshot {
+  legacyCalendarOccurrences?:readonly import("../../seo/legacy-calendar-identities").LegacyCalendarOccurrence[];
   sourceCalendarIdentityPaths?:Readonly<Record<string,string>>;
   eventScopeIds?:Readonly<Record<string,readonly string[]>>;
   cancelledCalendarEvents?:readonly ChurchEvent[];

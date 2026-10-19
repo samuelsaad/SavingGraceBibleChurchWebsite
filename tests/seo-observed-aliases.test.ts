@@ -19,6 +19,8 @@ describe('observed original redirect identities',()=>{
   expect(bindObservedSourceAliases([page],[row],new Set([row.alias]),x=>x)).toEqual({});
   expect(bindObservedSourceAliases([page],[row],new Set(),()=>'/current/')).toEqual({'/?p=42':'/current/'});
   expect(bindObservedSourceAliases([page],[row],new Set(),()=>null)).toEqual({'/?p=42':null});
+  expect(bindObservedSourceAliases([page],[row],new Set(),()=>undefined)).toEqual({});
+  expect(sourceRoutePolicy([page],[{path:page.path,entityId:'42',status:301,targetPath:'/missing-target/'}],undefined,undefined,[row]).sourceObservedAliases).toEqual({});
   const sermon={...page,kind:'sermon' as const};expect(bindObservedSourceAliases([sermon],[{...row,kind:'sermon'}],new Set(),x=>x,{'42':'/sermons/audited-current-slug/'})).toEqual({'/?p=42':'/sermons/audited-current-slug/'});
  });
  it('preserves exact campaign encoding without discarding meaningful or ambiguous parameters',()=>{

@@ -61,6 +61,8 @@ export type Schedule =
 type ChurchEventInput = Omit<ChurchEvent, "id"> & { id: string };
 
 export interface ChurchEvent {
+  /** Verified original occurrence identity; server-derived, never an editorial input. */
+  calendarIdentity?:{uid:string;url:string;sequence:number;modifiedAt?:string;originalLines?:readonly string[]};
   calendarRevision?:{modifiedAt:string;sequence:number;cancelled?:boolean};
   /** Imported historical occurrence pages need not duplicate a maintained recurring series. */
   calendarVisible?: boolean;

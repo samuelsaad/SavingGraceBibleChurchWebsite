@@ -1,3 +1,4 @@
+import {publicTextTransfer} from '../server/http/public-text-transfer';
 import {Readable} from 'node:stream';
 import { createServer } from "node:http";
 import {createStagingCmsIntegration} from "../cms/staging-integration";
@@ -42,7 +43,8 @@ async function main() {
     process.env.RELEASE_COMMIT!, process.env.RESTRICTED_FRONTEND_DISABLED === "1",evaluation);
   const server = createServer(async (incoming, outgoing) => {
     try {
-      const response = await handler(await toWebRequest(incoming, cms?.origin??"http://127.0.0.1:8080", cms?.maximumBodyBytes??16_384));
+      const request=await toWebRequest(incoming, cms?.origin??"http://127.0.0.1:8080", cms?.maximumBodyBytes??16_384);
+      const response = publicTextTransfer(await handler(request),request);
       outgoing.writeHead(response.status, Object.fromEntries(response.headers));
       if(response.body)Readable.fromWeb(response.body as import('node:stream/web').ReadableStream).pipe(outgoing);else outgoing.end();
     } catch { outgoing.writeHead(400, { "Cache-Control": "no-store", "X-Robots-Tag": "noindex" }); outgoing.end("request_refused"); }

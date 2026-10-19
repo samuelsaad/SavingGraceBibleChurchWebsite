@@ -254,9 +254,11 @@ export function renderCalendarFeed(context:FrontendRenderContext=publicRenderCon
     if(event.calendarVisible===false)continue;
     const venue = eventVenue(event, context);
     const start = event.schedule.kind === "single" ? event.schedule.date : event.schedule.from;
-    const revision=event.calendarRevision,modified=revision?.modifiedAt??'2026-09-24T00:00:00Z';
-    const modifiedStamp=new Date(modified).toISOString().replace(/[-:]/gu,'').replace(/\.\d{3}Z$/u,'Z');
-    lines.push("BEGIN:VEVENT", `SEQUENCE:${revision?.sequence??0}`, `LAST-MODIFIED:${modifiedStamp}`, `STATUS:${revision?.cancelled?'CANCELLED':'CONFIRMED'}`, `UID:${event.id}@www.savinggrace.org.au`, `DTSTAMP:${modifiedStamp}`, `DTSTART;TZID=Australia/Melbourne:${stamp(start, event.start)}`, `DTEND;TZID=Australia/Melbourne:${stamp(start, event.end)}`, `SUMMARY:${icsEscape(event.title)}`, `LOCATION:${icsEscape(`${venue.name}, ${venue.address}, ${venue.locality}`)}`, `URL:https://www.savinggrace.org.au${event.path}`);
+    const revision=event.calendarRevision,identity=event.calendarIdentity,modified=identity?identity.modifiedAt:revision?.modifiedAt;
+    const utcStamp=(value:string)=>new Date(value).toISOString().replace(/[-:]/gu,'').replace(/\.\d{3}Z$/u,'Z');
+    const generatedStamp=utcStamp(modified??new Date().toISOString());
+    if(identity?.originalLines&&!revision?.cancelled){lines.push('BEGIN:VEVENT',...identity.originalLines,...(identity.originalLines.some(line=>line.startsWith('DTSTAMP:'))?[]:[`DTSTAMP:${generatedStamp}`]),'END:VEVENT');continue;}
+    lines.push("BEGIN:VEVENT", `SEQUENCE:${identity?.sequence??revision?.sequence??0}`, ...(modified?[`LAST-MODIFIED:${utcStamp(modified)}`]:[]), `STATUS:${revision?.cancelled?'CANCELLED':'CONFIRMED'}`, `UID:${identity?.uid??event.id+'@www.savinggrace.org.au'}`, `DTSTAMP:${generatedStamp}`, `DTSTART;TZID=Australia/Melbourne:${stamp(start, event.start)}`, `DTEND;TZID=Australia/Melbourne:${stamp(start, event.end)}`, `SUMMARY:${icsEscape(event.title)}`, `LOCATION:${icsEscape(`${venue.name}, ${venue.address}, ${venue.locality}`)}`, `URL:${identity?.url??'https://www.savinggrace.org.au'+event.path}`);
     if (event.description.length) lines.push(`DESCRIPTION:${icsEscape(event.description.join("\n\n"))}`);
     if (event.schedule.kind === "weekly") {
       lines.push(`RRULE:FREQ=WEEKLY;BYDAY=${weekdayCodes[event.schedule.weekday]}${event.schedule.until ? `;UNTIL=${melbourneUtc(event.schedule.until, event.end)}` : ""}`);

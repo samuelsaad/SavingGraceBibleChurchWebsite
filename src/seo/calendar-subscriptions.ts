@@ -1,7 +1,9 @@
+import {emptyFilterOptions} from '../frontend/pages/sermons-v1';
+import {calendarOccurrenceEvents} from './legacy-calendar-identities';
 import {originalCalendarGroups} from '../frontend/content/calendar-groups';
 /** Known calendar scopes stay live without creating an arbitrary crawl space. */
 import {occurrencesBetween,melbourneToday,venues,type ChurchEvent} from '../frontend/content/events';
-import {renderCalendarFeed,occurrenceRow} from '../frontend/pages/church';
+import {renderCalendarFeed,renderEventPage,occurrenceRow} from '../frontend/pages/church';
 import {pageShell} from '../frontend/shell';
 import {html} from '../frontend/html';
 import {frontendResponse} from '../server/http/frontend-response';
@@ -10,12 +12,14 @@ function selectedScope(path:string,context:FrontendRenderContext):ChurchEvent[]|
  const literal=/(?:^|\/)(20\d{2}-\d{2}(?:-\d{2})?)(?:\/|$)/u.exec(path)?.[1];
  if(literal){const value=literal.length===7?literal+'-01':literal;const time=Date.parse(value+'T00:00:00Z');if(!Number.isFinite(time)||new Date(time).toISOString().slice(0,10)!==value)return null;}
  const all=[...(context.siteContent?.events??[]),...(context.siteContent?.cancelledCalendarEvents??[])];
- if(path==='/events/calendar.ics'||path==='/events/'||/^\/events\/(?:\d{4}-\d{2}(?:-\d{2})?|(?:day|list|month|week|today)(?:\/(?:\d{4}-\d{2}(?:-\d{2})?|page\/[1-9]\d{0,2}))?)\/$/u.test(path))return all;
- const venue=Object.values(context.siteContent?.venues??{}).find(v=>v.legacyPath===path);if(venue)return all.filter(e=>e.venue===venue.id);
- const organizer=context.siteContent?.eventScopeIds?.[path];if(path.startsWith('/organiser/')&&organizer)return all.filter(e=>organizer.includes(e.id));
+ if(path==='/events/calendar.ics'||path==='/events/'||/^\/events\/(?:\d{4}-\d{2}(?:-\d{2})?|(?:day|list|month|week|today|summary)(?:\/(?:\d{4}-\d{2}(?:-\d{2})?|page\/[1-9]\d{0,2}))?)\/$/u.test(path))return all;
+ const scopePath=path.replace(/(?:page\/[1-9]\d{0,2}\/)$/u,'');
+ const venue=Object.values(context.siteContent?.venues??{}).find(v=>v.legacyPath===scopePath);if(venue)return all.filter(e=>e.venue===venue.id);
+ const organizer=context.siteContent?.eventScopeIds?.[scopePath];if(path.startsWith('/organiser/')&&organizer)return all.filter(e=>organizer.includes(e.id));
  const facetMatch=/^(\/events\/(?:category|tag)\/[^/]+\/)(.*)$/u.exec(path);const facet=facetMatch?.[1];if(facetMatch&&!/^(?:(?:(?:list|month|week|day|today)(?:\/(?:20\d{2}-\d{2}(?:-\d{2})?|page\/[1-9]\d{0,2}))?|20\d{2}-\d{2}(?:-\d{2})?|page\/[1-9]\d{0,2})\/)?$/u.test(facetMatch[2]!))return null;
  if(facet){const ids=context.siteContent?.eventScopeIds?.[facet];return ids?all.filter(e=>ids.includes(e.id)):null;}
- const event=all.find(e=>e.path===path||e.legacyPaths.includes(path));return event?[event]:null;
+ const eventPath=path.startsWith('/event/')?path.replace(/(?:all|20\d{2}-\d{2}-\d{2})\/$/u,''):path;
+ const event=all.find(e=>e.calendarVisible!==false&&(e.path===eventPath||e.legacyPaths.includes(eventPath)))??all.find(e=>e.calendarVisible!==false&&(e.path===path||e.legacyPaths.includes(path)));return event?[event]:null;
 }
 function calendarWindow(url:URL,defaultList=false):{from:string;until:string}|null{
  const literal=/(20\d{2}-\d{2}(?:-\d{2})?)/u.exec(url.pathname)?.[1],requested=literal??url.searchParams.get('tribe-bar-date');
@@ -55,16 +59,30 @@ export function calendarSubscription(request:Request,context:FrontendRenderConte
  if(!context.siteContent)return null;
  const url=new URL(request.url),flags=['ical','outlook-ical'].filter(k=>url.searchParams.has(k));
  if(url.pathname!=='/events/calendar.ics'&&(flags.length!==1||url.searchParams.get(flags[0]!)!=='1'))return null;
- let events=selectedScope(url.pathname==='/'&&url.searchParams.get('post_type')==='tribe_events'?'/events/':url.pathname,context);if(!events)return null;
+ let events=selectedScope((url.pathname==='/'||/^\/page\/[1-9]\d{0,2}\/$/u.test(url.pathname))&&url.searchParams.get('post_type')==='tribe_events'?'/events/':url.pathname,context);if(!events)return null;
  events=filteredEvents(url,context,events);if(!events)return null;
- events=displayedEvents(events,url);
+ const scopedEvents=events,legacy=context.siteContent.legacyCalendarOccurrences;
+ if(!legacy)events=displayedEvents(events,url);
  let window;try{window=calendarWindow(url);}catch{return null;}
- if(window){const selected=window;events=events.flatMap(event=>occurrencesBetween(event,selected.from,selected.until,100).map(o=>({...event,id:event.id+'-'+o.date,schedule:{kind:'single' as const,date:o.date}})));}
+ if(legacy){const today=melbourneToday(),past=url.searchParams.get('eventDisplay')==='past',shift=(days:number)=>new Date(Date.parse(today+'T00:00:00Z')+days*86400000).toISOString().slice(0,10);const singles=events.every(e=>e.schedule.kind==='single'),dates=singles?events.map(e=>(e.schedule as {kind:'single';date:string}).date).sort():[];const range=window??{from:singles&&dates.length?dates[0]!:past?[...legacy.filter(r=>scopedEvents.some(e=>e.id===r.eventId)).map(r=>r.date),shift(-365)].sort()[0]!:today,until:singles&&dates.length?dates.at(-1)!:past?today:shift(365)};events=calendarOccurrenceEvents(events,legacy,range);events=displayedEvents(events,url);}
+ else if(window){const selected=window;events=events.flatMap(event=>occurrencesBetween(event,selected.from,selected.until,100).map(o=>({...event,id:event.id+'-'+o.date,schedule:{kind:'single' as const,date:o.date}})));}
  const feed=renderCalendarFeed({...context,siteContent:{...context.siteContent,events:events.filter(e=>!e.calendarRevision?.cancelled),cancelledCalendarEvents:events.filter(e=>e.calendarRevision?.cancelled)}});
  return new Response(request.method==='HEAD'?null:feed,{headers:{'Content-Type':'text/calendar; charset=utf-8','Content-Disposition':'inline; filename="saving-grace-bible-church-events.ics"','Cache-Control':'no-cache, max-age=0, must-revalidate','X-Robots-Tag':'noindex, follow','X-Content-Type-Options':'nosniff'}});
 }
+/** Only a real occurrence of one currently published schedule gets a new detail page. */
+export function futureCalendarOccurrence(request:Request,context:FrontendRenderContext):Response|null{
+ const url=new URL(request.url),match=/^(\/event\/[^/]+\/)(20\d{2}-\d{2}-\d{2})\/$/u.exec(url.pathname);if(!match||!context.siteContent)return null;
+ const date=match[2]!,today=melbourneToday(),until=new Date(Date.parse(today+'T00:00:00Z')+366*86400000).toISOString().slice(0,10);if(date<today||date>until)return null;
+ const all=[...context.siteContent.events,...(context.siteContent.cancelledCalendarEvents??[])],matching=all.filter(event=>event.calendarVisible!==false&&(event.path===match[1]||event.legacyPaths.includes(match[1]!)));if(matching.length!==1)return null;
+ const event=matching[0]!;if(event.calendarRevision?.cancelled)return new Response('This gathering has been cancelled.',{status:410,headers:{'Content-Type':'text/plain; charset=utf-8','X-Robots-Tag':'noindex','Cache-Control':'no-store'}});
+ if(!occurrencesBetween(event,date,date,1).length)return null;
+ const source=context.siteContent.sourceSeoByPath?.[url.pathname],content={...event,path:url.pathname,schedule:{kind:'single' as const,date},seo:{...source,noindex:source?.noindex??true}};
+ return frontendResponse(renderEventPage(content,{today,sermons:[],options:emptyFilterOptions},context));
+}
+
 /** Called only after an exact retained source page is unavailable. */
 export function futureCalendarPage(request:Request,context:FrontendRenderContext):Response|null{
+ const occurrence=futureCalendarOccurrence(request,context);if(occurrence)return occurrence;
  if(!context.siteContent)return null;const url=new URL(request.url),selected=selectedScope(url.pathname,context);if(!selected||!url.pathname.startsWith('/events/'))return null;
  if(url.pathname==='/events/'&&!url.search||/^\/events\/[^/]+\/$/u.test(url.pathname)&&!/^\/events\/(?:20\d{2}-\d{2}(?:-\d{2})?|list|month|week|day|today)\/$/u.test(url.pathname))return null;
  if(url.searchParams.get('eventDisplay')==='past')return null;
@@ -82,7 +100,8 @@ export function futureCalendarPage(request:Request,context:FrontendRenderContext
 
 /** Captured future date views must react to CMS edits instead of freezing a calendar. */
 export function maintainedCalendarView(request:Request,context:FrontendRenderContext):Response|null{
- const url=new URL(request.url),literal=/(20\d{2}-\d{2}(?:-\d{2})?)/u.exec(url.pathname)?.[1]??url.searchParams.get('tribe-bar-date');
+ const url=new URL(request.url);if(url.pathname.startsWith('/event/')){const parent=url.pathname.replace(/20\d{2}-\d{2}-\d{2}\/$/u,'');const event=[...(context.siteContent?.events??[]),...(context.siteContent?.cancelledCalendarEvents??[])].find(e=>e.path===parent||e.legacyPaths.includes(parent));if(event&&(event.calendarRevision?.sequence??0)>1)return futureCalendarOccurrence(request,context);}
+ const literal=/(20\d{2}-\d{2}(?:-\d{2})?)/u.exec(url.pathname)?.[1]??url.searchParams.get('tribe-bar-date');
  if(!literal||literal<'2026-10'||!url.pathname.startsWith('/events/'))return null;
  return futureCalendarPage(request,context);
 }

@@ -77,6 +77,35 @@ class CandidateVerifyTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError,'concurrency_invalid'):
                     verify.Verification(baseline,'http://127.0.0.1:4440',base/'private'/'run',concurrency=value)
 
+    def test_parallel_comparison_preserves_every_row_difference_and_inlink(self):
+        from collections import Counter
+        with tempfile.TemporaryDirectory() as root:
+            base=Path(root);url=ORIGIN+'/example/';baseline=base/'ledger.json'
+            baseline.write_text(json.dumps({'pendingUrls':[url+str(i) for i in range(20)]}))
+            class AnonymousVerification(verify.Verification):
+                def verify_url(self,url,state):
+                    assert not self.rows and not self.internal_inlinks
+                    self.rows.append({'url':url,'state':state});self.differences.append({'url':url,'missing':1})
+                    self.internal_targets.add(ORIGIN+'/same/');self.internal_inlinks[ORIGIN+'/same/']+=2
+            results=[]
+            for workers in [1,4]:
+                run=AnonymousVerification(baseline,'http://127.0.0.1:4440',base/'private'/str(workers),comparison_workers=workers)
+                run.verify_inventory()
+                results.append((run.rows,run.differences,run.internal_targets,run.internal_inlinks))
+            self.assertEqual(results[0],results[1]);self.assertEqual(len(results[1][0]),20);self.assertEqual(results[1][3][ORIGIN+'/same/'],40)
+            for i,value in enumerate([0,5,True,1.5]):
+                with self.assertRaisesRegex(ValueError,'comparison_workers_invalid'):verify.Verification(baseline,'http://127.0.0.1:4440',base/'private'/('invalid'+str(i)),comparison_workers=value)
+
+    def test_parallel_same_url_has_one_immutable_http_owner(self):
+        from concurrent.futures import ThreadPoolExecutor
+        import time
+        with tempfile.TemporaryDirectory()as root:
+            opener=Opener([Response(body=b'one')]);original=opener.open
+            def slow(*args,**kwargs):time.sleep(.02);return original(*args,**kwargs)
+            opener.open=slow;client=verify.LoopbackClient('http://127.0.0.1:4440',Path(root),opener=opener)
+            with ThreadPoolExecutor(max_workers=4)as pool:rows=list(pool.map(lambda _:client.fetch(ORIGIN+'/same/'),range(12)))
+            self.assertEqual(client.requests,1);self.assertEqual(len(opener.requests),1);self.assertEqual({r['bodySha256']for r in rows},{verify.digest(b'one')})
+
     def test_only_literal_loopback_with_explicit_port(self):
         with tempfile.TemporaryDirectory() as root:
             for candidate in ['https://127.0.0.1:4440','http://localhost:4440','http://192.168.1.1:4440','http://127.0.0.1','http://127.0.0.1:4440/path','http://user@127.0.0.1:4440','http://www.savinggrace.org.au:4440']:
@@ -224,3 +253,18 @@ class PortableEvidencePaths(unittest.TestCase):
             self.assertEqual(verify.confined_file(root,'responses\\example.html'),(root/'responses/example.html').resolve())
             for value in ['C:\\private\\example.html','../outside.html','\\server\\share\\file','responses\\..\\..\\outside.html']:
                 with self.assertRaises(ValueError):verify.confined_file(root,value)
+
+class FrozenRootConfinement(unittest.TestCase):
+    def test_files_are_resolved_again_even_after_the_root_is_cached(self):
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory()as folder:
+            root=Path(folder)/'root';outside=Path(folder)/'outside';root.mkdir();outside.mkdir();(root/'file').write_bytes(b'one');(outside/'file').write_bytes(b'one')
+            self.assertEqual(verify.confined_file(root,'file'),(root/'file').resolve())
+            original=Path.resolve;target=root/'file';escaped=(outside/'file').resolve();calls=[]
+            def replaced(path,*args,**kwargs):
+                calls.append(path)
+                if path==target:return escaped
+                return original(path,*args,**kwargs)
+            with patch.object(Path,'resolve',replaced):
+                with self.assertRaisesRegex(ValueError,'source_evidence_path_invalid'):verify.confined_file(root,'file')
+            self.assertIn(target,calls)

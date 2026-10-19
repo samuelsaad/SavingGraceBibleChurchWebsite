@@ -13,6 +13,12 @@ class AliasExtraction(unittest.TestCase):
    (root/'ledger.private.json').write_text(json.dumps({'pages':pages}));bundle={'pages':[{'path':'/event/example/2024-01-14/','sourceId':42,'kind':'event','issues':[],'responseSha256':digest}]}
    rows=M.generate(root,bundle);self.assertEqual([r['alias']for r in rows],['/?p=42']);self.assertEqual(rows[0]['chain'][-1]['status'],200)
    bundle['pages'][0]['responseSha256']='b'*64;self.assertEqual(M.generate(root,bundle),[])
+ def test_non_numeric_archive_aliases_bind_the_exact_response_without_inventing_a_wordpress_id(self):
+  with tempfile.TemporaryDirectory()as d:
+   root=Path(d);origin='https://www.savinggrace.org.au';digest='a'*64;old=origin+'/?post_type=tribe_events&paged=2';target=origin+'/events/day/page/2/';records=[{'url':old,'status':301,'bodySha256':digest,'redirectTarget':target},{'url':target,'status':200,'bodySha256':digest}];pages={}
+   for i,r in enumerate(records):
+    name=str(i)+'.json';(root/name).write_text(json.dumps(r));pages[r['url']]={'status':r['status'],'bodySha256':digest,'recordPath':name}
+   (root/'ledger.private.json').write_text(json.dumps({'pages':pages}));bundle={'pages':[{'path':'/events/day/page/2/','sourceId':None,'kind':'archive','issues':[],'responseSha256':digest}]};rows=M.generate(root,bundle);self.assertEqual(len(rows),1);self.assertIsNone(rows[0]['sourceId'])
  def test_private_external_and_encoded_paths_are_refused(self):
   for value in ['https://evil.example/x','https://www.savinggrace.org.au/admin/x','https://www.savinggrace.org.au/a%2Fb','https://user:pass@www.savinggrace.org.au/x']:
    self.assertIsNone(M.path(value))
