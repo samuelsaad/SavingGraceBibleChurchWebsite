@@ -198,7 +198,7 @@ class SeoDeploymentTest(unittest.TestCase):
                 OP.source_snapshot(SimpleNamespace(sql=sql))
 
     def test_existing_source_retry_refuses_unknown_history_or_bundle(self):
-        valid={'sourceCounts':{'source_public_versions':8033,'source_public_routes':6141,'source_public_imports':8},'sourceSha256':OP.EXISTING_SOURCE_SHA}
+        valid={'sourceCounts':{'source_public_versions':8587,'source_public_routes':6260,'source_public_imports':9},'sourceSha256':OP.EXISTING_SOURCE_SHA}
         OP.verify_existing_source(valid,OP.INCOMING_BUNDLE_SHA)
         with self.assertRaisesRegex(RuntimeError,'seo_existing_source_drift'):OP.verify_existing_source(valid,OP.EXISTING_BUNDLE_SHA)
         for changed,bundle in (({**valid,'sourceSha256':'0'*64},OP.INCOMING_BUNDLE_SHA),(valid,'0'*64),({**valid,'sourceCounts':{}},OP.INCOMING_BUNDLE_SHA)):
@@ -363,8 +363,8 @@ class SeoDeploymentTest(unittest.TestCase):
                 calls.append(operation)
                 if operation == "cms-plan":
                     self.assertNotIn("SOURCE_CMS_PLAN_SHA256", cfg["services"]["app"]["environment"])
-                    return json.dumps({"planned": 1, "held": 1223, "planSha256": "7dce063d0c26a45f0a1653152a964f749581b8741c69357403eb7075b9731969"})
-                self.assertEqual(cfg["services"]["app"]["environment"]["SOURCE_CMS_PLAN_SHA256"], "7dce063d0c26a45f0a1653152a964f749581b8741c69357403eb7075b9731969")
+                    return json.dumps({"planned": 16, "held": 1445, "planSha256": "478c01d5de68b898d67db6a7a533e692d81e40770fb404f865f78db4e3902fde"})
+                self.assertEqual(cfg["services"]["app"]["environment"]["SOURCE_CMS_PLAN_SHA256"], "478c01d5de68b898d67db6a7a533e692d81e40770fb404f865f78db4e3902fde")
                 return json.dumps({"result": {"inserted": 0}, "assets": {"inserted": 0}})
             fixture.run = run
             upgrade = SimpleNamespace(cms_snapshot=lambda _: {name: [] for name in ("cms_entities", "cms_revisions", "cms_routes", "media_assets", "audit_events", "schema_migrations")})

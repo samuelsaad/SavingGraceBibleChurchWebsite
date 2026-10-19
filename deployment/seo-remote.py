@@ -22,12 +22,12 @@ from urllib.parse import urlsplit, parse_qs
 import time
 
 UPGRADE_SHA = "8d399d913a7ad30fa7e94d76c4dbbf0e6ac749a99d0937f6e92187bf4c989cdd"
-PREVIOUS_COMMIT = "d068c2214e2d53b6c50de4788305acaf7fa052ed"
-PREVIOUS_IMAGE = "sha256:cfdcd574a493753c73a349da9710fd44f489a07d4dbde3562c7029132201b2ff"
+PREVIOUS_COMMIT = "edf6c291c8d9130d44698f0d87dbd83100a77f45"
+PREVIOUS_IMAGE = "sha256:761155063d484cbc72a1e740f63f8cfa3e4222ba693833960b6be1c66679d4a7"
 BASE_SCHEMA_ORDER = 28
-EXISTING_SOURCE_SHA = "5f44735379b990f0f4950eef509ce28434cd1036632fea4abf897e237a98c83a"
+EXISTING_SOURCE_SHA = "cc9aa745c9c650de622779a700385cdb7b5c7c4159357a095eee1ca493e70b55"
 EXISTING_BUNDLE_SHA = "3f34acc4b850884c4fbb44bbb66fc0b42c23bb1dfa7f7416f5840cb80ffb1917"
-INCOMING_BUNDLE_SHA = "e4621e98c6d45a64f8d9b9550d5390877d6305fe6db99a67d3a32c228bb6b072"
+INCOMING_BUNDLE_SHA = "0d550805a97a2ced9d603d0f1cdecb0df77f5d72b5e1ed9b54d640836ec5695f"
 SOURCE_TABLES = ("source_public_versions", "source_public_routes", "source_public_imports")
 ASSET_KEY = re.compile(r"[a-f0-9]{64}\.(?:png|jpg|webp|gif|avif|svg|ico|pdf|doc|docx|xls|xlsx|ppt|pptx|rss|atom|ics|zip|otf|mp3|mp4)")
 MIGRATION = "0028_source_public_migration"
@@ -304,7 +304,7 @@ def owner_secret_identity(base, path):
 
 def verify_existing_source(actual, bundle_hash):
     # Require the frozen incumbent history and the exact reviewed additive delta.
-    expected={"source_public_versions":8033,"source_public_routes":6141,"source_public_imports":8}
+    expected={"source_public_versions":8587,"source_public_routes":6260,"source_public_imports":9}
     if actual.get("sourceCounts") != expected or actual.get("sourceSha256") != EXISTING_SOURCE_SHA or bundle_hash != INCOMING_BUNDLE_SHA:
         fail("seo_existing_source_drift")
 
@@ -626,7 +626,7 @@ def adopt_cms(base, upgrade, helper, root, recovery):
         frozen = base.load(marker)
         if plan["planned"] and plan != frozen: fail("seo_cms_plan_changed")
     else:
-        if plan.get("planned") != 1 or plan.get("held") != 1223 or plan.get("planSha256") != "7dce063d0c26a45f0a1653152a964f749581b8741c69357403eb7075b9731969":
+        if plan.get("planned") != 16 or plan.get("held") != 1445 or plan.get("planSha256") != "478c01d5de68b898d67db6a7a533e692d81e40770fb404f865f78db4e3902fde":
             fail("seo_cms_plan_scope")
         frozen = plan; base.save(marker, frozen)
     config["services"]["app"]["environment"]["SOURCE_CMS_PLAN_SHA256"] = frozen["planSha256"]
