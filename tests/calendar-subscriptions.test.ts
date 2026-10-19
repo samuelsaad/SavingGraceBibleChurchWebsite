@@ -121,3 +121,13 @@ it('retains explicit occurrence edits, module hiding and slug dispositions inste
  c.siteContent!.routes=[{path,entityId:'specific-occurrence',status:301,targetPath:'/moved-occurrence/'},{path:'/moved-occurrence/',entityId:'specific-occurrence',status:200,targetPath:null}];expect(futureCalendarOccurrence(new Request('https://www.example.test'+path),c)).toBeNull();
  }finally{vi.useRealTimers();}
 });
+
+
+it('renders complete selected months when opened from a middle date, with the same feed membership',async()=>{
+ vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-01T02:00:00Z'));
+ try{const c=context();c.siteContent!.events=[{...event,schedule:{kind:'weekly',weekday:0,from:'2026-09-27',until:'2026-11-08'}}];const url='https://www.example.test/events/?eventDisplay=month&tribe-bar-date=2026-10-21';const html=await maintainedCalendarView(new Request(url),c)!.text();expect(html).toContain('From 2026-10-01 to 2026-10-31');expect(html).toContain('2026-10-04T17:30');expect(html).not.toContain('Calendar days');const feed=await calendarSubscription(new Request(url+'&ical=1'),c)!.text();expect(feed).toContain('20261004T173000');expect(feed).toContain('20261025T173000');expect(feed).not.toContain('20261101T173000');}finally{vi.useRealTimers();}
+});
+it('restores real adjacent-day links and scoped live client subscriptions without leaking loopback URLs',async()=>{
+ vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-19T02:00:00Z'));
+ try{const c=context();c.mode='public';c.siteContent!.events=[{...event,schedule:{kind:'weekly',weekday:0,from:'2026-10-01'}}];const request=new Request('https://www.example.test/events/day/2026-10-21/?utm_source=example&paged=1');const html=await maintainedCalendarView(request,c)!.text();expect(html).toContain('/events/day/2026-10-20/?utm_source=example');expect(html).toContain('/events/day/2026-10-22/?utm_source=example');for(const label of ['Google Calendar','iCalendar','Outlook 365','Outlook Live','Export .ics file','Export Outlook .ics file'])expect(html).toContain(label);expect(html).not.toContain('cid=webcal%3A%2F%2Fwww.example.test');c.mode='restricted';const privateHtml=await maintainedCalendarView(request,c)!.text();expect(privateHtml).not.toContain('https://www.google.com/calendar/render');expect(privateHtml).toContain('Export .ics file');}finally{vi.useRealTimers();}
+});

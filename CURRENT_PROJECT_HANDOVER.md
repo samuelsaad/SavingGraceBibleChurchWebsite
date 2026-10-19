@@ -1898,3 +1898,35 @@ Only safe D-170 implementation and completion documentation are included in the
 authorized integrated-branch handoff. Existing dataset-bearing history is covered
 by Samuel's explicit push exception; no additional private content, credentials,
 reconciliation, dumps, raw captions, accounts or sessions are included.
+
+
+### D-183 exact calendar dependency completion (20 October 2026)
+
+The complete b82b06b HTTP graph exposed 31 additional genuine calendar targets.
+Exactly those public URLs were captured without following other discovered links.
+The frozen union is now 23,160 URLs / 15,808 captures / 28,656 file witnesses;
+all original 23,017 inventory identities remain. The ledger SHA-256 is
+`454ee1a28ba1fe871990847ec7d4547a7b293ae1da6ab38c552d7902f12fec6c`.
+
+The guarded local import added 24 past event occurrences and ten archives,
+including three known original day views. It updated no existing source row.
+Trial rollback, identical replay, audited scoped withdrawal, guarded exact
+reapplication and unchanged normal withdrawal protection passed. All 65 original
+table fingerprints, excluding only these exact new rows/audits, match byte for byte
+including timestamps. CMS adoption added 27 documents; replay added zero.
+There are 6,568 source routes and 459 known originally public sermons; complete
+current WordPress database coverage remains unproved. All 87 image occurrences
+on the 34 added pages use previously verified files.
+
+Calendar controls preserve scoped day navigation and live subscription clients.
+Month views begin on day one, including when a midmonth date was selected. The
+source renderer restores an omitted iCalendar URI only from an unambiguous exact
+owned URI inside the same original Google Calendar subscription list. Public
+links use the existing production hostname; private environments do not activate
+production measurement. Exact reviewed query aliases are resolved before path
+aliases so internal links can reach final destinations without losing query meaning.
+
+Integrated verification and final finding reconciliation are in progress. The
+previous b82b06b release is independently pushed and its local image was built
+and checked; it was not deployed to protected staging. The last pinned staging
+SSH attempt timed out. WordPress remains live; DNS and production are unchanged.
