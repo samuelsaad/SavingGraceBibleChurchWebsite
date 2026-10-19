@@ -38,6 +38,16 @@ def archive(path, records):
 
 
 class SeoDeploymentTest(unittest.TestCase):
+    def test_complete_hash_streams_without_whole_backup_allocation(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path=pathlib.Path(folder)/'backup.tar';data=b'Anonymous binary fixture.'*100000
+            path.write_bytes(data)
+            with patch.object(pathlib.Path,'read_bytes',side_effect=AssertionError('whole-file read refused')):
+                self.assertEqual(OP.streaming_sha(path),hashlib.sha256(data).hexdigest())
+            with self.assertRaisesRegex(RuntimeError,'cms_file_refused'):
+                OP.streaming_sha(path.parent)
+
+
     def test_preservation_hashes_all_assets_once_and_checks_every_original(self):
         manifest=Mock(return_value={'one.pdf':3,'two.mp3':9,'new.png':4})
         target=SimpleNamespace(assets_manifest=manifest)

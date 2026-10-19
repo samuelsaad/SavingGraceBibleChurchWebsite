@@ -34,6 +34,20 @@ def fail(code):
     raise RuntimeError(code)
 
 
+def streaming_sha(path):
+    """Same complete SHA-256 with bounded memory, including recording backups."""
+    if path.is_symlink() or not path.is_file(): fail("cms_file_refused")
+    before = path.stat()
+    digest = hashlib.sha256()
+    with path.open("rb") as source:
+        for chunk in iter(lambda: source.read(1024 * 1024), b""):
+            digest.update(chunk)
+    after = path.stat()
+    identity = lambda value: (value.st_dev, value.st_ino, value.st_size, value.st_mtime_ns, value.st_ctime_ns)
+    if identity(before) != identity(after): fail("seo_hashed_file_changed")
+    return digest.hexdigest()
+
+
 def helpers():
     path = pathlib.Path(__file__).with_name("cms-upgrade-remote.py")
     if path.is_symlink() or not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != UPGRADE_SHA:
@@ -41,6 +55,7 @@ def helpers():
     spec = importlib.util.spec_from_file_location("seo_verified_cms_upgrade", path)
     upgrade = importlib.util.module_from_spec(spec); spec.loader.exec_module(upgrade)
     base = upgrade.base_operator()
+    base.sha = streaming_sha
     base.RUNTIME_ENTRIES = (*base.RUNTIME_ENTRIES, "source-public-sync")
     base.CMS_TABLES = (*base.CMS_TABLES, *SOURCE_TABLES, "redirects", "audit_events")
     base.assets_manifest = lambda: assets_manifest(base)
