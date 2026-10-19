@@ -1,3 +1,4 @@
+import{createSourcePageValidationCache}from'./source-page-validation';
 import {readSourceRssFacts} from './rss-fact-store';
 import {createSourceRssHandler} from './rss-feeds';
 import {loadLegacyCalendarOccurrences} from './legacy-calendar-identities';
@@ -133,9 +134,10 @@ export async function createVersionedSourceHandler(options:{reader:Pool;assetDir
  const assetHandler=createCmsAssetHandler(assets,{authenticate:async()=>null},{authorizeMutation:()=>false},async(key,draft)=>!draft&&await cms.canReadAsset(key,false));
  const relations=[...new Set([...sourceRuntimeFingerprintSql.matchAll(/\bFROM ([a-z][a-z0-9_]*)/gu)].map(match=>match[1]!))].sort();
  const fingerprint=createSnapshotVerifiedFingerprint(options.reader,sourceRuntimeFingerprint,relations);
+ const validateSourcePage=createSourcePageValidationCache();
  const select=versionedHandlerCache(fingerprint,async(version)=>{
   // Release the consumed source wire rows before allocating the full CMS corpus.
-  const pages=await readSourcePublicPages(options.reader);
+  const pages=await readSourcePublicPages(options.reader,undefined,undefined,validateSourcePage);
   const [snapshot,images]=await Promise.all([cms.getPublishedSnapshot(),store.list()]);
   const sermons=await createCompositeSourceSermonRepository(pages,options.reader,options.acceptedStageRepository??options.acceptedLocalRepository,snapshot.entities,snapshot.routes);
   const sourceAssets=createSourcePublicAssetHandler(pages,options.assetDirectory);

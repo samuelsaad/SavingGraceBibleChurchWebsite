@@ -1,4 +1,89 @@
-# SEO source baseline — 13 October 2026 Australia/Sydney
+# SEO source baseline — 20 October 2026 Australia/Sydney
+
+Production remains **https://www.savinggrace.org.au** on the original WordPress site.
+Its verified HTTPS www origin, current public responses and explicit public links
+establish production identity. Localhost, staging addresses and WordPress GUIDs do
+not establish current production permalinks. No production content, DNS or traffic
+has been changed.
+
+The frozen finite union now has **23,089 observed URLs**, retaining the original
+23,017 denominator and all original 15,252 hashes. Its 72 additions are specific
+missing identities/resources or final source changes; HTML links were not expanded
+into another calendar/query crawl. There are **15,737 captured responses** and
+**28,465 file witnesses**. Captured statuses are 10,812 successful, 3,871 permanent
+redirects, 59 temporary redirects, 723 not found and 272 rate-limited responses.
+Uncaptured URLs, older source snapshots and unavailable account evidence remain
+explicit limitations rather than presumed removals or proof of complete coverage.
+
+Ledger SHA-256:
+`bf724f9c9640700e5de9c24cb9937909073ee312975e787665e54480f9079083`.
+Parsed cache SHA-256:
+`30a6e6394176e721c4eb98fe5230c820e5fea5e05dd9e714535bade5ff034bd5`.
+The full comparison checks every source witness before/after and per read. New
+candidate runs make fresh HTTP requests and require an independently derived
+application/configuration/database runtime label.
+
+| Source projection type | Routes | Identity interpretation |
+| --- | ---: | --- |
+| Pages | 33 | 30 verified original WordPress identities and their public paths |
+| Blog posts | 3 | Three original posts |
+| Sermons | 459 | Distinct known originally public source sermons |
+| Archives/taxonomy/observed query/pagination | 2,339 | URL variants, not distinct authored documents |
+| Event detail routes | 1,239 | Occurrence/source identities, not proof of stored recurrence completeness |
+| Assets/documents/feeds/calendar resources | 2,461 | Includes observed resource queries and exact empty historical exports |
+| Total | 6,534 | Active local source projection; independent CMS/native ownership still applies |
+
+The current public main pages, original sermons, taxonomy/filter/pagination pages,
+posts, events/recurrences, attachments, images/documents, feeds, historical aliases
+and meaningful query variants are retained in the URL ledger. An inventory row or
+successful HTTP status is not an accepted content/metadata disposition by itself.
+
+## Capture dates and authority
+
+- The original crawl/sitemaps/REST and finite observation frontier were captured
+  9–13 October. Subsequent targeted dependencies and the new 18 October sermon
+  retain their actual per-record capture times. The seven final missing past-calendar
+  pages and one original shortcode 404 were inspected on 20 October Sydney time.
+- Four live RSS feeds and their eight exact member dependencies were captured on
+  19 October. Original feed XML, immutable opaque GUIDs and the older WXR reconcile
+  462 feed identities: 459 sermons and three posts. GUIDs remain identity evidence,
+  not guessed current permalinks.
+- Two bounded current-source checks at 2026-10-19 15:40 UTC confirmed homepage main
+  content, title, canonical, robots, language and extracted dates against the retained
+  9 October snapshot. Homepage HTML hashes differ; only these meaningful fields are
+  confirmed unchanged. Robots bytes are exactly identical. This does not refresh
+  every page or establish current stored WordPress publication coverage.
+- The fresh rendered homepage identifies **All in One SEO (AIOSEO) 4.6.4**, WordPress
+  6.4.13 and Site Kit by Google 1.116.0. Stored plugin fields, activation/configuration
+  and their complete database-to-rendered comparison remain unavailable.
+- The retained 24 September WXR has 1,357 items, 454 then-public sermons and 437
+  attachments. Its raw XML SHA-256 is
+  `fd15e0553349f40fa74264b0cb1ab70560cf48ae7ef18101cccb7b0514876e0e`.
+  It is an older snapshot and not a current full WordPress database backup.
+- The configured database reader failed the required SELECT/USAGE-only privilege
+  guard before table extraction. No guard, privilege or production data was changed.
+  No alternative current authorized backup/account was available. Stored publication,
+  permalinks, plugin metadata, attachment and recurrence reconciliation, final delta
+  and isolated WordPress restoration remain incomplete.
+- Search Console/Analytics/Tag Manager ownership, properties, streams, landing-page,
+  query, backlink/indexing and comparable-period field baselines are unavailable.
+  Two public GA4 IDs were observed unchanged on both homepage captures; that does
+  not prove church ownership or authorize duplicate tracking/staging activation.
+
+Four official profile URLs were verified in current original homepage links.
+The local CMS had never populated those fields, including all prior revisions,
+and had no pending settings draft. A scoped system-attributed revision restored
+Facebook, YouTube, Instagram and SermonAudio links without changing unrelated
+settings. The replay made no change. Protected-staging propagation is pending access.
+
+The 117 MP3 and one MP4 backups contain exactly 1,106,058,680 unchanged bytes.
+Recording binaries, backup/configuration material, source prose and account evidence
+remain private and outside Git/images. The original hosting remains in service.
+
+The following earlier D-182 text is retained as historical capture context only.
+Current acceptance counts and release status are in the latest acceptance report.
+
+# Retained D-182 baseline — 13 October 2026 (historical)
 
 Verified live WordPress origin: **https://www.savinggrace.org.au**. Fresh public REST
 `url` and `home` both identify that HTTPS www hostname. Public response captures

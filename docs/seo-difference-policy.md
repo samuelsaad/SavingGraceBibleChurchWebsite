@@ -101,3 +101,5 @@ An original future occurrence removed by a published recurrence edit returns410
 and retains its cancellation UID in calendar exports. Unknown dates remain404.
 Explicit per-occurrence edits, module hiding and slug dispositions retain their CMS
 ownership; a computed series page cannot overwrite them or revive withdrawn content.
+
+Validated source reuse is a runtime performance optimization, never a disposition policy. It requires current pointer selection, exact current wire-byte SHA-256, prior complete schema/version validation and deep immutability. Changed bytes or versions cannot reuse an earlier certificate. Mutable/unknown constructor input remains fully parsed. Bounded in-memory reuse has no disk authority, TTL, eligibility or editorial effect.

@@ -1,6 +1,6 @@
 # SEO migration cutover and rollback
 
-D-181 prepares a CMS replacement at the existing domain. This is not authorization to switch production traffic, change DNS/TLS, modify WordPress or remove recovery systems. Production operator: Samuel or a named delegate must be recorded at the final go/no-go review. A NOT READY acceptance report blocks cutover.
+D-183 continues preparation of a CMS replacement at the existing domain. This is not authorization to switch production traffic, change DNS/TLS, modify WordPress or remove recovery systems. Production operator: Samuel or a named delegate must be recorded at the final go/no-go review. A NOT READY acceptance report blocks cutover.
 
 ## Release and recovery gates
 
@@ -11,14 +11,14 @@ and asset files. Do not roll back to an older application merely because schema
 order remains 28. The guarded operator freezes the actual source-backed CMS plan,
 preserves every incumbent CMS row and resource, and verifies idempotent adoption.
 
-Use the release commit, image digest, source ledger hash, source bundle hash, asset manifest hash, migration checksums and protected recovery receipt in `seo-migration-acceptance.md`. Never deploy an uncommitted directory. Verify remote Git commit and deployed health/image identity independently. Stage configuration stays loopback/SSH-only, non-indexable and read-only for visitors; protected admin remains protected.
+Use the separately recorded application commit, documentation commit, image digest, source ledger hash, source bundle hash, asset manifest hash, migration checksums and protected recovery receipt in `seo-migration-acceptance.md`. Never deploy an uncommitted directory. Verify remote Git commit and deployed health/image identity independently. Stage configuration stays loopback/SSH-only, non-indexable and read-only for visitors; protected admin remains protected.
 
 Before production authorization, obtain the missing fresh WordPress SELECT/USAGE-only source account, complete source/destination reconciliation, resolve every unexplained public-content loss, and provide account/indexing evidence or an explicit acceptance of its absence. Obtain a current WordPress database/export, complete uploaded assets and configuration backup through approved read-only access; test restoration in isolation. A retained older export is not a final backup. Retain WordPress and its assets until acceptance and recovery retention expire.
 
 ## Freeze and final delta
 
 1. Agree and record the exact content freeze time with the church editor. Freeze is an operational agreement; this task does not change WordPress. If editing must continue, record additions, edits, withdrawals, metadata/media changes and uploaded files through the final source capture.
-2. Repeat the guarded fresh source inventory and public crawl. Keep the previous snapshot immutable. Compare source identity, status, body/metadata hashes, canonical path and assets. Do not treat absence in an incomplete crawl as removal.
+2. Obtain the current guarded WordPress publication/permalink/metadata/attachment/recurrence inventory. Reuse the frozen 23,089-URL union, and inspect only exact final additions, edits, withdrawals or missing dependencies. Do not restart open-ended calendar/query crawling. Keep the previous snapshot immutable. Compare source identity, status, body/metadata hashes, canonical path and assets. Do not treat absence in an incomplete crawl as removal.
 3. Build a new private source bundle. Each changed route must bind the exact currently expected version. New routes expect null. Conflicts stop the transaction. A previously withdrawn route cannot be resurrected automatically. Existing enrichment approvals, uncertainty and CMS edits are independent.
 4. Review source publication changes and deletions explicitly. Apply approved withdrawals/redirects using the existing audited workflow. Do not overwrite current CMS revisions or infer a removal from an unavailable optional transcript/video.
 5. Import atomically, rerun byte-identical to prove idempotency, and rerun the entire URL ledger, content/metadata comparison, sitemap/link/asset checks and browser matrix. Reconcile source changes occurring during the freeze window before opening traffic.
@@ -198,3 +198,84 @@ must close the acceptance blockers, verify WordPress/database/uploads/configurat
 backups and restoration, production authentication/MFA and measurement configuration,
 record exact final database/content/release hashes, and obtain separate cutover
 permission. Keep WordPress and recording/resource dependencies available for recovery.
+
+
+## D-183 interruption and recovery controls — 20 October 2026
+
+The f13b6d2 staging rehearsal reached source migration/resource reconciliation after
+bridge activation, then pinned SSH timed out during CMS adoption. Its actual current
+CMS pointers, source receipts, running commit and image are unconfirmed. The last
+fully exercised activation/rollback/reactivation was 6fd5417. Never assume that older
+image is still running, blindly repeat adoption, or use a historical incumbent guard.
+
+When hosting access returns, first run read-only inventory/health and inspect the
+private phase receipts. Preserve current volumes, snapshots, credentials and both
+recovery roots. Compare the exact 22-row final source delta, 11-document adoption
+plan and four verified profile links with current revisions. Apply only unconsumed,
+unchanged expected versions. A pending draft or intervening edit blocks that item.
+Archive an unused task release root only after mount/process checks and verified
+recoverable per-file archive metadata/hashes; never weaken the free-space gate or
+prune images/backups to make a deployment proceed.
+
+Source rollback retains withdrawn tombstones and immutable receipts. A separate
+non-HTTP reapplication may restore only new rows withdrawn by that exact operator
+restoration: original/import/restore receipts, complete bundle hashes, exact versions
+and unchanged timestamps must match, with no editorial withdrawal. Normal imports
+still refuse withdrawn content. Existing mixed/update imports require their own
+recovery evidence and are not covered by this new-row-only operation.
+
+The new-site PostgreSQL 65-table restoration and composite asset restoration remain
+valid retained evidence. The asset set has 2,387 files including the exact 118 copied
+recordings and four private RSS extraction caches. Use the original XML, manifest
+hashes and frozen cache hashes, never a newly generated replacement as evidence.
+A current WordPress database/uploads/configuration recovery is separate and missing.
+Its isolated project must start `sgbc-seo-wp-restore-20261019-`; refuse an existing
+project, bind loopback, disable email/cron/analytics/integrations, and keep proprietary
+plugins inert. Do not weaken the source account's SELECT/USAGE privilege guard.
+
+Production hosting/runtime and the managed identity provider remain undecided. Record
+individual administrator membership, MFA, provider recovery and actual successful
+login/recovery before production acceptance. Local development login or staging's
+shared secret cannot meet that gate. Verify the approved SMTP sender/recipient and
+actual church measurement properties/stream/consent. Two original GA4 IDs are observed;
+that observation grants no ownership proof or authority to activate either on staging.
+
+## Exact post-switch smoke sequence (prepared, not executed)
+
+Only after separate traffic-switch authorization and an accepted release:
+
+1. Record actual DNS answers and validate TLS for `www.savinggrace.org.au`; verify
+   HTTP and apex host variants redirect directly to the same HTTPS www destination.
+   Preserve the meaningful query and attribution behavior in the complete URL ledger.
+2. Keep a protected loopback proxy to the deployed production application. Independently
+   verify its commit/image/configuration and SQL/content fingerprint before using its
+   runtime label; a caller-provided commit string alone is not proof.
+3. Run the full frozen URL, content, metadata, asset, sitemap and internal-link comparator.
+   Inspect real public canonical/robots headers as well as the private proxy response.
+4. Verify homepage, sermon archive/pagination/search, the newest sermon and Arabic sermon,
+   contact success/failure, future recurrence edits and calendar/RSS subscriptions.
+   Verify the 118 recordings' full identities/MIME/ranges through final production routing.
+5. Confirm admin/private previews require the intended production identity, drafts remain
+   unavailable, production has no staging noindex/authentication, and staging emits no
+   production analytics. Submit the retained sitemap through the actual owned property.
+6. Capture approved production measurement once without duplicate page views; exclude
+   private/query/form data. Preserve original verification files/TXT/meta mechanisms.
+   This same-domain CMS replacement does not use Change of Address.
+
+```powershell
+Resolve-DnsName www.savinggrace.org.au
+curl.exe --silent --show-error --fail --head https://www.savinggrace.org.au/
+curl.exe --silent --show-error --head http://savinggrace.org.au/sermons/
+curl.exe --silent --show-error --head https://savinggrace.org.au/sermons/
+python scripts/seo-verify-candidate.py --baseline private/seo-baseline/d183-final/ledger-calendar-eight-20261020.private.json --assets private/seo-baseline/d183-final/assets-calendar-eight-20261020.private.json --candidate http://127.0.0.1:4446 --environment production --expected-runtime-label <independently-verified-production-label> --concurrency 4 --comparison-workers 4 --timeout 60 --request-limit 50000 --output private/seo-verification/<fresh-production-run>
+```
+
+The example loopback port must actually forward to the deployed production candidate;
+do not accidentally test the retained local application. All outputs/incident details
+stay private. A critical 5xx, wrong-content redirect, private-content exposure, missing
+recording, broken canonical target or accidental production indexing exclusion stops
+acceptance and triggers operator rollback review. Preserve post-launch CMS/database
+changes by timestamped delta export plus current database/assets snapshot before
+rollback; reconcile them by identity/version afterward rather than overwriting them.
+Samuel or Yang must name the release operator, rollback operator and account owner at
+the final go/no-go. Prepared responsibilities are not recorded owner acceptance.

@@ -665,3 +665,5 @@ provider-independent:the architecture's later decision supersedes historical Cog
 selection. No provider/account/MFA/recovery state is invented or connected here.
 
 D-183 integrated context/recurrence checkpoint: PostgreSQL 1,519/0 skips; standard 1,372/147 gated skips; Python 167; type/build and privacy scan passed. Current original homepage/robots confirmation and four no-clobber profile-link settings preservation receipts remain private. Final immutable HTTP comparison and staging activation are not yet accepted.
+
+D-183 immutable source validation reuse: PostgreSQL 1,523/zero skips; standard 1,376/147 gated skips; Python 167; types/build/importer/offline audit/privacy passed. Real-corpus component benchmark 7,873 ms initial / 2,158 ms reuse, exact object and DB-state equality. Final release HTTP/timing and complete cohort reconciliation remain pending. eca90d9 whole-inventory run was interrupted before HTTP after the measured cold-rebuild finding; retain its earlier 120 browser and reversible CMS/feed results separately.

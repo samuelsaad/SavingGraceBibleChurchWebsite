@@ -1,6 +1,47 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
 
+## D-183 validated-source performance checkpoint — 20 October 2026
+
+A controlled original/candidate mobile lab comparison exposed a first-request
+homepage delay after CMS publication. Profiling found repeated full-corpus schema
+validation and hashing during snapshot rebuilding. Per-runtime bounded validation
+reuse now requires the exact current payload-wire SHA-256 and version; new/changed
+bytes still undergo complete schema and version-hash checks. Only deeply frozen,
+fully validated source objects receive an in-memory certificate. Unknown/mutable
+constructor inputs retain full validation. Current database pointers, withdrawals,
+publication/approval and runtime fingerprint checks are unchanged; no TTL is added.
+
+On the actual 6,534-route corpus, read/validation plus source repository construction
+measured 7,873 ms initially and 2,158 ms on reuse. This was a component benchmark with
+concurrent verification, not a public-page or field-performance acceptance result.
+The database fingerprint and all immutable object identities remained unchanged.
+Final frozen-release published-response timing still requires verification.
+
+Integrated checks: PostgreSQL 1,523 passed/zero skips; standard 1,376 passed/147 gated
+skips covered by PostgreSQL; Python 167; types zero errors/warnings, seven existing
+hints; build 45 pages; anonymized importer and offline dependency audit passed.
+Privacy manifest `db238cc4fe7a72c1b49c8f7cbd5079ca2044cec7606a8949c15a6048ec6405d1`
+passed with zero private-body or prohibited secret/source matches.
+
+The preceding eca90d9 release passed 120 browser cases, three CMS browser workflows,
+11 RSS/CMS checks and an exact original future-occurrence cancellation/recovery.
+The 27 October original event retained exactly one cancelled UID/date/URL after a
+published weekday change; its draft did not cancel, and exact prior content was
+restored. A private harness response-wrapper error was recovered with exact payload
+and intervening-edit guards before the successful repeat. That release's full URL
+comparison was interrupted before HTTP to implement the measured performance fix;
+its browser/component results are not a final inventory acceptance claim.
+
+Frozen source union remains 23,089 URLs, 15,737 responses and 28,465 witnesses;
+projection 6,534 routes/459 known public sermons. Current rendered source identifies
+AIOSEO 4.6.4, WordPress 6.4.13 and Site Kit 1.116.0; stored configuration is unproved.
+Staging remains unreachable and its interrupted f13b6d2 actual running state remains
+unconfirmed. The current source/account/mail/production configuration gaps persist.
+Production traffic, DNS and WordPress remain unchanged.
+
+
+
 ## D-183 source context and recurrence checkpoint — 20 October 2026
 
 The next candidate preserves verified speaker role/archive introduction text in
