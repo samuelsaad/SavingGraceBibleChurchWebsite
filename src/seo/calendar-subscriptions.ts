@@ -60,9 +60,9 @@ function matchesEventSearch(url:URL,event:ChurchEvent,context:FrontendRenderCont
  const original=event.calendarIdentity?.originalLines,record=original&&event.schedule.kind==='single'?{eventId:event.id,uid:event.calendarIdentity!.uid,url:event.calendarIdentity!.url,date:event.schedule.date,sequence:event.calendarIdentity!.sequence,lines:original}:null,fact=record?retainedCalendarFact(record):null,venue=context.siteContent?.venues[event.venue]??venues[event.venue];return matchesSearch(url,fact?.title??event.title,fact?.description??event.description,fact?.location??[venue?.name,venue?.address,venue?.locality].filter(Boolean).join(' '));
 }
 /** Explicit past/upcoming exports retain the requested temporal membership. */
-function displayedEvents(events:ChurchEvent[],url:URL):ChurchEvent[]{
+export function displayedEvents(events:ChurchEvent[],url:URL,now=new Date()):ChurchEvent[]{
  const display=url.searchParams.get('eventDisplay');if(display!=='past'&&display!=='upcoming')return events;
- const now=new Date(),actualToday=melbourneToday(now),anchor=url.searchParams.get('tribe-bar-date')??url.searchParams.get('eventDate'),validAnchor=anchor&&/^20[0-9]{2}-[0-9]{2}-[0-9]{2}$/u.test(anchor)&&Number.isFinite(Date.parse(anchor+'T00:00:00Z'))&&new Date(anchor+'T00:00:00Z').toISOString().slice(0,10)===anchor?anchor:null,today=validAnchor??actualToday,clock=new Intl.DateTimeFormat('en-AU',{timeZone:'Australia/Melbourne',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(now);
+ const actualToday=melbourneToday(now),anchor=url.searchParams.get('tribe-bar-date')??url.searchParams.get('eventDate'),validAnchor=anchor&&/^20[0-9]{2}-[0-9]{2}-[0-9]{2}$/u.test(anchor)&&Number.isFinite(Date.parse(anchor+'T00:00:00Z'))&&new Date(anchor+'T00:00:00Z').toISOString().slice(0,10)===anchor?anchor:null,today=validAnchor??actualToday,clock=new Intl.DateTimeFormat('en-AU',{timeZone:'Australia/Melbourne',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(now);
  const shift=(days:number)=>new Date(Date.parse(today+'T00:00:00Z')+days*86400000).toISOString().slice(0,10);
  return events.flatMap(event=>{
   const boundary=validAnchor?(display==='past'?shift(-1):today):display==='past'?(event.end<=clock?today:shift(-1)):(event.end>clock?today:shift(1)),schedule=event.schedule;
@@ -93,7 +93,7 @@ export function futureCalendarOccurrence(request:Request,context:FrontendRenderC
  const date=match[2]!,today=melbourneToday(),until=new Date(Date.parse(today+'T00:00:00Z')+366*86400000).toISOString().slice(0,10);if(date<today||date>until)return null;
  const all=[...context.siteContent.events,...(context.siteContent.cancelledCalendarEvents??[])],matching=all.filter(event=>event.calendarVisible!==false&&(event.path===match[1]||event.legacyPaths.includes(match[1]!)));if(matching.length!==1)return null;
  const event=matching[0]!;if(event.calendarRevision?.cancelled)return new Response('This gathering has been cancelled.',{status:410,headers:{'Content-Type':'text/plain; charset=utf-8','X-Robots-Tag':'noindex','Cache-Control':'no-store'}});
- if(!occurrencesBetween(event,date,date,1).length)return null;
+ if(!occurrencesBetween(event,date,date,1).length){if(event.schedule.kind!=='single'&&event.schedule.exclusions?.includes(date))return new Response('This gathering has been cancelled.',{status:410,headers:{'Content-Type':'text/plain; charset=utf-8','X-Robots-Tag':'noindex','Cache-Control':'no-store'}});return null;}
  const source=context.siteContent.sourceSeoByPath?.[url.pathname],content={...event,path:url.pathname,schedule:{kind:'single' as const,date},seo:{...source,noindex:source?Boolean(source.noindex):true}};
  return frontendResponse(renderEventPage(content,{today,sermons:[],options:emptyFilterOptions},context));
 }

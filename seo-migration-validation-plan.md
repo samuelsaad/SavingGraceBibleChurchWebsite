@@ -500,3 +500,29 @@ Standard tests 1,328 passes / 147 gated skips; types 672 files / zero errors/war
 audit and 540-file source/runtime privacy scan passed. Earlier failed runs are
 retained separately. Final deployed/full-inventory acceptance remains required;
 see `docs/seo-d183-completion.md`. No production/DNS/WordPress mutation occurred.
+
+### D-183 RSS/source identity release checkpoint — 19 October 2026
+
+Original finding denominators remain unchanged. The finite source union is 23,081
+URLs / 15,718 responses / 28,427 hash witnesses. Four live RSS routes preserve
+verified GUIDs/publication dates and published-only membership; event occurrences
+have stable distinct identifiers and cancellation signals. Three exact pilot
+native/source/media bindings remove duplicates while preserving stored rows.
+
+`npm run test:postgres`: 1,506 passes, zero skips; disposable target removed.
+`npm test`: 1,359 passes, 147 gated skips covered above. Focused final RSS/cache/
+calendar/design-preservation checks: 26 passes. Python SEO checks: 161 passes.
+Types/build/importer/offline audit/private-content scan and deployed HTTP evidence
+are recorded in the final acceptance package after the remaining release gates.
+An initial source-file hash assertion failed after exporting the unchanged existing
+DST helper; independent exact-source comparison proved this was the sole change
+and updated the preservation hash. No church rendering was rewritten. An incorrect
+nonexistent importer fixture path failed; the established `tests/fixtures/dry-run.json`
+then succeeded. Failed evidence is retained rather than labelled passed.
+
+The four-feed local source rehearsal changed four active pointers, changed zero on
+replay, restored four independently, changed zero on restore replay, then reapplied
+four with a distinct assembly envelope and unchanged source-capture dates/content.
+Native sermon rows matched before/after. CMS plan remains zero additions / 1,445
+held. No migration schema or PostgreSQL restoration behavior changed; retain the
+successful 65-table recovery proof rather than repeating it.

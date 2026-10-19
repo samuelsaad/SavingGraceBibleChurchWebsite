@@ -1,3 +1,4 @@
+import {sha256} from '../src/seo/source-public-model';
 import {describe,it,expect} from 'vitest';
 import {createServer} from 'node:http';
 import {once} from 'node:events';
@@ -17,6 +18,17 @@ async function withHttp(repository:PublicSermonRepository,run:(base:string)=>Pro
  try{await run(base);}finally{server.closeAllConnections();await new Promise<void>((resolve,reject)=>server.close(error=>error?reject(error):resolve()));}
 }
 describe('ordinary approved editorial content with source originals',()=>{
+ it('reconciles a verified historical pilot only in the public projection, retaining content and source withdrawal',async()=>{
+  const source=original(),native=approved({sourceWordpressId:'900001',editorialChanges:{title:'2026-10-19T00:00:00Z'}}),media={provider:'youtube' as const,mediaType:'video' as const,externalId:'abcdefghijk',canonicalUrl:'https://www.youtube.com/watch?v=abcdefghijk',title:'Anonymous recording',durationSeconds:null};
+  source.sermon!.media=[media];source.sermon!.primaryMedia=media;native.detail.media=[media];native.detail.primaryMedia=media;
+  const binding={nativeId:native.detail.id,legacySourceId:'900001',originalSourceId:String(source.sourceId),originalPath:source.path,mediaIdentitySha256:sha256('youtube:abcdefghijk')},before=JSON.stringify(native);
+  const repository=await CompositeSourceSermonRepository.create([source],[native],async()=>null,false,undefined,[],[],[binding]);
+  const list=await repository.listPublished(query());expect(list.totalItems).toBe(1);expect(list.data[0]).toMatchObject({id:native.detail.id,slug:'source-original',title:native.detail.title,summary:native.detail.summary});
+  expect(await repository.findPublicPathDisposition('/sermons/'+native.detail.slug+'/')).toEqual({kind:'redirect',location:source.path});expect(JSON.stringify(native)).toBe(before);
+  const hidden=await CompositeSourceSermonRepository.create([source],[native],async()=>null,false,undefined,[],[{path:source.path,entityId:'source-document',status:410,targetPath:null}],[binding]);expect((await hidden.listPublished(query())).totalItems).toBe(0);expect(await hidden.listPublishedSitemapEntries()).toEqual([]);
+  await expect(CompositeSourceSermonRepository.create([{...source,path:'/sermons/other-original/',sourceUrl:origin+'/sermons/other-original/',sermon:{...source.sermon!,slug:'other-original'}}],[native],async()=>null,false,undefined,[],[],[binding])).rejects.toThrow('original_pilot_identity_binding_changed');
+ });
+
  it('renders original unparsed Scripture references through actual archive HTTP without approving them',async()=>{
   const source=original(),repository=await CompositeSourceSermonRepository.create([source],[],async()=>null);
   const row=(await repository.listPublished(query())).data[0]!;

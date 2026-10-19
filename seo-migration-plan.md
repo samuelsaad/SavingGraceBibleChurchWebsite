@@ -49,3 +49,23 @@ new-enrichment completeness are not substitutes for the current source inventory
 Missing account access, stale evidence, unmatched URLs and unresolved regressions
 remain visible and can require a NOT READY verdict. Post-launch field/search evidence
 cannot be claimed during staging. Final traffic/DNS actions remain for review.
+
+### D-183 live feed extraction and active version verification
+
+The four live RSS feeds use a rebuildable extraction cache on the existing private
+asset volume. Exactly four content-addressed `.rssfacts` files are allowlisted by
+source XML hash, file hash and length in the release; they are not a primary data
+store, public asset route, database field, Git content dataset or release-image
+content. Original XML, historical opaque GUIDs and published CMS version hashes
+remain the evidence. Unknown cache files, corruption or source drift fail closed.
+Published changes and recurrence cancellations update RSS and ICS; drafts remain
+excluded. Reused WordPress recurring-event GUIDs receive the actual occurrence date
+to distinguish gatherings. Historical publication times never become import times.
+
+Three historical accepted pilots retain their stored IDs, reviews and all audit
+history. A fixed native/source/media identity binding reconciles their public
+projection to the verified original sermon URLs and prevents duplicate archive
+entries. This routing correction grants no approval or publication state; explicit
+withdrawals still prevail. Tests must prove identity uniqueness and no mutation.
+
+Staging acceptance checks active source pointers against every incoming bundle page, not only historical receipt existence. Scoped restore replay must still match the restored pointers; later changes are conflicts.

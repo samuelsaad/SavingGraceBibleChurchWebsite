@@ -22,14 +22,15 @@ from urllib.parse import urlsplit, parse_qs
 import time
 
 UPGRADE_SHA = "8d399d913a7ad30fa7e94d76c4dbbf0e6ac749a99d0937f6e92187bf4c989cdd"
-PREVIOUS_COMMIT = "edf6c291c8d9130d44698f0d87dbd83100a77f45"
-PREVIOUS_IMAGE = "sha256:761155063d484cbc72a1e740f63f8cfa3e4222ba693833960b6be1c66679d4a7"
+PREVIOUS_COMMIT = "6fd5417920624e02ef68e054389e4a1a792d0a44"
+PREVIOUS_IMAGE = "sha256:91b68b57b5ee27a29848816aae750c5ea358212024fe55f22c8e6e5dcaa7914d"
 BASE_SCHEMA_ORDER = 28
-EXISTING_SOURCE_SHA = "cc9aa745c9c650de622779a700385cdb7b5c7c4159357a095eee1ca493e70b55"
+EXISTING_SOURCE_SHA = "a6b578032152542a01d7f593efbe027d5f5f89ccfa4cff3fabed8de1b44cb7d6"
 EXISTING_BUNDLE_SHA = "3f34acc4b850884c4fbb44bbb66fc0b42c23bb1dfa7f7416f5840cb80ffb1917"
-INCOMING_BUNDLE_SHA = "a615a30a655d20fc3ff131416aa456fdb2001289dfb396d869436e46861fceda"
+INCOMING_BUNDLE_SHA = "4c695cc090bde27a5f64c0998973cd823bccb53396de4a18e7695dd61fbf54bf"
 SOURCE_TABLES = ("source_public_versions", "source_public_routes", "source_public_imports")
 ASSET_KEY = re.compile(r"[a-f0-9]{64}\.(?:png|jpg|webp|gif|avif|svg|ico|pdf|doc|docx|xls|xlsx|ppt|pptx|rss|atom|ics|zip|otf|mp3|mp4)")
+RSS_FACT_ASSETS = {'f9eacfba6d1043a9fd731e46be5fd8210426d71606a58a4671bc0a9e1172e5d2.rssfacts': {'path': '/category/posts/feed/', 'sourceResponseSha256': '3c7e3fcff64fe807cc6d61e2aa04419f0f4b72895545c19556e1c7851e02a424', 'key': 'f9eacfba6d1043a9fd731e46be5fd8210426d71606a58a4671bc0a9e1172e5d2.rssfacts', 'sha256': 'f9eacfba6d1043a9fd731e46be5fd8210426d71606a58a4671bc0a9e1172e5d2', 'bytes': 47649}, 'b550b065f989b65fd872ab677bca0847248a984b17fbbb5b7a4a58e18a14767f.rssfacts': {'path': '/events/feed/', 'sourceResponseSha256': 'd5e94fa11eee912980f34bb8245a5584909e71316da1b5efbb35ca405a0bab99', 'key': 'b550b065f989b65fd872ab677bca0847248a984b17fbbb5b7a4a58e18a14767f.rssfacts', 'sha256': 'b550b065f989b65fd872ab677bca0847248a984b17fbbb5b7a4a58e18a14767f', 'bytes': 25997}, '8038933ca2724be5db143e4552646a4b02199d084702e5a7c4708daf78e78ab5.rssfacts': {'path': '/feed/', 'sourceResponseSha256': '7eb2a774c50bd90361a93ef74b561c8faaf5edb152bc0d95bb9ab28d5bbe13af', 'key': '8038933ca2724be5db143e4552646a4b02199d084702e5a7c4708daf78e78ab5.rssfacts', 'sha256': '8038933ca2724be5db143e4552646a4b02199d084702e5a7c4708daf78e78ab5', 'bytes': 47637}, '857b2ae8c90de7647a10b30095e151bb2d98a0a572af26efbfae8a32a5a79516.rssfacts': {'path': '/sermons/feed/', 'sourceResponseSha256': '433fd7df00b6bd6283a6857eefeaa4966b5cea45be3f35c13eb2b3059d501037', 'key': '857b2ae8c90de7647a10b30095e151bb2d98a0a572af26efbfae8a32a5a79516.rssfacts', 'sha256': '857b2ae8c90de7647a10b30095e151bb2d98a0a572af26efbfae8a32a5a79516', 'bytes': 73407}}
 MIGRATION = "0028_source_public_migration"
 
 
@@ -87,7 +88,7 @@ def assets_manifest(base):
         if path.name == "source-public":
             if path.is_symlink() or not path.is_dir(): fail("seo_source_asset_root_refused")
             for asset in path.iterdir():
-                if not ASSET_KEY.fullmatch(asset.name) or base.sha(asset) != asset.stem: fail("seo_source_asset_integrity")
+                if (not ASSET_KEY.fullmatch(asset.name) and asset.name not in RSS_FACT_ASSETS) or asset.is_symlink() or not asset.is_file() or (asset.name in RSS_FACT_ASSETS and (asset.stat().st_size != RSS_FACT_ASSETS[asset.name]["bytes"] or asset.stat().st_nlink != 1)) or base.sha(asset) != asset.stem: fail("seo_source_asset_integrity")
                 result["source-public/" + asset.name] = asset.stat().st_size
         else:
             if not re.fullmatch(r"[a-f0-9]{64}\.(png|jpg|gif|webp|pdf)", path.name) or base.sha(path) != path.stem: fail("seo_cms_asset_integrity")
@@ -231,6 +232,9 @@ def asset_expectations(bundle):
             fail("seo_asset_empty_calendar_refused")
         if key in result and result[key] != asset: fail("seo_asset_manifest_conflict")
         result[key] = asset
+        for fact in RSS_FACT_ASSETS.values():
+            if page.get("path") == fact["path"] and page.get("responseSha256") == fact["sourceResponseSha256"]:
+                result[fact["key"]] = {"storageKey": fact["key"], "sha256": fact["sha256"], "bytes": fact["bytes"], "contentType": "application/x-sgbc-private-rss-facts"}
     return result
 
 
@@ -304,7 +308,7 @@ def owner_secret_identity(base, path):
 
 def verify_existing_source(actual, bundle_hash):
     # Require the frozen incumbent history and the exact reviewed additive delta.
-    expected={"source_public_versions":8587,"source_public_routes":6260,"source_public_imports":9}
+    expected={"source_public_versions":8843,"source_public_routes":6516,"source_public_imports":10}
     if actual.get("sourceCounts") != expected or actual.get("sourceSha256") != EXISTING_SOURCE_SHA or bundle_hash != INCOMING_BUNDLE_SHA:
         fail("seo_existing_source_drift")
 
@@ -501,6 +505,10 @@ def verify_source_ready(base, root, recovery):
     expected = {"commit": recovery["commit"], "image": recovery["image"], "bundleSha256": base.sha(root / "source-public.bundle.private.json"), "assetArchiveSha256": base.sha(root / "source-public-assets.private.tar")}
     if any(receipt.get(key) != value for key, value in expected.items()) or not re.fullmatch(r"[a-f0-9]{64}", receipt.get("sourceImportSha256", "")): fail("seo_source_receipt_binding")
     if int(base.sql("SELECT count(*) FROM source_public_imports WHERE bundle_sha256='" + receipt["sourceImportSha256"] + "'").decode().strip()) != 1: fail("seo_source_import_required")
+    command = ["docker", "compose", "-f", str(root / "source-maintenance.json"), "run", "--rm", "--no-deps", "--pull", "never", "app", "verify-import"]
+    verified = json.loads(base.run(command, timeout=600))
+    expected_pages = len(base.load(root / "source-public.bundle.private.json")["pages"])
+    if verified.get("outcome") != "source_public_verify-import" or verified.get("result") != {"pages": expected_pages, "activeVersionsMatched": True}: fail("seo_source_active_versions_required")
     assets = base.assets_manifest()
     if any(assets.get("source-public/" + key) != value["bytes"] for key, value in asset_expectations(base.load(root / "source-public.bundle.private.json")).items()): fail("seo_source_asset_required")
 
@@ -637,7 +645,7 @@ def adopt_cms(base, upgrade, helper, root, recovery):
         frozen = base.load(marker)
         if plan["planned"] and plan != frozen: fail("seo_cms_plan_changed")
     else:
-        if plan.get("planned") != 26 or plan.get("held") != 1445 or plan.get("planSha256") != "14121c98539c27a023f93f33cf6372f536c305aa5aaea92425b45441907639bb":
+        if plan.get("planned") != 0 or plan.get("held") != 1445 or plan.get("planSha256") != "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945":
             fail("seo_cms_plan_scope")
         frozen = plan; base.save(marker, frozen)
     config["services"]["app"]["environment"]["SOURCE_CMS_PLAN_SHA256"] = frozen["planSha256"]

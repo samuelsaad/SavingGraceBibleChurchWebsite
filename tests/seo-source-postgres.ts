@@ -9,7 +9,7 @@ import {completedSchemaMigrations} from '../src/staging/completed-schema';
 import {loadAcceptedSemanticMigration} from '../src/semantic/accepted-semantic-migration';
 import {loadCmsMigration,verifyCmsSchema} from '../src/cms/migration';
 import {loadSourcePublicMigration} from '../src/seo/source-public-migration';
-import {applySourcePublicMigration,importSourcePublicBundle,readSourcePublicPages,restoreSourcePublicImport} from '../src/seo/source-public-store';
+import {applySourcePublicMigration,importSourcePublicBundle,readSourcePublicPages,restoreSourcePublicImport,verifySourcePublicBundle} from '../src/seo/source-public-store';
 import {sourceBundleSchema,sourceVersionHash,type SourcePublicPage} from '../src/seo/source-public-model';
 import {createCompositeSourceSermonRepository} from '../src/seo/composite-sermon-repository';
 import {sourceRuntimeFingerprint} from '../src/seo/runtime-snapshot';
@@ -79,6 +79,9 @@ export function registerSeoSourcePostgresTests(getPool:()=>Pool){
  await client.query('SAVEPOINT conflict');await expect(importSourcePublicBundle(client,{...bundle,pages:[{...page,title:'An observed source delta'}]},commit)).rejects.toThrow('concurrent_change');await client.query('ROLLBACK TO SAVEPOINT conflict');
  const delta={...bundle,pages:[{...page,title:'An observed source delta'}],expectedVersions:{[page.path]:sourceVersionHash(page)}};const changed=await importSourcePublicBundle(client,delta,commit);expect(changed.updated).toBe(1);
  await client.query('SAVEPOINT recovery');await expect(restoreSourcePublicImport(client,initial.bundleSha256,commit)).rejects.toThrow('later_change');await client.query('ROLLBACK TO SAVEPOINT recovery');expect((await restoreSourcePublicImport(client,changed.bundleSha256,commit)).restored).toBe(1);expect((await readSourcePublicPages(client))[0]?.title).toBe(page.title);
+ expect((await verifySourcePublicBundle(client,bundle)).activeVersionsMatched).toBe(true);await expect(verifySourcePublicBundle(client,delta)).rejects.toThrow('active_version_mismatch');expect((await restoreSourcePublicImport(client,changed.bundleSha256,commit)).unchanged).toBe(1);
+ const reapply={...delta,capturedAt:'2026-10-10T00:00:00Z'};await importSourcePublicBundle(client,reapply,commit);await expect(restoreSourcePublicImport(client,changed.bundleSha256,commit)).rejects.toThrow('later_change');await expect(verifySourcePublicBundle(client,bundle)).rejects.toThrow('active_version_mismatch');const reapplyHash=(await importSourcePublicBundle(client,reapply,commit)).bundleSha256;await restoreSourcePublicImport(client,reapplyHash,commit);
+
  await client.query('SAVEPOINT immutable');await expect(client.query('UPDATE source_public_versions SET payload=payload')).rejects.toThrow('immutable');await client.query('ROLLBACK TO SAVEPOINT immutable');
  const migration=await loadSourcePublicMigration();await client.query('SAVEPOINT down');await expect(client.query(migration.downBody)).rejects.toThrow('Preserve source migration history');await client.query('ROLLBACK TO SAVEPOINT down');
  expect((await client.query("SELECT md5(coalesce(json_agg(to_jsonb(s) ORDER BY id)::text,'[]')) hash FROM sermons s")).rows).toEqual(before);

@@ -232,7 +232,7 @@ function icsFold(line:string):string {
  lines.push(current);return lines.join('\r\n');
 }
 /** RFC 5545 UNTIL must be UTC when DTSTART carries a TZID. */
-function melbourneUtc(date:string,time:string):string{
+export function melbourneUtc(date:string,time:string):string{
  const wall=new Date(date+'T'+time+':00Z').getTime();let instant=wall;
  const formatter=new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
  for(let n=0;n<3;n++){const p=Object.fromEntries(formatter.formatToParts(new Date(instant)).map(part=>[part.type,part.value]));const displayed=Date.parse(p.year+'-'+p.month+'-'+p.day+'T'+p.hour+':'+p.minute+':'+p.second+'Z');instant+=wall-displayed;}

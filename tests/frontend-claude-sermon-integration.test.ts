@@ -18,8 +18,8 @@ const preservedSources = [
   ],
   [
     "src/frontend/pages/church.ts",
-    // D-183 calendar UID continuity and truthful dates; church HTML layout remains unchanged.
-    "16055e3a3ba477cf954bd6520c85d03ac883bba1b4b74da6c03dc6f0fb49f1e8"
+    // D-183 reuses the existing DST conversion for RSS by exporting it; rendering bytes are unchanged.
+    "402917c856ca2fc69ba84ee3aeabf165c95438e49c505cef8e3c007ada114a30"
   ],
   [
     "src/frontend/styles/core.ts",

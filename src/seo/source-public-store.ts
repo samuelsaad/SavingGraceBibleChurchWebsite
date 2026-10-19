@@ -49,6 +49,16 @@ export async function readSourcePublicPages(db:Db,paths?:readonly string[]):Prom
  return pages;
 }
 
+/** Read-only active-pointer proof; a historical receipt alone is insufficient. */
+export async function verifySourcePublicBundle(db:Db,input:unknown){
+ const bundle=sourceBundleSchema.parse(input);
+ for(const page of bundle.pages){
+  const current=(await db.query<{version_sha256:string;withdrawn:boolean}>('SELECT version_sha256,withdrawn FROM source_public_routes WHERE path=$1',[page.path])).rows[0];
+  if(!current||current.withdrawn||current.version_sha256!==sourceVersionHash(page))throw Error('source_public_active_version_mismatch');
+ }
+ return{pages:bundle.pages.length,activeVersionsMatched:true};
+}
+
 /** Restore only this import's pointers when they still match; content/history stay immutable. */
 export async function restoreSourcePublicImport(db:Db,bundleHash:string,releaseCommit:string){
  if(!/^[a-f0-9]{64}$/u.test(bundleHash)||!/^[a-f0-9]{40}$/u.test(releaseCommit))throw Error('source_public_restore_identity');
@@ -56,7 +66,10 @@ export async function restoreSourcePublicImport(db:Db,bundleHash:string,releaseC
  const row=(await db.query<{inventory_sha256:string;changes:Array<{path:string;before:string|null;after:string}>}>('SELECT inventory_sha256,changes FROM source_public_imports WHERE bundle_sha256=$1',[bundleHash])).rows[0];
  if(!row)throw Error('source_public_restore_missing');
  const restoreHash=sha256(stableJson({operation:'restore',bundleHash,releaseCommit}));
- if((await db.query('SELECT 1 FROM source_public_imports WHERE bundle_sha256=$1',[restoreHash])).rowCount)return{restored:0,unchanged:row.changes.length};
+ if((await db.query('SELECT 1 FROM source_public_imports WHERE bundle_sha256=$1',[restoreHash])).rowCount){
+  for(const change of row.changes){const current=(await db.query<{version_sha256:string;withdrawn:boolean}>('SELECT version_sha256,withdrawn FROM source_public_routes WHERE path=$1 FOR UPDATE',[change.path])).rows[0];if(!current||current.version_sha256!==(change.before??change.after)||current.withdrawn!==(change.before===null))throw Error('source_public_restore_later_change');}
+  return{restored:0,unchanged:row.changes.length};
+ }
  for(const change of row.changes){const current=(await db.query<{version_sha256:string;withdrawn:boolean}>('SELECT version_sha256,withdrawn FROM source_public_routes WHERE path=$1 FOR UPDATE',[change.path])).rows[0];if(!current||current.withdrawn||current.version_sha256!==change.after)throw Error('source_public_restore_later_change');}
  for(const change of row.changes)await db.query('UPDATE source_public_routes SET version_sha256=$2,withdrawn=$3,row_version=row_version+1,updated_at=now() WHERE path=$1',[change.path,change.before??change.after,change.before===null]);
  await db.query('INSERT INTO source_public_imports(bundle_sha256,inventory_sha256,release_commit,changes) VALUES($1,$2,$3,$4::jsonb)',[restoreHash,row.inventory_sha256,releaseCommit,JSON.stringify(row.changes.map(change=>({path:change.path,before:change.after,after:change.before,operation:'restore',sourceImport:bundleHash})))]);

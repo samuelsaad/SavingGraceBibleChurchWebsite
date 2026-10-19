@@ -38,6 +38,18 @@ def archive(path, records):
 
 
 class SeoDeploymentTest(unittest.TestCase):
+    def test_private_rss_cache_allowlist_matches_the_runtime_and_is_source_bound(self):
+        import re
+        source=(ROOT/'src/seo/rss-fact-manifest.ts').read_text()
+        rows=json.loads(re.search(r'sourceRssFactAssets:readonly SourceRssFactAsset\[\]=([\s\S]+);',source).group(1))
+        self.assertEqual(OP.RSS_FACT_ASSETS,{row['key']:row for row in rows})
+        row=rows[0];original=asset(b'anonymous feed','rss')
+        page={'kind':'asset','path':row['path'],'responseSha256':row['sourceResponseSha256'],'asset':original}
+        expected=OP.asset_expectations({'pages':[page]})
+        self.assertEqual(expected[row['key']]['sha256'],row['sha256'])
+        page['responseSha256']='f'*64
+        self.assertNotIn(row['key'],OP.asset_expectations({'pages':[page]}))
+
     def test_digest_snapshot_hashes_every_complete_row_without_retaining_duplicate_decoded_payloads(self):
         row={'version_sha256':'one','payload':{'text':'Anonymous complete payload','other':[1,2,3]}}
         def sql(statement):return b'3' if 'pg_tables' in statement else b'1' if statement.endswith('source_public_versions') else b'0'
@@ -198,7 +210,7 @@ class SeoDeploymentTest(unittest.TestCase):
                 OP.source_snapshot(SimpleNamespace(sql=sql))
 
     def test_existing_source_retry_refuses_unknown_history_or_bundle(self):
-        valid={'sourceCounts':{'source_public_versions':8587,'source_public_routes':6260,'source_public_imports':9},'sourceSha256':OP.EXISTING_SOURCE_SHA}
+        valid={'sourceCounts':{'source_public_versions':8843,'source_public_routes':6516,'source_public_imports':10},'sourceSha256':OP.EXISTING_SOURCE_SHA}
         OP.verify_existing_source(valid,OP.INCOMING_BUNDLE_SHA)
         with self.assertRaisesRegex(RuntimeError,'seo_existing_source_drift'):OP.verify_existing_source(valid,OP.EXISTING_BUNDLE_SHA)
         for changed,bundle in (({**valid,'sourceSha256':'0'*64},OP.INCOMING_BUNDLE_SHA),(valid,'0'*64),({**valid,'sourceCounts':{}},OP.INCOMING_BUNDLE_SHA)):
@@ -363,8 +375,8 @@ class SeoDeploymentTest(unittest.TestCase):
                 calls.append(operation)
                 if operation == "cms-plan":
                     self.assertNotIn("SOURCE_CMS_PLAN_SHA256", cfg["services"]["app"]["environment"])
-                    return json.dumps({"planned": 26, "held": 1445, "planSha256": "14121c98539c27a023f93f33cf6372f536c305aa5aaea92425b45441907639bb"})
-                self.assertEqual(cfg["services"]["app"]["environment"]["SOURCE_CMS_PLAN_SHA256"], "14121c98539c27a023f93f33cf6372f536c305aa5aaea92425b45441907639bb")
+                    return json.dumps({"planned": 0, "held": 1445, "planSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"})
+                self.assertEqual(cfg["services"]["app"]["environment"]["SOURCE_CMS_PLAN_SHA256"], "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945")
                 return json.dumps({"result": {"inserted": 0}, "assets": {"inserted": 0}})
             fixture.run = run
             upgrade = SimpleNamespace(cms_snapshot=lambda _: {name: [] for name in ("cms_entities", "cms_revisions", "cms_routes", "media_assets", "audit_events", "schema_migrations")})

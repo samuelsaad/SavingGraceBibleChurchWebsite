@@ -1,6 +1,6 @@
 import {describe,it,expect,vi} from 'vitest';
 import {renderCalendarFeed} from '../src/frontend/pages/church';
-import {calendarSubscription,futureCalendarPage,maintainedCalendarView} from '../src/seo/calendar-subscriptions';
+import {calendarSubscription,futureCalendarPage,futureCalendarOccurrence,maintainedCalendarView} from '../src/seo/calendar-subscriptions';
 import {events,venues} from '../src/frontend/content/events';
 import {defaultSiteSettings} from '../src/frontend/content/site-snapshot';
 import type {FrontendRenderContext} from '../src/frontend/routes';
@@ -74,4 +74,9 @@ it('searches published event wording and venue details in HTML and subscriptions
  const path='/events/list/?tribe-bar-search=shared+meal&tribe-bar-location=Westmeadows',page=await futureCalendarPage(new Request('https://www.example.test'+path),c)!.text();expect(page).toContain('Anonymous fellowship');expect(page).not.toContain('Unrelated workshop');expect(page).toContain('aria-label="Search church events"');const feed=await calendarSubscription(new Request('https://www.example.test'+path+'&ical=1'),c)!.text();expect(feed).toContain('Anonymous fellowship');expect(feed).not.toContain('Unrelated workshop');
  const nested=await futureCalendarPage(new Request('https://www.example.test/events/list/?tribe-events-views[tribe-bar-search]=shared'),c)!.text();expect(nested).toContain('Anonymous fellowship');expect(nested).not.toContain('Unrelated workshop');expect(futureCalendarPage(new Request('https://www.example.test'+path+'&tribe-events-views[tribe-bar-search]=other'),c)).toBeNull();
  }finally{vi.useRealTimers();}
+});
+
+it('returns gone only for an explicitly excluded occurrence, leaving unknown dates missing',()=>{
+ vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-19T02:00:00Z'));
+ try{const c=context();c.siteContent!.events=[{...event,schedule:{kind:'weekly',weekday:0,from:'2026-10-01',exclusions:['2026-10-25']}}];expect(futureCalendarOccurrence(new Request('https://www.example.test/event/old-anonymous/2026-10-25/'),c)?.status).toBe(410);expect(futureCalendarOccurrence(new Request('https://www.example.test/event/old-anonymous/2026-10-26/'),c)).toBeNull();expect(futureCalendarOccurrence(new Request('https://www.example.test/event/old-anonymous/2026-11-01/'),c)?.status).toBe(200);}finally{vi.useRealTimers();}
 });

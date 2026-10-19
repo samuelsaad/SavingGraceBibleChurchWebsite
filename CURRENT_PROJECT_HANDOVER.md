@@ -1,5 +1,33 @@
 # Saving Grace Bible Church Website — Current Project Handover
 
+## D-183 live feeds and original sermon identities — 19 October 2026
+
+The latest finite source union has 23,081 URLs, 15,718 captured responses and
+28,427 retained witnesses; ledger SHA-256
+`824e978b31acc118883bb021c0b64d1cc186a4c647b7e7a0333ba9ca1d745335`.
+There are 6,516 source routes and 459 known original public sermons. Three accepted
+historical pilots now project onto their verified original URLs without changing
+stored IDs, reviews or editorial content. This removes duplicate archive entries.
+The selected archive also retains all original Bible-book classifications.
+
+Four RSS feeds now follow published CMS/sermon/calendar snapshots. Opaque original
+GUIDs and historical dates are retained; recurring event GUIDs distinguish actual
+dates. Drafts remain private. Exactly four private, source-bound extraction caches
+are rebuilt from frozen original evidence on the existing asset volume, never Git
+or public URLs. Four source-feed versions passed guarded local import, idempotent
+replay, independent scoped restore, restored replay and clean reapply; sermon rows
+were unchanged. Active-version checks reject stale imports/restoration receipts.
+
+The integrated PostgreSQL suite passed 1,506 tests with zero skips; standard tests
+passed 1,359 with 147 gated skips covered by that run. Focused final rendering/feed
+checks passed. Earlier failed hash-fixture and mistaken importer-path attempts are
+retained; the actual anonymized fixture succeeds. This is still a release checkpoint:
+final candidate HTTP comparison, protected staging and acceptance exports follow.
+The last fully rehearsed staging application is `6fd5417920624e02ef68e054389e4a1a792d0a44`,
+image `sha256:91b68b57b5ee27a29848816aae750c5ea358212024fe55f22c8e6e5dcaa7914d`.
+Production traffic, DNS and WordPress remain unchanged. Existing account, original
+backup, live mail recipient and production authentication/configuration gaps remain.
+
 ## D-183 pre-cutover implementation — 19 October 2026
 
 The existing SEO branch now includes original recording preservation/range serving,

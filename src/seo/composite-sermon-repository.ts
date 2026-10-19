@@ -1,3 +1,4 @@
+import {originalEditorialIdentity,type OriginalNativeIdentity} from './source-original-native-identities';
 import {applyOriginalCmsSerMons} from './source-sermon-cms';
 import type {CmsPublishedDocument,CmsRoute} from '../cms/model';
 /** Source originals plus the unchanged, normally approved public editorial projection. */
@@ -75,15 +76,16 @@ export class CompositeSourceSermonRepository implements PublicSermonRepository {
  private readonly nativeSlugs=new Map<string,string>();
  private readonly relatedCache=new Map<string,Promise<SermonDetail['relatedSermons']>>();
  private constructor(private readonly disposition:(path:string)=>Promise<PublicSermonPathDisposition|null>,private readonly relatedLoader?:(id:string,slug:string)=>Promise<SermonDetail['relatedSermons']>){}
- static async create(pages:readonly SourcePublicPage[],approved:readonly PublicEditorialSermon[],disposition:(path:string)=>Promise<PublicSermonPathDisposition|null>,acceptedStaging=false,relatedLoader?:(id:string,slug:string)=>Promise<SermonDetail['relatedSermons']>,cms:readonly CmsPublishedDocument[]=[],cmsRoutes:readonly CmsRoute[]=[]){
+ static async create(pages:readonly SourcePublicPage[],approved:readonly PublicEditorialSermon[],disposition:(path:string)=>Promise<PublicSermonPathDisposition|null>,acceptedStaging=false,relatedLoader?:(id:string,slug:string)=>Promise<SermonDetail['relatedSermons']>,cms:readonly CmsPublishedDocument[]=[],cmsRoutes:readonly CmsRoute[]=[],identityBindings?:readonly OriginalNativeIdentity[]){
   const routes=new Map(cmsRoutes.map(route=>[route.path,route]));
   const publishedOriginalIds=new Set(cms.filter(doc=>doc.content.template==='source-sermon').map(doc=>(doc.content.source as {id:number}).id));
   const withdrawn=pages.filter(page=>{if(page.kind!=='sermon')return false;const route=routes.get(page.path);return route?.status===410||route?.status===301&&!publishedOriginalIds.has(page.sourceId!);});
   const withdrawnPaths=new Set(withdrawn.map(page=>page.path)),withdrawnIds=new Set(withdrawn.flatMap(page=>page.sourceId===null?[]:[String(page.sourceId)]));
   // Retain immutable source/review evidence while removing a CMS-withdrawn
   // identity from every visitor discovery surface, including native aliases.
+  const resolvedOriginalIds=new Map(approved.map(item=>[item.detail.id,originalEditorialIdentity(pages,item,identityBindings)]));
   pages=pages.filter(page=>!withdrawnPaths.has(page.path));
-  approved=approved.filter(item=>item.sourceWordpressId===null||!withdrawnIds.has(item.sourceWordpressId));
+  approved=approved.filter(item=>resolvedOriginalIds.get(item.detail.id)===null||!withdrawnIds.has(resolvedOriginalIds.get(item.detail.id)!));
   const repository=new CompositeSourceSermonRepository(disposition,relatedLoader),source=new SourcePublicSermonRepository(pages);
   const candidates:SourcePublicPage[]=[];
   for(const input of pages){const page=sourcePageSchema.parse(input);if(page.kind==='sermon'&&!page.issues.length)candidates.push(page);}
@@ -92,7 +94,8 @@ export class CompositeSourceSermonRepository implements PublicSermonRepository {
   for(const item of approved){sermonDetailSchema.parse(item.detail);if(item.detail.sourcePublic||item.detail.sourceScriptureReferences||!acceptedStaging&&(item.detail.reviewState||item.detail.reviewProvenance))throw Error('source_editorial_private_projection');
    repository.nativeSlugs.set(item.detail.id,item.detail.slug);
    if(ids.has(item.detail.id))throw Error('source_editorial_duplicate_identity');ids.add(item.detail.id);
-   if(item.sourceWordpressId!==null){if(!/^[1-9][0-9]*$/u.test(item.sourceWordpressId)||bySource.has(item.sourceWordpressId))throw Error('source_editorial_duplicate_identity');bySource.set(item.sourceWordpressId,item);}
+   const originalId=resolvedOriginalIds.get(item.detail.id)??null;
+   if(originalId!==null){if(!/^[1-9][0-9]*$/u.test(originalId)||bySource.has(originalId))throw Error('source_editorial_duplicate_identity');bySource.set(originalId,item);}
   }
   const used=new Set<string>();
   for(const page of candidates){

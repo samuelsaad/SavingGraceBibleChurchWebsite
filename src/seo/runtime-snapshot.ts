@@ -1,3 +1,5 @@
+import {readSourceRssFacts} from './rss-fact-store';
+import {createSourceRssHandler} from './rss-feeds';
 import {loadLegacyCalendarOccurrences} from './legacy-calendar-identities';
 import {createSnapshotVerifiedFingerprint} from './snapshot-fingerprint-proof';
 import {reviewedArchiveAliases} from './source-reviewed-archive-aliases';
@@ -142,10 +144,14 @@ export async function createVersionedSourceHandler(options:{reader:Pool;assetDir
   const resourceRedirects=await readSourceResourceRedirects(options.reader);
   const routes=sourceRoutePolicy(pages,snapshot.routes,{...publicRenderContext,siteContent:content},resourceRedirects,[...observedSourceAliases,...reviewedArchiveAliases],sermons.verifiedSourceShortlinks());
   routes.sourceShortlinks={...routes.sourceShortlinks,...sermons.verifiedSourceShortlinks()};
+  const rssFacts=await readSourceRssFacts(pages,options.assetDirectory);
+  const cmsPublicationRows=rssFacts.size?(await options.reader.query<{entity_id:string;published_at:Date|string}>("SELECT entity_id,min(created_at) AS published_at FROM audit_events WHERE entity_type='cms_entity' AND action='cms.publish' GROUP BY entity_id")).rows:[];
+  const sermonPublicationRows=rssFacts.size?(await options.reader.query<{id:string;published_at:Date|string}>("SELECT id,published_at FROM sermons WHERE published_at IS NOT NULL")).rows:[];
+  const rss=createSourceRssHandler({pages,cms:snapshot,content,sermons,facts:rssFacts,sourceBindings:sermons.verifiedSourceShortlinks(),firstCmsPublishedAt:Object.fromEntries(cmsPublicationRows.map(row=>[row.entity_id,new Date(row.published_at).toISOString()])),nativeSermonPublishedAt:Object.fromEntries(sermonPublicationRows.map(row=>[row.id,new Date(row.published_at).toISOString()]))});
   const handler=createSeoHttpAdapter({...(contactDelivery?{contactDelivery}:{}),policy:options.policy,sermons,...routes,content:async()=>content,publicSearch:createLegacySourceSearch(pages,content,sermons,sermons.verifiedSourceShortlinks()),
    sourcePage:createSourcePublicPageHandler(pages),sourceQueryPage:createSourcePublicPageHandler(pages,true),sourceSitemap:async()=>sourcePublicSitemap(pages,{...publicRenderContext,siteContent:content}),sourceDisposition:async path=>resourceRedirects.has(path)?{kind:'redirect' as const,location:resourceRedirects.get(path)!}:editorial.findPublicPathDisposition(path),
-   publicAsset:async request=>{const response=await sourceAssets(request)??siteAssetResponse(request)??await assetHandler(request);
-    if(response&&options.policy.environment==='production'&&response.status===200){if(!['application/rss+xml','application/atom+xml','text/calendar'].includes(response.headers.get('Content-Type')?.split(';')[0]??'')&&!(response.headers.get('Content-Length')==='0'&&response.headers.get('Content-Type')?.startsWith('text/html')))response.headers.delete('X-Robots-Tag');response.headers.set('Cache-Control','public, max-age=3600');}
+   publicAsset:async request=>{const response=await rss(request)??await sourceAssets(request)??siteAssetResponse(request)??await assetHandler(request);
+    if(response&&options.policy.environment==='production'&&response.status===200){if(!['application/rss+xml','application/atom+xml','text/calendar'].includes(response.headers.get('Content-Type')?.split(';')[0]??'')&&!(response.headers.get('Content-Length')==='0'&&response.headers.get('Content-Type')?.startsWith('text/html')))response.headers.delete('X-Robots-Tag');if(!['application/rss+xml','application/atom+xml','text/calendar'].includes(response.headers.get('Content-Type')?.split(';')[0]??''))response.headers.set('Cache-Control','public, max-age=3600');}
     return response;}});
   return {handler,label:sha256(stableJson({release:options.releaseIdentity,state:version,policy:options.policy,acceptedStageSupplement:Boolean(options.acceptedStageRepository),acceptedLocalSupplement:Boolean(options.acceptedLocalRepository)})),pages:pages.length,sermons:pages.filter(p=>p.kind==='sermon').length};
  });
