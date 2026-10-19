@@ -365,10 +365,11 @@ def verify_resource_history(base, root):
     if not extra and not extra_audit:return
     manifest=base.load(root / "source-resource-redirects.private.json")
     expected={row["oldPath"]:row for row in manifest["rows"]};ids={row["id"] for row in extra}
+    correlation="d182-resource-redirects:"+hashlib.sha256(json.dumps(manifest,sort_keys=True,separators=(",", ":"),ensure_ascii=False).encode()).hexdigest()
     if len(extra)>534 or any(row.get("source_sermon_id") is not None or row.get("status_code")!=301 or row.get("reason")!="verified_original_attachment_resource" or not row.get("verified_at") or row["old_path"] not in expected or row["new_path"]!=expected[row["old_path"]]["newPath"] for row in extra):
         fail("seo_unscoped_redirect_added")
     by_id={row["id"]:expected[row["old_path"]] for row in extra}
-    if len(extra_audit)!=len(extra) or any(row.get("entity_type")!="redirect" or row.get("entity_id") not in ids or row.get("actor_role")!="system" or row.get("actor_subject")!="source-public-migration" or row.get("action")!="seo.original_resource_redirect" or row.get("request_correlation_id")!="d182-resource-redirects:a22e67b4d8e78403446add446a46ae4be762f86c0188d0efa3fd4a5b389cce70" or row.get("outcome")!="succeeded" or "assetSha256:"+by_id.get(row.get("entity_id"),{}).get("assetSha256","") not in row.get("changed_fields",[]) or "newPath:"+by_id.get(row.get("entity_id"),{}).get("newPath","") not in row.get("changed_fields",[]) for row in extra_audit):
+    if len(extra_audit)!=len(extra) or any(row.get("entity_type")!="redirect" or row.get("entity_id") not in ids or row.get("actor_role")!="system" or row.get("actor_subject")!="source-public-migration" or row.get("action")!="seo.original_resource_redirect" or row.get("request_correlation_id")!=correlation or row.get("outcome")!="succeeded" or "assetSha256:"+by_id.get(row.get("entity_id"),{}).get("assetSha256","") not in row.get("changed_fields",[]) or "newPath:"+by_id.get(row.get("entity_id"),{}).get("newPath","") not in row.get("changed_fields",[]) for row in extra_audit):
         fail("seo_unscoped_audit_added")
 
 

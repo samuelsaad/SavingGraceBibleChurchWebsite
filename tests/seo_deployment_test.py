@@ -38,6 +38,17 @@ def archive(path, records):
 
 
 class SeoDeploymentTest(unittest.TestCase):
+    def test_new_resource_audit_is_bound_to_the_frozen_manifest_not_an_older_release(self):
+        manifest={'format':'sgbc-original-resource-redirects-v1','sourceInventorySha256':'a'*64,'rows':[{'oldPath':'/anonymous-old/','newPath':'/wp-content/uploads/anonymous.pdf','assetSha256':'b'*64}]}
+        correlation='d182-resource-redirects:'+hashlib.sha256(json.dumps(manifest,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()).hexdigest()
+        redirect={'id':'one','old_path':'/anonymous-old/','new_path':'/wp-content/uploads/anonymous.pdf','source_sermon_id':None,'status_code':301,'reason':'verified_original_attachment_resource','verified_at':'2026-10-19'}
+        audit={'id':'audit-one','entity_type':'redirect','entity_id':'one','actor_role':'system','actor_subject':'source-public-migration','action':'seo.original_resource_redirect','request_correlation_id':correlation,'outcome':'succeeded','changed_fields':['assetSha256:'+'b'*64,'newPath:/wp-content/uploads/anonymous.pdf']}
+        fake=SimpleNamespace(load=lambda path:manifest if path.name=='source-resource-redirects.private.json'else{'redirects':[],'audit':[]})
+        with patch.object(OP,'resource_history_snapshot',return_value={'redirects':[redirect],'audit':[audit]}):OP.verify_resource_history(fake,pathlib.Path('/anonymous'))
+        for altered in ({**audit,'request_correlation_id':'d182-resource-redirects:'+'c'*64},{**audit,'actor_subject':'other'},{**audit,'changed_fields':[]}):
+            with patch.object(OP,'resource_history_snapshot',return_value={'redirects':[redirect],'audit':[altered]}),self.assertRaisesRegex(RuntimeError,'seo_unscoped_audit_added'):OP.verify_resource_history(fake,pathlib.Path('/anonymous'))
+
+
     def test_complete_hash_streams_without_whole_backup_allocation(self):
         with tempfile.TemporaryDirectory() as folder:
             path=pathlib.Path(folder)/'backup.tar';data=b'Anonymous binary fixture.'*100000
