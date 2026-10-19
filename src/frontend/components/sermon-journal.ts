@@ -1,4 +1,5 @@
 /** Compact V5 entries; descriptions come from the caller's eligible summaries. */
+import {resolveBibleBook} from '../../domain/bible-passage';
 import type { SermonSummary } from "../../domain/sermon";
 import { siteImage } from "../assets/media";
 import { html, plainTextParagraphs, timeElement, when, type Html } from "../html";
@@ -24,6 +25,7 @@ const disclosureGlyph = html`<svg viewBox="0 0 24 24" width="20" height="20" fil
 export function sermonJournal(sermons: SermonSummary[], links: SiteLinks, featured = false): Html {
   return html`<ul class="journal" role="list">${sermons.map((sermon) => {
     const book = primaryBook(sermon);
+    const additionalBooks=sermon.books.filter(item=>sermon.isTopical||!book||(resolveBibleBook(item.slug)??resolveBibleBook(item.name))?.id!==book.id);
     const portrait = sermon.speaker ? verifiedSpeakerPortrait(sermon.speaker.name) : null;
     const href = links.sermon(sermon.slug);
     const descriptionId = `description-${sermon.id}`;
@@ -36,6 +38,7 @@ export function sermonJournal(sermons: SermonSummary[], links: SiteLinks, featur
         <h3 class="journal__title"${contentAttributes}><a href="${href}">${sermon.title}</a></h3>
         ${when(sermon.reviewState === "draft_awaiting_review", html`<p class="journal__warning">Draft · awaiting administrator review</p>`)}
         ${when(sermon.summary, () => html`<div class="journal__description" id="${descriptionId}"${contentAttributes}>${plainTextParagraphs(sermon.summary!)}</div>`)}
+        ${when(additionalBooks.length,()=>html`<p class="journal__series journal__books"><span>Book</span> ${additionalBooks.map((item,i)=>html`${i?", ":""}<a href="${links.taxonomy("books",item.slug)}">${item.name}</a>`)}</p>`)}
         ${when(sermon.series.length, () => html`<p class="journal__series"><span>Series</span> ${sermon.series.map((series, i) => html`${i ? ", " : ""}<a href="${links.taxonomy("series", series.slug)}">${series.name}</a>`)}</p>`)}
         <div class="journal__tools">
           <div class="journal__formats" aria-label="Sermon media and transcript">

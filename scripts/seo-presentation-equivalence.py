@@ -71,7 +71,7 @@ def metadata_field_witness(node,candidate):
  if any(not identity or identity[0]!=kind for identity,name in wanted):return False
  if norm(match[2].replace(',',' '))!=norm(' '.join(name for identity,name in wanted)):return False
  classes={'series':'journal__series','speakers':'journal__speaker','books':'journal__tab'}
- areas=[n for n in walk(candidate)if classes[kind]in n['attrs'].get('class','').split()]
+ areas=[n for n in walk(candidate)if classes[kind]in n['attrs'].get('class','').split()or kind=='books'and 'journal__books'in n['attrs'].get('class','').split()]
  actual=[(taxonomy_identity(n['attrs'].get('href','')),norm(CAP.text(n)))for area in areas for n in walk(area)if n['tag']=='a']
  whole=norm(CAP.text(candidate))
  return all(any(a==identity and (text==name or whole_text(whole,name))for a,text in actual)for identity,name in wanted)

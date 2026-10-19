@@ -2,6 +2,12 @@ import importlib.util,pathlib,unittest
 P=pathlib.Path(__file__).resolve().parents[1]
 S=importlib.util.spec_from_file_location('policy',P/'scripts/seo-presentation-equivalence.py');M=importlib.util.module_from_spec(S);S.loader.exec_module(M)
 class PresentationProofTests(unittest.TestCase):
+ def test_additional_book_labels_require_the_same_original_taxonomy_identity_and_name(self):
+  source=next(n for n in M.walk(M.tree('<p>Book: <a href="/sermons/?sermon_book=selected-text">Selected Text</a></p>'))if n['tag']=='p')
+  current='<article><p class="journal__books"><span>Book</span> <a href="/sermons/?sermon_book=selected-text">Selected Text</a></p></article>'
+  self.assertTrue(M.metadata_field_witness(source,M.tree(current)))
+  for wrong in [current.replace('sermon_book=selected-text','sermon_book=luke'),current.replace('>Selected Text<','>Luke<'),current.replace('journal__books','unrelated')]:self.assertFalse(M.metadata_field_witness(source,M.tree(wrong)))
+
  def test_selected_option_count_decoration_preserves_exact_typed_visible_filter(self):
   doc='<select name="sermon_book"><option value="acts" selected>Acts (1)</option></select><div aria-label="Active filters">Book: Acts</div>'
   source={'url':'https://www.savinggrace.org.au/sermons/?sermon_book=%2Facts%2F'}
