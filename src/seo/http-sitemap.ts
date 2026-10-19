@@ -44,9 +44,9 @@ export function renderSeoSitemap(entries: readonly PublicSermonSitemapEntry[], c
   const knownChurch = new Set(["/",...pagesFor(context).map(item=>item.path),...postsFor(context).map(item=>item.path),...(context.siteContent?.events??events).map(item=>item.path),...(context.siteContent?.routes??[]).map(item=>item.path)]);
   const source = additional.filter(item=>{
     const parsed=new URL(item.path,canonicalOriginFor(context));
-    const queryAllowed=!!parsed.search && (context.seo?.indexableArchivePaths??[]).includes(item.path)
+    const queryAllowed=!!parsed.search && ((context.seo?.indexableCapturedQueryPaths??[]).includes(item.path) || ((context.seo?.indexableArchivePaths??[]).includes(item.path)
       && /^\/sermons\/(?:page\/(?:[2-9]|[1-9][0-9]+)\/)?$/u.test(parsed.pathname)
-      && /^\?(?:sermon_series|sermon_speaker|sermon_topics|sermon_book)=[a-z0-9-]+$/u.test(parsed.search);
+      && /^\?(?:sermon_series|sermon_speaker|sermon_topics|sermon_book)=[a-z0-9-]+$/u.test(parsed.search)));
     if(parsed.pathname+parsed.search!==item.path || !item.path.startsWith("/") || item.path.startsWith("//") || /[#\\]/u.test(item.path)
       || (parsed.search && !queryAllowed) || /%(?:2f|5c|00|0[ad])/iu.test(item.path)
       || /^\/(?:admin|api|frontend-preview|draft-preview|cms-preview|__local|__cms|sermons-v[0-9]+)(?:\/|$)/u.test(item.path)) throw new Error("seo_sitemap_path_invalid");

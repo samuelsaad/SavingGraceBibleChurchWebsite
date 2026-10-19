@@ -25,7 +25,7 @@ export interface FrontendRenderContext {
   /** Current verified original-resource destinations; assigned only by the server. */
   sourceResourceRedirects?: Readonly<Record<string,string>>;
   /** Supplied only by the validated HTTP environment policy. */
-  seo?: {canonicalOrigin:string;indexable:boolean;indexableArchivePaths?:readonly string[]};
+  seo?: {canonicalOrigin:string;indexable:boolean;indexableArchivePaths?:readonly string[];indexableCapturedQueryPaths?:readonly string[]};
   mode: "public" | "preview" | "restricted" | "draft-preview";
   basePath: "" | "/frontend-preview" | "/draft-preview" | "/cms-preview";
   /** Set exclusively by the authenticated visual canvas endpoint. */

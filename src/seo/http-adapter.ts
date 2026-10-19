@@ -52,7 +52,7 @@ export const legacySitemapPaths=Object.freeze([
 const privatePath = /^\/(?:admin(?:\/|$)|api(?:\/|$)|frontend-preview(?:\/|$)|draft-preview(?:\/|$)|cms-preview(?:\/|$)|cms-editor-frame(?:\/|$)|related-themes-evaluation(?:\/|$)|healthz(?:\/|$)|__local(?:\/|$)|__cms(?:\/|$)|health(?:\/|$))/u;
 export function createSeoHttpAdapter(options: SeoHttpAdapterOptions): (request: Request) => Promise<Response> {
   const policy = createSeoHttpPolicy(options.policy);
-  const context: FrontendRenderContext = {mode: policy.indexable ? "public" : "restricted", basePath:"",...(options.sourceResourceRedirects?{sourceResourceRedirects:options.sourceResourceRedirects}:{}), seo:{canonicalOrigin:policy.canonicalOrigin,indexable:policy.indexable,indexableArchivePaths:options.indexableArchivePaths??[]}};
+  const context: FrontendRenderContext = {mode: policy.indexable ? "public" : "restricted", basePath:"",...(options.sourceResourceRedirects?{sourceResourceRedirects:options.sourceResourceRedirects}:{}), seo:{canonicalOrigin:policy.canonicalOrigin,indexable:policy.indexable,indexableArchivePaths:options.indexableArchivePaths??[],indexableCapturedQueryPaths:options.indexableCapturedQueryPaths??[]}};
   const contacts=new Map(policy.acceptedOrigins.map(origin=>[origin,createContactHandler({origin,...(options.contactDelivery?{deliver:options.contactDelivery}:{})})]));
   const site = createPublicSermonSiteHandler(options.sermons, context, {
     ...(options.today ? {today:options.today} : {}),

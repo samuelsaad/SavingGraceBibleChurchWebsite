@@ -211,6 +211,13 @@ describe("explicit production SEO adapter",()=>{
     expect(xml).toContain("/sermons/page/4/");expect(xml).not.toContain("/sermons/page/2/");expect(xml).toContain("/sermons/page/3/");
     expect(()=>renderSeoSitemap([],publicRenderContext,true,[],-1)).toThrow("seo_sitemap_count_invalid");
   });
+  it('includes only exact verified indexable source queries without failing the entire sitemap',async()=>{
+    const path='/?eventDisplay=venue&tribe_venue=anonymous&post_type=tribe_venue';
+    const route=createSeoHttpAdapter({policy:{environment:'production',canonicalOrigin:origin},sermons:repository(),indexableCapturedQueryPaths:[path],sourceSitemap:async()=>[{path}],sourceQueryPage:async()=>new Response('Verified original venue')});
+    const response=await route(new Request(origin+'/sitemap.xml'));expect(response.status).toBe(200);expect(await response.text()).toContain(origin+'/?eventDisplay=venue&amp;tribe_venue=anonymous&amp;post_type=tribe_venue');
+    expect(()=>renderSeoSitemap([],publicRenderContext,false,[{path}])).toThrow('seo_sitemap_path_invalid');
+    for(const unsafe of ['/admin/?eventDisplay=venue','//evil.test/?eventDisplay=venue','/events/%2fprivate/?eventDisplay=venue'])expect(()=>renderSeoSitemap([],{...publicRenderContext,seo:{canonicalOrigin:origin,indexable:true,indexableCapturedQueryPaths:[unsafe]}},false,[{path:unsafe}])).toThrow('seo_sitemap_path_invalid');
+  });
   it("rejects malformed sitemap provenance and untrusted additional paths",()=>{
     for(const entry of [{slug:"bad/slash",lastModified:"2026-01-01"},{slug:"ok",lastModified:"2026-02-30"}])expect(()=>renderSeoSitemap([entry],publicRenderContext)).toThrow();
     expect(()=>renderSeoSitemap([],publicRenderContext,false,[{path:"//untrusted.test/"}])).toThrow();
