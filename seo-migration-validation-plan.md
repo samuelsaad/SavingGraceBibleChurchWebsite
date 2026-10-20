@@ -856,3 +856,29 @@ hash/size gates are preserved. A task-owned incomplete offline packager/scan was
 stopped after verifying its process/parent scope because the operator entry
 needed this correction. No remote deployment, deletion or database write occurred
 from that packaging process. Fresh complete gates and packaging follow.
+
+
+The final image-sitemap validator accepts the established public `/media/` image
+library as well as managed and original uploads. A new regression covers a
+published library image, and negative cases reject dot-segment, encoded traversal
+and malformed percent paths. The memory-constrained two-worker run retained
+seven timeout/cascading fixture failures; the isolated one-worker rerun passed
+1,580 PostgreSQL tests with zero skips without changing timeouts or assertions.
+The final image-path change receives fresh integrated verification.
+
+
+D-183 original sitemap date correction (20 October): preserve original offset
+timestamps at UTC millisecond precision; retain existing dated editorial updates.
+The archive delta restores only null modification fields from exact original XML
+entries bound to retained original response hashes and the frozen inventory.
+Collection dates use actual published component changes, never build/import time.
+Focused date/image tests: 27 passed. Full final gates and HTTP evidence follow.
+
+D-183 exact XML-date delta: 453 archives updated, no inserts; replay 453 unchanged.
+Independent apply rollback and scoped restore rollback passed; unrelated rows in
+all 65 tables stayed byte-identical. Source routes remain 6,787; original public
+sermons remain 459. Original XML association ledger: 453 safe URL/date/hash rows.
+The first PostgreSQL run retained one obsolete date-only assertion failure
+(1,584 passed); after requiring the full retained timestamp, the clean rerun
+passed all 1,585 tests with zero skips and removed its exact disposable database.
+The final remaining integrated gates and HTTP comparison are tracked separately.

@@ -111,6 +111,6 @@ export class SourcePublicSermonRepository implements PublicSermonRepository {
     return options.series.map(series=>({series,sermon:this.summary(this.pages.filter(page=>page.sermon!.series.some(term=>term.slug===series.slug))
       .sort((a,b)=>b.sermon!.serviceDate.localeCompare(a.sermon!.serviceDate)||a.sermon!.id.localeCompare(b.sermon!.id))[0]!)}));
   }
-  async listPublishedSitemapEntries(){return this.pages.filter(page=>page.indexable).map(page=>({slug:page.sermon!.slug,lastModified:(page.modifiedAt??page.publishedAt??page.sermon!.serviceDate).slice(0,10)}));}
+  async listPublishedSitemapEntries(){return this.pages.filter(page=>page.indexable).map(page=>({slug:page.sermon!.slug,lastModified:page.modifiedAt??page.publishedAt??page.sermon!.serviceDate}));}
   async findPublicPathDisposition(path:string){return this.disposition?await this.disposition(path):null;}
 }

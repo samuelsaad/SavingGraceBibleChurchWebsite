@@ -105,7 +105,7 @@ export class CompositeSourceSermonRepository implements PublicSermonRepository {
   for(const page of candidates){
    let detail=(await source.findPublishedBySlug(page.sermon!.slug))!;
    const editorial=page.sourceId===null?undefined:bySource.get(String(page.sourceId));
-   let lastModified=(page.modifiedAt??page.publishedAt??detail.serviceDate).slice(0,10),passageTerms=page.passageTerms;
+   let lastModified=page.modifiedAt??page.publishedAt??detail.serviceDate,passageTerms=page.passageTerms;
    if(editorial){used.add(editorial.detail.id);const current=structuredClone(editorial.detail),changes=editorial.editorialChanges,edited=(...fields:string[])=>fields.some(field=>Object.hasOwn(changes,field));
     const originalSlug=detail.slug,slug=edited('slug')||editorial.canonicalSlug===current.slug?current.slug:originalSlug;
     detail={...detail,id:current.id,slug,summary:current.summary,transcript:current.transcript,questionAnswers:current.questionAnswers,primaryPassages:current.primaryPassages,primaryPassageState:current.primaryPassageState,...(acceptedStaging?{reviewState:current.reviewState,reviewWarnings:current.reviewWarnings,reviewProvenance:current.reviewProvenance}:{}),
@@ -122,7 +122,7 @@ export class CompositeSourceSermonRepository implements PublicSermonRepository {
     // WordPress copy. Only explicit edits to the original projection do so.
     const originalFields=['slug','title','serviceDate','speakerId','seriesIds','bookClassificationIds','scriptureReferences','media','body','seoDescription'];
     const timestamps=originalFields.flatMap(field=>changes[field]?[changes[field]!]:[]).filter(value=>Number.isFinite(Date.parse(value))).sort((a,b)=>Date.parse(b)-Date.parse(a));
-    if(timestamps[0]&&Date.parse(timestamps[0])>Date.parse(page.modifiedAt??page.publishedAt??detail.serviceDate)){lastModified=new Date(timestamps[0]).toISOString().slice(0,10);detail.sourcePublic!.modifiedAt=new Date(timestamps[0]).toISOString();}
+    if(timestamps[0]&&Date.parse(timestamps[0])>Date.parse(page.modifiedAt??page.publishedAt??detail.serviceDate)){lastModified=new Date(timestamps[0]).toISOString();detail.sourcePublic!.modifiedAt=new Date(timestamps[0]).toISOString();}
     if(originalSlug!==slug)repository.aliases.set(pathFor(originalSlug),pathFor(slug));
     if(current.slug!==slug)repository.aliases.set(pathFor(current.slug),pathFor(slug));
    }

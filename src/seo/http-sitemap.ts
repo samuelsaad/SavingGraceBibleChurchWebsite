@@ -1,3 +1,4 @@
+import {sitemapDate,latestSitemapDate} from './sitemap-dates';
 /** Canonical, indexable, server-rendered routes only; no draft or comparison pages. */
 import {maintainedIndexableCalendar} from './calendar-presentation';
 import { archivePageSize, archivePagePath, canonicalOriginFor, sermonPath, type FrontendRenderContext } from "../frontend/routes";
@@ -14,12 +15,13 @@ function sermonUrls(entries: readonly PublicSermonSitemapEntry[], context: Front
   const seen = new Set<string>();
   for (const entry of entries) {
     const slug = validateLegacySlug(entry.slug);
-    if (!slug || !/^\d{4}-\d{2}-\d{2}$/.test(entry.lastModified)
-      || new Date(entry.lastModified).toISOString().slice(0, 10) !== entry.lastModified) throw new Error("seo_sitemap_entry_invalid");
+    if(!slug)throw Error("seo_sitemap_entry_invalid");
+    let modified:string;try{modified=sitemapDate(entry.lastModified);}catch{throw Error("seo_sitemap_entry_invalid");}
     const path = sermonPath(context, slug);
     if (seen.has(path)) throw new Error("seo_sitemap_duplicate");
-    seen.add(path); urls.push({ path, lastModified: entry.lastModified });
+    seen.add(path); urls.push({ path, lastModified: modified });
   }
+  const archiveModified=latestSitemapDate(urls.filter(item=>context.siteContent?.sourceSeoByPath?.[item.path]?.noindex!==true).map(item=>item.lastModified));if(archiveModified)urls[0]!.lastModified=archiveModified;
   for (let page = 2; page <= Math.ceil(totalItems / archivePageSize); page++) urls.push({ path: archivePagePath(page) });
   return urls.filter(item=>context.siteContent?.sourceSeoByPath?.[item.path]?.noindex!==true);
 }
@@ -34,7 +36,8 @@ function churchUrls(context: FrontendRenderContext): SitemapUrl[] {
   ];
   const current = snapshot ? new Set(snapshot.routes.filter(route => route.status === 200).map(route => route.path)) : null;
   return paths.filter(path => !current || current.has(path)).map(path => {
-    const modified = snapshot?.modifiedAtByPath?.[path];
+    const related=path==='/blogs/'?(snapshot?.posts??[]).map(post=>snapshot?.modifiedAtByPath?.[post.path]):path==='/events/'?[...(snapshot?.events??[]).filter(event=>event.calendarVisible!==false).map(event=>snapshot?.modifiedAtByPath?.[event.path]),...(snapshot?.cancelledCalendarEvents??[]).map(event=>event.calendarRevision?.modifiedAt)]:[];
+    const modified=latestSitemapDate([snapshot?.modifiedAtByPath?.[path],...related]);
     if(modified && (!Number.isFinite(Date.parse(modified)) || !/^\d{4}-\d{2}-\d{2}T/u.test(modified))) throw new Error("seo_sitemap_date_invalid");
     return {path,...(modified?{lastModified:modified}:{})};
   });
@@ -51,15 +54,16 @@ export function renderSeoSitemap(entries: readonly PublicSermonSitemapEntry[], c
     if(parsed.pathname+parsed.search!==item.path || !item.path.startsWith("/") || item.path.startsWith("//") || /[#\\]/u.test(item.path)
       || (parsed.search && !queryAllowed) || /%(?:2f|5c|00|0[ad])/iu.test(item.path)
       || /^\/(?:admin|api|frontend-preview|draft-preview|cms-preview|__local|__cms|sermons-v[0-9]+)(?:\/|$)/u.test(item.path)) throw new Error("seo_sitemap_path_invalid");
-    if(item.lastModified && (!/^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z)?$/u.test(item.lastModified) || !Number.isFinite(Date.parse(item.lastModified)))) throw new Error("seo_sitemap_date_invalid");
+    if(item.lastModified)sitemapDate(item.lastModified);
     return maintainedIndexableCalendar(item.path,context) || !legacyDisposition(item.path,context) && (!knownChurch.has(item.path) || allowedChurch.has(item.path));
   });
   const urls = [...source,...church,...sermonUrls(entries, context,totalItems)];
   const unique = new Map<string,SitemapUrl>();
   for(const item of urls){
     const previous=unique.get(item.path),images=[...new Set([...(previous?.images??[]),...(item.images??[])])];
-    if(images.length>1000||images.some(path=>!path.startsWith('/')||path.startsWith('//')||/[?#\\\u0000-\u0020]/u.test(path)||/%(?:2f|5c|00|0[ad])/iu.test(path)||!/^\/(?:wp-content\/uploads|cms-assets|assets|images|brand)\/.+\.(?:png|jpe?g|webp|gif|avif|svg)$/iu.test(path)))throw Error('seo_sitemap_image_invalid');
-    unique.set(item.path,{...previous,...item,...(images.length?{images}:{})});
+    if(images.length>1000||images.some(path=>!path.startsWith('/')||path.startsWith('//')||new URL(path,canonicalOriginFor(context)).pathname!==path||/%(?![a-f0-9]{2})/iu.test(path)||/[?#\\\u0000-\u0020]/u.test(path)||/%(?:2f|5c|00|0[ad])/iu.test(path)||!/^\/(?:wp-content\/uploads|cms-assets|assets|images|media|brand)\/.+\.(?:png|jpe?g|webp|gif|avif|svg)$/iu.test(path)))throw Error('seo_sitemap_image_invalid');
+    const modified=latestSitemapDate([previous?.lastModified,item.lastModified]);
+    unique.set(item.path,{...previous,...item,...(modified?{lastModified:modified}:{}),...(images.length?{images}:{})});
   }
   const origin = canonicalOriginFor(context);
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">${[...unique.values()].map(item => `<url><loc>${escapeXml(origin + item.path)}</loc>${item.lastModified ? `<lastmod>${escapeXml(item.lastModified)}</lastmod>` : ""}${(item.images??[]).map(path=>`<image:image><image:loc>${escapeXml(origin+path)}</image:loc></image:image>`).join("")}</url>`).join("")}</urlset>`;
