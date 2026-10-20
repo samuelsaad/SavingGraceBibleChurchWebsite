@@ -841,3 +841,18 @@ original noindex. It is prepared through the existing source builder for the
 maintained calendar template; it is neither an empty response nor a removal.
 The guarded 77-row delta comprises 37 source metadata updates, 39 discussion
 resources and this one archive, plus four separately audited image redirects.
+
+
+The 77-row source delta and four image redirects passed actual guarded PostgreSQL
+application, independent transaction rollback, exact scoped restoration in a
+separate rollback, active-pointer verification and idempotent rerun. No unrelated
+row changed across all 65 tables. The source projection has 6,787 routes and 459
+known original public sermons. Page six and the 39 discussion resources remain
+separate functional checks; source request failures remain explicitly unresolved.
+
+The final staging entry dispatches original-attachment and source-image manifests
+through their strict distinct validators. Existing sealed-target and mounted-file
+hash/size gates are preserved. A task-owned incomplete offline packager/scan was
+stopped after verifying its process/parent scope because the operator entry
+needed this correction. No remote deployment, deletion or database write occurred
+from that packaging process. Fresh complete gates and packaging follow.

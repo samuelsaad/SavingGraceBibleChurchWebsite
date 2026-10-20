@@ -1,4 +1,4 @@
-import {importSourceResourceRedirects} from './source-resource-redirects';
+import {importSourceResourceManifest} from './source-resource-redirects';
 /** Non-HTTP D-181 migration/import into the exact existing sealed staging DB. */
 import {Pool} from 'pg';
 import {lstat,readFile} from 'node:fs/promises';
@@ -37,7 +37,7 @@ async function main(){
    }else if(operation==='import-redirects'){
     const path='/run/source-public/redirects.json',stat=await lstat(path);if(!stat.isFile()||stat.isSymbolicLink()||stat.size>4*1024*1024)throw Error('source_resource_manifest_file');
     const bytes=await readFile(path);if(!/^[a-f0-9]{64}$/u.test(process.env.SOURCE_RESOURCE_REDIRECTS_SHA256??'')||sha256(bytes)!==process.env.SOURCE_RESOURCE_REDIRECTS_SHA256)throw Error('source_resource_manifest_hash');
-    result=await importSourceResourceRedirects(c,JSON.parse(bytes.toString('utf8')));
+    result=await importSourceResourceManifest(c,JSON.parse(bytes.toString('utf8')));
    }else if(operation==='restore')result=await restoreSourcePublicImport(c,process.env.SOURCE_PUBLIC_IMPORT_SHA256??'',process.env.RELEASE_COMMIT!);
    else{const pages=await readSourcePublicPages(c);result={pages:pages.length,sermons:pages.filter(page=>page.kind==='sermon').length,indexable:pages.filter(page=>page.indexable).length};}
    await c.query(['inventory','verify-import'].includes(operation!)?'ROLLBACK':'COMMIT');process.stdout.write(JSON.stringify({outcome:'source_public_'+operation,result})+'\n');

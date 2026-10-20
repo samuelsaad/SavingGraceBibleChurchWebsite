@@ -16,6 +16,9 @@ const auditAction='seo.original_resource_redirect';
 export async function importSourceResourceRedirects(db:SqlExecutor,input:unknown){
  return applyVerifiedResourceRedirects(db,resourceRedirectManifestSchema.parse(input));
 }
+export async function importSourceResourceManifest(db:SqlExecutor,input:unknown){
+ return input!==null&&typeof input==='object'&&'format'in input&&input.format==='sgbc-original-sitemap-image-redirects-v1'?importSourceSitemapImageRedirects(db,input):importSourceResourceRedirects(db,input);
+}
 const sitemapImageRedirectSchema=z.object({format:z.literal('sgbc-original-sitemap-image-redirects-v1'),sourceInventorySha256:digest,rows:z.array(z.object({oldPath:sourcePathSchema,newPath:sourcePathSchema,sourceParentPath:sourcePathSchema,sourceParentResponseSha256:digest,sourceSitemapResponseSha256:digest,assetSha256:digest}).strict()).max(1000)}).strict();
 /** An original image hint may name a resized WordPress attachment. Its current
  * immutable parent version must bind both that exact hint and the verified file.

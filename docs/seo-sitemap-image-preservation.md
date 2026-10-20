@@ -32,3 +32,10 @@ disposable target, and `python -m unittest discover -s tests -p '*test.py'`.
 Actual full-mapping HTTP, scoped import/recovery and deployed release evidence
 are recorded in the main acceptance report; unit checks alone do not establish
 complete migration acceptance.
+
+The sealed staging `source-public-sync import-redirects` command dispatches the
+new image format and the existing attachment format through their separate strict
+validators. The existing protected target, transaction, size, mounted-file and
+SHA-256 guards remain mandatory. Unknown formats are refused. Actual PostgreSQL
+checks exercise the same dispatch used by the staging command. This prepares the
+operation; it does not claim staging was reachable or that deployment occurred.

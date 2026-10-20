@@ -2104,3 +2104,17 @@ original noindex. It is prepared through the existing source builder for the
 maintained calendar template; it is neither an empty response nor a removal.
 The guarded 77-row delta comprises 37 source metadata updates, 39 discussion
 resources and this one archive, plus four separately audited image redirects.
+
+
+The guarded local source/image/feed delta is applied: 40 new routes, 37 metadata
+updates, 39 copied original RSS resources and four exact image redirects. Trial
+application rollback, independent scoped-restore rollback, active-pointer checks
+and no-change replay passed. All unrelated rows across 65 tables were byte
+unchanged; the known original public sermon count remains 459. The source
+projection now has 6,787 routes. The first preparation refused an occupied private
+manifest filename before any database write; retained evidence uses fresh names.
+
+The sealed staging import command now recognizes the new image manifest through
+the same strict dispatcher exercised by PostgreSQL tests. It retains the existing
+file hash, size, transaction and protected-target gates. The earlier incomplete
+package attempt is retained; final release assembly is continuing.
