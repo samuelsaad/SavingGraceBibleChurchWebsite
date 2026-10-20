@@ -2075,3 +2075,32 @@ The 32 original sitemap responses contain 1,932 page-entry rows; all reach an
 existing candidate sitemap member. This is separate from image hints and full
 current WordPress stored-state coverage. Protected staging still times out at
 20 October 00:28 UTC; no remote command or deployment is claimed.
+
+
+The four additional image-body requests exhausted their bounded attempts without
+a response. Exact same-page WordPress attachment IDs and responsive srcset
+relationships nevertheless identify all four verified originals already retained.
+A separate sitemap-image redirect importer requires the active parent response,
+exact original XML hint, final image file hash and literal resized filename
+correspondence; it never labels this as an observed original HTTP redirect.
+Migration creates direct audited 301s and preserves them after parent withdrawal.
+Original body unavailability remains recorded independently.
+
+
+### D-183 completed finite source check — 20 October
+
+The frozen union retains all original 23,017 identities and totals 23,334 URLs,
+16,491 captured response/attempt records and 29,924 file witnesses. The exact
+501-destination check ended with 39 original discussion feeds, one real calendar
+page-six archive, 363 original 404 responses and 98 unavailable responses after
+bounded retries. Four additional exact image attempts were also unavailable.
+No discovered calendar/query links were followed. The source ledger SHA-256 is
+`85c07f7057f90a6ac558fa46a08e09e29245d978a89daba413eb12a1bc9c1188`.
+Original cache, ledger and parser witnesses remain unchanged. Source unavailability
+and lack of authoritative WordPress stored-state coverage remain explicit.
+
+The page-six response contains twelve real January/February gatherings and
+original noindex. It is prepared through the existing source builder for the
+maintained calendar template; it is neither an empty response nor a removal.
+The guarded 77-row delta comprises 37 source metadata updates, 39 discussion
+resources and this one archive, plus four separately audited image redirects.

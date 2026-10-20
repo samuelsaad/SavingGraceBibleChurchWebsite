@@ -14,11 +14,32 @@ const resourceOriginalPathSchema=z.string().refine(value=>sourcePathSchema.safeP
 const reason='verified_original_attachment_resource';
 const auditAction='seo.original_resource_redirect';
 export async function importSourceResourceRedirects(db:SqlExecutor,input:unknown){
- const manifest=resourceRedirectManifestSchema.parse(input),manifestSha256=sha256(stableJson(manifest));
+ return applyVerifiedResourceRedirects(db,resourceRedirectManifestSchema.parse(input));
+}
+const sitemapImageRedirectSchema=z.object({format:z.literal('sgbc-original-sitemap-image-redirects-v1'),sourceInventorySha256:digest,rows:z.array(z.object({oldPath:sourcePathSchema,newPath:sourcePathSchema,sourceParentPath:sourcePathSchema,sourceParentResponseSha256:digest,sourceSitemapResponseSha256:digest,assetSha256:digest}).strict()).max(1000)}).strict();
+/** An original image hint may name a resized WordPress attachment. Its current
+ * immutable parent version must bind both that exact hint and the verified file.
+ * This is a new migration redirect, never a claimed original HTTP 301. */
+export async function importSourceSitemapImageRedirects(db:SqlExecutor,input:unknown){
+ const manifest=sitemapImageRedirectSchema.parse(input);
+ if(new Set(manifest.rows.map(row=>row.oldPath)).size!==manifest.rows.length)throw Error('source_image_redirect_duplicate');
+ await db.query('SELECT pg_advisory_xact_lock(181,29)');
+ for(const row of manifest.rows){
+  const resized=/^(\/wp-content\/uploads\/.+)-([1-9][0-9]{0,4})x([1-9][0-9]{0,4})(\.(?:jpe?g|png|webp))$/iu.exec(row.oldPath);
+  if(!resized||row.newPath!==resized[1]!+resized[4]!||row.oldPath.includes('?')||row.newPath.includes('?')||manifest.rows.some(other=>other.oldPath===row.newPath))throw Error('source_image_redirect_identity');
+  const parent=(await db.query('SELECT v.payload::text AS payload,v.version_sha256 FROM source_public_routes r JOIN source_public_versions v USING(version_sha256) WHERE r.path=$1 AND NOT r.withdrawn FOR SHARE OF r',[row.sourceParentPath])).rows[0]as{payload:string;version_sha256:string}|undefined;
+  if(!parent)throw Error('source_image_redirect_parent_missing');
+  const page=sourcePageSchema.parse(JSON.parse(parent.payload));
+  if(sourceVersionHash(page)!==parent.version_sha256||page.responseSha256!==row.sourceParentResponseSha256||!page.sourceId||page.issues.length||!page.sitemapImages?.some(image=>{const original=new URL(image.originalUrl);return ['www.savinggrace.org.au','savinggrace.org.au'].includes(original.hostname)&&!original.search&&original.pathname===row.oldPath&&image.path===row.newPath&&image.sha256===row.assetSha256&&image.sourceSitemapResponseSha256===row.sourceSitemapResponseSha256;}))throw Error('source_image_redirect_provenance');
+ }
+ return applyVerifiedResourceRedirects(db,manifest);
+}
+async function applyVerifiedResourceRedirects(db:SqlExecutor,manifest:{sourceInventorySha256:string;rows:readonly{oldPath:string;newPath:string;assetSha256:string;sourceUrl?:string}[]}){
+ const manifestSha256=sha256(stableJson(manifest));
  await db.query("SET LOCAL savinggrace.application_request='on'");await db.query('SELECT pg_advisory_xact_lock(181,29)');
  const result={manifestSha256,inserted:0,unchanged:0,held:[] as Array<{urlSha256:string;reason:string}>};
  for(const row of manifest.rows){
-  const hold=(reason:string)=>result.held.push({urlSha256:sha256(row.sourceUrl),reason});
+  const hold=(reason:string)=>result.held.push({urlSha256:sha256(row.sourceUrl??'https://www.savinggrace.org.au'+row.oldPath),reason});
   const target=(await db.query(`SELECT v.payload::text AS payload,v.version_sha256 FROM source_public_routes r JOIN source_public_versions v USING(version_sha256) WHERE r.path=$1 AND NOT r.withdrawn FOR SHARE OF r`,[row.newPath])).rows[0] as {payload:unknown;version_sha256:string}|undefined;
   if(!target){hold('verified_destination_unavailable');continue;}
   const page=sourcePageSchema.parse(typeof target.payload==='string'?JSON.parse(target.payload):target.payload);

@@ -334,6 +334,19 @@ def indexable(response):
     robots = ' '.join(extracted.get('robots', [])) + ' ' + response.get('headers', {}).get('x-robots-tag', '')
     return response.get('status') == 200 and 'noindex' not in robots.lower() and 'none' not in re.split(r'[,\s]+', robots.lower())
 
+def sitemap_locations(root):
+    # Page/index locs are direct children of url/sitemap entries. An image:loc
+    # is an image resource, never an indexable HTML page or sitemap index.
+    kind=root.tag.rsplit('}',1)[-1]
+    namespace=root.tag[:-len(kind)] if root.tag.endswith('}'+kind) else ''
+    entry_tag=namespace+('sitemap'if kind=='sitemapindex'else'url')
+    for entry in root:
+        if entry.tag!=entry_tag: continue
+        locations=[node for node in entry if node.tag==namespace+'loc']
+        if len(locations)!=1: raise ValueError('sitemap_entry_loc_invalid')
+        images=[node.text or '' for node in entry.findall('{http://www.google.com/schemas/sitemap-image/1.1}image/{http://www.google.com/schemas/sitemap-image/1.1}loc')]
+        yield (locations[0].text or '').strip(),images
+
 class Verification:
     def __init__(self, baseline, candidate, output, *, assets=None, environment='production', candidate_id=None, expected_label=None, request_limit=20000, concurrency=1, timeout=15, comparison_workers=1):
         if type(concurrency) is not int or not 1 <= concurrency <= 4: raise ValueError('candidate_concurrency_invalid')
@@ -360,7 +373,7 @@ class Verification:
         self.environment = environment
         self.client = LoopbackClient(candidate, self.output, request_limit=request_limit, expected_label=expected_label, timeout=timeout)
         self.rows, self.differences, self.link_rows, self.control_issues = [], [], [], []
-        self.sitemap_urls, self.internal_targets = set(), set()
+        self.sitemap_urls, self.internal_targets, self.sitemap_image_urls = set(), set(), set()
         self.internal_inlinks = Counter()
         self.robots = RobotFileParser()
 
@@ -400,14 +413,18 @@ class Verification:
             kind = root.tag.rsplit('}', 1)[-1]
             if kind not in ('sitemapindex', 'urlset'):
                 self.control_issues.append('sitemap_root_invalid'); continue
-            for node in root.iter():
-                if node.tag.rsplit('}', 1)[-1] != 'loc': continue
-                url = (node.text or '').strip()
+            try: locations=list(sitemap_locations(root))
+            except ValueError:
+                self.control_issues.append('sitemap_entry_loc_invalid');continue
+            for url,images in locations:
                 if not church_url(url) or not url.startswith(CANONICAL + '/'):
                     self.control_issues.append('sitemap_noncanonical_or_external_url'); continue
                 if kind == 'sitemapindex': queue.append(url)
                 elif url in self.sitemap_urls: self.control_issues.append('sitemap_duplicate_url')
                 else: self.sitemap_urls.add(url)
+                for image in images:
+                    if not church_url(image) or not image.startswith(CANONICAL+'/') or PRIVATE_PATH.search(urlsplit(image).path):self.control_issues.append('sitemap_image_noncanonical_or_private');continue
+                    self.sitemap_image_urls.add(image);self.internal_targets.add(image)
 
     def asset_diff(self, url, response):
         source = self.assets.get('assets', {}).get(url)
@@ -508,6 +525,7 @@ class Verification:
             issues = list(followed['issues'])
             if result.get('status') != 200: issues.append('internal_target_not_200')
             if len(followed['chain']) > 1: issues.append('internal_target_redirects')
+            if target in self.sitemap_image_urls and not result.get('mime','').startswith('image/'):issues.append('sitemap_image_mime_invalid')
             if target in self.sitemap_urls:
                 if not result.get('extracted') or not indexable(result): issues.append('sitemap_target_not_indexable_html')
                 elif result['extracted'].get('canonicalUrls') != [target]: issues.append('sitemap_target_not_self_canonical')
@@ -576,7 +594,7 @@ class Verification:
         summary = {'format': 'sgbc-seo-candidate-verification-v1', 'bindings': self.bindings, 'finishedAt': stamp(),
                    'baselineComplete': complete, 'sourcePendingCount': pending, 'sourceDeferredCount': len(self.ledger.get('deferred', {})), 'inventoryCount': len(inventory(self.ledger, self.assets)),
                    'checkedInventoryRows': attempted_rows, 'inventoryReportRows': len(self.rows), 'candidateRequests': self.client.requests,
-                   'sitemapUrlCount': len(self.sitemap_urls), 'internalTargetCount': len(self.link_rows),
+                   'sitemapImageUrlCount':len(self.sitemap_image_urls), 'sitemapUrlCount': len(self.sitemap_urls), 'internalTargetCount': len(self.link_rows),
                    'sourceStateCounts': dict(Counter(row['sourceState'] for row in self.rows)), 'issueCounts': dict(sorted(issue_counts.items())),
                    'runtimeLabelObserved': self.client.label, 'runtimeIdentityVerified': self.client.expected_label is not None,
                    'unverifiedRuntimeIdentity': self.client.expected_label is None,

@@ -3,7 +3,7 @@ import{defaultSiteSettings}from'../src/frontend/content/site-snapshot';
 import{createSourcePageValidationCache}from'../src/seo/source-page-validation';
 import {protectedLocalPostgresPassword,protectedLocalPostgresUser} from '../src/migration/protected-local-postgres';
 import {createSnapshotVerifiedFingerprint,fingerprintSnapshotProofSql} from '../src/seo/snapshot-fingerprint-proof';
-import {importSourceResourceRedirects,readSourceResourceRedirects} from '../src/seo/source-resource-redirects';
+import {importSourceResourceRedirects,importSourceSitemapImageRedirects,readSourceResourceRedirects} from '../src/seo/source-resource-redirects';
 import {sourceCmsPostgresLifecycle} from './helpers/source-cms-postgres-lifecycle';
 import type {Pool} from 'pg';
 import {expect,it} from 'vitest';
@@ -42,6 +42,17 @@ export function registerSeoSourcePostgresTests(getPool:()=>Pool){
    await writer.query('ALTER TABLE seo_snapshot_acceptance_fixture ENABLE ROW LEVEL SECURITY');const before=fullReads;await get();await get();expect(fullReads).toBe(before+2);
   }finally{if(transaction){await transaction.query('ROLLBACK');transaction.release();}await reader.end();guard();await writer.query('DROP TABLE IF EXISTS seo_snapshot_acceptance_fixture');}
  });
+
+ it('migrates an exact original resized image hint without asserting an original HTTP redirect',async()=>{guard();const client=await getPool().connect();try{
+  await client.query('BEGIN');for(const item of [...(await completedSchemaMigrations()).slice(22),await loadAcceptedSemanticMigration(),await loadCmsMigration()]){await client.query(item.upBody);await client.query('INSERT INTO schema_migrations(migration_order,migration_id,checksum_sha256) VALUES($1,$2,$3)',[item.order,item.id,item.checksumSha256]);}await applySourcePublicMigration(client);
+  const path='/wp-content/uploads/anonymous.jpg',oldPath='/wp-content/uploads/anonymous-300x200.jpg',origin='https://www.savinggrace.org.au';
+  const parent={...fixture(),sitemapImages:[{path,sha256:hash,sourceSitemapUrl:origin+'/page-sitemap.xml',sourceSitemapResponseSha256:hash,originalUrl:origin+oldPath}]},asset={...fixture(),path,sourceUrl:origin+path,kind:'asset' as const,sourceId:919192,indexable:false,asset:{storageKey:hash+'.jpg',sha256:hash,contentType:'image/jpeg',bytes:100}};
+  await importSourcePublicBundle(client,{format:'sgbc-source-public-v1',capturedAt:parent.capturedAt,inventorySha256:hash,pages:[parent,asset],expectedVersions:{[parent.path]:null,[path]:null}},commit);
+  const row={oldPath,newPath:path,sourceParentPath:parent.path,sourceParentResponseSha256:hash,sourceSitemapResponseSha256:hash,assetSha256:hash},manifest={format:'sgbc-original-sitemap-image-redirects-v1',sourceInventorySha256:hash,rows:[row]};
+  for(const patch of [{oldPath:'/wp-content/uploads/unrelated-300x200.jpg'},{sourceParentResponseSha256:'c'.repeat(64)},{sourceSitemapResponseSha256:'c'.repeat(64)},{assetSha256:'c'.repeat(64)}])await expect(importSourceSitemapImageRedirects(client,{...manifest,rows:[{...row,...patch}]})).rejects.toThrow();
+  expect((await importSourceSitemapImageRedirects(client,manifest)).inserted).toBe(1);expect((await importSourceSitemapImageRedirects(client,manifest)).unchanged).toBe(1);expect((await readSourceResourceRedirects(client)).get(oldPath)).toBe(path);expect((await client.query("SELECT count(*)::int AS n FROM audit_events WHERE entity_type='redirect' AND action='seo.original_resource_redirect'")).rows[0].n).toBe(1);
+  await client.query('UPDATE source_public_routes SET withdrawn=true WHERE path=$1',[parent.path]);await expect(importSourceSitemapImageRedirects(client,manifest)).rejects.toThrow('parent_missing');expect((await readSourceResourceRedirects(client)).get(oldPath)).toBe(path);
+ }finally{await client.query('ROLLBACK');client.release();}});
 
  it('original resource redirects preserve all ownership and audit history, are idempotent and invalidate when bytes change',async()=>{guard();const client=await getPool().connect();try{
   await client.query('BEGIN');for(const item of [...(await completedSchemaMigrations()).slice(22),await loadAcceptedSemanticMigration(),await loadCmsMigration()]){await client.query(item.upBody);await client.query('INSERT INTO schema_migrations(migration_order,migration_id,checksum_sha256) VALUES($1,$2,$3)',[item.order,item.id,item.checksumSha256]);}await applySourcePublicMigration(client);
