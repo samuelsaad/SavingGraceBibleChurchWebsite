@@ -155,3 +155,10 @@ it('retains captured Day-selector semantics and uses native URLs for real daily 
 });
 
 it('excludes a witnessed but exhausted live legacy page from the sitemap without excluding its working collection',()=>{vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-01T00:00:00Z'));try{const c=context(),path='/?post_type=tribe_events&eventDisplay=list',second=path+'&paged=2';c.siteContent!.sourceSeoByPath={[path]:{title:'Collection'},[second]:{title:'Collection page two'}};const pages=[path,second].map(path=>({path,kind:'archive',indexable:true,issues:[],canonicalSource:null,content:[],sourceUrl:'https://www.savinggrace.org.au'+path}));expect(sourcePublicSitemap(pages as never,c).map(row=>row.path)).toEqual([path]);}finally{vi.useRealTimers();}});
+
+
+it('keeps a distinct noindex calendar query canonical instead of the homepage and removes only campaign identity',async()=>{
+ vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-01T00:00:00Z'));
+ try{const c=context();c.mode='public';c.siteContent!.events=[{...event,schedule:{kind:'weekly',weekday:0,from:'2026-10-01',until:'2027-10-01'}}];const path='/?post_type=tribe_events&eventDisplay=list&paged=2';c.siteContent!.sourceSeoByPath={[path]:{title:'Original calendar page two',noindex:true}};const response=maintainedCalendarView(new Request('https://www.savinggrace.org.au'+path+'&utm_source=example'),c)!;expect(response.status).toBe(200);const doc=await response.text(),escaped=path.replaceAll('&','&amp;');expect(doc).toContain('rel="canonical" href="https://www.savinggrace.org.au'+escaped+'"');expect(doc).toContain('property="og:url" content="https://www.savinggrace.org.au'+escaped+'"');expect(doc).toContain('name="robots" content="noindex, follow"');expect(doc).not.toContain('rel="canonical" href="https://www.savinggrace.org.au/"');expect(doc).toContain('utm_source=example');expect(doc).toContain('Original calendar page two');
+ }finally{vi.useRealTimers();}
+});

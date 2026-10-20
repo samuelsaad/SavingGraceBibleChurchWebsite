@@ -5,7 +5,7 @@ from urllib.parse import urlsplit, parse_qsl, unquote, urljoin
 SPEC=importlib.util.spec_from_file_location('presentation_capture',Path(__file__).with_name('seo-source-capture.py'))
 CAP=importlib.util.module_from_spec(SPEC);SPEC.loader.exec_module(CAP)
 BLOCKS={'p','h1','h2','h3','h4','h5','h6','li','blockquote','figcaption'}
-def norm(value):return CAP.clean(value).replace('\u00a0',' ').strip()
+def norm(value):return CAP.clean(value if value is not None else '').replace('\u00a0',' ').strip()
 def sha(value):return hashlib.sha256(value.encode()).hexdigest()
 def walk(node):
  if not isinstance(node,dict):return
@@ -198,6 +198,77 @@ def pagination_control_witnesses(root,source,candidate,document,related_archive,
   if witness:remaining[key]-=1;result.append({'blockSha256':key,'page':int(value),**witness})
  return result
 
+def visible_nodes(node):
+ if not isinstance(node,dict):return
+ attrs=node['attrs']
+ if node['tag']in('script','style','noscript','template')or 'hidden'in attrs or attrs.get('aria-hidden')=='true'or 'hidden'in CAP.classes(node)or re.search(r'(?:display\s*:\s*none|visibility\s*:\s*hidden)',attrs.get('style',''),re.I):return
+ yield node
+ for child in node['children']:
+  if isinstance(child,dict):yield from visible_nodes(child)
+
+def inline_event_paragraph_witnesses(source,candidate,document,root,remaining):
+ if source.get('template')not in('page','post')or not isinstance(source.get('sourcePostId'),int)or source['sourcePostId']<1 or not root:return []
+ def own(value,base):
+  u=urlsplit(urljoin(base,value));return u.path+('?' +u.query if u.query else '')if u.scheme in('http','https')and u.hostname in('www.savinggrace.org.au','savinggrace.org.au')and not(u.username or u.password or u.port)else None
+ if own(source['url'],source['url'])!=own(candidate['url'],candidate['url']):return []
+ def links(node,base):return{(own(n['attrs'].get('href',''),base),norm(CAP.text(n)))for n in walk(node)if n['tag']=='a'and norm(CAP.text(n))}
+ def runs(node):
+  if isinstance(node,str):return [norm(node)]if norm(node)else []
+  if node['tag']in CAP.DROP:return []
+  return [value for child in node['children']for value in runs(child)]
+ def ordered(text,values):
+  at=0
+  for value in values:
+   match=re.search(r'(?<!\w)'+re.escape(value)+r'(?!\w)',text[at:])
+   if not match:return False
+   at+=match.end()
+  return True
+ main=CAP.first(tree(document),lambda n:n['tag']=='main');current=[n for n in visible_nodes(main)if n['tag']=='p']if main else [];result=[]
+ for node in walk(root):
+  if node['tag']!='p':continue
+  key=sha(norm(CAP.text(node)))
+  if not remaining.get(key):continue
+  original_links=links(node,source['url']);events={u for u,label in original_links if u and re.fullmatch(r'/event/[a-z0-9-]+/20[0-9]{2}-[0-9]{2}-[0-9]{2}/',u)}
+  if len(events)!=1 or not any(u=='/events/'and label=='View Calendar'for u,label in original_links):continue
+  original_runs=runs(node)
+  if not original_runs or len(original_runs)>128:continue
+  match=next((n for n in current if original_links<=links(n,candidate['url'])and ordered(norm(CAP.text(n)),original_runs)),None)
+  if match:
+   remaining[key]-=1;result.append({'blockSha256':key,'reason':'same_original_event_date_links_and_ordered_inline_copy_with_additional_time_and_title','eventPath':next(iter(events)),'sourceTextRunsSha256':sha(json.dumps(original_runs)),'candidateParagraphSha256':sha(json.dumps(match,sort_keys=True)),'candidateResponseSha256':sha(document)})
+ return result
+
+def archive_header_witnesses(source,candidate,document,remaining):
+ # The frozen crawler omits header containers from mainText. Read only the
+ # actual visible archive heading inside main, with the same typed scope.
+ group=archive_group(source['url'])
+ if source.get('template')!='archive'or group is None or group!=archive_group(candidate['url']):return []
+ primary=norm(source.get('primaryHeading',''))
+ if not primary or primary!=norm(candidate.get('primaryHeading','')):return []
+ root=tree(document);main=CAP.first(root,lambda n:n['tag']=='main'and n['attrs'].get('id')=='main-content')
+ if not main:return []
+ def visible(node):
+  attrs=node['attrs'];return 'hidden'not in attrs and attrs.get('aria-hidden')!='true'and not re.search(r'(?:display\s*:\s*none|visibility\s*:\s*hidden)',attrs.get('style',''),re.I)
+ if not visible(main):return []
+ rendered=list(visible_nodes(main));header=next((n for n in rendered if n['tag']=='header'and 'v5__heading'in CAP.classes(n)),None)
+ if not header or not visible(header):return []
+ headings=[n for n in visible_nodes(header)if n['tag']=='h1'and visible(n)and norm(CAP.text(n))==primary]
+ if len(headings)!=1:return []
+ result=[];key=sha(primary)
+ if remaining.get(key)and any(b.get('tag')=='h1'and norm(b.get('text',''))==primary for b in source.get('semanticBlocks',[])):
+  remaining[key]-=1;result.append({'blockSha256':key,'reason':'exact_original_primary_h1_visible_in_rendered_archive_header','candidateResponseSha256':sha(document)})
+ speaker=next((value for key,value in group if key=='sermon_speaker'),None)
+ if len(group)==1 and speaker and primary.startswith('Preacher: '):
+  name=primary.removeprefix('Preacher: ');intro=' '.join(norm(CAP.text(n))for n in visible_nodes(header)if n['tag']=='p'and visible(n));by='Sermons by '+name
+  roles=[norm(b.get('text',''))for b in source.get('semanticBlocks',[])if b.get('tag')=='h6'and norm(b.get('text',''))]
+  for label in dict.fromkeys([*roles,by]):
+   key=sha(label)
+   if not remaining.get(key):continue
+   exact=whole_text(intro,label)
+   typed=label==by and active_filter_witness(source,document)and any(n['tag']=='h2'and n['attrs'].get('id')=='v5-results-heading'and norm(CAP.text(n))=='Sermons'and visible(n)for n in rendered)
+   if exact or typed:
+    remaining[key]-=1;result.append({'blockSha256':key,'reason':'exact_original_archive_intro_visible_in_header'if exact else'same_original_speaker_in_h1_typed_filter_and_sermon_results_heading','candidateHeaderSha256':sha(json.dumps(header,sort_keys=True)),'candidateResponseSha256':sha(document)})
+ return result
+
 def block_witnesses(source,candidate,document,missing,source_document=None,related_archive=None):
  """Require the same card URL and every original leaf, never a bag of words."""
  remaining=collections.Counter(missing);witnesses=[]
@@ -216,6 +287,8 @@ def block_witnesses(source,candidate,document,missing,source_document=None,relat
     if matched:
      remaining[key]-=1;witnesses.append({'blockSha256':key,'reason':'same_sermon_card_all_original_leaves_verified'if complete else'same_sermon_identity_exact_individual_block_verified','identity':path,'sourceCardSha256':sha(CAP.sanitize(node,source['url'])),'candidateCardSha256':sha(CAP.sanitize(matched['node'],matched['page'])),'candidatePage':matched['page'],'candidateResponseSha256':matched['responseSha256']})
  witnesses+=pagination_control_witnesses(root,source,candidate,document,related_archive,remaining)
+ witnesses+=archive_header_witnesses(source,candidate,document,remaining)
+ witnesses+=inline_event_paragraph_witnesses(source,candidate,document,root,remaining)
  if remaining.get(sha('Filtered by:'))and active_filter_witness(source,document):
   remaining[sha('Filtered by:')]-=1;witnesses.append({'blockSha256':sha('Filtered by:'),'reason':'same_typed_selected_filters_and_visible_removable_tokens'})
  # WordPress sometimes duplicated the exact primary heading as H1 and H2.

@@ -757,3 +757,47 @@ or wrong-file redirect targets still fail. These rules retain raw findings.
 All 371 originally empty calendar URLs returned actual nonempty text/calendar in
 the 72ac498 full HTTP rehearsal. The metadata follow-up accounted for 28 of 29
 remaining rows; the final search title still awaits the guarded compatible import.
+
+
+### D-183 preserved ranges and complete public keyword matches
+
+A real source comparison found Mark 10:23–27 rendered only as Mark 10:23 in a
+source-backed card, and a second original range was similarly narrowed. The
+candidate retains the source-backed range on cards/detail, leaves the independent
+reviewed primary passage intact, and keeps explicit editorial reference changes.
+Anonymous real-HTTP regressions verify both displayed references and unchanged
+input objects. Another regression verifies 51 public transcript-only keyword hits,
+including the second repository page and isolation from the next search query.
+
+Exact archive-header and ministry-widget witnesses additionally require rendered
+visible ancestors, the same typed scope/event/date, unchanged links and ordered
+original text. They address frozen-parser omissions without removing raw findings
+or accepting absent copy. All new rules have rejection cases for wrong identities,
+missing words, hidden ancestors and changed links. Full integrated verification
+and actual delivery are still pending.
+
+
+The same comparison exposed literal underscore delimiters around a blog
+introduction containing a link. The inline renderer now retains whole-phrase
+emphasis across that link without changing stored words or hrefs. Escaping,
+unsupported protocols, independent emphasis runs and strong text are covered by
+focused regressions. The focused source/renderer set passed 75 tests.
+
+The completed 72ac498 original-cohort rehearsal verified all 76 original
+image/alternative findings using 58 actual file probes, and all 120 original
+indexability findings through actual responses/canonicals/robots. It accounted
+for 2,091 of 2,114 original block findings before the newly identified range
+and inline-renderer fixes; the remaining 23 URL rows are retained for final
+application comparison. Metadata and 37 calendar/feed semantic differences remain
+separate reconciliation steps. This is an interim denominator, not final acceptance.
+
+
+The exact metadata follow-up accounted for 112 of the final 125 original rows.
+The remaining 13 exposed one pending source-backed search-title import and twelve
+legacy calendar-query pages whose live renderer used the root pathname as its
+canonical. The candidate now keeps the full meaningful calendar query in canonical
+and social URL, removes only campaign identity and retains noindex. Visitor links
+still retain campaign values. A focused real-rendering regression checks page two,
+its distinct query canonical, source title, noindex and campaign behavior.
+The 75-case source/inline/reference set and focused calendar adapter checks passed;
+the next full gate run covers the complete integrated candidate.

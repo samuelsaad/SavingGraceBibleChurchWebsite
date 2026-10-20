@@ -2023,3 +2023,35 @@ standard tests (148 gated cases covered by PostgreSQL), 704-file type checking
 with zero errors/warnings and seven existing hints, and the 45-page build. Python,
 importer, runtime build and offline audit passed. Private release scanning and
 actual publication/search/import recovery remain separate acceptance steps.
+
+
+### D-183 source-range and inline-renderer corrections — 20 October
+
+The current candidate preserves a verified original-public Scripture range when
+optional reviewed primary-passage granularity is narrower, retaining both the
+independent reviewed passage and all stored evidence. Public keyword search now
+retains transcript-only matches and result pages beyond the first 50, without
+carrying a previous query match into another search. A blog introduction's
+whole-phrase emphasis now spans its inline link instead of displaying literal
+underscores. New anonymous real-HTTP and renderer regressions passed.
+The 72ac498 original-cohort run accounted for all 76 original image/alt findings
+and all 120 indexability findings, plus 2,091 of 2,114 block findings. Final
+source-range/inline corrections, metadata and calendar semantics still require
+release-bound HTTP reconciliation. The last pushed compatible intermediate is
+f74ca61; its offline image is built. The protected staging SSH probe at
+19 October 23:43 UTC still timed out before any remote command ran.
+
+
+The integrated source-preservation candidate passed 1,572 PostgreSQL tests with
+zero skips; 1,424 standard passes with 148 gated database cases covered there;
+263 Python checks; type/build/importer/runtime/offline-audit and a 592-file privacy
+scan with zero private or prohibited findings. Twelve noindex calendar-query
+pages now keep their distinct canonical/query scope, excluding campaign identity
+while retaining attribution in visitor links. The exact search-title row was
+imported, narrowly restored and re-applied with immutable receipts, independent
+transaction rollback and a zero-change replay. Four actual old-application HTTP
+responses proved rollback availability. An occupied canary port was preserved;
+a verified free loopback port was used and stopped. All pre-existing rows across
+65 tables matched the retained fingerprints. The source projection now has 6,747
+routes; the 459 known original public sermons are unchanged. Final release
+delivery, full HTTP reconciliation and the exact missing-target frontier continue.

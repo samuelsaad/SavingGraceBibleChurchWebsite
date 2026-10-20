@@ -68,6 +68,15 @@ function emphasis(escaped: string): string {
 
 /** Renders inline markup to escaped HTML. */
 export function inline(text: string, context: FrontendRenderContext): Html {
+  return renderInline(text,context,0);
+}
+function renderInline(text:string,context:FrontendRenderContext,depth:number):Html {
+  // A phrase may contain a link. Applying emphasis independently to each
+  // side of that link leaves the original formatting delimiters visible.
+  for(const marker of ['**','_'])if(depth<8&&text.startsWith(marker)&&text.endsWith(marker)&&text.length>marker.length*2){
+    const inner=text.slice(marker.length,-marker.length);
+    if(!inner.replace(linkPattern,'').includes(marker))return marker==='_'?html`<em>${renderInline(inner,context,depth+1)}</em>`:html`<strong>${renderInline(inner,context,depth+1)}</strong>`;
+  }
   let output = "";
   let last = 0;
   for (const match of text.matchAll(linkPattern)) {

@@ -52,6 +52,10 @@ export function renderPublicSermonPage(
   const book = primaryBook(sermon);
   const bookCount = book ? options.books.find((item) => item.slug === book.slug)?.sermonCount ?? null : null;
   const canonicalPath = `/sermons/${sermon.slug}/`;
+  const originalReferences=sermon.sourcePublic?sermon.scriptureReferences.map(item=>item.displayText):[];
+  const stampSermon=originalReferences.length?{...sermon,sourceScriptureReferences:originalReferences}:sermon;
+  const sameReference=(value:string)=>value.replace(/[‐‑‒–—−]/gu,'-').replace(/\s+/gu,' ').trim();
+  const distinctOriginalReferences=originalReferences.filter(value=>!sermon.primaryPassages.some(item=>sameReference(item.displayText)===sameReference(value)));
   const metadataDescription = sermon.seoDescription ?? sermon.summary ?? undefined;
   const isLongTitle = sermon.title.length > 40;
   const contentLanguage=sermon.sourcePublic?.language??sermon.language??'en';
@@ -67,7 +71,7 @@ export function renderPublicSermonPage(
   const head = html`<header class="sermon__head">
     ${canonStrip(options, { current: book?.slug, label: book ? `${book.canonicalName} on the shelf` : undefined })}
     ${trail}
-    ${passageStamp(sermon, "sermon__stamp")}
+    ${passageStamp(stampSermon, "sermon__stamp")}
     <h1 class="sermon__title${isLongTitle ? " is-long" : ""}"${contentAttributes}${pageOptions.sourceBlocks?editAttributes(context,['heading'],'text','Original sermon title'):html``}>${sermon.title}</h1>
     <p class="sermon__meta">
       <span>${timeElement(sermon.serviceDate)}</span>
@@ -145,6 +149,7 @@ export function renderPublicSermonPage(
         ${when(sermon.speaker, () => html`<dt>Speaker</dt><dd><a href="${links.taxonomy("speakers", sermon.speaker!.slug)}">${sermon.speaker!.name}</a></dd>`)}
         ${when(sermon.series.length, () => html`<dt>Series</dt><dd>${sermon.series.map((item, index) => html`${index > 0 ? ", " : ""}<a href="${links.taxonomy("series", item.slug)}">${item.name}</a>`)}</dd>`)}
         ${when(sermon.primaryPassages.length, () => html`<dt>Preached from</dt><dd>${sermon.primaryPassages.map((item) => item.displayText).join(", ")}</dd>`)}
+        ${when(distinctOriginalReferences.length, () => html`<dt>Passage</dt><dd>${distinctOriginalReferences.join(", ")}</dd>`)}
         ${when(book, () => html`<dt>Shelved under</dt><dd><a href="${links.taxonomy("books", book!.slug)}">${book!.canonicalName}</a></dd>`)}
       </dl>
     </div>

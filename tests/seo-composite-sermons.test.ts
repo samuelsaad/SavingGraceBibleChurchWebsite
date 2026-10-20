@@ -19,6 +19,12 @@ async function withHttp(repository:PublicSermonRepository,run:(base:string)=>Pro
  try{await run(base);}finally{server.closeAllConnections();await new Promise<void>((resolve,reject)=>server.close(error=>error?reject(error):resolve()));}
 }
 describe('ordinary approved editorial content with source originals',()=>{
+ it('keeps the complete original public reference when an independently reviewed primary is narrower',async()=>{
+  const native=approved();native.detail.primaryPassages=[{displayText:'John 1:1',isLead:true}];const before=JSON.stringify(native),repository=await CompositeSourceSermonRepository.create([original()],[native],async()=>null);
+  const row=(await repository.listPublished(query())).data[0]!;expect(row.primaryPassages).toEqual(native.detail.primaryPassages);expect(row.sourceScriptureReferences).toEqual(['John 1:1–4']);
+  await withHttp(repository,async base=>{const archive=await(await fetch(base+'/sermons/')).text();expect(archive).toContain('Passage: </span>John 1:1–4');const detail=await(await fetch(base+'/sermons/source-original/')).text();expect(detail).toContain('Passage: </span>John 1:1–4');expect(detail).toContain('<dt>Preached from</dt><dd>John 1:1</dd>');expect(detail).toContain('<dt>Passage</dt><dd>John 1:1–4</dd>');});
+  expect(JSON.stringify(native)).toBe(before);
+ });
  it('reconciles a verified historical pilot only in the public projection, retaining content and source withdrawal',async()=>{
   const source=original(),native=approved({sourceWordpressId:'900001',editorialChanges:{title:'2026-10-19T00:00:00Z'}}),media={provider:'youtube' as const,mediaType:'video' as const,externalId:'abcdefghijk',canonicalUrl:'https://www.youtube.com/watch?v=abcdefghijk',title:'Anonymous recording',durationSeconds:null};
   source.sermon!.media=[media];source.sermon!.primaryMedia=media;native.detail.media=[media];native.detail.primaryMedia=media;

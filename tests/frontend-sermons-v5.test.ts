@@ -36,7 +36,8 @@ describe("SermonsV5 presentation", () => {
     const {sourceScriptureReferences, ...native} = original;
     expect(renderSermonsV5Page({...input, sermons:[native]})).not.toContain('Acts 7:2–4');
     const reviewed = renderSermonsV5Page({...input, sermons:[{...original, primaryPassages:sermon.primaryPassages}]});
-    expect(reviewed).toContain('Preached from </span>Romans 5:1');expect(reviewed).not.toContain('John 2:1');
+    expect(reviewed).toContain('Passage: </span>Acts 7:2–4, John 2:1 &lt;source&gt;');expect(reviewed).not.toContain('Preached from </span>Romans 5:1');
+    const nativeReviewed=renderSermonsV5Page({...input,sermons:[{...native,primaryPassages:sermon.primaryPassages}]});expect(nativeReviewed).toContain('Preached from </span>Romans 5:1');expect(nativeReviewed).not.toContain('John 2:1');
     const named = {...original, title:"Acts 7:2–4", sourceScriptureReferences:["Acts 7:2–4"]};
     expect(renderSermonsV5Page({...input, sermons:[named]})).not.toContain('Passage:');
   });

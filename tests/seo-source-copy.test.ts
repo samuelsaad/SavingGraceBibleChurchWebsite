@@ -109,3 +109,12 @@ it('searches current published homepage text and respects hidden modules and exp
  const replaced=search({...published,home:{...home,seo:{replaceSourceContent:true}}});expect(await(await replaced(new Request('https://www.savinggrace.org.au/?s=LegacyVisibleHomeWord'),{mode:'public',basePath:''}))!.text()).toContain('<p>0 results</p>');
  const newHome=search(published,[]);expect(await(await newHome(new Request('https://www.savinggrace.org.au/?s=CurrentVisibleHomeWord'),{mode:'public',basePath:''}))!.text()).toContain('<p>1 results</p>');
 });
+
+
+it('keeps public transcript-only matches across native pages and never caches a prior query match',async()=>{
+ const pages=Array.from({length:51},(_,i)=>sourcePageSchema.parse({...source,path:'/sermons/anonymous-'+i+'/',kind:'sermon',sourceUrl:'https://www.savinggrace.org.au/sermons/anonymous-'+i+'/',sourceId:950000+i,sermon:{id:'00000000-0000-4000-8000-'+String(i).padStart(12,'0'),slug:'anonymous-'+i,title:'Anonymous public sermon '+i,serviceDate:'2026-01-01',summary:null,speaker:null,series:[],books:[],scriptureReferences:[],primaryPassages:[],primaryPassageState:'unresolved',primaryMedia:null,seoDescription:null,body:null,media:[],transcript:null,questionAnswers:[],relatedSermons:[]},content:[],title:'Anonymous document',heading:'Anonymous public sermon '+i}));
+ const calls:number[]=[];const repository={listPublished:async(q:{page:number;query?:string})=>{calls.push(q.page);return q.query==='transcriptonly'?{totalItems:51,data:pages.slice((q.page-1)*50,q.page*50).map(p=>p.sermon!)}:{totalItems:0,data:[]};}};
+ const handler=createLegacySourceSearch(pages,{pages:[],posts:[],events:[],venues:{},home:null,settings:defaultSiteSettings,assets:{},routes:[]},repository as never,Object.fromEntries(pages.map(p=>[String(p.sourceId),p.path])));
+ const response=await handler(new Request('https://www.savinggrace.org.au/?s=transcriptonly&paged=3'),{mode:'public',basePath:''});const body=await response!.text();expect(body).toContain('<p>51 results</p>');expect(calls).toEqual([1,2]);expect(body).not.toContain('No results found');
+ const unrelated=await handler(new Request('https://www.savinggrace.org.au/?s=unrelated'),{mode:'public',basePath:''});expect(await unrelated!.text()).toContain('<p>0 results</p>');
+});

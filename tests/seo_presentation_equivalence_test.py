@@ -96,3 +96,23 @@ class DuplicatePrimaryHeadingTests(unittest.TestCase):
   text='Anonymous church heading';key=M.sha(text);source={'url':'https://www.savinggrace.org.au/about/','sourcePostId':77,'template':'page','primaryHeading':text,'semanticBlocks':[{'tag':'h1','text':text},{'tag':'h2','text':text}]};candidate={'url':source['url'],'primaryHeading':text,'mainText':''};document='<html><h1>'+text+'</h1><main><p>Original other copy.</p></main></html>'
   self.assertTrue(M.block_witnesses(source,candidate,document,{key:1})['fullyEquivalent'])
   for changed in [{'template':'archive'},{'primaryHeading':'Different heading'},{'semanticBlocks':[{'tag':'p','text':text},{'tag':'p','text':text}]}]:self.assertFalse(M.block_witnesses({**source,**changed},candidate,document,{key:1})['fullyEquivalent'])
+
+
+class RenderedArchiveHeaderTests(unittest.TestCase):
+ def test_frozen_parser_omission_requires_the_actual_same_scope_visible_primary_heading(self):
+  url='https://www.savinggrace.org.au/sermons/?sermon_speaker=anonymous';title='Preacher: Anonymous';source={'url':url,'template':'archive','primaryHeading':title,'semanticBlocks':[{'tag':'h1','text':title},{'tag':'h4','text':'Sermons by Anonymous'},{'tag':'h6','text':'Pastor'}]};candidate={'url':url,'primaryHeading':title,'mainText':''}
+  doc='<main id="main-content"><header class="v5__heading"><h1>Preacher: Anonymous</h1><p>Pastor</p></header><select name="sermon_speaker"><option selected value="anonymous">Anonymous (1)</option></select><div aria-label="Active filters">Speaker: Anonymous</div><h2 id="v5-results-heading">Sermons</h2></main>'
+  missing={M.sha(v):1 for v in[title,'Sermons by Anonymous','Pastor']};self.assertTrue(M.block_witnesses(source,candidate,doc,missing)['fullyEquivalent'])
+  elder={**source,'semanticBlocks':[{**b,'text':b['text'].replace('Pastor','Elder')}for b in source['semanticBlocks']]};self.assertTrue(M.block_witnesses(elder,candidate,doc.replace('Pastor','Elder'),{M.sha(v.replace('Pastor','Elder')):n for v,n in[(title,1),('Sermons by Anonymous',1),('Pastor',1)]})['fullyEquivalent'])
+  for wrong in[doc.replace('v5__heading','unrelated'),doc.replace('<header ','<header hidden '),doc.replace('<main id=', '<main hidden id='),doc.replace('<h1>Preacher: Anonymous</h1>','<h1>Different person</h1>'),doc.replace('value="anonymous"','value="other"')]:self.assertFalse(M.block_witnesses(source,candidate,wrong,missing)['fullyEquivalent'])
+  unrelated={**candidate,'url':url.replace('anonymous','other')};self.assertFalse(M.block_witnesses(source,unrelated,doc,missing)['fullyEquivalent'])
+  self.assertFalse(M.block_witnesses(source,candidate,doc,{M.sha('Unpreserved original paragraph'):1})['fullyEquivalent'])
+  self.assertFalse(M.block_witnesses({**source,'primaryHeading':None},{**candidate,'primaryHeading':None},doc,missing)['fullyEquivalent'])
+
+
+class OriginalInlineEventParagraphTests(unittest.TestCase):
+ def test_extra_event_details_cannot_remove_original_ordered_text_or_links(self):
+  url='https://www.savinggrace.org.au/anonymous-ministry/';path='/event/anonymous/2026-11-07/';original='<main><p>Our next Study: <span>Nov 7</span><header><a href="'+path+'">Anonymous event</a></header><a href="/events/">View Calendar</a></p></main>';current='<main><p>Our next Study: Nov 7 3:30 pm <a href="'+path+'">Anonymous event</a> <a href="/events/">View Calendar</a></p></main>';value='Our next Study: Nov 7 View Calendar';source={'url':url,'template':'page','sourcePostId':71,'mainSelector':'main','semanticBlocks':[{'tag':'p','text':value}]};candidate={'url':url,'mainText':''};missing={M.sha(value):1}
+  self.assertTrue(M.block_witnesses(source,candidate,current,missing,original)['fullyEquivalent'])
+  for wrong in[current.replace('2026-11-07','2026-11-08'),current.replace('href="/events/"','href="/unrelated/"'),current.replace('Nov 7','Nov 8'),current.replace('Our next Study: Nov 7','Nov 7 Our next Study:'),current.replace('<p>','<p hidden>'),current.replace('<main>','<main hidden>')]:self.assertFalse(M.block_witnesses(source,candidate,wrong,missing,original)['fullyEquivalent'])
+  self.assertFalse(M.block_witnesses(source,{**candidate,'url':url.replace('anonymous','other')},current,missing,original)['fullyEquivalent'])

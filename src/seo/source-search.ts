@@ -47,11 +47,20 @@ export function createLegacySourceSearch(pages:readonly SourcePublicPage[],snaps
   const terms=words(query).toLowerCase().split(/\s+/u).filter(Boolean),pageNumber=Number(rawPage),pageSize=20;
   const records=selectedRecords??=buildRecords();
   const entries=[...records.values()];
+  const nativeMatches=new Set<string>();
   if(query&&(!type||type==='sermons'||type==='any')){
-   const result=await sermons.listPublished({page:1,pageSize:50,query,order:'DESC'});
-   for(const sermon of result.data){const path='/sermons/'+sermon.slug+'/';if(!entries.some(item=>item.path===path))entries.push({path,title:sermon.title,text:sermon.summary??'',kind:'sermon',language:'en-AU',date:sermon.serviceDate});}
+   // The public repository searches approved visible content, including a
+   // transcript. A summary-only second filter must not discard those matches.
+   const first=await sermons.listPublished({page:1,pageSize:50,query,order:'DESC'}),total=first.totalItems??first.data.length,pageCount=Math.max(1,Math.ceil(total/50));
+   if(!Number.isSafeInteger(total)||total<0||pageCount>200)throw Error('source_search_public_result_scope');
+   const paths=new Set(entries.map(item=>item.path));
+   for(let page=1;page<=pageCount;page++){
+    const result=page===1?first:await sermons.listPublished({page,pageSize:50,query,order:'DESC'});
+    if((result.totalItems??result.data.length)!==total)throw Error('source_search_public_results_changed');
+    for(const sermon of result.data){const path='/sermons/'+sermon.slug+'/';nativeMatches.add(path);if(!paths.has(path)){paths.add(path);entries.push({path,title:sermon.title,text:sermon.summary??'',kind:'sermon',language:sermon.language??'en-AU',date:sermon.serviceDate});}}
+   }
   }
-  const hits=query?entries.filter(item=>(!type||supported[type]!.includes(item.kind))&&terms.every(term=>words(item.title+' '+item.text).toLowerCase().includes(term))).sort((a,b)=>terms.reduce((score,term)=>score+(b.title.toLowerCase().includes(term)?1:0)-(a.title.toLowerCase().includes(term)?1:0),0)||b.date.localeCompare(a.date)||a.path.localeCompare(b.path)):[];
+  const hits=query?entries.filter(item=>(!type||supported[type]!.includes(item.kind))&&(nativeMatches.has(item.path)||terms.every(term=>words(item.title+' '+item.text).toLowerCase().includes(term)))).sort((a,b)=>terms.reduce((score,term)=>score+(b.title.toLowerCase().includes(term)?1:0)-(a.title.toLowerCase().includes(term)?1:0),0)||b.date.localeCompare(a.date)||a.path.localeCompare(b.path)):[];
   const totalPages=Math.max(1,Math.ceil(hits.length/pageSize));
   const href=(page:number)=>{const params=new URLSearchParams(url.search);params.set('paged',String(page));return '/?'+params.toString();};
   const observed=pages.find(page=>page.path===url.pathname+url.search&&page.kind==='archive'&&!page.issues.length);

@@ -47,15 +47,16 @@ export function titleCarriesPassage(sermon: SermonSummary): boolean {
   return sermon.primaryPassages.every((item) => title.includes(normalisedReference(item.displayText)));
 }
 
-/** Reviewed passages take priority. Original public labels remain visible without
- * promoting an unparsed source reference into an approved primary passage. */
+/** A verified original-public reference stays visible independently of optional
+ * reviewed primary-passage granularity; ordinary native records use reviewed passages. */
 export function passageStamp(sermon: SermonSummary, className: string): Html | null {
   const reviewed = sermon.primaryPassages.map(item => item.displayText);
-  const references = reviewed.length ? reviewed : sermon.sourceScriptureReferences ?? [];
+  const original = sermon.sourceScriptureReferences ?? [];
+  const references = original.length ? original : reviewed;
   if (!references.length) return null;
   const title = normalisedReference(sermon.title);
   if (references.every(reference => title.includes(normalisedReference(reference)))) return null;
-  return html`<p class="${className}"><span class="sr-only">${reviewed.length ? "Preached from " : "Passage: "}</span>${references.join(", ")}</p>`;
+  return html`<p class="${className}"><span class="sr-only">${original.length ? "Passage: " : "Preached from "}</span>${references.join(", ")}</p>`;
 }
 
 /** The first classified book, which labels and colours every entry's side tab. */

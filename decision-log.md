@@ -1204,3 +1204,15 @@ SSH tunnel for Samuel's use; stop temporary verification processes. No productio
 tracking on staging. Actual property/stream, approved test recipient and managed
 production administrator/MFA/recovery evidence are required before those features
 can be accepted. Missing inputs never authorize invented configuration or approval.
+
+
+### D-183 implementation clarification — original Scripture ranges
+
+The pre-cutover comparison found that a narrower reviewed primary passage could
+suppress an original-public verse range in archive cards. Preserve the source-backed
+reference in that public presentation; keep the reviewed primary passage visible
+separately on the detail when different. Explicit audited reference edits still win.
+This changes rendering defaults only, never stored references, approval, review or
+publication state. Internal keyword search retains matching approved public transcript
+content and all bounded result pages instead of filtering those matches a second
+time against a summary. No private or unapproved content becomes searchable.

@@ -2,6 +2,13 @@
 
 ## D-183 — bounded pre-cutover completion (19 October 2026)
 
+Verified original-public Scripture labels remain visible independently of optional
+reviewed primary-passage granularity. Preserve explicit audited reference edits;
+never rewrite primary-passage approvals or infer a source label is approved. The
+archive uses the source-backed current reference; the detail may also show the
+independently reviewed primary passage with its existing label.
+
+
 
 
 An operator may reapply only newly inserted source rows withdrawn by that exact
