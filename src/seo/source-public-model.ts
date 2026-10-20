@@ -16,11 +16,13 @@ export const sourcePathSchema=z.string().min(1).max(2000).refine(value=>{
   return value.startsWith('/')&&!value.startsWith('//')&&!/[\\\u0000-\u0020]/u.test(value)&&u.origin===sourceOrigin&&u.pathname+u.search===value&&(!u.search||search||ordinary)&&!u.hash&&!/^\/(?:admin|api|frontend-preview|draft-preview|cms-preview|cms-editor-frame|related-themes-evaluation|cms-assets)(?:\/|$)/u.test(value);
  }catch{return false;}
 },'Expected a safe source-public pathname');
+const sitemapImageSchema=z.object({path:sourcePathSchema.refine(path=>!path.includes('?')&&/\.(?:png|jpe?g|webp|gif|avif|svg)$/iu.test(path)),sha256:digestSchema,sourceSitemapUrl:z.url().refine(value=>{const u=new URL(value);return u.protocol==='https:'&&sourceHosts.has(u.hostname)&&!u.username&&!u.password&&!u.port&&!u.search&&!u.hash&&/sitemap[^/]*\.xml$/u.test(u.pathname);}),sourceSitemapResponseSha256:digestSchema,originalUrl:z.url().refine(value=>{const u=new URL(value);return ['https:','http:'].includes(u.protocol)&&!u.username&&!u.password&&!u.port&&!u.hash&&[...sourceHosts,'stage.savinggrace.org.au','i0.wp.com','i1.wp.com','i2.wp.com'].includes(u.hostname);})}).strict();
 export const sourcePageSchema=z.object({
  path:sourcePathSchema,kind:z.enum(['sermon','page','post','taxonomy','archive','event','attachment','feed','asset']),
  sourceUrl:z.url().refine(value=>{const u=new URL(value);return ['https:','http:'].includes(u.protocol)&&sourceHosts.has(u.hostname)&&!u.username&&!u.password;}),
  sourceId:z.number().int().positive().nullable(),capturedAt:z.iso.datetime(),responseSha256:digestSchema,
  hasOriginalHeading:z.boolean().optional(),
+ sitemapImages:z.array(sitemapImageSchema).max(1000).optional(),
  title:z.string().min(1).max(2000),heading:z.string().min(1).max(2000),description:z.string().max(10000).nullable(),
  socialTitle:z.string().max(2000).optional(),socialType:z.enum(['website','article']).optional(),socialDescription:z.string().max(10000).optional(),socialImageSource:z.string().max(2000).optional(),
  language:z.string().regex(/^[a-z]{2,3}(?:[-_][A-Za-z]{2,4})?$/u).default('en'),indexable:z.boolean(),
@@ -33,6 +35,7 @@ export const sourcePageSchema=z.object({
  asset:z.object({storageKey:z.string().regex(/^[a-f0-9]{64}\.(?:png|jpg|webp|gif|avif|svg|ico|pdf|doc|docx|xls|xlsx|ppt|pptx|rss|atom|ics|zip|otf|mp3|mp4)$/u),sha256:digestSchema,contentType:z.string().min(1).max(100),bytes:z.number().int().nonnegative().max(2147483648),emptySourceCalendar:z.literal(true).optional()}).strict().optional(),
  sermon:sermonDetailSchema.nullable(),issues:z.array(z.string().max(300)).max(100).default([])
 }).strict().superRefine((value,ctx)=>{
+ if(value.sitemapImages&&(value.kind==='asset'||value.kind==='feed'||new Set(value.sitemapImages.map(image=>image.path)).size!==value.sitemapImages.length))ctx.addIssue({code:'custom',message:'Only distinct verified page image associations are admitted'});
  if(value.structuredData){const data=value.structuredData;if(data.responseSha256!==value.responseSha256||data.primary&&data.primary.path!==value.path||data.breadcrumbs&&data.breadcrumbs.at(-1)?.path!==value.path)ctx.addIssue({code:'custom',message:'Source schema must bind the exact response and primary route'});if(data.primary&&(data.primary.type==='Event'&&value.kind!=='event'||data.primary.type==='BlogPosting'&&value.kind!=='post'))ctx.addIssue({code:'custom',message:'Source schema type must match the primary page'});if(data.primary&&(data.primary.type==='Event'?data.primary.name:data.primary.headline)!==value.heading)ctx.addIssue({code:'custom',message:'Source schema heading must match visible content'});}
  if(new URL(value.sourceUrl).pathname+new URL(value.sourceUrl).search!==value.path||new URL(value.sourceUrl).hash)ctx.addIssue({code:'custom',message:'Source URL must exactly identify its route'});
  if(value.path.includes('?')&&value.kind!=='archive'&&value.kind!=='asset')ctx.addIssue({code:'custom',message:'Only observed archive or verified resource queries are admitted'});

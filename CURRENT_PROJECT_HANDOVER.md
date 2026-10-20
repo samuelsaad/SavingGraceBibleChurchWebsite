@@ -2055,3 +2055,23 @@ a verified free loopback port was used and stopped. All pre-existing rows across
 65 tables matched the retained fingerprints. The source projection now has 6,747
 routes; the 459 known original public sermons are unchanged. Final release
 delivery, full HTTP reconciliation and the exact missing-target frontier continue.
+
+
+### D-183 original image sitemap associations — 20 October
+
+The source XML contains 54 page/image associations on 37 page identities. The
+replacement now supports source-hashed original image hints in its existing
+versioned source projection. Final sitemap inclusion follows the current canonical
+CMS owner, withdrawals, noindex and explicit content replacement; each original
+file must have a matching verified image hash. Source data, file bodies and source
+XML remain private. Data reconciliation and final release checks are in progress.
+
+The image-sitemap candidate passed 1,579 PostgreSQL tests with zero skips and
+1,431 standard tests, with 148 gated cases covered by PostgreSQL. Type checks
+reported zero errors/warnings and seven existing hints; build, 263 Python tests,
+importer, runtime and offline audit passed. One readonly anonymous fixture needed
+a type-only correction; the fresh type/build/Python/importer gates then passed.
+The 32 original sitemap responses contain 1,932 page-entry rows; all reach an
+existing candidate sitemap member. This is separate from image hints and full
+current WordPress stored-state coverage. Protected staging still times out at
+20 October 00:28 UTC; no remote command or deployment is claimed.

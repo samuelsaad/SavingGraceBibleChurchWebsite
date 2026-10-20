@@ -801,3 +801,14 @@ still retain campaign values. A focused real-rendering regression checks page tw
 its distinct query canonical, source title, noindex and campaign behavior.
 The 75-case source/inline/reference set and focused calendar adapter checks passed;
 the next full gate run covers the complete integrated candidate.
+
+
+### D-183 image sitemap regression
+
+The replacement previously omitted all original image sitemap hints. Seven
+anonymous regression cases now verify exact owned image paths and file hashes,
+source XML provenance, canonical ownership after a slug change, duplicate merging,
+withdrawal/noindex/content replacement, featured-image controls, XML escaping and
+rejection of private/external paths. The initial fixture lacked legacyPaths; it was
+corrected and all 16 focused sitemap/route-policy tests passed. Full integrated
+gates and actual-data HTTP proof remain separate steps.

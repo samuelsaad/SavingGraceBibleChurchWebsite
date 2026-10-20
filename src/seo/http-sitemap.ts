@@ -7,7 +7,7 @@ import { escapeXml } from "../frontend/xml";
 import { validateLegacySlug } from "../domain/slug";
 import type { PublicSermonSitemapEntry } from "../server/repositories/sermon-repository";
 
-export interface SitemapUrl { path: string; lastModified?: string }
+export interface SitemapUrl { path: string; lastModified?: string; images?: readonly string[] }
 function sermonUrls(entries: readonly PublicSermonSitemapEntry[], context: FrontendRenderContext, totalItems=entries.length): SitemapUrl[] {
   if(!Number.isSafeInteger(totalItems)||totalItems<entries.length)throw new Error("seo_sitemap_count_invalid");
   const urls: SitemapUrl[] = [{ path: "/sermons/" }];
@@ -55,7 +55,12 @@ export function renderSeoSitemap(entries: readonly PublicSermonSitemapEntry[], c
     return maintainedIndexableCalendar(item.path,context) || !legacyDisposition(item.path,context) && (!knownChurch.has(item.path) || allowedChurch.has(item.path));
   });
   const urls = [...source,...church,...sermonUrls(entries, context,totalItems)];
-  const unique = new Map(urls.map(item => [item.path, item]));
+  const unique = new Map<string,SitemapUrl>();
+  for(const item of urls){
+    const previous=unique.get(item.path),images=[...new Set([...(previous?.images??[]),...(item.images??[])])];
+    if(images.length>1000||images.some(path=>!path.startsWith('/')||path.startsWith('//')||/[?#\\\u0000-\u0020]/u.test(path)||/%(?:2f|5c|00|0[ad])/iu.test(path)||!/^\/(?:wp-content\/uploads|cms-assets|assets|images|brand)\/.+\.(?:png|jpe?g|webp|gif|avif|svg)$/iu.test(path)))throw Error('seo_sitemap_image_invalid');
+    unique.set(item.path,{...previous,...item,...(images.length?{images}:{})});
+  }
   const origin = canonicalOriginFor(context);
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${[...unique.values()].map(item => `<url><loc>${escapeXml(origin + item.path)}</loc>${item.lastModified ? `<lastmod>${escapeXml(item.lastModified)}</lastmod>` : ""}</url>`).join("")}</urlset>`;
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">${[...unique.values()].map(item => `<url><loc>${escapeXml(origin + item.path)}</loc>${item.lastModified ? `<lastmod>${escapeXml(item.lastModified)}</lastmod>` : ""}${(item.images??[]).map(path=>`<image:image><image:loc>${escapeXml(origin+path)}</image:loc></image:image>`).join("")}</url>`).join("")}</urlset>`;
 }

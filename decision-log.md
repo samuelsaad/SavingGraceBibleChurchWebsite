@@ -1216,3 +1216,14 @@ This changes rendering defaults only, never stored references, approval, review 
 publication state. Internal keyword search retains matching approved public transcript
 content and all bounded result pages instead of filtering those matches a second
 time against a summary. No private or unapproved content becomes searchable.
+
+
+### D-183 clarification — source-bound image sitemap associations
+
+Retain verified original XML page/image associations in the existing immutable
+source-public version JSON, with exact sitemap response hash and corresponding
+verified image file hash. No schema/table or new primary store is introduced.
+Only current indexable canonical published pages emit hints; explicit CMS source
+replacement and withdrawal remain authoritative. Output uses verified owned image
+paths rather than broken original staging/CDN identities. This changes neither
+source bodies, editorial content, approvals nor sermon eligibility.
